@@ -1,52 +1,19 @@
-import React, { useState, useEffect } from 'react'
-import { atProtoService } from '../services/atproto'
+import React, { useCallback } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-
-interface PostRecord {
-  $type?: string
-  text: string
-  createdAt: string
-  embed?: any
-  reply?: any
-  facets?: any[]
-  langs?: string[]
-  labels?: any
-  tags?: string[]
-}
-
-interface Post {
-  uri: string
-  cid: string
-  author: {
-    did: string
-    handle: string
-    displayName?: string
-    avatar?: string
-  }
-  record: PostRecord | any  // The record is the actual post content
-  embed?: any
-  replyCount?: number
-  repostCount?: number
-  likeCount?: number
-  quoteCount?: number
-  indexedAt: string
-  viewer?: {
-    like?: string
-    repost?: string
-    threadMuted?: boolean
-    replyDisabled?: boolean
-  }
-  labels?: any[]
-}
+import { useTimeline } from '../hooks/useTimeline'
+import type { FeedItem, Post } from '../types/atproto'
 
 export const Feed: React.FC = () => {
-  const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    loadFeed()
-  }, [])
+  const { 
+    posts, 
+    isLoading, 
+    isFetching,
+    isFetchingNextPage,
+    error, 
+    hasNextPage, 
+    loadMore, 
+    refresh 
+  } = useTimeline()
 
   // Helper function to extract text from post
   const getPostText = (post: Post): string => {
@@ -68,34 +35,13 @@ export const Feed: React.FC = () => {
     return new Date().toISOString()
   }
 
-  const loadFeed = async () => {
-    try {
-      setLoading(true)
-      const response = await atProtoService.getAgent().getTimeline()
-      
-      const feedPosts = response.data.feed.map((item: any) => item.post)
-      
-      // Log one post to see the structure
-      if (feedPosts.length > 0) {
-        console.log('Full post object:', feedPosts[0])
-        console.log('Post record:', feedPosts[0].record)
-        console.log('Post keys:', Object.keys(feedPosts[0]))
-        if (feedPosts[0].record) {
-          console.log('Record keys:', Object.keys(feedPosts[0].record))
-        }
-      }
-      
-      setPosts(feedPosts)
-      setError('')
-    } catch (err) {
-      setError('Failed to load feed')
-      console.error(err)
-    } finally {
-      setLoading(false)
+  const handleLoadMore = useCallback(() => {
+    if (!isFetchingNextPage && hasNextPage) {
+      loadMore()
     }
-  }
+  }, [isFetchingNextPage, hasNextPage, loadMore])
 
-  if (loading) {
+  if (isLoading) {
     return <div style={{ padding: '20px', textAlign: 'center' }}>Loading feed...</div>
   }
 
@@ -107,7 +53,8 @@ export const Feed: React.FC = () => {
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
       <h2>Your Timeline</h2>
       <button
-        onClick={loadFeed}
+        onClick={() => refresh()}
+        disabled={isFetching}
         style={{
           marginBottom: '20px',
           padding: '10px 20px',
@@ -118,10 +65,12 @@ export const Feed: React.FC = () => {
           cursor: 'pointer'
         }}
       >
-        Refresh Feed
+        {isFetching ? 'Refreshing...' : 'Refresh Feed'}
       </button>
       
-      {posts.map((post) => (
+      {posts.map((item) => {
+        const post = item.post
+        return (
         <div
           key={post.uri}
           style={{
@@ -244,7 +193,28 @@ export const Feed: React.FC = () => {
             <span>❤️ {post.likeCount || 0}</span>
           </div>
         </div>
-      ))}
+        )
+      })}
+      
+      {hasNextPage && (
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <button
+            onClick={handleLoadMore}
+            disabled={isFetchingNextPage}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#0085ff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: isFetchingNextPage ? 'not-allowed' : 'pointer',
+              opacity: isFetchingNextPage ? 0.6 : 1
+            }}
+          >
+            {isFetchingNextPage ? 'Loading more...' : 'Load more'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

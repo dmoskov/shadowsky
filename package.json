@@ -11,9 +11,13 @@
   },
   "dependencies": {
     "@atproto/api": "^0.15.13",
+    "@atproto/lexicon": "^0.4.11",
+    "@atproto/xrpc": "^0.7.0",
+    "@tanstack/react-query": "^5.80.6",
     "date-fns": "^4.1.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "zod": "^3.25.55"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

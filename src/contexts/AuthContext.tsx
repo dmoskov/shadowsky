@@ -1,11 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { atProtoService } from '../services/atproto'
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
+import { atProtoClient, ATProtoClient } from '../services/atproto'
+import type { Session } from '../types/atproto'
 
 interface AuthContextType {
   isAuthenticated: boolean
+  isLoading: boolean
   login: (identifier: string, password: string) => Promise<boolean>
   logout: () => void
-  session: any
+  session: Session | null
+  client: ATProtoClient
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -24,44 +27,57 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [session, setSession] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [session, setSession] = useState<Session | null>(null)
+
+  const logout = useCallback(() => {
+    atProtoClient.logout()
+    setIsAuthenticated(false)
+    setSession(null)
+  }, [])
 
   useEffect(() => {
-    const savedSession = localStorage.getItem('bsky_session')
-    if (savedSession) {
-      const sessionData = JSON.parse(savedSession)
-      atProtoService.resume(sessionData).then(result => {
-        if (result.success) {
+    const initializeAuth = async () => {
+      try {
+        const savedSession = ATProtoClient.loadSavedSession()
+        if (savedSession) {
+          const resumedSession = await atProtoClient.resumeSession(savedSession)
           setIsAuthenticated(true)
-          setSession(sessionData)
-        } else {
-          localStorage.removeItem('bsky_session')
+          setSession(resumedSession)
         }
-      })
+      } catch (error) {
+        // Session invalid, clear it
+        console.error('Failed to resume session:', error)
+        atProtoClient.logout()
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    initializeAuth()
+  }, [])
+
+  const login = useCallback(async (identifier: string, password: string): Promise<boolean> => {
+    try {
+      const newSession = await atProtoClient.login(identifier, password)
+      setIsAuthenticated(true)
+      setSession(newSession)
+      return true
+    } catch (error) {
+      console.error('Login error:', error)
+      return false
     }
   }, [])
 
-  const login = async (identifier: string, password: string): Promise<boolean> => {
-    const result = await atProtoService.login(identifier, password)
-    if (result.success) {
-      setIsAuthenticated(true)
-      const session = atProtoService.getSession()
-      setSession(session)
-      localStorage.setItem('bsky_session', JSON.stringify(session))
-      return true
-    }
-    return false
-  }
-
-  const logout = () => {
-    atProtoService.logout()
-    setIsAuthenticated(false)
-    setSession(null)
-    localStorage.removeItem('bsky_session')
-  }
-
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, session }}>
+    <AuthContext.Provider value={{ 
+      isAuthenticated, 
+      isLoading,
+      login, 
+      logout, 
+      session,
+      client: atProtoClient
+    }}>
       {children}
     </AuthContext.Provider>
   )

@@ -14,15 +14,21 @@ A custom Bluesky client built with React, TypeScript, and Vite that provides a c
 ## Technical Stack
 - **Frontend**: React + TypeScript
 - **Build Tool**: Vite (for fast development)
-- **AT Protocol SDK**: @atproto/api (official TypeScript SDK)
+- **AT Protocol SDK**: @atproto/api, @atproto/lexicon, @atproto/xrpc
+- **Data Fetching**: TanStack Query (React Query) for caching and synchronization
+- **Validation**: Zod for runtime type validation
 - **Styling**: Inline styles (for now, easy to migrate to CSS-in-JS later)
-- **State Management**: React Context (simple, built-in solution)
-- **Version Control**: Git (managed by Claude for easy rollback)
+- **State Management**: React Context for auth, React Query for server state
+- **Version Control**: Git (managed autonomously by Claude)
+- **Error Handling**: Custom error classes with AT Protocol mapping
 
 ## Current Features
 - ✅ Authentication with Bluesky credentials
-- ✅ Session persistence (localStorage)
-- ✅ Timeline feed viewing
+- ✅ Session persistence with automatic refresh
+- ✅ Timeline feed with infinite scrolling
+- ✅ Proper error handling (rate limits, auth errors, etc.)
+- ✅ Type-safe AT Protocol integration
+- ✅ Optimistic UI updates ready
 - ✅ Post display with:
   - Text content
   - Author information and avatars
@@ -38,12 +44,22 @@ BSKY/
 │   │   ├── Feed.tsx     # Timeline feed display
 │   │   └── Login.tsx    # Authentication form
 │   ├── contexts/        # React contexts
-│   │   └── AuthContext.tsx  # Authentication state
+│   │   └── AuthContext.tsx  # Authentication state management
 │   ├── services/        # API services
-│   │   └── atproto.ts   # AT Protocol wrapper
-│   ├── hooks/          # Custom React hooks (future)
-│   ├── types/          # TypeScript types (future)
-│   └── utils/          # Utility functions (future)
+│   │   └── atproto/     # AT Protocol service layer
+│   │       ├── client.ts    # Main AT Proto client
+│   │       ├── feed.ts      # Feed-related operations
+│   │       └── index.ts     # Service exports
+│   ├── hooks/           # Custom React hooks
+│   │   ├── useErrorHandler.ts  # Centralized error handling
+│   │   └── useTimeline.ts      # Timeline data fetching
+│   ├── lib/             # Utility libraries
+│   │   ├── errors.ts         # Error classes and mapping
+│   │   └── query-client.ts   # React Query configuration
+│   ├── types/           # TypeScript type definitions
+│   │   ├── atproto.ts       # AT Protocol types
+│   │   └── app.ts          # Application types
+│   └── utils/           # Utility functions (future)
 ├── progress/           # Session logs and progress tracking
 └── CLAUDE.md          # This file
 ```
@@ -100,10 +116,36 @@ git checkout main
 - Experimental features are developed in branches
 - No user approval needed for routine commits
 
+## Architecture Principles
+
+### Type Safety
+- All AT Protocol responses are properly typed using official types
+- No `any` types except where absolutely necessary
+- Zod schemas for runtime validation of user inputs
+
+### Error Handling
+- Custom error classes for different AT Protocol errors
+- Automatic error mapping from API responses
+- User-friendly error messages with appropriate actions
+- Rate limit handling with retry information
+
+### Data Management
+- React Query for all server state (feeds, posts, etc.)
+- Automatic caching and background refetching
+- Optimistic updates for better UX
+- Infinite scrolling with cursor-based pagination
+
+### Service Architecture
+- Clean separation between UI and API logic
+- Service classes for different AT Protocol operations
+- Singleton pattern for service instances
+- Proper error propagation through layers
+
 ## Known Issues & Fixes
 1. **Safari localhost connection**: Use `http://127.0.0.1:5173/` instead of `localhost`
-2. **Post text not showing**: Posts use `record.value.text` not `record.text`
+2. **Post text location**: Posts use `record.value.text` not `record.text`
 3. **HMR warnings**: AuthContext export causes Fast Refresh issues (non-breaking)
+4. **Circular dependencies**: Avoided by careful hook design
 
 ## Planned Features
 ### Core Functionality
@@ -128,32 +170,35 @@ git checkout main
 - [ ] Export functionality
 
 ## API Structure Notes
-Based on our debugging, the Bluesky API returns posts with this structure:
+
+### Post Structure
+The Bluesky API returns posts with proper AT Protocol typing:
 ```typescript
-{
-  uri: string,
-  cid: string,
-  author: {
-    did: string,
-    handle: string,
-    displayName?: string,
-    avatar?: string
-  },
+import { AppBskyFeedDefs } from '@atproto/api'
+
+// Post structure follows AppBskyFeedDefs.PostView
+interface Post {
+  uri: string               // AT URI (at://did/collection/rkey)
+  cid: string              // Content ID
+  author: ProfileView      // Author profile
   record: {
-    uri: string,
-    cid: string,
+    uri: string
+    cid: string
     value: {
-      $type: "app.bsky.feed.post",
-      text: string,
-      createdAt: string,
-      // ... other fields
+      $type: "app.bsky.feed.post"
+      text: string
+      createdAt: string
+      facets?: Facet[]   // Rich text (mentions, links)
+      embed?: Embed      // Images, external links, quotes
+      reply?: ReplyRef   // Thread reference
     }
-  },
-  indexedAt: string,
-  replyCount?: number,
-  repostCount?: number,
-  likeCount?: number,
-  // ... other fields
+  }
+  embed?: EmbedView        // Resolved embed content
+  replyCount?: number
+  repostCount?: number
+  likeCount?: number
+  indexedAt: string        // When indexed by AppView
+  viewer?: ViewerState     // Current user's interaction
 }
 ```
 
