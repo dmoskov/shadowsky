@@ -9,7 +9,6 @@ import {
   MoreHorizontal,
   Bookmark,
   Link,
-  Image as ImageIcon
 } from 'lucide-react'
 import clsx from 'clsx'
 import type { FeedItem } from '../types/atproto'
@@ -127,7 +126,7 @@ export const PostCard: React.FC<PostCardProps> = ({ item }) => {
             <div className={clsx("post-media", {
               "media-grid": post.embed.images.length > 1
             })}>
-              {post.embed.images.map((image: any, index: number) => (
+              {post.embed.images.map((image: { thumb?: string; fullsize?: string; alt?: string }, index: number) => (
                 <motion.div
                   key={index}
                   className="media-item"

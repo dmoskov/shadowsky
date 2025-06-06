@@ -76,11 +76,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Only clear session for authentication errors
             if (error instanceof SessionExpiredError || 
                 error instanceof AuthenticationError ||
-                (error as any)?.status === 401) {
+                (error as Error & { status?: number })?.status === 401) {
               console.log('Session invalid, clearing...')
               atProtoClient.logout()
             } else if (error instanceof NetworkError || 
-                      (error as any)?.status >= 500 ||
+                      ((error as Error & { status?: number })?.status ?? 0) >= 500 ||
                       !navigator.onLine) {
               // For network errors, keep the session and retry
               console.log('Network error during session resume, will retry...')

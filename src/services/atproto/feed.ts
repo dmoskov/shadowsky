@@ -114,7 +114,7 @@ export class FeedService {
     try {
       const agent = this.client.getAgent()
       
-      const post: any = { text }
+      const post: Record<string, unknown> = { text }
       
       if (options?.reply) {
         post.reply = options.reply

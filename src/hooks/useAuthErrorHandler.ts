@@ -5,10 +5,7 @@
 
 import { useCallback } from 'react'
 import { 
-  ATProtoError, 
-  RateLimitError, 
-  AuthenticationError, 
-  SessionExpiredError,
+  ATProtoError,
   isRateLimitError,
   isAuthenticationError,
   isSessionExpiredError

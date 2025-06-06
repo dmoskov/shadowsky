@@ -127,8 +127,8 @@ export class ATProtoClient {
       // Clear corrupted session data
       try {
         localStorage.removeItem('bsky_session')
-      } catch (e) {
-        // Ignore
+      } catch {
+        // Ignore localStorage errors
       }
       return null
     }

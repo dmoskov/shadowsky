@@ -2,7 +2,6 @@ import React, { useCallback, useRef, useEffect } from 'react'
 import { useTimeline } from '../hooks/useTimeline'
 import { ErrorBoundary } from './ErrorBoundary'
 import { PostCard } from './PostCard'
-import type { FeedItem } from '../types/atproto'
 
 export const Feed: React.FC = () => {
   const { 

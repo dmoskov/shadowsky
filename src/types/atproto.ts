@@ -21,13 +21,9 @@ export type {
 import type { AppBskyFeedDefs, AppBskyActorDefs } from '@atproto/api'
 
 // App-specific type extensions
-export interface Post extends AppBskyFeedDefs.PostView {
-  // Additional app-specific fields can be added here
-}
+export type Post = AppBskyFeedDefs.PostView
 
-export interface Author extends AppBskyActorDefs.ProfileViewDetailed {
-  // Additional app-specific fields can be added here
-}
+export type Author = AppBskyActorDefs.ProfileViewDetailed
 
 export interface FeedItem {
   post: Post

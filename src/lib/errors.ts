@@ -54,57 +54,66 @@ export class SessionExpiredError extends ATProtoError {
 }
 
 // Error mapping from AT Protocol errors
-export function mapATProtoError(error: any): ATProtoError {
+export function mapATProtoError(error: unknown): ATProtoError {
+  const err = error as Error & {
+    status?: number
+    headers?: Record<string, string>
+    error?: string
+    code?: string
+    name?: string
+    message?: string
+  }
+  
   // Handle network errors first
-  if (error.name === 'NetworkError' || error.name === 'TypeError' && error.message.includes('fetch')) {
-    return new NetworkError('Network connection failed', error)
+  if (err.name === 'NetworkError' || (err.name === 'TypeError' && err.message?.includes('fetch'))) {
+    return new NetworkError('Network connection failed', err)
   }
   
   // Handle timeout errors
-  if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
-    return new NetworkError('Request timeout', error)
+  if (err.name === 'AbortError' || err.code === 'ECONNABORTED') {
+    return new NetworkError('Request timeout', err)
   }
   
-  if (error.status === 429) {
-    const resetAt = error.headers?.['ratelimit-reset'] 
-      ? new Date(parseInt(error.headers['ratelimit-reset']) * 1000)
+  if (err.status === 429) {
+    const resetAt = err.headers?.['ratelimit-reset'] 
+      ? new Date(parseInt(err.headers['ratelimit-reset']) * 1000)
       : new Date(Date.now() + 60000) // Default to 1 minute
-    return new RateLimitError(resetAt, error.message, error)
+    return new RateLimitError(resetAt, err.message || 'Rate limit exceeded', err)
   }
 
-  if (error.status === 401) {
-    return new AuthenticationError(error.message || 'Unauthorized', error)
+  if (err.status === 401) {
+    return new AuthenticationError(err.message || 'Unauthorized', err)
   }
 
-  if (error.status === 400) {
+  if (err.status === 400) {
     // Check for specific token errors in the response
-    if (error.error === 'ExpiredToken' || error.error === 'InvalidToken' ||
-        error.message?.toLowerCase().includes('token') ||
-        error.message?.toLowerCase().includes('expired')) {
-      return new SessionExpiredError(error.message || 'Session expired', error)
+    if (err.error === 'ExpiredToken' || err.error === 'InvalidToken' ||
+        err.message?.toLowerCase().includes('token') ||
+        err.message?.toLowerCase().includes('expired')) {
+      return new SessionExpiredError(err.message || 'Session expired', err)
     }
-    return new InvalidRequestError(error.message || 'Bad request', error)
+    return new InvalidRequestError(err.message || 'Bad request', err)
   }
 
-  if (error.status === 404) {
-    return new RecordNotFoundError(error.message || 'Not found', error)
+  if (err.status === 404) {
+    return new RecordNotFoundError(err.message || 'Not found', err)
   }
 
-  if (error.error === 'ExpiredToken' || error.error === 'InvalidToken') {
-    return new SessionExpiredError(error.message, error)
+  if (err.error === 'ExpiredToken' || err.error === 'InvalidToken') {
+    return new SessionExpiredError(err.message || 'Session expired', err)
   }
 
   // Generic network error for server errors
-  if (error.status >= 500) {
-    return new NetworkError('Server error', error)
+  if (err.status && err.status >= 500) {
+    return new NetworkError('Server error', err)
   }
   
   // Handle CORS errors
-  if (error.message?.toLowerCase().includes('cors')) {
-    return new NetworkError('CORS error - unable to connect to server', error)
+  if (err.message?.toLowerCase().includes('cors')) {
+    return new NetworkError('CORS error - unable to connect to server', err)
   }
 
-  return new ATProtoError('UnknownError', error.message || 'An unknown error occurred', error)
+  return new ATProtoError('UnknownError', err.message || 'An unknown error occurred', err)
 }
 
 // Type guard functions
