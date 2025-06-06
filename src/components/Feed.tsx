@@ -1,9 +1,12 @@
-import React, { useCallback, useRef, useEffect } from 'react'
+import React, { useCallback, useRef, useEffect, useState } from 'react'
 import { useTimeline } from '../hooks/useTimeline'
 import { ErrorBoundary } from './ErrorBoundary'
 import { PostCard } from './PostCard'
+import { ComposeModal } from './ComposeModal'
+import type { Post } from '../types/atproto'
 
 export const Feed: React.FC = () => {
+  const [replyTo, setReplyTo] = useState<{ post: Post; root?: Post } | undefined>()
   const { 
     posts, 
     isLoading, 
@@ -123,7 +126,13 @@ export const Feed: React.FC = () => {
               </div>
             )}
           >
-            <PostCard item={item} />
+            <PostCard 
+              item={item} 
+              onReply={(post) => setReplyTo({ 
+                post, 
+                root: item.reply?.root 
+              })}
+            />
           </ErrorBoundary>
         ))}
       </div>
@@ -157,6 +166,13 @@ export const Feed: React.FC = () => {
           </button>
         </div>
       )}
+      
+      {/* Reply Modal */}
+      <ComposeModal 
+        isOpen={!!replyTo}
+        onClose={() => setReplyTo(undefined)}
+        replyTo={replyTo}
+      />
     </div>
   )
 }

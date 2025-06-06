@@ -19,9 +19,10 @@ import { usePostInteractions } from '../hooks/usePostInteractions'
 
 interface PostCardProps {
   item: FeedItem
+  onReply?: (post: Post) => void
 }
 
-export const PostCard: React.FC<PostCardProps> = ({ item }) => {
+export const PostCard: React.FC<PostCardProps> = ({ item, onReply }) => {
   const { post, reply, reason } = item
   const [showMenu, setShowMenu] = useState(false)
   const { likePost, repostPost, isLiking, isReposting } = usePostInteractions()
@@ -217,6 +218,7 @@ export const PostCard: React.FC<PostCardProps> = ({ item }) => {
         <div className="post-engagement">
           <motion.button
             className={clsx("engagement-btn", { active: false })}
+            onClick={() => onReply?.(post)}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
           >
