@@ -81,6 +81,12 @@ npm install
 # Start development server
 npm run dev
 
+# Start dev server in background (for continuous development)
+npm run dev > /tmp/vite-output.log 2>&1 &
+
+# Check if dev server is running
+ps aux | grep vite | grep -v grep
+
 # Build for production
 npm run build
 
@@ -210,6 +216,7 @@ When working on this project:
 4. Document any new API discoveries
 5. Keep the codebase simple and readable
 6. Git is managed autonomously - commits happen at natural breakpoints
+7. **Keep dev server running**: Always check if `npm run dev` is active. After major changes or if the server stops, restart it with `npm run dev > /tmp/vite-output.log 2>&1 &`
 
 ## Resources
 - [AT Protocol Documentation](https://atproto.com/)
