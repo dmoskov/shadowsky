@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { formatDistanceToNow } from 'date-fns'
 import { 
   Heart, 
@@ -80,10 +80,9 @@ export const PostCard: React.FC<PostCardProps> = ({ item }) => {
           "is-reply": !!reply,
           "is-repost": !!reason
         })}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        whileHover={{ y: -2 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
       >
       {/* Repost Indicator */}
       {reason && '$type' in reason && reason.$type === 'app.bsky.feed.defs#reasonRepost' && (

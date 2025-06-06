@@ -150,11 +150,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform var(--transition-base);
-}
-
-.media-item:hover img {
-  transform: scale(1.05);
 }
 
 /* External Link */
@@ -165,13 +160,12 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   text-decoration: none;
-  transition: all var(--transition-base);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
   background-color: var(--color-bg-tertiary);
 }
 
 .external-link-card:hover {
   border-color: var(--color-border-hover);
-  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
@@ -301,7 +295,7 @@
   border-radius: var(--radius-lg);
   background-color: var(--color-bg-tertiary);
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: border-color var(--transition-base), background-color var(--transition-base);
 }
 
 .quoted-post:hover {

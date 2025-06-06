@@ -13,11 +13,6 @@
   border-bottom: none;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   position: relative;
-  transition: background-color 0.2s ease;
-}
-
-.parent-post:hover {
-  background-color: var(--color-bg-hover);
 }
 
 .parent-post.is-root {

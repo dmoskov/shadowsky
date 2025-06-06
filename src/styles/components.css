@@ -32,8 +32,7 @@
 
 .btn-primary:hover:not(:disabled) {
   background-color: #1a8cd8;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(29, 155, 240, 0.3);
+  box-shadow: 0 2px 6px rgba(29, 155, 240, 0.3);
 }
 
 .btn-primary:active:not(:disabled) {
@@ -68,8 +67,7 @@
 
 .btn-danger:hover:not(:disabled) {
   background-color: #e63946;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+  box-shadow: 0 2px 6px rgba(255, 59, 48, 0.3);
 }
 
 /* Button Sizes */
@@ -95,14 +93,13 @@
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   overflow: hidden;
-  transition: all var(--transition-base);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
   position: relative;
 }
 
 .card:hover {
   border-color: var(--color-border-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .card-body {
