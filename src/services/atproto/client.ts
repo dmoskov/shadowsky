@@ -134,3 +134,6 @@ export class ATProtoClient {
     }
   }
 }
+
+// Export singleton instance  
+export const atClient = new BskyAgent({ service: 'https://bsky.social' })

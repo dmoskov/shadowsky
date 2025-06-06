@@ -24,9 +24,15 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
   const { data: thread, isLoading, error } = useQuery({
     queryKey: ['thread', postUri],
     queryFn: () => threadService.getThread(postUri),
-    retry: 2,
-    onError: handleError
+    retry: 2
   })
+  
+  // Handle errors
+  React.useEffect(() => {
+    if (error) {
+      handleError(error)
+    }
+  }, [error, handleError])
   
   if (isLoading) {
     return (

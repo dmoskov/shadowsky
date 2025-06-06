@@ -96,11 +96,12 @@
   border-top: none;
 }
 
-.post-card.is-reply .post-author {
+/* Only show thread line when there's actually a parent post above */
+.parent-post + .post-card.is-reply .post-author {
   position: relative;
 }
 
-.post-card.is-reply .post-author::before {
+.parent-post + .post-card.is-reply .post-author::before {
   content: '';
   position: absolute;
   left: calc(-1 * var(--spacing-lg) + 24px);

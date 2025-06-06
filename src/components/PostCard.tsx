@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import { ParentPost } from './ParentPost'
-import type { FeedItem } from '../types/atproto'
+import type { FeedItem, Post } from '../types/atproto'
 import { usePostInteractions } from '../hooks/usePostInteractions'
 
 interface PostCardProps {

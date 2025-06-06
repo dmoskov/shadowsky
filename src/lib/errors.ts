@@ -128,3 +128,6 @@ export function isAuthenticationError(error: unknown): error is AuthenticationEr
 export function isSessionExpiredError(error: unknown): error is SessionExpiredError {
   return error instanceof SessionExpiredError
 }
+
+// Export convenience function for service layer
+export const handleATProtoError = mapATProtoError
