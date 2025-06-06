@@ -81,11 +81,14 @@ npm install
 # Start development server
 npm run dev
 
-# Start dev server in background (for continuous development)
-npm run dev > /tmp/vite-output.log 2>&1 &
+# Dev server management (recommended)
+./scripts/dev-server.sh start    # Start server
+./scripts/dev-server.sh status   # Check health
+./scripts/dev-server.sh restart  # Restart server
+./scripts/dev-server.sh log      # View live logs
 
-# Check if dev server is running
-ps aux | grep vite | grep -v grep
+# Legacy: Start dev server in background
+npm run dev > /tmp/vite-output.log 2>&1 &
 
 # Open in Chrome browser
 ./scripts/open-chrome.sh
