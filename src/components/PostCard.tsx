@@ -25,18 +25,19 @@ export const PostCard: React.FC<PostCardProps> = ({ item }) => {
   const [repostCount, setRepostCount] = useState(post.repostCount || 0)
   const [showMenu, setShowMenu] = useState(false)
 
-  // Extract post text - handling the structure properly
+  // Extract post text - Bluesky stores text directly in record.text
   const getPostText = (): string => {
-    if (post.record && post.record.value && typeof post.record.value === 'object' && 'text' in post.record.value) {
-      return post.record.value.text || ''
+    if (post.record && typeof post.record === 'object' && 'text' in post.record) {
+      return (post.record as { text?: string }).text || ''
     }
     return ''
   }
 
   // Get post date
   const getPostDate = (): string => {
-    if (post.record && post.record.value && 'createdAt' in post.record.value) {
-      return post.record.value.createdAt
+    // Check record.createdAt first
+    if (post.record && typeof post.record === 'object' && 'createdAt' in post.record) {
+      return (post.record as { createdAt?: string }).createdAt || post.indexedAt
     }
     return post.indexedAt || new Date().toISOString()
   }

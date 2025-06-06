@@ -29,6 +29,19 @@
   object-fit: cover;
 }
 
+.avatar-placeholder {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-body);
+  color: var(--color-text-secondary);
+}
+
 .post-author-info {
   flex: 1;
   min-width: 0;
