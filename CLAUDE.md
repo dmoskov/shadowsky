@@ -87,6 +87,12 @@ npm run dev > /tmp/vite-output.log 2>&1 &
 # Check if dev server is running
 ps aux | grep vite | grep -v grep
 
+# Open in Chrome browser
+./scripts/open-chrome.sh
+
+# Check for development errors
+node ./scripts/check-dev-errors.js
+
 # Build for production
 npm run build
 
@@ -217,6 +223,8 @@ When working on this project:
 5. Keep the codebase simple and readable
 6. Git is managed autonomously - commits happen at natural breakpoints
 7. **Keep dev server running**: Always check if `npm run dev` is active. After major changes or if the server stops, restart it with `npm run dev > /tmp/vite-output.log 2>&1 &`
+8. **Use Chrome for testing**: Run `./scripts/open-chrome.sh` to open in Chrome (Safari has compatibility issues)
+9. **Check for errors**: Run `node ./scripts/check-dev-errors.js` to detect common development errors
 
 ## Resources
 - [AT Protocol Documentation](https://atproto.com/)

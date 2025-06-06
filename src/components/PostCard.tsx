@@ -13,6 +13,7 @@ import {
   GitBranch
 } from 'lucide-react'
 import clsx from 'clsx'
+import { ParentPost } from './ParentPost'
 import type { FeedItem } from '../types/atproto'
 
 interface PostCardProps {
@@ -68,13 +69,22 @@ export const PostCard: React.FC<PostCardProps> = ({ item }) => {
   const postDate = getPostDate()
 
   return (
-    <motion.article
-      className="post-card card"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      whileHover={{ y: -2 }}
-    >
+    <div className="post-wrapper">
+      {/* Show parent post if this is a reply */}
+      {reply && reply.parent && (
+        <ParentPost post={reply.parent} />
+      )}
+      
+      <motion.article
+        className={clsx("post-card card", {
+          "is-reply": !!reply,
+          "is-repost": !!reason
+        })}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        whileHover={{ y: -2 }}
+      >
       {/* Repost Indicator */}
       {reason && '$type' in reason && reason.$type === 'app.bsky.feed.defs#reasonRepost' && (
         <div className="repost-indicator">
@@ -85,18 +95,6 @@ export const PostCard: React.FC<PostCardProps> = ({ item }) => {
         </div>
       )}
       
-      {/* Reply Context */}
-      {reply && (
-        <div className="reply-context">
-          <div className="reply-line"></div>
-          <div className="reply-info">
-            <CornerUpRight size={14} />
-            <span className="text-secondary text-caption">
-              Replying to @{reply.parent.author.handle}
-            </span>
-          </div>
-        </div>
-      )}
 
       <div className="post-card-body">
         {/* Author Section */}
