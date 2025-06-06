@@ -9,6 +9,8 @@ import {
   MoreHorizontal,
   Bookmark,
   Link,
+  CornerUpRight,
+  GitBranch
 } from 'lucide-react'
 import clsx from 'clsx'
 import type { FeedItem } from '../types/atproto'
@@ -18,7 +20,7 @@ interface PostCardProps {
 }
 
 export const PostCard: React.FC<PostCardProps> = ({ item }) => {
-  const { post } = item
+  const { post, reply, reason } = item
   const [liked, setLiked] = useState(false)
   const [likeCount, setLikeCount] = useState(post.likeCount || 0)
   const [reposted, setReposted] = useState(false)
@@ -73,6 +75,29 @@ export const PostCard: React.FC<PostCardProps> = ({ item }) => {
       transition={{ duration: 0.3 }}
       whileHover={{ y: -2 }}
     >
+      {/* Repost Indicator */}
+      {reason && '$type' in reason && reason.$type === 'app.bsky.feed.defs#reasonRepost' && (
+        <div className="repost-indicator">
+          <Repeat2 size={14} />
+          <span className="text-secondary text-caption">
+            {(reason as any).by?.displayName || (reason as any).by?.handle} reposted
+          </span>
+        </div>
+      )}
+      
+      {/* Reply Context */}
+      {reply && (
+        <div className="reply-context">
+          <div className="reply-line"></div>
+          <div className="reply-info">
+            <CornerUpRight size={14} />
+            <span className="text-secondary text-caption">
+              Replying to @{reply.parent.author.handle}
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="post-card-body">
         {/* Author Section */}
         <div className="post-author">
@@ -122,6 +147,30 @@ export const PostCard: React.FC<PostCardProps> = ({ item }) => {
         <div className="post-content">
           <p className="post-text">{postText}</p>
           
+          {/* Quoted Post */}
+          {post.embed && '$type' in post.embed && post.embed.$type === 'app.bsky.embed.record#view' && (
+            <div className="quoted-post">
+              {post.embed.record && 'author' in post.embed.record && (
+                <>
+                  <div className="quoted-post-author">
+                    <img 
+                      src={(post.embed.record as any).author.avatar} 
+                      alt="" 
+                      className="quoted-avatar"
+                    />
+                    <span className="author-display-name">
+                      {(post.embed.record as any).author.displayName || (post.embed.record as any).author.handle}
+                    </span>
+                    <span className="text-tertiary">@{(post.embed.record as any).author.handle}</span>
+                  </div>
+                  <p className="quoted-post-text">
+                    {(post.embed.record as any).value?.text || ''}
+                  </p>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Media Preview */}
           {post.embed?.images && (
             <div className={clsx("post-media", {
@@ -250,6 +299,7 @@ export const PostCard: React.FC<PostCardProps> = ({ item }) => {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.article>
+      </motion.article>
+    </div>
   )
 }

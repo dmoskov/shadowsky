@@ -3,6 +3,7 @@
 @import './styles/header.css';
 @import './styles/post-card.css';
 @import './styles/feed.css';
+@import './styles/thread.css';
 
 /* Reset body styles from Vite defaults */
 body {
