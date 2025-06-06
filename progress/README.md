@@ -2,8 +2,36 @@
 
 This directory contains session logs and progress updates for the Bluesky Client project.
 
+## Directory Structure
+
+```
+progress/
+├── README.md              # This file
+├── TEMPLATE-session.md    # Template for new sessions
+├── screenshots/           # Visual progress documentation
+├── YYYY-MM-DD-session-N.md # Individual session logs
+└── YYYY-MM-DD-topic.md    # Special topic deep dives
+```
+
+## Documentation Hierarchy
+
+1. **SESSION_NOTES.md** (root) - Current working state, ephemeral
+2. **progress/** (here) - Historical record, permanent
+3. **CLAUDE.md** (root) - Canonical project documentation
+4. **DECISIONS.md** (root) - Architecture decision records
+5. **METRICS.md** (root) - Performance and progress metrics
+6. **PATTERNS.md** (root) - Recurring patterns and learnings
+
 ## Session Format
 Each session log should be named: `YYYY-MM-DD-session-N.md` where N is the session number for that day.
+
+## How to Create a New Session Log
+
+1. Copy `TEMPLATE-session.md` to `YYYY-MM-DD-session-N.md`
+2. Fill in all sections during the session
+3. Take screenshots for visual changes
+4. Update SESSION_NOTES.md with key findings
+5. When features stabilize, update CLAUDE.md
 
 ## Session Index
 
