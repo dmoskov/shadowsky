@@ -21,9 +21,10 @@ interface PostCardProps {
   item: FeedItem
   onReply?: (post: Post) => void
   onViewThread?: (uri: string) => void
+  showParentPost?: boolean
 }
 
-export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread }) => {
+export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread, showParentPost = false }) => {
   const { post, reply, reason } = item
   const [showMenu, setShowMenu] = useState(false)
   const { likePost, repostPost, isLiking, isReposting } = usePostInteractions()
@@ -64,8 +65,8 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread 
 
   return (
     <div className="post-wrapper">
-      {/* Show parent post if this is a reply */}
-      {reply && reply.parent && (
+      {/* Show parent post if this is a reply AND showParentPost is true */}
+      {showParentPost && reply && reply.parent && (
         <ParentPost post={reply.parent} />
       )}
       

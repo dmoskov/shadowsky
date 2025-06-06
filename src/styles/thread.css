@@ -89,8 +89,8 @@
   z-index: 1;
 }
 
-/* Post Card Modifications for Replies */
-.post-card.is-reply {
+/* Post Card Modifications for Replies WITH visible parent */
+.parent-post + .post-card.is-reply {
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   margin-top: -1px; /* Slight overlap to ensure connection */
   border-top: none;

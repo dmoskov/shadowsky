@@ -132,6 +132,7 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
                 <PostCard 
                   item={threadPostToFeedItem(ancestor)}
                   onReply={handleReply}
+                  showParentPost={false}
                 />
               </ErrorBoundary>
             </motion.div>
@@ -157,6 +158,7 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
               <PostCard 
                 item={threadPostToFeedItem(thread)}
                 onReply={handleReply}
+                showParentPost={false}
               />
             </ErrorBoundary>
           </motion.div>
@@ -190,6 +192,7 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
                     <PostCard 
                       item={threadPostToFeedItem(descendant)}
                       onReply={handleReply}
+                      showParentPost={false}
                     />
                   </ErrorBoundary>
                 </motion.div>
