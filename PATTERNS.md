@@ -21,13 +21,13 @@ This document captures recurring patterns, successful approaches, and lessons le
 
 ### AT Protocol Text Location Variations
 **Problem**: Post text can be in multiple locations in the API response
-**Locations to check**:
-1. `post.record.value.text`
-2. `post.record.text`
-3. `post.value.text`
-4. `post.text`
-**Solution**: Implement fallback chain checking all locations
-**Frequency**: Common with parent posts and replies
+**Correct Location**: `post.record.text` (standard PostView structure)
+**Incorrect Locations** (don't exist):
+- `post.value.text` ❌
+- `post.text` ❌
+**Solution**: Use `post.record.text` consistently, with fallback for `record.$type === 'app.bsky.feed.post'`
+**Frequency**: Common confusion with parent posts
+**Root Cause**: PostView has `record: { [_ in string]: unknown }` structure
 
 ### PostCSS Import Warnings
 **Problem**: "@import must precede all other statements"

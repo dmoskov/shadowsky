@@ -1,21 +1,23 @@
 # Bluesky Client Session Notes
 
-## Last Updated: 2025-01-06 14:15 PST
+## Last Updated: 2025-01-06 15:00 PST
 
 ## Quick Status
 - 🟢 Dev Server: Running
-- 📍 Current Focus: Progress tracking system implementation
-- 🐛 Active Bugs: 2 (parent post text, UI jankiness)
+- 📍 Current Focus: PostCSS import warning
+- 🐛 Active Bugs: 1 (PostCSS import warning)
 - 📊 Features Complete: 8/25
 
 ## Current State
 The Bluesky client is functional with a dark theme UI, basic post display, and threading support. Recent work focused on fixing UI issues with parent posts in threads.
 
 ## Recent Fixes Completed
-1. **Parent Post Text Extraction** - Fixed issue where parent posts showed no text content by adding multiple fallback paths for text extraction
+1. **Parent Post Text Extraction** - Fixed by using correct `post.record.text` path (removed incorrect `post.value.text` checks)
 2. **Thread Line Alignment** - Adjusted CSS to properly align thread connector lines between posts
 3. **Parent Post Styling** - Added hover effects, better contrast, and visual hierarchy
 4. **Post Spacing** - Fixed spacing between threaded posts for better visual connection
+5. **UI Jankiness** - Removed transform animations on hover, optimized transitions to specific properties
+6. **Progress Tracking System** - Implemented comprehensive documentation structure with DECISIONS.md, METRICS.md, PATTERNS.md
 
 ## Technical Implementation Details
 
@@ -33,9 +35,8 @@ Modified `ParentPost.tsx` to check multiple possible locations for text:
 - Added hover states and opacity for visual hierarchy
 
 ## Known Issues & Next Steps
-1. **Parent Post Text Still Missing** - Despite fixes, parent posts may still show "[No text content]" - need to verify actual data structure from API
-2. **PostCSS Import Warning** - Recurring warning about @import statements in CSS
-3. **UI Polish Needed** - User mentioned "UI is a little janky" - further refinement needed
+1. **PostCSS Import Warning** - Recurring warning about @import statements in CSS (11 instances)
+2. **Test Account Created** - User provided test credentials for bskyclienttest.bsky.social
 
 ## Active Development Tools
 - Server management: `./scripts/dev-server.sh` (start/stop/restart/status)

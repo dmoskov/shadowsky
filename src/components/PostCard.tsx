@@ -281,21 +281,18 @@ export const PostCard: React.FC<PostCardProps> = ({ item }) => {
       </div>
 
       {/* Context Menu */}
-      <AnimatePresence>
-        {showMenu && (
-          <motion.div
-            className="post-menu"
-            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            <button className="menu-item">Copy link</button>
-            <button className="menu-item">Mute thread</button>
-            <button className="menu-item danger">Report post</button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {showMenu && (
+        <motion.div
+          className="post-menu"
+          initial={{ opacity: 0, scale: 0.95, y: -10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <button className="menu-item">Copy link</button>
+          <button className="menu-item">Mute thread</button>
+          <button className="menu-item danger">Report post</button>
+        </motion.div>
+      )}
       </motion.article>
     </div>
   )
