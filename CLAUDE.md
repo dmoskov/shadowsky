@@ -9,6 +9,7 @@ A custom Bluesky client built with React, TypeScript, and Vite that provides a c
 3. **Keep it simple and extensible** - easy to understand and modify
 4. **Add custom "bells and whistles"** - unique features beyond the standard client
 5. **Local-first approach** - runs on your machine with no external dependencies
+6. **Version control with Git** - Manage all changes through Git for easy rollback and history tracking
 
 ## Technical Stack
 - **Frontend**: React + TypeScript
@@ -16,6 +17,7 @@ A custom Bluesky client built with React, TypeScript, and Vite that provides a c
 - **AT Protocol SDK**: @atproto/api (official TypeScript SDK)
 - **Styling**: Inline styles (for now, easy to migrate to CSS-in-JS later)
 - **State Management**: React Context (simple, built-in solution)
+- **Version Control**: Git (managed by Claude for easy rollback)
 
 ## Current Features
 - ✅ Authentication with Bluesky credentials
@@ -69,6 +71,33 @@ npm run build
 # Type checking
 npx tsc --noEmit
 ```
+
+## Git Management
+This project uses Git for version control, managed by Claude to ensure safe development:
+
+### Common Git Commands
+```bash
+# Check current status
+git status
+
+# View commit history
+git log --oneline
+
+# Revert to previous commit (if needed)
+git reset --hard HEAD~1
+
+# Create a new branch for experiments
+git checkout -b experiment-branch
+
+# Switch back to main
+git checkout main
+```
+
+### Commit Strategy
+- All significant changes are committed with descriptive messages
+- Commits are made after completing features or fixing bugs
+- Each session's work is committed for easy rollback
+- Experimental features are developed in branches
 
 ## Known Issues & Fixes
 1. **Safari localhost connection**: Use `http://127.0.0.1:5173/` instead of `localhost`
