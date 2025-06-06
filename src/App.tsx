@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
+import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { Login } from './components/Login'
 import { Feed } from './components/Feed'
@@ -7,14 +8,30 @@ import { Header } from './components/Header'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ComposeModal } from './components/ComposeModal'
 import { ThreadView } from './components/ThreadView'
+import { Profile } from './components/Profile'
+import { Notifications } from './components/Notifications'
 import { queryClient } from './lib/query-client'
 import { PenSquare } from 'lucide-react'
 import './App.css'
 
+function ThreadViewWrapper() {
+  const { uri } = useParams<{ uri: string }>()
+  const navigate = useNavigate()
+  
+  if (!uri) return null
+  
+  return (
+    <ThreadView 
+      postUri={decodeURIComponent(uri)}
+      onBack={() => navigate('/')}
+    />
+  )
+}
+
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth()
   const [isComposeOpen, setIsComposeOpen] = useState(false)
-  const [selectedThread, setSelectedThread] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   if (isLoading) {
     return (
@@ -33,14 +50,15 @@ function AppContent() {
       <div className="app-layout">
         <Header />
         <main className="main-content">
-          {selectedThread ? (
-            <ThreadView 
-              postUri={selectedThread}
-              onBack={() => setSelectedThread(null)}
-            />
-          ) : (
-            <Feed onViewThread={(uri) => setSelectedThread(uri)} />
-          )}
+          <Routes>
+            <Route path="/" element={
+              <Feed onViewThread={(uri) => navigate(`/thread/${encodeURIComponent(uri)}`)} />
+            } />
+            <Route path="/thread/:uri" element={<ThreadViewWrapper />} />
+            <Route path="/profile/:handle" element={<Profile />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </main>
       </div>
       
@@ -66,11 +84,13 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <ErrorBoundary>
-            <AppContent />
-          </ErrorBoundary>
-        </AuthProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <ErrorBoundary>
+              <AppContent />
+            </ErrorBoundary>
+          </AuthProvider>
+        </BrowserRouter>
       </QueryClientProvider>
     </ErrorBoundary>
   )

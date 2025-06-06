@@ -63,6 +63,14 @@
   flex-shrink: 0;
 }
 
+.post-author-avatar.clickable {
+  cursor: pointer;
+}
+
+.post-author-avatar.clickable:hover {
+  opacity: 0.8;
+}
+
 .avatar-image {
   width: 48px;
   height: 48px;
@@ -93,6 +101,14 @@
   align-items: center;
   gap: var(--spacing-xs);
   margin-bottom: var(--spacing-xs);
+}
+
+.post-author-name.clickable {
+  cursor: pointer;
+}
+
+.post-author-name.clickable:hover .author-display-name {
+  text-decoration: underline;
 }
 
 .author-display-name {

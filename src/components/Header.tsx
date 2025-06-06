@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { 
   Bell, 
   Search, 
@@ -12,12 +13,15 @@ import {
   ChevronDown
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useUnreadNotificationCount } from '../hooks/useNotifications'
 import clsx from 'clsx'
 
 export const Header: React.FC = () => {
   const { logout, session } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
   const [darkMode, setDarkMode] = useState(true) // For now, always dark
+  const navigate = useNavigate()
+  const { data: unreadCount } = useUnreadNotificationCount()
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode)
@@ -33,11 +37,12 @@ export const Header: React.FC = () => {
     >
       <div className="header-content">
         {/* Logo */}
-        <div className="header-logo">
+        <div className="header-logo" onClick={() => navigate('/')}>
           <motion.h1 
             className="gradient-text text-h3"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            style={{ cursor: 'pointer' }}
           >
             Bluesky
           </motion.h1>
@@ -69,12 +74,15 @@ export const Header: React.FC = () => {
           {/* Notifications */}
           <motion.button
             className="btn btn-icon btn-ghost notification-btn"
+            onClick={() => navigate('/notifications')}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             title="Notifications"
           >
             <Bell size={20} />
-            <span className="notification-badge">3</span>
+            {unreadCount !== undefined && unreadCount > 0 && (
+              <span className="notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+            )}
           </motion.button>
 
           {/* User Menu */}
@@ -110,7 +118,13 @@ export const Header: React.FC = () => {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <button className="dropdown-item">
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => {
+                      navigate(`/profile/${session?.handle}`)
+                      setShowDropdown(false)
+                    }}
+                  >
                     <User size={18} />
                     <span>Profile</span>
                   </button>

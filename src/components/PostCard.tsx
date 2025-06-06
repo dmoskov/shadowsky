@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { formatDistanceToNow } from 'date-fns'
+import { useNavigate } from 'react-router-dom'
 import { 
   Heart, 
   MessageCircle, 
@@ -28,6 +29,7 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
   const { post, reply, reason } = item
   const [showMenu, setShowMenu] = useState(false)
   const { likePost, repostPost, isLiking, isReposting } = usePostInteractions()
+  const navigate = useNavigate()
   
   // Use viewer state to determine if liked/reposted
   const isLiked = !!post.viewer?.like
@@ -105,7 +107,13 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
       <div className="post-card-body">
         {/* Author Section */}
         <div className="post-author">
-          <div className="post-author-avatar">
+          <div 
+            className="post-author-avatar clickable"
+            onClick={(e) => {
+              e.stopPropagation()
+              navigate(`/profile/${post.author.handle}`)
+            }}
+          >
             {post.author.avatar ? (
               <img 
                 src={post.author.avatar} 
@@ -120,7 +128,13 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
           </div>
           
           <div className="post-author-info">
-            <div className="post-author-name">
+            <div 
+              className="post-author-name clickable"
+              onClick={(e) => {
+                e.stopPropagation()
+                navigate(`/profile/${post.author.handle}`)
+              }}
+            >
               <span className="author-display-name">
                 {post.author.displayName || post.author.handle}
               </span>
