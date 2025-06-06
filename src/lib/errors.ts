@@ -55,6 +55,16 @@ export class SessionExpiredError extends ATProtoError {
 
 // Error mapping from AT Protocol errors
 export function mapATProtoError(error: any): ATProtoError {
+  // Handle network errors first
+  if (error.name === 'NetworkError' || error.name === 'TypeError' && error.message.includes('fetch')) {
+    return new NetworkError('Network connection failed', error)
+  }
+  
+  // Handle timeout errors
+  if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
+    return new NetworkError('Request timeout', error)
+  }
+  
   if (error.status === 429) {
     const resetAt = error.headers?.['ratelimit-reset'] 
       ? new Date(parseInt(error.headers['ratelimit-reset']) * 1000)
@@ -67,6 +77,12 @@ export function mapATProtoError(error: any): ATProtoError {
   }
 
   if (error.status === 400) {
+    // Check for specific token errors in the response
+    if (error.error === 'ExpiredToken' || error.error === 'InvalidToken' ||
+        error.message?.toLowerCase().includes('token') ||
+        error.message?.toLowerCase().includes('expired')) {
+      return new SessionExpiredError(error.message || 'Session expired', error)
+    }
     return new InvalidRequestError(error.message || 'Bad request', error)
   }
 
@@ -78,9 +94,14 @@ export function mapATProtoError(error: any): ATProtoError {
     return new SessionExpiredError(error.message, error)
   }
 
-  // Generic network error for unknown cases
+  // Generic network error for server errors
   if (error.status >= 500) {
     return new NetworkError('Server error', error)
+  }
+  
+  // Handle CORS errors
+  if (error.message?.toLowerCase().includes('cors')) {
+    return new NetworkError('CORS error - unable to connect to server', error)
   }
 
   return new ATProtoError('UnknownError', error.message || 'An unknown error occurred', error)

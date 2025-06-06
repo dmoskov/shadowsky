@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react'
 import { atProtoClient, ATProtoClient } from '../services/atproto'
 import type { Session } from '../types/atproto'
+import { SessionExpiredError, AuthenticationError, NetworkError } from '../lib/errors'
 
 interface AuthContextType {
   isAuthenticated: boolean
@@ -9,6 +10,7 @@ interface AuthContextType {
   logout: () => void
   session: Session | null
   client: ATProtoClient
+  refreshSession: () => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -29,26 +31,78 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [session, setSession] = useState<Session | null>(null)
+  const initAttempts = useRef(0)
+  const maxRetries = 3
 
   const logout = useCallback(() => {
     atProtoClient.logout()
     setIsAuthenticated(false)
     setSession(null)
   }, [])
+  
+  const refreshSession = useCallback(async (): Promise<boolean> => {
+    try {
+      const newSession = await atProtoClient.refreshSession()
+      if (newSession) {
+        setSession(newSession)
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('Failed to refresh session:', error)
+      if (error instanceof SessionExpiredError || 
+          error instanceof AuthenticationError) {
+        logout()
+      }
+      return false
+    }
+  }, [logout])
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
         const savedSession = ATProtoClient.loadSavedSession()
         if (savedSession) {
-          const resumedSession = await atProtoClient.resumeSession(savedSession)
-          setIsAuthenticated(true)
-          setSession(resumedSession)
+          initAttempts.current++
+          
+          try {
+            const resumedSession = await atProtoClient.resumeSession(savedSession)
+            setIsAuthenticated(true)
+            setSession(resumedSession)
+            initAttempts.current = 0 // Reset on success
+          } catch (error) {
+            console.error('Failed to resume session:', error)
+            
+            // Only clear session for authentication errors
+            if (error instanceof SessionExpiredError || 
+                error instanceof AuthenticationError ||
+                (error as any)?.status === 401) {
+              console.log('Session invalid, clearing...')
+              atProtoClient.logout()
+            } else if (error instanceof NetworkError || 
+                      (error as any)?.status >= 500 ||
+                      !navigator.onLine) {
+              // For network errors, keep the session and retry
+              console.log('Network error during session resume, will retry...')
+              
+              if (initAttempts.current < maxRetries && navigator.onLine) {
+                setTimeout(() => {
+                  initializeAuth() // Retry
+                }, 2000 * initAttempts.current) // Exponential backoff
+                return // Don't set loading to false yet
+              } else {
+                console.error('Max retries reached or offline, continuing without session')
+                // Don't clear the session, user might come back online
+              }
+            } else {
+              // Unknown error, log but don't clear session
+              console.error('Unknown error during session resume:', error)
+            }
+          }
         }
       } catch (error) {
-        // Session invalid, clear it
-        console.error('Failed to resume session:', error)
-        atProtoClient.logout()
+        // Error loading from localStorage
+        console.error('Failed to load saved session:', error)
       } finally {
         setIsLoading(false)
       }
@@ -65,7 +119,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return true
     } catch (error) {
       console.error('Login error:', error)
-      return false
+      // Re-throw the error so the Login component can handle it
+      throw error
     }
   }, [])
 
@@ -76,7 +131,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       login, 
       logout, 
       session,
-      client: atProtoClient
+      client: atProtoClient,
+      refreshSession
     }}>
       {children}
     </AuthContext.Provider>

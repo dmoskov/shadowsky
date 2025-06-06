@@ -1,5 +1,6 @@
 /**
- * Custom hook for handling errors in a consistent way
+ * Auth-specific error handler that doesn't depend on AuthContext
+ * This avoids circular dependencies
  */
 
 import { useCallback } from 'react'
@@ -13,18 +14,17 @@ import {
   isSessionExpiredError
 } from '../lib/errors'
 
-interface ErrorHandlerOptions {
+interface AuthErrorHandlerOptions {
   onRateLimit?: (resetAt: Date) => void
   onAuthError?: () => void
   onSessionExpired?: () => void
   fallback?: (error: Error) => void
-  logout?: () => void  // Accept logout as a parameter
+  logout?: () => void
 }
 
-export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
-
+export const useAuthErrorHandler = (options: AuthErrorHandlerOptions = {}) => {
   const handleError = useCallback((error: Error | unknown) => {
-    console.error('Error caught by handler:', error)
+    console.error('Auth Error caught by handler:', error)
 
     // Handle rate limit errors
     if (isRateLimitError(error)) {
@@ -34,7 +34,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
         const minutesUntilReset = Math.ceil(
           (error.resetAt.getTime() - Date.now()) / 60000
         )
-        alert(`Rate limited. Please try again in ${minutesUntilReset} minute(s).`)
+        console.warn(`Rate limited. Retry in ${minutesUntilReset} minute(s).`)
       }
       return
     }
@@ -45,9 +45,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
         options.onAuthError()
       } else if (options.logout) {
         options.logout()
-        alert('Authentication failed. Please log in again.')
-      } else {
-        alert('Authentication failed. Please refresh and log in again.')
+        console.warn('Authentication failed. Session cleared.')
       }
       return
     }
@@ -58,16 +56,14 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
         options.onSessionExpired()
       } else if (options.logout) {
         options.logout()
-        alert('Your session has expired. Please log in again.')
-      } else {
-        alert('Your session has expired. Please refresh and log in again.')
+        console.warn('Session expired. Session cleared.')
       }
       return
     }
 
     // Handle AT Protocol errors
     if (error instanceof ATProtoError) {
-      alert(`Error: ${error.message}`)
+      console.error(`AT Protocol Error: ${error.message}`)
       return
     }
 
@@ -75,21 +71,9 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
     if (options.fallback) {
       options.fallback(error as Error)
     } else {
-      alert('An unexpected error occurred. Please try again.')
+      console.error('Unexpected error in auth flow:', error)
     }
   }, [options])
 
   return { handleError }
-}
-
-// Convenience hook for async operations with error handling
-export const useAsyncError = () => {
-  const { handleError } = useErrorHandler()
-
-  const throwError = useCallback((error: Error | unknown) => {
-    handleError(error)
-    throw error
-  }, [handleError])
-
-  return throwError
 }

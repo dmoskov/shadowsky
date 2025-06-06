@@ -50,6 +50,8 @@ export class ATProtoClient {
       
       return response.data as Session
     } catch (error) {
+      // Log the raw error for debugging
+      console.debug('Raw resumeSession error:', error)
       throw mapATProtoError(error)
     }
   }
@@ -108,9 +110,26 @@ export class ATProtoClient {
   static loadSavedSession(): Session | null {
     try {
       const saved = localStorage.getItem('bsky_session')
-      return saved ? JSON.parse(saved) : null
+      if (!saved) return null
+      
+      const session = JSON.parse(saved)
+      
+      // Validate session has required fields
+      if (!session.accessJwt || !session.refreshJwt || !session.did) {
+        console.warn('Invalid session format, clearing...')
+        localStorage.removeItem('bsky_session')
+        return null
+      }
+      
+      return session
     } catch (error) {
       console.error('Failed to load saved session:', error)
+      // Clear corrupted session data
+      try {
+        localStorage.removeItem('bsky_session')
+      } catch (e) {
+        // Ignore
+      }
       return null
     }
   }

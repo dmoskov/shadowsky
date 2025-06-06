@@ -5,10 +5,12 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { feedService } from '../services/atproto'
 import { useErrorHandler } from './useErrorHandler'
+import { useAuth } from '../contexts/AuthContext'
 import type { TimelineResponse } from '../types/atproto'
 
 export const useTimeline = () => {
-  const { handleError } = useErrorHandler()
+  const { logout } = useAuth()
+  const { handleError } = useErrorHandler({ logout })
 
   const {
     data,
@@ -52,7 +54,8 @@ export const useTimeline = () => {
 
 // Hook for author-specific feeds
 export const useAuthorFeed = (actor: string) => {
-  const { handleError } = useErrorHandler()
+  const { logout } = useAuth()
+  const { handleError } = useErrorHandler({ logout })
 
   const {
     data,
