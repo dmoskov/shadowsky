@@ -11,3 +11,8 @@ Each session log should be named: `YYYY-MM-DD-session-N.md` where N is the sessi
 - **File**: [2025-06-06-session-1.md](./2025-06-06-session-1.md)
 - **Summary**: Initial project setup, basic authentication, and feed display
 - **Key Achievement**: Got the client working with login and timeline feed
+
+### 2025-06-06 - Session 2: Major Architecture Refactor
+- **File**: [2025-06-06-session-2.md](./2025-06-06-session-2.md)
+- **Summary**: Implemented proper AT Protocol architecture based on expert critique
+- **Key Achievement**: Type safety, error handling, React Query integration, clean service layer
