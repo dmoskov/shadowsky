@@ -3,22 +3,18 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { Login } from './components/Login'
 import { Feed } from './components/Feed'
+import { Header } from './components/Header'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { queryClient } from './lib/query-client'
 import './App.css'
 
 function AppContent() {
-  const { isAuthenticated, isLoading, logout } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
 
   if (isLoading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
-        <div>Loading...</div>
+      <div className="loading-container">
+        <div className="spinner spinner-lg"></div>
       </div>
     )
   }
@@ -28,30 +24,11 @@ function AppContent() {
   }
 
   return (
-    <div>
-      <header style={{ 
-        padding: '20px',
-        backgroundColor: '#f0f0f0',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <h1>Bluesky Client</h1>
-        <button
-          onClick={logout}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#ff4444',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          Logout
-        </button>
-      </header>
-      <Feed />
+    <div className="app-layout">
+      <Header />
+      <main className="main-content">
+        <Feed />
+      </main>
     </div>
   )
 }
