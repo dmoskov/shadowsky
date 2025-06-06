@@ -1,0 +1,250 @@
+import React, { useState, useEffect } from 'react'
+import { atProtoService } from '../services/atproto'
+import { formatDistanceToNow } from 'date-fns'
+
+interface PostRecord {
+  $type?: string
+  text: string
+  createdAt: string
+  embed?: any
+  reply?: any
+  facets?: any[]
+  langs?: string[]
+  labels?: any
+  tags?: string[]
+}
+
+interface Post {
+  uri: string
+  cid: string
+  author: {
+    did: string
+    handle: string
+    displayName?: string
+    avatar?: string
+  }
+  record: PostRecord | any  // The record is the actual post content
+  embed?: any
+  replyCount?: number
+  repostCount?: number
+  likeCount?: number
+  quoteCount?: number
+  indexedAt: string
+  viewer?: {
+    like?: string
+    repost?: string
+    threadMuted?: boolean
+    replyDisabled?: boolean
+  }
+  labels?: any[]
+}
+
+export const Feed: React.FC = () => {
+  const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    loadFeed()
+  }, [])
+
+  // Helper function to extract text from post
+  const getPostText = (post: Post): string => {
+    // The Bluesky API returns the text in post.record.value.text
+    if (post.record && post.record.value && typeof post.record.value === 'object' && 'text' in post.record.value) {
+      return post.record.value.text || ''
+    }
+    return ''
+  }
+
+  // Helper function to get created date
+  const getPostDate = (post: Post): string => {
+    // Try record.value.createdAt first
+    if (post.record && post.record.value && typeof post.record.value === 'object' && 'createdAt' in post.record.value) {
+      return post.record.value.createdAt
+    }
+    // Fall back to indexedAt which is when the post was indexed by the service
+    if (post.indexedAt) return post.indexedAt
+    return new Date().toISOString()
+  }
+
+  const loadFeed = async () => {
+    try {
+      setLoading(true)
+      const response = await atProtoService.getAgent().getTimeline()
+      
+      const feedPosts = response.data.feed.map((item: any) => item.post)
+      
+      // Log one post to see the structure
+      if (feedPosts.length > 0) {
+        console.log('Full post object:', feedPosts[0])
+        console.log('Post record:', feedPosts[0].record)
+        console.log('Post keys:', Object.keys(feedPosts[0]))
+        if (feedPosts[0].record) {
+          console.log('Record keys:', Object.keys(feedPosts[0].record))
+        }
+      }
+      
+      setPosts(feedPosts)
+      setError('')
+    } catch (err) {
+      setError('Failed to load feed')
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return <div style={{ padding: '20px', textAlign: 'center' }}>Loading feed...</div>
+  }
+
+  if (error) {
+    return <div style={{ padding: '20px', color: 'red' }}>{error}</div>
+  }
+
+  return (
+    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
+      <h2>Your Timeline</h2>
+      <button
+        onClick={loadFeed}
+        style={{
+          marginBottom: '20px',
+          padding: '10px 20px',
+          backgroundColor: '#0085ff',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer'
+        }}
+      >
+        Refresh Feed
+      </button>
+      
+      {posts.map((post) => (
+        <div
+          key={post.uri}
+          style={{
+            border: '1px solid #e0e0e0',
+            borderRadius: '8px',
+            padding: '15px',
+            marginBottom: '15px',
+            backgroundColor: 'white'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+            {post.author.avatar && (
+              <img
+                src={post.author.avatar}
+                alt={post.author.handle}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  marginRight: '10px'
+                }}
+              />
+            )}
+            <div>
+              <div style={{ fontWeight: 'bold' }}>
+                {post.author.displayName || post.author.handle}
+              </div>
+              <div style={{ color: '#666', fontSize: '14px' }}>
+                @{post.author.handle}
+              </div>
+            </div>
+            <div style={{ marginLeft: 'auto', color: '#666', fontSize: '14px' }}>
+              {formatDistanceToNow(new Date(getPostDate(post)), { addSuffix: true })}
+            </div>
+          </div>
+          
+          <div style={{ marginBottom: '10px', whiteSpace: 'pre-wrap' }}>
+            {getPostText(post)}
+          </div>
+          
+          {/* Handle quoted posts/reposts */}
+          {post.embed && post.embed.record && (
+            <div style={{
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '10px',
+              marginBottom: '10px',
+              backgroundColor: '#f9f9f9'
+            }}>
+              <div style={{ fontSize: '14px', marginBottom: '8px' }}>
+                <strong>{post.embed.record.author?.displayName || post.embed.record.author?.handle}</strong>
+                <span style={{ color: '#666', marginLeft: '8px' }}>
+                  @{post.embed.record.author?.handle}
+                </span>
+              </div>
+              <div style={{ fontSize: '14px' }}>
+                {post.embed.record.value?.text || ''}
+              </div>
+            </div>
+          )}
+
+          {/* Handle image embeds */}
+          {post.embed && post.embed.images && (
+            <div style={{ marginBottom: '10px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {post.embed.images.map((image: any, index: number) => (
+                <img
+                  key={index}
+                  src={image.thumb || image.fullsize}
+                  alt={image.alt || ''}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '300px',
+                    borderRadius: '8px',
+                    objectFit: 'cover'
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          
+          {/* Handle external embeds */}
+          {post.embed && post.embed.external && (
+            <div style={{
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '10px',
+              marginBottom: '10px',
+              cursor: 'pointer'
+            }}
+            onClick={() => window.open(post.embed.external.uri, '_blank')}
+            >
+              {post.embed.external.thumb && (
+                <img
+                  src={post.embed.external.thumb}
+                  alt=""
+                  style={{
+                    width: '100%',
+                    maxHeight: '200px',
+                    objectFit: 'cover',
+                    borderRadius: '4px',
+                    marginBottom: '8px'
+                  }}
+                />
+              )}
+              <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                {post.embed.external.title}
+              </div>
+              <div style={{ color: '#666', fontSize: '14px' }}>
+                {post.embed.external.description}
+              </div>
+              <div style={{ color: '#0085ff', fontSize: '12px', marginTop: '4px' }}>
+                {new URL(post.embed.external.uri).hostname}
+              </div>
+            </div>
+          )}
+          
+          <div style={{ display: 'flex', gap: '20px', color: '#666', fontSize: '14px' }}>
+            <span>💬 {post.replyCount || 0}</span>
+            <span>🔁 {post.repostCount || 0}</span>
+            <span>❤️ {post.likeCount || 0}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
