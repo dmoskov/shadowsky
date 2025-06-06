@@ -51,7 +51,10 @@ BSKY/
 ├── src/
 │   ├── components/       # React components
 │   │   ├── Feed.tsx     # Timeline feed display
-│   │   └── Login.tsx    # Authentication form
+│   │   ├── Login.tsx    # Authentication form
+│   │   ├── PostCard.tsx # Individual post display
+│   │   ├── ParentPost.tsx # Thread parent display
+│   │   └── ...
 │   ├── contexts/        # React contexts
 │   │   └── AuthContext.tsx  # Authentication state management
 │   ├── services/        # API services
@@ -68,19 +71,55 @@ BSKY/
 │   ├── types/           # TypeScript type definitions
 │   │   ├── atproto.ts       # AT Protocol types
 │   │   └── app.ts          # Application types
+│   ├── styles/          # CSS modules and design system
+│   │   ├── design-system.css # CSS variables and tokens
+│   │   ├── post-card.css    # Post component styles
+│   │   ├── thread.css       # Thread UI styles
+│   │   └── ...
 │   └── utils/           # Utility functions (future)
-├── progress/           # Session logs and progress tracking
-└── CLAUDE.md          # This file
+├── progress/            # Session logs and progress tracking
+│   ├── TEMPLATE-session.md  # Session template
+│   ├── screenshots/         # Visual progress
+│   └── YYYY-MM-DD-*.md    # Session logs
+├── scripts/             # Development automation
+│   ├── dev-server.sh       # Server management
+│   ├── open-chrome.sh      # Browser launcher
+│   └── check-dev-errors.js # Error monitoring
+├── CLAUDE.md           # This file - project documentation
+├── README.md           # GitHub readme
+├── SESSION_NOTES.md    # Current working state
+├── DECISIONS.md        # Architecture decisions
+├── METRICS.md          # Performance metrics
+└── PATTERNS.md         # Development patterns
 ```
 
 ## Progress Tracking
-All development progress is tracked in the `./progress/` directory. Each session creates a new log file with:
-- Date and summary of work completed
-- Problems encountered and solutions
-- Next steps and TODOs
-- Code snippets for reference
 
-See [./progress/README.md](./progress/README.md) for session history.
+### Documentation Hierarchy
+The project uses a three-tier documentation system:
+
+1. **Ephemeral (Working State)**
+   - `SESSION_NOTES.md` - Current session's working notes, updated frequently
+   - In-memory todo list - Active task tracking
+
+2. **Historical (Permanent Record)**
+   - `./progress/` - Detailed session logs, never modified after creation
+   - `./progress/screenshots/` - Visual documentation of UI changes
+   - `./progress/TEMPLATE-session.md` - Standardized session template
+
+3. **Canonical (Project Truth)**
+   - `CLAUDE.md` - This file, updated when features stabilize
+   - `DECISIONS.md` - Architecture decision records (ADRs)
+   - `METRICS.md` - Performance and progress metrics over time
+   - `PATTERNS.md` - Recurring patterns, lessons learned, and best practices
+
+### Information Flow
+```
+Active Development → SESSION_NOTES.md → progress/*.md → Documentation Files
+(immediate updates)  (session end)      (feature complete)
+```
+
+See [./progress/README.md](./progress/README.md) for session history and guidelines.
 
 ## Development Commands
 ```bash
@@ -228,15 +267,21 @@ interface Post {
 
 ## Contributing Guidelines
 When working on this project:
-1. Check `./progress/` for recent work and context
+1. Check `SESSION_NOTES.md` for current state and `./progress/` for history
 2. Test all changes (Git commits are made autonomously)
-3. Update this file when adding major features
+3. Update documentation based on the three-tier system:
+   - SESSION_NOTES.md during work
+   - Create progress log at session end
+   - Update CLAUDE.md when features stabilize
+   - Record decisions in DECISIONS.md
+   - Track patterns in PATTERNS.md
 4. Document any new API discoveries
 5. Keep the codebase simple and readable
 6. Git is managed autonomously - commits happen at natural breakpoints
-7. **Keep dev server running**: Always check if `npm run dev` is active. After major changes or if the server stops, restart it with `npm run dev > /tmp/vite-output.log 2>&1 &`
-8. **Use Chrome for testing**: Run `./scripts/open-chrome.sh` to open in Chrome (Safari has compatibility issues)
-9. **Check for errors**: Run `node ./scripts/check-dev-errors.js` to detect common development errors
+7. **Keep dev server running**: Use `./scripts/dev-server.sh` for management
+8. **Use Chrome for testing**: Run `./scripts/open-chrome.sh` to open in Chrome
+9. **Check for errors**: Run `node ./scripts/check-dev-errors.js` to detect issues
+10. **Visual documentation**: Take screenshots for UI changes, save to `progress/screenshots/`
 
 ## Resources
 - [AT Protocol Documentation](https://atproto.com/)
