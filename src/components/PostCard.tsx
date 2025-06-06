@@ -15,6 +15,7 @@ import {
 import clsx from 'clsx'
 import { ParentPost } from './ParentPost'
 import type { FeedItem } from '../types/atproto'
+import { usePostInteractions } from '../hooks/usePostInteractions'
 
 interface PostCardProps {
   item: FeedItem
@@ -22,11 +23,14 @@ interface PostCardProps {
 
 export const PostCard: React.FC<PostCardProps> = ({ item }) => {
   const { post, reply, reason } = item
-  const [liked, setLiked] = useState(false)
-  const [likeCount, setLikeCount] = useState(post.likeCount || 0)
-  const [reposted, setReposted] = useState(false)
-  const [repostCount, setRepostCount] = useState(post.repostCount || 0)
   const [showMenu, setShowMenu] = useState(false)
+  const { likePost, repostPost, isLiking, isReposting } = usePostInteractions()
+  
+  // Use viewer state to determine if liked/reposted
+  const isLiked = !!post.viewer?.like
+  const isReposted = !!post.viewer?.repost
+  const likeCount = post.likeCount || 0
+  const repostCount = post.repostCount || 0
 
   // Extract post text - Bluesky stores text directly in record.text
   const getPostText = (): string => {
@@ -45,24 +49,12 @@ export const PostCard: React.FC<PostCardProps> = ({ item }) => {
     return post.indexedAt || new Date().toISOString()
   }
 
-  const handleLike = () => {
-    if (liked) {
-      setLiked(false)
-      setLikeCount(count => Math.max(0, count - 1))
-    } else {
-      setLiked(true)
-      setLikeCount(count => count + 1)
-    }
+  const handleLike = async () => {
+    await likePost(post)
   }
 
-  const handleRepost = () => {
-    if (reposted) {
-      setReposted(false)
-      setRepostCount(count => Math.max(0, count - 1))
-    } else {
-      setReposted(true)
-      setRepostCount(count => count + 1)
-    }
+  const handleRepost = async () => {
+    await repostPost(post)
   }
 
   const postText = getPostText()
@@ -233,13 +225,14 @@ export const PostCard: React.FC<PostCardProps> = ({ item }) => {
           </motion.button>
 
           <motion.button
-            className={clsx("engagement-btn", { active: reposted })}
+            className={clsx("engagement-btn", { active: isReposted, reposted: isReposted })}
             onClick={handleRepost}
+            disabled={isReposting}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
           >
             <motion.div
-              animate={{ rotate: reposted ? 180 : 0 }}
+              animate={{ rotate: isReposted ? 180 : 0 }}
               transition={{ duration: 0.3 }}
             >
               <Repeat2 size={18} />
@@ -248,16 +241,17 @@ export const PostCard: React.FC<PostCardProps> = ({ item }) => {
           </motion.button>
 
           <motion.button
-            className={clsx("engagement-btn like-btn", { active: liked })}
+            className={clsx("engagement-btn like-btn", { active: isLiked })}
             onClick={handleLike}
+            disabled={isLiking}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
           >
             <motion.div
-              animate={{ scale: liked ? [1, 1.3, 1] : 1 }}
+              animate={{ scale: isLiked ? [1, 1.3, 1] : 1 }}
               transition={{ duration: 0.3 }}
             >
-              <Heart size={18} fill={liked ? "currentColor" : "none"} />
+              <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
             </motion.div>
             <span>{likeCount}</span>
           </motion.button>

@@ -17,3 +17,6 @@ export const feedService = new FeedService(atProtoClient)
 export { ATProtoClient } from './client'
 export { FeedService } from './feed'
 export type { ATProtoConfig } from './client'
+
+// Export interaction services
+export { interactionsService } from './interactions'
