@@ -1,7 +1,6 @@
-import { BskyAgent } from '@atproto/api'
-import { atClient } from './client'
+import { AtpAgent } from '@atproto/api'
 import type { Post } from '../../types/atproto'
-import { handleATProtoError } from '../../lib/errors'
+import { mapATProtoError } from '../../lib/errors'
 
 export interface LikeResult {
   uri: string
@@ -14,11 +13,7 @@ export interface RepostResult {
 }
 
 class InteractionsService {
-  private agent: BskyAgent
-
-  constructor() {
-    this.agent = atClient
-  }
+  constructor(private agent: AtpAgent) {}
 
   /**
    * Like a post
@@ -28,7 +23,7 @@ class InteractionsService {
       const result = await this.agent.like(post.uri, post.cid)
       return result
     } catch (error) {
-      throw handleATProtoError(error)
+      throw mapATProtoError(error)
     }
   }
 
@@ -39,7 +34,7 @@ class InteractionsService {
     try {
       await this.agent.deleteLike(likeUri)
     } catch (error) {
-      throw handleATProtoError(error)
+      throw mapATProtoError(error)
     }
   }
 
@@ -51,7 +46,7 @@ class InteractionsService {
       const result = await this.agent.repost(post.uri, post.cid)
       return result
     } catch (error) {
-      throw handleATProtoError(error)
+      throw mapATProtoError(error)
     }
   }
 
@@ -62,7 +57,7 @@ class InteractionsService {
     try {
       await this.agent.deleteRepost(repostUri)
     } catch (error) {
-      throw handleATProtoError(error)
+      throw mapATProtoError(error)
     }
   }
 
@@ -84,7 +79,7 @@ class InteractionsService {
       })
       return result
     } catch (error) {
-      throw handleATProtoError(error)
+      throw mapATProtoError(error)
     }
   }
 
@@ -99,7 +94,7 @@ class InteractionsService {
       })
       return result
     } catch (error) {
-      throw handleATProtoError(error)
+      throw mapATProtoError(error)
     }
   }
 
@@ -110,7 +105,7 @@ class InteractionsService {
     try {
       await this.agent.deletePost(postUri)
     } catch (error) {
-      throw handleATProtoError(error)
+      throw mapATProtoError(error)
     }
   }
 
@@ -122,7 +117,7 @@ class InteractionsService {
       const result = await this.agent.follow(did)
       return result
     } catch (error) {
-      throw handleATProtoError(error)
+      throw mapATProtoError(error)
     }
   }
 
@@ -133,10 +128,17 @@ class InteractionsService {
     try {
       await this.agent.deleteFollow(followUri)
     } catch (error) {
-      throw handleATProtoError(error)
+      throw mapATProtoError(error)
     }
   }
 }
 
-// Export singleton instance
-export const interactionsService = new InteractionsService()
+// Singleton instance
+let interactionsServiceInstance: InteractionsService | null = null
+
+export function getInteractionsService(agent: AtpAgent): InteractionsService {
+  if (!interactionsServiceInstance) {
+    interactionsServiceInstance = new InteractionsService(agent)
+  }
+  return interactionsServiceInstance
+}

@@ -1,26 +1,20 @@
-import { BskyAgent } from '@atproto/api'
-import { atClient } from './client'
+import { AtpAgent } from '@atproto/api'
 import type { AppBskyFeedDefs } from '@atproto/api'
-import { handleATProtoError } from '../../lib/errors'
+import { mapATProtoError } from '../../lib/errors'
 
 export type ThreadViewPost = AppBskyFeedDefs.ThreadViewPost
 
-class ThreadService {
-  private agent: BskyAgent
-
-  constructor() {
-    this.agent = atClient
-  }
+export class ThreadService {
+  constructor(private agent: AtpAgent) {}
 
   /**
    * Get a full thread view for a post
    */
-  async getThread(uri: string, depth = 6, height = 80): Promise<ThreadViewPost> {
+  async getThread(uri: string, depth = 6): Promise<ThreadViewPost> {
     try {
-      const response = await this.agent.getPostThread({
+      const response = await this.agent.app.bsky.feed.getPostThread({
         uri,
-        depth,
-        height
+        depth
       })
       
       if (!response.data.thread) {
@@ -34,14 +28,14 @@ class ThreadService {
       
       return response.data.thread as ThreadViewPost
     } catch (error) {
-      throw handleATProtoError(error)
+      throw mapATProtoError(error)
     }
   }
   
   /**
    * Get thread ancestors (parent posts)
    */
-  getAncestors(thread: ThreadViewPost): ThreadViewPost[] {
+  static getAncestors(thread: ThreadViewPost): ThreadViewPost[] {
     const ancestors: ThreadViewPost[] = []
     let current = thread.parent
     
@@ -56,7 +50,7 @@ class ThreadService {
   /**
    * Get thread descendants (replies) flattened
    */
-  getDescendants(thread: ThreadViewPost): ThreadViewPost[] {
+  static getDescendants(thread: ThreadViewPost): ThreadViewPost[] {
     const descendants: ThreadViewPost[] = []
     
     const traverse = (node: ThreadViewPost) => {
@@ -75,5 +69,12 @@ class ThreadService {
   }
 }
 
-// Export singleton instance
-export const threadService = new ThreadService()
+// Singleton instance
+let threadServiceInstance: ThreadService | null = null
+
+export function getThreadService(agent: AtpAgent): ThreadService {
+  if (!threadServiceInstance) {
+    threadServiceInstance = new ThreadService(agent)
+  }
+  return threadServiceInstance
+}

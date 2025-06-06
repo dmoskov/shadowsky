@@ -209,6 +209,10 @@ git checkout main
 2. **Post text location**: Posts use `record.value.text` not `record.text`
 3. **HMR warnings**: AuthContext export causes Fast Refresh issues (non-breaking)
 4. **Circular dependencies**: Avoided by careful hook design
+5. **AT Protocol Authentication**: CRITICAL - Always use authenticated agent and app.bsky.* namespaces
+   - See `src/services/atproto/AGENT_USAGE_GUIDE.md` for details
+   - Never use convenience methods like `agent.searchPosts()` - use `agent.app.bsky.feed.searchPosts()`
+   - Always pass authenticated agent to services, never use raw atClient
 
 ## Planned Features
 ### Core Functionality
