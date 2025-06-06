@@ -29,12 +29,21 @@ A custom Bluesky client built with React, TypeScript, and Vite that provides a c
 - ✅ Proper error handling (rate limits, auth errors, etc.)
 - ✅ Type-safe AT Protocol integration
 - ✅ Optimistic UI updates ready
+- ✅ Dark theme UI with modern design system
 - ✅ Post display with:
   - Text content
   - Author information and avatars
   - Timestamps (relative time)
   - Engagement metrics (replies, reposts, likes)
   - Support for embeds (images, links, quotes)
+  - Thread context and reply chains
+  - Repost indicators
+  - Animated engagement buttons
+- ✅ Development tooling:
+  - Automated server management
+  - Chrome testing integration
+  - Error detection and monitoring
+  - Git hooks for stability
 
 ## Project Structure
 ```
