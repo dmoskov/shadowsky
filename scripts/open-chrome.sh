@@ -1,7 +1,7 @@
 #!/bin/bash
 # Open URL in Chrome for better development experience
 
-URL="${1:-http://127.0.0.1:5173/}"
+URL="${1:-http://localhost:5173/}"
 
 # Check if Chrome is installed
 if [ -d "/Applications/Google Chrome.app" ]; then
