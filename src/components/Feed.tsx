@@ -5,7 +5,11 @@ import { PostCard } from './PostCard'
 import { ComposeModal } from './ComposeModal'
 import type { Post } from '../types/atproto'
 
-export const Feed: React.FC = () => {
+interface FeedProps {
+  onViewThread?: (uri: string) => void
+}
+
+export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
   const [replyTo, setReplyTo] = useState<{ post: Post; root?: Post } | undefined>()
   const { 
     posts, 
@@ -132,6 +136,7 @@ export const Feed: React.FC = () => {
                 post, 
                 root: item.reply?.root 
               })}
+              onViewThread={onViewThread}
             />
           </ErrorBoundary>
         ))}

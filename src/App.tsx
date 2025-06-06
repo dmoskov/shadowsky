@@ -6,6 +6,7 @@ import { Feed } from './components/Feed'
 import { Header } from './components/Header'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ComposeModal } from './components/ComposeModal'
+import { ThreadView } from './components/ThreadView'
 import { queryClient } from './lib/query-client'
 import { PenSquare } from 'lucide-react'
 import './App.css'
@@ -13,6 +14,7 @@ import './App.css'
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth()
   const [isComposeOpen, setIsComposeOpen] = useState(false)
+  const [selectedThread, setSelectedThread] = useState<string | null>(null)
 
   if (isLoading) {
     return (
@@ -31,7 +33,14 @@ function AppContent() {
       <div className="app-layout">
         <Header />
         <main className="main-content">
-          <Feed />
+          {selectedThread ? (
+            <ThreadView 
+              postUri={selectedThread}
+              onBack={() => setSelectedThread(null)}
+            />
+          ) : (
+            <Feed onViewThread={(uri) => setSelectedThread(uri)} />
+          )}
         </main>
       </div>
       

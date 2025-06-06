@@ -20,9 +20,10 @@ import { usePostInteractions } from '../hooks/usePostInteractions'
 interface PostCardProps {
   item: FeedItem
   onReply?: (post: Post) => void
+  onViewThread?: (uri: string) => void
 }
 
-export const PostCard: React.FC<PostCardProps> = ({ item, onReply }) => {
+export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread }) => {
   const { post, reply, reason } = item
   const [showMenu, setShowMenu] = useState(false)
   const { likePost, repostPost, isLiking, isReposting } = usePostInteractions()
@@ -76,6 +77,18 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.2 }}
+        onClick={(e) => {
+          // Only navigate if clicking on the card itself, not buttons
+          if (
+            onViewThread &&
+            (e.target as HTMLElement).closest('.engagement-btn') === null &&
+            (e.target as HTMLElement).closest('.btn') === null &&
+            (e.target as HTMLElement).closest('a') === null
+          ) {
+            onViewThread(post.uri)
+          }
+        }}
+        style={{ cursor: onViewThread ? 'pointer' : 'default' }}
       >
       {/* Repost Indicator */}
       {reason && '$type' in reason && reason.$type === 'app.bsky.feed.defs#reasonRepost' && (

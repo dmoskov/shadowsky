@@ -306,3 +306,8 @@
 .engagement-btn.repost-animating svg {
   animation: repostAnimation 0.6s ease;
 }
+
+/* Utility classes */
+.ml-auto {
+  margin-left: auto;
+}

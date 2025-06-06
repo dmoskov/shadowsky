@@ -5,6 +5,7 @@
 @import './styles/feed.css';
 @import './styles/thread.css';
 @import './styles/compose.css';
+@import './styles/thread-view.css';
 
 /* Reset body styles from Vite defaults */
 body {

@@ -1,0 +1,194 @@
+/* Thread View Styles */
+
+.thread-container {
+  max-width: 680px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.thread-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-bg-primary);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.thread-title {
+  font-size: var(--font-size-heading-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.thread-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xxl);
+  color: var(--color-text-secondary);
+}
+
+.thread-posts {
+  padding: var(--spacing-lg);
+}
+
+/* Thread post styling */
+.thread-ancestor {
+  opacity: 0.8;
+  position: relative;
+}
+
+.thread-ancestor::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--spacing-lg) + 24px);
+  bottom: -1px;
+  top: calc(100% - 1px);
+  width: 2px;
+  height: var(--spacing-md);
+  background-color: var(--color-border);
+  z-index: 1;
+}
+
+.thread-main-post {
+  position: relative;
+  margin: var(--spacing-md) 0;
+}
+
+.thread-main-post .post-card {
+  border: 2px solid var(--color-brand-primary);
+  box-shadow: 0 0 0 4px rgba(29, 155, 240, 0.1);
+}
+
+/* Thread replies */
+.thread-replies {
+  margin-top: var(--spacing-xl);
+}
+
+.thread-replies-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-sm) 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.thread-reply {
+  position: relative;
+  margin-bottom: var(--spacing-md);
+}
+
+/* Indentation for nested replies */
+.thread-reply.depth-1 { margin-left: var(--spacing-lg); }
+.thread-reply.depth-2 { margin-left: calc(var(--spacing-lg) * 2); }
+.thread-reply.depth-3 { margin-left: calc(var(--spacing-lg) * 3); }
+.thread-reply.depth-4 { margin-left: calc(var(--spacing-lg) * 4); }
+.thread-reply.depth-5 { margin-left: calc(var(--spacing-lg) * 5); }
+
+/* Visual hierarchy for nested replies */
+.thread-reply.depth-1 .post-card { opacity: 0.95; }
+.thread-reply.depth-2 .post-card { opacity: 0.9; }
+.thread-reply.depth-3 .post-card { opacity: 0.85; }
+.thread-reply.depth-4 .post-card { opacity: 0.8; }
+.thread-reply.depth-5 .post-card { opacity: 0.75; }
+
+/* Thread lines for replies */
+.thread-reply::before {
+  content: '';
+  position: absolute;
+  left: calc(-1 * var(--spacing-md) - 2px);
+  top: var(--spacing-lg);
+  width: var(--spacing-md);
+  height: 2px;
+  background-color: var(--color-border);
+}
+
+.thread-reply.depth-0::before {
+  display: none;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .thread-container {
+    max-width: 100%;
+  }
+  
+  .thread-posts {
+    padding: var(--spacing-md);
+  }
+  
+  .thread-reply.depth-2 { margin-left: var(--spacing-md); }
+  .thread-reply.depth-3 { margin-left: calc(var(--spacing-md) * 1.5); }
+  .thread-reply.depth-4 { margin-left: calc(var(--spacing-md) * 2); }
+  .thread-reply.depth-5 { margin-left: calc(var(--spacing-md) * 2); }
+}
+
+/* Thread Reader Mode */
+.thread-reader-mode {
+  background-color: var(--color-bg-primary);
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing-xl);
+}
+
+.thread-reader-mode .thread-posts {
+  padding: 0;
+}
+
+.thread-reader-mode .post-card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-xl);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.thread-reader-mode .post-card:last-child {
+  border-bottom: none;
+}
+
+.thread-reader-mode .post-text {
+  font-size: var(--font-size-body-lg);
+  line-height: 1.8;
+}
+
+.thread-reader-mode .post-engagement {
+  opacity: 0.7;
+}
+
+.thread-reader-toggle {
+  position: fixed;
+  bottom: calc(var(--spacing-xl) + 70px);
+  right: var(--spacing-xl);
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  z-index: var(--z-sticky);
+}
+
+.thread-reader-toggle:hover {
+  background-color: var(--color-bg-tertiary);
+  transform: scale(1.05);
+}
