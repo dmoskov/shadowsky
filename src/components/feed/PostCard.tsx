@@ -1,23 +1,16 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { 
-  Heart, 
-  MessageCircle, 
-  Repeat2, 
-  Share,
-  MoreHorizontal,
-  Bookmark,
-  Link,
-  Check
-} from 'lucide-react'
-import clsx from 'clsx'
+import { Repeat2 } from 'lucide-react'
 import { ParentPost } from '../thread/ParentPost'
-import { ReplyContext } from '../ui/ReplyContext'
+import { PostHeader } from './PostHeader'
+import { PostContent } from './PostContent'
+import { PostEngagementBar } from './PostEngagementBar'
+import { PostMenu } from './PostMenu'
 import type { FeedItem, Post } from '../../types/atproto'
 import { usePostInteractions } from '../../hooks/usePostInteractions'
 import { atUriToWebUrl, copyToClipboard, shareUrl } from '../../utils/url-helpers'
-import { getPostText, formatPostTime, hasQuoteEmbed, hasImageEmbed, hasExternalEmbed, getExternalEmbed, getImageEmbed, getQuoteEmbed } from '../../utils/post-helpers'
+import { getPostText } from '../../utils/post-helpers'
 
 interface PostCardProps {
   item: FeedItem
@@ -26,7 +19,12 @@ interface PostCardProps {
   showParentPost?: boolean
 }
 
-export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread, showParentPost = false }) => {
+export const PostCard: React.FC<PostCardProps> = ({ 
+  item, 
+  onReply, 
+  onViewThread, 
+  showParentPost = false 
+}) => {
   const { post, reply, reason } = item
   const [showMenu, setShowMenu] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
@@ -39,7 +37,6 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
   const likeCount = post.likeCount || 0
   const repostCount = post.repostCount || 0
 
-
   const handleLike = async () => {
     await likePost(post)
   }
@@ -50,7 +47,7 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
 
   const handleShare = async () => {
     const postUrl = atUriToWebUrl(post.uri, post.author.handle)
-    const postText = getPostText()
+    const postText = getPostText(post)
     const shareText = postText.length > 100 ? postText.substring(0, 100) + '...' : postText
     
     const shared = await shareUrl(
@@ -67,332 +64,89 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
 
   const handleCopyLink = async () => {
     const postUrl = atUriToWebUrl(post.uri, post.author.handle)
-    const copied = await copyToClipboard(postUrl)
-    
-    if (copied) {
+    const success = await copyToClipboard(postUrl)
+    if (success) {
       setCopiedLink(true)
       setTimeout(() => setCopiedLink(false), 2000)
     }
   }
 
-  const postText = getPostText(post)
-  const postTime = formatPostTime(post)
+  const handlePostClick = () => {
+    if (onViewThread) {
+      onViewThread(post.uri)
+    }
+  }
+
+  const handleAuthorClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigate(`/profile/${post.author.handle}`)
+  }
+
+  const handleReply = () => {
+    onReply?.(post)
+  }
 
   return (
-    <div className="post-wrapper">
-      {/* Show parent post if this is a reply AND showParentPost is true */}
-      {showParentPost && reply && reply.parent && (
-        <ParentPost post={reply.parent} />
-      )}
-      
-      <motion.article
-        className={clsx("post-card card", {
-          "is-reply": !!reply,
-          "is-repost": !!reason
-        })}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.2 }}
-        onClick={(e) => {
-          // Only navigate if clicking on the card itself, not buttons
-          if (
-            onViewThread &&
-            (e.target as HTMLElement).closest('.engagement-btn') === null &&
-            (e.target as HTMLElement).closest('.btn') === null &&
-            (e.target as HTMLElement).closest('a') === null &&
-            (e.target as HTMLElement).closest('.quoted-post') === null
-          ) {
-            onViewThread(post.uri)
-          }
-        }}
-        style={{ cursor: onViewThread ? 'pointer' : 'default' }}
-      >
-      {/* Repost Indicator */}
-      {reason && '$type' in reason && reason.$type === 'app.bsky.feed.defs#reasonRepost' && (
+    <>
+      {/* Repost indicator */}
+      {reason && reason.$type === 'app.bsky.feed.defs#reasonRepost' && (
         <div className="repost-indicator">
-          <Repeat2 size={14} />
-          <span className="text-secondary text-caption">
-            {(reason as any).by?.displayName || (reason as any).by?.handle} reposted
+          <Repeat2 size={16} />
+          <span className="text-secondary text-sm">
+            {reason.by.displayName || reason.by.handle} reposted
           </span>
         </div>
       )}
-      
 
-      <div className="post-card-body">
-        {/* Author Section */}
-        <div className="post-author">
-          <div 
-            className="post-author-avatar clickable"
-            onClick={(e) => {
-              e.stopPropagation()
-              navigate(`/profile/${post.author.handle}`)
-            }}
-          >
-            {post.author.avatar ? (
-              <img 
-                src={post.author.avatar} 
-                alt={post.author.handle}
-                className="avatar-image"
-              />
-            ) : (
-              <div className="avatar-placeholder">
-                {post.author.handle.charAt(0).toUpperCase()}
-              </div>
-            )}
-          </div>
-          
-          <div className="post-author-info">
-            <div 
-              className="post-author-name clickable"
-              onClick={(e) => {
-                e.stopPropagation()
-                navigate(`/profile/${post.author.handle}`)
-              }}
-            >
-              <span className="author-display-name">
-                {post.author.displayName || post.author.handle}
-              </span>
-              {post.author.displayName && (
-                <span className="author-handle text-secondary">
-                  @{post.author.handle}
-                </span>
-              )}
-            </div>
-            <time className="post-time text-tertiary text-caption">
-              {postTime}
-            </time>
-          </div>
+      {/* Parent post if this is a reply */}
+      {showParentPost && reply && reply.parent && (
+        <ParentPost post={reply.parent} />
+      )}
 
-          <div className="post-actions">
-            <motion.button
-              className="btn btn-icon btn-ghost"
-              onClick={() => setShowMenu(!showMenu)}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <MoreHorizontal size={18} />
-            </motion.button>
-          </div>
-        </div>
+      <motion.article 
+        className="post-card"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        onClick={handlePostClick}
+      >
+        {/* Header */}
+        <PostHeader 
+          post={post}
+          onMenuToggle={() => setShowMenu(!showMenu)}
+          showMenu={showMenu}
+        />
 
         {/* Content */}
-        <div className="post-content">
-          {/* Reply context */}
-          {item.reply && !showParentPost && (
-            <ReplyContext reply={item.reply} post={post} />
-          )}
-          <p className="post-text">{postText}</p>
-          
-          {/* Quoted Post */}
-          {post.embed && '$type' in post.embed && post.embed.$type === 'app.bsky.embed.record#view' && (
-            <motion.div 
-              className="quoted-post"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log('Quoted post clicked, embed:', post.embed);
-                console.log('Record:', (post.embed as any).record);
-                const uri = (post.embed as any).record?.uri;
-                console.log('URI:', uri);
-                if (uri && onViewThread) {
-                  console.log('Calling onViewThread with URI:', uri);
-                  onViewThread(uri);
-                  console.log('onViewThread called successfully');
-                }
-              }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.stopPropagation();
-                  const uri = (post.embed as any).record?.uri;
-                  if (uri && onViewThread) {
-                    onViewThread(uri);
-                  }
-                }
-              }}
-            >
-              {(post.embed as any).record && 'author' in (post.embed as any).record && (
-                <>
-                  <div className="quoted-post-author">
-                    <img 
-                      src={(post.embed as any).record.author.avatar} 
-                      alt="" 
-                      className="quoted-avatar"
-                    />
-                    <span className="author-display-name">
-                      {(post.embed as any).record.author.displayName || (post.embed as any).record.author.handle}
-                    </span>
-                    <span className="text-tertiary">@{(post.embed as any).record.author.handle}</span>
-                  </div>
-                  <p className="quoted-post-text">
-                    {(post.embed as any).record.value?.text || ''}
-                  </p>
-                </>
-              )}
-            </motion.div>
-          )}
-
-          {/* Media Preview */}
-          {post.embed && '$type' in post.embed && post.embed.$type === 'app.bsky.embed.images#view' && (post.embed as any).images && (
-            <div className={clsx("post-media", {
-              "media-grid": (post.embed as any).images.length > 1
-            })}>
-              {(post.embed as any).images.map((image: { thumb?: string; fullsize?: string; alt?: string }, index: number) => (
-                <motion.div
-                  key={index}
-                  className="media-item"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <img
-                    src={image.thumb || image.fullsize}
-                    alt={image.alt || ''}
-                    loading="lazy"
-                  />
-                </motion.div>
-              ))}
-            </div>
-          )}
-
-          {/* External Link */}
-          {post.embed && '$type' in post.embed && post.embed.$type === 'app.bsky.embed.external#view' && (post.embed as any).external && (
-            <motion.a
-              href={(post.embed as any).external.uri}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="external-link-card"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {(post.embed as any).external.thumb && (
-                <img
-                  src={(post.embed as any).external.thumb}
-                  alt=""
-                  className="link-thumbnail"
-                />
-              )}
-              <div className="link-content">
-                <h4 className="link-title">{(post.embed as any).external.title}</h4>
-                <p className="link-description text-secondary">
-                  {(post.embed as any).external.description}
-                </p>
-                <span className="link-url text-tertiary">
-                  <Link size={12} />
-                  {new URL((post.embed as any).external.uri).hostname}
-                </span>
-              </div>
-            </motion.a>
-          )}
-        </div>
+        <PostContent
+          item={item}
+          post={post}
+          showParentPost={showParentPost}
+          onViewThread={onViewThread}
+        />
 
         {/* Engagement Bar */}
-        <div className="post-engagement">
-          <motion.button
-            className={clsx("engagement-btn", { active: false })}
-            onClick={() => onReply?.(post)}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <MessageCircle size={18} />
-            <span>{post.replyCount || 0}</span>
-          </motion.button>
+        <PostEngagementBar
+          post={post}
+          isLiked={isLiked}
+          isReposted={isReposted}
+          likeCount={likeCount}
+          repostCount={repostCount}
+          isLiking={isLiking}
+          isReposting={isReposting}
+          onReply={handleReply}
+          onRepost={handleRepost}
+          onLike={handleLike}
+          onShare={handleShare}
+        />
 
-          <motion.button
-            className={clsx("engagement-btn", { 
-              active: isReposted, 
-              reposted: isReposted,
-              'btn-loading': isReposting 
-            })}
-            onClick={handleRepost}
-            disabled={isReposting}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <motion.div
-              animate={{ rotate: isReposted ? 180 : 0 }}
-              transition={{ duration: 0.3 }}
-              style={{ opacity: isReposting ? 0 : 1 }}
-            >
-              <Repeat2 size={18} />
-            </motion.div>
-            <span className={clsx("number-transition", { changing: isReposting })}>
-              {repostCount}
-            </span>
-          </motion.button>
-
-          <motion.button
-            className={clsx("engagement-btn like-btn", { 
-              active: isLiked,
-              liked: isLiked,
-              'btn-loading': isLiking 
-            })}
-            onClick={handleLike}
-            disabled={isLiking}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <motion.div
-              animate={{ scale: isLiked ? [1, 1.3, 1] : 1 }}
-              transition={{ duration: 0.3 }}
-              style={{ opacity: isLiking ? 0 : 1 }}
-            >
-              <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
-            </motion.div>
-            <span className={clsx("number-transition", { changing: isLiking })}>
-              {likeCount}
-            </span>
-          </motion.button>
-
-          <motion.button
-            className="engagement-btn"
-            onClick={handleShare}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <Share size={18} />
-          </motion.button>
-
-          <motion.button
-            className="engagement-btn ml-auto"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <Bookmark size={18} />
-          </motion.button>
-        </div>
-      </div>
-
-      {/* Context Menu */}
-      {showMenu && (
-        <motion.div
-          className="post-menu"
-          initial={{ opacity: 0, scale: 0.95, y: -10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <button 
-            className="menu-item"
-            onClick={() => {
-              handleCopyLink()
-              setShowMenu(false)
-            }}
-          >
-            {copiedLink ? (
-              <>
-                <Check size={16} />
-                <span>Link copied!</span>
-              </>
-            ) : (
-              'Copy link'
-            )}
-          </button>
-          <button className="menu-item">Mute thread</button>
-          <button className="menu-item danger">Report post</button>
-        </motion.div>
-      )}
+        {/* Dropdown Menu */}
+        <PostMenu
+          isOpen={showMenu}
+          onCopyLink={handleCopyLink}
+          copiedLink={copiedLink}
+        />
       </motion.article>
-    </div>
+    </>
   )
 }
