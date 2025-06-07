@@ -9,12 +9,15 @@ import {
   Share,
   MoreHorizontal,
   Bookmark,
-  Link
+  Link,
+  Check
 } from 'lucide-react'
 import clsx from 'clsx'
 import { ParentPost } from './ParentPost'
+import { ReplyContext } from './ReplyContext'
 import type { FeedItem, Post } from '../types/atproto'
 import { usePostInteractions } from '../hooks/usePostInteractions'
+import { atUriToWebUrl, copyToClipboard, shareUrl } from '../utils/url-helpers'
 
 interface PostCardProps {
   item: FeedItem
@@ -26,6 +29,7 @@ interface PostCardProps {
 export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread, showParentPost = false }) => {
   const { post, reply, reason } = item
   const [showMenu, setShowMenu] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
   const { likePost, repostPost, isLiking, isReposting } = usePostInteractions()
   const navigate = useNavigate()
   
@@ -60,6 +64,33 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
     await repostPost(post)
   }
 
+  const handleShare = async () => {
+    const postUrl = atUriToWebUrl(post.uri, post.author.handle)
+    const postText = getPostText()
+    const shareText = postText.length > 100 ? postText.substring(0, 100) + '...' : postText
+    
+    const shared = await shareUrl(
+      postUrl,
+      `Post by @${post.author.handle}`,
+      shareText
+    )
+    
+    if (!shared && !navigator.share) {
+      // If share failed and Web Share API not available, copy link as fallback
+      handleCopyLink()
+    }
+  }
+
+  const handleCopyLink = async () => {
+    const postUrl = atUriToWebUrl(post.uri, post.author.handle)
+    const copied = await copyToClipboard(postUrl)
+    
+    if (copied) {
+      setCopiedLink(true)
+      setTimeout(() => setCopiedLink(false), 2000)
+    }
+  }
+
   const postText = getPostText()
   const postDate = getPostDate()
 
@@ -84,7 +115,8 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
             onViewThread &&
             (e.target as HTMLElement).closest('.engagement-btn') === null &&
             (e.target as HTMLElement).closest('.btn') === null &&
-            (e.target as HTMLElement).closest('a') === null
+            (e.target as HTMLElement).closest('a') === null &&
+            (e.target as HTMLElement).closest('.quoted-post') === null
           ) {
             onViewThread(post.uri)
           }
@@ -162,16 +194,41 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
         {/* Content */}
         <div className="post-content">
           {/* Reply context */}
-          {item.reply && showParentPost !== false && (
-            <div className="reply-context">
-              <span className="reply-indicator">↳ Replying to @{item.reply.parent.author.handle}</span>
-            </div>
+          {item.reply && !showParentPost && (
+            <ReplyContext reply={item.reply} post={post} />
           )}
           <p className="post-text">{postText}</p>
           
           {/* Quoted Post */}
           {post.embed && '$type' in post.embed && post.embed.$type === 'app.bsky.embed.record#view' && (
-            <div className="quoted-post">
+            <motion.div 
+              className="quoted-post"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('Quoted post clicked, embed:', post.embed);
+                console.log('Record:', (post.embed as any).record);
+                const uri = (post.embed as any).record?.uri;
+                console.log('URI:', uri);
+                if (uri && onViewThread) {
+                  console.log('Calling onViewThread with URI:', uri);
+                  onViewThread(uri);
+                  console.log('onViewThread called successfully');
+                }
+              }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.stopPropagation();
+                  const uri = (post.embed as any).record?.uri;
+                  if (uri && onViewThread) {
+                    onViewThread(uri);
+                  }
+                }
+              }}
+            >
               {(post.embed as any).record && 'author' in (post.embed as any).record && (
                 <>
                   <div className="quoted-post-author">
@@ -190,7 +247,7 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
                   </p>
                 </>
               )}
-            </div>
+            </motion.div>
           )}
 
           {/* Media Preview */}
@@ -292,6 +349,7 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
 
           <motion.button
             className="engagement-btn"
+            onClick={handleShare}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
           >
@@ -316,7 +374,22 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.2 }}
         >
-          <button className="menu-item">Copy link</button>
+          <button 
+            className="menu-item"
+            onClick={() => {
+              handleCopyLink()
+              setShowMenu(false)
+            }}
+          >
+            {copiedLink ? (
+              <>
+                <Check size={16} />
+                <span>Link copied!</span>
+              </>
+            ) : (
+              'Copy link'
+            )}
+          </button>
           <button className="menu-item">Mute thread</button>
           <button className="menu-item danger">Report post</button>
         </motion.div>

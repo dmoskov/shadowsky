@@ -48,7 +48,12 @@ export const Profile: React.FC = () => {
   }
 
   const handleViewThread = (uri: string) => {
-    navigate(`/thread/${encodeURIComponent(uri)}`)
+    console.log('Profile handleViewThread called with URI:', uri);
+    const encodedUri = encodeURIComponent(uri);
+    const path = `/thread/${encodedUri}`;
+    console.log('Navigating to:', path);
+    navigate(path);
+    console.log('Navigation called');
   }
 
   if (profileLoading) {

@@ -11,6 +11,8 @@ import { ThreadView } from './components/ThreadView'
 import { Profile } from './components/Profile'
 import { Notifications } from './components/Notifications'
 import { Search } from './components/Search'
+import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal'
+import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
 import { queryClient } from './lib/query-client'
 import { PenSquare } from 'lucide-react'
 import './App.css'
@@ -19,11 +21,17 @@ function ThreadViewWrapper() {
   const { uri } = useParams<{ uri: string }>()
   const navigate = useNavigate()
   
+  console.log('ThreadViewWrapper - raw URI from params:', uri);
+  
   if (!uri) return null
+  
+  const decodedUri = decodeURIComponent(uri);
+  console.log('ThreadViewWrapper - decoded URI:', decodedUri);
   
   return (
     <ThreadView 
-      postUri={decodeURIComponent(uri)}
+      key={decodedUri}
+      postUri={decodedUri}
       onBack={() => navigate('/')}
     />
   )
@@ -33,6 +41,9 @@ function AppContent() {
   const { isAuthenticated, isLoading } = useAuth()
   const [isComposeOpen, setIsComposeOpen] = useState(false)
   const navigate = useNavigate()
+  
+  // Enable keyboard navigation
+  useKeyboardNavigation()
 
   if (isLoading) {
     return (
@@ -78,6 +89,9 @@ function AppContent() {
         isOpen={isComposeOpen}
         onClose={() => setIsComposeOpen(false)}
       />
+      
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal />
     </>
   )
 }

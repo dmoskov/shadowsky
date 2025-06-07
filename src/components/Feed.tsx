@@ -3,6 +3,7 @@ import { useTimeline } from '../hooks/useTimeline'
 import { ErrorBoundary } from './ErrorBoundary'
 import { PostCard } from './PostCard'
 import { ComposeModal } from './ComposeModal'
+import { FeedLoading } from './SkeletonLoaders'
 import type { Post } from '../types/atproto'
 
 interface FeedProps {
@@ -63,20 +64,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
         <div className="feed-header">
           <h2 className="feed-title">Your Timeline</h2>
         </div>
-        <div className="feed-posts">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="post-skeleton card">
-              <div className="skeleton-header">
-                <div className="skeleton-avatar"></div>
-                <div className="skeleton-info">
-                  <div className="skeleton-name"></div>
-                  <div className="skeleton-handle"></div>
-                </div>
-              </div>
-              <div className="skeleton-content"></div>
-            </div>
-          ))}
-        </div>
+        <FeedLoading />
       </div>
     )
   }

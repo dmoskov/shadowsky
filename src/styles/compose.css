@@ -175,7 +175,7 @@
 .compose-fab {
   position: fixed;
   bottom: var(--spacing-xl);
-  right: var(--spacing-xl);
+  left: var(--spacing-xl);
   width: 56px;
   height: 56px;
   border-radius: var(--radius-full);
@@ -213,6 +213,6 @@
   
   .compose-fab {
     bottom: var(--spacing-lg);
-    right: var(--spacing-lg);
+    left: var(--spacing-lg);
   }
 }

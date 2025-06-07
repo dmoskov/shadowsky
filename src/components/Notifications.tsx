@@ -12,6 +12,8 @@ import {
   Quote
 } from 'lucide-react'
 import { useNotifications, useMarkNotificationsRead, getNotificationText } from '../hooks/useNotifications'
+import { NotificationsEmpty } from './EmptyStates'
+import { PageLoader } from './SkeletonLoaders'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 
 export const Notifications: React.FC = () => {
@@ -100,9 +102,7 @@ export const Notifications: React.FC = () => {
       {/* Notifications List */}
       <div className="notifications-list">
         {isLoading ? (
-          <div className="loading-state">
-            <div className="spinner" />
-          </div>
+          <PageLoader message="Loading notifications..." />
         ) : data?.notifications && data.notifications.length > 0 ? (
           <AnimatePresence mode="popLayout">
             {data.notifications.map((notification, index) => (
@@ -152,12 +152,7 @@ export const Notifications: React.FC = () => {
             ))}
           </AnimatePresence>
         ) : (
-          <div className="empty-state">
-            <p className="text-secondary">No notifications yet</p>
-            <p className="text-tertiary text-caption">
-              When someone likes, reposts, or replies to your posts, you'll see it here.
-            </p>
-          </div>
+          <NotificationsEmpty />
         )}
       </div>
     </div>

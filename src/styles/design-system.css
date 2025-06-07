@@ -105,6 +105,17 @@
   --content-max-width: 1280px;
   --content-narrow: 600px;
   --content-wide: 960px;
+  
+  /* Layout System */
+  --container-sm: 640px;
+  --container-max-width: 1200px;
+  --container-lg: 1440px;
+  --feed-max-width: 600px;
+  --thread-max-width: 700px;
+  --profile-max-width: 900px;
+  --search-max-width: 800px;
+  --modal-max-width: 560px;
+  --header-height: 56px;
 }
 
 /* Font Family */

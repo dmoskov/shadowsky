@@ -169,3 +169,11 @@
     left: calc(var(--spacing-md) + 16px);
   }
 }
+
+/* Thread Header Controls */
+.thread-header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-left: auto;
+}

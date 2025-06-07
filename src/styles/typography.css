@@ -1,0 +1,245 @@
+/* Typography Improvements */
+
+/* Base Typography Reset */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 var(--spacing-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+}
+
+p {
+  margin: 0 0 var(--spacing-md);
+  line-height: var(--line-height-normal);
+}
+
+/* Heading Hierarchy */
+h1, .text-h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.02em;
+}
+
+h2, .text-h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.01em;
+}
+
+h3, .text-h3 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+}
+
+h4, .text-h4 {
+  font-size: var(--font-size-h4);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Body Text Variants */
+.text-lead {
+  font-size: var(--font-size-body-lg);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-secondary);
+}
+
+.text-small {
+  font-size: var(--font-size-body-sm);
+  line-height: var(--line-height-normal);
+}
+
+.text-micro {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-snug);
+  letter-spacing: 0.01em;
+}
+
+/* Text Utilities */
+.text-uppercase {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+}
+
+.text-mono {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+  font-size: 0.9em;
+}
+
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.text-clamp-2 {
+  -webkit-line-clamp: 2;
+}
+
+/* Link Styles */
+a {
+  color: var(--color-text-link);
+  text-decoration: none;
+  transition: color var(--transition-base);
+  
+  &:hover {
+    color: var(--color-brand-secondary);
+    text-decoration: underline;
+  }
+  
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+/* Component-Specific Typography */
+
+/* Feed Title */
+.feed-title {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* Post Typography */
+.post-text {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-primary);
+  word-wrap: break-word;
+  margin: 0;
+}
+
+.author-display-name {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.author-handle {
+  font-size: var(--font-size-body-sm);
+  color: var(--color-text-secondary);
+}
+
+.post-time {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-tertiary);
+}
+
+/* Profile Typography */
+.profile-display-name {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  margin: 0 0 var(--spacing-xs);
+}
+
+.profile-handle {
+  font-size: var(--font-size-body);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-md);
+}
+
+.profile-bio {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-md);
+}
+
+/* Stat Typography */
+.stat-value {
+  font-size: var(--font-size-h4);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  display: block;
+}
+
+.stat-label {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  display: block;
+}
+
+/* Notification Typography */
+.notification-text {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  
+  strong {
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.notification-preview {
+  font-size: var(--font-size-body-sm);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xs);
+}
+
+/* Thread Typography */
+.thread-title {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+}
+
+.reply-indicator {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* Error Typography */
+.error-text {
+  color: var(--color-error);
+  font-size: var(--font-size-body);
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+  /* Scale down heading sizes on mobile */
+  h1, .text-h1 {
+    font-size: calc(var(--font-size-h1) * 0.85);
+  }
+  
+  h2, .text-h2 {
+    font-size: calc(var(--font-size-h2) * 0.9);
+  }
+  
+  h3, .text-h3 {
+    font-size: calc(var(--font-size-h3) * 0.9);
+  }
+  
+  .feed-title {
+    font-size: var(--font-size-h3);
+  }
+  
+  .profile-display-name {
+    font-size: var(--font-size-h3);
+  }
+}
+
+/* Reading Mode Typography */
+.thread-reader-mode {
+  .post-text {
+    font-size: var(--font-size-body-lg);
+    line-height: var(--line-height-relaxed);
+  }
+  
+  .author-display-name {
+    font-size: var(--font-size-body-lg);
+  }
+}
