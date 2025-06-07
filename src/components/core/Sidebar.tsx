@@ -15,8 +15,8 @@ import {
   PenSquare
 } from 'lucide-react'
 import clsx from 'clsx'
-import { useAuth } from '../contexts/AuthContext'
-import { useUnreadNotificationCount } from '../hooks/useNotifications'
+import { useAuth } from '../../contexts/AuthContext'
+import { useUnreadNotificationCount } from '../../hooks/useNotifications'
 
 interface NavItem {
   path: string

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { useAuth } from '../contexts/AuthContext'
-import { ATProtoError, RateLimitError, AuthenticationError } from '../lib/errors'
+import { useAuth } from '../../contexts/AuthContext'
+import { ATProtoError, RateLimitError, AuthenticationError } from '../../lib/errors'
 
 export const Login: React.FC = () => {
   const [identifier, setIdentifier] = useState('')

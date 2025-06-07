@@ -12,8 +12,8 @@ import {
   Sun,
   ChevronDown
 } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
-import { useUnreadNotificationCount } from '../hooks/useNotifications'
+import { useAuth } from '../../contexts/AuthContext'
+import { useUnreadNotificationCount } from '../../hooks/useNotifications'
 import clsx from 'clsx'
 
 export const Header: React.FC = () => {

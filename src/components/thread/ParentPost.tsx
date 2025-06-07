@@ -1,6 +1,6 @@
 import React from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import type { Post } from '../types/atproto'
+import type { Post } from '../../types/atproto'
 
 interface ParentPostProps {
   post: Post

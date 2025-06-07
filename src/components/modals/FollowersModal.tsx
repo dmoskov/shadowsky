@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Users, UserCheck } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useFollowers, useFollowing } from '../hooks/useProfile'
+import { useFollowers, useFollowing } from '../../hooks/useProfile'
 import type { ProfileView } from '@atproto/api/dist/client/types/app/bsky/actor/defs'
 
 interface FollowersModalProps {

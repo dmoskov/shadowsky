@@ -11,9 +11,9 @@ import {
   AtSign,
   Quote
 } from 'lucide-react'
-import { useNotifications, useMarkNotificationsRead, getNotificationText } from '../hooks/useNotifications'
-import { NotificationsEmpty } from './EmptyStates'
-import { PageLoader } from './SkeletonLoaders'
+import { useNotifications, useMarkNotificationsRead, getNotificationText } from '../../hooks/useNotifications'
+import { NotificationsEmpty } from '../ui/EmptyStates'
+import { PageLoader } from '../ui/SkeletonLoaders'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 
 export const Notifications: React.FC = () => {

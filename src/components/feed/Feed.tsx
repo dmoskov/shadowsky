@@ -1,10 +1,10 @@
 import React, { useCallback, useRef, useEffect, useState } from 'react'
-import { useTimeline } from '../hooks/useTimeline'
-import { ErrorBoundary } from './ErrorBoundary'
-import { PostCard } from './PostCard'
-import { ComposeModal } from './ComposeModal'
-import { FeedLoading } from './SkeletonLoaders'
-import type { Post } from '../types/atproto'
+import { useTimeline } from '../../hooks/useTimeline'
+import { ErrorBoundary } from '../core/ErrorBoundary'
+import { PostCard } from '../feed/PostCard'
+import { ComposeModal } from '../modals/ComposeModal'
+import { FeedLoading } from '../ui/SkeletonLoaders'
+import type { Post } from '../../types/atproto'
 
 interface FeedProps {
   onViewThread?: (uri: string) => void

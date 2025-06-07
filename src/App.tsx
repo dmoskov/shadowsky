@@ -2,17 +2,19 @@ import { useState } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { Login } from './components/Login'
-import { Feed } from './components/Feed'
-import { Header } from './components/Header'
-import { Sidebar } from './components/Sidebar'
-import { ErrorBoundary } from './components/ErrorBoundary'
-import { ComposeModal } from './components/ComposeModal'
-import { ThreadView } from './components/ThreadView'
-import { Profile } from './components/Profile'
-import { Notifications } from './components/Notifications'
-import { Search } from './components/Search'
-import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal'
+import { 
+  Login,
+  Feed,
+  Header,
+  Sidebar,
+  ErrorBoundary,
+  ComposeModal,
+  ThreadView,
+  Profile,
+  Notifications,
+  Search,
+  KeyboardShortcutsModal
+} from './components'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
 import { queryClient } from './lib/query-client'
 import { PenSquare } from 'lucide-react'

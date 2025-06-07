@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { formatDistanceToNow } from 'date-fns'
 import { Heart, MessageCircle, Repeat2 } from 'lucide-react'
 import clsx from 'clsx'
-import type { Post } from '../types/atproto'
+import type { Post } from '../../types/atproto'
 
 interface CompactPostCardProps {
   post: Post

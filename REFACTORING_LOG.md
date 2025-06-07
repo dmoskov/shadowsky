@@ -61,7 +61,83 @@ Files moved:
 
 ## Phase 2: Component Organization
 
-[Will be filled as we progress]
+### Step 7: Create Component Subdirectories
+```bash
+mkdir -p src/components/{core,feed,thread,modals,profile,ui}
+```
+- Time: 10:14 AM
+- Status: ✓
+
+### Step 8: Move Components to Subdirectories
+
+**Core components moved:**
+- ErrorBoundary.tsx → core/
+- Header.tsx → core/
+- Login.tsx → core/
+- Sidebar.tsx → core/
+
+**Feed components moved:**
+- Feed.tsx → feed/
+- PostCard.tsx → feed/
+- CompactPostCard.tsx → feed/
+
+**Thread components moved:**
+- ThreadView.tsx → thread/
+- ThreadBranchDiagram.tsx → thread/
+- ThreadBranchDiagramCompact.tsx → thread/
+- ThreadIndicator.tsx → thread/
+- ThreadLine.tsx → thread/
+- ThreadNavigation.tsx → thread/
+- ThreadOverviewMap.tsx → thread/
+- ThreadParticipants.tsx → thread/
+- ParentPost.tsx → thread/
+
+**Modal components moved:**
+- ComposeModal.tsx → modals/
+- FollowersModal.tsx → modals/
+- KeyboardShortcutsModal.tsx → modals/
+
+**Profile components moved:**
+- Profile.tsx → profile/
+- Notifications.tsx → profile/
+- Search.tsx → profile/
+
+**UI components moved:**
+- EmptyStates.tsx → ui/
+- SkeletonLoaders.tsx → ui/
+- ReplyContext.tsx → ui/
+
+Total: 25 components reorganized
+- Time: 10:20 AM
+- Status: ✓
+
+### Step 9: Create Index File for Backward Compatibility
+Created src/components/index.ts with all exports
+- Time: 10:25 AM
+- Status: ✓
+
+### Step 10: Fix Import Paths
+Created and ran fix-imports.cjs script:
+- Fixed 17 components with updated import paths
+- Changed imports from `../` to `../../` for contexts, hooks, services, lib, types, utils
+- Fixed component-to-component imports based on new locations
+- Time: 10:29 AM
+- Status: ✓
+
+### Step 11: Fix Dynamic Imports
+Found and fixed 2 dynamic imports:
+- src/components/modals/ComposeModal.tsx line 51
+- src/components/thread/ThreadView.tsx line 45
+- Changed from `await import('../services/atproto')` to `await import('../../services/atproto')`
+- Time: 10:30 AM
+- Status: ✓
+
+### Step 12: Verify and Restart Dev Server
+- Killed all Vite processes
+- Restarted dev server fresh
+- Result: Dev server running healthy with no import errors
+- Time: 10:31 AM
+- Status: ✓
 
 ---
 
@@ -86,7 +162,16 @@ git checkout main
 ---
 
 ## Testing Checklist After Each Phase
-- [ ] Dev server starts without errors
+
+### After Phase 1 (Test/Screenshot Cleanup):
+- [✓] Dev server starts without errors
+- [✓] Login page loads
+- [✓] Basic functionality preserved
+
+### After Phase 2 (Component Organization):
+- [✓] Dev server starts without errors (verified at 10:31 AM)
+- [✓] All imports resolved correctly
+- [✓] Components load from new locations via index.ts
 - [ ] Login page loads
 - [ ] Can log in successfully
 - [ ] Feed displays posts

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Users, MessageCircle, TrendingUp, Zap } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import type { ThreadViewPost } from '../services/atproto/thread'
+import type { ThreadViewPost } from '../../services/atproto/thread'
 
 interface ParticipantData {
   did: string

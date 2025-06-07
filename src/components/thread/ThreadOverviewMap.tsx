@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Maximize2, Minimize2 } from 'lucide-react'
-import type { ThreadViewPost } from '../services/atproto/thread'
+import type { ThreadViewPost } from '../../services/atproto/thread'
 
 interface ThreadOverviewMapProps {
   thread: ThreadViewPost

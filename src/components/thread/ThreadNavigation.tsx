@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronUp, ChevronDown, Home, Users, Search } from 'lucide-react'
 import { ThreadBranchDiagram } from './ThreadBranchDiagramCompact'
-import type { ThreadViewPost } from '../services/atproto/thread'
+import type { ThreadViewPost } from '../../services/atproto/thread'
 
 interface ThreadNavigationProps {
   thread: ThreadViewPost

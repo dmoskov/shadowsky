@@ -13,11 +13,11 @@ import {
   Check
 } from 'lucide-react'
 import clsx from 'clsx'
-import { ParentPost } from './ParentPost'
-import { ReplyContext } from './ReplyContext'
-import type { FeedItem, Post } from '../types/atproto'
-import { usePostInteractions } from '../hooks/usePostInteractions'
-import { atUriToWebUrl, copyToClipboard, shareUrl } from '../utils/url-helpers'
+import { ParentPost } from '../thread/ParentPost'
+import { ReplyContext } from '../ui/ReplyContext'
+import type { FeedItem, Post } from '../../types/atproto'
+import { usePostInteractions } from '../../hooks/usePostInteractions'
+import { atUriToWebUrl, copyToClipboard, shareUrl } from '../../utils/url-helpers'
 
 interface PostCardProps {
   item: FeedItem

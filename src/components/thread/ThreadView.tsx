@@ -4,19 +4,19 @@ import { ArrowLeft, Loader2, MessageCircle, BookOpen, X, Map, Users } from 'luci
 import { useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import { useQuery } from '@tanstack/react-query'
-import { getThreadService, ThreadService } from '../services/atproto/thread'
-import { PostCard } from './PostCard'
-import { CompactPostCard } from './CompactPostCard'
-import { ComposeModal } from './ComposeModal'
-import { ErrorBoundary } from './ErrorBoundary'
+import { getThreadService, ThreadService } from '../../services/atproto/thread'
+import { PostCard } from '../feed/PostCard'
+import { CompactPostCard } from '../feed/CompactPostCard'
+import { ComposeModal } from '../modals/ComposeModal'
+import { ErrorBoundary } from '../core/ErrorBoundary'
 import { ThreadLine } from './ThreadLine'
 import { ThreadNavigation } from './ThreadNavigation'
-import { useErrorHandler } from '../hooks/useErrorHandler'
+import { useErrorHandler } from '../../hooks/useErrorHandler'
 // import { ThreadOverviewMap, THREAD_MAP_ENABLED } from './ThreadOverviewMap'
 // import { ThreadParticipants, THREAD_PARTICIPANTS_ENABLED } from './ThreadParticipants'
 
-import type { Post, FeedItem } from '../types/atproto'
-import type { ThreadViewPost } from '../services/atproto/thread'
+import type { Post, FeedItem } from '../../types/atproto'
+import type { ThreadViewPost } from '../../services/atproto/thread'
 import type { AppBskyFeedDefs } from '@atproto/api'
 
 const THREAD_MAP_ENABLED = false
@@ -42,7 +42,7 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
   const { data: thread, isLoading, error } = useQuery({
     queryKey: ['thread', postUri],
     queryFn: async () => {
-      const { atProtoClient } = await import('../services/atproto')
+      const { atProtoClient } = await import('../../services/atproto')
       const agent = atProtoClient.agent
       if (!agent) throw new Error('Not authenticated')
       const threadService = getThreadService(agent)

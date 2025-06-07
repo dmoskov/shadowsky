@@ -1,26 +1,24 @@
-import React, { useMemo, useRef, useEffect } from 'react'
+import React, { useMemo, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { MessageCircle, GitBranch, Users, Clock } from 'lucide-react'
-import type { ThreadViewPost } from '../services/atproto/thread'
+import { GitBranch, MessageCircle, Users, TrendingUp, Clock } from 'lucide-react'
+import type { ThreadViewPost } from '../../services/atproto/thread'
 
 interface ThreadBranch {
   id: string
   uri: string
   author: string
   authorHandle: string
-  authorAvatar?: string
   text: string
   depth: number
   replyCount: number
+  directReplyCount: number
   participantCount: number
   latestActivity: Date
   heat: number
   children: ThreadBranch[]
   parent?: ThreadBranch
-  x?: number
-  y?: number
   color?: string
-  isMainLine?: boolean
+  timeAgo: string
 }
 
 interface ThreadBranchDiagramProps {
@@ -37,17 +35,29 @@ interface LayoutNode {
   column: number
 }
 
-// Color palette for branches
+// More muted color palette for better readability
 const BRANCH_COLORS = [
-  '#3b82f6', // blue
-  '#ef4444', // red
-  '#10b981', // green
-  '#f59e0b', // amber
-  '#8b5cf6', // purple
-  '#ec4899', // pink
-  '#14b8a6', // teal
-  '#f97316', // orange
+  '#60a5fa', // blue
+  '#f87171', // red
+  '#34d399', // green
+  '#fbbf24', // amber
+  '#a78bfa', // purple
+  '#f472b6', // pink
+  '#2dd4bf', // teal
+  '#fb923c', // orange
 ]
+
+// Format time ago
+const formatTimeAgo = (date: Date): string => {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+  if (seconds < 60) return `${seconds}s`
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h`
+  const days = Math.floor(hours / 24)
+  return `${days}d`
+}
 
 export const ThreadBranchDiagram: React.FC<ThreadBranchDiagramProps> = ({
   thread,
@@ -116,17 +126,17 @@ export const ThreadBranchDiagram: React.FC<ThreadBranchDiagramProps> = ({
         uri: node.post.uri,
         author: node.post.author.displayName || node.post.author.handle,
         authorHandle: node.post.author.handle,
-        authorAvatar: node.post.author.avatar,
         text: (node.post.record as any)?.text || '',
         depth,
         replyCount: totalReplies,
+        directReplyCount: replies.length,
         participantCount: participants.size,
         latestActivity: latestTime,
         heat,
         children,
         parent,
         color: BRANCH_COLORS[colorIndex],
-        isMainLine: depth === 0 || (parent && parent.children.indexOf(branch) === 0)
+        timeAgo: formatTimeAgo(new Date(node.post.indexedAt))
       }
       
       // Set parent reference for children
@@ -140,27 +150,29 @@ export const ThreadBranchDiagram: React.FC<ThreadBranchDiagramProps> = ({
       uri: thread.post.uri,
       author: thread.post.author.displayName || thread.post.author.handle,
       authorHandle: thread.post.author.handle,
-      authorAvatar: thread.post.author.avatar,
       text: (thread.post.record as any)?.text || '',
       depth: 0,
       replyCount: 0,
+      directReplyCount: 0,
       participantCount: 1,
       latestActivity: new Date(thread.post.indexedAt),
       heat: 0,
       children: [],
-      color: BRANCH_COLORS[0]
+      color: BRANCH_COLORS[0],
+      timeAgo: formatTimeAgo(new Date(thread.post.indexedAt))
     }
   }, [thread])
   
-  // Calculate git-style layout
+  // Calculate compact layout
   const layoutTree = useMemo(() => {
-    const NODE_HEIGHT = 80
-    const COLUMN_WIDTH = 40
-    const START_Y = 40
+    const NODE_HEIGHT = 32  // Much smaller
+    const COLUMN_WIDTH = 24  // Tighter columns
+    const START_Y = 20
+    const MIN_BRANCH_GAP = 8  // Minimal gap between branches
     
     let nextY = START_Y
     let maxColumn = 0
-    const occupiedColumns = new Map<number, number>() // column -> lastY
+    const occupiedColumns = new Map<number, number>()
     
     const findFreeColumn = (parentColumn: number, y: number): number => {
       // Try parent column first
@@ -187,7 +199,7 @@ export const ThreadBranchDiagram: React.FC<ThreadBranchDiagramProps> = ({
       const column = branch.depth === 0 ? 0 : findFreeColumn(parentColumn, y)
       
       if (!forceY) {
-        nextY += NODE_HEIGHT
+        nextY += NODE_HEIGHT + MIN_BRANCH_GAP
       }
       
       occupiedColumns.set(column, y)
@@ -195,7 +207,7 @@ export const ThreadBranchDiagram: React.FC<ThreadBranchDiagramProps> = ({
       
       const node: LayoutNode = {
         branch,
-        x: column * COLUMN_WIDTH + 40,
+        x: column * COLUMN_WIDTH + 20,
         y,
         children: [],
         column
@@ -203,6 +215,7 @@ export const ThreadBranchDiagram: React.FC<ThreadBranchDiagramProps> = ({
       
       // Layout children
       branch.children.forEach((child, index) => {
+        if (index > 0) nextY += MIN_BRANCH_GAP  // Add small gap between siblings
         const childNode = layoutBranch(child, column)
         node.children.push(childNode)
       })
@@ -219,21 +232,21 @@ export const ThreadBranchDiagram: React.FC<ThreadBranchDiagramProps> = ({
     let maxY = 0
     
     const traverse = (node: LayoutNode) => {
-      maxX = Math.max(maxX, node.x + 200) // account for node width
-      maxY = Math.max(maxY, node.y + 80)
+      maxX = Math.max(maxX, node.x + 180)  // Account for node width
+      maxY = Math.max(maxY, node.y + 32)
       node.children.forEach(traverse)
     }
     
     traverse(layoutTree)
-    return { width: maxX + 40, height: maxY + 40 }
+    return { width: Math.max(260, maxX + 20), height: maxY + 20 }
   }, [layoutTree])
   
-  // Render git-style connection
+  // Render compact connection
   const renderConnection = (parent: LayoutNode, child: LayoutNode) => {
     const parentX = parent.x
-    const parentY = parent.y + 40 // center of node
+    const parentY = parent.y + 16  // Center of smaller node
     const childX = child.x
-    const childY = child.y + 40
+    const childY = child.y + 16
     
     let path: string
     
@@ -241,106 +254,110 @@ export const ThreadBranchDiagram: React.FC<ThreadBranchDiagramProps> = ({
       // Straight line
       path = `M ${parentX} ${parentY} L ${parentX} ${childY}`
     } else {
-      // Branch line with curve
-      const midY = parentY + 20
+      // Compact branch curve
+      const midY = parentY + 8
       path = `M ${parentX} ${parentY} 
               L ${parentX} ${midY}
               Q ${parentX} ${childY} ${childX} ${childY}`
     }
     
     return (
-      <motion.path
+      <path
         key={`${parent.branch.id}-${child.branch.id}`}
         d={path}
         stroke={child.branch.color}
-        strokeWidth="3"
+        strokeWidth="2"
         fill="none"
-        opacity={0.8}
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 0.5, delay: child.branch.depth * 0.1 }}
+        opacity={0.6}
       />
     )
   }
   
-  // Render branch node (git-style commit)
+  // Render compact node
   const renderNode = (node: LayoutNode) => {
     const { branch, x, y } = node
     const isActive = branch.uri === currentPostUri
     const isHovered = hoveredBranch === branch.id
     
+    // Calculate dynamic width based on content
+    const minWidth = 120
+    const maxWidth = 180
+    const charWidth = 7  // Approximate character width
+    const neededWidth = Math.max(
+      branch.author.length * charWidth + 60,  // Author + padding
+      80 + 30  // Reply count + padding
+    )
+    const nodeWidth = Math.min(maxWidth, Math.max(minWidth, neededWidth))
+    
     return (
-      <motion.g
+      <g
         key={branch.id}
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: branch.depth * 0.05 }}
         onMouseEnter={() => setHoveredBranch(branch.id)}
         onMouseLeave={() => setHoveredBranch(null)}
         onClick={() => onNavigate(branch.uri)}
         style={{ cursor: 'pointer' }}
       >
-        {/* Commit dot */}
+        {/* Compact dot */}
         <circle
           cx={x}
-          cy={y + 40}
-          r={isActive ? 8 : 6}
+          cy={y + 16}
+          r={isActive ? 5 : 4}
           fill={branch.color}
-          stroke={isActive ? '#fff' : branch.color}
-          strokeWidth={isActive ? 3 : 0}
+          stroke={isActive ? '#fff' : 'none'}
+          strokeWidth={isActive ? 2 : 0}
         />
         
-        {/* Branch label/content */}
-        <foreignObject
-          x={x + 20}
+        {/* Compact node */}
+        <rect
+          x={x + 12}
           y={y}
-          width={160}
-          height={80}
-          style={{ overflow: 'visible' }}
+          width={nodeWidth}
+          height={32}
+          rx={4}
+          fill={isActive ? branch.color : (isHovered ? '#374151' : '#2d3748')}
+          fillOpacity={isActive ? 0.2 : 1}
+          stroke={branch.color}
+          strokeWidth="1"
+          opacity={0.9}
+        />
+        
+        {/* Compact content */}
+        <text
+          x={x + 20}
+          y={y + 14}
+          fill={isActive ? '#fff' : '#f3f4f6'}
+          fontSize="11"
+          fontWeight={isActive ? '600' : '500'}
         >
-          <div 
-            className={`branch-node ${isActive ? 'active' : ''} ${isHovered ? 'hovered' : ''}`}
-            style={{
-              background: isActive ? branch.color : (isHovered ? '#374151' : '#2d3748'),
-              borderColor: branch.color,
-              borderWidth: '2px',
-              borderStyle: 'solid',
-              borderRadius: '8px',
-              padding: '8px',
-              color: '#fff',
-              fontSize: '12px',
-              height: '64px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              boxShadow: isHovered ? '0 4px 12px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0,0,0,0.2)'
-            }}
+          {branch.author.slice(0, 16)}{branch.author.length > 16 ? '…' : ''}
+        </text>
+        
+        {/* Stats line */}
+        <text
+          x={x + 20}
+          y={y + 26}
+          fill="#9ca3af"
+          fontSize="9"
+        >
+          {branch.directReplyCount > 0 && `${branch.directReplyCount} replies`}
+          {branch.heat > 0.5 && ' 🔥'}
+          {branch.participantCount > 2 && ` • ${branch.participantCount}p`}
+          {` • ${branch.timeAgo}`}
+        </text>
+        
+        {/* Nested indicator */}
+        {branch.children.length > 0 && (
+          <text
+            x={x + nodeWidth + 2}
+            y={y + 20}
+            fill={branch.color}
+            fontSize="10"
+            fontWeight="bold"
           >
-            <div style={{ fontWeight: 600, marginBottom: '4px' }}>
-              {branch.author.slice(0, 18)}{branch.author.length > 18 ? '…' : ''}
-            </div>
-            <div style={{ 
-              fontSize: '11px', 
-              opacity: 0.9,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}>
-              {branch.text.slice(0, 30)}{branch.text.length > 30 ? '…' : ''}
-            </div>
-            <div style={{ 
-              fontSize: '10px', 
-              opacity: 0.7,
-              display: 'flex',
-              gap: '8px',
-              marginTop: '4px'
-            }}>
-              <span>{branch.replyCount} replies</span>
-              {branch.heat > 0.5 && <span>🔥</span>}
-            </div>
-          </div>
-        </foreignObject>
-      </motion.g>
+            ▶
+          </text>
+        )}
+      </g>
     )
   }
   
@@ -364,54 +381,91 @@ export const ThreadBranchDiagram: React.FC<ThreadBranchDiagramProps> = ({
     return elements
   }
   
+  // Calculate thread stats
+  const threadStats = useMemo(() => {
+    let totalPosts = 0
+    let uniqueAuthors = new Set<string>()
+    let maxDepth = 0
+    let hottestBranch = { heat: 0, author: '' }
+    
+    const analyze = (branch: ThreadBranch, depth: number = 0) => {
+      totalPosts++
+      uniqueAuthors.add(branch.authorHandle)
+      maxDepth = Math.max(maxDepth, depth)
+      
+      if (branch.heat > hottestBranch.heat) {
+        hottestBranch = { heat: branch.heat, author: branch.author }
+      }
+      
+      branch.children.forEach(child => analyze(child, depth + 1))
+    }
+    
+    analyze(branches)
+    
+    return {
+      totalPosts,
+      uniqueAuthors: uniqueAuthors.size,
+      maxDepth,
+      hottestBranch: hottestBranch.heat > 0 ? hottestBranch : null
+    }
+  }, [branches])
+  
   return (
-    <div className="thread-branch-diagram-v2" ref={containerRef}>
-      <div className="diagram-header">
-        <h4>
-          <GitBranch size={16} />
-          Thread Structure
-        </h4>
-        <div className="diagram-stats">
-          <span>
-            <MessageCircle size={12} />
-            {branches.replyCount} replies
+    <div className="thread-branch-diagram-compact" ref={containerRef}>
+      <div className="diagram-header-compact">
+        <div className="header-title">
+          <GitBranch size={12} />
+          <span>Thread Map</span>
+        </div>
+        <div className="diagram-stats-compact">
+          <span title="Total posts">
+            <MessageCircle size={10} />
+            {threadStats.totalPosts}
           </span>
-          <span>
-            <Users size={12} />
-            {branches.participantCount} people
+          <span title="Unique participants">
+            <Users size={10} />
+            {threadStats.uniqueAuthors}
           </span>
+          {threadStats.maxDepth > 2 && (
+            <span title="Max depth">
+              ↳{threadStats.maxDepth}
+            </span>
+          )}
         </div>
       </div>
       
-      <div className="diagram-scroll-container">
+      <div className="diagram-scroll-container-compact">
         <svg 
           ref={svgRef}
           width={svgDimensions.width} 
           height={svgDimensions.height}
         >
-          {renderTree(layoutTree)}
+          <motion.g
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            {renderTree(layoutTree)}
+          </motion.g>
         </svg>
       </div>
       
-      {hoveredBranch && (
-        <div className="branch-tooltip-v2">
-          {(() => {
-            const branch = findBranchById(branches, hoveredBranch)
-            if (!branch) return null
-            return (
-              <>
-                <strong>{branch.author}</strong>
-                <div className="tooltip-text">{branch.text.slice(0, 100)}...</div>
-                <div className="tooltip-meta">
-                  {new Date(branch.latestActivity).toLocaleTimeString()} • 
-                  {branch.replyCount} replies • 
-                  {branch.participantCount} participants
-                </div>
-              </>
-            )
-          })()}
-        </div>
-      )}
+      {hoveredBranch && (() => {
+        const branch = findBranchById(branches, hoveredBranch)
+        if (!branch) return null
+        
+        return (
+          <div className="branch-tooltip-compact">
+            <div className="tooltip-author">{branch.author}</div>
+            <div className="tooltip-text">{branch.text.slice(0, 80)}...</div>
+            <div className="tooltip-stats">
+              <span>{branch.replyCount} total replies</span>
+              <span>{branch.participantCount} participants</span>
+              <span>{new Date(branch.latestActivity).toLocaleTimeString()}</span>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
@@ -424,3 +478,5 @@ const findBranchById = (branch: ThreadBranch, id: string): ThreadBranch | null =
   }
   return null
 }
+
+export { ThreadBranchDiagram as ThreadBranchDiagramCompact }

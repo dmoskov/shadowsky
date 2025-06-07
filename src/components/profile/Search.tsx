@@ -10,10 +10,10 @@ import {
   Loader,
   User
 } from 'lucide-react'
-import { useSearchActors, useSearchPosts, useSearchTypeahead } from '../hooks/useSearch'
-import { PostCard } from './PostCard'
-import { ComposeModal } from './ComposeModal'
-import type { Post } from '../types/atproto'
+import { useSearchActors, useSearchPosts, useSearchTypeahead } from '../../hooks/useSearch'
+import { PostCard } from '../feed/PostCard'
+import { ComposeModal } from '../modals/ComposeModal'
+import type { Post } from '../../types/atproto'
 import type { ProfileView } from '@atproto/api/dist/client/types/app/bsky/actor/defs'
 
 type SearchTab = 'posts' | 'users'

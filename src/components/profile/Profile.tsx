@@ -14,12 +14,12 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import { useProfile, useAuthorFeed, useFollowUser } from '../hooks/useProfile'
-import { PostCard } from './PostCard'
-import { ComposeModal } from './ComposeModal'
-import { FollowersModal } from './FollowersModal'
-import type { Post } from '../types/atproto'
+import { useAuth } from '../../contexts/AuthContext'
+import { useProfile, useAuthorFeed, useFollowUser } from '../../hooks/useProfile'
+import { PostCard } from '../feed/PostCard'
+import { ComposeModal } from '../modals/ComposeModal'
+import { FollowersModal } from '../modals/FollowersModal'
+import type { Post } from '../../types/atproto'
 
 type TabType = 'posts' | 'replies' | 'media' | 'likes'
 
