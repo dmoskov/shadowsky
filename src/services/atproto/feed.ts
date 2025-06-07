@@ -10,25 +10,28 @@ import type { TimelineResponse, Post } from '../../types/atproto'
 
 export class FeedService {
   constructor(private client: ATProtoClient) {
-    // Wrap methods with deduplication
+    // Constructor intentionally left minimal
+    // Method wrapping happens after method definitions
+  }
+  
+  public initializeDeduplication() {
+    // Wrap methods with deduplication after they're defined
+    const originalGetTimeline = this.getTimeline.bind(this);
     this.getTimeline = withDeduplication(
-      this.getTimeline.bind(this),
+      originalGetTimeline,
       (cursor) => `timeline:${cursor || 'initial'}`
     );
     
+    const originalGetAuthorFeed = this.getAuthorFeed.bind(this);
     this.getAuthorFeed = withDeduplication(
-      this.getAuthorFeed.bind(this),
+      originalGetAuthorFeed,
       (actor, cursor) => `author:${actor}:${cursor || 'initial'}`
     );
     
+    const originalGetPostThread = this.getPostThread.bind(this);
     this.getPostThread = withDeduplication(
-      this.getPostThread.bind(this),
+      originalGetPostThread,
       (uri) => `thread:${uri}`
-    );
-    
-    this.searchPosts = withDeduplication(
-      this.searchPosts.bind(this),
-      (query, cursor) => `search:${query}:${cursor || 'initial'}`
     );
   }
 

@@ -12,6 +12,8 @@ export const atProtoClient = new ATProtoClient({
 })
 
 export const feedService = new FeedService(atProtoClient)
+// Initialize deduplication after service creation
+feedService.initializeDeduplication()
 
 // Export types and classes
 export { ATProtoClient } from './client'
