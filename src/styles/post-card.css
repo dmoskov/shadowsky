@@ -160,6 +160,22 @@
   overflow: hidden;
 }
 
+/* Post Images */
+.post-images {
+  margin-top: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.post-image {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  display: block;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+}
+
 .media-grid {
   display: grid;
   gap: var(--spacing-xs);
