@@ -20,7 +20,14 @@ class InteractionsService {
    */
   async likePost(post: Post): Promise<LikeResult> {
     try {
-      const result = await this.agent.like(post.uri, post.cid)
+      const { data: session } = await this.agent.com.atproto.server.getSession()
+      const result = await this.agent.app.bsky.feed.like.create(
+        { repo: session.did },
+        {
+          subject: { uri: post.uri, cid: post.cid },
+          createdAt: new Date().toISOString()
+        }
+      )
       return result
     } catch (error) {
       throw mapATProtoError(error)
@@ -32,7 +39,16 @@ class InteractionsService {
    */
   async unlikePost(likeUri: string): Promise<void> {
     try {
-      await this.agent.deleteLike(likeUri)
+      // Parse the AT URI to get the rkey
+      const parts = likeUri.split('/')
+      const rkey = parts[parts.length - 1]
+      const { data: session } = await this.agent.com.atproto.server.getSession()
+      
+      await this.agent.com.atproto.repo.deleteRecord({
+        repo: session.did,
+        collection: 'app.bsky.feed.like',
+        rkey
+      })
     } catch (error) {
       throw mapATProtoError(error)
     }
@@ -43,7 +59,14 @@ class InteractionsService {
    */
   async repostPost(post: Post): Promise<RepostResult> {
     try {
-      const result = await this.agent.repost(post.uri, post.cid)
+      const { data: session } = await this.agent.com.atproto.server.getSession()
+      const result = await this.agent.app.bsky.feed.repost.create(
+        { repo: session.did },
+        {
+          subject: { uri: post.uri, cid: post.cid },
+          createdAt: new Date().toISOString()
+        }
+      )
       return result
     } catch (error) {
       throw mapATProtoError(error)
@@ -55,7 +78,16 @@ class InteractionsService {
    */
   async deleteRepost(repostUri: string): Promise<void> {
     try {
-      await this.agent.deleteRepost(repostUri)
+      // Parse the AT URI to get the rkey
+      const parts = repostUri.split('/')
+      const rkey = parts[parts.length - 1]
+      const { data: session } = await this.agent.com.atproto.server.getSession()
+      
+      await this.agent.com.atproto.repo.deleteRecord({
+        repo: session.did,
+        collection: 'app.bsky.feed.repost',
+        rkey
+      })
     } catch (error) {
       throw mapATProtoError(error)
     }
@@ -72,12 +104,18 @@ class InteractionsService {
     }
   ): Promise<{ uri: string; cid: string }> {
     try {
-      const result = await this.agent.post({
-        text,
-        reply: replyTo,
-        createdAt: new Date().toISOString()
+      const { data: session } = await this.agent.com.atproto.server.getSession()
+      const result = await this.agent.com.atproto.repo.createRecord({
+        repo: session.did,
+        collection: 'app.bsky.feed.post',
+        record: {
+          $type: 'app.bsky.feed.post',
+          text,
+          reply: replyTo,
+          createdAt: new Date().toISOString()
+        }
       })
-      return result
+      return { uri: result.data.uri, cid: result.data.cid }
     } catch (error) {
       throw mapATProtoError(error)
     }
@@ -88,11 +126,17 @@ class InteractionsService {
    */
   async createPost(text: string): Promise<{ uri: string; cid: string }> {
     try {
-      const result = await this.agent.post({
-        text,
-        createdAt: new Date().toISOString()
+      const { data: session } = await this.agent.com.atproto.server.getSession()
+      const result = await this.agent.com.atproto.repo.createRecord({
+        repo: session.did,
+        collection: 'app.bsky.feed.post',
+        record: {
+          $type: 'app.bsky.feed.post',
+          text,
+          createdAt: new Date().toISOString()
+        }
       })
-      return result
+      return { uri: result.data.uri, cid: result.data.cid }
     } catch (error) {
       throw mapATProtoError(error)
     }
@@ -103,7 +147,16 @@ class InteractionsService {
    */
   async deletePost(postUri: string): Promise<void> {
     try {
-      await this.agent.deletePost(postUri)
+      // Parse the AT URI to get the rkey
+      const parts = postUri.split('/')
+      const rkey = parts[parts.length - 1]
+      const { data: session } = await this.agent.com.atproto.server.getSession()
+      
+      await this.agent.com.atproto.repo.deleteRecord({
+        repo: session.did,
+        collection: 'app.bsky.feed.post',
+        rkey
+      })
     } catch (error) {
       throw mapATProtoError(error)
     }
@@ -114,7 +167,14 @@ class InteractionsService {
    */
   async followUser(did: string): Promise<{ uri: string; cid: string }> {
     try {
-      const result = await this.agent.follow(did)
+      const { data: session } = await this.agent.com.atproto.server.getSession()
+      const result = await this.agent.app.bsky.graph.follow.create(
+        { repo: session.did },
+        {
+          subject: did,
+          createdAt: new Date().toISOString()
+        }
+      )
       return result
     } catch (error) {
       throw mapATProtoError(error)
@@ -126,19 +186,23 @@ class InteractionsService {
    */
   async unfollowUser(followUri: string): Promise<void> {
     try {
-      await this.agent.deleteFollow(followUri)
+      // Parse the AT URI to get the rkey
+      const parts = followUri.split('/')
+      const rkey = parts[parts.length - 1]
+      const { data: session } = await this.agent.com.atproto.server.getSession()
+      
+      await this.agent.com.atproto.repo.deleteRecord({
+        repo: session.did,
+        collection: 'app.bsky.graph.follow',
+        rkey
+      })
     } catch (error) {
       throw mapATProtoError(error)
     }
   }
 }
 
-// Singleton instance
-let interactionsServiceInstance: InteractionsService | null = null
-
+// Factory function - create new instance per agent
 export function getInteractionsService(agent: AtpAgent): InteractionsService {
-  if (!interactionsServiceInstance) {
-    interactionsServiceInstance = new InteractionsService(agent)
-  }
-  return interactionsServiceInstance
+  return new InteractionsService(agent)
 }

@@ -6,7 +6,6 @@ import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notif
 
 export function useNotifications() {
   const { session } = useAuth()
-  const { handleError } = useErrorHandler()
 
   return useQuery({
     queryKey: ['notifications'],

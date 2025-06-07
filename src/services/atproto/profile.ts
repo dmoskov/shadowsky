@@ -8,7 +8,7 @@ export class ProfileService {
 
   async getProfile(handle: string): Promise<ProfileViewDetailed> {
     try {
-      const response = await this.agent.getProfile({ actor: handle })
+      const response = await this.agent.app.bsky.actor.getProfile({ actor: handle })
       return response.data
     } catch (error) {
       throw mapATProtoError(error)
@@ -20,7 +20,7 @@ export class ProfileService {
     cursor?: string
   }> {
     try {
-      const response = await this.agent.getAuthorFeed({
+      const response = await this.agent.app.bsky.feed.getAuthorFeed({
         actor: handle,
         limit: 30,
         cursor
@@ -37,8 +37,16 @@ export class ProfileService {
 
   async followUser(did: string): Promise<{ uri: string; cid: string }> {
     try {
-      const response = await this.agent.follow(did)
-      return response
+      // Get the user's DID first
+      const { data: session } = await this.agent.com.atproto.server.getSession()
+      const response = await this.agent.app.bsky.graph.follow.create(
+        { repo: session.did },
+        {
+          subject: did,
+          createdAt: new Date().toISOString()
+        }
+      )
+      return { uri: response.uri, cid: response.cid }
     } catch (error) {
       throw mapATProtoError(error)
     }
@@ -46,7 +54,16 @@ export class ProfileService {
 
   async unfollowUser(followUri: string): Promise<void> {
     try {
-      await this.agent.deleteFollow(followUri)
+      // Parse the AT URI to get the rkey
+      const parts = followUri.split('/')
+      const rkey = parts[parts.length - 1]
+      const { data: session } = await this.agent.com.atproto.server.getSession()
+      
+      await this.agent.com.atproto.repo.deleteRecord({
+        repo: session.did,
+        collection: 'app.bsky.graph.follow',
+        rkey
+      })
     } catch (error) {
       throw mapATProtoError(error)
     }
@@ -57,7 +74,7 @@ export class ProfileService {
     cursor?: string
   }> {
     try {
-      const response = await this.agent.getFollowers({
+      const response = await this.agent.app.bsky.graph.getFollowers({
         actor: handle,
         limit: 50,
         cursor
@@ -77,7 +94,7 @@ export class ProfileService {
     cursor?: string
   }> {
     try {
-      const response = await this.agent.getFollows({
+      const response = await this.agent.app.bsky.graph.getFollows({
         actor: handle,
         limit: 50,
         cursor
@@ -93,12 +110,7 @@ export class ProfileService {
   }
 }
 
-// Singleton instance
-let profileServiceInstance: ProfileService | null = null
-
+// Factory function - create new instance per agent
 export function getProfileService(agent: AtpAgent): ProfileService {
-  if (!profileServiceInstance) {
-    profileServiceInstance = new ProfileService(agent)
-  }
-  return profileServiceInstance
+  return new ProfileService(agent)
 }

@@ -1,0 +1,139 @@
+/* Followers Modal Styles */
+.modal-followers {
+  max-width: 500px;
+  width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--color-border);
+  margin: 0 -1.5rem;
+  padding: 0 1.5rem;
+}
+
+.modal-tabs .tab-item {
+  flex: 1;
+  padding: 1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.modal-tabs .tab-item:hover {
+  color: var(--color-text);
+  background: var(--color-hover);
+}
+
+.modal-tabs .tab-item.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.tab-count {
+  background: var(--color-bg-secondary);
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  border-radius: 0.5rem;
+  margin: 0 -0.5rem;
+}
+
+.user-item:hover {
+  background: var(--color-hover);
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-names {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.user-display-name {
+  font-weight: 600;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-handle {
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-bio {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.user-badge {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+/* Profile Stats Hover */
+.profile-stats .stat-item {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.profile-stats .stat-item:hover {
+  background: var(--color-hover);
+  transform: translateY(-1px);
+}

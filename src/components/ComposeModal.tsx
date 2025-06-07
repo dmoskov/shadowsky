@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { X, Send, Image, AtSign, Hash, Loader2 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { interactionsService } from '../services/atproto'
+import { getInteractionsService } from '../services/atproto'
 import { useAuth } from '../contexts/AuthContext'
 import { useErrorHandler } from '../hooks/useErrorHandler'
 import type { Post } from '../types/atproto'
@@ -48,6 +48,11 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
 
   const createPostMutation = useMutation({
     mutationFn: async () => {
+      const { atProtoClient } = await import('../services/atproto')
+      const agent = atProtoClient.getAgent()
+      if (!agent) throw new Error('Not authenticated')
+      const interactionsService = getInteractionsService(agent)
+      
       if (replyTo) {
         // Creating a reply
         const replyData = {

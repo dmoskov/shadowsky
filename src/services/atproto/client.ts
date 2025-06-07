@@ -12,7 +12,7 @@ export interface ATProtoConfig {
 }
 
 export class ATProtoClient {
-  private agent: BskyAgent
+  private _agent: BskyAgent
   private config: Required<ATProtoConfig>
   
   constructor(config: ATProtoConfig = {}) {
@@ -21,20 +21,21 @@ export class ATProtoClient {
       persistSession: config.persistSession !== false
     }
     
-    this.agent = new BskyAgent({
+    this._agent = new BskyAgent({
       service: this.config.service
     })
   }
 
   async login(identifier: string, password: string): Promise<Session> {
     try {
-      const response = await this.agent.login({ identifier, password })
+      const response = await this._agent.login({ identifier, password })
       
-      if (this.config.persistSession && response.data) {
-        this.saveSession(response.data)
+      const sessionData = response.data as any
+      if (this.config.persistSession && sessionData) {
+        this.saveSession(sessionData)
       }
       
-      return response.data as Session
+      return sessionData as Session
     } catch (error) {
       throw mapATProtoError(error)
     }
@@ -42,13 +43,19 @@ export class ATProtoClient {
 
   async resumeSession(session: Session): Promise<Session> {
     try {
-      const response = await this.agent.resumeSession(session)
+      // Convert our Session type to AtpSessionData
+      const atpSession = {
+        ...session,
+        active: session.active ?? true
+      }
+      const response = await this._agent.resumeSession(atpSession)
       
-      if (this.config.persistSession && response.data) {
-        this.saveSession(response.data)
+      const sessionData = response.data as any
+      if (this.config.persistSession && sessionData) {
+        this.saveSession(sessionData)
       }
       
-      return response.data as Session
+      return sessionData as Session
     } catch (error) {
       // Log the raw error for debugging
       console.debug('Raw resumeSession error:', error)
@@ -58,42 +65,67 @@ export class ATProtoClient {
 
   async refreshSession(): Promise<Session | null> {
     try {
-      if (!this.agent.session) return null
+      if (!this._agent.session) return null
       
-      const response = await this.agent.refreshSession()
+      // BskyAgent doesn't have refreshSession, we need to manually refresh
+      // by resuming with the current session
+      const currentSession = this._agent.session
+      if (!currentSession) return null
       
-      if (this.config.persistSession && response.data) {
-        this.saveSession(response.data)
+      const response = await this._agent.resumeSession(currentSession)
+      
+      const sessionData = response.data as any
+      if (this.config.persistSession && sessionData) {
+        this.saveSession(sessionData)
       }
       
-      return response.data as Session
+      return sessionData as Session
     } catch (error) {
       throw mapATProtoError(error)
     }
   }
 
   logout(): void {
-    this.agent.session = undefined
+    // Clear persisted session first
     if (this.config.persistSession) {
       this.clearSession()
     }
+    
+    // Since we can't directly clear the agent's session (it's read-only),
+    // we'll rely on the page reload in AuthContext to fully reset the app
+    // The important part is clearing localStorage so the session isn't resumed
   }
 
   getAgent(): BskyAgent {
-    return this.agent
+    return this._agent
+  }
+  
+  get agent(): BskyAgent {
+    return this._agent
   }
 
   getSession(): Session | null {
-    return this.agent.session as Session | null
+    return this._agent.session as Session | null
   }
 
   isAuthenticated(): boolean {
-    return this.agent.session !== undefined
+    return this._agent.session !== undefined
   }
 
-  private saveSession(session: Session): void {
+  private saveSession(session: any): void {
     try {
-      localStorage.setItem('bsky_session', JSON.stringify(session))
+      // Ensure we're saving all required fields
+      const sessionData: Session = {
+        did: session.did,
+        handle: session.handle,
+        email: session.email,
+        emailConfirmed: session.emailConfirmed,
+        emailAuthFactor: session.emailAuthFactor,
+        accessJwt: session.accessJwt,
+        refreshJwt: session.refreshJwt,
+        active: session.active
+      }
+      localStorage.setItem('bsky_session', JSON.stringify(sessionData))
     } catch (error) {
       console.error('Failed to save session:', error)
     }
@@ -135,5 +167,5 @@ export class ATProtoClient {
   }
 }
 
-// Export singleton instance  
-export const atClient = new BskyAgent({ service: 'https://bsky.social' })
+// Note: We don't export a raw BskyAgent instance anymore
+// All services should use the authenticated agent from ATProtoClient

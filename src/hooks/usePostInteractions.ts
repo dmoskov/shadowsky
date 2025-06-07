@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { interactionsService } from '../services/atproto'
+import { getInteractionsService } from '../services/atproto'
 import type { Post, FeedItem } from '../types/atproto'
 import { useErrorHandler } from './useErrorHandler'
 
@@ -19,6 +19,11 @@ export function usePostInteractions(): UsePostInteractionsReturn {
   // Like mutation
   const likeMutation = useMutation({
     mutationFn: async ({ post, isLiked }: { post: Post; isLiked: boolean }) => {
+      const { atProtoClient } = await import('../services/atproto')
+      const agent = atProtoClient.getAgent()
+      if (!agent) throw new Error('Not authenticated')
+      const interactionsService = getInteractionsService(agent)
+      
       if (isLiked && post.viewer?.like) {
         await interactionsService.unlikePost(post.viewer.like)
         return { action: 'unlike' }
@@ -97,7 +102,7 @@ export function usePostInteractions(): UsePostInteractionsReturn {
         )
       }
     },
-    onError: (error, { post }) => {
+    onError: (error) => {
       // Revert on error
       queryClient.invalidateQueries({ queryKey: ['timeline'] })
       handleError(error)
@@ -107,6 +112,11 @@ export function usePostInteractions(): UsePostInteractionsReturn {
   // Repost mutation
   const repostMutation = useMutation({
     mutationFn: async ({ post, isReposted }: { post: Post; isReposted: boolean }) => {
+      const { atProtoClient } = await import('../services/atproto')
+      const agent = atProtoClient.getAgent()
+      if (!agent) throw new Error('Not authenticated')
+      const interactionsService = getInteractionsService(agent)
+      
       if (isReposted && post.viewer?.repost) {
         await interactionsService.deleteRepost(post.viewer.repost)
         return { action: 'unrepost' }
@@ -185,7 +195,7 @@ export function usePostInteractions(): UsePostInteractionsReturn {
         )
       }
     },
-    onError: (error, { post }) => {
+    onError: (error) => {
       // Revert on error
       queryClient.invalidateQueries({ queryKey: ['timeline'] })
       handleError(error)

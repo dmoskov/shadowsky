@@ -133,6 +133,17 @@
   margin-bottom: var(--spacing-md);
 }
 
+/* Reply Context */
+.reply-context {
+  margin-bottom: var(--spacing-xs);
+}
+
+.reply-indicator {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-sm);
+  font-style: italic;
+}
+
 .post-text {
   font-size: var(--font-size-body);
   line-height: var(--line-height-relaxed);

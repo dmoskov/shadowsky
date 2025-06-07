@@ -165,9 +165,18 @@
   color: var(--color-error);
 }
 
+/* Mobile Search Button */
+.mobile-search-btn {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .header-search {
     display: none;
+  }
+  
+  .mobile-search-btn {
+    display: flex;
   }
 
   .user-handle {

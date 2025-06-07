@@ -116,7 +116,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
         {posts.map((item) => (
           <ErrorBoundary 
             key={item.post.uri}
-            fallback={(error, reset) => (
+            fallback={(_, reset) => (
               <div className="post-error card">
                 <p className="error-text">
                   Failed to display this post

@@ -12,14 +12,25 @@ export class FeedService {
   async getTimeline(cursor?: string): Promise<TimelineResponse> {
     try {
       const agent = this.client.getAgent()
-      const response = await agent.getTimeline({ cursor, limit: 30 })
+      const response = await agent.app.bsky.feed.getTimeline({ cursor, limit: 30 })
       
       return {
         cursor: response.data.cursor,
         feed: response.data.feed.map(item => ({
           post: item.post as Post,
-          reply: item.reply,
-          reason: item.reason
+          reply: item.reply && 'root' in item.reply && 'parent' in item.reply && 
+                 item.reply.root.$type === 'app.bsky.feed.defs#postView' &&
+                 item.reply.parent.$type === 'app.bsky.feed.defs#postView'
+            ? {
+                root: item.reply.root as Post,
+                parent: item.reply.parent as Post
+              }
+            : undefined,
+          reason: item.reason && '$type' in item.reason && 
+                  (item.reason.$type === 'app.bsky.feed.defs#reasonRepost' || 
+                   item.reason.$type === 'app.bsky.feed.defs#reasonPin')
+            ? item.reason as any
+            : undefined
         }))
       }
     } catch (error) {
@@ -30,7 +41,7 @@ export class FeedService {
   async getAuthorFeed(actor: string, cursor?: string): Promise<TimelineResponse> {
     try {
       const agent = this.client.getAgent()
-      const response = await agent.getAuthorFeed({ 
+      const response = await agent.app.bsky.feed.getAuthorFeed({ 
         actor, 
         cursor, 
         limit: 30 
@@ -40,8 +51,19 @@ export class FeedService {
         cursor: response.data.cursor,
         feed: response.data.feed.map(item => ({
           post: item.post as Post,
-          reply: item.reply,
-          reason: item.reason
+          reply: item.reply && 'root' in item.reply && 'parent' in item.reply && 
+                 item.reply.root.$type === 'app.bsky.feed.defs#postView' &&
+                 item.reply.parent.$type === 'app.bsky.feed.defs#postView'
+            ? {
+                root: item.reply.root as Post,
+                parent: item.reply.parent as Post
+              }
+            : undefined,
+          reason: item.reason && '$type' in item.reason && 
+                  (item.reason.$type === 'app.bsky.feed.defs#reasonRepost' || 
+                   item.reason.$type === 'app.bsky.feed.defs#reasonPin')
+            ? item.reason as any
+            : undefined
         }))
       }
     } catch (error) {
@@ -52,7 +74,7 @@ export class FeedService {
   async getPostThread(uri: string) {
     try {
       const agent = this.client.getAgent()
-      const response = await agent.getPostThread({ uri })
+      const response = await agent.app.bsky.feed.getPostThread({ uri })
       return response.data
     } catch (error) {
       throw mapATProtoError(error)
@@ -62,7 +84,7 @@ export class FeedService {
   async getPost(uri: string) {
     try {
       const agent = this.client.getAgent()
-      const response = await agent.getPosts({ uris: [uri] })
+      const response = await agent.app.bsky.feed.getPosts({ uris: [uri] })
       return response.data.posts[0] as Post
     } catch (error) {
       throw mapATProtoError(error)
@@ -72,7 +94,14 @@ export class FeedService {
   async likePost(uri: string, cid: string) {
     try {
       const agent = this.client.getAgent()
-      const response = await agent.like(uri, cid)
+      const { data: session } = await agent.com.atproto.server.getSession()
+      const response = await agent.app.bsky.feed.like.create(
+        { repo: session.did },
+        {
+          subject: { uri, cid },
+          createdAt: new Date().toISOString()
+        }
+      )
       return response
     } catch (error) {
       throw mapATProtoError(error)
@@ -82,7 +111,15 @@ export class FeedService {
   async unlikePost(likeUri: string) {
     try {
       const agent = this.client.getAgent()
-      await agent.deleteLike(likeUri)
+      const parts = likeUri.split('/')
+      const rkey = parts[parts.length - 1]
+      const { data: session } = await agent.com.atproto.server.getSession()
+      
+      await agent.com.atproto.repo.deleteRecord({
+        repo: session.did,
+        collection: 'app.bsky.feed.like',
+        rkey
+      })
     } catch (error) {
       throw mapATProtoError(error)
     }
@@ -91,7 +128,14 @@ export class FeedService {
   async repost(uri: string, cid: string) {
     try {
       const agent = this.client.getAgent()
-      const response = await agent.repost(uri, cid)
+      const { data: session } = await agent.com.atproto.server.getSession()
+      const response = await agent.app.bsky.feed.repost.create(
+        { repo: session.did },
+        {
+          subject: { uri, cid },
+          createdAt: new Date().toISOString()
+        }
+      )
       return response
     } catch (error) {
       throw mapATProtoError(error)
@@ -101,7 +145,15 @@ export class FeedService {
   async deleteRepost(repostUri: string) {
     try {
       const agent = this.client.getAgent()
-      await agent.deleteRepost(repostUri)
+      const parts = repostUri.split('/')
+      const rkey = parts[parts.length - 1]
+      const { data: session } = await agent.com.atproto.server.getSession()
+      
+      await agent.com.atproto.repo.deleteRecord({
+        repo: session.did,
+        collection: 'app.bsky.feed.repost',
+        rkey
+      })
     } catch (error) {
       throw mapATProtoError(error)
     }
@@ -122,7 +174,16 @@ export class FeedService {
       
       // TODO: Handle image uploads when needed
       
-      const response = await agent.post(post)
+      const { data: session } = await agent.com.atproto.server.getSession()
+      const response = await agent.com.atproto.repo.createRecord({
+        repo: session.did,
+        collection: 'app.bsky.feed.post',
+        record: {
+          $type: 'app.bsky.feed.post',
+          ...post,
+          createdAt: new Date().toISOString()
+        }
+      })
       return response
     } catch (error) {
       throw mapATProtoError(error)
@@ -132,7 +193,15 @@ export class FeedService {
   async deletePost(uri: string) {
     try {
       const agent = this.client.getAgent()
-      await agent.deletePost(uri)
+      const parts = uri.split('/')
+      const rkey = parts[parts.length - 1]
+      const { data: session } = await agent.com.atproto.server.getSession()
+      
+      await agent.com.atproto.repo.deleteRecord({
+        repo: session.did,
+        collection: 'app.bsky.feed.post',
+        rkey
+      })
     } catch (error) {
       throw mapATProtoError(error)
     }

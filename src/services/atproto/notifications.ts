@@ -10,7 +10,7 @@ export class NotificationService {
     cursor?: string
   }> {
     try {
-      const response = await this.agent.listNotifications({
+      const response = await this.agent.app.bsky.notification.listNotifications({
         limit: 30,
         cursor
       })
@@ -26,7 +26,7 @@ export class NotificationService {
 
   async updateSeen(seenAt: string): Promise<void> {
     try {
-      await this.agent.updateSeenNotifications(seenAt)
+      await this.agent.app.bsky.notification.updateSeen({ seenAt })
     } catch (error) {
       throw mapATProtoError(error)
     }
@@ -34,7 +34,7 @@ export class NotificationService {
 
   async getUnreadCount(): Promise<number> {
     try {
-      const response = await this.agent.countUnreadNotifications()
+      const response = await this.agent.app.bsky.notification.getUnreadCount()
       return response.data.count
     } catch (error) {
       throw mapATProtoError(error)
@@ -42,12 +42,7 @@ export class NotificationService {
   }
 }
 
-// Singleton instance
-let notificationServiceInstance: NotificationService | null = null
-
+// Factory function - create new instance per agent
 export function getNotificationService(agent: AtpAgent): NotificationService {
-  if (!notificationServiceInstance) {
-    notificationServiceInstance = new NotificationService(agent)
-  }
-  return notificationServiceInstance
+  return new NotificationService(agent)
 }

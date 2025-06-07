@@ -19,5 +19,5 @@ export { FeedService } from './feed'
 export type { ATProtoConfig } from './client'
 
 // Export interaction services
-export { interactionsService } from './interactions'
-export { threadService } from './thread'
+export { getInteractionsService } from './interactions'
+export { getThreadService } from './thread'

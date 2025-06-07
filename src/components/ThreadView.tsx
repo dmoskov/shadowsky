@@ -3,13 +3,14 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, Loader2, MessageCircle, BookOpen, X } from 'lucide-react'
 import clsx from 'clsx'
 import { useQuery } from '@tanstack/react-query'
-import { threadService } from '../services/atproto/thread'
+import { getThreadService, ThreadService } from '../services/atproto/thread'
 import { PostCard } from './PostCard'
 import { ComposeModal } from './ComposeModal'
 import { ErrorBoundary } from './ErrorBoundary'
 import { useErrorHandler } from '../hooks/useErrorHandler'
 import type { Post, FeedItem } from '../types/atproto'
 import type { ThreadViewPost } from '../services/atproto/thread'
+import type { AppBskyFeedDefs } from '@atproto/api'
 
 interface ThreadViewProps {
   postUri: string
@@ -23,7 +24,13 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
   
   const { data: thread, isLoading, error } = useQuery({
     queryKey: ['thread', postUri],
-    queryFn: () => threadService.getThread(postUri),
+    queryFn: async () => {
+      const { atProtoClient } = await import('../services/atproto')
+      const agent = atProtoClient.agent
+      if (!agent) throw new Error('Not authenticated')
+      const threadService = getThreadService(agent)
+      return threadService.getThread(postUri)
+    },
     retry: 2
   })
   
@@ -72,9 +79,8 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
     )
   }
   
-  // Get ancestors and descendants
-  const ancestors = threadService.getAncestors(thread)
-  const descendants = threadService.getDescendants(thread)
+  // Get ancestors
+  const ancestors = thread ? ThreadService.getAncestors(thread) : []
   
   // Convert ThreadViewPost to FeedItem for PostCard
   const threadPostToFeedItem = (post: ThreadViewPost): FeedItem => ({
@@ -120,7 +126,7 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
               className="thread-ancestor"
             >
               <ErrorBoundary
-                fallback={(error, reset) => (
+                fallback={(_, reset) => (
                   <div className="post-error card">
                     <p className="error-text">Failed to display post</p>
                     <button onClick={reset} className="btn btn-secondary btn-sm">
@@ -146,7 +152,7 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
             transition={{ delay: ancestors.length * 0.05 }}
           >
             <ErrorBoundary
-              fallback={(error, reset) => (
+              fallback={(_, reset) => (
                 <div className="post-error card">
                   <p className="error-text">Failed to display post</p>
                   <button onClick={reset} className="btn btn-secondary btn-sm">
@@ -164,39 +170,14 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
           </motion.div>
           
           {/* Descendants (replies) */}
-          {descendants.length > 0 && (
+          {thread.replies && thread.replies.length > 0 && (
             <div className="thread-replies">
               <div className="thread-replies-header">
                 <MessageCircle size={18} />
-                <span>{descendants.length} {descendants.length === 1 ? 'Reply' : 'Replies'}</span>
+                <span>{countAllReplies(thread)} {countAllReplies(thread) === 1 ? 'Reply' : 'Replies'}</span>
               </div>
               
-              {descendants.map((descendant, index) => (
-                <motion.div
-                  key={descendant.post.uri}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: (ancestors.length + 1 + index) * 0.05 }}
-                  className={`thread-reply depth-${getReplyDepth(descendant, thread)}`}
-                >
-                  <ErrorBoundary
-                    fallback={(error, reset) => (
-                      <div className="post-error card">
-                        <p className="error-text">Failed to display reply</p>
-                        <button onClick={reset} className="btn btn-secondary btn-sm">
-                          Retry
-                        </button>
-                      </div>
-                    )}
-                  >
-                    <PostCard 
-                      item={threadPostToFeedItem(descendant)}
-                      onReply={handleReply}
-                      showParentPost={false}
-                    />
-                  </ErrorBoundary>
-                </motion.div>
-              ))}
+              {renderThreadReplies(thread.replies, 0, handleReply, ancestors)}
             </div>
           )}
         </div>
@@ -223,19 +204,84 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
   )
 }
 
-// Helper function to determine reply depth for styling
-function getReplyDepth(reply: ThreadViewPost, mainPost: ThreadViewPost): number {
-  let depth = 0
-  let current = reply.parent
+// Helper function to count all replies recursively
+function countAllReplies(thread: ThreadViewPost): number {
+  let count = 0
   
-  while (current && current !== mainPost && depth < 5) {
-    depth++
-    if (current.$type === 'app.bsky.feed.defs#threadViewPost') {
-      current = (current as ThreadViewPost).parent
-    } else {
-      break
+  const countReplies = (node: ThreadViewPost) => {
+    if (node.replies && Array.isArray(node.replies)) {
+      for (const reply of node.replies) {
+        if (reply.$type === 'app.bsky.feed.defs#threadViewPost') {
+          count++
+          countReplies(reply as ThreadViewPost)
+        }
+      }
     }
   }
   
-  return Math.min(depth, 5) // Cap at 5 for styling
+  countReplies(thread)
+  return count
+}
+
+// Render nested replies with proper hierarchy
+function renderThreadReplies(
+  replies: AppBskyFeedDefs.ThreadViewPost[] | AppBskyFeedDefs.NotFoundPost[] | AppBskyFeedDefs.BlockedPost[] | { $type: string }[],
+  depth: number,
+  onReply: (post: Post) => void,
+  ancestors: ThreadViewPost[]
+): React.ReactNode {
+  if (!replies || !Array.isArray(replies)) return null
+  
+  return replies.map((reply, index) => {
+    if (reply.$type !== 'app.bsky.feed.defs#threadViewPost') return null
+    
+    const threadReply = reply as ThreadViewPost
+    const hasReplies = threadReply.replies && threadReply.replies.length > 0
+    
+    return (
+      <div key={`${threadReply.post.uri}-${depth}-${index}`} className="thread-branch">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: index * 0.05 }}
+          className={`thread-reply depth-${Math.min(depth, 5)}`}
+        >
+          {/* Connection line to parent */}
+          {depth > 0 && <div className="thread-connector" />}
+          
+          <ErrorBoundary
+            fallback={(_, reset) => (
+              <div className="post-error card">
+                <p className="error-text">Failed to display reply</p>
+                <button onClick={reset} className="btn btn-secondary btn-sm">
+                  Retry
+                </button>
+              </div>
+            )}
+          >
+            <div className={clsx("thread-post-wrapper", { "has-replies": hasReplies })}>
+              <PostCard 
+                item={{
+                  post: threadReply.post,
+                  reply: threadReply.parent && threadReply.parent.$type === 'app.bsky.feed.defs#threadViewPost' ? {
+                    root: ancestors[0]?.post || threadReply.post,
+                    parent: (threadReply.parent as ThreadViewPost).post
+                  } : undefined
+                }}
+                onReply={onReply}
+                showParentPost={false}
+              />
+            </div>
+          </ErrorBoundary>
+        </motion.div>
+        
+        {/* Render nested replies */}
+        {hasReplies && (
+          <div className="thread-children">
+            {renderThreadReplies(threadReply.replies!, depth + 1, onReply, ancestors)}
+          </div>
+        )}
+      </div>
+    )
+  })
 }

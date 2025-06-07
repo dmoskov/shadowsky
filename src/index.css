@@ -8,6 +8,8 @@
 @import './styles/thread-view.css';
 @import './styles/profile.css';
 @import './styles/notifications.css';
+@import './styles/search.css';
+@import './styles/followers-modal.css';
 
 /* Reset body styles from Vite defaults */
 body {

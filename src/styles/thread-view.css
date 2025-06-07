@@ -85,38 +85,100 @@
   font-weight: var(--font-weight-medium);
 }
 
+/* Thread branch structure */
+.thread-branch {
+  position: relative;
+}
+
+.thread-children {
+  position: relative;
+  margin-left: 48px; /* Avatar width + spacing */
+}
+
 .thread-reply {
   position: relative;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  transition: all var(--transition-base);
 }
 
-/* Indentation for nested replies */
-.thread-reply.depth-1 { margin-left: var(--spacing-lg); }
-.thread-reply.depth-2 { margin-left: calc(var(--spacing-lg) * 2); }
-.thread-reply.depth-3 { margin-left: calc(var(--spacing-lg) * 3); }
-.thread-reply.depth-4 { margin-left: calc(var(--spacing-lg) * 4); }
-.thread-reply.depth-5 { margin-left: calc(var(--spacing-lg) * 5); }
+/* Thread connector lines */
+.thread-connector {
+  position: absolute;
+  left: -24px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-border);
+}
 
-/* Visual hierarchy for nested replies */
-.thread-reply.depth-1 .post-card { opacity: 0.95; }
-.thread-reply.depth-2 .post-card { opacity: 0.9; }
-.thread-reply.depth-3 .post-card { opacity: 0.85; }
-.thread-reply.depth-4 .post-card { opacity: 0.8; }
-.thread-reply.depth-5 .post-card { opacity: 0.75; }
-
-/* Thread lines for replies */
-.thread-reply::before {
+.thread-connector::before {
   content: '';
   position: absolute;
-  left: calc(-1 * var(--spacing-md) - 2px);
-  top: var(--spacing-lg);
-  width: var(--spacing-md);
+  top: 32px;
+  left: 0;
+  width: 22px;
   height: 2px;
-  background-color: var(--color-border);
+  background: var(--color-border);
 }
 
-.thread-reply.depth-0::before {
-  display: none;
+/* Thread post wrapper */
+.thread-post-wrapper {
+  position: relative;
+}
+
+.thread-post-wrapper.has-replies::after {
+  content: '';
+  position: absolute;
+  left: 24px;
+  top: 60px;
+  bottom: -8px;
+  width: 2px;
+  background: var(--color-border);
+  z-index: 0;
+}
+
+/* Depth-based styling */
+.thread-reply.depth-0 { margin-left: 0; }
+.thread-reply.depth-1 { margin-left: 0; }
+.thread-reply.depth-2 { margin-left: 0; }
+.thread-reply.depth-3 { margin-left: 0; }
+.thread-reply.depth-4 { margin-left: 0; }
+.thread-reply.depth-5 { margin-left: 0; }
+
+/* Subtle depth indication */
+.thread-reply.depth-1 .post-card { 
+  border-left: 2px solid var(--color-border);
+  padding-left: calc(var(--spacing-md) + 2px);
+}
+.thread-reply.depth-2 .post-card { 
+  border-left: 2px solid var(--color-border);
+  padding-left: calc(var(--spacing-md) + 2px);
+  opacity: 0.98;
+}
+.thread-reply.depth-3 .post-card { 
+  border-left: 2px solid var(--color-border);
+  padding-left: calc(var(--spacing-md) + 2px);
+  opacity: 0.96;
+}
+.thread-reply.depth-4 .post-card { 
+  border-left: 2px solid var(--color-border);
+  padding-left: calc(var(--spacing-md) + 2px);
+  opacity: 0.94;
+}
+.thread-reply.depth-5 .post-card { 
+  border-left: 2px solid var(--color-border);
+  padding-left: calc(var(--spacing-md) + 2px);
+  opacity: 0.92;
+}
+
+/* Hover effects */
+.thread-reply:hover .thread-connector,
+.thread-reply:hover .thread-connector::before {
+  background: var(--color-brand-primary);
+}
+
+.thread-post-wrapper:hover.has-replies::after {
+  background: var(--color-brand-primary);
 }
 
 /* Responsive design */
@@ -129,10 +191,17 @@
     padding: var(--spacing-md);
   }
   
-  .thread-reply.depth-2 { margin-left: var(--spacing-md); }
-  .thread-reply.depth-3 { margin-left: calc(var(--spacing-md) * 1.5); }
-  .thread-reply.depth-4 { margin-left: calc(var(--spacing-md) * 2); }
-  .thread-reply.depth-5 { margin-left: calc(var(--spacing-md) * 2); }
+  .thread-children {
+    margin-left: 32px; /* Smaller indent on mobile */
+  }
+  
+  .thread-connector {
+    left: -16px;
+  }
+  
+  .thread-connector::before {
+    width: 14px;
+  }
 }
 
 /* Thread Reader Mode */

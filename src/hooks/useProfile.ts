@@ -6,7 +6,6 @@ import type { ProfileViewDetailed } from '@atproto/api/dist/client/types/app/bsk
 
 export function useProfile(handle: string) {
   const { session } = useAuth()
-  const { handleError } = useErrorHandler()
 
   return useQuery({
     queryKey: ['profile', handle],
@@ -28,7 +27,6 @@ export function useProfile(handle: string) {
 
 export function useAuthorFeed(handle: string) {
   const { session } = useAuth()
-  const { handleError } = useErrorHandler()
 
   return useQuery({
     queryKey: ['authorFeed', handle],
@@ -45,7 +43,6 @@ export function useAuthorFeed(handle: string) {
 }
 
 export function useFollowUser() {
-  const { session } = useAuth()
   const { handleError } = useErrorHandler()
   const queryClient = useQueryClient()
 
@@ -101,5 +98,39 @@ export function useFollowUser() {
       // Always refetch to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['profile', variables.profile.handle] })
     }
+  })
+}
+
+export function useFollowers(handle: string, cursor?: string) {
+  const { session } = useAuth()
+
+  return useQuery({
+    queryKey: ['followers', handle, cursor],
+    queryFn: async () => {
+      const { atProtoClient } = await import('../services/atproto')
+      const agent = atProtoClient.agent
+      if (!agent) throw new Error('Not authenticated')
+      const profileService = getProfileService(agent)
+      return profileService.getFollowers(handle, cursor)
+    },
+    enabled: !!session && !!handle,
+    staleTime: 60 * 1000, // 1 minute
+  })
+}
+
+export function useFollowing(handle: string, cursor?: string) {
+  const { session } = useAuth()
+
+  return useQuery({
+    queryKey: ['following', handle, cursor],
+    queryFn: async () => {
+      const { atProtoClient } = await import('../services/atproto')
+      const agent = atProtoClient.agent
+      if (!agent) throw new Error('Not authenticated')
+      const profileService = getProfileService(agent)
+      return profileService.getFollows(handle, cursor)
+    },
+    enabled: !!session && !!handle,
+    staleTime: 60 * 1000, // 1 minute
   })
 }

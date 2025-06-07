@@ -20,12 +20,21 @@ export const Header: React.FC = () => {
   const { logout, session } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
   const [darkMode, setDarkMode] = useState(true) // For now, always dark
+  const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
   const { data: unreadCount } = useUnreadNotificationCount()
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode)
     // TODO: Implement theme switching
+  }
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`)
+      setSearchQuery('')
+    }
   }
 
   return (
@@ -49,17 +58,30 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Search Bar */}
-        <div className="header-search">
+        <form className="header-search" onSubmit={handleSearch}>
           <Search size={20} className="search-icon" />
           <input 
             type="text" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search Bluesky..." 
             className="search-input"
           />
-        </div>
+        </form>
 
         {/* Actions */}
         <div className="header-actions">
+          {/* Search Button (Mobile) */}
+          <motion.button
+            className="btn btn-icon btn-ghost mobile-search-btn"
+            onClick={() => navigate('/search')}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            title="Search"
+          >
+            <Search size={20} />
+          </motion.button>
+
           {/* Theme Toggle */}
           <motion.button
             className="btn btn-icon btn-ghost"

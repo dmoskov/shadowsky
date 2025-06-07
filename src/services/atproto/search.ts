@@ -53,7 +53,9 @@ export class SearchService {
         limit: 8
       })
       
-      return response.data.actors
+      // Typeahead returns ProfileViewBasic, but we need ProfileView
+      // Cast as any for now since they're compatible enough for display
+      return response.data.actors as any
     } catch (error) {
       throw mapATProtoError(error)
     }

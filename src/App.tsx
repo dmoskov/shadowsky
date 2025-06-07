@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -10,6 +10,7 @@ import { ComposeModal } from './components/ComposeModal'
 import { ThreadView } from './components/ThreadView'
 import { Profile } from './components/Profile'
 import { Notifications } from './components/Notifications'
+import { Search } from './components/Search'
 import { queryClient } from './lib/query-client'
 import { PenSquare } from 'lucide-react'
 import './App.css'
@@ -57,6 +58,7 @@ function AppContent() {
             <Route path="/thread/:uri" element={<ThreadViewWrapper />} />
             <Route path="/profile/:handle" element={<Profile />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/search" element={<Search />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

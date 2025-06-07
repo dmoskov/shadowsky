@@ -9,7 +9,8 @@ import {
   UserPlus,
   UserMinus,
   Image,
-  MessageCircle
+  MessageCircle,
+  Heart
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -17,6 +18,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useProfile, useAuthorFeed, useFollowUser } from '../hooks/useProfile'
 import { PostCard } from './PostCard'
 import { ComposeModal } from './ComposeModal'
+import { FollowersModal } from './FollowersModal'
 import type { Post } from '../types/atproto'
 
 type TabType = 'posts' | 'replies' | 'media' | 'likes'
@@ -28,8 +30,10 @@ export const Profile: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('posts')
   const [showMenu, setShowMenu] = useState(false)
   const [replyingTo, setReplyingTo] = useState<Post | null>(null)
+  const [showFollowersModal, setShowFollowersModal] = useState(false)
+  const [followersModalTab, setFollowersModalTab] = useState<'followers' | 'following'>('followers')
   
-  const { data: profile, isLoading: _profileLoading, error: profileError } = useProfile(handle || '')
+  const { data: profile, isLoading: profileLoading, error: profileError } = useProfile(handle || '')
   const { data: feedData, isLoading: feedLoading } = useAuthorFeed(handle || '')
   const { mutate: toggleFollow, isPending: isFollowPending } = useFollowUser()
 
@@ -45,6 +49,35 @@ export const Profile: React.FC = () => {
 
   const handleViewThread = (uri: string) => {
     navigate(`/thread/${encodeURIComponent(uri)}`)
+  }
+
+  if (profileLoading) {
+    return (
+      <div className="profile-page">
+        <div className="profile-header">
+          <div className="profile-header-nav">
+            <div className="skeleton skeleton-btn" />
+            <div className="profile-header-info">
+              <div className="skeleton skeleton-text" style={{ width: '150px' }} />
+              <div className="skeleton skeleton-text" style={{ width: '80px' }} />
+            </div>
+            <div className="skeleton skeleton-btn" />
+          </div>
+        </div>
+        <div className="profile-info card">
+          <div className="skeleton skeleton-banner" />
+          <div className="profile-main">
+            <div className="skeleton skeleton-avatar large" />
+            <div className="skeleton skeleton-btn" style={{ width: '100px' }} />
+          </div>
+          <div className="profile-details">
+            <div className="skeleton skeleton-text" style={{ width: '200px' }} />
+            <div className="skeleton skeleton-text" style={{ width: '150px' }} />
+            <div className="skeleton skeleton-text" style={{ width: '100%' }} />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (profileError) {
@@ -182,11 +215,23 @@ export const Profile: React.FC = () => {
 
           {/* Stats */}
           <div className="profile-stats">
-            <button className="stat-item">
+            <button 
+              className="stat-item"
+              onClick={() => {
+                setFollowersModalTab('followers')
+                setShowFollowersModal(true)
+              }}
+            >
               <span className="stat-value">{profile?.followersCount || 0}</span>
               <span className="stat-label text-secondary">Followers</span>
             </button>
-            <button className="stat-item">
+            <button 
+              className="stat-item"
+              onClick={() => {
+                setFollowersModalTab('following')
+                setShowFollowersModal(true)
+              }}
+            >
               <span className="stat-value">{profile?.followsCount || 0}</span>
               <span className="stat-label text-secondary">Following</span>
             </button>
@@ -220,6 +265,7 @@ export const Profile: React.FC = () => {
           className={`tab-item ${activeTab === 'likes' ? 'active' : ''}`}
           onClick={() => setActiveTab('likes')}
         >
+          <Heart size={16} />
           Likes
         </button>
       </div>
@@ -260,7 +306,7 @@ export const Profile: React.FC = () => {
         <ComposeModal
           isOpen={!!replyingTo}
           onClose={() => setReplyingTo(null)}
-          replyTo={replyingTo}
+          replyTo={replyingTo ? { post: replyingTo } : undefined}
         />
       )}
 
@@ -296,6 +342,14 @@ export const Profile: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Followers Modal */}
+      <FollowersModal
+        isOpen={showFollowersModal}
+        onClose={() => setShowFollowersModal(false)}
+        handle={handle || ''}
+        initialTab={followersModalTab}
+      />
     </div>
   )
 }

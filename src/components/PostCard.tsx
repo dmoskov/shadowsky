@@ -9,9 +9,7 @@ import {
   Share,
   MoreHorizontal,
   Bookmark,
-  Link,
-  CornerUpRight,
-  GitBranch
+  Link
 } from 'lucide-react'
 import clsx from 'clsx'
 import { ParentPost } from './ParentPost'
@@ -163,26 +161,32 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
 
         {/* Content */}
         <div className="post-content">
+          {/* Reply context */}
+          {item.reply && showParentPost !== false && (
+            <div className="reply-context">
+              <span className="reply-indicator">↳ Replying to @{item.reply.parent.author.handle}</span>
+            </div>
+          )}
           <p className="post-text">{postText}</p>
           
           {/* Quoted Post */}
           {post.embed && '$type' in post.embed && post.embed.$type === 'app.bsky.embed.record#view' && (
             <div className="quoted-post">
-              {post.embed.record && 'author' in post.embed.record && (
+              {(post.embed as any).record && 'author' in (post.embed as any).record && (
                 <>
                   <div className="quoted-post-author">
                     <img 
-                      src={(post.embed.record as any).author.avatar} 
+                      src={(post.embed as any).record.author.avatar} 
                       alt="" 
                       className="quoted-avatar"
                     />
                     <span className="author-display-name">
-                      {(post.embed.record as any).author.displayName || (post.embed.record as any).author.handle}
+                      {(post.embed as any).record.author.displayName || (post.embed as any).record.author.handle}
                     </span>
-                    <span className="text-tertiary">@{(post.embed.record as any).author.handle}</span>
+                    <span className="text-tertiary">@{(post.embed as any).record.author.handle}</span>
                   </div>
                   <p className="quoted-post-text">
-                    {(post.embed.record as any).value?.text || ''}
+                    {(post.embed as any).record.value?.text || ''}
                   </p>
                 </>
               )}
@@ -190,11 +194,11 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
           )}
 
           {/* Media Preview */}
-          {post.embed?.images && (
+          {post.embed && '$type' in post.embed && post.embed.$type === 'app.bsky.embed.images#view' && (post.embed as any).images && (
             <div className={clsx("post-media", {
-              "media-grid": post.embed.images.length > 1
+              "media-grid": (post.embed as any).images.length > 1
             })}>
-              {post.embed.images.map((image: { thumb?: string; fullsize?: string; alt?: string }, index: number) => (
+              {(post.embed as any).images.map((image: { thumb?: string; fullsize?: string; alt?: string }, index: number) => (
                 <motion.div
                   key={index}
                   className="media-item"
@@ -212,30 +216,30 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
           )}
 
           {/* External Link */}
-          {post.embed?.external && (
+          {post.embed && '$type' in post.embed && post.embed.$type === 'app.bsky.embed.external#view' && (post.embed as any).external && (
             <motion.a
-              href={post.embed.external.uri}
+              href={(post.embed as any).external.uri}
               target="_blank"
               rel="noopener noreferrer"
               className="external-link-card"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              {post.embed.external.thumb && (
+              {(post.embed as any).external.thumb && (
                 <img
-                  src={post.embed.external.thumb}
+                  src={(post.embed as any).external.thumb}
                   alt=""
                   className="link-thumbnail"
                 />
               )}
               <div className="link-content">
-                <h4 className="link-title">{post.embed.external.title}</h4>
+                <h4 className="link-title">{(post.embed as any).external.title}</h4>
                 <p className="link-description text-secondary">
-                  {post.embed.external.description}
+                  {(post.embed as any).external.description}
                 </p>
                 <span className="link-url text-tertiary">
                   <Link size={12} />
-                  {new URL(post.embed.external.uri).hostname}
+                  {new URL((post.embed as any).external.uri).hostname}
                 </span>
               </div>
             </motion.a>

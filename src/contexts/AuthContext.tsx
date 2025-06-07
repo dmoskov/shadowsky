@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import type { ReactNode } from 'react'
 import { atProtoClient, ATProtoClient } from '../services/atproto'
 import type { Session } from '../types/atproto'
 import { SessionExpiredError, AuthenticationError, NetworkError } from '../lib/errors'
+import { queryClient } from '../lib/query-client'
 
 interface AuthContextType {
   isAuthenticated: boolean
@@ -35,9 +37,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const maxRetries = 3
 
   const logout = useCallback(() => {
+    // Clear all auth state
     atProtoClient.logout()
     setIsAuthenticated(false)
     setSession(null)
+    
+    // Clear React Query cache
+    queryClient.clear()
+    
+    // Force a page reload to ensure all state is cleared
+    window.location.href = '/'
   }, [])
   
   const refreshSession = useCallback(async (): Promise<boolean> => {
