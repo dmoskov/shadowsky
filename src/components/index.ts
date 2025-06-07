@@ -31,6 +31,6 @@ export { Notifications } from './profile/Notifications'
 export { Search } from './profile/Search'
 
 // UI components
-export { EmptyStates } from './ui/EmptyStates'
-export { SkeletonLoaders } from './ui/SkeletonLoaders'
+export * from './ui/EmptyStates'
+export * from './ui/SkeletonLoaders'
 export { ReplyContext } from './ui/ReplyContext'
