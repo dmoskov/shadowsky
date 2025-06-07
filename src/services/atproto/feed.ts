@@ -4,38 +4,63 @@
 
 import { ATProtoClient } from './client'
 import { mapATProtoError } from '../../lib/errors'
+import { rateLimiters, withRateLimit } from '../../lib/rate-limiter'
+import { withDeduplication } from '../../lib/request-deduplication'
 import type { TimelineResponse, Post } from '../../types/atproto'
 
 export class FeedService {
-  constructor(private client: ATProtoClient) {}
+  constructor(private client: ATProtoClient) {
+    // Wrap methods with deduplication
+    this.getTimeline = withDeduplication(
+      this.getTimeline.bind(this),
+      (cursor) => `timeline:${cursor || 'initial'}`
+    );
+    
+    this.getAuthorFeed = withDeduplication(
+      this.getAuthorFeed.bind(this),
+      (actor, cursor) => `author:${actor}:${cursor || 'initial'}`
+    );
+    
+    this.getPostThread = withDeduplication(
+      this.getPostThread.bind(this),
+      (uri) => `thread:${uri}`
+    );
+    
+    this.searchPosts = withDeduplication(
+      this.searchPosts.bind(this),
+      (query, cursor) => `search:${query}:${cursor || 'initial'}`
+    );
+  }
 
   async getTimeline(cursor?: string): Promise<TimelineResponse> {
-    try {
-      const agent = this.client.getAgent()
-      const response = await agent.app.bsky.feed.getTimeline({ cursor, limit: 30 })
-      
-      return {
-        cursor: response.data.cursor,
-        feed: response.data.feed.map(item => ({
-          post: item.post as Post,
-          reply: item.reply && 'root' in item.reply && 'parent' in item.reply && 
-                 item.reply.root.$type === 'app.bsky.feed.defs#postView' &&
-                 item.reply.parent.$type === 'app.bsky.feed.defs#postView'
-            ? {
-                root: item.reply.root as Post,
-                parent: item.reply.parent as Post
-              }
-            : undefined,
-          reason: item.reason && '$type' in item.reason && 
-                  (item.reason.$type === 'app.bsky.feed.defs#reasonRepost' || 
-                   item.reason.$type === 'app.bsky.feed.defs#reasonPin')
-            ? item.reason as any
-            : undefined
-        }))
+    return withRateLimit(rateLimiters.feed, 'timeline', async () => {
+      try {
+        const agent = this.client.getAgent()
+        const response = await agent.app.bsky.feed.getTimeline({ cursor, limit: 30 })
+        
+        return {
+          cursor: response.data.cursor,
+          feed: response.data.feed.map(item => ({
+            post: item.post as Post,
+            reply: item.reply && 'root' in item.reply && 'parent' in item.reply && 
+                   item.reply.root.$type === 'app.bsky.feed.defs#postView' &&
+                   item.reply.parent.$type === 'app.bsky.feed.defs#postView'
+              ? {
+                  root: item.reply.root as Post,
+                  parent: item.reply.parent as Post
+                }
+              : undefined,
+            reason: item.reason && '$type' in item.reason && 
+                    (item.reason.$type === 'app.bsky.feed.defs#reasonRepost' || 
+                     item.reason.$type === 'app.bsky.feed.defs#reasonPin')
+              ? item.reason as any
+              : undefined
+          }))
+        }
+      } catch (error) {
+        throw mapATProtoError(error)
       }
-    } catch (error) {
-      throw mapATProtoError(error)
-    }
+    })
   }
 
   async getAuthorFeed(actor: string, cursor?: string): Promise<TimelineResponse> {
