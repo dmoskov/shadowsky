@@ -192,7 +192,7 @@
 }
 
 .compose-fab:hover {
-  background-color: #1a8cd8;
+  background-color: var(--blue-600);
   transform: scale(1.05);
   box-shadow: var(--shadow-xl);
 }

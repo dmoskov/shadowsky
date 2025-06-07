@@ -134,11 +134,11 @@
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all var(--transition-base);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--blue-500-rgb), 0.3);
 }
 
 .compose-btn:hover {
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(var(--blue-500-rgb), 0.4);
   transform: translateY(-1px);
 }
 

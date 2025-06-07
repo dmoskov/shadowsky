@@ -31,8 +31,8 @@
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #1a8cd8;
-  box-shadow: 0 2px 6px rgba(29, 155, 240, 0.3);
+  background-color: var(--blue-600);
+  box-shadow: 0 2px 6px rgba(var(--blue-500-rgb), 0.3);
 }
 
 .btn-primary:active:not(:disabled) {
@@ -66,8 +66,8 @@
 }
 
 .btn-danger:hover:not(:disabled) {
-  background-color: #e63946;
-  box-shadow: 0 2px 6px rgba(255, 59, 48, 0.3);
+  background-color: var(--red-600);
+  box-shadow: 0 2px 6px var(--color-error-bg);
 }
 
 /* Button Sizes */
@@ -99,7 +99,7 @@
 
 .card:hover {
   border-color: var(--color-border-hover);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 8px var(--shadow-color);
 }
 
 .card-body {
@@ -108,10 +108,10 @@
 
 /* Glass Effect */
 .glass {
-  background: rgba(20, 24, 36, 0.7);
+  background: var(--color-glass-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border);
 }
 
 /* Input Styles */
@@ -226,7 +226,7 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--color-backdrop);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   z-index: var(--z-modal-backdrop);

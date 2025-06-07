@@ -1,44 +1,11 @@
 /* Design System - CSS Custom Properties */
 
 :root {
-  /* Color Palette - Light Mode (keeping for future) */
-  --color-bg-primary-light: #ffffff;
-  --color-bg-secondary-light: #f8f9fa;
-  --color-text-primary-light: #1a1a1a;
-  
-  /* Color Palette - Dark Mode */
-  --color-bg-primary: #0A0E1B;
-  --color-bg-secondary: #141824;
-  --color-bg-tertiary: #1C2230;
-  --color-bg-elevated: #242938;
-  
-  /* Text Colors */
-  --color-text-primary: #E8EAED;
-  --color-text-secondary: #9AA0A6;
-  --color-text-tertiary: #5F6368;
-  --color-text-link: #1D9BF0;
-  
-  /* Brand Colors */
-  --color-brand-primary: #1D9BF0;
-  --color-brand-secondary: #7856FF;
-  --color-brand-gradient: linear-gradient(135deg, #1D9BF0 0%, #7856FF 100%);
-  
+  /* Color definitions have been moved to color-system.css */
   /* RGB values for opacity calculations */
-  --primary-rgb: 29, 155, 240;
-  
-  /* Semantic Colors */
-  --color-success: #34C759;
-  --color-warning: #FF9500;
-  --color-error: #FF3B30;
-  --color-info: #007AFF;
-  --danger-color: #FF3B30;
-  
-  /* Interactive States */
-  --color-hover-overlay: rgba(255, 255, 255, 0.08);
-  --color-active-overlay: rgba(255, 255, 255, 0.12);
-  --color-focus-ring: #1D9BF0;
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-border-hover: rgba(255, 255, 255, 0.2);
+  --primary-rgb: 59, 130, 246;  /* Updated to match --blue-500 */
+  --blue-500-rgb: 59, 130, 246;
+  --purple-500-rgb: 168, 85, 247;
   
   /* Typography Scale */
   --font-size-display: 3rem;        /* 48px */

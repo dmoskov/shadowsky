@@ -79,11 +79,11 @@
 }
 
 .notification-icon.like {
-  color: #e0245e;
+  color: var(--color-notification-like);
 }
 
 .notification-icon.repost {
-  color: #17bf63;
+  color: var(--color-notification-repost);
 }
 
 .notification-icon.follow {
@@ -91,15 +91,15 @@
 }
 
 .notification-icon.mention {
-  color: #1da1f2;
+  color: var(--color-notification-mention);
 }
 
 .notification-icon.reply {
-  color: #794bc4;
+  color: var(--color-notification-reply);
 }
 
 .notification-icon.quote {
-  color: #f7931a;
+  color: var(--color-notification-quote);
 }
 
 /* Notification Content */
@@ -197,7 +197,7 @@
   height: 18px;
   padding: 0 4px;
   border-radius: 9px;
-  background-color: var(--danger-color);
+  background-color: var(--color-error);
   color: white;
   font-size: 11px;
   font-weight: var(--font-weight-semibold);

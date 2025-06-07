@@ -321,7 +321,7 @@
 }
 
 .error-state .text-error {
-  color: var(--danger-color);
+  color: var(--color-error);
   font-weight: var(--font-weight-medium);
   margin-bottom: var(--spacing-sm);
 }

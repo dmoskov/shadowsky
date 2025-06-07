@@ -4,7 +4,7 @@
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
-  background: rgba(10, 14, 27, 0.95);
+  background: var(--color-bg-primary);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--color-border);
@@ -13,7 +13,7 @@
 }
 
 .header.scrolled {
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 20px var(--shadow-color);
 }
 
 .header.hidden {

@@ -315,7 +315,7 @@
 }
 
 .menu-item.danger:hover {
-  background-color: rgba(255, 68, 68, 0.1);
+  background-color: var(--color-error-bg);
   color: var(--color-error);
 }
 
@@ -341,7 +341,7 @@
 .quoted-post:hover {
   border-color: var(--color-brand-primary);
   background-color: var(--color-hover-overlay);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--shadow-color);
 }
 
 .quoted-post:active {
