@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { 
@@ -21,8 +21,41 @@ export const Header: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState(false)
   const [darkMode, setDarkMode] = useState(true) // For now, always dark
   const [searchQuery, setSearchQuery] = useState('')
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [isHidden, setIsHidden] = useState(false)
   const navigate = useNavigate()
   const { data: unreadCount } = useUnreadNotificationCount()
+
+  // Handle scroll behavior
+  useEffect(() => {
+    let lastScrollY = window.scrollY
+    let ticking = false
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY
+          
+          // Add scrolled class when scrolled down
+          setIsScrolled(currentScrollY > 10)
+          
+          // Hide header when scrolling down, show when scrolling up
+          if (currentScrollY > lastScrollY && currentScrollY > 60) {
+            setIsHidden(true)
+          } else {
+            setIsHidden(false)
+          }
+          
+          lastScrollY = currentScrollY
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode)
@@ -39,7 +72,10 @@ export const Header: React.FC = () => {
 
   return (
     <motion.header 
-      className="header"
+      className={clsx('header', {
+        'scrolled': isScrolled,
+        'hidden': isHidden
+      })}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -124,6 +160,7 @@ export const Header: React.FC = () => {
               </div>
               <span className="user-handle">@{session?.handle || 'user'}</span>
               <motion.div
+                className="user-menu-chevron"
                 animate={{ rotate: showDropdown ? 180 : 0 }}
                 transition={{ duration: 0.2 }}
               >

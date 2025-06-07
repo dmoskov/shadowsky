@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { Login } from './components/Login'
 import { Feed } from './components/Feed'
 import { Header } from './components/Header'
+import { Sidebar } from './components/Sidebar'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ComposeModal } from './components/ComposeModal'
 import { ThreadView } from './components/ThreadView'
@@ -61,18 +62,21 @@ function AppContent() {
     <>
       <div className="app-layout">
         <Header />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={
-              <Feed onViewThread={(uri) => navigate(`/thread/${encodeURIComponent(uri)}`)} />
-            } />
-            <Route path="/thread/:uri" element={<ThreadViewWrapper />} />
-            <Route path="/profile/:handle" element={<Profile />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
+        <div className="app-body">
+          <Sidebar onCompose={() => setIsComposeOpen(true)} />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={
+                <Feed onViewThread={(uri) => navigate(`/thread/${encodeURIComponent(uri)}`)} />
+              } />
+              <Route path="/thread/:uri" element={<ThreadViewWrapper />} />
+              <Route path="/profile/:handle" element={<Profile />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+        </div>
       </div>
       
       {/* Floating Action Button */}

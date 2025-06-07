@@ -201,7 +201,14 @@
   transform: scale(0.95);
 }
 
-/* Responsive */
+/* Desktop - hide FAB since we have sidebar compose button */
+@media (min-width: 769px) {
+  .compose-fab {
+    display: none;
+  }
+}
+
+/* Mobile responsive */
 @media (max-width: 768px) {
   .compose-modal {
     width: 100%;

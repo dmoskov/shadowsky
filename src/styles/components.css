@@ -141,11 +141,14 @@
 
 /* Avatar */
 .avatar {
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-full);
   background-color: var(--color-bg-tertiary);
+  flex-shrink: 0;
 }
 
 .avatar img {

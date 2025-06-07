@@ -2,6 +2,14 @@
 .app-layout {
   min-height: 100vh;
   background-color: var(--color-bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  position: relative;
 }
 
 .loading-container {
@@ -13,6 +21,31 @@
 }
 
 .main-content {
-  padding-top: var(--spacing-lg);
-  min-height: calc(100vh - 80px);
+  flex: 1;
+  padding: var(--spacing-lg);
+  min-height: calc(100vh - var(--header-height, 60px));
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Desktop layout with sidebar */
+@media (min-width: 769px) {
+  .main-content {
+    margin-left: 0;
+    max-width: calc(100% - 260px);
+  }
+}
+
+/* Collapsed sidebar */
+@media (min-width: 769px) and (max-width: 1280px) {
+  .main-content {
+    max-width: calc(100% - 72px);
+  }
+}
+
+/* Mobile - no sidebar */
+@media (max-width: 768px) {
+  .main-content {
+    padding: var(--spacing-sm);
+  }
 }
