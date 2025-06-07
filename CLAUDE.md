@@ -271,21 +271,23 @@ interface Post {
 
 ## Contributing Guidelines
 When working on this project:
-1. Check `SESSION_NOTES.md` for current state and `./progress/` for history
-2. Test all changes (Git commits are made autonomously)
-3. Update documentation based on the three-tier system:
+1. **ALWAYS CHECK EXISTING CODE FIRST**: Read `DEVELOPMENT_PROCESS.md` and follow the reuse guidelines
+2. **Review `TEST_SCRIPTS_INVENTORY.md`** before creating any test scripts
+3. Check `SESSION_NOTES.md` for current state and `./progress/` for history
+4. Test all changes (Git commits are made autonomously)
+5. Update documentation based on the three-tier system:
    - SESSION_NOTES.md during work
    - Create progress log at session end
    - Update CLAUDE.md when features stabilize
    - Record decisions in DECISIONS.md
    - Track patterns in PATTERNS.md
-4. Document any new API discoveries
-5. Keep the codebase simple and readable
-6. Git is managed autonomously - commits happen at natural breakpoints
-7. **Keep dev server running**: Use `./scripts/dev-server.sh` for management
-8. **Use Chrome for testing**: Run `./scripts/open-chrome.sh` to open in Chrome
-9. **Check for errors**: Run `node ./scripts/check-dev-errors.js` to detect issues
-10. **Visual documentation**: Take screenshots for UI changes, save to `progress/screenshots/`
+6. Document any new API discoveries
+7. Keep the codebase simple and readable
+8. Git is managed autonomously - commits happen at natural breakpoints
+9. **Keep dev server running**: Use `./scripts/dev-server.sh` for management
+10. **Use Chrome for testing**: Run `./scripts/open-chrome.sh` to open in Chrome
+11. **Check for errors**: Run `node ./scripts/check-dev-errors.js` to detect issues
+12. **Visual documentation**: Take screenshots for UI changes, save to `progress/screenshots/`
 
 ## Resources
 - [AT Protocol Documentation](https://atproto.com/)
