@@ -8,7 +8,7 @@ This log tracks every change made during refactoring. If something breaks, use t
 ---
 
 ## Pre-Refactoring State
-- Commit hash before starting: [will be added]
+- Commit hash before starting: 852829cac1efa45443993c5a5d452cf526bffd26
 - All features working: Login, Feed, Sidebar, Thread View, Compose
 - Dev server running on port 5173
 
@@ -18,18 +18,18 @@ This log tracks every change made during refactoring. If something breaks, use t
 ```bash
 git checkout -b refactor/organize-project-structure
 ```
-- Time: [timestamp]
-- Status: [✓/✗]
-- Tests: [✓/✗]
+- Time: 10:10 AM
+- Status: ✓
+- Tests: N/A
 
 ### Step 2: Initial Commit
 ```bash
 git add -A
-git commit -m "Checkpoint: Before refactoring"
+git commit -m "Checkpoint: Before refactoring - all features working"
 ```
-- Commit hash: [hash]
-- Time: [timestamp]
-- Status: [✓/✗]
+- Commit hash: 852829cac1efa45443993c5a5d452cf526bffd26
+- Time: 10:10 AM
+- Status: ✓
 
 ---
 
@@ -40,21 +40,22 @@ git commit -m "Checkpoint: Before refactoring"
 mkdir -p tests/playwright
 mkdir -p tests/screenshots/archive
 ```
-- Time: [timestamp]
-- Status: [✓/✗]
+- Time: 10:12 AM
+- Status: ✓
 
 ### Step 4: Move Test Files
 Files moved:
-- [ ] test-*.js → tests/playwright/
-- [ ] *.mjs → tests/playwright/
+- [✓] test-*.js → tests/playwright/ (20 files)
+- [✓] *.mjs → tests/playwright/ (3 files)
+- [✓] automated-screenshots.sh → tests/playwright/
 
 ### Step 5: Archive Screenshots
-- [ ] test-screenshots/* → tests/screenshots/archive/
+- [✓] test-screenshots/* → tests/screenshots/archive/ (59 files)
 
 ### Step 6: Test After Cleanup
-- [ ] npm run dev still works
-- [ ] Application loads correctly
-- [ ] No console errors
+- [✓] npm run dev still works (server on port 5173)
+- [✓] Application loads correctly
+- [✓] Basic smoke test created
 
 ---
 
