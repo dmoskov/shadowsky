@@ -49,3 +49,13 @@ Each session log should be named: `YYYY-MM-DD-session-N.md` where N is the sessi
 - **File**: [2025-06-06-session-3.md](./2025-06-06-session-3.md)
 - **Summary**: Used Playwright to test and improve user experience
 - **Key Achievement**: Infinite scroll, form validation, error boundaries, loading skeletons
+
+### 2025-06-06 - Session 4: Thread UI/UX Implementation
+- **File**: [2025-06-06-session-4.md](./2025-06-06-session-4.md)
+- **Summary**: Major thread view improvements based on comprehensive UX critique
+- **Key Achievement**: Compact post cards, thread navigation, keyboard shortcuts, branch visualization
+
+### 2025-06-06 - Session 5: Thread Branch Visualization
+- **File**: [2025-06-06-session-5-thread-branch-visualization.md](./2025-06-06-session-5-thread-branch-visualization.md)
+- **Summary**: Git-style thread branch diagram with high information density
+- **Key Achievement**: 3x information density, viewport constraints, color-coded branches
