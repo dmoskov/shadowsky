@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUnreadNotificationCount } from '../../hooks/useNotifications'
+import { useToast } from '../ui/Toast'
 import clsx from 'clsx'
 
 interface HeaderProps {
@@ -30,6 +31,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   const [isHidden, setIsHidden] = useState(false)
   const navigate = useNavigate()
   const { data: unreadCount } = useUnreadNotificationCount()
+  const toast = useToast()
 
   // Handle scroll behavior
   useEffect(() => {
@@ -207,11 +209,23 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
                     <User size={18} />
                     <span>Profile</span>
                   </button>
-                  <button className="dropdown-item">
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => {
+                      toast.info('Bookmarks feature coming soon!')
+                      setShowDropdown(false)
+                    }}
+                  >
                     <Bookmark size={18} />
                     <span>Bookmarks</span>
                   </button>
-                  <button className="dropdown-item">
+                  <button 
+                    className="dropdown-item"
+                    onClick={() => {
+                      toast.warning('Settings page under construction')
+                      setShowDropdown(false)
+                    }}
+                  >
                     <Settings size={18} />
                     <span>Settings</span>
                   </button>

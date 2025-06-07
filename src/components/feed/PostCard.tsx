@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { formatDistanceToNow } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 import { 
   Heart, 
@@ -18,6 +17,7 @@ import { ReplyContext } from '../ui/ReplyContext'
 import type { FeedItem, Post } from '../../types/atproto'
 import { usePostInteractions } from '../../hooks/usePostInteractions'
 import { atUriToWebUrl, copyToClipboard, shareUrl } from '../../utils/url-helpers'
+import { getPostText, formatPostTime, hasQuoteEmbed, hasImageEmbed, hasExternalEmbed, getExternalEmbed, getImageEmbed, getQuoteEmbed } from '../../utils/post-helpers'
 
 interface PostCardProps {
   item: FeedItem
@@ -39,22 +39,6 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
   const likeCount = post.likeCount || 0
   const repostCount = post.repostCount || 0
 
-  // Extract post text - Bluesky stores text directly in record.text
-  const getPostText = (): string => {
-    if (post.record && typeof post.record === 'object' && 'text' in post.record) {
-      return (post.record as { text?: string }).text || ''
-    }
-    return ''
-  }
-
-  // Get post date
-  const getPostDate = (): string => {
-    // Check record.createdAt first
-    if (post.record && typeof post.record === 'object' && 'createdAt' in post.record) {
-      return (post.record as { createdAt?: string }).createdAt || post.indexedAt
-    }
-    return post.indexedAt || new Date().toISOString()
-  }
 
   const handleLike = async () => {
     await likePost(post)
@@ -91,8 +75,8 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
     }
   }
 
-  const postText = getPostText()
-  const postDate = getPostDate()
+  const postText = getPostText(post)
+  const postTime = formatPostTime(post)
 
   return (
     <div className="post-wrapper">
@@ -175,7 +159,7 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
               )}
             </div>
             <time className="post-time text-tertiary text-caption">
-              {formatDistanceToNow(new Date(postDate), { addSuffix: true })}
+              {postTime}
             </time>
           </div>
 
@@ -316,7 +300,11 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
           </motion.button>
 
           <motion.button
-            className={clsx("engagement-btn", { active: isReposted, reposted: isReposted })}
+            className={clsx("engagement-btn", { 
+              active: isReposted, 
+              reposted: isReposted,
+              'btn-loading': isReposting 
+            })}
             onClick={handleRepost}
             disabled={isReposting}
             whileHover={{ scale: 1.1 }}
@@ -325,14 +313,21 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
             <motion.div
               animate={{ rotate: isReposted ? 180 : 0 }}
               transition={{ duration: 0.3 }}
+              style={{ opacity: isReposting ? 0 : 1 }}
             >
               <Repeat2 size={18} />
             </motion.div>
-            <span>{repostCount}</span>
+            <span className={clsx("number-transition", { changing: isReposting })}>
+              {repostCount}
+            </span>
           </motion.button>
 
           <motion.button
-            className={clsx("engagement-btn like-btn", { active: isLiked })}
+            className={clsx("engagement-btn like-btn", { 
+              active: isLiked,
+              liked: isLiked,
+              'btn-loading': isLiking 
+            })}
             onClick={handleLike}
             disabled={isLiking}
             whileHover={{ scale: 1.1 }}
@@ -341,10 +336,13 @@ export const PostCard: React.FC<PostCardProps> = ({ item, onReply, onViewThread,
             <motion.div
               animate={{ scale: isLiked ? [1, 1.3, 1] : 1 }}
               transition={{ duration: 0.3 }}
+              style={{ opacity: isLiking ? 0 : 1 }}
             >
               <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
             </motion.div>
-            <span>{likeCount}</span>
+            <span className={clsx("number-transition", { changing: isLiking })}>
+              {likeCount}
+            </span>
           </motion.button>
 
           <motion.button

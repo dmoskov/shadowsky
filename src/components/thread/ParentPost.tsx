@@ -1,6 +1,6 @@
 import React from 'react'
-import { formatDistanceToNow } from 'date-fns'
 import type { Post } from '../../types/atproto'
+import { getPostText, formatPostTime } from '../../utils/post-helpers'
 
 interface ParentPostProps {
   post: Post
@@ -8,32 +8,8 @@ interface ParentPostProps {
 }
 
 export const ParentPost: React.FC<ParentPostProps> = ({ post, isRoot = false }) => {
-  const getPostText = (): string => {
-    // Standard PostView structure: text is in post.record.text
-    if (post.record && typeof post.record === 'object' && 'text' in post.record) {
-      return (post.record as { text?: string }).text || ''
-    }
-    
-    // Fallback for edge cases
-    if (post.record && typeof post.record === 'object') {
-      const record = post.record as any
-      // Check if record has $type indicating it's a post
-      if (record.$type === 'app.bsky.feed.post' && record.text) {
-        return record.text
-      }
-    }
-    
-    return ''
-  }
-
-  const getPostDate = (): string => {
-    // Check record.createdAt first (standard location)
-    if (post.record && typeof post.record === 'object' && 'createdAt' in post.record) {
-      return (post.record as { createdAt?: string }).createdAt || post.indexedAt
-    }
-    // Fall back to indexedAt
-    return post.indexedAt || new Date().toISOString()
-  }
+  const postText = getPostText(post)
+  const postTime = formatPostTime(post)
 
   return (
     <div className={`parent-post ${isRoot ? 'is-root' : ''}`}>
@@ -57,7 +33,7 @@ export const ParentPost: React.FC<ParentPostProps> = ({ post, isRoot = false }) 
             <span className="text-tertiary">@{post.author.handle}</span>
           </div>
           <time className="text-tertiary text-caption">
-            {formatDistanceToNow(new Date(getPostDate()), { addSuffix: true })}
+            {postTime}
           </time>
         </div>
         {post.author.displayName && (
@@ -68,7 +44,7 @@ export const ParentPost: React.FC<ParentPostProps> = ({ post, isRoot = false }) 
           </div>
         )}
       </div>
-      <p className="parent-post-text">{getPostText() || <span className="text-tertiary">[No text content]</span>}</p>
+      <p className="parent-post-text">{postText || <span className="text-tertiary">[No text content]</span>}</p>
       <div className="thread-connector"></div>
     </div>
   )

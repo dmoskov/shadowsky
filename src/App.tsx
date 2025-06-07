@@ -13,7 +13,10 @@ import {
   Profile,
   Notifications,
   Search,
-  KeyboardShortcutsModal
+  KeyboardShortcutsModal,
+  ToastProvider,
+  ToastContainer,
+  ScrollProgress
 } from './components'
 import { MobileNav } from './components/core/MobileNav'
 import { MobileMenu } from './components/core/MobileMenu'
@@ -65,6 +68,7 @@ function AppContent() {
 
   return (
     <>
+      <ScrollProgress />
       <div className="app-layout">
         <Header onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
         <div className="app-body">
@@ -110,6 +114,9 @@ function AppContent() {
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
       />
+      
+      {/* Toast Notifications */}
+      <ToastContainer />
     </>
   )
 }
@@ -120,9 +127,11 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
-            <ErrorBoundary>
-              <AppContent />
-            </ErrorBoundary>
+            <ToastProvider>
+              <ErrorBoundary>
+                <AppContent />
+              </ErrorBoundary>
+            </ToastProvider>
           </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>

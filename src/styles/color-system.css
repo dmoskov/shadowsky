@@ -110,6 +110,7 @@
   --color-brand-primary: var(--blue-500);
   --color-brand-primary-hover: var(--blue-600);
   --color-brand-primary-active: var(--blue-700);
+  --color-brand-primary-rgb: 59, 130, 246; /* For rgba() usage */
   --color-brand-secondary: var(--purple-500);
   --color-brand-secondary-hover: var(--purple-600);
   --color-brand-gradient: linear-gradient(135deg, var(--blue-500) 0%, var(--purple-500) 100%);

@@ -1,9 +1,9 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { formatDistanceToNow } from 'date-fns'
 import { Heart, MessageCircle, Repeat2 } from 'lucide-react'
 import clsx from 'clsx'
 import type { Post } from '../../types/atproto'
+import { getPostText, formatPostTime } from '../../utils/post-helpers'
 
 interface CompactPostCardProps {
   post: Post
@@ -20,27 +20,8 @@ export const CompactPostCard: React.FC<CompactPostCardProps> = ({
   onReply,
   onClick
 }) => {
-  // Extract post text
-  const getPostText = (): string => {
-    if (post.record && typeof post.record === 'object' && 'text' in post.record) {
-      return (post.record as { text?: string }).text || ''
-    }
-    return ''
-  }
-
-  // Get post date
-  const getPostDate = (): string => {
-    if (post.record && typeof post.record === 'object' && 'createdAt' in post.record) {
-      const createdAt = (post.record as { createdAt?: string }).createdAt
-      if (createdAt) {
-        return formatDistanceToNow(new Date(createdAt), { addSuffix: true })
-      }
-    }
-    return post.indexedAt || new Date().toISOString()
-  }
-
-  const postText = getPostText()
-  const postDate = getPostDate()
+  const postText = getPostText(post)
+  const postTime = formatPostTime(post)
 
   return (
     <motion.div
@@ -65,7 +46,7 @@ export const CompactPostCard: React.FC<CompactPostCardProps> = ({
               {post.author.displayName || post.author.handle}
             </span>
             <span className="compact-handle">@{post.author.handle}</span>
-            <span className="compact-time">{postDate}</span>
+            <span className="compact-time">{postTime}</span>
           </div>
         </div>
       )}

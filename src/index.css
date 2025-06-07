@@ -22,6 +22,8 @@
 @import './styles/notifications.css';
 @import './styles/search.css';
 @import './styles/followers-modal.css';
+@import './styles/toast.css';
+@import './styles/micro-interactions.css';
 
 /* Reset body styles from Vite defaults */
 body {
