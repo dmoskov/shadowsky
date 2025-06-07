@@ -1,6 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import type { Post } from '../../types/atproto'
 import { mapATProtoError } from '../../lib/errors'
+import { rateLimiters, withRateLimit } from '../../lib/rate-limiter'
 
 export interface LikeResult {
   uri: string
@@ -103,43 +104,47 @@ class InteractionsService {
       parent: { uri: string; cid: string }
     }
   ): Promise<{ uri: string; cid: string }> {
-    try {
-      const { data: session } = await this.agent.com.atproto.server.getSession()
-      const result = await this.agent.com.atproto.repo.createRecord({
-        repo: session.did,
-        collection: 'app.bsky.feed.post',
-        record: {
-          $type: 'app.bsky.feed.post',
-          text,
-          reply: replyTo,
-          createdAt: new Date().toISOString()
-        }
-      })
-      return { uri: result.data.uri, cid: result.data.cid }
-    } catch (error) {
-      throw mapATProtoError(error)
-    }
+    return withRateLimit(rateLimiters.interactions, 'createReply', async () => {
+      try {
+        const { data: session } = await this.agent.com.atproto.server.getSession()
+        const result = await this.agent.com.atproto.repo.createRecord({
+          repo: session.did,
+          collection: 'app.bsky.feed.post',
+          record: {
+            $type: 'app.bsky.feed.post',
+            text,
+            reply: replyTo,
+            createdAt: new Date().toISOString()
+          }
+        })
+        return { uri: result.data.uri, cid: result.data.cid }
+      } catch (error) {
+        throw mapATProtoError(error)
+      }
+    })
   }
 
   /**
    * Create a new post
    */
   async createPost(text: string): Promise<{ uri: string; cid: string }> {
-    try {
-      const { data: session } = await this.agent.com.atproto.server.getSession()
-      const result = await this.agent.com.atproto.repo.createRecord({
-        repo: session.did,
-        collection: 'app.bsky.feed.post',
-        record: {
-          $type: 'app.bsky.feed.post',
-          text,
-          createdAt: new Date().toISOString()
-        }
-      })
-      return { uri: result.data.uri, cid: result.data.cid }
-    } catch (error) {
-      throw mapATProtoError(error)
-    }
+    return withRateLimit(rateLimiters.interactions, 'createPost', async () => {
+      try {
+        const { data: session } = await this.agent.com.atproto.server.getSession()
+        const result = await this.agent.com.atproto.repo.createRecord({
+          repo: session.did,
+          collection: 'app.bsky.feed.post',
+          record: {
+            $type: 'app.bsky.feed.post',
+            text,
+            createdAt: new Date().toISOString()
+          }
+        })
+        return { uri: result.data.uri, cid: result.data.cid }
+      } catch (error) {
+        throw mapATProtoError(error)
+      }
+    })
   }
 
   /**

@@ -1,44 +1,60 @@
 import { AtpAgent } from '@atproto/api'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { mapATProtoError } from '../../lib/errors'
+import { rateLimiters, withRateLimit } from '../../lib/rate-limiter'
 
 export class NotificationService {
   constructor(private agent: AtpAgent) {}
 
+  /**
+   * List notifications for the current user
+   */
   async listNotifications(cursor?: string): Promise<{
     notifications: Notification[]
     cursor?: string
   }> {
-    try {
-      const response = await this.agent.app.bsky.notification.listNotifications({
-        limit: 30,
-        cursor
-      })
-      
-      return {
-        notifications: response.data.notifications,
-        cursor: response.data.cursor
+    return withRateLimit(rateLimiters.general, 'listNotifications', async () => {
+      try {
+        const response = await this.agent.app.bsky.notification.listNotifications({
+          limit: 50,
+          cursor
+        })
+        
+        return {
+          notifications: response.data.notifications,
+          cursor: response.data.cursor
+        }
+      } catch (error) {
+        throw mapATProtoError(error)
       }
-    } catch (error) {
-      throw mapATProtoError(error)
-    }
+    })
   }
 
-  async updateSeen(seenAt: string): Promise<void> {
-    try {
-      await this.agent.app.bsky.notification.updateSeen({ seenAt })
-    } catch (error) {
-      throw mapATProtoError(error)
-    }
-  }
-
+  /**
+   * Get unread notification count
+   */
   async getUnreadCount(): Promise<number> {
-    try {
-      const response = await this.agent.app.bsky.notification.getUnreadCount()
-      return response.data.count
-    } catch (error) {
-      throw mapATProtoError(error)
-    }
+    return withRateLimit(rateLimiters.general, 'getUnreadCount', async () => {
+      try {
+        const response = await this.agent.app.bsky.notification.getUnreadCount()
+        return response.data.count
+      } catch (error) {
+        throw mapATProtoError(error)
+      }
+    })
+  }
+
+  /**
+   * Update last seen time for notifications
+   */
+  async updateSeen(seenAt: string): Promise<void> {
+    return withRateLimit(rateLimiters.general, 'updateSeen', async () => {
+      try {
+        await this.agent.app.bsky.notification.updateSeen({ seenAt })
+      } catch (error) {
+        throw mapATProtoError(error)
+      }
+    })
   }
 }
 
