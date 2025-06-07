@@ -81,6 +81,7 @@
 
 .notification-btn {
   position: relative;
+  overflow: visible !important; /* Allow badge to show outside button bounds */
 }
 
 .notification-badge {
