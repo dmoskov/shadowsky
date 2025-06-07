@@ -15,6 +15,8 @@ import {
   Search,
   KeyboardShortcutsModal
 } from './components'
+import { MobileNav } from './components/core/MobileNav'
+import { MobileMenu } from './components/core/MobileMenu'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
 import { queryClient } from './lib/query-client'
 import { PenSquare } from 'lucide-react'
@@ -43,6 +45,7 @@ function ThreadViewWrapper() {
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth()
   const [isComposeOpen, setIsComposeOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
   
   // Enable keyboard navigation
@@ -63,7 +66,7 @@ function AppContent() {
   return (
     <>
       <div className="app-layout">
-        <Header />
+        <Header onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
         <div className="app-body">
           <Sidebar onCompose={() => setIsComposeOpen(true)} />
           <main className="main-content">
@@ -98,6 +101,15 @@ function AppContent() {
       
       {/* Keyboard Shortcuts Modal */}
       <KeyboardShortcutsModal />
+      
+      {/* Mobile Navigation */}
+      <MobileNav />
+      
+      {/* Mobile Menu */}
+      <MobileMenu 
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+      />
     </>
   )
 }

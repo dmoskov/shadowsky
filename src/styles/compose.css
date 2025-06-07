@@ -175,7 +175,7 @@
 .compose-fab {
   position: fixed;
   bottom: var(--spacing-xl);
-  left: var(--spacing-xl);
+  right: var(--spacing-xl);
   width: 56px;
   height: 56px;
   border-radius: var(--radius-full);
@@ -202,7 +202,7 @@
 }
 
 /* Desktop - hide FAB since we have sidebar compose button */
-@media (min-width: 769px) {
+@media (min-width: 768px) {
   .compose-fab {
     display: none;
   }

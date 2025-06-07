@@ -10,13 +10,18 @@ import {
   Bookmark,
   Moon,
   Sun,
-  ChevronDown
+  ChevronDown,
+  Menu
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUnreadNotificationCount } from '../../hooks/useNotifications'
 import clsx from 'clsx'
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  onMenuToggle?: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   const { logout, session } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
   const [darkMode, setDarkMode] = useState(true) // For now, always dark
@@ -81,6 +86,21 @@ export const Header: React.FC = () => {
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       <div className="header-content">
+        {/* Mobile Menu Toggle */}
+        <motion.button
+          className="mobile-menu-toggle"
+          onClick={onMenuToggle}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          aria-label="Menu"
+        >
+          <div className="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </motion.button>
+
         {/* Logo */}
         <div className="header-logo" onClick={() => navigate('/')}>
           <motion.h1 

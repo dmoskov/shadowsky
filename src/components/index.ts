@@ -3,6 +3,7 @@ export { Header } from './core/Header'
 export { Sidebar } from './core/Sidebar'
 export { Login } from './core/Login'
 export { ErrorBoundary } from './core/ErrorBoundary'
+export { MobileNav } from './core/MobileNav'
 
 // Feed components
 export { Feed } from './feed/Feed'
