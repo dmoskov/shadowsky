@@ -38,7 +38,12 @@ export const PostCard: React.FC<PostCardProps> = ({
   const repostCount = post.repostCount || 0
 
   const handleLike = async () => {
-    await likePost(post)
+    try {
+      console.log('Like button clicked for post:', post.uri)
+      await likePost(post)
+    } catch (error) {
+      console.error('Like failed:', error)
+    }
   }
 
   const handleRepost = async () => {

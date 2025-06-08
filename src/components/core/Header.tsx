@@ -222,7 +222,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
                   <button 
                     className="dropdown-item"
                     onClick={() => {
-                      toast.warning('Settings page under construction')
+                      navigate('/settings')
                       setShowDropdown(false)
                     }}
                   >

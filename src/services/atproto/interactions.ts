@@ -3,6 +3,15 @@ import type { Post } from '../../types/atproto'
 import { mapATProtoError } from '../../lib/errors'
 import { rateLimiters, withRateLimit } from '../../lib/rate-limiter'
 
+// Helper to ensure agent is authenticated
+function ensureAuthenticated(agent: AtpAgent): void {
+  if (!agent.session) {
+    console.error('Agent has no session:', agent)
+    throw new Error('Not authenticated - no session on agent')
+  }
+  console.log('Agent session confirmed:', agent.session.handle)
+}
+
 export interface LikeResult {
   uri: string
   cid: string
@@ -20,19 +29,31 @@ class InteractionsService {
    * Like a post
    */
   async likePost(post: Post): Promise<LikeResult> {
-    try {
-      const { data: session } = await this.agent.com.atproto.server.getSession()
-      const result = await this.agent.app.bsky.feed.like.create(
-        { repo: session.did },
-        {
-          subject: { uri: post.uri, cid: post.cid },
-          createdAt: new Date().toISOString()
-        }
-      )
-      return result
-    } catch (error) {
-      throw mapATProtoError(error)
-    }
+    return withRateLimit(rateLimiters.interactions, 'like', async () => {
+      try {
+        // Ensure agent is authenticated
+        ensureAuthenticated(this.agent)
+        
+        console.log('Post details:', { uri: post.uri, cid: post.cid })
+        
+        const { data: session } = await this.agent.com.atproto.server.getSession()
+        console.log('Session check passed:', session.handle, session.did)
+        
+        const result = await this.agent.app.bsky.feed.like.create(
+          { repo: session.did },
+          {
+            subject: { uri: post.uri, cid: post.cid },
+            createdAt: new Date().toISOString()
+          }
+        )
+        
+        console.log('Like created successfully:', result)
+        return result
+      } catch (error) {
+        console.error('Like error details:', error)
+        throw mapATProtoError(error)
+      }
+    })
   }
 
   /**
@@ -59,19 +80,24 @@ class InteractionsService {
    * Repost a post
    */
   async repostPost(post: Post): Promise<RepostResult> {
-    try {
-      const { data: session } = await this.agent.com.atproto.server.getSession()
-      const result = await this.agent.app.bsky.feed.repost.create(
-        { repo: session.did },
-        {
-          subject: { uri: post.uri, cid: post.cid },
-          createdAt: new Date().toISOString()
-        }
-      )
-      return result
-    } catch (error) {
-      throw mapATProtoError(error)
-    }
+    return withRateLimit(rateLimiters.interactions, 'repost', async () => {
+      try {
+        // Ensure agent is authenticated
+        ensureAuthenticated(this.agent)
+        
+        const { data: session } = await this.agent.com.atproto.server.getSession()
+        const result = await this.agent.app.bsky.feed.repost.create(
+          { repo: session.did },
+          {
+            subject: { uri: post.uri, cid: post.cid },
+            createdAt: new Date().toISOString()
+          }
+        )
+        return result
+      } catch (error) {
+        throw mapATProtoError(error)
+      }
+    })
   }
 
   /**

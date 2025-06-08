@@ -42,7 +42,7 @@ export const ThreadPostList: React.FC<ThreadPostListProps> = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05 }}
-          className="thread-ancestor"
+          className="thread-post thread-ancestor"
           data-post-uri={ancestor.post.uri}
           data-author-handle={ancestor.post.author.handle}
         >
@@ -67,7 +67,7 @@ export const ThreadPostList: React.FC<ThreadPostListProps> = ({
       
       {/* Main post */}
       <motion.div
-        className="thread-main-post"
+        className="thread-post thread-main-post"
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: ancestors.length * 0.05 }}
@@ -91,7 +91,6 @@ export const ThreadPostList: React.FC<ThreadPostListProps> = ({
               onViewThread={onViewThread}
               showParentPost={false}
             />
-            <div className="focal-post-indicator">Main Post</div>
           </div>
         </ErrorBoundary>
       </motion.div>
@@ -151,13 +150,10 @@ function renderThreadReplies(
     const isOriginalPoster = threadReply.post.author.did === originalPosterDid
     
     return (
-      <div key={`${threadReply.post.uri}-${depth}-${index}`} className="thread-branch">
-        {/* Thread connection lines */}
-        <ThreadLine 
-          depth={depth}
-          isLast={isLastReply}
-          hasReplies={hasReplies}
-        />
+      <div key={`${threadReply.post.uri}-${depth}-${index}`} className={clsx("thread-post thread-reply", {
+        "has-children": hasReplies,
+        "is-op": isOriginalPoster && depth > 0
+      })}>
         
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -197,11 +193,6 @@ function renderThreadReplies(
                 onViewThread={onViewThread}
                 showParentPost={false}
               />
-              
-              {/* Original poster indicator */}
-              {isOriginalPoster && depth > 0 && (
-                <span className="is-op-indicator">OP</span>
-              )}
             </div>
           </ErrorBoundary>
         </motion.div>

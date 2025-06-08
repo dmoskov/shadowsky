@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -18,8 +18,12 @@ import {
   ToastContainer,
   ScrollProgress
 } from './components'
+import { Settings } from './components/settings/Settings'
+import { Analytics } from './components/analytics/Analytics'
+import { AnalyticsMock } from './components/analytics/AnalyticsMock'
 import { MobileNav } from './components/core/MobileNav'
 import { MobileMenu } from './components/core/MobileMenu'
+import { MobileTabBar } from './components/core/MobileTabBar'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
 import { queryClient } from './lib/query-client'
 import { PenSquare } from 'lucide-react'
@@ -48,11 +52,25 @@ function ThreadViewWrapper() {
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth()
   const [isComposeOpen, setIsComposeOpen] = useState(false)
+  const [composeTemplate, setComposeTemplate] = useState<string | undefined>()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
   
   // Enable keyboard navigation
   useKeyboardNavigation()
+  
+  // Listen for compose modal events
+  useEffect(() => {
+    const handleOpenCompose = (event: CustomEvent) => {
+      setComposeTemplate(event.detail?.template)
+      setIsComposeOpen(true)
+    }
+    
+    window.addEventListener('openComposeModal', handleOpenCompose as EventListener)
+    return () => {
+      window.removeEventListener('openComposeModal', handleOpenCompose as EventListener)
+    }
+  }, [])
 
   if (isLoading) {
     return (
@@ -69,7 +87,7 @@ function AppContent() {
   return (
     <>
       <ScrollProgress />
-      <div className="app-layout">
+      <div className="app-layout app-container">
         <Header onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
         <div className="app-body">
           <Sidebar onCompose={() => setIsComposeOpen(true)} />
@@ -82,6 +100,9 @@ function AppContent() {
               <Route path="/profile/:handle" element={<Profile />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/search" element={<Search />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/analytics/:handle" element={<Analytics />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
@@ -100,13 +121,18 @@ function AppContent() {
       {/* Compose Modal */}
       <ComposeModal 
         isOpen={isComposeOpen}
-        onClose={() => setIsComposeOpen(false)}
+        onClose={() => {
+          setIsComposeOpen(false)
+          setComposeTemplate(undefined)
+        }}
+        template={composeTemplate}
       />
       
       {/* Keyboard Shortcuts Modal */}
       <KeyboardShortcutsModal />
       
       {/* Mobile Navigation */}
+      <MobileTabBar />
       <MobileNav />
       
       {/* Mobile Menu */}

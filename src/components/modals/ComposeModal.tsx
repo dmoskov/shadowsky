@@ -14,18 +14,36 @@ interface ComposeModalProps {
     post: Post
     root?: Post
   }
+  template?: string
 }
 
 export const ComposeModal: React.FC<ComposeModalProps> = ({ 
   isOpen, 
   onClose, 
-  replyTo 
+  replyTo,
+  template
 }) => {
   const [text, setText] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { session } = useAuth()
   const { handleError } = useErrorHandler()
   const queryClient = useQueryClient()
+  
+  // Set template text when template changes
+  useEffect(() => {
+    if (template && isOpen) {
+      switch (template) {
+        case 'question':
+          setText('What\'s your opinion on ')
+          break
+        case 'reactivation':
+          setText('Something I\'ve been thinking about lately: ')
+          break
+        default:
+          setText('')
+      }
+    }
+  }, [template, isOpen])
   
   const characterLimit = 300
   const charactersRemaining = characterLimit - text.length

@@ -24,20 +24,37 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
   
+  /* Font Size Shortcuts */
+  --font-size-xs: 0.75rem;  /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  
   /* Line Heights */
   --line-height-tight: 1.2;
   --line-height-snug: 1.4;
   --line-height-normal: 1.6;
   --line-height-relaxed: 1.8;
   
-  /* Spacing Scale (8pt grid) */
-  --spacing-xs: 0.25rem;   /* 4px */
-  --spacing-sm: 0.5rem;    /* 8px */
-  --spacing-md: 1rem;      /* 16px */
-  --spacing-lg: 1.5rem;    /* 24px */
-  --spacing-xl: 2rem;      /* 32px */
-  --spacing-xxl: 3rem;     /* 48px */
-  --spacing-xxxl: 4rem;    /* 64px */
+  /* Spacing Scale (4px grid system - matching official Bluesky) */
+  --spacing-0: 0;          /* 0px */
+  --spacing-1: 0.25rem;    /* 4px - base unit */
+  --spacing-2: 0.5rem;     /* 8px */
+  --spacing-3: 0.75rem;    /* 12px */
+  --spacing-4: 1rem;       /* 16px */
+  --spacing-5: 1.25rem;    /* 20px */
+  --spacing-6: 1.5rem;     /* 24px */
+  --spacing-8: 2rem;       /* 32px */
+  --spacing-10: 2.5rem;    /* 40px */
+  --spacing-12: 3rem;      /* 48px */
+  --spacing-16: 4rem;      /* 64px */
+  
+  /* Legacy spacing (for backward compatibility) */
+  --spacing-xs: var(--spacing-1);
+  --spacing-sm: var(--spacing-2);
+  --spacing-md: var(--spacing-4);
+  --spacing-lg: var(--spacing-6);
+  --spacing-xl: var(--spacing-8);
+  --spacing-xxl: var(--spacing-12);
+  --spacing-xxxl: var(--spacing-16);
   
   /* Border Radius */
   --radius-sm: 0.25rem;    /* 4px */
@@ -52,10 +69,12 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   
-  /* Transitions */
+  /* Transitions (matching official Bluesky) */
+  --transition-instant: 50ms ease;
   --transition-fast: 150ms ease;
   --transition-base: 200ms ease;
   --transition-slow: 300ms ease;
+  --transition-hover: var(--transition-instant);
   
   /* Z-index Scale */
   --z-base: 0;

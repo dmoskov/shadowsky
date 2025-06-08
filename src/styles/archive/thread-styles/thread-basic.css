@@ -1,0 +1,93 @@
+/* Basic Thread Styling - Just make it work */
+
+/* Container */
+.thread-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Remove all default post card styling in threads */
+.thread-container .post-card {
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important; 
+  box-shadow: none !important;
+  padding: 16px !important;
+  background: var(--color-bg-primary) !important;
+}
+
+/* Add simple borders between posts */
+.thread-container .post-card + .post-card {
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Highlight main post */
+.thread-main-post .post-card {
+  background: rgba(59, 130, 246, 0.08) !important;
+  position: relative;
+}
+
+.thread-main-post .post-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--color-brand-primary);
+}
+
+/* Make ancestors slightly faded */
+.thread-ancestor {
+  opacity: 0.7;
+}
+
+/* Simple indentation for nested replies */
+.thread-children {
+  margin-left: 20px;
+  padding-left: 20px;
+  border-left: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Hide all the broken elements */
+.thread-line,
+.thread-connector,
+.is-op-indicator,
+.focal-post-indicator,
+.thread-branch-indicator {
+  display: none !important;
+}
+
+/* Fix hover state */
+.thread-container .post-card:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Header */
+.thread-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-primary);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Remove animations that might be breaking layout */
+.thread-post,
+.thread-post-nested {
+  animation: none !important;
+}
+
+/* Ensure text is readable */
+.thread-container .post-content {
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+/* Fix engagement bar */
+.thread-container .post-engagement {
+  padding-top: 8px;
+  margin-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}

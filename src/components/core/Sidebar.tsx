@@ -12,7 +12,8 @@ import {
   Hash,
   Users,
   TrendingUp,
-  PenSquare
+  PenSquare,
+  BarChart3
 } from 'lucide-react'
 import clsx from 'clsx'
 import { useAuth } from '../../contexts/AuthContext'
@@ -41,6 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
     { path: '/messages', label: 'Messages', icon: Mail },
     { path: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
     { path: `/profile/${session?.handle}`, label: 'Profile', icon: User },
+    { path: '/analytics', label: 'Analytics', icon: BarChart3 },
     { path: '/settings', label: 'Settings', icon: Settings },
   ]
 

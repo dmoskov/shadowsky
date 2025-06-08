@@ -33,13 +33,70 @@ export function usePostInteractions(): UsePostInteractionsReturn {
       }
     },
     onMutate: async ({ post, isLiked }) => {
+      console.log('Like mutation onMutate:', { postUri: post.uri, isLiked })
+      
       // Cancel outgoing queries
       await queryClient.cancelQueries({ queryKey: ['timeline'] })
 
+      // Get the previous data
+      const previousData = queryClient.getQueryData(['timeline'])
+
       // Optimistically update the post
-      queryClient.setQueriesData(
-        { queryKey: ['timeline'] },
-        (oldData: any) => {
+      queryClient.setQueryData(['timeline'], (oldData: any) => {
+        if (!oldData) return oldData
+
+        // Create a deep copy to ensure React Query detects the change
+        const newData = {
+          ...oldData,
+          pages: oldData.pages.map((page: any, pageIndex: number) => ({
+            ...page,
+            feed: page.feed.map((item: FeedItem, itemIndex: number) => {
+              if (item.post.uri === post.uri) {
+                const newLikeCount = isLiked 
+                  ? Math.max(0, (item.post.likeCount || 0) - 1)
+                  : (item.post.likeCount || 0) + 1
+                  
+                const updatedItem = {
+                  ...item,
+                  post: {
+                    ...item.post,
+                    likeCount: newLikeCount,
+                    viewer: {
+                      ...item.post.viewer,
+                      like: isLiked ? undefined : 'optimistic-like'
+                    }
+                  }
+                }
+                
+                console.log('Optimistically updating post:', {
+                  uri: post.uri,
+                  pageIndex,
+                  itemIndex,
+                  oldLikeCount: item.post.likeCount,
+                  newLikeCount,
+                  oldViewer: item.post.viewer,
+                  newViewer: updatedItem.post.viewer
+                })
+                
+                return updatedItem
+              }
+              return item
+            })
+          }))
+        }
+        
+        return newData
+      })
+
+      // Return context with previous data
+      return { previousData }
+    },
+    onSuccess: (data, { post }) => {
+      console.log('Like onSuccess:', data)
+      
+      // Update with the real like URI - skip if it's just confirming optimistic update
+      if (data.action === 'like' && data.uri) {
+        queryClient.setQueryData(['timeline'], (oldData: any) => {
           if (!oldData) return oldData
 
           return {
@@ -48,63 +105,42 @@ export function usePostInteractions(): UsePostInteractionsReturn {
               ...page,
               feed: page.feed.map((item: FeedItem) => {
                 if (item.post.uri === post.uri) {
-                  return {
+                  const updatedPost = {
                     ...item,
                     post: {
                       ...item.post,
-                      likeCount: isLiked 
-                        ? Math.max(0, (item.post.likeCount || 0) - 1)
-                        : (item.post.likeCount || 0) + 1,
                       viewer: {
                         ...item.post.viewer,
-                        like: isLiked ? undefined : 'optimistic-like'
+                        like: data.uri
                       }
                     }
                   }
+                  console.log('Updating post with real like URI:', {
+                    uri: post.uri,
+                    action: data.action,
+                    likeUri: data.uri,
+                    updatedViewer: updatedPost.post.viewer
+                  })
+                  return updatedPost
                 }
                 return item
               })
             }))
           }
-        }
-      )
-    },
-    onSuccess: (data, { post }) => {
-      // Update with the real like URI if it was a like action
-      if (data.action === 'like' && data.uri) {
-        queryClient.setQueriesData(
-          { queryKey: ['timeline'] },
-          (oldData: any) => {
-            if (!oldData) return oldData
-
-            return {
-              ...oldData,
-              pages: oldData.pages.map((page: any) => ({
-                ...page,
-                feed: page.feed.map((item: FeedItem) => {
-                  if (item.post.uri === post.uri && item.post.viewer?.like === 'optimistic-like') {
-                    return {
-                      ...item,
-                      post: {
-                        ...item.post,
-                        viewer: {
-                          ...item.post.viewer,
-                          like: data.uri
-                        }
-                      }
-                    }
-                  }
-                  return item
-                })
-              }))
-            }
-          }
-        )
+        })
       }
+      
+      // Invalidate after a delay to refresh from server
+      setTimeout(() => {
+        console.log('Invalidating timeline query after delay')
+        queryClient.invalidateQueries({ queryKey: ['timeline'] })
+      }, 2000)
     },
-    onError: (error) => {
-      // Revert on error
-      queryClient.invalidateQueries({ queryKey: ['timeline'] })
+    onError: (error, variables, context) => {
+      // Revert to previous data on error
+      if (context?.previousData) {
+        queryClient.setQueryData(['timeline'], context.previousData)
+      }
       handleError(error)
     }
   })
@@ -129,75 +165,89 @@ export function usePostInteractions(): UsePostInteractionsReturn {
       // Cancel outgoing queries
       await queryClient.cancelQueries({ queryKey: ['timeline'] })
 
-      // Optimistically update the post
-      queryClient.setQueriesData(
-        { queryKey: ['timeline'] },
-        (oldData: any) => {
-          if (!oldData) return oldData
+      // Get the previous data
+      const previousData = queryClient.getQueryData(['timeline'])
 
-          return {
-            ...oldData,
-            pages: oldData.pages.map((page: any) => ({
-              ...page,
-              feed: page.feed.map((item: FeedItem) => {
-                if (item.post.uri === post.uri) {
-                  return {
-                    ...item,
-                    post: {
-                      ...item.post,
-                      repostCount: isReposted 
-                        ? Math.max(0, (item.post.repostCount || 0) - 1)
-                        : (item.post.repostCount || 0) + 1,
-                      viewer: {
-                        ...item.post.viewer,
-                        repost: isReposted ? undefined : 'optimistic-repost'
-                      }
+      // Optimistically update the post
+      queryClient.setQueryData(['timeline'], (oldData: any) => {
+        if (!oldData) return oldData
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            feed: page.feed.map((item: FeedItem) => {
+              if (item.post.uri === post.uri) {
+                return {
+                  ...item,
+                  post: {
+                    ...item.post,
+                    repostCount: isReposted 
+                      ? Math.max(0, (item.post.repostCount || 0) - 1)
+                      : (item.post.repostCount || 0) + 1,
+                    viewer: {
+                      ...item.post.viewer,
+                      repost: isReposted ? undefined : 'optimistic-repost'
                     }
                   }
                 }
-                return item
-              })
-            }))
-          }
+              }
+              return item
+            })
+          }))
         }
-      )
+      })
+
+      return { previousData }
     },
     onSuccess: (data, { post }) => {
-      // Update with the real repost URI if it was a repost action
-      if (data.action === 'repost' && data.uri) {
-        queryClient.setQueriesData(
-          { queryKey: ['timeline'] },
-          (oldData: any) => {
-            if (!oldData) return oldData
+      console.log('Repost onSuccess:', data)
+      
+      // Update with the real repost URI
+      queryClient.setQueryData(['timeline'], (oldData: any) => {
+        if (!oldData) return oldData
 
-            return {
-              ...oldData,
-              pages: oldData.pages.map((page: any) => ({
-                ...page,
-                feed: page.feed.map((item: FeedItem) => {
-                  if (item.post.uri === post.uri && item.post.viewer?.repost === 'optimistic-repost') {
-                    return {
-                      ...item,
-                      post: {
-                        ...item.post,
-                        viewer: {
-                          ...item.post.viewer,
-                          repost: data.uri
-                        }
-                      }
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            feed: page.feed.map((item: FeedItem) => {
+              if (item.post.uri === post.uri) {
+                const updatedPost = {
+                  ...item,
+                  post: {
+                    ...item.post,
+                    viewer: {
+                      ...item.post.viewer,
+                      repost: data.action === 'repost' ? data.uri : undefined
                     }
                   }
-                  return item
+                }
+                console.log('Updating post with real repost URI:', {
+                  uri: post.uri,
+                  action: data.action,
+                  repostUri: data.uri,
+                  updatedViewer: updatedPost.post.viewer
                 })
-              }))
-            }
-          }
-        )
-      }
+                return updatedPost
+              }
+              return item
+            })
+          }))
+        }
+      })
+      
+      // Invalidate after a delay to refresh from server
+      setTimeout(() => {
+        console.log('Invalidating timeline query after delay')
+        queryClient.invalidateQueries({ queryKey: ['timeline'] })
+      }, 2000)
     },
-    onError: (error) => {
-      // Revert on error
-      queryClient.invalidateQueries({ queryKey: ['timeline'] })
+    onError: (error, variables, context) => {
+      // Revert to previous data on error
+      if (context?.previousData) {
+        queryClient.setQueryData(['timeline'], context.previousData)
+      }
       handleError(error)
     }
   })

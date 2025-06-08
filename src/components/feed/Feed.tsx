@@ -3,7 +3,9 @@ import { useTimeline } from '../../hooks/useTimeline'
 import { ErrorBoundary } from '../core/ErrorBoundary'
 import { PostCard } from '../feed/PostCard'
 import { ComposeModal } from '../modals/ComposeModal'
-import { FeedLoading } from '../ui/SkeletonLoaders'
+import { FeedLoading, InlineLoader } from '../ui/SkeletonLoaders'
+import { FeedError, InlineError } from '../ui/ErrorStates'
+import { FeedEmpty } from '../ui/EmptyStates'
 import type { Post } from '../../types/atproto'
 
 interface FeedProps {
@@ -72,17 +74,21 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
   if (error) {
     return (
       <div className="feed-container">
-        <div className="error-state">
-          <div className="error-message">
-            {error instanceof Error ? error.message : 'Failed to load feed'}
-          </div>
-          <button
-            onClick={() => refresh()}
-            className="btn btn-primary"
-          >
-            Try Again
-          </button>
+        <div className="feed-header">
+          <h2 className="feed-title">Your Timeline</h2>
         </div>
+        <FeedError onRetry={() => refresh()} />
+      </div>
+    )
+  }
+
+  if (!posts || posts.length === 0) {
+    return (
+      <div className="feed-container">
+        <div className="feed-header">
+          <h2 className="feed-title">Your Timeline</h2>
+        </div>
+        <FeedEmpty />
       </div>
     )
   }
@@ -96,6 +102,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
           disabled={isFetching}
           className="btn btn-primary"
         >
+          {isFetching ? <InlineLoader size="sm" /> : null}
           {isFetching ? 'Refreshing...' : 'Refresh Feed'}
         </button>
       </div>
@@ -119,6 +126,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
             )}
           >
             <PostCard 
+              key={item.post.uri}
               item={item} 
               onReply={(post) => setReplyTo({ 
                 post, 
@@ -137,7 +145,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
       >
         {isFetchingNextPage && (
           <div className="loading-more">
-            <div className="spinner"></div>
+            <InlineLoader />
             <span>Loading more posts...</span>
           </div>
         )}

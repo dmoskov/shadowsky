@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:visual": "./scripts/run-visual-tests.sh",
+    "test:visual:update": "./scripts/run-visual-tests.sh --update",
+    "test:visual:ui": "./scripts/run-visual-tests.sh --ui"
   },
   "dependencies": {
     "@atproto/api": "^0.15.13",

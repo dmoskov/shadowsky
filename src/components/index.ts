@@ -33,7 +33,9 @@ export { Search } from './profile/Search'
 
 // UI components
 export * from './ui/EmptyStates'
+export * from './ui/ErrorStates'
 export * from './ui/SkeletonLoaders'
 export { ReplyContext } from './ui/ReplyContext'
 export { ToastProvider, ToastContainer, useToast } from './ui/Toast'
 export { ScrollProgress } from './ui/ScrollProgress'
+export { Tooltip } from './ui/Tooltip'

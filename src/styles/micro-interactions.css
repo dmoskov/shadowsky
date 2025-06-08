@@ -3,7 +3,7 @@
 /* Form Field Focus Animations */
 .form-field {
   position: relative;
-  transition: all var(--transition-base);
+  transition: all var(--transition-hover);
 }
 
 .form-field input:focus,
@@ -63,7 +63,7 @@
 
 /* Card Hover Effects */
 .post-card {
-  transition: all var(--transition-base);
+  transition: all var(--transition-hover);
   will-change: transform;
 }
 
@@ -274,7 +274,7 @@
 /* Engagement Button Animations */
 .engagement-button {
   position: relative;
-  transition: all var(--transition-base);
+  transition: all var(--transition-hover);
 }
 
 .engagement-button:hover {

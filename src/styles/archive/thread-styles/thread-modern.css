@@ -1,0 +1,287 @@
+/* Modern Thread Styling - Complete Rewrite */
+
+/* Thread Container */
+.thread-container {
+  max-width: 600px;
+  margin: 0 auto;
+  background: var(--color-bg-primary);
+  min-height: 100vh;
+}
+
+/* Thread Header */
+.thread-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--spacing-3) var(--spacing-4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.thread-header h1 {
+  font-size: var(--font-size-h4);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+}
+
+/* Thread Posts Container */
+.thread-posts {
+  padding: 0;
+}
+
+/* Base Post Styling in Threads */
+.thread-post {
+  position: relative;
+  background: var(--color-bg-primary);
+}
+
+.thread-post .post-card {
+  border: none;
+  border-radius: 0;
+  margin: 0;
+  padding: var(--spacing-3) var(--spacing-4);
+  box-shadow: none;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background-color var(--transition-hover);
+}
+
+.thread-post .post-card:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Fix Post Header Layout */
+.thread-post .post-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-2);
+}
+
+.thread-post .post-author {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
+}
+
+.thread-post .avatar-image,
+.thread-post .avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.thread-post .avatar-placeholder {
+  background: var(--color-bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Fix Author Info Layout */
+.thread-post .author-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.thread-post .author-name {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.thread-post .author-handle {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* Fix Timestamp Position */
+.thread-post .post-time {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  margin-left: var(--spacing-2);
+}
+
+/* Thread Connection Lines */
+.thread-post.has-children::before {
+  content: '';
+  position: absolute;
+  left: 32px; /* Center of 40px avatar */
+  top: 52px; /* Below avatar */
+  bottom: 0;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  z-index: 0;
+}
+
+/* Main Post Highlight */
+.thread-main-post {
+  position: relative;
+}
+
+.thread-main-post .post-card {
+  background: rgba(var(--blue-500-rgb), 0.05);
+  border-left: 3px solid var(--color-brand-primary);
+  padding-left: calc(var(--spacing-4) - 3px);
+}
+
+/* Ancestor Posts (Context) */
+.thread-ancestor {
+  opacity: 0.7;
+}
+
+.thread-ancestor .post-card {
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-2) var(--spacing-4);
+}
+
+/* Reply Structure */
+.thread-replies {
+  position: relative;
+}
+
+.thread-replies-header {
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+/* Nested Replies */
+.thread-children {
+  position: relative;
+  margin-left: 40px; /* Indent by avatar width */
+  border-left: 2px solid rgba(255, 255, 255, 0.08);
+}
+
+.thread-children .thread-post .post-card {
+  padding-left: var(--spacing-3);
+}
+
+/* OP Indicator */
+.thread-post.is-op .author-name::after {
+  content: 'OP';
+  font-size: 10px;
+  padding: 2px 6px;
+  background: var(--color-brand-primary);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+  margin-left: var(--spacing-2);
+  line-height: 1;
+  display: inline-block;
+}
+
+/* Post Content Spacing */
+.thread-post .post-content {
+  margin-bottom: var(--spacing-2);
+}
+
+/* Engagement Bar in Threads */
+.thread-post .post-engagement {
+  padding-top: var(--spacing-2);
+  margin-top: var(--spacing-2);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Loading State */
+.thread-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-8);
+}
+
+/* Empty State */
+.thread-empty {
+  text-align: center;
+  padding: var(--spacing-8);
+  color: var(--color-text-secondary);
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  .thread-container {
+    max-width: 100%;
+  }
+  
+  .thread-post .post-card {
+    padding: var(--spacing-2) var(--spacing-3);
+  }
+  
+  .thread-children {
+    margin-left: 24px;
+  }
+  
+  .thread-post .post-content,
+  .thread-post .post-engagement {
+    padding-left: 0;
+  }
+}
+
+/* Remove any conflicting styles */
+.thread-post-wrapper,
+.thread-branch,
+.thread-line,
+.thread-connector,
+.focal-post-indicator,
+.is-op-indicator {
+  all: unset;
+}
+
+/* Smooth Animations */
+.thread-post {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Override post-card default styles in threads */
+.thread-container .post-card {
+  margin-bottom: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Ensure proper avatar centering */
+.thread-post .post-header .post-author {
+  text-decoration: none;
+  color: inherit;
+}
+
+.thread-post .post-header .post-author:hover {
+  text-decoration: none;
+}
+
+/* Fix menu button positioning */
+.thread-post .post-actions {
+  margin-left: auto;
+}

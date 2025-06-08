@@ -22,6 +22,10 @@
   background: var(--color-bg-primary);
 }
 
+.app-container {
+  min-height: 100vh;
+}
+
 /* Desktop-optimized main content */
 .main-content {
   padding-top: var(--header-height);

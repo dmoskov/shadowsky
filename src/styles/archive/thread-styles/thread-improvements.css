@@ -103,32 +103,63 @@
   color: var(--color-text-primary);
 }
 
-/* Thread Navigation */
-.thread-navigation {
+/* Thread Navigation Container */
+.thread-navigation-container {
   position: fixed;
-  right: 20px;
-  top: 80px; /* Below header */
-  bottom: 20px; /* Leave space at bottom */
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
-  box-shadow: var(--shadow-lg);
-  width: 280px; /* Wider for diagram */
+  right: 0;
+  top: 80px;
+  bottom: 20px;
   z-index: var(--z-sticky);
   display: flex;
+  align-items: flex-start;
+}
+
+/* Collapsible Toggle Button */
+.thread-nav-toggle {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  padding: 8px 4px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--color-text-secondary);
+  margin-top: 20px;
+  height: 48px;
+  width: 32px;
+}
+
+.thread-nav-toggle:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border-color: var(--color-brand-primary);
+}
+
+/* Thread Navigation Panel */
+.thread-navigation {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-left: none;
+  border-radius: 0;
+  padding: 12px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 120px); /* Ensure it fits in viewport */
+  max-height: calc(100vh - 120px);
+  overflow: hidden;
 }
 
 .thread-nav-header {
-  margin-bottom: var(--spacing-sm);
-  padding-bottom: var(--spacing-sm);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--color-border);
 }
 
 .thread-nav-header h3 {
-  font-size: var(--font-size-caption);
+  font-size: 11px;
   font-weight: var(--font-weight-semibold);
   margin: 0;
   color: var(--color-text-secondary);
@@ -136,7 +167,7 @@
 
 .keyboard-hints {
   display: flex;
-  gap: var(--spacing-xs);
+  gap: 6px;
   font-size: 9px;
   color: var(--color-text-tertiary);
   margin-top: 2px;
@@ -149,29 +180,41 @@
 .thread-nav-actions {
   display: flex;
   justify-content: center;
-  gap: var(--spacing-xs);
-  margin-bottom: var(--spacing-sm);
-  flex-shrink: 0; /* Don't shrink when space is tight */
+  gap: 4px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 .nav-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
   cursor: pointer;
   transition: all var(--transition-fast);
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .nav-button:hover {
   background: var(--color-bg-tertiary);
   border-color: var(--color-brand-primary);
+}
+
+.nav-button.active {
+  background: var(--color-brand-primary);
+  color: white;
+  border-color: var(--color-brand-primary);
+}
+
+.thread-diagram-container {
+  flex: 1;
+  overflow: hidden;
+  margin-bottom: 8px;
 }
 
 .thread-participants {
@@ -238,19 +281,19 @@
 
 .thread-search-btn {
   width: 100%;
-  padding: 6px var(--spacing-sm);
+  padding: 6px 8px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-xs);
-  font-size: 11px;
+  gap: 4px;
+  font-size: 10px;
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: all var(--transition-fast);
-  margin-top: var(--spacing-sm);
+  flex-shrink: 0;
 }
 
 .thread-search-btn:hover {

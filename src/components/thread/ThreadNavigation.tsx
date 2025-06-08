@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { ChevronUp, ChevronDown, Home, Users, Search } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ChevronUp, ChevronDown, Home, Search, ChevronRight, ChevronLeft } from 'lucide-react'
 import { ThreadBranchDiagram } from './ThreadBranchDiagramCompact'
 import type { ThreadViewPost } from '../../services/atproto/thread'
 
@@ -15,6 +15,7 @@ export const ThreadNavigation: React.FC<ThreadNavigationProps> = ({
   currentPostUri,
   onNavigate
 }) => {
+  const [isCollapsed, setIsCollapsed] = useState(true)
   // Keyboard navigation
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -165,57 +166,76 @@ export const ThreadNavigation: React.FC<ThreadNavigationProps> = ({
   }
 
   return (
-    <motion.div 
-      className="thread-navigation"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="thread-nav-header">
-        <h3>Thread Navigation</h3>
-        <div className="keyboard-hints">
-          <span>J/K: Navigate</span>
-          <span>N/P: Branches</span>
-          <span>H: Home</span>
-        </div>
-      </div>
+    <div className="thread-navigation-container">
+      {/* Collapse/Expand Toggle */}
+      <motion.button 
+        className="thread-nav-toggle"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        whileTap={{ scale: 0.95 }}
+        title={isCollapsed ? "Expand thread navigation" : "Collapse thread navigation"}
+      >
+        {isCollapsed ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+      </motion.button>
 
-      <div className="thread-nav-actions">
-        <button 
-          onClick={navigatePrevious}
-          className="nav-button"
-          title="Previous post (K)"
-        >
-          <ChevronUp size={18} />
-        </button>
-        
-        <button 
-          onClick={() => onNavigate(thread.post.uri)}
-          className="nav-button"
-          title="Go to main post (H)"
-        >
-          <Home size={18} />
-        </button>
-        
-        <button 
-          onClick={navigateNext}
-          className="nav-button"
-          title="Next post (J)"
-        >
-          <ChevronDown size={18} />
-        </button>
-      </div>
+      {/* Navigation Panel */}
+      <AnimatePresence>
+        {!isCollapsed && (
+          <motion.div 
+            className="thread-navigation"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 280, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <div className="thread-nav-header">
+              <h3>Thread Navigation</h3>
+              <div className="keyboard-hints">
+                <span>J/K</span>
+                <span>H: Home</span>
+              </div>
+            </div>
 
-      <ThreadBranchDiagram 
-        thread={thread}
-        currentPostUri={currentPostUri}
-        onNavigate={onNavigate}
-      />
+            <div className="thread-nav-actions">
+              <button 
+                onClick={navigatePrevious}
+                className="nav-button"
+                title="Previous post (K)"
+              >
+                <ChevronUp size={16} />
+              </button>
+              
+              <button 
+                onClick={() => onNavigate(thread.post.uri)}
+                className="nav-button active"
+                title="Go to main post (H)"
+              >
+                <Home size={16} />
+              </button>
+              
+              <button 
+                onClick={navigateNext}
+                className="nav-button"
+                title="Next post (J)"
+              >
+                <ChevronDown size={16} />
+              </button>
+            </div>
 
-      <button className="thread-search-btn">
-        <Search size={16} />
-        Search in thread
-      </button>
-    </motion.div>
+            <div className="thread-diagram-container">
+              <ThreadBranchDiagram 
+                thread={thread}
+                currentPostUri={currentPostUri}
+                onNavigate={onNavigate}
+              />
+            </div>
+
+            <button className="thread-search-btn">
+              <Search size={14} />
+              <span>Search in thread</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }

@@ -12,7 +12,7 @@
   font-weight: var(--font-weight-medium);
   line-height: 1;
   border-radius: var(--radius-md);
-  transition: all var(--transition-base);
+  transition: all var(--transition-hover);
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
@@ -201,7 +201,7 @@ a {
 
 /* Card Hover Effects */
 .card {
-  transition: all var(--transition-base);
+  transition: all var(--transition-hover);
   
   &.clickable {
     cursor: pointer;
@@ -223,7 +223,7 @@ a {
 input,
 textarea,
 select {
-  transition: all var(--transition-base);
+  transition: all var(--transition-hover);
   
   &:focus {
     outline: none;

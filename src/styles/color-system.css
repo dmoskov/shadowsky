@@ -132,6 +132,8 @@
   --color-info-hover: var(--blue-600);
   --color-info-bg: rgba(59, 130, 246, 0.1);
   
+  --color-brand-bg: rgba(59, 130, 246, 0.1);
+  
   /* Borders */
   --color-border: rgba(255, 255, 255, 0.1);
   --color-border-hover: rgba(255, 255, 255, 0.2);

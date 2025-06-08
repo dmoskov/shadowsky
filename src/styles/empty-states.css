@@ -119,6 +119,119 @@
   font-size: var(--font-size-body-sm);
 }
 
+/* Error States */
+.error-state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--spacing-xxl) var(--spacing-lg);
+  max-width: 400px;
+  margin: 0 auto;
+  min-height: 300px;
+}
+
+.error-state-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  margin-bottom: var(--spacing-lg);
+  background: var(--color-error-bg);
+  border-radius: var(--radius-full);
+  color: var(--color-error);
+}
+
+.error-state-warning .error-state-icon {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.error-state-info .error-state-icon {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+
+.error-state-title {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-sm);
+}
+
+.error-state-description {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-lg);
+  max-width: 320px;
+}
+
+/* Inline Error */
+.inline-error {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: var(--font-size-body-sm);
+}
+
+.inline-error .btn-link {
+  background: none;
+  border: none;
+  color: var(--color-error);
+  cursor: pointer;
+  padding: 2px;
+}
+
+.inline-error .btn-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+/* Error Toast */
+.error-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--color-error);
+  color: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  position: fixed;
+  bottom: var(--spacing-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 320px;
+  z-index: var(--z-toast);
+}
+
+.error-toast-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-left: auto;
+}
+
+.error-toast .btn-link {
+  background: none;
+  border: none;
+  color: white;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: var(--font-size-body-sm);
+}
+
+.error-toast .btn-link:hover {
+  opacity: 0.8;
+}
+
 /* Empty State Animations */
 @keyframes float {
   0%, 100% {

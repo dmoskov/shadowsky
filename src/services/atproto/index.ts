@@ -18,6 +18,7 @@ feedService.initializeDeduplication()
 // Export types and classes
 export { ATProtoClient } from './client'
 export { FeedService } from './feed'
+export { AnalyticsService } from './analytics'
 export type { ATProtoConfig } from './client'
 
 // Export interaction services
