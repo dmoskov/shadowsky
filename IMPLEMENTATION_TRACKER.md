@@ -187,6 +187,31 @@
 - Total tests: 25 passing (5 smoke + 9 usePostInteractions + 11 AuthContext)
 **Next Step**: Add tests for useTimeline hook to reach 10% coverage target
 
+### 2025-01-08 07:50 - Added useTimeline Tests
+**Task**: Add tests for useTimeline hook  
+**Status**: Completed  
+**Changes Made**:
+- Created test suite for useTimeline and useAuthorFeed hooks
+- Tested timeline fetching, pagination, and error handling
+- Added tests for refresh functionality and loading states
+- Mocked feed service and error handler dependencies
+**Verification**:
+- All tests passing: ✅ (13/13 tests)
+- Initial load tests: ✅ (loading state, data fetching, empty timeline)
+- Pagination tests: ✅ (load more, cursor handling)
+- Error handling: ✅ (network errors, error propagation)
+- Refresh tests: ✅ (refetch, fetching state)
+- Author feed tests: ✅ (specific author, pagination, actor changes)
+**Technical Details**:
+- Used delayed promises to test loading/fetching states
+- Simplified error handler test to focus on error propagation
+- Tested both infinite query hooks (timeline and author feed)
+**Coverage Results**:
+- useTimeline hook: Well tested for all scenarios
+- Overall project coverage: 7.73% (increased from 6.64%)
+- Total tests: 38 passing
+**Next Step**: Test error boundaries to continue toward 10% coverage
+
 ### Entry Template
 ```
 Date: YYYY-MM-DD HH:MM
