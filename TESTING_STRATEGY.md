@@ -5,8 +5,11 @@ This document outlines our testing strategy following the Distinguished Engineer
 
 ## Current Status
 - **Infrastructure**: ✅ Complete (Jest + React Testing Library)
-- **Coverage**: 3.69% (Baseline established)
-- **First Test**: ✅ usePostInteractions hook (66% passing)
+- **Coverage**: 6.64% (Up from 3.69%)
+- **Tests Written**: 
+  - ✅ usePostInteractions hook (100% passing - 9/9 tests)
+  - ✅ AuthContext (100% passing - 11/11 tests)
+- **Total Tests**: 25 passing
 
 ## Testing Principles
 

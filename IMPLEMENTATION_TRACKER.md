@@ -163,6 +163,30 @@
 - Hook is now well-tested for critical path
 **Next Step**: Add tests for useAuth hook to continue building coverage
 
+### 2025-01-08 07:35 - Added AuthContext Tests
+**Task**: Add tests for useAuth hook  
+**Status**: Completed  
+**Changes Made**:
+- Created comprehensive test suite for AuthContext
+- Mocked all external dependencies (atproto client, query client)
+- Fixed window.location mocking for jsdom environment
+- Tested all critical auth flows
+**Verification**:
+- All tests passing: ✅ (11/11 tests)
+- Initial state tests: ✅ (loading states, session resume)
+- Login/logout flows: ✅ (success and error cases)
+- Session refresh: ✅ (token refresh and expiry handling)
+- Error handling: ✅ (network errors, auth errors)
+**Technical Challenges**:
+- Fixed jsdom navigation errors by properly mocking window.location
+- Handled async loading states with proper test setup
+- Mocked complex retry logic for network errors
+**Coverage Results**:
+- AuthContext: Well tested for all critical paths
+- Overall project coverage: 6.64% (increased from 3.47%)
+- Total tests: 25 passing (5 smoke + 9 usePostInteractions + 11 AuthContext)
+**Next Step**: Add tests for useTimeline hook to reach 10% coverage target
+
 ### Entry Template
 ```
 Date: YYYY-MM-DD HH:MM
