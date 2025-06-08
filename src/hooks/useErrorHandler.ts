@@ -15,6 +15,7 @@ import {
   isAuthenticationError,
   isSessionExpiredError
 } from '../lib/errors'
+import { trackError, ErrorCategory } from '../lib/error-tracking'
 
 interface ErrorHandlerOptions {
   onRateLimit?: (resetAt: Date) => void
@@ -27,8 +28,21 @@ interface ErrorHandlerOptions {
 
 export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
 
-  const handleError = useCallback((error: Error | unknown) => {
-    console.error('Error caught by handler:', error)
+  const handleError = useCallback((error: Error | unknown, action?: string) => {
+    // Determine error category for tracking
+    let category: ErrorCategory = 'unknown';
+    if (isRateLimitError(error) || error instanceof ATProtoError) {
+      category = 'network';
+    } else if (isAuthenticationError(error) || isSessionExpiredError(error)) {
+      category = 'auth';
+    }
+
+    // Track the error with our new system
+    trackError(error, { 
+      category, 
+      action,
+      metadata: error instanceof ATProtoError ? { code: error.code } : undefined
+    });
 
     // Handle rate limit errors
     if (isRateLimitError(error)) {

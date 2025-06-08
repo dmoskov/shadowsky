@@ -120,7 +120,7 @@ export function usePostInteractions(): UsePostInteractionsReturn {
       if (context?.previousData) {
         queryClient.setQueryData(['timeline'], context.previousData)
       }
-      handleError(error)
+      handleError(error, 'likePost')
     }
   })
 
@@ -218,7 +218,7 @@ export function usePostInteractions(): UsePostInteractionsReturn {
       if (context?.previousData) {
         queryClient.setQueryData(['timeline'], context.previousData)
       }
-      handleError(error)
+      handleError(error, 'repostPost')
     }
   })
 
