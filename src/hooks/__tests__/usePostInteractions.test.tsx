@@ -301,10 +301,13 @@ describe('usePostInteractions', () => {
     it('should indicate loading state during like operation', async () => {
       const mockPost = createMockPost();
       
-      // Mock a delayed response
-      mockInteractionsService.likePost.mockImplementation(
-        () => new Promise(resolve => setTimeout(() => resolve({ uri: 'test' }), 100))
-      );
+      // Use a flag to control when the promise resolves
+      let resolveHandler: ((value: any) => void) | null = null;
+      mockInteractionsService.likePost.mockImplementation(() => {
+        return new Promise((resolve) => {
+          resolveHandler = resolve;
+        });
+      });
 
       const { result } = renderHook(() => usePostInteractions(), {
         wrapper: ({ children }) => (
@@ -314,20 +317,28 @@ describe('usePostInteractions', () => {
         ),
       });
 
-      // Start liking
-      const likePromise = act(async () => {
-        return result.current.likePost(mockPost);
+      // Start the like operation but don't await it
+      let likeOperation: Promise<void> | null = null;
+      act(() => {
+        likeOperation = result.current.likePost(mockPost);
       });
 
-      // Check loading state is true
-      expect(result.current.isLiking).toBe(true);
+      // The loading state should be true while the promise is pending
+      await waitFor(() => {
+        expect(result.current.isLiking).toBe(true);
+      });
       expect(result.current.isReposting).toBe(false);
 
-      // Wait for completion
-      await likePromise;
+      // Now resolve the promise and wait for the operation to complete
+      await act(async () => {
+        resolveHandler!({ uri: 'test-like-uri' });
+        await likeOperation!;
+      });
 
-      // Check loading state is false
-      expect(result.current.isLiking).toBe(false);
+      // After completion, loading state should be false
+      await waitFor(() => {
+        expect(result.current.isLiking).toBe(false);
+      });
     });
   });
 
@@ -337,6 +348,9 @@ describe('usePostInteractions', () => {
         likeCount: 0,
         viewer: { like: 'existing-like' }
       });
+
+      // Mock successful unlike
+      mockInteractionsService.unlikePost.mockResolvedValue({});
 
       const initialData = {
         pages: [{
@@ -365,6 +379,9 @@ describe('usePostInteractions', () => {
 
     it('should handle posts not in timeline', async () => {
       const mockPost = createMockPost();
+      
+      // Mock successful like
+      mockInteractionsService.likePost.mockResolvedValue({ uri: 'at://new-like' });
       
       // No timeline data
       queryClient.setQueryData(['timeline'], null);

@@ -33,8 +33,6 @@ export function usePostInteractions(): UsePostInteractionsReturn {
       }
     },
     onMutate: async ({ post, isLiked }) => {
-      console.log('Like mutation onMutate:', { postUri: post.uri, isLiked })
-      
       // Cancel outgoing queries
       await queryClient.cancelQueries({ queryKey: ['timeline'] })
 
@@ -68,16 +66,6 @@ export function usePostInteractions(): UsePostInteractionsReturn {
                   }
                 }
                 
-                console.log('Optimistically updating post:', {
-                  uri: post.uri,
-                  pageIndex,
-                  itemIndex,
-                  oldLikeCount: item.post.likeCount,
-                  newLikeCount,
-                  oldViewer: item.post.viewer,
-                  newViewer: updatedItem.post.viewer
-                })
-                
                 return updatedItem
               }
               return item
@@ -92,8 +80,6 @@ export function usePostInteractions(): UsePostInteractionsReturn {
       return { previousData }
     },
     onSuccess: (data, { post }) => {
-      console.log('Like onSuccess:', data)
-      
       // Update with the real like URI - skip if it's just confirming optimistic update
       if (data.action === 'like' && data.uri) {
         queryClient.setQueryData(['timeline'], (oldData: any) => {
@@ -115,12 +101,6 @@ export function usePostInteractions(): UsePostInteractionsReturn {
                       }
                     }
                   }
-                  console.log('Updating post with real like URI:', {
-                    uri: post.uri,
-                    action: data.action,
-                    likeUri: data.uri,
-                    updatedViewer: updatedPost.post.viewer
-                  })
                   return updatedPost
                 }
                 return item
@@ -132,7 +112,6 @@ export function usePostInteractions(): UsePostInteractionsReturn {
       
       // Invalidate after a delay to refresh from server
       setTimeout(() => {
-        console.log('Invalidating timeline query after delay')
         queryClient.invalidateQueries({ queryKey: ['timeline'] })
       }, 2000)
     },
@@ -201,8 +180,6 @@ export function usePostInteractions(): UsePostInteractionsReturn {
       return { previousData }
     },
     onSuccess: (data, { post }) => {
-      console.log('Repost onSuccess:', data)
-      
       // Update with the real repost URI
       queryClient.setQueryData(['timeline'], (oldData: any) => {
         if (!oldData) return oldData
@@ -223,12 +200,6 @@ export function usePostInteractions(): UsePostInteractionsReturn {
                     }
                   }
                 }
-                console.log('Updating post with real repost URI:', {
-                  uri: post.uri,
-                  action: data.action,
-                  repostUri: data.uri,
-                  updatedViewer: updatedPost.post.viewer
-                })
                 return updatedPost
               }
               return item
@@ -239,7 +210,6 @@ export function usePostInteractions(): UsePostInteractionsReturn {
       
       // Invalidate after a delay to refresh from server
       setTimeout(() => {
-        console.log('Invalidating timeline query after delay')
         queryClient.invalidateQueries({ queryKey: ['timeline'] })
       }, 2000)
     },
