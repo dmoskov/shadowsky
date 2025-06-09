@@ -26,6 +26,7 @@ import { Analytics } from './components/analytics/Analytics'
 // These components are not in the index export
 import { MobileMenu } from './components/core/MobileMenu'
 import { MobileTabBar } from './components/core/MobileTabBar'
+import { ErrorBadge } from './components/common/ErrorBadge'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
 import { queryClient } from './lib/query-client'
 import { PenSquare } from 'lucide-react'
@@ -157,6 +158,7 @@ function AppContent() {
       
       {/* Toast Notifications */}
       <ToastContainer />
+      {import.meta.env.DEV && <ErrorBadge />}
     </>
   )
 }
