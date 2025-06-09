@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tailwind Style Guide - Bluesky Client</title>
+    <link rel="stylesheet" href="/src/index.css">
+    <style>
+        .guide-section {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--color-bg-secondary);
+            border-radius: var(--radius-lg);
+        }
+        .guide-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--color-text-primary);
+        }
+        .guide-subtitle {
+            font-size: 1.125rem;
+            font-weight: 500;
+            margin: 1.5rem 0 1rem 0;
+            color: var(--color-text-secondary);
+        }
+        .guide-grid {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+        .code-block {
+            background: var(--color-bg-primary);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            font-family: monospace;
+            font-size: 0.875rem;
+            margin: 0.5rem 0;
+            overflow-x: auto;
+        }
+        .example-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body style="background: var(--color-bg-primary); padding: 2rem;">
+    <div style="max-width: 1200px; margin: 0 auto;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 2rem; color: var(--color-text-primary);">
+            Tailwind Style Guide
+        </h1>
+        
+        <div class="guide-section">
+            <h2 class="guide-title">Buttons</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--color-text-secondary);">
+                Button components using Tailwind utilities with tw- prefix
+            </p>
+            
+            <div class="guide-subtitle">Primary Button</div>
+            <div class="example-row">
+                <button class="tw-btn-primary">Primary Button</button>
+                <button class="tw-btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;">Disabled</button>
+            </div>
+            <div class="code-block">
+                &lt;button class="tw-btn-primary"&gt;Primary Button&lt;/button&gt;
+            </div>
+            
+            <div class="guide-subtitle">Secondary Button</div>
+            <div class="example-row">
+                <button class="tw-btn-secondary">Secondary Button</button>
+                <button class="tw-btn-secondary" disabled style="opacity: 0.5; cursor: not-allowed;">Disabled</button>
+            </div>
+            <div class="code-block">
+                &lt;button class="tw-btn-secondary"&gt;Secondary Button&lt;/button&gt;
+            </div>
+            
+            <div class="guide-subtitle">Ghost Button</div>
+            <div class="example-row">
+                <button class="tw-btn-ghost">Ghost Button</button>
+                <button class="tw-btn-ghost" disabled style="opacity: 0.5; cursor: not-allowed;">Disabled</button>
+            </div>
+            <div class="code-block">
+                &lt;button class="tw-btn-ghost"&gt;Ghost Button&lt;/button&gt;
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h2 class="guide-title">Form Inputs</h2>
+            
+            <div class="guide-subtitle">Text Input</div>
+            <input type="text" class="tw-input" placeholder="Enter text here..." style="max-width: 400px;">
+            <div class="code-block">
+                &lt;input type="text" class="tw-input" placeholder="Enter text..."&gt;
+            </div>
+            
+            <div class="guide-subtitle">Textarea</div>
+            <textarea class="tw-input" rows="3" placeholder="Enter longer text..." style="max-width: 400px;"></textarea>
+            <div class="code-block">
+                &lt;textarea class="tw-input" rows="3"&gt;&lt;/textarea&gt;
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h2 class="guide-title">Cards</h2>
+            
+            <div class="guide-subtitle">Basic Card</div>
+            <div class="tw-card" style="max-width: 600px;">
+                <h3 style="margin: 0 0 0.5rem 0;">Card Title</h3>
+                <p style="margin: 0; color: var(--color-text-secondary);">
+                    This is a basic card component using Tailwind utilities.
+                </p>
+            </div>
+            <div class="code-block">
+                &lt;div class="tw-card"&gt;
+                    &lt;h3&gt;Card Title&lt;/h3&gt;
+                    &lt;p&gt;Card content&lt;/p&gt;
+                &lt;/div&gt;
+            </div>
+            
+            <div class="guide-subtitle">Post Card Preview</div>
+            <div class="tw-post-card" style="max-width: 600px;">
+                <div style="display: flex; gap: 0.75rem;">
+                    <div style="width: 48px; height: 48px; background: var(--color-bg-tertiary); border-radius: 50%;"></div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600;">Display Name</div>
+                        <div style="color: var(--color-text-secondary); font-size: 0.875rem;">@handle</div>
+                        <p style="margin: 0.5rem 0;">This is what a post will look like with Tailwind styles.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="code-block">
+                &lt;div class="tw-post-card"&gt;...&lt;/div&gt;
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h2 class="guide-title">Color Utilities</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--color-text-secondary);">
+                All colors reference our existing CSS variables
+            </p>
+            
+            <div class="guide-grid">
+                <div>
+                    <div class="guide-subtitle">Text Colors</div>
+                    <div class="twtext-primary">twtext-primary</div>
+                    <div class="twtext-secondary">twtext-secondary</div>
+                    <div class="twtext-tertiary">twtext-tertiary</div>
+                    <div class="twtext-brand-primary">twtext-brand-primary</div>
+                </div>
+                
+                <div>
+                    <div class="guide-subtitle">Background Colors</div>
+                    <div class="twbg-brand-primary twtext-white twp-2 twrounded" style="margin: 0.25rem 0;">twbg-brand-primary</div>
+                    <div class="twbg-bg-secondary twp-2 twrounded" style="margin: 0.25rem 0;">twbg-bg-secondary</div>
+                    <div class="twbg-bg-tertiary twp-2 twrounded" style="margin: 0.25rem 0;">twbg-bg-tertiary</div>
+                </div>
+                
+                <div>
+                    <div class="guide-subtitle">Border Colors</div>
+                    <div class="twborder twborder-border twp-2 twrounded" style="margin: 0.25rem 0;">twborder-border</div>
+                    <div class="twborder twborder-brand-primary twp-2 twrounded" style="margin: 0.25rem 0;">twborder-brand-primary</div>
+                    <div class="twborder twborder-error twp-2 twrounded" style="margin: 0.25rem 0;">twborder-error</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h2 class="guide-title">Spacing</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--color-text-secondary);">
+                Based on our 4px grid system
+            </p>
+            
+            <div class="guide-subtitle">Padding Examples</div>
+            <div class="example-row">
+                <div class="twbg-bg-secondary twp-1 twrounded">twp-1 (4px)</div>
+                <div class="twbg-bg-secondary twp-2 twrounded">twp-2 (8px)</div>
+                <div class="twbg-bg-secondary twp-4 twrounded">twp-4 (16px)</div>
+                <div class="twbg-bg-secondary twp-6 twrounded">twp-6 (24px)</div>
+            </div>
+            
+            <div class="guide-subtitle">Margin Examples</div>
+            <div style="background: var(--color-bg-tertiary); padding: 1rem; border-radius: var(--radius-md);">
+                <div class="twbg-bg-secondary twp-2 twrounded twmb-2">twmb-2 (8px bottom margin)</div>
+                <div class="twbg-bg-secondary twp-2 twrounded twmb-4">twmb-4 (16px bottom margin)</div>
+                <div class="twbg-bg-secondary twp-2 twrounded">Last item</div>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h2 class="guide-title">Migration Pattern</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--color-text-secondary);">
+                Example of migrating from current CSS to Tailwind
+            </p>
+            
+            <div class="guide-subtitle">Before (Current CSS)</div>
+            <div class="code-block">
+                &lt;button class="btn btn-primary"&gt;Click me&lt;/button&gt;
+                &lt;div class="post-card"&gt;...&lt;/div&gt;
+            </div>
+            
+            <div class="guide-subtitle">After (Tailwind)</div>
+            <div class="code-block">
+                &lt;button class="tw-btn-primary"&gt;Click me&lt;/button&gt;
+                &lt;div class="tw-post-card"&gt;...&lt;/div&gt;
+            </div>
+            
+            <div class="guide-subtitle">During Migration (Both work)</div>
+            <div class="code-block">
+                &lt;!-- Old styles continue to work --&gt;
+                &lt;button class="btn btn-primary"&gt;Old Button&lt;/button&gt;
+                
+                &lt;!-- New Tailwind styles with tw- prefix --&gt;
+                &lt;button class="tw-btn-primary"&gt;New Button&lt;/button&gt;
+            </div>
+        </div>
+    </div>
+</body>
+</html>

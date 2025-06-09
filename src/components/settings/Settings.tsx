@@ -141,78 +141,90 @@ export const Settings: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="settings-container">
-        <div className="settings-loading">
-          <div className="spinner spinner-lg"></div>
-          <p>Loading settings...</p>
+      <div className="min-h-screen bg-gray-900 p-4">
+        <div className="flex items-center justify-center py-16">
+          <div className="w-8 h-8 border-2 border-gray-700 border-t-blue-400 rounded-full animate-spin"></div>
+          <p className="ml-3 text-gray-400">Loading settings...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="settings-container">
-      <div className="settings-header">
-        <button 
-          onClick={() => navigate(-1)}
-          className="btn-icon"
-          aria-label="Go back"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1>Settings</h1>
-        <button 
-          onClick={handleSave}
-          className="btn btn-primary"
-          disabled={isSaving}
-        >
-          {isSaving ? (
-            <span className="spinner spinner-sm" />
-          ) : savedMessage ? (
-            <>
-              <Check size={16} />
-              Saved
-            </>
-          ) : (
-            <>
-              <Save size={16} />
-              Save Changes
-            </>
-          )}
-        </button>
+    <div className="min-h-screen bg-gray-900">
+      <div className="sticky top-0 z-10 bg-gray-900 border-b border-gray-800 px-4 py-3">
+        <div className="flex items-center justify-between max-w-4xl mx-auto">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
+              aria-label="Go back"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h1 className="text-xl font-semibold">Settings</h1>
+          </div>
+          <button 
+            onClick={handleSave}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            ) : savedMessage ? (
+              <>
+                <Check size={16} />
+                Saved
+              </>
+            ) : (
+              <>
+                <Save size={16} />
+                Save Changes
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
-      <div className="settings-content">
-        <div className="settings-tabs">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`settings-tab ${activeTab === tab.id ? 'active' : ''}`}
-            >
-              <tab.icon size={18} />
-              {tab.label}
-            </button>
-          ))}
-        </div>
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="lg:flex lg:gap-6">
+          <div className="lg:w-64 mb-6 lg:mb-0">
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-2">
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors ${
+                    activeTab === tab.id 
+                      ? 'bg-blue-600 text-white' 
+                      : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <tab.icon size={18} />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-        <div className="settings-panel">
+          <div className="flex-1">
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
           {activeTab === 'general' && (
             <motion.div 
-              className="settings-section"
+              className="space-y-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <h2>General Settings</h2>
+              <h2 className="text-xl font-semibold mb-4">General Settings</h2>
               
-              <div className="settings-group">
-                <h3>Account</h3>
-                <p className="text-secondary">
+              <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                <h3 className="text-lg font-medium mb-2">Account</h3>
+                <p className="text-gray-400 mb-4">
                   Logged in as @{agent?.session?.handle}
                 </p>
                 <button 
                   onClick={logout}
-                  className="btn btn-secondary btn-danger"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
                 >
                   Log Out
                 </button>
@@ -222,14 +234,14 @@ export const Settings: React.FC = () => {
 
           {activeTab === 'feed' && (
             <motion.div 
-              className="settings-section"
+              className="space-y-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <h2>Feed Preferences</h2>
+              <h2 className="text-xl font-semibold mb-4">Feed Preferences</h2>
               
-              <div className="settings-group">
-                <label className="settings-toggle">
+              <div className="bg-gray-900 rounded-lg p-4 border border-gray-700 space-y-4">
+                <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={feedPrefs.hideReplies || false}
@@ -237,6 +249,7 @@ export const Settings: React.FC = () => {
                       ...feedPrefs,
                       hideReplies: e.target.checked
                     })}
+                    className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-blue-600 focus:ring-blue-500"
                   />
                   <span>Hide all replies</span>
                 </label>
@@ -442,6 +455,8 @@ export const Settings: React.FC = () => {
               </div>
             </motion.div>
           )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

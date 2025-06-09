@@ -1,0 +1,8 @@
+/* Test Tailwind v4 in a simple file */
+@import "tailwindcss";
+
+/* Test if we can use utilities */
+.test {
+  @apply p-4 bg-blue-500 text-white;
+}
+EOF < /dev/null

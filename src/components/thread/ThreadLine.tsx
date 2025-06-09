@@ -19,30 +19,40 @@ export const ThreadLine: React.FC<ThreadLineProps> = ({
       {/* Vertical line from parent */}
       {depth > 0 && (
         <motion.div 
-          className="thread-line vertical"
+          className="absolute w-0.5 bg-gray-700"
           initial={{ height: 0 }}
           animate={{ height: isLast ? '50%' : '100%' }}
           transition={{ duration: 0.3 }}
-          style={{ left: `${(depth - 1) * 20 + 24}px` }}
+          style={{ 
+            left: `${(depth - 1) * 20 + 24}px`,
+            top: 0
+          }}
         />
       )}
       
       {/* Horizontal connector */}
       {depth > 0 && (
         <motion.div 
-          className="thread-line horizontal"
+          className="absolute h-0.5 bg-gray-700"
           initial={{ width: 0 }}
           animate={{ width: 20 }}
           transition={{ duration: 0.2, delay: 0.1 }}
-          style={{ left: `${(depth - 1) * 20 + 24}px` }}
+          style={{ 
+            left: `${(depth - 1) * 20 + 24}px`,
+            top: '24px'
+          }}
         />
       )}
       
       {/* Continuation line for children */}
       {hasReplies && !isCollapsed && (
         <div 
-          className="thread-line vertical continuation"
-          style={{ left: `${depth * 20 + 24}px` }}
+          className="absolute w-0.5 bg-gray-700"
+          style={{ 
+            left: `${depth * 20 + 24}px`,
+            top: '48px',
+            bottom: 0
+          }}
         />
       )}
     </>

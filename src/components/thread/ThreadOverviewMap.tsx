@@ -88,18 +88,18 @@ export const ThreadOverviewMap: React.FC<ThreadOverviewMapProps> = ({
   return (
     <AnimatePresence>
       <motion.div
-        className={`thread-overview-map ${isExpanded ? 'expanded' : 'minimized'}`}
+        className={`bg-gray-800 border border-gray-700 rounded-lg ${isExpanded ? 'w-full max-w-4xl' : 'w-80'} max-h-96 flex flex-col`}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.8 }}
         transition={{ duration: 0.3 }}
       >
-        <div className="map-header">
-          <h3 className="map-title">Thread Map</h3>
-          <div className="map-controls">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+          <h3 className="font-semibold">Thread Map</h3>
+          <div className="flex items-center gap-1">
             {onToggleExpand && (
               <button
-                className="btn btn-icon btn-ghost"
+                className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
                 onClick={onToggleExpand}
                 aria-label={isExpanded ? 'Minimize' : 'Expand'}
               >
@@ -108,7 +108,7 @@ export const ThreadOverviewMap: React.FC<ThreadOverviewMapProps> = ({
             )}
             {onClose && (
               <button
-                className="btn btn-icon btn-ghost"
+                className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
                 onClick={onClose}
                 aria-label="Close map"
               >
@@ -118,12 +118,12 @@ export const ThreadOverviewMap: React.FC<ThreadOverviewMapProps> = ({
           </div>
         </div>
         
-        <div className="map-container" ref={mapRef}>
+        <div className="flex-1 overflow-auto p-2" ref={mapRef}>
           <svg
             width={mapWidth}
             height={mapHeight}
             viewBox={`0 0 ${mapWidth} ${mapHeight}`}
-            className="thread-map-svg"
+            className="w-full h-full"
           >
             {/* Draw connection lines */}
             {threadStructure.map((node, index) => {
@@ -144,7 +144,7 @@ export const ThreadOverviewMap: React.FC<ThreadOverviewMapProps> = ({
                     y1={parent.y + 10}
                     x2={node.x + 20}
                     y2={node.y + 10}
-                    stroke="var(--color-border)"
+                    stroke="#374151"
                     strokeWidth="1"
                     opacity="0.5"
                   />
@@ -166,18 +166,18 @@ export const ThreadOverviewMap: React.FC<ThreadOverviewMapProps> = ({
                   cx={node.x + 20}
                   cy={node.y + 10}
                   r={isExpanded ? 12 : 8}
-                  className={`map-node ${currentPostUri === node.uri ? 'current' : ''}`}
-                  fill={currentPostUri === node.uri ? 'var(--color-brand-primary)' : 'var(--color-bg-elevated)'}
-                  stroke={node.hasReplies ? 'var(--color-border)' : 'transparent'}
+                  className={`transition-colors ${currentPostUri === node.uri ? 'current' : ''}`}
+                  fill={currentPostUri === node.uri ? '#3b82f6' : '#1f2937'}
+                  stroke={node.hasReplies ? '#374151' : 'transparent'}
                   strokeWidth="2"
                 />
                 {isExpanded && (
                   <text
                     x={node.x + 35}
                     y={node.y + 14}
-                    className="map-node-label"
+                    className="text-xs"
                     fontSize="10"
-                    fill="var(--color-text-secondary)"
+                    fill="#9ca3af"
                   >
                     @{node.author.split('.')[0]}
                     {node.replyCount > 0 && ` (${node.replyCount})`}
@@ -188,18 +188,18 @@ export const ThreadOverviewMap: React.FC<ThreadOverviewMapProps> = ({
           </svg>
         </div>
         
-        <div className="map-legend">
-          <div className="legend-item">
-            <div className="legend-dot current" />
-            <span>Current</span>
+        <div className="flex items-center justify-between px-4 py-2 border-t border-gray-700 text-xs text-gray-400">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-blue-400" />
+              <span>Current</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-gray-700 border border-gray-600" />
+              <span>Has replies</span>
+            </div>
           </div>
-          <div className="legend-item">
-            <div className="legend-dot has-replies" />
-            <span>Has replies</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-count">{threadStructure.length} posts</span>
-          </div>
+          <span>{threadStructure.length} posts</span>
         </div>
       </motion.div>
     </AnimatePresence>

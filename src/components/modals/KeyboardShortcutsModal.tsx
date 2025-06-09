@@ -75,7 +75,7 @@ export const KeyboardShortcutsModal: React.FC = () => {
       {isOpen && (
         <>
           <motion.div
-            className="modal-backdrop"
+            className="fixed inset-0 bg-black/50 z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -83,19 +83,19 @@ export const KeyboardShortcutsModal: React.FC = () => {
           />
           
           <motion.div
-            className="keyboard-shortcuts-modal"
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-gray-900 rounded-xl shadow-xl z-50 max-h-[80vh] flex flex-col"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="modal-header">
-              <h2 className="modal-title">
-                <Command size={24} />
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
+              <h2 className="flex items-center gap-3 text-xl font-semibold">
+                <Command size={24} className="text-blue-400" />
                 Keyboard Shortcuts
               </h2>
               <button
-                className="btn btn-icon btn-ghost"
+                className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
                 onClick={() => setIsOpen(false)}
                 aria-label="Close"
               >
@@ -103,22 +103,22 @@ export const KeyboardShortcutsModal: React.FC = () => {
               </button>
             </div>
             
-            <div className="shortcuts-content">
+            <div className="flex-1 overflow-y-auto px-6 py-4">
               {shortcutGroups.map((group) => (
-                <div key={group.title} className="shortcut-group">
-                  <h3 className="shortcut-group-title">{group.title}</h3>
-                  <div className="shortcut-list">
+                <div key={group.title} className="mb-6 last:mb-0">
+                  <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">{group.title}</h3>
+                  <div className="space-y-2">
                     {group.shortcuts.map((shortcut, index) => (
-                      <div key={index} className="shortcut-item">
-                        <div className="shortcut-keys">
+                      <div key={index} className="flex items-center justify-between py-2">
+                        <div className="flex items-center gap-2">
                           {shortcut.keys.map((key, i) => (
                             <React.Fragment key={i}>
-                              {i > 0 && <span className="key-separator">then</span>}
-                              <kbd className="key">{key}</kbd>
+                              {i > 0 && <span className="text-gray-500 text-sm mx-1">then</span>}
+                              <kbd className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-sm font-mono">{key}</kbd>
                             </React.Fragment>
                           ))}
                         </div>
-                        <span className="shortcut-description">
+                        <span className="text-gray-300 ml-4">
                           {shortcut.description}
                         </span>
                       </div>
@@ -128,9 +128,9 @@ export const KeyboardShortcutsModal: React.FC = () => {
               ))}
             </div>
             
-            <div className="modal-footer">
-              <p className="text-secondary text-caption">
-                Press <kbd>?</kbd> anytime to show these shortcuts
+            <div className="px-6 py-3 border-t border-gray-800">
+              <p className="text-gray-400 text-sm text-center">
+                Press <kbd className="px-1.5 py-0.5 bg-gray-800 border border-gray-700 rounded text-xs font-mono mx-1">?</kbd> anytime to show these shortcuts
               </p>
             </div>
           </motion.div>

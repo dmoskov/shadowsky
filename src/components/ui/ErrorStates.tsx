@@ -28,19 +28,23 @@ const ErrorStateBase: React.FC<ErrorStateProps> = ({
   variant = 'error' 
 }) => (
   <motion.div 
-    className={`error-state-container error-state-${variant}`}
+    className={`flex flex-col items-center justify-center text-center px-8 py-16 ${
+      variant === 'error' ? 'text-red-400' : 
+      variant === 'warning' ? 'text-yellow-400' : 
+      'text-blue-400'
+    }`}
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.3 }}
   >
-    <div className="error-state-icon">
+    <div className="mb-4">
       {icon}
     </div>
-    <h2 className="error-state-title">{title}</h2>
-    <p className="error-state-description">{description}</p>
+    <h2 className="text-xl font-semibold mb-2">{title}</h2>
+    <p className="text-gray-400 mb-6 max-w-md">{description}</p>
     {action && (
       <motion.button
-        className="btn btn-primary"
+        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
         onClick={action.onClick}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -171,12 +175,12 @@ export const InlineError: React.FC<{
   message: string
   onRetry?: () => void
 }> = ({ message, onRetry }) => (
-  <div className="inline-error">
+  <div className="inline-flex items-center gap-2 px-3 py-2 bg-red-900/20 text-red-400 rounded-lg">
     <AlertTriangle size={16} />
-    <span>{message}</span>
+    <span className="text-sm">{message}</span>
     {onRetry && (
       <button 
-        className="btn-link"
+        className="ml-2 p-1 hover:bg-red-900/30 rounded transition-colors"
         onClick={onRetry}
         aria-label="Retry"
       >
@@ -193,20 +197,20 @@ export const ErrorToast: React.FC<{
   onDismiss: () => void
 }> = ({ message, onRetry, onDismiss }) => (
   <motion.div
-    className="error-toast"
+    className="flex items-center gap-3 px-4 py-3 bg-red-900/90 text-red-400 rounded-lg shadow-lg"
     initial={{ opacity: 0, y: 50 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: 50 }}
   >
     <AlertTriangle size={20} />
-    <span>{message}</span>
-    <div className="error-toast-actions">
+    <span className="flex-1">{message}</span>
+    <div className="flex items-center gap-2">
       {onRetry && (
-        <button className="btn-link" onClick={onRetry}>
+        <button className="px-3 py-1 text-sm font-medium hover:bg-red-800/50 rounded transition-colors" onClick={onRetry}>
           Try again
         </button>
       )}
-      <button className="btn-link" onClick={onDismiss}>
+      <button className="px-3 py-1 text-sm font-medium hover:bg-red-800/50 rounded transition-colors" onClick={onDismiss}>
         Dismiss
       </button>
     </div>
