@@ -18,29 +18,50 @@ export const Tooltip: React.FC<Props> = ({
   const [isVisible, setIsVisible] = useState(false)
   const [coords, setCoords] = useState({ x: 0, y: 0 })
   const triggerRef = useRef<HTMLDivElement>(null)
+  const tooltipRef = useRef<HTMLDivElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout>()
 
   const handleMouseEnter = () => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect()
-      const scrollX = window.scrollX
-      const scrollY = window.scrollY
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
       
-      let x = rect.left + scrollX + rect.width / 2
-      let y = rect.top + scrollY
+      // Use fixed positioning coordinates (no scroll offset needed)
+      let x = rect.left + rect.width / 2
+      let y = rect.top
       
+      // Adjust position based on prop
       switch (position) {
         case 'bottom':
-          y = rect.bottom + scrollY
+          y = rect.bottom
           break
         case 'left':
-          x = rect.left + scrollX
-          y = rect.top + scrollY + rect.height / 2
+          x = rect.left
+          y = rect.top + rect.height / 2
           break
         case 'right':
-          x = rect.right + scrollX
-          y = rect.top + scrollY + rect.height / 2
+          x = rect.right
+          y = rect.top + rect.height / 2
           break
+      }
+      
+      // Ensure tooltip stays within viewport bounds
+      // Account for tooltip being centered
+      const halfWidth = maxWidth / 2
+      if (x - halfWidth < 10) {
+        x = halfWidth + 10
+      } else if (x + halfWidth > viewportWidth - 10) {
+        x = viewportWidth - halfWidth - 10
+      }
+      
+      // Ensure vertical bounds
+      if (position === 'top' && y < 100) {
+        // Not enough space above, flip to bottom
+        y = rect.bottom
+      } else if (position === 'bottom' && y + 100 > viewportHeight) {
+        // Not enough space below, flip to top
+        y = rect.top
       }
       
       setCoords({ x, y })
@@ -66,43 +87,6 @@ export const Tooltip: React.FC<Props> = ({
     }
   }, [])
 
-  const getTooltipStyle = () => {
-    const style: React.CSSProperties = {
-      position: 'absolute',
-      maxWidth,
-      zIndex: 9999,
-    }
-    
-    switch (position) {
-      case 'top':
-        style.bottom = '100%'
-        style.left = '50%'
-        style.transform = 'translateX(-50%)'
-        style.marginBottom = '8px'
-        break
-      case 'bottom':
-        style.top = '100%'
-        style.left = '50%'
-        style.transform = 'translateX(-50%)'
-        style.marginTop = '8px'
-        break
-      case 'left':
-        style.right = '100%'
-        style.top = '50%'
-        style.transform = 'translateY(-50%)'
-        style.marginRight = '8px'
-        break
-      case 'right':
-        style.left = '100%'
-        style.top = '50%'
-        style.transform = 'translateY(-50%)'
-        style.marginLeft = '8px'
-        break
-    }
-    
-    return style
-  }
-
   return (
     <>
       <div 
@@ -119,30 +103,43 @@ export const Tooltip: React.FC<Props> = ({
           className="tooltip-container"
           style={{
             position: 'fixed',
-            left: coords.x,
-            top: coords.y,
+            left: 0,
+            top: 0,
             pointerEvents: 'none',
-            zIndex: 'var(--z-tooltip)',
-            opacity: isVisible ? 1 : 0,
-            transition: 'opacity var(--transition-hover)',
+            zIndex: 9999,
           }}
         >
-          <div style={{ position: 'relative' }}>
-            <div 
-              className="tooltip-content"
-              style={{
-                ...getTooltipStyle(),
+          <div 
+            ref={tooltipRef}
+            className="tooltip-content"
+            style={{
+              position: 'absolute',
+              left: coords.x,
+              top: coords.y,
+              transform: position === 'top' || position === 'bottom' 
+                ? 'translate(-50%, ' + (position === 'top' ? '-100%' : '0') + ')' 
+                : 'translate(' + (position === 'left' ? '-100%' : '0') + ', -50%)',
+              marginTop: position === 'top' ? '-8px' : position === 'bottom' ? '8px' : '0',
+              marginLeft: position === 'left' ? '-8px' : position === 'right' ? '8px' : '0',
+              maxWidth: maxWidth + 'px',
+              // Only apply default styles if content is a string
+              ...(typeof content === 'string' ? {
                 background: 'var(--color-bg-elevated)',
                 color: 'var(--color-text-primary)',
-                padding: 'var(--spacing-1) var(--spacing-2)',
+                padding: 'var(--spacing-2) var(--spacing-3)',
                 borderRadius: 'var(--radius-sm)',
                 fontSize: 'var(--font-size-sm)',
-                whiteSpace: 'nowrap',
+                lineHeight: '1.4',
+                whiteSpace: 'normal',
+                wordWrap: 'break-word',
                 boxShadow: 'var(--shadow-md)',
-              }}
-            >
-              {content}
-            </div>
+                border: '1px solid var(--color-border-secondary)',
+              } : {}),
+              opacity: isVisible ? 1 : 0,
+              transition: 'opacity 200ms ease-in-out',
+            }}
+          >
+            {content}
           </div>
         </div>
       )}
