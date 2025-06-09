@@ -74,9 +74,9 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
 
   if (isLoading) {
     return (
-      <div className="feed-container">
-        <div className="feed-header">
-          <h2 className="feed-title">Your Timeline</h2>
+      <div className="max-w-2xl mx-auto px-4 pt-4">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
+          <h2 className="text-2xl font-bold text-gray-100">Your Timeline</h2>
         </div>
         <FeedLoading />
       </div>
@@ -85,9 +85,9 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
 
   if (error) {
     return (
-      <div className="feed-container">
-        <div className="feed-header">
-          <h2 className="feed-title">Your Timeline</h2>
+      <div className="max-w-2xl mx-auto px-4 pt-4">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
+          <h2 className="text-2xl font-bold text-gray-100">Your Timeline</h2>
         </div>
         <FeedError onRetry={() => refresh()} />
       </div>
@@ -96,9 +96,9 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
 
   if (!posts || posts.length === 0) {
     return (
-      <div className="feed-container">
-        <div className="feed-header">
-          <h2 className="feed-title">Your Timeline</h2>
+      <div className="max-w-2xl mx-auto px-4 pt-4">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
+          <h2 className="text-2xl font-bold text-gray-100">Your Timeline</h2>
         </div>
         <FeedEmpty />
       </div>
@@ -106,31 +106,38 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
   }
 
   return (
-    <div className="feed-container">
-      <div className="feed-header">
-        <h2 className="feed-title">Your Timeline</h2>
+    <div className="max-w-2xl mx-auto px-4 pt-4">
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
+        <h2 className="text-2xl font-bold text-gray-100">Your Timeline</h2>
         <button
           onClick={() => refresh()}
           disabled={isFetching}
-          className="btn btn-primary"
+          className={`
+            px-4 py-2 text-sm font-medium rounded-full
+            bg-blue-600 text-white
+            hover:bg-blue-700 disabled:opacity-60
+            transition-all duration-200
+            flex items-center space-x-2
+          `}
         >
           {isFetching ? <InlineLoader size="sm" /> : null}
-          {isFetching ? 'Refreshing...' : 'Refresh Feed'}
+          <span>{isFetching ? 'Refreshing...' : 'Refresh Feed'}</span>
         </button>
       </div>
       
-      <div className="feed-posts">
+      <div className="space-y-2">
         {posts.map((item) => (
           <ErrorBoundary 
             key={item.post.uri}
             fallback={(_, reset) => (
-              <div className="post-error card">
-                <p className="error-text">
+              <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                <p className="text-red-400 mb-3">
                   Failed to display this post
                 </p>
                 <button
                   onClick={reset}
-                  className="btn btn-secondary btn-sm"
+                  className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 
+                           rounded transition-colors duration-200"
                 >
                   Retry
                 </button>
@@ -153,16 +160,16 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
       {/* Infinite scroll trigger */}
       <div 
         ref={loadMoreRef}
-        className="load-more-trigger"
+        className="py-8"
       >
         {isFetchingNextPage && (
-          <div className="loading-more">
+          <div className="flex items-center justify-center space-x-3 text-gray-400">
             <InlineLoader />
             <span>Loading more posts...</span>
           </div>
         )}
         {!hasNextPage && posts.length > 0 && (
-          <div className="no-more-posts">
+          <div className="text-center text-gray-500 py-4">
             No more posts to load
           </div>
         )}
@@ -170,10 +177,11 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
       
       {/* Manual load more button as fallback */}
       {hasNextPage && !isFetchingNextPage && (
-        <div className="load-more-manual">
+        <div className="flex justify-center py-4">
           <button
             onClick={handleLoadMore}
-            className="btn btn-secondary"
+            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 
+                     text-gray-200 rounded-full transition-colors duration-200"
           >
             Load more manually
           </button>

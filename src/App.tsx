@@ -27,6 +27,7 @@ import { Analytics } from './components/analytics/Analytics'
 import { MobileMenu } from './components/core/MobileMenu'
 import { MobileTabBar } from './components/core/MobileTabBar'
 import { ErrorBadge } from './components/common/ErrorBadge'
+import { TailwindTest } from './components/TailwindTest'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
 import { queryClient } from './lib/query-client'
 import { PenSquare } from 'lucide-react'
@@ -102,12 +103,13 @@ function AppContent() {
   return (
     <>
       <ScrollProgress />
-      <div className="app-layout app-container">
+      <div className="min-h-screen bg-gray-900">
         <Header onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
-        <div className="app-body">
+        <div className="flex relative">
           <Sidebar onCompose={() => setIsComposeOpen(true)} />
-          <main className="main-content">
-            <Routes>
+          <main className="flex-1 lg:pl-64 pt-16 min-h-screen w-full">
+            <div className="max-w-7xl mx-auto">
+              <Routes>
               <Route path="/" element={
                 <Feed onViewThread={(uri) => navigate(`/thread/${encodeURIComponent(uri)}`)} />
               } />
@@ -118,15 +120,19 @@ function AppContent() {
               <Route path="/settings" element={<Settings />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/analytics/:handle" element={<Analytics />} />
+              <Route path="/tailwind-test" element={<TailwindTest />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            </div>
           </main>
         </div>
       </div>
       
       {/* Floating Action Button */}
       <button 
-        className="compose-fab"
+        className="fixed bottom-6 right-6 lg:hidden w-14 h-14 bg-blue-600 hover:bg-blue-700 
+                   text-white rounded-full shadow-lg flex items-center justify-center 
+                   transition-all duration-200 hover:scale-110 z-50"
         onClick={() => setIsComposeOpen(true)}
         aria-label="Compose new post"
       >

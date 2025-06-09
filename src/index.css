@@ -25,6 +25,8 @@
 @import './styles/settings.css';
 @import './styles/analytics.css';
 
+/* Tailwind CSS is imported in main.tsx to avoid conflicts */
+
 /* Reset body styles from Vite defaults */
 body {
   margin: 0;

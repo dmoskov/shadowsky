@@ -15,7 +15,6 @@ import {
   PenSquare,
   BarChart3
 } from 'lucide-react'
-import clsx from 'clsx'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUnreadNotificationCount } from '../../hooks/useNotifications'
 
@@ -60,31 +59,40 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
   }
 
   return (
-    <aside className="sidebar">
-      <nav className="sidebar-nav">
-        <div className="nav-section">
+    <aside className="hidden lg:flex flex-col fixed left-0 top-16 bottom-0 w-64 
+                     bg-gray-900 border-r border-gray-800 pt-4">
+      <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+        <div className="space-y-1">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
-              className={clsx('nav-item', {
-                'active': isActive(item.path)
-              })}
+              className={`
+                relative flex items-center px-3 py-2 rounded-lg
+                transition-all duration-200 group
+                ${isActive(item.path) 
+                  ? 'bg-gray-800 text-white' 
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                }
+              `}
             >
               <motion.div
-                className="nav-item-content"
+                className="flex items-center w-full"
                 whileHover={{ x: 4 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <item.icon size={22} className="nav-icon" />
-                <span className="nav-label">{item.label}</span>
+                <item.icon size={22} className="mr-3" />
+                <span className="font-medium">{item.label}</span>
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className="nav-badge">{item.badge > 99 ? '99+' : item.badge}</span>
+                  <span className="ml-auto bg-blue-500 text-white text-xs 
+                                 rounded-full px-2 py-0.5 font-medium">
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
                 )}
               </motion.div>
               {isActive(item.path) && (
                 <motion.div
-                  className="nav-indicator"
+                  className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r"
                   layoutId="sidebar-indicator"
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
@@ -93,32 +101,41 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
           ))}
         </div>
 
-        <div className="nav-divider" />
+        <div className="my-4 border-t border-gray-800" />
 
-        <div className="nav-section">
-          <h3 className="nav-section-title">Discover</h3>
+        <div className="space-y-1">
+          <h3 className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Discover
+          </h3>
           {trendingItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
-              className={clsx('nav-item', {
-                'active': isActive(item.path)
-              })}
+              className={`
+                relative flex items-center px-3 py-2 rounded-lg
+                transition-all duration-200 group
+                ${isActive(item.path) 
+                  ? 'bg-gray-800 text-white' 
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                }
+              `}
             >
               <motion.div
-                className="nav-item-content"
+                className="flex items-center w-full"
                 whileHover={{ x: 4 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <item.icon size={22} className="nav-icon" />
-                <span className="nav-label">{item.label}</span>
+                <item.icon size={22} className="mr-3" />
+                <span className="font-medium">{item.label}</span>
               </motion.div>
             </NavLink>
           ))}
         </div>
 
         <motion.button
-          className="compose-btn"
+          className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium 
+                     py-3 px-4 rounded-full flex items-center justify-center space-x-2
+                     transition-colors duration-200"
           onClick={onCompose}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -129,18 +146,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
       </nav>
 
       {/* User section at bottom */}
-      <div className="sidebar-user">
-        <div className="user-info">
-          <div className="avatar avatar-md">
-            {session?.handle && (
-              <div className="avatar-placeholder">
-                {session.handle.charAt(0).toUpperCase()}
-              </div>
-            )}
+      <div className="p-4 border-t border-gray-800">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 
+                         flex items-center justify-center text-white font-medium">
+            {session?.handle?.charAt(0).toUpperCase() || 'U'}
           </div>
-          <div className="user-details">
-            <div className="user-name">{session?.email?.split('@')[0] || 'User'}</div>
-            <div className="user-handle">@{session?.handle || 'handle'}</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium text-gray-200 truncate">
+              {session?.email?.split('@')[0] || 'User'}
+            </div>
+            <div className="text-xs text-gray-400 truncate">
+              @{session?.handle || 'handle'}
+            </div>
           </div>
         </div>
       </div>

@@ -115,7 +115,7 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
     <>
       {/* Backdrop */}
       <motion.div
-        className="modal-backdrop"
+        className="fixed inset-0 bg-black/50 z-50"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         onClick={onClose}
@@ -123,18 +123,18 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
       
       {/* Modal */}
       <motion.div
-        className="compose-modal"
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-gray-900 rounded-xl shadow-xl z-50 overflow-hidden"
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', damping: 20 }}
       >
-            <div className="compose-header">
-              <h2 className="compose-title">
+            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+              <h2 className="text-xl font-semibold">
                 {replyTo ? 'Reply' : 'New Post'}
               </h2>
               <button
                 onClick={onClose}
-                className="btn btn-icon btn-ghost"
+                className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
                 disabled={createPostMutation.isPending}
               >
                 <X size={20} />
@@ -143,19 +143,19 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
 
             {/* Reply context */}
             {replyTo && (
-              <div className="reply-context-preview">
-                <div className="reply-line-preview"></div>
-                <div className="reply-to-info">
+              <div className="relative px-4 pt-2 pb-0">
+                <div className="absolute left-11 top-8 bottom-0 w-0.5 bg-gray-700"></div>
+                <div className="flex gap-3">
                   <img 
                     src={replyTo.post.author.avatar} 
                     alt={replyTo.post.author.displayName}
-                    className="reply-to-avatar"
+                    className="w-10 h-10 rounded-full"
                   />
-                  <div>
-                    <div className="reply-to-author">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm">
                       {replyTo.post.author.displayName || replyTo.post.author.handle}
                     </div>
-                    <div className="reply-to-text">
+                    <div className="text-gray-400 text-sm line-clamp-2">
                       {(replyTo.post.record as { text?: string })?.text || ''}
                     </div>
                   </div>
@@ -163,15 +163,15 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="compose-form">
+            <form onSubmit={handleSubmit} className="p-4">
               {/* Author info */}
-              <div className="compose-author">
+              <div className="flex items-center gap-2 mb-3">
                 {session?.handle && (
                   <>
-                    <div className="compose-avatar">
+                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-semibold">
                       {session.handle.charAt(0).toUpperCase()}
                     </div>
-                    <span className="compose-handle">@{session.handle}</span>
+                    <span className="text-gray-400">@{session.handle}</span>
                   </>
                 )}
               </div>
@@ -183,17 +183,17 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={replyTo ? "Post your reply" : "What's happening?"}
-                className="compose-textarea"
+                className="w-full bg-transparent border-none outline-none resize-none text-lg placeholder-gray-500 min-h-[120px]"
                 disabled={createPostMutation.isPending}
                 maxLength={characterLimit * 2} // Allow typing over limit for better UX
               />
 
               {/* Actions bar */}
-              <div className="compose-actions">
-                <div className="compose-tools">
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-800">
+                <div className="flex gap-1">
                   <button
                     type="button"
-                    className="btn btn-icon btn-ghost"
+                    className="p-2 rounded-lg text-gray-400 opacity-50 cursor-not-allowed"
                     title="Add image (coming soon)"
                     disabled
                   >
@@ -201,7 +201,7 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
                   </button>
                   <button
                     type="button"
-                    className="btn btn-icon btn-ghost"
+                    className="p-2 rounded-lg text-gray-400 opacity-50 cursor-not-allowed"
                     title="Mention someone (coming soon)"
                     disabled
                   >
@@ -209,7 +209,7 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
                   </button>
                   <button
                     type="button"
-                    className="btn btn-icon btn-ghost"
+                    className="p-2 rounded-lg text-gray-400 opacity-50 cursor-not-allowed"
                     title="Add hashtag (coming soon)"
                     disabled
                   >
@@ -217,13 +217,15 @@ export const ComposeModal: React.FC<ComposeModalProps> = ({
                   </button>
                 </div>
 
-                <div className="compose-submit">
-                  <span className={`character-count ${isOverLimit ? 'over-limit' : ''}`}>
+                <div className="flex items-center gap-3">
+                  <span className={`text-sm font-medium ${
+                    isOverLimit ? 'text-red-400' : 'text-gray-400'
+                  }`}>
                     {charactersRemaining}
                   </span>
                   <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-400 text-white rounded-full font-medium transition-colors flex items-center gap-2"
                     disabled={!text.trim() || isOverLimit || createPostMutation.isPending}
                   >
                     {createPostMutation.isPending ? (

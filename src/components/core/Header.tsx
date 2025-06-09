@@ -15,7 +15,6 @@ import {
 import { useAuth } from '../../contexts/AuthContext'
 import { useUnreadNotificationCount } from '../../hooks/useNotifications'
 import { useToast } from '../ui/Toast'
-import clsx from 'clsx'
 
 interface HeaderProps {
   onMenuToggle?: () => void;
@@ -78,168 +77,196 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
 
   return (
     <motion.header 
-      className={clsx('header', {
-        'scrolled': isScrolled,
-        'hidden': isHidden
-      })}
+      className={`
+        fixed top-0 left-0 right-0 z-50
+        bg-gray-900 border-b border-gray-800
+        transition-all duration-300
+        ${isScrolled ? 'shadow-lg backdrop-blur-md bg-opacity-95' : ''}
+        ${isHidden ? '-translate-y-full' : 'translate-y-0'}
+      `}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
-      <div className="header-content">
-        {/* Mobile Menu Toggle */}
-        <motion.button
-          className="mobile-menu-toggle"
-          onClick={onMenuToggle}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          aria-label="Menu"
-        >
-          <div className="hamburger">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </motion.button>
-
-        {/* Logo */}
-        <div className="header-logo" onClick={() => navigate('/')}>
-          <motion.h1 
-            className="gradient-text text-h3"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            style={{ cursor: 'pointer' }}
-          >
-            Bluesky
-          </motion.h1>
-        </div>
-
-        {/* Search Bar */}
-        <form className="header-search" onSubmit={handleSearch}>
-          <Search size={20} className="search-icon" />
-          <input 
-            type="text" 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search Bluesky..." 
-            className="search-input"
-          />
-        </form>
-
-        {/* Actions */}
-        <div className="header-actions">
-          {/* Search Button (Mobile) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Mobile Menu Toggle */}
           <motion.button
-            className="btn btn-icon btn-ghost mobile-search-btn"
-            onClick={() => navigate('/search')}
+            className="lg:hidden p-2 rounded-lg hover:bg-gray-800 transition-colors"
+            onClick={onMenuToggle}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            title="Search"
+            aria-label="Menu"
           >
-            <Search size={20} />
+            <div className="w-6 h-5 flex flex-col justify-between">
+              <span className="w-full h-0.5 bg-gray-300 rounded-full transition-all"></span>
+              <span className="w-full h-0.5 bg-gray-300 rounded-full transition-all"></span>
+              <span className="w-full h-0.5 bg-gray-300 rounded-full transition-all"></span>
+            </div>
           </motion.button>
 
-          {/* Theme Toggle */}
-          <motion.button
-            className="btn btn-icon btn-ghost"
-            onClick={toggleDarkMode}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </motion.button>
-
-          {/* Notifications */}
-          <motion.button
-            className="btn btn-icon btn-ghost notification-btn"
-            onClick={() => navigate('/notifications')}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            title="Notifications"
-          >
-            <Bell size={20} />
-            {unreadCount !== undefined && unreadCount > 0 && (
-              <span className="notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
-            )}
-          </motion.button>
-
-          {/* User Menu */}
-          <div className="user-menu">
-            <motion.button
-              className={clsx("user-menu-trigger", { active: showDropdown })}
-              onClick={() => setShowDropdown(!showDropdown)}
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <motion.h1 
+              className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent cursor-pointer"
+              onClick={() => navigate('/')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <div className="avatar avatar-md">
-                {session?.handle && (
-                  <div className="avatar-placeholder">
-                    {session.handle.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <span className="user-handle">@{session?.handle || 'user'}</span>
-              <motion.div
-                className="user-menu-chevron"
-                animate={{ rotate: showDropdown ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <ChevronDown size={16} />
-              </motion.div>
+              Bluesky
+            </motion.h1>
+          </div>
+
+          {/* Search Bar */}
+          <form 
+            className="hidden md:flex flex-1 max-w-md mx-8" 
+            onSubmit={handleSearch}
+          >
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input 
+                type="text" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search Bluesky..." 
+                className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-full 
+                          text-gray-200 placeholder-gray-400
+                          focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20
+                          transition-all duration-200"
+              />
+            </div>
+          </form>
+
+          {/* Actions */}
+          <div className="flex items-center space-x-2">
+            {/* Search Button (Mobile) */}
+            <motion.button
+              className="md:hidden p-2 rounded-lg hover:bg-gray-800 transition-colors"
+              onClick={() => navigate('/search')}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              title="Search"
+            >
+              <Search className="text-gray-300" size={20} />
             </motion.button>
 
-            <AnimatePresence>
-              {showDropdown && (
+            {/* Theme Toggle */}
+            <motion.button
+              className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
+              onClick={toggleDarkMode}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {darkMode ? 
+                <Sun className="text-gray-300" size={20} /> : 
+                <Moon className="text-gray-300" size={20} />
+              }
+            </motion.button>
+
+            {/* Notifications */}
+            <motion.button
+              className="relative p-2 rounded-lg hover:bg-gray-800 transition-colors"
+              onClick={() => navigate('/notifications')}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              title="Notifications"
+            >
+              <Bell className="text-gray-300" size={20} />
+              {unreadCount !== undefined && unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs 
+                               rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </motion.button>
+
+            {/* User Menu */}
+            <div className="relative">
+              <motion.button
+                className={`
+                  flex items-center space-x-2 p-1.5 pr-3 rounded-full
+                  hover:bg-gray-800 transition-colors
+                  ${showDropdown ? 'bg-gray-800' : ''}
+                `}
+                onClick={() => setShowDropdown(!showDropdown)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 
+                               flex items-center justify-center text-white font-medium">
+                  {session?.handle?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <span className="hidden sm:block text-gray-300 text-sm font-medium">
+                  @{session?.handle || 'user'}
+                </span>
                 <motion.div
-                  className="dropdown-menu"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
+                  animate={{ rotate: showDropdown ? 180 : 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <button 
-                    className="dropdown-item"
-                    onClick={() => {
-                      navigate(`/profile/${session?.handle}`)
-                      setShowDropdown(false)
-                    }}
-                  >
-                    <User size={18} />
-                    <span>Profile</span>
-                  </button>
-                  <button 
-                    className="dropdown-item"
-                    onClick={() => {
-                      toast.info('Bookmarks feature coming soon!')
-                      setShowDropdown(false)
-                    }}
-                  >
-                    <Bookmark size={18} />
-                    <span>Bookmarks</span>
-                  </button>
-                  <button 
-                    className="dropdown-item"
-                    onClick={() => {
-                      navigate('/settings')
-                      setShowDropdown(false)
-                    }}
-                  >
-                    <Settings size={18} />
-                    <span>Settings</span>
-                  </button>
-                  <div className="divider" />
-                  <button className="dropdown-item danger" onClick={logout}>
-                    <LogOut size={18} />
-                    <span>Logout</span>
-                  </button>
+                  <ChevronDown className="text-gray-400" size={16} />
                 </motion.div>
-              )}
-            </AnimatePresence>
+              </motion.button>
+
+              <AnimatePresence>
+                {showDropdown && (
+                  <motion.div
+                    className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-lg shadow-xl 
+                              border border-gray-700 overflow-hidden"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <button 
+                      className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 
+                                transition-colors text-gray-200"
+                      onClick={() => {
+                        navigate(`/profile/${session?.handle}`)
+                        setShowDropdown(false)
+                      }}
+                    >
+                      <User size={18} />
+                      <span>Profile</span>
+                    </button>
+                    <button 
+                      className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 
+                                transition-colors text-gray-200"
+                      onClick={() => {
+                        toast.info('Bookmarks feature coming soon!')
+                        setShowDropdown(false)
+                      }}
+                    >
+                      <Bookmark size={18} />
+                      <span>Bookmarks</span>
+                    </button>
+                    <button 
+                      className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 
+                                transition-colors text-gray-200"
+                      onClick={() => {
+                        navigate('/settings')
+                        setShowDropdown(false)
+                      }}
+                    >
+                      <Settings size={18} />
+                      <span>Settings</span>
+                    </button>
+                    <div className="border-t border-gray-700" />
+                    <button 
+                      className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-red-900 
+                                hover:bg-opacity-20 transition-colors text-red-400"
+                      onClick={logout}
+                    >
+                      <LogOut size={18} />
+                      <span>Logout</span>
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
-
     </motion.header>
   )
 }

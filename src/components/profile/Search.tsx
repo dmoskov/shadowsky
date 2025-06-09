@@ -61,40 +61,40 @@ export const Search: React.FC = () => {
 
   const UserCard: React.FC<{ user: ProfileView }> = ({ user }) => (
     <motion.div
-      className="user-card card"
+      className="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:bg-gray-800/50 cursor-pointer transition-colors"
       onClick={() => handleViewProfile(user.handle)}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <div className="user-card-content">
-        <div className="user-avatar">
+      <div className="flex gap-3">
+        <div className="flex-shrink-0">
           {user.avatar ? (
-            <img src={user.avatar} alt={user.handle} />
+            <img src={user.avatar} alt={user.handle} className="w-12 h-12 rounded-full" />
           ) : (
-            <div className="avatar-placeholder">
+            <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center font-semibold">
               {user.handle.charAt(0).toUpperCase()}
             </div>
           )}
         </div>
         
-        <div className="user-info">
-          <h3 className="user-display-name">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold truncate">
             {user.displayName || user.handle}
           </h3>
-          <p className="user-handle text-secondary">@{user.handle}</p>
+          <p className="text-gray-400 text-sm">@{user.handle}</p>
           {user.description && (
-            <p className="user-bio text-secondary">{user.description}</p>
+            <p className="text-gray-300 text-sm mt-1 line-clamp-2">{user.description}</p>
           )}
-          <div className="user-stats">
-            <span className="stat-item">
-              <span className="stat-value">{(user as any).followersCount || 0}</span>
-              <span className="stat-label text-tertiary">followers</span>
+          <div className="flex gap-4 mt-2 text-sm">
+            <span className="flex items-center gap-1">
+              <span className="font-medium">{(user as any).followersCount || 0}</span>
+              <span className="text-gray-500">followers</span>
             </span>
-            <span className="stat-item">
-              <span className="stat-value">{(user as any).followsCount || 0}</span>
-              <span className="stat-label text-tertiary">following</span>
+            <span className="flex items-center gap-1">
+              <span className="font-medium">{(user as any).followsCount || 0}</span>
+              <span className="text-gray-500">following</span>
             </span>
           </div>
         </div>
@@ -103,16 +103,16 @@ export const Search: React.FC = () => {
   )
 
   return (
-    <div className="search-page">
+    <div className="max-w-4xl mx-auto">
       {/* Header */}
       <motion.header 
-        className="search-header"
+        className="sticky top-16 z-10 bg-gray-900 border-b border-gray-800 px-4 py-3"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <div className="search-header-nav">
+        <div className="flex items-center gap-3">
           <motion.button
-            className="btn btn-icon btn-ghost"
+            className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
             onClick={handleBack}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
@@ -120,8 +120,8 @@ export const Search: React.FC = () => {
             <ArrowLeft size={20} />
           </motion.button>
           
-          <div className="search-input-wrapper">
-            <SearchIcon size={20} className="search-icon" />
+          <div className="relative flex-1">
+            <SearchIcon size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               ref={searchInputRef}
               type="text"
@@ -130,11 +130,11 @@ export const Search: React.FC = () => {
               onFocus={() => setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               placeholder="Search Bluesky..."
-              className="search-input"
+              className="w-full pl-10 pr-10 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
             />
             {searchQuery && (
               <motion.button
-                className="btn btn-icon btn-ghost clear-btn"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-700 transition-colors"
                 onClick={() => setSearchQuery('')}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -149,7 +149,7 @@ export const Search: React.FC = () => {
         <AnimatePresence>
           {showSuggestions && suggestions && suggestions.length > 0 && (
             <motion.div
-              className="search-suggestions"
+              className="absolute left-4 right-4 mt-2 bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
@@ -157,19 +157,21 @@ export const Search: React.FC = () => {
               {suggestions.map((user) => (
                 <button
                   key={user.did}
-                  className="suggestion-item"
+                  className="w-full px-4 py-3 hover:bg-gray-700 transition-colors flex items-center gap-3 text-left"
                   onClick={() => handleSuggestionClick(user.handle)}
                 >
-                  <div className="suggestion-avatar">
+                  <div className="flex-shrink-0">
                     {user.avatar ? (
-                      <img src={user.avatar} alt={user.handle} />
+                      <img src={user.avatar} alt={user.handle} className="w-8 h-8 rounded-full" />
                     ) : (
-                      <User size={16} />
+                      <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
+                        <User size={16} />
+                      </div>
                     )}
                   </div>
-                  <div className="suggestion-info">
-                    <span className="suggestion-name">{user.displayName || user.handle}</span>
-                    <span className="suggestion-handle text-secondary">@{user.handle}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{user.displayName || user.handle}</div>
+                    <div className="text-gray-400 text-sm">@{user.handle}</div>
                   </div>
                 </button>
               ))}
@@ -180,16 +182,24 @@ export const Search: React.FC = () => {
 
       {/* Tabs */}
       {searchQuery && (
-        <div className="search-tabs">
+        <div className="flex border-b border-gray-800 px-4">
           <button
-            className={`tab-item ${activeTab === 'posts' ? 'active' : ''}`}
+            className={`flex-1 py-4 font-medium transition-colors border-b-2 flex items-center justify-center gap-2 ${
+              activeTab === 'posts' 
+                ? 'text-blue-400 border-blue-400' 
+                : 'text-gray-400 border-transparent hover:text-gray-200'
+            }`}
             onClick={() => setActiveTab('posts')}
           >
             <FileText size={16} />
             Posts
           </button>
           <button
-            className={`tab-item ${activeTab === 'users' ? 'active' : ''}`}
+            className={`flex-1 py-4 font-medium transition-colors border-b-2 flex items-center justify-center gap-2 ${
+              activeTab === 'users' 
+                ? 'text-blue-400 border-blue-400' 
+                : 'text-gray-400 border-transparent hover:text-gray-200'
+            }`}
             onClick={() => setActiveTab('users')}
           >
             <Users size={16} />
@@ -199,26 +209,26 @@ export const Search: React.FC = () => {
       )}
 
       {/* Results */}
-      <div className="search-results">
+      <div className="px-4">
         {!searchQuery ? (
-          <div className="empty-state">
-            <SearchIcon size={48} className="empty-icon" />
-            <h2>Search Bluesky</h2>
-            <p className="text-secondary">
+          <div className="text-center py-16">
+            <SearchIcon size={48} className="mx-auto mb-4 text-gray-600" />
+            <h2 className="text-2xl font-bold mb-2">Search Bluesky</h2>
+            <p className="text-gray-400">
               Find posts and users across the network
             </p>
           </div>
         ) : activeTab === 'posts' ? (
           <>
             {postsLoading ? (
-              <div className="loading-state">
-                <Loader className="spinner" size={32} />
-                <p className="text-secondary">Searching posts...</p>
+              <div className="flex flex-col items-center py-8">
+                <Loader className="animate-spin mb-2" size={32} />
+                <p className="text-gray-400">Searching posts...</p>
               </div>
             ) : postsError ? (
-              <div className="error-state">
-                <p className="text-error">Error searching posts</p>
-                <p className="text-secondary text-sm">{postsError.message}</p>
+              <div className="text-center py-8">
+                <p className="text-red-400 font-medium">Error searching posts</p>
+                <p className="text-gray-400 text-sm mt-1">{postsError.message}</p>
               </div>
             ) : postsData && 'posts' in postsData && postsData.posts && postsData.posts.length > 0 ? (
               <AnimatePresence mode="popLayout">
@@ -239,22 +249,22 @@ export const Search: React.FC = () => {
                 ))}
               </AnimatePresence>
             ) : (
-              <div className="empty-state">
-                <p className="text-secondary">No posts found for "{searchQuery}"</p>
+              <div className="text-center py-8">
+                <p className="text-gray-400">No posts found for "{searchQuery}"</p>
               </div>
             )}
           </>
         ) : (
           <>
             {usersLoading ? (
-              <div className="loading-state">
-                <Loader className="spinner" size={32} />
-                <p className="text-secondary">Searching users...</p>
+              <div className="flex flex-col items-center py-8">
+                <Loader className="animate-spin mb-2" size={32} />
+                <p className="text-gray-400">Searching users...</p>
               </div>
             ) : usersError ? (
-              <div className="error-state">
-                <p className="text-error">Error searching users</p>
-                <p className="text-secondary text-sm">{usersError.message}</p>
+              <div className="text-center py-8">
+                <p className="text-red-400 font-medium">Error searching users</p>
+                <p className="text-gray-400 text-sm mt-1">{usersError.message}</p>
               </div>
             ) : usersData && 'actors' in usersData && usersData.actors && usersData.actors.length > 0 ? (
               <AnimatePresence mode="popLayout">
@@ -271,8 +281,8 @@ export const Search: React.FC = () => {
                 ))}
               </AnimatePresence>
             ) : (
-              <div className="empty-state">
-                <p className="text-secondary">No users found for "{searchQuery}"</p>
+              <div className="text-center py-8">
+                <p className="text-gray-400">No users found for "{searchQuery}"</p>
               </div>
             )}
           </>
