@@ -15,7 +15,8 @@ import {
   isAuthenticationError,
   isSessionExpiredError
 } from '../lib/errors'
-import { trackError, ErrorCategory } from '../lib/error-tracking'
+import { trackError } from '../lib/error-tracking'
+import type { ErrorCategory } from '../lib/error-tracking'
 
 interface ErrorHandlerOptions {
   onRateLimit?: (resetAt: Date) => void

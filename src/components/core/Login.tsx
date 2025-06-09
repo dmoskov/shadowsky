@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { ATProtoError, RateLimitError, AuthenticationError } from '../../lib/errors'
+import { performanceTracker } from '../../lib/performance-tracking'
 
 export const Login: React.FC = () => {
   const [identifier, setIdentifier] = useState('')
@@ -26,9 +27,13 @@ export const Login: React.FC = () => {
     }
     
     setLoading(true)
+    performanceTracker.mark('login-start')
 
     try {
-      const success = await login(identifier, password)
+      const success = await performanceTracker.measureAsync(
+        'login-attempt',
+        async () => await login(identifier, password)
+      )
       if (!success) {
         setError('Invalid username or password. Please try again.')
       }

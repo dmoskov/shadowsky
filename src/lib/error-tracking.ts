@@ -172,3 +172,6 @@ export const wrapWithTracking = <T extends (...args: any[]) => any>(
   fn: T,
   context: Omit<ErrorContext, 'action'>
 ) => errorTracker.wrap(fn, context);
+
+// Re-export types for better module resolution
+export type { ErrorContext };

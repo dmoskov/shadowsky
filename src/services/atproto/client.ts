@@ -4,6 +4,7 @@
 
 import { BskyAgent } from '@atproto/api'
 import { mapATProtoError } from '../../lib/errors'
+// import { measureAsync } from '../../lib/performance-tracking'
 import type { Session } from '../../types/atproto'
 
 export interface ATProtoConfig {

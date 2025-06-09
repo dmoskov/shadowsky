@@ -6,6 +6,7 @@ import { ComposeModal } from '../modals/ComposeModal'
 import { FeedLoading, InlineLoader } from '../ui/SkeletonLoaders'
 import { FeedError, InlineError } from '../ui/ErrorStates'
 import { FeedEmpty } from '../ui/EmptyStates'
+import { performanceTracker, useRenderTracking } from '../../lib/performance-tracking'
 import type { Post } from '../../types/atproto'
 
 interface FeedProps {
@@ -13,6 +14,8 @@ interface FeedProps {
 }
 
 export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
+  useRenderTracking('Feed')
+  
   const [replyTo, setReplyTo] = useState<{ post: Post; root?: Post } | undefined>()
   const { 
     posts, 
@@ -24,6 +27,15 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
     loadMore, 
     refresh 
   } = useTimeline()
+
+  // Track feed loading performance
+  useEffect(() => {
+    if (!isLoading && posts.length > 0) {
+      performanceTracker.trackCustomMetric('feed-posts-loaded', posts.length, {
+        action: 'initial-load'
+      })
+    }
+  }, [isLoading, posts.length])
 
   const handleLoadMore = useCallback(() => {
     if (!isFetchingNextPage && hasNextPage) {

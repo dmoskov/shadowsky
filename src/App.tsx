@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+// import { performanceTracker, setPerformanceContext } from './lib/performance-tracking'
 import { 
   Login,
   Feed,
@@ -16,12 +17,14 @@ import {
   KeyboardShortcutsModal,
   ToastProvider,
   ToastContainer,
-  ScrollProgress
+  ScrollProgress,
+  MobileNav
 } from './components'
+// Import directly since they're not in the index
 import { Settings } from './components/settings/Settings'
 import { Analytics } from './components/analytics/Analytics'
 import { AnalyticsMock } from './components/analytics/AnalyticsMock'
-import { MobileNav } from './components/core/MobileNav'
+// These components are not in the index export
 import { MobileMenu } from './components/core/MobileMenu'
 import { MobileTabBar } from './components/core/MobileTabBar'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
@@ -55,9 +58,22 @@ function AppContent() {
   const [composeTemplate, setComposeTemplate] = useState<string | undefined>()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
   
   // Enable keyboard navigation
   useKeyboardNavigation()
+  
+  // Track route changes for performance monitoring
+  // useEffect(() => {
+  //   setPerformanceContext({ route: location.pathname })
+  // }, [location.pathname])
+  
+  // Add global performance command for developers
+  // useEffect(() => {
+  //   // @ts-ignore - Adding to window for dev access
+  //   window.showPerformance = () => performanceTracker.getSummary()
+  //   console.log('💡 Tip: Type showPerformance() in console to see performance metrics')
+  // }, [])
   
   // Listen for compose modal events
   useEffect(() => {

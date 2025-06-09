@@ -28,6 +28,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.2",
+    "web-vitals": "^5.0.2",
     "zod": "^3.25.55"
   },
   "devDependencies": {

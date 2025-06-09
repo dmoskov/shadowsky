@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { getInteractionsService } from '../services/atproto'
 import type { Post, FeedItem } from '../types/atproto'
 import { useErrorHandler } from './useErrorHandler'
+import { performanceTracker } from '../lib/performance-tracking'
 
 export interface UsePostInteractionsReturn {
   likePost: (post: Post) => Promise<void>
@@ -225,22 +226,34 @@ export function usePostInteractions(): UsePostInteractionsReturn {
   return {
     likePost: async (post: Post) => {
       const isLiked = !!post.viewer?.like
-      await likeMutation.mutateAsync({ post, isLiked })
+      await performanceTracker.measureAsync(
+        `${isLiked ? 'unlike' : 'like'}-post`,
+        async () => await likeMutation.mutateAsync({ post, isLiked })
+      )
     },
     unlikePost: async (post: Post) => {
       const isLiked = !!post.viewer?.like
       if (isLiked) {
-        await likeMutation.mutateAsync({ post, isLiked })
+        await performanceTracker.measureAsync(
+          'unlike-post',
+          async () => await likeMutation.mutateAsync({ post, isLiked })
+        )
       }
     },
     repostPost: async (post: Post) => {
       const isReposted = !!post.viewer?.repost
-      await repostMutation.mutateAsync({ post, isReposted })
+      await performanceTracker.measureAsync(
+        `${isReposted ? 'unrepost' : 'repost'}-post`,
+        async () => await repostMutation.mutateAsync({ post, isReposted })
+      )
     },
     deleteRepost: async (post: Post) => {
       const isReposted = !!post.viewer?.repost
       if (isReposted) {
-        await repostMutation.mutateAsync({ post, isReposted })
+        await performanceTracker.measureAsync(
+          'unrepost-post',
+          async () => await repostMutation.mutateAsync({ post, isReposted })
+        )
       }
     },
     isLiking: likeMutation.isPending,

@@ -6,6 +6,7 @@ import { ATProtoClient } from './client'
 import { mapATProtoError } from '../../lib/errors'
 import { rateLimiters, withRateLimit } from '../../lib/rate-limiter'
 import { withDeduplication } from '../../lib/request-deduplication'
+// import { measureAsync } from '../../lib/performance-tracking'
 import type { TimelineResponse, Post } from '../../types/atproto'
 
 export class FeedService {
