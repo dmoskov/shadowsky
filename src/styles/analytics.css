@@ -1505,6 +1505,7 @@
 }
 
 /* Tooltip */
+.analytics-tooltip .bsky-tooltip-content,
 .tooltip-content {
   background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
@@ -1517,20 +1518,24 @@
   backdrop-filter: blur(10px);
 }
 
+.analytics-tooltip .bsky-tooltip-content h4,
 .tooltip-content h4 {
   margin: 0 0 var(--spacing-xs);
   font-size: var(--font-size-base);
   font-weight: 600;
 }
 
+.analytics-tooltip .bsky-tooltip-content p,
 .tooltip-content p {
   margin: 0 0 var(--spacing-xs);
 }
 
+.analytics-tooltip .bsky-tooltip-content p:last-child,
 .tooltip-content p:last-child {
   margin-bottom: 0;
 }
 
+.analytics-tooltip .bsky-tooltip-content .formula,
 .tooltip-content .formula {
   font-family: monospace;
   font-size: var(--font-size-xs);
@@ -1541,6 +1546,7 @@
   overflow-x: auto;
 }
 
+.analytics-tooltip .bsky-tooltip-content .scale-info,
 .tooltip-content .scale-info {
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);

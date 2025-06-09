@@ -112,7 +112,7 @@ export const EngagementQualityChart: React.FC<Props> = ({ data }) => {
             transition={{ delay: index * 0.1 }}
           >
             <div className="metric-header">
-              <Tooltip content={metric.tooltip} position="top" maxWidth={350}>
+              <Tooltip content={metric.tooltip} position="top" maxWidth={350} className="analytics-tooltip">
                 <span className="metric-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   {metric.label}
                   <HelpCircle size={14} style={{ opacity: 0.5 }} />

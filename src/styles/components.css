@@ -314,3 +314,25 @@
 .ml-auto {
   margin-left: auto;
 }
+/* Tooltip Component */
+.bsky-tooltip {
+  /* Base styles will be overridden by analytics tooltips */
+}
+
+.bsky-tooltip-text {
+  display: block;
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border-secondary);
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.bsky-tooltip-content {
+  /* Complex content - let analytics.css style this */
+}
