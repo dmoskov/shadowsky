@@ -15,7 +15,7 @@ export function atUriToWebUrl(uri: string, handle: string): string {
       throw new Error('Invalid AT URI format')
     }
     
-    const [, did, collection, rkey] = match
+    const [, , collection, rkey] = match
     
     // For posts, generate the proper Bluesky URL
     if (collection === 'app.bsky.feed.post') {
@@ -54,7 +54,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
         const successful = document.execCommand('copy')
         document.body.removeChild(textArea)
         return successful
-      } catch (err) {
+      } catch (_err) {
         document.body.removeChild(textArea)
         return false
       }

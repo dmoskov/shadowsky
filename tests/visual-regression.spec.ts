@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import fs from 'fs/promises';
-import path from 'path';
 
 // Test configuration
 const TEST_URL = 'http://localhost:5173';

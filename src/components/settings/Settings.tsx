@@ -9,7 +9,6 @@ import {
   Shield, 
   Eye, 
   MessageSquare, 
-  Bell,
   Palette,
   Info,
   Save,
@@ -24,12 +23,6 @@ type ThreadViewPref = AppBskyActorDefs.ThreadViewPref
 type MutedWord = AppBskyActorDefs.MutedWord
 type MutedWordsPref = AppBskyActorDefs.MutedWordsPref
 
-interface PreferencesData {
-  preferences: Array<{
-    $type: string
-    [key: string]: any
-  }>
-}
 
 export const Settings: React.FC = () => {
   const navigate = useNavigate()

@@ -111,59 +111,6 @@ export const ThreadNavigation: React.FC<ThreadNavigationProps> = ({
     }
   }
 
-  // Get key participants
-  const getKeyParticipants = () => {
-    const participants = new Map<string, { handle: string, count: number, displayName?: string }>()
-    
-    const traverse = (node: ThreadViewPost) => {
-      if (!node || !node.post || !node.post.author) return
-      
-      const author = node.post.author
-      const handle = author.handle
-      const current = participants.get(handle) || { 
-        handle, 
-        count: 0,
-        displayName: author.displayName
-      }
-      participants.set(handle, { 
-        ...current, 
-        count: current.count + 1 
-      })
-      
-      if (node.replies && Array.isArray(node.replies)) {
-        node.replies.forEach(reply => {
-          if (reply && reply.$type === 'app.bsky.feed.defs#threadViewPost') {
-            traverse(reply as ThreadViewPost)
-          }
-        })
-      }
-    }
-    
-    // Also check ancestors
-    let current = thread
-    while (current && current.parent && current.parent.$type === 'app.bsky.feed.defs#threadViewPost') {
-      const parent = current.parent as ThreadViewPost
-      if (parent.post && parent.post.author) {
-        const author = parent.post.author
-        const existing = participants.get(author.handle) || { 
-          handle: author.handle, 
-          count: 0,
-          displayName: author.displayName
-        }
-        participants.set(author.handle, { 
-          ...existing, 
-          count: existing.count + 1 
-        })
-      }
-      current = parent
-    }
-    
-    traverse(thread)
-    
-    return Array.from(participants.values())
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5)
-  }
 
   return (
     <div className="thread-navigation-container">

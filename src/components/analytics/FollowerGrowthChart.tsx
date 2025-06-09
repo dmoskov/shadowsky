@@ -215,7 +215,7 @@ export const FollowerGrowthChart: React.FC<Props> = ({ currentFollowers, timeRan
           })}
           
           {/* X-axis labels */}
-          {data.filter((_, i) => i % Math.ceil(data.length / 5) === 0 || i === data.length - 1).map((point, index, filtered) => {
+          {data.filter((_, i) => i % Math.ceil(data.length / 5) === 0 || i === data.length - 1).map((point, _index, _filtered) => {
             const originalIndex = data.indexOf(point)
             const x = (originalIndex / (data.length - 1)) * chartWidth + padding.left
             const date = new Date(point.date)

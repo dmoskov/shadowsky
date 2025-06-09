@@ -3,18 +3,18 @@
  * Common utilities and helpers for testing React components
  */
 
-import React, { ReactElement } from 'react';
-import { render, RenderOptions } from '@testing-library/react';
+import React from 'react';
+import type { ReactElement } from 'react';
+import { render } from '@testing-library/react';
+import type { RenderOptions } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from '../contexts/AuthContext';
 import { ToastProvider } from '../components/ui/Toast';
 
 // Create a custom render function that includes all providers
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   // Add custom options here if needed
   initialRoute?: string;
-  isAuthenticated?: boolean;
 }
 
 // Create a test query client with faster defaults
@@ -87,7 +87,7 @@ export function customRender(
   ui: ReactElement,
   options?: CustomRenderOptions
 ) {
-  const { initialRoute = '/', isAuthenticated = true, ...renderOptions } = options || {};
+  const { initialRoute = '/', ...renderOptions } = options || {};
 
   // Set initial route if specified
   if (initialRoute !== '/') {

@@ -44,12 +44,6 @@ export const Sparkline: React.FC<Props> = ({
     return `${linePath} L ${lastX} ${bottomY} L ${padding} ${bottomY} Z`
   }
   
-  // Determine trend
-  const firstThird = data.slice(0, Math.floor(data.length / 3))
-  const lastThird = data.slice(-Math.floor(data.length / 3))
-  const firstAvg = firstThird.reduce((a, b) => a + b, 0) / firstThird.length
-  const lastAvg = lastThird.reduce((a, b) => a + b, 0) / lastThird.length
-  const trend = lastAvg > firstAvg ? 'up' : lastAvg < firstAvg ? 'down' : 'flat'
   
   return (
     <div className="sparkline" style={{ width, height }}>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 // import { performanceTracker, setPerformanceContext } from './lib/performance-tracking'
 import { 
@@ -23,7 +23,6 @@ import {
 // Import directly since they're not in the index
 import { Settings } from './components/settings/Settings'
 import { Analytics } from './components/analytics/Analytics'
-import { AnalyticsMock } from './components/analytics/AnalyticsMock'
 // These components are not in the index export
 import { MobileMenu } from './components/core/MobileMenu'
 import { MobileTabBar } from './components/core/MobileTabBar'
@@ -58,7 +57,6 @@ function AppContent() {
   const [composeTemplate, setComposeTemplate] = useState<string | undefined>()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
-  const location = useLocation()
   
   // Enable keyboard navigation
   useKeyboardNavigation()

@@ -16,13 +16,6 @@ const ThrowError: React.FC<{ shouldThrow?: boolean }> = ({ shouldThrow = false }
   return <div>No error</div>
 }
 
-// Component that throws in useEffect
-const ThrowErrorInEffect: React.FC = () => {
-  React.useEffect(() => {
-    throw new Error('Effect error')
-  }, [])
-  return <div>Component loaded</div>
-}
 
 describe('ErrorBoundary', () => {
   // Suppress console.error for these tests
@@ -182,7 +175,7 @@ describe('ErrorBoundary', () => {
 
     it('should reset with custom fallback reset function', () => {
       let resetCalled = false
-      const customFallback = (error: Error, reset: () => void) => (
+      const customFallback = (_error: Error, reset: () => void) => (
         <button
           onClick={() => {
             resetCalled = true

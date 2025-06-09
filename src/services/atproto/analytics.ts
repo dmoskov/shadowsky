@@ -1,9 +1,5 @@
 import type { 
   AppBskyFeedDefs,
-  AppBskyFeedGetAuthorFeed,
-  AppBskyActorDefs,
-  AppBskyGraphGetFollowers,
-  AppBskyGraphGetFollows,
   BskyAgent
 } from '@atproto/api'
 

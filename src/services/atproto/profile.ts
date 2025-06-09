@@ -2,7 +2,6 @@ import { AtpAgent } from '@atproto/api'
 import type { ProfileView, ProfileViewDetailed } from '@atproto/api/dist/client/types/app/bsky/actor/defs'
 import type { PostView } from '@atproto/api/dist/client/types/app/bsky/feed/defs'
 import { mapATProtoError } from '../../lib/errors'
-import { rateLimiters, withRateLimit } from '../../lib/rate-limiter'
 
 export class ProfileService {
   constructor(private agent: AtpAgent) {}

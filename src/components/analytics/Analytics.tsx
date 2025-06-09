@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { 
@@ -7,10 +7,7 @@ import {
   TrendingUp, 
   Users, 
   MessageSquare, 
-  Clock,
-  BarChart3,
   Share2,
-  Calendar,
   RefreshCw,
   HelpCircle
 } from 'lucide-react'
@@ -20,10 +17,6 @@ import { EngagementQualityChart } from './EngagementQualityChart'
 import { ContentPerformance } from './ContentPerformance'
 import { TemporalHeatmap } from './TemporalHeatmap'
 import { Tooltip } from '../ui/Tooltip'
-import { NetworkGraph } from './NetworkGraph'
-import { NetworkHealth } from './NetworkHealth'
-import { PowerUsers } from './PowerUsers'
-import { NetworkInsights } from './NetworkInsights'
 import { NetworkHealthActionable } from './NetworkHealthActionable'
 import { MetricCard } from './MetricCard'
 import { FollowerGrowthChart } from './FollowerGrowthChart'
@@ -33,13 +26,11 @@ import { generateInsights } from '../../utils/analytics-insights'
 import { useAnalyticsSync } from '../../hooks/useAnalyticsSync'
 
 export const Analytics: React.FC = () => {
-  const { handle } = useParams<{ handle?: string }>()
   const navigate = useNavigate()
-  const { client, session } = useAuth()
+  const { session } = useAuth()
   const [selectedTimeRange, setSelectedTimeRange] = useState('30d')
   const { syncStatus, syncAnalytics, isFirstSync } = useAnalyticsSync()
 
-  const targetHandle = handle || session?.handle
   const targetDid = session?.did
 
   const { data: analytics, isLoading, error, refetch } = useQuery({
@@ -369,7 +360,6 @@ export const Analytics: React.FC = () => {
       <section className="analytics-section">
         <NetworkHealthActionable 
           metrics={analytics.networkMetrics}
-          totalPosts={contentAnalysis.totalPosts}
           engagementRate={engagementMetrics.engagementRate}
           followerGrowth={analytics.historicalData?.followerGrowth ? {
             percentChange: analytics.historicalData.followerGrowth.percentChange,

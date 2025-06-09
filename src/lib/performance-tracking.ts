@@ -34,8 +34,11 @@ class PerformanceTracker {
   private context: PerformanceContext = {};
 
   constructor() {
-    this.initializeWebVitals();
-    this.trackNavigationTiming();
+    // Only initialize web vitals in browser environment
+    if (typeof window !== 'undefined' && typeof performance !== 'undefined' && performance.getEntriesByType) {
+      this.initializeWebVitals();
+      this.trackNavigationTiming();
+    }
   }
 
   /**
@@ -281,7 +284,7 @@ export const useRenderTracking = (componentName: string) => {
       performanceTracker.trackCustomMetric(
         `${componentName} re-render`,
         renderTime,
-        { count: renderCount.current }
+        { metadata: { count: renderCount.current } }
       );
     }
     

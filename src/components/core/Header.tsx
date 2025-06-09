@@ -10,8 +10,7 @@ import {
   Bookmark,
   Moon,
   Sun,
-  ChevronDown,
-  Menu
+  ChevronDown
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUnreadNotificationCount } from '../../hooks/useNotifications'

@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { RefreshCw, Check, AlertCircle, Database, Clock, TrendingUp } from 'lucide-react'
+import { RefreshCw, Check, AlertCircle, Database, Clock } from 'lucide-react'
 import { formatRelativeTime } from '../../utils/format-helpers'
 import type { SyncStatus } from '../../hooks/useAnalyticsSync'
 

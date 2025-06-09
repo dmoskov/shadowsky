@@ -13,7 +13,7 @@ jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, layout, initial, animate, exit, ...props }: any) => <div {...props}>{children}</div>,
   },
-  AnimatePresence: ({ children, mode }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: any) => <>{children}</>,
 }))
 
 // Test component that uses the toast hook

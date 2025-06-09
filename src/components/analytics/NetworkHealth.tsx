@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, Users, Activity, HelpCircle } from 'lucide-react'
+import { TrendingUp, Activity, HelpCircle } from 'lucide-react'
 import { Tooltip } from '../ui/Tooltip'
 import type { NetworkMetrics } from '../../services/atproto/analytics'
 
@@ -23,7 +23,7 @@ interface FollowerSegments {
 export const NetworkHealth: React.FC<Props> = ({ metrics, totalPosts, followerGrowth }) => {
   // Calculate network quality score
   const calculateNetworkQuality = (): number => {
-    const { followers, activeFollowers, topEngagers } = metrics
+    const { followers, activeFollowers } = metrics
     
     // Engagement rate from core network (40%)
     const engagementRate = followers > 0 ? (activeFollowers.size / followers) * 100 : 0

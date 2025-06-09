@@ -2,7 +2,7 @@
  * React component wrappers for error tracking
  */
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { trackError } from '../../lib/error-tracking';
 
 /**

@@ -1,6 +1,6 @@
-import React, { useMemo, useRef } from 'react'
+import React, { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { GitBranch, MessageCircle, Users, TrendingUp, Clock } from 'lucide-react'
+import { GitBranch, MessageCircle, Users } from 'lucide-react'
 import type { ThreadViewPost } from '../../services/atproto/thread'
 
 interface ThreadBranch {
@@ -384,7 +384,7 @@ export const ThreadBranchDiagram: React.FC<ThreadBranchDiagramProps> = ({
   // Calculate thread stats
   const threadStats = useMemo(() => {
     let totalPosts = 0
-    let uniqueAuthors = new Set<string>()
+    const uniqueAuthors = new Set<string>()
     let maxDepth = 0
     let hottestBranch = { heat: 0, author: '' }
     

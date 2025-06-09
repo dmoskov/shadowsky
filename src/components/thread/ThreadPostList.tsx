@@ -4,7 +4,6 @@ import { MessageCircle } from 'lucide-react'
 import clsx from 'clsx'
 import { PostCard } from '../feed/PostCard'
 import { ErrorBoundary } from '../core/ErrorBoundary'
-import { ThreadLine } from './ThreadLine'
 import { ThreadService } from '../../services/atproto/thread'
 import type { Post, FeedItem } from '../../types/atproto'
 import type { ThreadViewPost } from '../../services/atproto/thread'
@@ -136,7 +135,7 @@ function renderThreadReplies(
   onReply: (post: Post) => void,
   onViewThread: (uri: string) => void,
   ancestors: ThreadViewPost[],
-  parentAuthor?: string
+  _parentAuthor?: string
 ): React.ReactNode {
   if (!replies || !Array.isArray(replies)) return null
   
@@ -145,7 +144,6 @@ function renderThreadReplies(
     
     const threadReply = reply as ThreadViewPost
     const hasReplies = threadReply.replies && threadReply.replies.length > 0
-    const isLastReply = index === replies.length - 1
     const originalPosterDid = ancestors[0]?.post.author.did
     const isOriginalPoster = threadReply.post.author.did === originalPosterDid
     

@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
 import { Repeat2 } from 'lucide-react'
 import { ParentPost } from '../thread/ParentPost'
 import { PostHeader } from './PostHeader'
@@ -29,7 +28,6 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [showMenu, setShowMenu] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const { likePost, repostPost, isLiking, isReposting } = usePostInteractions()
-  const navigate = useNavigate()
   
   // Use viewer state to determine if liked/reposted
   const isLiked = !!post.viewer?.like
@@ -80,11 +78,6 @@ export const PostCard: React.FC<PostCardProps> = ({
     if (onViewThread) {
       onViewThread(post.uri)
     }
-  }
-
-  const handleAuthorClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    navigate(`/profile/${post.author.handle}`)
   }
 
   const handleReply = () => {

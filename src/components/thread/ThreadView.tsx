@@ -11,9 +11,6 @@ import { useThreadData } from '../../hooks/useThreadData'
 
 import type { Post } from '../../types/atproto'
 
-const THREAD_MAP_ENABLED = false
-const THREAD_PARTICIPANTS_ENABLED = false
-
 interface ThreadViewProps {
   postUri: string
   onBack: () => void

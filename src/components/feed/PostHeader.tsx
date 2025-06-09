@@ -7,10 +7,9 @@ import type { Post } from '../../types/atproto';
 interface PostHeaderProps {
   post: Post;
   onMenuToggle: () => void;
-  showMenu: boolean;
 }
 
-export const PostHeader: React.FC<PostHeaderProps> = ({ post, onMenuToggle, showMenu }) => {
+export const PostHeader: React.FC<PostHeaderProps> = ({ post, onMenuToggle }) => {
   return (
     <div className="post-header">
       <a 

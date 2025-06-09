@@ -6,10 +6,7 @@ import {
   Clock, 
   TrendingUp, 
   AlertCircle,
-  CheckCircle,
-  Star,
   ArrowRight,
-  Target,
   Zap,
   Heart
 } from 'lucide-react'
@@ -18,7 +15,6 @@ import type { NetworkMetrics } from '../../services/atproto/analytics'
 
 interface Props {
   metrics: NetworkMetrics
-  totalPosts: number
   engagementRate: number
   followerGrowth?: {
     percentChange: number
@@ -54,7 +50,6 @@ interface QuickDiagnosis {
 
 export const NetworkHealthActionable: React.FC<Props> = ({ 
   metrics, 
-  totalPosts, 
   engagementRate,
   followerGrowth,
   onComposePost

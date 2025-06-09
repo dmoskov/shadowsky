@@ -1,6 +1,6 @@
-import React, { useMemo, useRef, useEffect } from 'react'
+import React, { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { MessageCircle, GitBranch, Users, Clock } from 'lucide-react'
+import { MessageCircle, GitBranch, Users } from 'lucide-react'
 import type { ThreadViewPost } from '../../services/atproto/thread'
 
 interface ThreadBranch {
@@ -202,7 +202,7 @@ export const ThreadBranchDiagram: React.FC<ThreadBranchDiagramProps> = ({
       }
       
       // Layout children
-      branch.children.forEach((child, index) => {
+      branch.children.forEach((child) => {
         const childNode = layoutBranch(child, column)
         node.children.push(childNode)
       })

@@ -7,7 +7,7 @@ interface Props {
 }
 
 export const NetworkGraph: React.FC<Props> = ({ metrics }) => {
-  const { topEngagers, activeFollowers } = metrics
+  const { topEngagers } = metrics
   
   // Simple network visualization without D3
   const maxInteractions = topEngagers.length > 0 
