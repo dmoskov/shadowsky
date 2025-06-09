@@ -36,7 +36,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="mobile-menu-overlay"
+            className="fixed inset-0 bg-black/50 z-50 lg:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -47,50 +47,50 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
       
       {/* Menu Panel */}
       <motion.div
-        className={`mobile-menu ${isOpen ? 'active' : ''}`}
+        className="fixed top-0 left-0 h-full w-80 bg-gray-900 z-50 lg:hidden shadow-xl"
         initial={{ x: '-100%' }}
         animate={{ x: isOpen ? 0 : '-100%' }}
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
       >
-        <div className="mobile-menu-header">
-          <div className="mobile-menu-user">
-            <div className="avatar">
+        <div className="flex items-center justify-between p-4 border-b border-gray-800">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-800">
               {user?.avatar ? (
-                <img src={user.avatar} alt={user.displayName} />
+                <img src={user.avatar} alt={user.displayName} className="w-full h-full object-cover" />
               ) : (
-                <div className="avatar-placeholder">
+                <div className="w-full h-full flex items-center justify-center text-lg font-semibold">
                   {user?.displayName?.[0] || 'U'}
                 </div>
               )}
             </div>
-            <div className="user-info">
-              <div className="user-name">{user?.displayName || 'User'}</div>
-              <div className="user-handle">@{user?.handle}</div>
+            <div>
+              <div className="font-semibold">{user?.displayName || 'User'}</div>
+              <div className="text-sm text-gray-400">@{user?.handle}</div>
             </div>
           </div>
-          <button className="mobile-menu-close" onClick={onClose}>
+          <button className="p-2 rounded-lg hover:bg-gray-800 transition-colors" onClick={onClose}>
             <X size={24} />
           </button>
         </div>
         
-        <div className="mobile-menu-section">
+        <div className="py-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
               <button
                 key={item.path}
-                className="mobile-menu-item"
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition-colors text-left"
                 onClick={() => handleNavigate(item.path)}
               >
-                <Icon size={20} />
+                <Icon size={20} className="text-gray-400" />
                 <span>{item.label}</span>
               </button>
             );
           })}
         </div>
         
-        <div className="mobile-menu-section mobile-menu-footer">
-          <button className="mobile-menu-item danger" onClick={handleLogout}>
+        <div className="absolute bottom-0 left-0 right-0 border-t border-gray-800 p-2">
+          <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-900/20 text-red-400 transition-colors text-left" onClick={handleLogout}>
             <LogOut size={20} />
             <span>Log out</span>
           </button>

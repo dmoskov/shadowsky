@@ -33,7 +33,7 @@ export const ThreadPostList: React.FC<ThreadPostListProps> = ({
   })
 
   return (
-    <div className="thread-posts">
+    <div className="divide-y divide-gray-800">
       {/* Ancestors (parent posts) */}
       {ancestors.map((ancestor, index) => (
         <motion.div
@@ -41,15 +41,15 @@ export const ThreadPostList: React.FC<ThreadPostListProps> = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05 }}
-          className="thread-post thread-ancestor"
+          className="relative"
           data-post-uri={ancestor.post.uri}
           data-author-handle={ancestor.post.author.handle}
         >
           <ErrorBoundary
             fallback={(_, reset) => (
-              <div className="post-error card">
-                <p className="error-text">Failed to display post</p>
-                <button onClick={reset} className="btn btn-secondary btn-sm">
+              <div className="p-4 bg-red-900/20 border border-red-500/20 rounded-lg m-4">
+                <p className="text-red-400 mb-2">Failed to display post</p>
+                <button onClick={reset} className="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded transition-colors text-sm">
                   Retry
                 </button>
               </div>
@@ -66,7 +66,7 @@ export const ThreadPostList: React.FC<ThreadPostListProps> = ({
       
       {/* Main post */}
       <motion.div
-        className="thread-post thread-main-post"
+        className="relative bg-gray-800/30 border-l-4 border-blue-500"
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: ancestors.length * 0.05 }}
@@ -75,15 +75,15 @@ export const ThreadPostList: React.FC<ThreadPostListProps> = ({
       >
         <ErrorBoundary
           fallback={(_, reset) => (
-            <div className="post-error card">
-              <p className="error-text">Failed to display post</p>
-              <button onClick={reset} className="btn btn-secondary btn-sm">
+            <div className="p-4 bg-red-900/20 border border-red-500/20 rounded-lg m-4">
+              <p className="text-red-400 mb-2">Failed to display post</p>
+              <button onClick={reset} className="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded transition-colors text-sm">
                 Retry
               </button>
             </div>
           )}
         >
-          <div className="thread-focal-post">
+          <div className="pl-1">
             <PostCard 
               item={threadPostToFeedItem(thread)}
               onReply={onReply}
@@ -96,10 +96,10 @@ export const ThreadPostList: React.FC<ThreadPostListProps> = ({
       
       {/* Descendants (replies) */}
       {thread.replies && thread.replies.length > 0 && (
-        <div className="thread-replies">
-          <div className="thread-replies-header">
+        <div className="pt-4">
+          <div className="flex items-center gap-2 px-4 pb-4 text-gray-400">
             <MessageCircle size={18} />
-            <span>{countAllReplies(thread)} {countAllReplies(thread) === 1 ? 'Reply' : 'Replies'}</span>
+            <span className="font-medium">{countAllReplies(thread)} {countAllReplies(thread) === 1 ? 'Reply' : 'Replies'}</span>
           </div>
           
           {renderThreadReplies(thread.replies, 0, onReply, onViewThread, ancestors, thread.post.author.handle)}
@@ -148,37 +148,34 @@ function renderThreadReplies(
     const isOriginalPoster = threadReply.post.author.did === originalPosterDid
     
     return (
-      <div key={`${threadReply.post.uri}-${depth}-${index}`} className={clsx("thread-post thread-reply", {
-        "has-children": hasReplies,
-        "is-op": isOriginalPoster && depth > 0
-      })}>
+      <div key={`${threadReply.post.uri}-${depth}-${index}`} className="relative">
         
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: Math.min(index * 0.05, 0.5) }}
           className={clsx(
-            "thread-post-nested",
-            `depth-${Math.min(depth, 5)}`,
-            { "depth-max": depth > 5 }
+            "border-l-2",
+            depth === 0 ? "ml-0" : depth === 1 ? "ml-8" : depth === 2 ? "ml-16" : depth === 3 ? "ml-24" : depth === 4 ? "ml-32" : "ml-40",
+            isOriginalPoster ? "border-blue-500/50" : "border-gray-700"
           )}
           data-post-uri={threadReply.post.uri}
           data-author-handle={threadReply.post.author.handle}
         >
           <ErrorBoundary
             fallback={(_, reset) => (
-              <div className="post-error card">
-                <p className="error-text">Failed to display reply</p>
-                <button onClick={reset} className="btn btn-secondary btn-sm">
+              <div className="p-4 bg-red-900/20 border border-red-500/20 rounded-lg m-4">
+                <p className="text-red-400 mb-2">Failed to display reply</p>
+                <button onClick={reset} className="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded transition-colors text-sm">
                   Retry
                 </button>
               </div>
             )}
           >
-            <div className={clsx("thread-post-wrapper", { 
-              "has-replies": hasReplies,
-              "is-op": isOriginalPoster 
-            })}>
+            <div className={clsx(
+              "pl-4",
+              isOriginalPoster && "bg-blue-500/5"
+            )}>
               <PostCard 
                 item={{
                   post: threadReply.post,
@@ -196,17 +193,13 @@ function renderThreadReplies(
         </motion.div>
         
         {/* Render nested replies */}
-        {hasReplies && (
-          <div className="thread-children">
-            {renderThreadReplies(
-              threadReply.replies!, 
-              depth + 1, 
-              onReply, 
-              onViewThread, 
-              ancestors,
-              threadReply.post.author.handle
-            )}
-          </div>
+        {hasReplies && renderThreadReplies(
+          threadReply.replies!, 
+          depth + 1, 
+          onReply, 
+          onViewThread, 
+          ancestors,
+          threadReply.post.author.handle
         )}
       </div>
     )

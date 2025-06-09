@@ -61,11 +61,11 @@ const ToastItem: React.FC<{ toast: Toast }> = ({ toast }) => {
     warning: <AlertTriangle size={20} />,
   };
   
-  const colors = {
-    success: 'var(--color-success)',
-    error: 'var(--color-error)',
-    info: 'var(--color-info)',
-    warning: 'var(--color-warning)',
+  const colorClasses = {
+    success: 'bg-green-900/90 border-green-500 text-green-400',
+    error: 'bg-red-900/90 border-red-500 text-red-400',
+    info: 'bg-blue-900/90 border-blue-500 text-blue-400',
+    warning: 'bg-yellow-900/90 border-yellow-500 text-yellow-400',
   };
   
   return (
@@ -74,17 +74,14 @@ const ToastItem: React.FC<{ toast: Toast }> = ({ toast }) => {
       initial={{ opacity: 0, y: 50, scale: 0.3 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, x: 100, scale: 0.5 }}
-      className={`toast toast-${toast.type}`}
-      style={{
-        '--toast-color': colors[toast.type]
-      } as React.CSSProperties}
+      className={`relative flex items-center gap-3 px-4 py-3 rounded-lg border backdrop-blur-sm shadow-lg ${colorClasses[toast.type]}`}
     >
-      <div className="toast-icon" style={{ color: colors[toast.type] }}>
+      <div className="flex-shrink-0">
         {icons[toast.type]}
       </div>
-      <p className="toast-message">{toast.message}</p>
+      <p className="flex-1 text-sm font-medium">{toast.message}</p>
       <button
-        className="toast-close"
+        className="flex-shrink-0 p-1 rounded hover:bg-white/10 transition-colors"
         onClick={() => removeToast(toast.id)}
         aria-label="Close notification"
       >
@@ -101,7 +98,7 @@ export const ToastContainer: React.FC = () => {
   const { toasts } = context;
   
   return (
-    <div className="toast-container" aria-live="polite" aria-atomic="true">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm" aria-live="polite" aria-atomic="true">
       <AnimatePresence mode="sync">
         {toasts.map((toast) => (
           <ToastItem key={toast.id} toast={toast} />

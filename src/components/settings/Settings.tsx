@@ -249,11 +249,12 @@ export const Settings: React.FC = () => {
                       ...feedPrefs,
                       hideRepliesByUnfollowed: e.target.checked
                     })}
+                    className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-blue-600 focus:ring-blue-500"
                   />
                   <span>Hide replies by people you don't follow</span>
                 </label>
 
-                <label className="settings-toggle">
+                <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={feedPrefs.hideReposts || false}
@@ -261,11 +262,12 @@ export const Settings: React.FC = () => {
                       ...feedPrefs,
                       hideReposts: e.target.checked
                     })}
+                    className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-blue-600 focus:ring-blue-500"
                   />
                   <span>Hide reposts</span>
                 </label>
 
-                <label className="settings-toggle">
+                <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={feedPrefs.hideQuotePosts || false}
@@ -273,12 +275,13 @@ export const Settings: React.FC = () => {
                       ...feedPrefs,
                       hideQuotePosts: e.target.checked
                     })}
+                    className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-blue-600 focus:ring-blue-500"
                   />
                   <span>Hide quote posts</span>
                 </label>
 
-                <div className="settings-field">
-                  <label htmlFor="reply-threshold">
+                <div className="pt-4">
+                  <label htmlFor="reply-threshold" className="block text-sm font-medium mb-2">
                     Hide replies with fewer than X likes
                   </label>
                   <input
@@ -290,7 +293,7 @@ export const Settings: React.FC = () => {
                       ...feedPrefs,
                       hideRepliesByLikeCount: parseInt(e.target.value) || 0
                     })}
-                    className="input-number"
+                    className="w-20 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>

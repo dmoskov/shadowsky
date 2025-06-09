@@ -411,18 +411,18 @@ export const ThreadBranchDiagram: React.FC<ThreadBranchDiagramProps> = ({
   }, [branches])
   
   return (
-    <div className="thread-branch-diagram-compact" ref={containerRef}>
-      <div className="diagram-header-compact">
-        <div className="header-title">
+    <div className="bg-gray-900 rounded-lg overflow-hidden" ref={containerRef}>
+      <div className="flex items-center justify-between p-3 border-b border-gray-800">
+        <div className="flex items-center gap-1 text-sm font-medium text-gray-300">
           <GitBranch size={12} />
           <span>Thread Map</span>
         </div>
-        <div className="diagram-stats-compact">
-          <span title="Total posts">
+        <div className="flex items-center gap-3 text-xs text-gray-400">
+          <span title="Total posts" className="flex items-center gap-1">
             <MessageCircle size={10} />
             {threadStats.totalPosts}
           </span>
-          <span title="Unique participants">
+          <span title="Unique participants" className="flex items-center gap-1">
             <Users size={10} />
             {threadStats.uniqueAuthors}
           </span>
@@ -434,11 +434,12 @@ export const ThreadBranchDiagram: React.FC<ThreadBranchDiagramProps> = ({
         </div>
       </div>
       
-      <div className="diagram-scroll-container-compact">
+      <div className="overflow-x-auto overflow-y-auto max-h-96 p-2">
         <svg 
           ref={svgRef}
           width={svgDimensions.width} 
           height={svgDimensions.height}
+          className="min-w-full"
         >
           <motion.g
             initial={{ opacity: 0 }}
@@ -455,10 +456,10 @@ export const ThreadBranchDiagram: React.FC<ThreadBranchDiagramProps> = ({
         if (!branch) return null
         
         return (
-          <div className="branch-tooltip-compact">
-            <div className="tooltip-author">{branch.author}</div>
-            <div className="tooltip-text">{branch.text.slice(0, 80)}...</div>
-            <div className="tooltip-stats">
+          <div className="absolute bottom-2 left-2 right-2 bg-gray-800 border border-gray-700 rounded-lg p-3 shadow-lg z-10">
+            <div className="font-medium text-sm mb-1">{branch.author}</div>
+            <div className="text-xs text-gray-400 mb-2">{branch.text.slice(0, 80)}...</div>
+            <div className="flex gap-3 text-xs text-gray-500">
               <span>{branch.replyCount} total replies</span>
               <span>{branch.participantCount} participants</span>
               <span>{new Date(branch.latestActivity).toLocaleTimeString()}</span>

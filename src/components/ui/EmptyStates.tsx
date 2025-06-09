@@ -23,19 +23,19 @@ interface EmptyStateProps {
 
 const EmptyStateBase: React.FC<EmptyStateProps> = ({ icon, title, description, action }) => (
   <motion.div 
-    className="empty-state-container"
+    className="flex flex-col items-center justify-center text-center py-16 px-4"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.3 }}
   >
-    <div className="empty-state-icon">
+    <div className="text-gray-600 mb-4">
       {icon}
     </div>
-    <h2 className="empty-state-title">{title}</h2>
-    <p className="empty-state-description">{description}</p>
+    <h2 className="text-xl font-semibold mb-2">{title}</h2>
+    <p className="text-gray-400 max-w-md mb-6">{description}</p>
     {action && (
       <motion.button
-        className="btn btn-primary"
+        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
         onClick={action.onClick}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}

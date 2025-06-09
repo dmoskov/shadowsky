@@ -31,7 +31,7 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
   
   if (isLoading) {
     return (
-      <div className="thread-container">
+      <div className="min-h-screen bg-gray-900">
         <ThreadViewHeader
           onBack={onBack}
           isReaderMode={isReaderMode}
@@ -39,9 +39,9 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
           onToggleReaderMode={() => setIsReaderMode(!isReaderMode)}
           onToggleCompactMode={() => setIsCompactMode(!isCompactMode)}
         />
-        <div className="thread-loading">
-          <Loader2 size={32} className="animate-spin" />
-          <p>Loading thread...</p>
+        <div className="flex flex-col items-center justify-center py-16">
+          <Loader2 size={32} className="animate-spin mb-4 text-blue-500" />
+          <p className="text-gray-400">Loading thread...</p>
         </div>
       </div>
     )
@@ -49,7 +49,7 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
   
   if (error || !thread) {
     return (
-      <div className="thread-container">
+      <div className="min-h-screen bg-gray-900">
         <ThreadViewHeader
           onBack={onBack}
           isReaderMode={isReaderMode}
@@ -57,11 +57,11 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
           onToggleReaderMode={() => setIsReaderMode(!isReaderMode)}
           onToggleCompactMode={() => setIsCompactMode(!isCompactMode)}
         />
-        <div className="error-state">
-          <p className="error-message">
+        <div className="flex flex-col items-center justify-center py-16">
+          <p className="text-red-400 mb-4">
             {error instanceof Error ? error.message : 'Failed to load thread'}
           </p>
-          <button onClick={onBack} className="btn btn-secondary">
+          <button onClick={onBack} className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors">
             Go Back
           </button>
         </div>
@@ -92,8 +92,8 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
       postElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
       setCurrentPostUri(uri)
       // Highlight the post briefly
-      postElement.classList.add('highlighted')
-      setTimeout(() => postElement.classList.remove('highlighted'), 2000)
+      postElement.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50')
+      setTimeout(() => postElement.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50'), 2000)
     }
   }
   
@@ -133,7 +133,10 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
   
   return (
     <>
-      <div className={clsx("thread-container", { "thread-reader-mode": isReaderMode })} ref={threadContainerRef}>
+      <div className={clsx(
+        "min-h-screen bg-gray-900",
+        isReaderMode && "max-w-3xl mx-auto px-4"
+      )} ref={threadContainerRef}>
         <ThreadViewHeader
           onBack={onBack}
           isReaderMode={isReaderMode}

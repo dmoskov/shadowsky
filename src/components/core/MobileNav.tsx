@@ -39,25 +39,29 @@ export const MobileNav: React.FC = () => {
   };
   
   return (
-    <nav className="mobile-bottom-nav" role="navigation" aria-label="Main navigation">
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const active = isActive(item.path);
-        
-        return (
-          <motion.button
-            key={item.path}
-            className={`nav-item ${active ? 'active' : ''}`}
-            onClick={() => handleItemClick(item)}
-            whileTap={{ scale: 0.9 }}
-            aria-label={item.label}
-            aria-current={active ? 'page' : undefined}
-          >
-            <Icon size={24} aria-hidden="true" />
-            <span>{item.label}</span>
-          </motion.button>
-        );
-      })}
+    <nav className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 lg:hidden z-40" role="navigation" aria-label="Main navigation">
+      <div className="grid grid-cols-5 h-16">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.path);
+          
+          return (
+            <motion.button
+              key={item.path}
+              className={`flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
+                active ? 'text-blue-400' : 'text-gray-400 hover:text-gray-200'
+              }`}
+              onClick={() => handleItemClick(item)}
+              whileTap={{ scale: 0.9 }}
+              aria-label={item.label}
+              aria-current={active ? 'page' : undefined}
+            >
+              <Icon size={24} aria-hidden="true" />
+              <span>{item.label}</span>
+            </motion.button>
+          );
+        })}
+      </div>
     </nav>
   );
 };

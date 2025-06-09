@@ -4,45 +4,51 @@ import { motion } from 'framer-motion'
 // Post Skeleton
 export const PostSkeleton: React.FC = () => (
   <motion.div
-    className="post-skeleton card"
+    className="bg-gray-900 border border-gray-800 rounded-lg p-4"
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     transition={{ duration: 0.3 }}
   >
-    <div className="skeleton-header">
-      <div className="skeleton skeleton-avatar" />
-      <div className="skeleton-info">
-        <div className="skeleton skeleton-name" />
-        <div className="skeleton skeleton-handle" />
+    <div className="flex items-start gap-3 mb-3">
+      <div className="w-12 h-12 rounded-full bg-gray-800 animate-pulse" />
+      <div className="flex-1 space-y-2">
+        <div className="h-4 bg-gray-800 rounded w-32 animate-pulse" />
+        <div className="h-3 bg-gray-800 rounded w-24 animate-pulse" />
       </div>
     </div>
-    <div className="skeleton skeleton-content" />
-    <div className="skeleton skeleton-content short" />
-    <div className="skeleton-actions">
-      <div className="skeleton skeleton-action" />
-      <div className="skeleton skeleton-action" />
-      <div className="skeleton skeleton-action" />
+    <div className="space-y-2 mb-3">
+      <div className="h-4 bg-gray-800 rounded w-full animate-pulse" />
+      <div className="h-4 bg-gray-800 rounded w-3/4 animate-pulse" />
+    </div>
+    <div className="flex gap-6">
+      <div className="h-5 bg-gray-800 rounded w-16 animate-pulse" />
+      <div className="h-5 bg-gray-800 rounded w-16 animate-pulse" />
+      <div className="h-5 bg-gray-800 rounded w-16 animate-pulse" />
     </div>
   </motion.div>
 )
 
 // Profile Skeleton
 export const ProfileSkeleton: React.FC = () => (
-  <div className="profile-skeleton">
-    <div className="skeleton skeleton-banner" />
-    <div className="profile-skeleton-main">
-      <div className="skeleton skeleton-avatar large" />
-      <div className="skeleton skeleton-button" />
-    </div>
-    <div className="profile-skeleton-info">
-      <div className="skeleton skeleton-name" />
-      <div className="skeleton skeleton-handle" />
-      <div className="skeleton skeleton-bio" />
-      <div className="skeleton skeleton-bio" />
-    </div>
-    <div className="profile-skeleton-stats">
-      <div className="skeleton skeleton-stat" />
-      <div className="skeleton skeleton-stat" />
+  <div>
+    <div className="h-32 bg-gray-800 animate-pulse" />
+    <div className="px-4 pb-4">
+      <div className="flex items-end justify-between -mt-8 mb-4">
+        <div className="w-20 h-20 rounded-full bg-gray-800 animate-pulse border-4 border-gray-900" />
+        <div className="w-24 h-9 bg-gray-800 rounded-lg animate-pulse" />
+      </div>
+      <div className="space-y-3">
+        <div className="h-6 bg-gray-800 rounded w-48 animate-pulse" />
+        <div className="h-4 bg-gray-800 rounded w-32 animate-pulse" />
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-800 rounded w-full animate-pulse" />
+          <div className="h-4 bg-gray-800 rounded w-3/4 animate-pulse" />
+        </div>
+      </div>
+      <div className="flex gap-6 mt-4">
+        <div className="h-5 bg-gray-800 rounded w-20 animate-pulse" />
+        <div className="h-5 bg-gray-800 rounded w-20 animate-pulse" />
+      </div>
     </div>
   </div>
 )
@@ -65,19 +71,21 @@ export const ThreadSkeleton: React.FC = () => (
 
 // User Card Skeleton
 export const UserCardSkeleton: React.FC = () => (
-  <div className="user-card-skeleton card">
-    <div className="skeleton skeleton-avatar" />
-    <div className="user-skeleton-info">
-      <div className="skeleton skeleton-name" />
-      <div className="skeleton skeleton-handle" />
-      <div className="skeleton skeleton-bio" />
+  <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+    <div className="flex gap-3">
+      <div className="w-12 h-12 rounded-full bg-gray-800 animate-pulse" />
+      <div className="flex-1 space-y-2">
+        <div className="h-4 bg-gray-800 rounded w-32 animate-pulse" />
+        <div className="h-3 bg-gray-800 rounded w-24 animate-pulse" />
+        <div className="h-3 bg-gray-800 rounded w-full animate-pulse" />
+      </div>
     </div>
   </div>
 )
 
 // Feed Loading State
 export const FeedLoading: React.FC = () => (
-  <div className="feed-loading">
+  <div className="space-y-4">
     {[1, 2, 3].map(i => (
       <PostSkeleton key={i} />
     ))}
@@ -86,8 +94,8 @@ export const FeedLoading: React.FC = () => (
 
 // Search Results Loading
 export const SearchLoading: React.FC = () => (
-  <div className="search-loading">
-    <div className="skeleton skeleton-search-header" />
+  <div className="space-y-4">
+    <div className="h-8 bg-gray-800 rounded w-48 animate-pulse mb-4" />
     {[1, 2, 3].map(i => (
       <PostSkeleton key={i} />
     ))}
@@ -95,9 +103,17 @@ export const SearchLoading: React.FC = () => (
 )
 
 // Inline Loading Spinner
-export const InlineLoader: React.FC<{ size?: 'sm' | 'md' | 'lg' }> = ({ size = 'md' }) => (
-  <span className={`inline-loader spinner spinner-${size}`} />
-)
+export const InlineLoader: React.FC<{ size?: 'sm' | 'md' | 'lg' }> = ({ size = 'md' }) => {
+  const sizeClasses = {
+    sm: 'w-4 h-4',
+    md: 'w-6 h-6',
+    lg: 'w-8 h-8'
+  }
+  
+  return (
+    <span className={`inline-block ${sizeClasses[size]} border-2 border-blue-600 border-t-transparent rounded-full animate-spin`} />
+  )
+}
 
 // Loading Button
 export const LoadingButton: React.FC<{
@@ -108,18 +124,18 @@ export const LoadingButton: React.FC<{
   disabled?: boolean
 }> = ({ loading, children, className = '', onClick, disabled }) => (
   <button
-    className={`btn ${className} ${loading ? 'loading' : ''}`}
+    className={`px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2 ${className}`}
     onClick={onClick}
     disabled={disabled || loading}
   >
-    {loading ? <span className="spinner spinner-sm" /> : children}
+    {loading ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : children}
   </button>
 )
 
 // Page Loading State
 export const PageLoader: React.FC<{ message?: string }> = ({ message = 'Loading...' }) => (
-  <div className="page-loader">
-    <div className="spinner spinner-lg" />
-    <p className="text-secondary">{message}</p>
+  <div className="flex flex-col items-center justify-center py-16">
+    <div className="w-12 h-12 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mb-4" />
+    <p className="text-gray-400">{message}</p>
   </div>
 )
