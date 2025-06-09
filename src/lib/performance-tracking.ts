@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { onCLS, onFID, onFCP, onLCP, onTTFB, onINP } from 'web-vitals';
+import { onCLS, onFCP, onLCP, onTTFB, onINP } from 'web-vitals';
 import type { Metric } from 'web-vitals';
 
 interface PerformanceContext {
@@ -17,7 +17,6 @@ class PerformanceTracker {
   private readonly thresholds = {
     // Good thresholds based on Web Vitals standards
     LCP: { good: 2500, needsImprovement: 4000 }, // Largest Contentful Paint
-    FID: { good: 100, needsImprovement: 300 },   // First Input Delay
     CLS: { good: 0.1, needsImprovement: 0.25 },  // Cumulative Layout Shift
     FCP: { good: 1800, needsImprovement: 3000 }, // First Contentful Paint
     TTFB: { good: 800, needsImprovement: 1800 }, // Time to First Byte
@@ -45,13 +44,12 @@ class PerformanceTracker {
   private initializeWebVitals(): void {
     // Core Web Vitals
     onLCP(this.reportWebVital.bind(this));
-    onFID(this.reportWebVital.bind(this));
     onCLS(this.reportWebVital.bind(this));
+    onINP(this.reportWebVital.bind(this));
     
     // Additional metrics
     onFCP(this.reportWebVital.bind(this));
     onTTFB(this.reportWebVital.bind(this));
-    onINP(this.reportWebVital.bind(this));
   }
 
   /**
@@ -138,7 +136,6 @@ class PerformanceTracker {
   private logPerformanceHint(metricName: string, value: number): void {
     const hints: Record<string, string> = {
       LCP: '💡 Hint: Large images or slow server response may be causing delays. Consider optimizing images and using CDN.',
-      FID: '💡 Hint: Heavy JavaScript execution may be blocking user interactions. Consider code splitting.',
       CLS: '💡 Hint: Elements shifting during load. Ensure images have dimensions and fonts are preloaded.',
       FCP: '💡 Hint: Initial render is slow. Check server response time and critical CSS.',
       TTFB: '💡 Hint: Server response is slow. Check API performance and caching.',
