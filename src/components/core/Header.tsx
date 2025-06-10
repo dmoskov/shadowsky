@@ -137,7 +137,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
                 type="text" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={isProtestTheme ? "SEARCH THE TRUTH..." : "Search Bluesky..."} 
+                placeholder={isProtestTheme ? "SEARCH FOR JUSTICE..." : "Search Bluesky..."} 
                 className={`w-full pl-10 pr-4 py-2 rounded-full transition-all duration-200 ${
                   isProtestTheme 
                     ? `${themeClasses.inputEffects} bg-gray-800 border-orange-500 text-white placeholder-yellow-400`
