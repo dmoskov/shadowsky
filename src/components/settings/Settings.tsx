@@ -17,6 +17,7 @@ import {
 import type { 
   AppBskyActorDefs
 } from '@atproto/api'
+import { ThemeSelector } from './ThemeSelector'
 
 type FeedViewPref = AppBskyActorDefs.FeedViewPref
 type ThreadViewPref = AppBskyActorDefs.ThreadViewPref
@@ -410,17 +411,13 @@ export const Settings: React.FC = () => {
 
           {activeTab === 'appearance' && (
             <motion.div 
-              className="settings-section"
+              className="space-y-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <h2>Appearance</h2>
+              <h2 className="text-xl font-semibold mb-4">Appearance</h2>
               
-              <div className="settings-group">
-                <p className="text-secondary">
-                  Theme settings coming soon. Currently using dark theme.
-                </p>
-              </div>
+              <ThemeSelector />
             </motion.div>
           )}
 
