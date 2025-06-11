@@ -10,8 +10,6 @@ import type { FeedItem, Post } from '../../types/atproto'
 import { usePostInteractions } from '../../hooks/usePostInteractions'
 import { atUriToWebUrl, copyToClipboard, shareUrl } from '../../utils/url-helpers'
 import { getPostText } from '../../utils/post-helpers'
-import { useTheme, useThemeClasses } from '../../contexts/ThemeContext'
-import { PostCardProtest } from './PostCardProtest'
 
 interface PostCardProps {
   item: FeedItem
@@ -30,18 +28,6 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [showMenu, setShowMenu] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const { likePost, repostPost, isLiking, isReposting } = usePostInteractions()
-  const { isProtestTheme } = useTheme()
-  const themeClasses = useThemeClasses()
-
-  // Return protest-themed component if protest theme is active
-  if (isProtestTheme) {
-    return (
-      <PostCardProtest 
-        post={post as any} 
-        onViewThread={onViewThread}
-      />
-    )
-  }
   
   // Use viewer state to determine if liked/reposted
   const isLiked = !!post.viewer?.like
@@ -116,7 +102,7 @@ export const PostCard: React.FC<PostCardProps> = ({
       )}
 
       <motion.article 
-        className={`${themeClasses.cardBg} ${themeClasses.border} ${themeClasses.cardEffects} rounded-lg p-4 mb-4 cursor-pointer hover:${themeClasses.secondaryBg} transition-colors`}
+        className="post-card"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}

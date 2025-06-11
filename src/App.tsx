@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { ThemeProvider } from './contexts/ThemeContext'
 // import { performanceTracker, setPerformanceContext } from './lib/performance-tracking'
 import { 
   Login,
@@ -32,9 +31,7 @@ import { TailwindTest } from './components/TailwindTest'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
 import { queryClient } from './lib/query-client'
 import { PenSquare } from 'lucide-react'
-import { useThemeClasses } from './contexts/ThemeContext'
 import './App.css'
-import './styles/protest-theme.css'
 
 function ThreadViewWrapper() {
   const { uri } = useParams<{ uri: string }>()
@@ -62,7 +59,6 @@ function AppContent() {
   const [composeTemplate, setComposeTemplate] = useState<string | undefined>()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
-  const themeClasses = useThemeClasses()
   
   // Enable keyboard navigation
   useKeyboardNavigation()
@@ -107,7 +103,7 @@ function AppContent() {
   return (
     <>
       <ScrollProgress />
-      <div className={`min-h-screen ${themeClasses.primaryBg}`}>
+      <div className="min-h-screen bg-gray-900">
         <Header onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
         <div className="flex relative">
           <Sidebar onCompose={() => setIsComposeOpen(true)} />
@@ -178,15 +174,13 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <ThemeProvider>
-            <AuthProvider>
-              <ToastProvider>
-                <ErrorBoundary>
-                  <AppContent />
-                </ErrorBoundary>
-              </ToastProvider>
-            </AuthProvider>
-          </ThemeProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <ErrorBoundary>
+                <AppContent />
+              </ErrorBoundary>
+            </ToastProvider>
+          </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>
     </ErrorBoundary>

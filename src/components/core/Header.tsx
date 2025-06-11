@@ -10,13 +10,11 @@ import {
   Bookmark,
   Moon,
   Sun,
-  ChevronDown,
-  Palette
+  ChevronDown
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUnreadNotificationCount } from '../../hooks/useNotifications'
 import { useToast } from '../ui/Toast'
-import { useTheme, useThemeClasses } from '../../contexts/ThemeContext'
 
 interface HeaderProps {
   onMenuToggle?: () => void;
@@ -32,8 +30,6 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   const navigate = useNavigate()
   const { data: unreadCount } = useUnreadNotificationCount()
   const toast = useToast()
-  const { isProtestTheme, toggleTheme } = useTheme()
-  const themeClasses = useThemeClasses()
 
   // Handle scroll behavior
   useEffect(() => {
@@ -83,11 +79,10 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
     <motion.header 
       className={`
         fixed top-0 left-0 right-0 z-50
-        ${themeClasses.primaryBg} ${themeClasses.border} ${themeClasses.headerEffects}
+        bg-gray-900 border-b border-gray-800
         transition-all duration-300
         ${isScrolled ? 'shadow-lg backdrop-blur-md bg-opacity-95' : ''}
         ${isHidden ? '-translate-y-full' : 'translate-y-0'}
-        ${isProtestTheme ? 'border-b-2 border-orange-500' : ''}
       `}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
@@ -113,16 +108,12 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           {/* Logo */}
           <div className="flex-shrink-0">
             <motion.h1 
-              className={`text-2xl font-bold cursor-pointer ${
-                isProtestTheme 
-                  ? 'text-graffiti text-red-600' 
-                  : 'bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent'
-              }`}
+              className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent cursor-pointer"
               onClick={() => navigate('/')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              {isProtestTheme ? 'RESISTANCE' : 'Bluesky'}
+              Bluesky
             </motion.h1>
           </div>
 
@@ -137,12 +128,11 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
                 type="text" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={isProtestTheme ? "SEARCH THE TRUTH..." : "Search Bluesky..."} 
-                className={`w-full pl-10 pr-4 py-2 rounded-full transition-all duration-200 ${
-                  isProtestTheme 
-                    ? `${themeClasses.inputEffects} bg-gray-800 border-orange-500 text-white placeholder-yellow-400`
-                    : 'bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20'
-                }`}
+                placeholder="Search Bluesky..." 
+                className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-full 
+                          text-gray-200 placeholder-gray-400
+                          focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20
+                          transition-all duration-200"
               />
             </div>
           </form>
@@ -162,19 +152,15 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
 
             {/* Theme Toggle */}
             <motion.button
-              className={`p-2 rounded-lg transition-colors ${
-                isProtestTheme 
-                  ? 'hover:bg-red-800 text-red-400' 
-                  : 'hover:bg-gray-800 text-gray-300'
-              }`}
-              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
+              onClick={toggleDarkMode}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              title={isProtestTheme ? "Switch to default theme" : "Switch to resistance theme"}
+              title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {isProtestTheme ? 
-                <span className="text-xs font-bold">✊</span> : 
-                <Palette size={20} />
+              {darkMode ? 
+                <Sun className="text-gray-300" size={20} /> : 
+                <Moon className="text-gray-300" size={20} />
               }
             </motion.button>
 
