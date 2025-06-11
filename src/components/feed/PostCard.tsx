@@ -36,27 +36,10 @@ export const PostCard: React.FC<PostCardProps> = ({
   // Return protest-themed component if protest theme is active
   if (isProtestTheme) {
     return (
-      <>
-        {/* Repost indicator */}
-        {reason && reason.$type === 'app.bsky.feed.defs#reasonRepost' && (
-          <div className="flex items-center gap-2 text-gray-400 text-sm mb-2 ml-4">
-            <Repeat2 size={16} />
-            <span>
-              {reason.by.displayName || reason.by.handle} reposted
-            </span>
-          </div>
-        )}
-        
-        {/* Parent post if this is a reply */}
-        {showParentPost && reply && reply.parent && (
-          <ParentPost post={reply.parent} />
-        )}
-        
-        <PostCardProtest 
-          post={post} 
-          onViewThread={onViewThread}
-        />
-      </>
+      <PostCardProtest 
+        post={post as any} 
+        onViewThread={onViewThread}
+      />
     )
   }
   

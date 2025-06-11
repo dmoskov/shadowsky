@@ -8,7 +8,6 @@ import { FeedError } from '../ui/ErrorStates'
 import { FeedEmpty } from '../ui/EmptyStates'
 import { performanceTracker, useRenderTracking } from '../../lib/performance-tracking'
 import type { Post } from '../../types/atproto'
-import { useTheme, useThemeClasses } from '../../contexts/ThemeContext'
 
 interface FeedProps {
   onViewThread?: (uri: string) => void
@@ -18,8 +17,6 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
   useRenderTracking('Feed')
   
   const [replyTo, setReplyTo] = useState<{ post: Post; root?: Post } | undefined>()
-  const { isProtestTheme } = useTheme()
-  const themeClasses = useThemeClasses()
   const { 
     posts, 
     isLoading, 
@@ -79,9 +76,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
     return (
       <div className="max-w-2xl mx-auto px-4 pt-4">
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
-          <h2 className={`text-2xl font-bold ${isProtestTheme ? 'protest-header text-red-600' : 'text-gray-100'}`}>
-          {isProtestTheme ? 'THE FRONTLINE' : 'Your Timeline'}
-        </h2>
+          <h2 className="text-2xl font-bold text-gray-100">Your Timeline</h2>
         </div>
         <FeedLoading />
       </div>
@@ -92,9 +87,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
     return (
       <div className="max-w-2xl mx-auto px-4 pt-4">
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
-          <h2 className={`text-2xl font-bold ${isProtestTheme ? 'protest-header text-red-600' : 'text-gray-100'}`}>
-          {isProtestTheme ? 'THE FRONTLINE' : 'Your Timeline'}
-        </h2>
+          <h2 className="text-2xl font-bold text-gray-100">Your Timeline</h2>
         </div>
         <FeedError onRetry={() => refresh()} />
       </div>
@@ -105,9 +98,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
     return (
       <div className="max-w-2xl mx-auto px-4 pt-4">
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
-          <h2 className={`text-2xl font-bold ${isProtestTheme ? 'protest-header text-red-600' : 'text-gray-100'}`}>
-          {isProtestTheme ? 'THE FRONTLINE' : 'Your Timeline'}
-        </h2>
+          <h2 className="text-2xl font-bold text-gray-100">Your Timeline</h2>
         </div>
         <FeedEmpty />
       </div>
@@ -117,9 +108,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
   return (
     <div className="max-w-2xl mx-auto px-4 pt-4">
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
-        <h2 className={`text-2xl font-bold ${isProtestTheme ? 'protest-header text-red-600' : 'text-gray-100'}`}>
-          {isProtestTheme ? 'THE FRONTLINE' : 'Your Timeline'}
-        </h2>
+        <h2 className="text-2xl font-bold text-gray-100">Your Timeline</h2>
         <button
           onClick={() => refresh()}
           disabled={isFetching}

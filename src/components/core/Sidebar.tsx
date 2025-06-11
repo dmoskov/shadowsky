@@ -17,7 +17,6 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUnreadNotificationCount } from '../../hooks/useNotifications'
-import { useTheme, useThemeClasses, useProtestFeatures } from '../../contexts/ThemeContext'
 
 interface NavItem {
   path: string
@@ -34,9 +33,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
   const location = useLocation()
   const { session } = useAuth()
   const { data: unreadCount } = useUnreadNotificationCount()
-  const { isProtestTheme } = useTheme()
-  const themeClasses = useThemeClasses()
-  const { protestFilters } = useProtestFeatures()
 
   const navItems: NavItem[] = [
     { path: '/', label: 'Home', icon: Home },
@@ -63,8 +59,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
   }
 
   return (
-    <aside className={`hidden lg:flex flex-col fixed left-0 top-16 bottom-0 w-64 pt-4
-                     ${themeClasses.primaryBg} ${themeClasses.border} border-r`}>
+    <aside className="hidden lg:flex flex-col fixed left-0 top-16 bottom-0 w-64 
+                     bg-gray-900 border-r border-gray-800 pt-4">
       <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
         <div className="space-y-1">
           {navItems.map((item) => (
@@ -75,8 +71,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
                 relative flex items-center px-3 py-2 rounded-lg
                 transition-all duration-200 group
                 ${isActive(item.path) 
-                  ? isProtestTheme ? 'bg-red-900/50 text-red-400 border border-red-500' : 'bg-gray-800 text-white' 
-                  : isProtestTheme ? 'text-gray-300 hover:bg-red-900/30 hover:text-red-400' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-gray-800 text-white' 
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                 }
               `}
             >
@@ -119,8 +115,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
                 relative flex items-center px-3 py-2 rounded-lg
                 transition-all duration-200 group
                 ${isActive(item.path) 
-                  ? isProtestTheme ? 'bg-red-900/50 text-red-400 border border-red-500' : 'bg-gray-800 text-white' 
-                  : isProtestTheme ? 'text-gray-300 hover:bg-red-900/30 hover:text-red-400' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-gray-800 text-white' 
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                 }
               `}
             >
@@ -137,23 +133,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
         </div>
 
         <motion.button
-          className={`mt-6 w-full font-medium py-3 px-4 rounded-full flex items-center justify-center space-x-2
-                     transition-colors duration-200 ${
-                       isProtestTheme 
-                         ? 'btn-solidarity' 
-                         : 'bg-blue-600 hover:bg-blue-700 text-white'
-                     }`}
+          className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium 
+                     py-3 px-4 rounded-full flex items-center justify-center space-x-2
+                     transition-colors duration-200"
           onClick={onCompose}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
           <PenSquare size={20} />
-          <span>{isProtestTheme ? 'BROADCAST' : 'Compose'}</span>
+          <span>Compose</span>
         </motion.button>
       </nav>
 
       {/* User section at bottom */}
-      <div className={`p-4 border-t ${themeClasses.border}`}>
+      <div className="p-4 border-t border-gray-800">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 
                          flex items-center justify-center text-white font-medium">
