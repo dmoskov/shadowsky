@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, MessageCircle, Repeat, Share, MoreHorizontal, Fist } from 'lucide-react'
+import { Heart, MessageCircle, Repeat, Share, MoreHorizontal, Zap } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useTheme, useProtestFeatures } from '../../contexts/ThemeContext'
 import type { PostView } from '@atproto/api/dist/client/types/app/bsky/feed/defs'
-import { getPostText, getPostAuthor, getPostTimestamp, getPostStats } from '../../utils/post-helpers'
+import { getPostText, formatPostTime } from '../../utils/post-helpers'
 
 interface PostCardProtestProps {
   post: PostView
@@ -28,10 +28,14 @@ export const PostCardProtest: React.FC<PostCardProtestProps> = ({
   const [handprintVisible, setHandprintVisible] = useState(false)
   const [activeReaction, setActiveReaction] = useState<string | null>(null)
 
-  const postText = getPostText(post)
-  const author = getPostAuthor(post)
-  const timestamp = getPostTimestamp(post)
-  const stats = getPostStats(post)
+  const postText = getPostText(post) || ''
+  const author = post?.author || { handle: 'unknown', displayName: 'Unknown' }
+  const timestamp = post ? formatPostTime(post) : 'just now'
+  const stats = {
+    likeCount: post?.likeCount || 0,
+    repostCount: post?.repostCount || 0,
+    replyCount: post?.replyCount || 0
+  }
 
   // Enhanced stats for protest theme
   const isViral = stats.likeCount > 100 || stats.repostCount > 50
@@ -66,7 +70,7 @@ export const PostCardProtest: React.FC<PostCardProtestProps> = ({
     setTimeout(() => setActiveReaction(null), 3000)
   }
 
-  if (!isProtestTheme) {
+  if (!isProtestTheme || !post) {
     return null // Fallback to regular PostCard
   }
 
@@ -150,23 +154,6 @@ export const PostCardProtest: React.FC<PostCardProtestProps> = ({
           {postText}
         </p>
         
-        {/* Hashtags and mentions get special styling */}
-        <style jsx>{`
-          p :global(#hashtag) {
-            color: #dc143c;
-            font-weight: bold;
-            text-decoration: underline;
-            text-decoration-color: #ffd700;
-          }
-          
-          p :global(@mention) {
-            background: #ffd700;
-            color: #000;
-            padding: 0 2px;
-            border-radius: 2px;
-            font-weight: bold;
-          }
-        `}</style>
       </div>
 
       {/* Engagement Bar - Protest Style */}
@@ -212,7 +199,7 @@ export const PostCardProtest: React.FC<PostCardProtestProps> = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Fist size={18} />
+            <Zap size={18} />
             <span className="text-xs font-bold uppercase">Solidarity</span>
           </motion.button>
         </div>
