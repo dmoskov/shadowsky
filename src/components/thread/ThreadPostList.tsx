@@ -2,7 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { MessageCircle } from 'lucide-react'
 import clsx from 'clsx'
-import { PostCard } from '../feed/PostCard'
+import { PostCardNative } from '../feed/PostCardNative'
 import { ErrorBoundary } from '../core/ErrorBoundary'
 import { ThreadService } from '../../services/atproto/thread'
 import type { Post, FeedItem } from '../../types/atproto'
@@ -55,7 +55,7 @@ export const ThreadPostList: React.FC<ThreadPostListProps> = ({
               </div>
             )}
           >
-            <PostCard 
+            <PostCardNative 
               item={threadPostToFeedItem(ancestor)}
               onReply={onReply}
               showParentPost={false}
@@ -84,7 +84,7 @@ export const ThreadPostList: React.FC<ThreadPostListProps> = ({
           )}
         >
           <div className="pl-1">
-            <PostCard 
+            <PostCardNative 
               item={threadPostToFeedItem(thread)}
               onReply={onReply}
               onViewThread={onViewThread}
@@ -176,7 +176,7 @@ function renderThreadReplies(
               "pl-4",
               isOriginalPoster && "bg-blue-500/5"
             )}>
-              <PostCard 
+              <PostCardNative 
                 item={{
                   post: threadReply.post,
                   reply: threadReply.parent && threadReply.parent.$type === 'app.bsky.feed.defs#threadViewPost' ? {
@@ -187,6 +187,7 @@ function renderThreadReplies(
                 onReply={onReply}
                 onViewThread={onViewThread}
                 showParentPost={false}
+                isThreadChild={true}
               />
             </div>
           </ErrorBoundary>

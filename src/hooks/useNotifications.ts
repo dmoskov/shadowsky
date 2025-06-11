@@ -4,17 +4,17 @@ import { getNotificationService } from '../services/atproto/notifications'
 import { useErrorHandler } from './useErrorHandler'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 
-export function useNotifications() {
+export function useNotifications(priority?: boolean) {
   const { session } = useAuth()
 
   return useQuery({
-    queryKey: ['notifications'],
+    queryKey: ['notifications', priority],
     queryFn: async () => {
       const { atProtoClient } = await import('../services/atproto')
       const agent = atProtoClient.agent
       if (!agent) throw new Error('Not authenticated')
       const notificationService = getNotificationService(agent)
-      return notificationService.listNotifications()
+      return notificationService.listNotifications(undefined, priority)
     },
     enabled: !!session,
     staleTime: 30 * 1000, // 30 seconds

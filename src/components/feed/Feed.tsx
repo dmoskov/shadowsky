@@ -1,7 +1,7 @@
 import React, { useCallback, useRef, useEffect, useState } from 'react'
 import { useTimeline } from '../../hooks/useTimeline'
 import { ErrorBoundary } from '../core/ErrorBoundary'
-import { PostCard } from '../feed/PostCard'
+import { PostCardNative } from '../feed/PostCardNative'
 import { ComposeModal } from '../modals/ComposeModal'
 import { FeedLoading, InlineLoader } from '../ui/SkeletonLoaders'
 import { FeedError } from '../ui/ErrorStates'
@@ -144,7 +144,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
               </div>
             )}
           >
-            <PostCard 
+            <PostCardNative 
               key={item.post.uri}
               item={item} 
               onReply={(post) => setReplyTo({ 

@@ -8,8 +8,10 @@ export class NotificationService {
 
   /**
    * List notifications for the current user
+   * @param cursor - Pagination cursor
+   * @param priority - If true, only show notifications from followed accounts
    */
-  async listNotifications(cursor?: string): Promise<{
+  async listNotifications(cursor?: string, priority?: boolean): Promise<{
     notifications: Notification[]
     cursor?: string
   }> {
@@ -17,7 +19,8 @@ export class NotificationService {
       try {
         const response = await this.agent.app.bsky.notification.listNotifications({
           limit: 50,
-          cursor
+          cursor,
+          priority
         })
         
         return {

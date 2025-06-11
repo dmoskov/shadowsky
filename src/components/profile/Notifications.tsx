@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
@@ -9,7 +9,8 @@ import {
   UserPlus,
   MessageCircle,
   AtSign,
-  Quote
+  Quote,
+  Users
 } from 'lucide-react'
 import { useNotifications, useMarkNotificationsRead, getNotificationText } from '../../hooks/useNotifications'
 import { NotificationsEmpty } from '../ui/EmptyStates'
@@ -18,7 +19,14 @@ import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notif
 
 export const Notifications: React.FC = () => {
   const navigate = useNavigate()
-  const { data, isLoading, error } = useNotifications()
+  
+  // Load priority preference from localStorage
+  const [priorityOnly, setPriorityOnly] = useState(() => {
+    const saved = localStorage.getItem('notifications-priority')
+    return saved === 'true'
+  })
+  
+  const { data, isLoading, error } = useNotifications(priorityOnly)
   const { mutate: markAsRead } = useMarkNotificationsRead()
 
   // Mark notifications as read when viewing the page
@@ -32,8 +40,17 @@ export const Notifications: React.FC = () => {
     }
   }, [data?.notifications, markAsRead])
 
+  // Save priority preference to localStorage
+  useEffect(() => {
+    localStorage.setItem('notifications-priority', priorityOnly.toString())
+  }, [priorityOnly])
+
   const handleBack = () => {
     navigate('/')
+  }
+
+  const handleTogglePriority = () => {
+    setPriorityOnly(!priorityOnly)
   }
 
   const handleNotificationClick = (notification: Notification) => {
@@ -97,17 +114,35 @@ export const Notifications: React.FC = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <div className="flex items-center gap-4">
-          <motion.button
-            className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
-            onClick={handleBack}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <ArrowLeft size={20} />
-          </motion.button>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <motion.button
+              className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
+              onClick={handleBack}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <ArrowLeft size={20} />
+            </motion.button>
+            
+            <h1 className="text-xl font-semibold">Notifications</h1>
+          </div>
           
-          <h1 className="text-xl font-semibold">Notifications</h1>
+          {/* Priority Toggle */}
+          <motion.button
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+              priorityOnly 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+            }`}
+            onClick={handleTogglePriority}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title={priorityOnly ? "Show all notifications" : "Show only notifications from people you follow"}
+          >
+            <Users size={16} />
+            <span>{priorityOnly ? 'Following Only' : 'All'}</span>
+          </motion.button>
         </div>
       </motion.header>
 
