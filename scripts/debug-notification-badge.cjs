@@ -1,6 +1,7 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
 
+const { getTestCredentials } = require('../src/lib/test-credentials.js');
 async function debugNotificationBadge() {
   const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext({
@@ -19,7 +20,9 @@ async function debugNotificationBadge() {
     
     if (needsLogin) {
       console.log('2. Logging in...');
-      await page.fill('input[placeholder*="Username"]', 'traviskimmel+bsky@gmail.com');
+const credentials = getTestCredentials();
+
+      await page.fill('input[placeholder*="Username"]', credentials.identifier);
       await page.fill('input[type="password"]', 'C%;,!2iO"]Wu%11T9+Y8');
       await page.click('button[type="submit"]');
       

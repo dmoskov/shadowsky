@@ -1,5 +1,6 @@
 import { chromium } from '@playwright/test';
 
+import { getTestCredentials } from '../src/lib/test-credentials.js';
 (async () => {
   const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext({
@@ -28,7 +29,9 @@ import { chromium } from '@playwright/test';
     const identifierInput = page.locator('input[name="identifier"], input[placeholder*="Email"], input[placeholder*="Username"], input[type="email"], input[type="text"]').first();
     const passwordInput = page.locator('input[name="password"], input[type="password"]').first();
     
-    await identifierInput.fill('traviskimmel+bsky@gmail.com');
+const credentials = getTestCredentials();
+
+    await identifierInput.fill(credentials.identifier);
     await passwordInput.fill('C%;,!2iO"]Wu%11T9+Y8');
     
     // Find and click the submit button

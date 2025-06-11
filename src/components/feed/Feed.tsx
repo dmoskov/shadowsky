@@ -1,11 +1,12 @@
 import React, { useCallback, useRef, useEffect, useState } from 'react'
 import { useTimeline } from '../../hooks/useTimeline'
 import { ErrorBoundary } from '../core/ErrorBoundary'
-import { PostCardNative } from '../feed/PostCardNative'
+import { PostCardBluesky } from '../feed/PostCardBluesky'
 import { ComposeModal } from '../modals/ComposeModal'
 import { FeedLoading, InlineLoader } from '../ui/SkeletonLoaders'
 import { FeedError } from '../ui/ErrorStates'
 import { FeedEmpty } from '../ui/EmptyStates'
+import { ResponsiveContainer } from '../ui/ResponsiveContainer'
 import { performanceTracker, useRenderTracking } from '../../lib/performance-tracking'
 import type { Post } from '../../types/atproto'
 
@@ -74,59 +75,32 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
 
   if (isLoading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 pt-4">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
-          <h2 className="text-2xl font-bold text-gray-100">Your Timeline</h2>
-        </div>
+      <ResponsiveContainer>
         <FeedLoading />
-      </div>
+      </ResponsiveContainer>
     )
   }
 
   if (error) {
     return (
-      <div className="max-w-2xl mx-auto px-4 pt-4">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
-          <h2 className="text-2xl font-bold text-gray-100">Your Timeline</h2>
-        </div>
+      <ResponsiveContainer className="pt-8">
         <FeedError onRetry={() => refresh()} />
-      </div>
+      </ResponsiveContainer>
     )
   }
 
   if (!posts || posts.length === 0) {
     return (
-      <div className="max-w-2xl mx-auto px-4 pt-4">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
-          <h2 className="text-2xl font-bold text-gray-100">Your Timeline</h2>
-        </div>
+      <ResponsiveContainer className="pt-8">
         <FeedEmpty />
-      </div>
+      </ResponsiveContainer>
     )
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-4">
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
-        <h2 className="text-2xl font-bold text-gray-100">Your Timeline</h2>
-        <button
-          onClick={() => refresh()}
-          disabled={isFetching}
-          className={`
-            px-4 py-2 text-sm font-medium rounded-full
-            bg-blue-600 text-white
-            hover:bg-blue-700 disabled:opacity-60
-            transition-all duration-200
-            flex items-center space-x-2
-          `}
-        >
-          {isFetching ? <InlineLoader size="sm" /> : null}
-          <span>{isFetching ? 'Refreshing...' : 'Refresh Feed'}</span>
-        </button>
-      </div>
-      
-      <div className="space-y-2">
-        {posts.map((item) => (
+    <ResponsiveContainer>
+      <div className="border-t border-gray-800">
+        {posts.map((item, index) => (
           <ErrorBoundary 
             key={item.post.uri}
             fallback={(_, reset) => (
@@ -144,7 +118,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
               </div>
             )}
           >
-            <PostCardNative 
+            <PostCardBluesky 
               key={item.post.uri}
               item={item} 
               onReply={(post) => setReplyTo({ 
@@ -194,6 +168,6 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
         onClose={() => setReplyTo(undefined)}
         replyTo={replyTo}
       />
-    </div>
+    </ResponsiveContainer>
   )
 }

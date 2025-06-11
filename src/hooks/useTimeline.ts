@@ -38,7 +38,15 @@ export const useTimeline = () => {
   })
 
   // Flatten pages into a single array of posts
-  const posts = data?.pages.flatMap(page => page.feed) ?? []
+  // Filter out replies to only show top-level posts and reposts
+  const posts = data?.pages.flatMap(page => 
+    page.feed.filter(item => 
+      // Include reposts
+      item.reason?.$type === 'app.bsky.feed.defs#reasonRepost' ||
+      // Include only top-level posts (no reply field)
+      !item.reply
+    )
+  ) ?? []
 
   return {
     posts,

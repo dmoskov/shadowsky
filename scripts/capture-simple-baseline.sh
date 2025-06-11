@@ -36,8 +36,8 @@ async function captureBaseline() {
   await page.screenshot({ path: 'tests/visual-baseline-simple/01-login-page.png', fullPage: true });
 
   console.log('2. Logging in...');
-  await page.fill('input[placeholder="Username or email"]', 'traviskimmel+bsky@gmail.com');
-  await page.fill('input[type="password"]', 'C%;,!2iO"]Wu%11T9+Y8');
+  await page.fill('input[placeholder="Username or email"]', process.env.VITE_TEST_IDENTIFIER || 'your-test-account@email.com');
+  await page.fill('input[type="password"]', process.env.VITE_TEST_PASSWORD || 'your-test-password');
   await page.click('button[type="submit"]');
   
   // Wait for feed to load

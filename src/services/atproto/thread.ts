@@ -33,6 +33,31 @@ export class ThreadService {
   }
   
   /**
+   * Get the root thread for any post in a conversation
+   * This ensures we always show the full thread context
+   */
+  async getRootThread(uri: string, depth = 6): Promise<ThreadViewPost> {
+    // First get the thread for this specific post
+    const thread = await this.getThread(uri, depth)
+    
+    // Find the root by traversing up through parents
+    let root = thread
+    while (root.parent && root.parent.$type === 'app.bsky.feed.defs#threadViewPost') {
+      const parentThread = root.parent as ThreadViewPost
+      // We need to fetch the full thread from the parent to get all replies
+      try {
+        const fullParentThread = await this.getThread(parentThread.post.uri, depth)
+        root = fullParentThread
+      } catch (error) {
+        // If we can't fetch parent, use what we have
+        break
+      }
+    }
+    
+    return root
+  }
+  
+  /**
    * Get thread ancestors (parent posts)
    */
   static getAncestors(thread: ThreadViewPost): ThreadViewPost[] {

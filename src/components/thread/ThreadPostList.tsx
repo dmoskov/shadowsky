@@ -33,7 +33,7 @@ export const ThreadPostList: React.FC<ThreadPostListProps> = ({
   })
 
   return (
-    <div className="divide-y divide-gray-800">
+    <div>
       {/* Ancestors (parent posts) */}
       {ancestors.map((ancestor, index) => (
         <motion.div
@@ -58,7 +58,10 @@ export const ThreadPostList: React.FC<ThreadPostListProps> = ({
             <PostCardNative 
               item={threadPostToFeedItem(ancestor)}
               onReply={onReply}
+              onViewThread={onViewThread}
               showParentPost={false}
+              isInThread={true}
+              isParentPost={true}
             />
           </ErrorBoundary>
         </motion.div>
@@ -66,7 +69,7 @@ export const ThreadPostList: React.FC<ThreadPostListProps> = ({
       
       {/* Main post */}
       <motion.div
-        className="relative bg-gray-800/30 border-l-4 border-blue-500"
+        className="relative"
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: ancestors.length * 0.05 }}
@@ -83,12 +86,14 @@ export const ThreadPostList: React.FC<ThreadPostListProps> = ({
             </div>
           )}
         >
-          <div className="pl-1">
+          <div className="border-l-4 border-blue-500">
             <PostCardNative 
               item={threadPostToFeedItem(thread)}
               onReply={onReply}
               onViewThread={onViewThread}
               showParentPost={false}
+              isInThread={true}
+              isMainPost={true}
             />
           </div>
         </ErrorBoundary>
@@ -96,8 +101,8 @@ export const ThreadPostList: React.FC<ThreadPostListProps> = ({
       
       {/* Descendants (replies) */}
       {thread.replies && thread.replies.length > 0 && (
-        <div className="pt-4">
-          <div className="flex items-center gap-2 px-4 pb-4 text-gray-400">
+        <div className="border-t border-gray-800 mt-4">
+          <div className="flex items-center gap-2 px-4 py-3 text-gray-400 bg-gray-900/50">
             <MessageCircle size={18} />
             <span className="font-medium">{countAllReplies(thread)} {countAllReplies(thread) === 1 ? 'Reply' : 'Replies'}</span>
           </div>
@@ -155,9 +160,8 @@ function renderThreadReplies(
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: Math.min(index * 0.05, 0.5) }}
           className={clsx(
-            "border-l-2",
-            depth === 0 ? "ml-0" : depth === 1 ? "ml-8" : depth === 2 ? "ml-16" : depth === 3 ? "ml-24" : depth === 4 ? "ml-32" : "ml-40",
-            isOriginalPoster ? "border-blue-500/50" : "border-gray-700"
+            "relative",
+            depth === 0 ? "ml-0" : depth === 1 ? "ml-8" : depth === 2 ? "ml-16" : depth === 3 ? "ml-24" : depth === 4 ? "ml-32" : "ml-40"
           )}
           data-post-uri={threadReply.post.uri}
           data-author-handle={threadReply.post.author.handle}
@@ -172,11 +176,7 @@ function renderThreadReplies(
               </div>
             )}
           >
-            <div className={clsx(
-              "pl-4",
-              isOriginalPoster && "bg-blue-500/5"
-            )}>
-              <PostCardNative 
+            <PostCardNative 
                 item={{
                   post: threadReply.post,
                   reply: threadReply.parent && threadReply.parent.$type === 'app.bsky.feed.defs#threadViewPost' ? {
@@ -188,8 +188,8 @@ function renderThreadReplies(
                 onViewThread={onViewThread}
                 showParentPost={false}
                 isThreadChild={true}
+                isInThread={true}
               />
-            </div>
           </ErrorBoundary>
         </motion.div>
         

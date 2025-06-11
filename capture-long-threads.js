@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 
+import { getTestCredentials } from './src/lib/test-credentials.js';
 async function captureLongThreads() {
   const browser = await chromium.launch({ 
     headless: false,
@@ -13,7 +14,9 @@ async function captureLongThreads() {
   console.log('Navigated to login page');
 
   // Fill in login form with test credentials
-  await page.fill('input[placeholder="Username or email"]', 'traviskimmel+bsky@gmail.com');
+const credentials = getTestCredentials();
+
+  await page.fill('input[placeholder="Username or email"]', credentials.identifier);
   await page.fill('input[placeholder="Password"]', 'C%;,!2iO"]Wu%11T9+Y8');
   await page.click('button[type="submit"]');
   console.log('Submitted login form');

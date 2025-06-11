@@ -1,5 +1,6 @@
 import { chromium } from '@playwright/test';
 
+import { getTestCredentials } from '../src/lib/test-credentials.js';
 (async () => {
   const browser = await chromium.launch({ headless: false });
   const page = await browser.newContext().then(ctx => ctx.newPage());
@@ -10,7 +11,9 @@ import { chromium } from '@playwright/test';
   // Login if needed
   if (await page.locator('button:has-text("Login")').count() > 0) {
     console.log('Logging in...');
-    await page.fill('input[type="text"], input[type="email"]', 'traviskimmel+bsky@gmail.com');
+const credentials = getTestCredentials();
+
+    await page.fill('input[type="text"], input[type="email"]', credentials.identifier);
     await page.fill('input[type="password"]', 'C%;,!2iO"]Wu%11T9+Y8');
     await page.click('button:has-text("Login")');
     await page.waitForTimeout(5000);

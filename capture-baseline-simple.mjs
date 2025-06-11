@@ -1,5 +1,6 @@
 import { chromium } from '@playwright/test';
 
+import { getTestCredentials } from './src/lib/test-credentials.js';
 async function captureBaseline() {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
@@ -15,7 +16,9 @@ async function captureBaseline() {
   await page.screenshot({ path: `${baselineDir}/01-login-page.png`, fullPage: true });
 
   console.log('2. Logging in...');
-  await page.fill('input[placeholder="Username or email"]', 'traviskimmel+bsky@gmail.com');
+const credentials = getTestCredentials();
+
+  await page.fill('input[placeholder="Username or email"]', credentials.identifier);
   await page.fill('input[type="password"]', 'C%;,!2iO"]Wu%11T9+Y8');
   await page.click('button[type="submit"]');
   

@@ -6,7 +6,7 @@ import { ComposeModal } from '../modals/ComposeModal'
 import { ThreadNavigation } from './ThreadNavigation'
 import { ThreadViewHeader } from './ThreadViewHeader'
 import { ThreadViewModes } from './ThreadViewModes'
-import { ThreadPostList } from './ThreadPostList'
+import { ThreadPostListBluesky } from './ThreadPostListBluesky'
 import { useThreadData } from '../../hooks/useThreadData'
 
 import type { Post } from '../../types/atproto'
@@ -27,7 +27,11 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
   // const [mapExpanded, setMapExpanded] = useState(false)
   const threadContainerRef = useRef<HTMLDivElement>(null)
   
-  const { thread, isLoading, error } = useThreadData({ postUri })
+  // Fetch the full thread context (root thread)
+  const { thread, isLoading, error } = useThreadData({ postUri, fetchRoot: true })
+  
+  // Remember the originally clicked post URI to highlight it
+  const targetPostUri = postUri
   
   if (isLoading) {
     return (
@@ -145,10 +149,13 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
           onToggleCompactMode={() => setIsCompactMode(!isCompactMode)}
         />
         
-        <ThreadPostList
+        <ThreadPostListBluesky
           thread={thread}
           onReply={handleReply}
           onViewThread={handleViewThread}
+          isCompactMode={isCompactMode}
+          currentPostUri={currentPostUri}
+          targetPostUri={targetPostUri}  // Pass the originally clicked post
         />
       </div>
       

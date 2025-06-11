@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import path from 'path';
 
+import { getTestCredentials } from '../src/lib/test-credentials.js';
 // Configuration for visual regression tests
 const VISUAL_CONFIG = {
   fullPage: true,
@@ -13,7 +14,9 @@ async function loginIfNeeded(page: any) {
   // Check if we're on login page
   const loginInput = await page.locator('input[placeholder="Username or email"]').count();
   if (loginInput > 0) {
-    await page.fill('input[placeholder="Username or email"]', 'traviskimmel+bsky@gmail.com');
+const credentials = getTestCredentials();
+
+    await page.fill('input[placeholder="Username or email"]', credentials.identifier);
     await page.fill('input[type="password"]', 'C%;,!2iO"]Wu%11T9+Y8');
     await page.click('button[type="submit"]');
     await page.waitForSelector('.feed-container', { timeout: 10000 });

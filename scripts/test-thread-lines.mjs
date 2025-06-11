@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 
+import { getTestCredentials } from '../src/lib/test-credentials.js';
 async function testThreadLines() {
   const browser = await chromium.launch({ 
     headless: false,
@@ -29,7 +30,9 @@ async function testThreadLines() {
     if (!feedExists) {
       console.log('Logging in...');
       await page.fill('input[type="text"]', 'bskyclienttest.bsky.social');
-      await page.fill('input[type="password"]', 'C%;,!2iO"]Wu%11T9+Y8');
+const credentials = getTestCredentials();
+
+      await page.fill('input[type="password"]', credentials.password);
       await page.click('button[type="submit"]');
       await page.waitForSelector('.feed-posts', { timeout: 10000 });
     }

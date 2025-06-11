@@ -64,11 +64,11 @@ export const PostEmbeds: React.FC<PostEmbedsProps> = ({ embed, onViewThread }) =
         href={external.uri}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex mt-2 border border-gray-700 rounded-lg overflow-hidden hover:bg-gray-800/50 transition-colors"
+        className="flex mt-3 border border-gray-700 rounded-xl overflow-hidden hover:bg-gray-800/20 transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
         {external.thumb && (
-          <div className="w-32 h-32 flex-shrink-0 bg-gray-800">
+          <div className="w-[120px] flex-shrink-0 bg-gray-800">
             <img
               src={external.thumb}
               alt=""
@@ -77,16 +77,18 @@ export const PostEmbeds: React.FC<PostEmbedsProps> = ({ embed, onViewThread }) =
           </div>
         )}
         <div className="flex-1 p-3">
-          <h4 className="font-medium text-gray-100 line-clamp-1">
+          <div className="flex items-start gap-1.5 text-[13px] text-gray-500 mb-1">
+            <Link size={12} className="mt-0.5 flex-shrink-0" />
+            <span className="truncate">{new URL(external.uri).hostname}</span>
+          </div>
+          <h4 className="font-semibold text-[15px] text-gray-100 line-clamp-2 leading-tight">
             {external.title}
           </h4>
-          <p className="text-sm text-gray-500 line-clamp-2 mt-1">
-            {external.description}
-          </p>
-          <div className="flex items-center gap-1 text-xs text-gray-600 mt-2">
-            <Link size={12} />
-            <span>{new URL(external.uri).hostname}</span>
-          </div>
+          {external.description && (
+            <p className="text-[13px] text-gray-400 line-clamp-2 mt-1 leading-relaxed">
+              {external.description}
+            </p>
+          )}
         </div>
       </a>
     )
@@ -105,7 +107,7 @@ export const PostEmbeds: React.FC<PostEmbedsProps> = ({ embed, onViewThread }) =
       
       return (
         <div 
-          className="mt-2 border border-gray-700 rounded-lg p-3 hover:bg-gray-800/30 cursor-pointer transition-colors"
+          className="mt-2 border border-gray-700 rounded-lg overflow-hidden cursor-pointer transition-colors hover:bg-gray-800/30"
           onClick={(e) => {
             e.stopPropagation()
             if (quotedPost.uri && onViewThread) {
@@ -113,42 +115,44 @@ export const PostEmbeds: React.FC<PostEmbedsProps> = ({ embed, onViewThread }) =
             }
           }}
         >
-          {/* Mini header */}
-          <div className="flex items-center gap-2 mb-2">
-            <img 
-              src={author?.avatar || '/default-avatar.png'} 
-              alt={author?.handle || 'User'}
-              className="w-5 h-5 rounded-full bg-gray-700"
-            />
-            <div className="flex items-baseline gap-1 text-sm">
-              <span className="font-medium text-gray-100">
-                {author?.displayName || author?.handle}
-              </span>
-              <span className="text-gray-500">
-                @{author?.handle}
-              </span>
-              {quotedPost.indexedAt && (
-                <>
-                  <span className="text-gray-500">·</span>
-                  <span className="text-gray-500">
-                    {formatDistanceToNow(new Date(quotedPost.indexedAt), { addSuffix: true })}
-                  </span>
-                </>
-              )}
+          <div className="p-3">
+            {/* Mini header */}
+            <div className="flex items-center gap-2.5 mb-2">
+              <img 
+                src={author?.avatar || '/default-avatar.png'} 
+                alt={author?.handle || 'User'}
+                className="w-5 h-5 rounded-full bg-gray-700 object-cover"
+              />
+              <div className="flex items-baseline gap-1 text-[13px] min-w-0">
+                <span className="font-semibold text-gray-100 truncate max-w-[150px]">
+                  {author?.displayName || author?.handle}
+                </span>
+                <span className="text-gray-500 truncate">
+                  @{author?.handle}
+                </span>
+                {quotedPost.indexedAt && (
+                  <>
+                    <span className="text-gray-500">·</span>
+                    <span className="text-gray-500 whitespace-nowrap">
+                      {formatDistanceToNow(new Date(quotedPost.indexedAt), { addSuffix: true })}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
+          
+            {/* Quote content */}
+            {postRecord?.text && (
+              <p className="text-[14px] text-gray-200 whitespace-pre-wrap break-words leading-[1.4]">
+                {postRecord.text}
+              </p>
+            )}
           </div>
           
-          {/* Quote content */}
-          {postRecord?.text && (
-            <p className="text-sm text-gray-100 whitespace-pre-wrap break-words">
-              {postRecord.text}
-            </p>
-          )}
-          
-          {/* Nested embeds in quote */}
+          {/* Nested embeds in quote - images, links etc */}
           {quotedPost.embeds?.[0] && (
-            <div className="mt-2">
-              <PostEmbeds embed={quotedPost.embeds[0]} onViewThread={onViewThread} />
+            <div className="border-t border-gray-700">
+              <QuoteEmbeds embed={quotedPost.embeds[0]} />
             </div>
           )}
         </div>
@@ -185,5 +189,82 @@ export const PostEmbeds: React.FC<PostEmbedsProps> = ({ embed, onViewThread }) =
     )
   }
 
+  return null
+}
+
+// Simplified embeds for quotes - no click handlers, smaller sizing
+const QuoteEmbeds: React.FC<{ embed: any }> = ({ embed }) => {
+  if (!embed) return null
+  
+  const embedType = embed.$type
+  
+  // Images in quotes
+  if (embedType === 'app.bsky.embed.images#view') {
+    const imagesEmbed = embed as AppBskyEmbedImages.View
+    const images = imagesEmbed.images || []
+    
+    if (images.length === 1) {
+      return (
+        <div className="relative aspect-video bg-gray-800">
+          <img
+            src={images[0].thumb}
+            alt={images[0].alt || ''}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        </div>
+      )
+    }
+    
+    return (
+      <div className="grid grid-cols-2 gap-0.5">
+        {images.slice(0, 4).map((img, index) => (
+          <div key={index} className="relative aspect-video bg-gray-800">
+            <img
+              src={img.thumb}
+              alt={img.alt || ''}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        ))}
+      </div>
+    )
+  }
+  
+  // External links in quotes
+  if (embedType === 'app.bsky.embed.external#view') {
+    const externalEmbed = embed as AppBskyEmbedExternal.View
+    const external = externalEmbed.external
+    
+    return (
+      <div className="flex">
+        {external.thumb && (
+          <div className="w-[100px] flex-shrink-0 bg-gray-800">
+            <img
+              src={external.thumb}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+        <div className="flex-1 p-3">
+          <div className="flex items-center gap-1 text-[12px] text-gray-500 mb-1">
+            <Link size={10} />
+            <span className="truncate">{new URL(external.uri).hostname}</span>
+          </div>
+          <h4 className="text-[13px] font-medium text-gray-100 line-clamp-1">
+            {external.title}
+          </h4>
+          {external.description && (
+            <p className="text-[12px] text-gray-400 line-clamp-2 mt-0.5">
+              {external.description}
+            </p>
+          )}
+        </div>
+      </div>
+    )
+  }
+  
   return null
 }

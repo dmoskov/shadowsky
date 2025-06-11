@@ -14,6 +14,9 @@ interface PostCardNativeProps {
   onViewThread?: (uri: string) => void
   showParentPost?: boolean
   isThreadChild?: boolean
+  isInThread?: boolean
+  isMainPost?: boolean
+  isParentPost?: boolean
 }
 
 export const PostCardNative: React.FC<PostCardNativeProps> = ({ 
@@ -21,7 +24,10 @@ export const PostCardNative: React.FC<PostCardNativeProps> = ({
   onReply, 
   onViewThread, 
   showParentPost = false,
-  isThreadChild = false
+  isThreadChild = false,
+  isInThread = false,
+  isMainPost = false,
+  isParentPost = false
 }) => {
   const { post, reply, reason } = item
   const [showMenu, setShowMenu] = useState(false)
@@ -74,9 +80,9 @@ export const PostCardNative: React.FC<PostCardNativeProps> = ({
 
   return (
     <div className="relative">
-      {/* Thread line connector */}
+      {/* Thread line connector - connects from avatar bottom to next avatar top */}
       {isThreadChild && (
-        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-700" />
+        <div className="absolute left-6 top-14 bottom-0 w-0.5 bg-gray-700" />
       )}
 
       {/* Repost indicator */}
@@ -90,8 +96,25 @@ export const PostCardNative: React.FC<PostCardNativeProps> = ({
         </div>
       )}
 
+      {/* Reply indicator for feed view */}
+      {!isInThread && item.reply && (
+        <div className="flex items-center gap-1.5 px-4 pt-2 text-gray-500 text-sm">
+          <div className="w-12" /> {/* Spacer to align with avatar */}
+          <MessageCircle size={12} />
+          <span>Reply to @{item.reply.parent.author.handle}</span>
+        </div>
+      )}
+
       <motion.article 
-        className="relative bg-gray-900 hover:bg-gray-800/50 cursor-pointer transition-colors px-4 py-3"
+        className={`relative cursor-pointer transition-colors ${
+          isInThread 
+            ? isMainPost 
+              ? 'px-4 py-4' 
+              : isParentPost 
+                ? 'px-4 py-2 opacity-90' 
+                : 'px-4 py-3'
+            : 'bg-gray-900 hover:bg-gray-800/50 px-4 py-3'
+        }`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.2 }}
@@ -111,21 +134,29 @@ export const PostCardNative: React.FC<PostCardNativeProps> = ({
           <div className="flex-1 min-w-0">
             {/* Header */}
             <div className="flex items-baseline gap-1 flex-wrap">
-              <span className="font-bold text-gray-100 hover:underline">
+              <span className={`font-bold text-gray-100 hover:underline ${
+                isMainPost ? 'text-lg' : ''
+              }`}>
                 {post.author.displayName || post.author.handle}
               </span>
-              <span className="text-gray-500">
+              <span className={`text-gray-500 ${
+                isMainPost ? 'text-base' : isParentPost ? 'text-sm' : ''
+              }`}>
                 @{post.author.handle}
               </span>
               <span className="text-gray-500">·</span>
-              <time className="text-gray-500 hover:underline">
+              <time className={`text-gray-500 hover:underline ${
+                isParentPost ? 'text-sm' : ''
+              }`}>
                 {formatPostTime(post)}
               </time>
             </div>
 
             {/* Text content */}
             {getPostText(post) && (
-              <div className="mt-1 text-gray-100 whitespace-pre-wrap break-words">
+              <div className={`mt-1 text-gray-100 whitespace-pre-wrap break-words ${
+                isMainPost ? 'text-lg' : isParentPost ? 'text-sm' : ''
+              }`}>
                 {getPostText(post)}
               </div>
             )}

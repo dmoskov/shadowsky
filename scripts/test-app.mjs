@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 
+import { getTestCredentials } from '../src/lib/test-credentials.js';
 async function testBlueskyClient() {
   const browser = await chromium.launch({ 
     headless: false, // Set to true for headless mode
@@ -30,7 +31,9 @@ async function testBlueskyClient() {
     // Fill in credentials
     console.log('Entering credentials...');
     await page.fill('input[type="text"]', 'bskyclienttest.bsky.social');
-    await page.fill('input[type="password"]', 'C%;,!2iO"]Wu%11T9+Y8');
+const credentials = getTestCredentials();
+
+    await page.fill('input[type="password"]', credentials.password);
     
     // Click login button
     console.log('Clicking login...');

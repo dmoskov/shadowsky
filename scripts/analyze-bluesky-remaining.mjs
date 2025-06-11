@@ -1,5 +1,6 @@
 import { chromium } from '@playwright/test';
 
+import { getTestCredentials } from '../src/lib/test-credentials.js';
 (async () => {
   const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext({
@@ -23,7 +24,9 @@ import { chromium } from '@playwright/test';
     }
     
     // Fill login form
-    await page.locator('input[type="text"], input[type="email"]').first().fill('traviskimmel+bsky@gmail.com');
+const credentials = getTestCredentials();
+
+    await page.locator('input[type="text"], input[type="email"]').first().fill(credentials.identifier);
     await page.locator('input[type="password"]').first().fill('C%;,!2iO"]Wu%11T9+Y8');
     await page.locator('button[type="submit"]').first().click();
   } catch (e) {

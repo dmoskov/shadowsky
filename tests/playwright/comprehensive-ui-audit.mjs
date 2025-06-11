@@ -2,6 +2,7 @@ import { chromium } from 'playwright';
 import path from 'path';
 import fs from 'fs';
 
+import { getTestCredentials } from './src/lib/test-credentials.js';
 // Screenshots will be saved to progress/screenshots/ following project conventions
 const screenshotDir = path.join(process.cwd(), 'progress/screenshots');
 
@@ -48,7 +49,9 @@ async function comprehensiveUIAudit() {
     await takeScreenshot('01-login-focused', 'Login form with focus state');
     
     // Fill in login form using project credentials
-    await page.fill('input[placeholder="Username or email"]', 'traviskimmel+bsky@gmail.com');
+const credentials = getTestCredentials();
+
+    await page.fill('input[placeholder="Username or email"]', credentials.identifier);
     await page.fill('input[placeholder="Password"]', 'C%;,!2iO"]Wu%11T9+Y8');
     await takeScreenshot('01-login-filled', 'Login form filled out');
     

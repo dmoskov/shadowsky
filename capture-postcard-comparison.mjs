@@ -1,5 +1,6 @@
 import { chromium } from '@playwright/test';
 
+import { getTestCredentials } from './src/lib/test-credentials.js';
 async function captureComparison() {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
@@ -12,7 +13,9 @@ async function captureComparison() {
   await page.waitForLoadState('networkidle');
 
   console.log('2. Logging in...');
-  await page.fill('input[placeholder="Username or email"]', 'traviskimmel+bsky@gmail.com');
+const credentials = getTestCredentials();
+
+  await page.fill('input[placeholder="Username or email"]', credentials.identifier);
   await page.fill('input[type="password"]', 'C%;,!2iO"]Wu%11T9+Y8');
   await page.click('button[type="submit"]');
   

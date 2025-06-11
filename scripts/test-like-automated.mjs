@@ -1,5 +1,6 @@
 import { chromium } from '@playwright/test';
 
+import { getTestCredentials } from '../src/lib/test-credentials.js';
 (async () => {
   const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext({
@@ -35,7 +36,9 @@ import { chromium } from '@playwright/test';
     console.log('Login required, logging in with test credentials...');
     
     // Fill in credentials
-    await page.fill('input[type="text"], input[type="email"], input[placeholder*="sername"], input[placeholder*="mail"]', 'traviskimmel+bsky@gmail.com');
+const credentials = getTestCredentials();
+
+    await page.fill('input[type="text"], input[type="email"], input[placeholder*="sername"], input[placeholder*="mail"]', credentials.identifier);
     await page.fill('input[type="password"]', 'C%;,!2iO"]Wu%11T9+Y8');
     
     // Click login

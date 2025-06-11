@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 
+import { getTestCredentials } from './src/lib/test-credentials.js';
 async function testNotificationBadge() {
   const browser = await chromium.launch({ 
     headless: false,
@@ -23,7 +24,9 @@ async function testNotificationBadge() {
       console.log('📝 Logging in with test credentials...');
       
       // Use test credentials from .test-credentials file
-      await page.fill('input[placeholder*="Username"]', 'traviskimmel+bsky@gmail.com');
+const credentials = getTestCredentials();
+
+      await page.fill('input[placeholder*="Username"]', credentials.identifier);
       await page.fill('input[type="password"]', 'C%;,!2iO"]Wu%11T9+Y8');
       await page.click('button[type="submit"]');
       
