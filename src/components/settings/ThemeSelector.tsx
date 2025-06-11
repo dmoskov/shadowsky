@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Palette, Zap, Megaphone, Eye, EyeOff } from 'lucide-react'
+import { Palette, Fist, Megaphone, Eye, EyeOff } from 'lucide-react'
 import { useTheme, useProtestFeatures } from '../../contexts/ThemeContext'
 
 export const ThemeSelector: React.FC = () => {
@@ -21,7 +21,7 @@ export const ThemeSelector: React.FC = () => {
       name: 'Digital Resistance',
       description: 'Bold protest-inspired theme for digital activism',
       preview: 'bg-protest-primary border-orange-500',
-      icon: <Zap size={20} />
+      icon: <Fist size={20} />
     }
   ]
 
