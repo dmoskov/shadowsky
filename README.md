@@ -1,54 +1,72 @@
-# React + TypeScript + Vite
+# Bluesky Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A feature-rich desktop client for Bluesky (AT Protocol) built with React, TypeScript, and Vite.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 🔐 Secure authentication with session persistence
+- 📱 Responsive design with dark theme
+- 📊 Advanced analytics dashboard
+- 🧵 Enhanced thread navigation
+- 🚀 Performance optimized
+- 🎨 Clean, modern UI matching Bluesky's design
 
-## Expanding the ESLint configuration
+## 🚀 Quick Start
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+```bash
+# One-click setup (macOS)
+./setup-local-mac.sh
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+# Or manual setup
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Visit http://127.0.0.1:5173
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+**New to the project?** Check out [`QUICK_START.md`](QUICK_START.md) for a 2-minute orientation.
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+## 📁 Project Structure
+
 ```
+BSKY/
+├── src/          → Source code
+├── docs/         → All documentation (organized)
+├── scripts/      → Development scripts  
+├── tests/        → Test files
+│
+├── README.md     → You are here
+├── CLAUDE.md     → AI development guide
+└── SESSION_NOTES.md → Current work status
+```
+
+## 📚 Documentation
+
+All documentation is organized in the `docs/` directory:
+
+- **Architecture** → `docs/architecture/`
+- **Guides** → `docs/guides/`
+- **Decisions** → `docs/decisions/`
+- **Full Index** → [`docs/DIRECTORY_INDEX.md`](docs/DIRECTORY_INDEX.md)
+
+## 🔧 Development
+
+```bash
+npm test          # Run tests
+npm run build     # Build for production
+npm run type-check # Check types
+```
+
+## 🤝 Contributing
+
+1. Check `docs/handoff/` for comprehensive guides
+2. Follow patterns in `docs/decisions/PATTERNS.md`
+3. Test credentials go in `.env.local` (never commit!)
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+---
+
+Built with ❤️ for the decentralized social web. For detailed documentation, see [`docs/handoff/README-HANDOFF.md`](docs/handoff/README-HANDOFF.md).
