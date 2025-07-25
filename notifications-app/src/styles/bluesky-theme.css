@@ -197,3 +197,38 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* Responsive tabs */
+.bsky-tabs-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.bsky-tabs-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide tab labels on small screens */
+@media (max-width: 768px) {
+  .bsky-tab {
+    @apply px-3 py-2;
+  }
+  
+  .bsky-tab-label {
+    display: none;
+  }
+  
+  .bsky-tab span:first-child {
+    /* Icon */
+    margin: 0;
+  }
+}
+
+/* Show labels on larger screens */
+@media (min-width: 769px) {
+  .bsky-tab-label {
+    display: inline;
+  }
+}

@@ -185,7 +185,7 @@ export const NotificationsFeed: React.FC = () => {
         </div>
 
         {/* Filter tabs */}
-        <div className="flex gap-1 overflow-x-auto mt-4 border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
+        <div className="flex gap-1 mt-4 border-b bsky-tabs-container" style={{ borderColor: 'var(--bsky-border-primary)' }}>
           <FilterTab
             active={filter === 'all'}
             onClick={() => setFilter('all')}
@@ -432,9 +432,10 @@ const FilterTab: React.FC<FilterTabProps> = ({ active, onClick, icon, label }) =
     <button
       onClick={onClick}
       className={`bsky-tab flex items-center gap-1.5 ${active ? 'bsky-tab-active' : ''}`}
+      title={label}
     >
       <span style={{ opacity: active ? 1 : 0.7 }}>{icon}</span>
-      <span>{label}</span>
+      <span className="bsky-tab-label">{label}</span>
     </button>
   )
 }
