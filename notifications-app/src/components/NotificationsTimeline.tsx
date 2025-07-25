@@ -48,8 +48,8 @@ export const NotificationsTimeline: React.FC = () => {
         <div className="animate-pulse space-y-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="space-y-2">
-              <div className="h-6 bg-gray-800 rounded w-32"></div>
-              <div className="h-20 bg-gray-800 rounded"></div>
+              <div className="h-6 rounded w-32" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}></div>
+              <div className="h-20 rounded" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}></div>
             </div>
           ))}
         </div>
@@ -64,14 +64,14 @@ export const NotificationsTimeline: React.FC = () => {
           <Calendar className="text-blue-500" />
           Timeline View
         </h1>
-        <p className="text-gray-400">Your notifications organized by day</p>
+        <p style={{ color: 'var(--bsky-text-secondary)' }}>Your notifications organized by day</p>
       </div>
 
       <div className="space-y-8">
         {groupedNotifications.map(({ date, notifications }) => (
           <div key={date.toISOString()}>
-            <div className="sticky top-16 bg-gray-900 py-2 z-10">
-              <h2 className="text-lg font-semibold text-gray-300">
+            <div className="sticky top-16 py-2 z-10" style={{ backgroundColor: 'var(--bsky-bg-primary)' }}>
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
                 {isSameDay(date, new Date()) ? 'Today' : format(date, 'EEEE, MMMM d')}
               </h2>
             </div>
@@ -80,9 +80,9 @@ export const NotificationsTimeline: React.FC = () => {
               {notifications.map((notification) => (
                 <div
                   key={`${notification.uri}-${notification.indexedAt}`}
-                  className="flex gap-4 p-3 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors"
+                  className="flex gap-4 p-3 rounded-lg transition-colors bsky-card-hover"
                 >
-                  <div className="flex-shrink-0 text-xs text-gray-500 w-16 pt-1">
+                  <div className="flex-shrink-0 text-xs w-16 pt-1" style={{ color: 'var(--bsky-text-secondary)' }}>
                     <Clock size={14} className="inline mr-1" />
                     {format(new Date(notification.indexedAt), 'HH:mm')}
                   </div>
@@ -95,7 +95,7 @@ export const NotificationsTimeline: React.FC = () => {
                         className="w-8 h-8 rounded-full"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--bsky-bg-hover)' }}>
                         {notification.author.handle.charAt(0).toUpperCase()}
                       </div>
                     )}
@@ -106,7 +106,7 @@ export const NotificationsTimeline: React.FC = () => {
                           {notification.author.displayName || notification.author.handle}
                         </span>
                         {' '}
-                        <span className="text-gray-400">
+                        <span style={{ color: 'var(--bsky-text-secondary)' }}>
                           {getActionText(notification.reason)}
                         </span>
                       </p>

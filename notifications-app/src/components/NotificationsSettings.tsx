@@ -48,11 +48,11 @@ export const NotificationsSettings: React.FC = () => {
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold mb-2">Notification Settings</h1>
-        <p className="text-gray-400">Customize how you receive and view notifications</p>
+        <p style={{ color: 'var(--bsky-text-secondary)' }}>Customize how you receive and view notifications</p>
       </div>
 
       {/* General Settings */}
-      <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+      <div className="bsky-card p-6 space-y-4">
         <h2 className="text-lg font-semibold flex items-center gap-2 mb-4">
           <Bell size={20} />
           General
@@ -90,7 +90,12 @@ export const NotificationsSettings: React.FC = () => {
             <select
               value={settings.refreshInterval}
               onChange={(e) => handleIntervalChange(Number(e.target.value))}
-              className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm"
+              className="rounded-lg px-3 py-2 text-sm"
+              style={{
+                backgroundColor: 'var(--bsky-bg-tertiary)',
+                border: '1px solid var(--bsky-border-primary)',
+                color: 'var(--bsky-text-primary)'
+              }}
             >
               <option value={15}>15 seconds</option>
               <option value={30}>30 seconds</option>
@@ -103,7 +108,7 @@ export const NotificationsSettings: React.FC = () => {
       </div>
 
       {/* Filter Settings */}
-      <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+      <div className="bsky-card p-6 space-y-4">
         <h2 className="text-lg font-semibold flex items-center gap-2 mb-4">
           <Filter size={20} />
           Filters
@@ -116,8 +121,8 @@ export const NotificationsSettings: React.FC = () => {
           onChange={() => handleToggle('priorityOnly')}
         />
 
-        <div className="border-t border-gray-700 pt-4">
-          <p className="text-sm text-gray-400 mb-3">Hide notification types:</p>
+        <div className="border-t pt-4" style={{ borderColor: 'var(--bsky-border-light)' }}>
+          <p className="text-sm mb-3" style={{ color: 'var(--bsky-text-secondary)' }}>Hide notification types:</p>
           
           <SettingToggle
             label="Hide Likes"
@@ -171,19 +176,20 @@ const SettingToggle: React.FC<SettingToggleProps> = ({
   return (
     <div className="flex items-start justify-between py-2">
       <div className="flex gap-3">
-        {icon && <div className="text-gray-400 mt-0.5">{icon}</div>}
+        {icon && <div className="mt-0.5" style={{ color: 'var(--bsky-text-secondary)' }}>{icon}</div>}
         <div>
           <label className="font-medium text-sm cursor-pointer" onClick={onChange}>
             {label}
           </label>
-          <p className="text-xs text-gray-400 mt-0.5">{description}</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--bsky-text-secondary)' }}>{description}</p>
         </div>
       </div>
       <button
         onClick={onChange}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-          checked ? 'bg-blue-600' : 'bg-gray-600'
-        }`}
+        className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+        style={{
+          backgroundColor: checked ? 'var(--bsky-primary)' : 'var(--bsky-bg-hover)'
+        }}
       >
         <span
           className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${

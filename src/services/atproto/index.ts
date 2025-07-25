@@ -17,7 +17,8 @@ import { getNotificationService } from './notifications'
 // Create singleton instances
 export const atProtoClient = new ATProtoClient({
   service: 'https://bsky.social',
-  persistSession: true
+  persistSession: true,
+  sessionPrefix: 'main_' // Use 'main_bsky_session' as the storage key for main app
 })
 
 export const feedService = new FeedService(atProtoClient)

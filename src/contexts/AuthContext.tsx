@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import type { ReactNode } from 'react'
+import { atProtoClient } from '../services/atproto'
 import { ATProtoClient } from '@bsky/shared'
 import type { Session } from '@bsky/shared'
 import { SessionExpiredError, AuthenticationError, NetworkError } from '@bsky/shared'
@@ -29,8 +30,7 @@ interface AuthProviderProps {
   children: ReactNode
 }
 
-// Create a singleton instance of the AT Protocol client
-const atProtoClient = new ATProtoClient()
+// Use the configured client instance from services
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -73,7 +73,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const savedSession = ATProtoClient.loadSavedSession()
+        const savedSession = ATProtoClient.loadSavedSession('main_')
         if (savedSession) {
           initAttempts.current++
           

@@ -23,11 +23,11 @@ export const Profile: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="animate-pulse">
-          <div className="h-48 bg-gray-800 rounded-t-lg"></div>
-          <div className="bg-gray-900 rounded-b-lg p-6">
-            <div className="w-24 h-24 bg-gray-700 rounded-full -mt-16 mb-4"></div>
-            <div className="h-6 bg-gray-700 rounded w-48 mb-2"></div>
-            <div className="h-4 bg-gray-700 rounded w-32"></div>
+          <div className="h-48 rounded-t-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}></div>
+          <div className="rounded-b-lg p-6" style={{ backgroundColor: 'var(--bsky-bg-secondary)' }}>
+            <div className="w-24 h-24 rounded-full -mt-16 mb-4" style={{ backgroundColor: 'var(--bsky-bg-hover)' }}></div>
+            <div className="h-6 rounded w-48 mb-2" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}></div>
+            <div className="h-4 rounded w-32" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}></div>
           </div>
         </div>
       </div>
@@ -37,7 +37,7 @@ export const Profile: React.FC = () => {
   if (error || !profile) {
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-red-900/20 border border-red-500/20 rounded-lg p-4 text-red-400">
+        <div className="bsky-card p-4" style={{ borderColor: 'var(--bsky-error)', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--bsky-error)' }}>
           Failed to load profile
         </div>
       </div>
@@ -55,12 +55,12 @@ export const Profile: React.FC = () => {
             className="w-full h-48 object-cover"
           />
         ) : (
-          <div className="w-full h-48 bg-gradient-to-r from-blue-600 to-purple-600"></div>
+          <div className="w-full h-48" style={{ background: 'linear-gradient(135deg, var(--bsky-primary), var(--bsky-accent))' }}></div>
         )}
       </div>
 
       {/* Profile Info */}
-      <div className="bg-gray-900 px-6 pb-6">
+      <div className="px-6 pb-6" style={{ backgroundColor: 'var(--bsky-bg-secondary)' }}>
         <div className="flex justify-between items-start -mt-16 mb-4">
           {/* Avatar */}
           <div className="relative">
@@ -68,17 +68,18 @@ export const Profile: React.FC = () => {
               <img 
                 src={profile.avatar} 
                 alt={profile.handle}
-                className="w-32 h-32 rounded-full border-4 border-gray-900"
+                className="w-32 h-32 rounded-full border-4"
+                style={{ borderColor: 'var(--bsky-bg-secondary)' }}
               />
             ) : (
-              <div className="w-32 h-32 rounded-full border-4 border-gray-900 bg-gray-700 flex items-center justify-center text-3xl font-bold">
+              <div className="w-32 h-32 rounded-full border-4 flex items-center justify-center text-3xl font-bold" style={{ borderColor: 'var(--bsky-bg-secondary)', backgroundColor: 'var(--bsky-bg-hover)' }}>
                 {profile.handle.charAt(0).toUpperCase()}
               </div>
             )}
           </div>
 
           {/* Follow Button */}
-          <button className="mt-20 px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors">
+          <button className="mt-20 px-6 py-2 bsky-button-primary rounded-full">
             Follow
           </button>
         </div>
@@ -86,32 +87,32 @@ export const Profile: React.FC = () => {
         {/* Name and Handle */}
         <div className="mb-4">
           <h1 className="text-2xl font-bold">{profile.displayName || profile.handle}</h1>
-          <p className="text-gray-400">@{profile.handle}</p>
+          <p style={{ color: 'var(--bsky-text-secondary)' }}>@{profile.handle}</p>
         </div>
 
         {/* Bio */}
         {profile.description && (
-          <p className="text-gray-300 mb-4 whitespace-pre-wrap">{profile.description}</p>
+          <p className="mb-4 whitespace-pre-wrap" style={{ color: 'var(--bsky-text-primary)' }}>{profile.description}</p>
         )}
 
         {/* Stats */}
         <div className="flex gap-6 mb-4">
           <div>
             <span className="font-bold">{profile.postsCount || 0}</span>
-            <span className="text-gray-400 ml-1">posts</span>
+            <span className="ml-1" style={{ color: 'var(--bsky-text-secondary)' }}>posts</span>
           </div>
           <div>
             <span className="font-bold">{profile.followersCount || 0}</span>
-            <span className="text-gray-400 ml-1">followers</span>
+            <span className="ml-1" style={{ color: 'var(--bsky-text-secondary)' }}>followers</span>
           </div>
           <div>
             <span className="font-bold">{profile.followsCount || 0}</span>
-            <span className="text-gray-400 ml-1">following</span>
+            <span className="ml-1" style={{ color: 'var(--bsky-text-secondary)' }}>following</span>
           </div>
         </div>
 
         {/* Metadata */}
-        <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+        <div className="flex flex-wrap gap-4 text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
           {profile.indexedAt && (
             <div className="flex items-center gap-1">
               <Calendar size={16} />
@@ -124,7 +125,7 @@ export const Profile: React.FC = () => {
       {/* Posts Feed */}
       <div className="p-6">
         <h2 className="text-lg font-semibold mb-4">Recent Posts</h2>
-        <div className="text-center text-gray-400 py-8">
+        <div className="text-center py-8" style={{ color: 'var(--bsky-text-secondary)' }}>
           Posts feed will be implemented here
         </div>
       </div>

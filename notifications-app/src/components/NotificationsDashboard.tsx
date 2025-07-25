@@ -39,10 +39,10 @@ export const NotificationsDashboard: React.FC = () => {
     return (
       <div className="p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-800 rounded w-1/4"></div>
+          <div className="h-8 rounded w-1/4" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-800 rounded-lg"></div>
+              <div key={i} className="h-24 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}></div>
             ))}
           </div>
         </div>
@@ -54,7 +54,7 @@ export const NotificationsDashboard: React.FC = () => {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold mb-2">Notifications Dashboard</h1>
-        <p className="text-gray-400">Monitor your Bluesky activity at a glance</p>
+        <p style={{ color: 'var(--bsky-text-secondary)' }}>Monitor your Bluesky activity at a glance</p>
       </div>
 
       {/* Stats Grid */}
@@ -86,7 +86,7 @@ export const NotificationsDashboard: React.FC = () => {
       </div>
 
       {/* Notification Types */}
-      <div className="bg-gray-800 rounded-lg p-6">
+      <div className="bsky-card p-6">
         <h2 className="text-lg font-semibold mb-4">Notification Breakdown</h2>
         <div className="space-y-3">
           <NotificationTypeBar label="Likes" count={stats?.likes || 0} total={stats?.total || 1} color="pink" />
@@ -98,14 +98,14 @@ export const NotificationsDashboard: React.FC = () => {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-gray-800 rounded-lg p-6">
+      <div className="bsky-card p-6">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <TrendingUp size={20} />
           Recent Activity
         </h2>
         <div className="space-y-3">
           {recentNotifications.map((notification) => (
-            <div key={notification.uri} className="flex items-start gap-3 p-3 bg-gray-700/50 rounded-lg">
+            <div key={notification.uri} className="flex items-start gap-3 p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
               <div className="flex-shrink-0">
                 {notification.author.avatar ? (
                   <img 
@@ -114,7 +114,7 @@ export const NotificationsDashboard: React.FC = () => {
                     className="w-10 h-10 rounded-full"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--bsky-bg-hover)' }}>
                     {notification.author.handle.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -125,7 +125,7 @@ export const NotificationsDashboard: React.FC = () => {
                   {' '}
                   {getNotificationAction(notification.reason)}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs mt-1" style={{ color: 'var(--bsky-text-secondary)' }}>
                   {formatDistanceToNow(new Date(notification.indexedAt), { addSuffix: true })}
                 </p>
               </div>
@@ -145,20 +145,22 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, value, color }) => {
-  const colorClasses = {
-    blue: 'bg-blue-900/20 text-blue-400 border-blue-500/20',
-    yellow: 'bg-yellow-900/20 text-yellow-400 border-yellow-500/20',
-    pink: 'bg-pink-900/20 text-pink-400 border-pink-500/20',
-    green: 'bg-green-900/20 text-green-400 border-green-500/20',
+  const colorStyles = {
+    blue: { backgroundColor: 'rgba(0, 133, 255, 0.1)', color: 'var(--bsky-primary)', borderColor: 'rgba(0, 133, 255, 0.3)' },
+    yellow: { backgroundColor: 'rgba(250, 204, 21, 0.1)', color: '#facc15', borderColor: 'rgba(250, 204, 21, 0.3)' },
+    pink: { backgroundColor: 'rgba(236, 72, 153, 0.1)', color: '#ec4899', borderColor: 'rgba(236, 72, 153, 0.3)' },
+    green: { backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderColor: 'rgba(34, 197, 94, 0.3)' },
   }
 
+  const style = colorStyles[color as keyof typeof colorStyles]
+
   return (
-    <div className={`p-4 rounded-lg border ${colorClasses[color as keyof typeof colorClasses]}`}>
+    <div className="bsky-card p-4" style={{ borderColor: style.borderColor }}>
       <div className="flex items-center justify-between mb-2">
-        <Icon size={24} />
+        <Icon size={24} style={{ color: style.color }} />
         <span className="text-2xl font-bold">{value}</span>
       </div>
-      <p className="text-sm opacity-80">{label}</p>
+      <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>{label}</p>
     </div>
   )
 }
@@ -173,24 +175,27 @@ interface NotificationTypeBarProps {
 const NotificationTypeBar: React.FC<NotificationTypeBarProps> = ({ label, count, total, color }) => {
   const percentage = total > 0 ? (count / total) * 100 : 0
   
-  const colorClasses = {
-    pink: 'bg-pink-500',
-    green: 'bg-green-500',
-    blue: 'bg-blue-500',
-    purple: 'bg-purple-500',
-    indigo: 'bg-indigo-500',
+  const colorStyles = {
+    pink: 'var(--bsky-like)',
+    green: 'var(--bsky-repost)',
+    blue: 'var(--bsky-primary)',
+    purple: 'var(--bsky-accent)',
+    indigo: '#6366f1',
   }
 
   return (
     <div>
       <div className="flex justify-between text-sm mb-1">
         <span>{label}</span>
-        <span className="text-gray-400">{count}</span>
+        <span style={{ color: 'var(--bsky-text-secondary)' }}>{count}</span>
       </div>
-      <div className="w-full bg-gray-700 rounded-full h-2">
+      <div className="w-full rounded-full h-2" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
         <div 
-          className={`h-2 rounded-full transition-all duration-500 ${colorClasses[color as keyof typeof colorClasses]}`}
-          style={{ width: `${percentage}%` }}
+          className="h-2 rounded-full transition-all duration-500"
+          style={{ 
+            width: `${percentage}%`,
+            backgroundColor: colorStyles[color as keyof typeof colorStyles]
+          }}
         />
       </div>
     </div>

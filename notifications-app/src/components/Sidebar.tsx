@@ -31,7 +31,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       {/* Mobile overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 backdrop-blur-sm z-40 lg:hidden"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
           onClick={onClose}
         />
       )}
@@ -47,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           <h2 className="text-lg font-bold bsky-gradient-text">Menu</h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-all"
+            className="p-2 rounded-lg transition-all hover:opacity-70"
           >
             <X size={20} style={{ color: 'var(--bsky-text-secondary)' }} />
           </button>
@@ -62,12 +63,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               className={({ isActive }) => `
                 flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group
                 ${isActive 
-                  ? 'bg-blue-500 text-white shadow-md' 
-                  : 'hover:bg-gray-100'
+                  ? 'text-white shadow-md' 
+                  : 'hover:bg-blue-50'
                 }
               `}
               style={({ isActive }) => ({
-                color: isActive ? 'white' : 'var(--bsky-text-secondary)'
+                color: isActive ? 'white' : 'var(--bsky-text-secondary)',
+                backgroundColor: isActive ? 'var(--bsky-primary)' : 'transparent'
               })}
             >
               <item.icon size={20} className="group-hover:scale-110 transition-transform" />
@@ -85,7 +87,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             href="https://bsky.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 group"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group hover:bg-opacity-10 hover:bg-blue-500"
             style={{ color: 'var(--bsky-text-secondary)' }}
           >
             <ExternalLink size={20} className="group-hover:scale-110 transition-transform" />

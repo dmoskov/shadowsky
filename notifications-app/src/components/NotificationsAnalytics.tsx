@@ -83,8 +83,8 @@ export const NotificationsAnalytics: React.FC = () => {
     return (
       <div className="p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-800 rounded w-1/4"></div>
-          <div className="h-64 bg-gray-800 rounded"></div>
+          <div className="h-8 rounded w-1/4" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}></div>
+          <div className="h-64 rounded" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}></div>
         </div>
       </div>
     )
@@ -99,94 +99,106 @@ export const NotificationsAnalytics: React.FC = () => {
           <BarChart3 className="text-blue-500" />
           Analytics
         </h1>
-        <p className="text-gray-400">Understand your notification patterns</p>
+        <p style={{ color: 'var(--bsky-text-secondary)' }}>Understand your notification patterns</p>
       </div>
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gray-800 rounded-lg p-4">
+        <div className="bsky-card p-4">
           <div className="flex items-center justify-between mb-2">
             <TrendingUp className="text-green-500" size={24} />
             <span className="text-2xl font-bold">{analytics.totalEngagement}</span>
           </div>
-          <p className="text-sm text-gray-400">Total Engagements (7 days)</p>
+          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Total Engagements (7 days)</p>
         </div>
         
-        <div className="bg-gray-800 rounded-lg p-4">
+        <div className="bsky-card p-4">
           <div className="flex items-center justify-between mb-2">
             <Users className="text-blue-500" size={24} />
             <span className="text-2xl font-bold">{analytics.uniqueUsers}</span>
           </div>
-          <p className="text-sm text-gray-400">Unique Users</p>
+          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Unique Users</p>
         </div>
         
-        <div className="bg-gray-800 rounded-lg p-4">
+        <div className="bsky-card p-4">
           <div className="flex items-center justify-between mb-2">
             <MessageCircle className="text-purple-500" size={24} />
             <span className="text-2xl font-bold">{analytics.averagePerDay.toFixed(1)}</span>
           </div>
-          <p className="text-sm text-gray-400">Average per Day</p>
+          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Average per Day</p>
         </div>
       </div>
 
       {/* Activity Chart */}
-      <div className="bg-gray-800 rounded-lg p-6">
+      <div className="bsky-card p-6">
         <h2 className="text-lg font-semibold mb-4">7-Day Activity</h2>
         <div className="space-y-4">
           {analytics.last7Days.map((day) => (
             <div key={day.label} className="flex items-center gap-4">
-              <span className="text-sm text-gray-400 w-12">{day.label}</span>
+              <span className="text-sm w-12" style={{ color: 'var(--bsky-text-secondary)' }}>{day.label}</span>
               <div className="flex-1 flex gap-1">
                 <div 
-                  className="bg-pink-500 h-6 rounded transition-all duration-500"
-                  style={{ width: `${(day.likes / maxValue) * 100}%` }}
+                  className="h-6 rounded transition-all duration-500"
+                  style={{ 
+                    width: `${(day.likes / maxValue) * 100}%`,
+                    backgroundColor: 'var(--bsky-like)'
+                  }}
                   title={`${day.likes} likes`}
                 />
                 <div 
-                  className="bg-green-500 h-6 rounded transition-all duration-500"
-                  style={{ width: `${(day.reposts / maxValue) * 100}%` }}
+                  className="h-6 rounded transition-all duration-500"
+                  style={{ 
+                    width: `${(day.reposts / maxValue) * 100}%`,
+                    backgroundColor: 'var(--bsky-repost)'
+                  }}
                   title={`${day.reposts} reposts`}
                 />
                 <div 
-                  className="bg-blue-500 h-6 rounded transition-all duration-500"
-                  style={{ width: `${(day.follows / maxValue) * 100}%` }}
+                  className="h-6 rounded transition-all duration-500"
+                  style={{ 
+                    width: `${(day.follows / maxValue) * 100}%`,
+                    backgroundColor: 'var(--bsky-follow)'
+                  }}
                   title={`${day.follows} follows`}
                 />
                 <div 
-                  className="bg-purple-500 h-6 rounded transition-all duration-500"
-                  style={{ width: `${(day.replies / maxValue) * 100}%` }}
+                  className="h-6 rounded transition-all duration-500"
+                  style={{ 
+                    width: `${(day.replies / maxValue) * 100}%`,
+                    backgroundColor: 'var(--bsky-reply)'
+                  }}
                   title={`${day.replies} replies`}
                 />
               </div>
-              <span className="text-sm text-gray-300 w-12 text-right">{day.total}</span>
+              <span className="text-sm w-12 text-right" style={{ color: 'var(--bsky-text-primary)' }}>{day.total}</span>
             </div>
           ))}
         </div>
         
         <div className="flex gap-4 mt-4 text-xs">
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-pink-500 rounded"></div>
-            <span className="text-gray-400">Likes</span>
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--bsky-like)' }}></div>
+            <span style={{ color: 'var(--bsky-text-secondary)' }}>Likes</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-green-500 rounded"></div>
-            <span className="text-gray-400">Reposts</span>
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--bsky-repost)' }}></div>
+            <span style={{ color: 'var(--bsky-text-secondary)' }}>Reposts</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-blue-500 rounded"></div>
-            <span className="text-gray-400">Follows</span>
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--bsky-follow)' }}></div>
+            <span style={{ color: 'var(--bsky-text-secondary)' }}>Follows</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-purple-500 rounded"></div>
-            <span className="text-gray-400">Replies</span>
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--bsky-reply)' }}></div>
+            <span style={{ color: 'var(--bsky-text-secondary)' }}>Replies</span>
           </div>
         </div>
       </div>
 
       {/* Top Users */}
-      <div className="bg-gray-800 rounded-lg p-6">
+      <div className="bsky-card p-6">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Heart className="text-pink-500" size={20} />
+          <Heart style={{ color: 'var(--bsky-like)' }} size={20} />
           Most Active Users
         </h2>
         <div className="space-y-3">
@@ -196,18 +208,25 @@ export const NotificationsAnalytics: React.FC = () => {
                 <img 
                   src={user.avatar} 
                   alt={handle}
-                  className="w-10 h-10 rounded-full"
+                  className="w-10 h-10 rounded-full border-2"
+                  style={{ borderColor: 'var(--bsky-border-primary)' }}
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                <div 
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ 
+                    backgroundColor: 'var(--bsky-bg-tertiary)',
+                    color: 'var(--bsky-text-secondary)'
+                  }}
+                >
                   {handle.charAt(0).toUpperCase()}
                 </div>
               )}
               <div className="flex-1">
-                <p className="text-sm font-medium">{user?.displayName || handle}</p>
-                <p className="text-xs text-gray-400">@{handle}</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>{user?.displayName || handle}</p>
+                <p className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>@{handle}</p>
               </div>
-              <span className="text-sm text-gray-300">{count} interactions</span>
+              <span className="text-sm" style={{ color: 'var(--bsky-text-primary)' }}>{count} interactions</span>
             </div>
           ))}
         </div>

@@ -1,15 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, CheckCheck, Image, Loader } from 'lucide-react'
+import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, CheckCheck, Image, Loader, ChevronUp } from 'lucide-react'
 import { useNotifications, useUnreadCount, useMarkNotificationsRead } from '../hooks/useNotifications'
 import { useNotificationPosts, postHasImages } from '../hooks/useNotificationPosts'
 import { formatDistanceToNow } from 'date-fns'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
+import { aggregateNotifications, AggregatedNotificationItem } from './NotificationAggregator'
 
 type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies' | 'images'
 
 export const NotificationsFeed: React.FC = () => {
   const [filter, setFilter] = useState<NotificationFilter>('all')
   const [showUnreadOnly, setShowUnreadOnly] = useState(false)
+  const [expandedAggregations, setExpandedAggregations] = useState<Set<string>>(new Set())
   const loadMoreRef = useRef<HTMLDivElement>(null)
   
   const { 
@@ -234,95 +236,81 @@ export const NotificationsFeed: React.FC = () => {
             <p className="text-sm mt-2">Check back later for updates</p>
           </div>
         ) : (
-          filteredNotifications.map((notification: Notification) => (
-            <div
-              key={`${notification.uri}-${notification.indexedAt}`}
-              className={`bsky-notification flex gap-3 p-4 cursor-pointer ${
-                !notification.isRead ? 'bsky-notification-unread' : ''
-              }`}
-            >
-              <div className="flex-shrink-0 pt-1">
-                {getNotificationIcon(notification.reason)}
-              </div>
+          filter === 'all' ? (
+            // Show aggregated notifications for "All" tab
+            (() => {
+              const processedNotifications = aggregateNotifications(filteredNotifications)
               
-              <div className="flex gap-3 flex-1">
-                <div className="flex-shrink-0">
-                  {notification.author.avatar ? (
-                    <img 
-                      src={notification.author.avatar} 
-                      alt={notification.author.handle}
-                      className="w-10 h-10 bsky-avatar"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 bsky-avatar flex items-center justify-center" style={{ background: 'var(--bsky-bg-tertiary)' }}>
-                      <span className="text-sm font-semibold">{notification.author.handle.charAt(0).toUpperCase()}</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm">
-                    <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-                      {notification.author.displayName || notification.author.handle}
-                    </span>
-                    {' '}
-                    <span style={{ color: 'var(--bsky-text-secondary)' }}>
-                      {getNotificationText(notification.reason)}
-                    </span>
-                  </p>
-                  {notification.record && typeof notification.record === 'object' && 'text' in notification.record && (
-                    <p className="text-sm mt-1 line-clamp-2" style={{ color: 'var(--bsky-text-secondary)' }}>
-                      {(notification.record as { text?: string }).text}
-                    </p>
-                  )}
-                  {/* Display images if present */}
-                  {(() => {
-                    // Get the post for this notification if it's about a post
-                    const post = ['like', 'repost', 'reply', 'quote'].includes(notification.reason) 
-                      ? postMap.get(notification.uri) 
-                      : undefined
-                    
-                    if (!post?.embed) return null
-                    
-                    let images: Array<{ thumb: string; fullsize: string; alt?: string }> = []
-                    
-                    // Extract images from different embed types
-                    if (post.embed.$type === 'app.bsky.embed.images#view' && post.embed.images) {
-                      images = post.embed.images
-                    } else if (
-                      post.embed.$type === 'app.bsky.embed.recordWithMedia#view' && 
-                      post.embed.media?.$type === 'app.bsky.embed.images#view' &&
-                      post.embed.media.images
-                    ) {
-                      images = post.embed.media.images
-                    }
-                    
-                    if (images.length === 0) return null
-                    
-                    return (
-                      <div className="mt-2">
-                        <div className="grid grid-cols-2 gap-2 max-w-sm">
-                          {images.slice(0, 4).map((img, idx) => (
-                            <img 
-                              key={idx}
-                              src={img.thumb}
-                              alt={img.alt || ''}
-                              className="rounded-lg object-cover w-full h-24 border" 
-                              style={{ borderColor: 'var(--bsky-border-primary)' }}
-                              loading="lazy"
+              return processedNotifications.map((item, index) => {
+                if (item.type === 'aggregated') {
+                  const aggregationKey = `${item.reason}-${item.latestTimestamp}-${index}`
+                  const isExpanded = expandedAggregations.has(aggregationKey)
+                  
+                  return (
+                    <div key={aggregationKey}>
+                      <AggregatedNotificationItem
+                        item={item}
+                        onExpand={() => {
+                          const newExpanded = new Set(expandedAggregations)
+                          if (isExpanded) {
+                            newExpanded.delete(aggregationKey)
+                          } else {
+                            newExpanded.add(aggregationKey)
+                          }
+                          setExpandedAggregations(newExpanded)
+                        }}
+                      />
+                      
+                      {/* Show individual notifications when expanded */}
+                      {isExpanded && (
+                        <div className="ml-12 border-l-2" style={{ borderColor: 'var(--bsky-border-secondary)' }}>
+                          {item.notifications.map(notification => (
+                            <NotificationItem 
+                              key={`${notification.uri}-${notification.indexedAt}`}
+                              notification={notification}
+                              postMap={postMap}
+                              getNotificationIcon={getNotificationIcon}
                             />
                           ))}
+                          <button
+                            onClick={() => {
+                              const newExpanded = new Set(expandedAggregations)
+                              newExpanded.delete(aggregationKey)
+                              setExpandedAggregations(newExpanded)
+                            }}
+                            className="p-2 text-xs flex items-center gap-1 hover:opacity-80"
+                            style={{ color: 'var(--bsky-text-secondary)' }}
+                          >
+                            <ChevronUp size={14} />
+                            Collapse
+                          </button>
                         </div>
-                      </div>
-                    )
-                  })()}
-                  <time className="text-xs mt-1 block" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                    {formatDistanceToNow(new Date(notification.indexedAt), { addSuffix: true })}
-                  </time>
-                </div>
-              </div>
-            </div>
-          ))
+                      )}
+                    </div>
+                  )
+                } else {
+                  return (
+                    <NotificationItem 
+                      key={`${item.notification.uri}-${item.notification.indexedAt}`}
+                      notification={item.notification}
+                      postMap={postMap}
+                      getNotificationIcon={getNotificationIcon}
+                    />
+                  )
+                }
+              })
+            })()
+          ) : (
+            // Show regular notifications for filtered views
+            filteredNotifications.map((notification: Notification) => (
+              <NotificationItem 
+                key={`${notification.uri}-${notification.indexedAt}`}
+                notification={notification}
+                postMap={postMap}
+                getNotificationIcon={getNotificationIcon}
+              />
+            ))
+          )
         )}
         
         {/* Loading more indicator */}
@@ -390,4 +378,101 @@ function getNotificationText(reason: string): string {
     case 'quote': return 'quoted your post'
     default: return 'interacted with your post'
   }
+}
+
+interface NotificationItemProps {
+  notification: Notification
+  postMap: Map<string, any>
+  getNotificationIcon: (reason: string) => React.ReactNode
+}
+
+const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postMap, getNotificationIcon }) => {
+  return (
+    <div
+      className={`bsky-notification flex gap-3 p-4 cursor-pointer ${
+        !notification.isRead ? 'bsky-notification-unread' : ''
+      }`}
+    >
+      <div className="flex-shrink-0 pt-1">
+        {getNotificationIcon(notification.reason)}
+      </div>
+      
+      <div className="flex gap-3 flex-1">
+        <div className="flex-shrink-0">
+          {notification.author.avatar ? (
+            <img 
+              src={notification.author.avatar} 
+              alt={notification.author.handle}
+              className="w-10 h-10 bsky-avatar"
+            />
+          ) : (
+            <div className="w-10 h-10 bsky-avatar flex items-center justify-center" style={{ background: 'var(--bsky-bg-tertiary)' }}>
+              <span className="text-sm font-semibold">{notification.author.handle.charAt(0).toUpperCase()}</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <p className="text-sm">
+            <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+              {notification.author.displayName || notification.author.handle}
+            </span>
+            {' '}
+            <span style={{ color: 'var(--bsky-text-secondary)' }}>
+              {getNotificationText(notification.reason)}
+            </span>
+          </p>
+          {notification.record && typeof notification.record === 'object' && 'text' in notification.record && (
+            <p className="text-sm mt-1 line-clamp-2" style={{ color: 'var(--bsky-text-secondary)' }}>
+              {(notification.record as { text?: string }).text}
+            </p>
+          )}
+          {/* Display images if present */}
+          {(() => {
+            // Get the post for this notification if it's about a post
+            const post = ['like', 'repost', 'reply', 'quote'].includes(notification.reason) 
+              ? postMap.get(notification.uri) 
+              : undefined
+            
+            if (!post?.embed) return null
+            
+            let images: Array<{ thumb: string; fullsize: string; alt?: string }> = []
+            
+            // Extract images from different embed types
+            if (post.embed.$type === 'app.bsky.embed.images#view' && post.embed.images) {
+              images = post.embed.images
+            } else if (
+              post.embed.$type === 'app.bsky.embed.recordWithMedia#view' && 
+              post.embed.media?.$type === 'app.bsky.embed.images#view' &&
+              post.embed.media.images
+            ) {
+              images = post.embed.media.images
+            }
+            
+            if (images.length === 0) return null
+            
+            return (
+              <div className="mt-2">
+                <div className="grid grid-cols-2 gap-2 max-w-sm">
+                  {images.slice(0, 4).map((img, idx) => (
+                    <img 
+                      key={idx}
+                      src={img.thumb}
+                      alt={img.alt || ''}
+                      className="rounded-lg object-cover w-full h-24 border" 
+                      style={{ borderColor: 'var(--bsky-border-primary)' }}
+                      loading="lazy"
+                    />
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+          <time className="text-xs mt-1 block" style={{ color: 'var(--bsky-text-tertiary)' }}>
+            {formatDistanceToNow(new Date(notification.indexedAt), { addSuffix: true })}
+          </time>
+        </div>
+      </div>
+    </div>
+  )
 }
