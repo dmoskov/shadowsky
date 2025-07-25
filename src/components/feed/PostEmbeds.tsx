@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'lucide-react';
-import type { Post } from '@bsky/shared/types/atproto';
+import type { Post } from '@bsky/shared';
 import { hasQuoteEmbed, hasImageEmbed, hasExternalEmbed, getExternalEmbed, getImageEmbed, getQuoteEmbed } from '../../utils/post-helpers';
 
 interface PostEmbedsProps {

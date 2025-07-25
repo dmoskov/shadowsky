@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { atProtoClient, ATProtoClient } from '../services/atproto'
-import type { Session } from '../types/atproto'
-import { SessionExpiredError, AuthenticationError, NetworkError } from '../lib/errors'
-import { queryClient } from '../lib/query-client'
+import type { Session } from '@bsky/shared'
+import { SessionExpiredError, AuthenticationError, NetworkError } from '@bsky/shared'
+import { queryClient } from '@bsky/shared'
 import type { BskyAgent } from '@atproto/api'
 
 interface AuthContextType {

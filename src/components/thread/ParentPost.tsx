@@ -1,5 +1,5 @@
 import React from 'react'
-import type { Post } from '@bsky/shared/types/atproto'
+import type { Post } from '@bsky/shared'
 import { getPostText, formatPostTime } from '../../utils/post-helpers'
 
 interface ParentPostProps {

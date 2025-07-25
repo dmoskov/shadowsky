@@ -86,7 +86,9 @@ class ErrorTracker {
       // Limit stored errors
       if (this.errors.size > this.MAX_ERRORS) {
         const firstKey = this.errors.keys().next().value;
-        this.errors.delete(firstKey);
+        if (firstKey) {
+          this.errors.delete(firstKey);
+        }
       }
     }
 
@@ -326,7 +328,8 @@ export const clearErrors = () => errorTracker.clearErrors();
 export const getErrorCount = (category?: ErrorCategory) => errorTracker.getErrorCount(category);
 
 // Make error tracker available globally in development
-if (import.meta.env.DEV) {
+// @ts-ignore - import.meta.env is provided by Vite
+if (typeof window !== 'undefined' && import.meta.env?.DEV) {
   (window as any).errorTracker = {
     summary: getErrorSummary,
     clear: clearErrors,

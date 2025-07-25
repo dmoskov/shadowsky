@@ -6,7 +6,7 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { useTimeline, useAuthorFeed } from '../useTimeline'
 import { AllTheProviders, createMockFeedItem } from '../../test/utils'
-import type { TimelineResponse } from '@bsky/shared/types/atproto'
+import type { TimelineResponse } from '@bsky/shared'
 
 // Mock the service module
 jest.mock('../../services/atproto', () => ({

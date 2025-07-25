@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Heart, MessageCircle, Repeat2, Share } from 'lucide-react';
 import clsx from 'clsx';
-import type { Post } from '@bsky/shared/types/atproto';
+import type { Post } from '@bsky/shared';
 import { Tooltip } from '../ui/Tooltip';
 
 interface PostEngagementBarProps {

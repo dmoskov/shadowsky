@@ -11,7 +11,7 @@ import {
   Heart
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import type { NetworkMetrics } from '../../services/atproto/analytics'
+import type { NetworkMetrics } from '@bsky/shared'
 
 interface Props {
   metrics: NetworkMetrics

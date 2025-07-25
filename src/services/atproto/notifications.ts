@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
-import { mapATProtoError } from '@bsky/shared/lib/errors'
-import { rateLimiters, withRateLimit } from '@bsky/shared/lib/rate-limiter'
+import { mapATProtoError } from '@bsky/shared'
+import { rateLimiters, withRateLimit } from '@bsky/shared'
 
 export class NotificationService {
   constructor(private agent: AtpAgent) {}

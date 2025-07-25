@@ -140,11 +140,15 @@ export class AnalyticsService {
     
     // Calculate average engagement per post
     const avgEngagementPerPost = posts.length > 0 ? totalEngagement / posts.length : 0
+    const postsCount = posts.length || 1 // Prevent division by zero
 
     return {
       ...totals,
       totalEngagement,
-      engagementRate: Math.round(avgEngagementPerPost * 10) / 10
+      engagementRate: Math.round(avgEngagementPerPost * 10) / 10,
+      avgLikesPerPost: Math.round((totals.likes / postsCount) * 10) / 10,
+      avgRepostsPerPost: Math.round((totals.reposts / postsCount) * 10) / 10,
+      avgRepliesPerPost: Math.round((totals.replies / postsCount) * 10) / 10
     }
   }
 
@@ -162,12 +166,15 @@ export class AnalyticsService {
       totalLength += text.length
 
       // Count media
-      if (post.embed?.images || post.embed?.media) {
+      if (post.embed && (
+        (post.embed.$type === 'app.bsky.embed.images#view' && 'images' in post.embed) ||
+        (post.embed.$type === 'app.bsky.embed.video#view')
+      )) {
         postsWithMedia++
       }
 
       // Count external links
-      if (post.embed?.external) {
+      if (post.embed && post.embed.$type === 'app.bsky.embed.external#view' && 'external' in post.embed) {
         postsWithLinks++
       }
 
@@ -177,13 +184,13 @@ export class AnalyticsService {
       }
 
       // Count quotes
-      if (post.embed?.record) {
+      if (post.embed && (post.embed.$type === 'app.bsky.embed.record#view' || post.embed.$type === 'app.bsky.embed.recordWithMedia#view')) {
         quotes++
       }
 
       // Extract hashtags
       const hashtags = text.match(/#[\w]+/g) || []
-      hashtags.forEach(tag => {
+      hashtags.forEach((tag: string) => {
         const normalized = tag.toLowerCase()
         hashtagCounts.set(normalized, (hashtagCounts.get(normalized) || 0) + 1)
       })
@@ -318,7 +325,8 @@ export class AnalyticsService {
     })
 
     // Get top engagers
-    const topEngagers = Array.from(engagers.values())
+    const topEngagers = Array.from(engagers.entries())
+      .map(([did, data]) => ({ did, ...data }))
       .sort((a, b) => b.interactions - a.interactions)
       .slice(0, 20)
 
@@ -342,8 +350,9 @@ export class AnalyticsService {
       depth: 3
     })
 
-    if (!response.data.thread.post) {
-      throw new Error('Post not found')
+    const thread = response.data.thread
+    if (!thread || thread.$type === 'app.bsky.feed.defs#notFoundPost' || thread.$type === 'app.bsky.feed.defs#blockedPost') {
+      throw new Error('Post not found or blocked')
     }
 
     return response.data.thread

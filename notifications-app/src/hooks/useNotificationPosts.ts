@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
-import type { Post } from '../types/atproto'
+import type { Post } from '@bsky/shared'
 
 /**
  * Hook to fetch posts referenced in notifications

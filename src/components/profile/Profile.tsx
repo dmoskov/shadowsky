@@ -19,7 +19,7 @@ import { useProfile, useAuthorFeed, useFollowUser } from '../../hooks/useProfile
 import { PostCard } from '../feed/PostCard'
 import { ComposeModal } from '../modals/ComposeModal'
 import { FollowersModal } from '../modals/FollowersModal'
-import type { Post } from '@bsky/shared/types/atproto'
+import type { Post } from '@bsky/shared'
 
 type TabType = 'posts' | 'replies' | 'media' | 'likes'
 

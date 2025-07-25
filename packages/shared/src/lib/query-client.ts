@@ -18,13 +18,12 @@ export const queryClient = new QueryClient({
         if (err?.status && err.status >= 400 && err.status < 500) {
           return false
         }
-        // Retry up to 3 times with exponential backoff
-        if (failureCount < 3) {
-          // Wait 1s, 2s, 4s between retries
-          const delay = Math.min(1000 * Math.pow(2, failureCount), 4000)
-          return new Promise(resolve => setTimeout(resolve, delay)).then(() => true)
-        }
-        return false
+        // Retry up to 3 times
+        return failureCount < 3
+      },
+      retryDelay: (failureCount) => {
+        // Wait 1s, 2s, 4s between retries
+        return Math.min(1000 * Math.pow(2, failureCount), 4000)
       },
       // Prevent refetching on window focus
       refetchOnWindowFocus: false,

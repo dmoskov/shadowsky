@@ -35,7 +35,7 @@ class PerformanceTracker {
 
   constructor() {
     // Only initialize web vitals in browser environment
-    if (typeof window !== 'undefined' && typeof performance !== 'undefined' && performance.getEntriesByType) {
+    if (typeof window !== 'undefined' && typeof performance !== 'undefined' && 'getEntriesByType' in performance) {
       this.initializeWebVitals();
       this.trackNavigationTiming();
     }
@@ -136,7 +136,7 @@ class PerformanceTracker {
   /**
    * Log performance hints for poor metrics
    */
-  private logPerformanceHint(metricName: string, value: number): void {
+  private logPerformanceHint(metricName: string, _value: number): void {
     const hints: Record<string, string> = {
       LCP: '💡 Hint: Large images or slow server response may be causing delays. Consider optimizing images and using CDN.',
       CLS: '💡 Hint: Elements shifting during load. Ensure images have dimensions and fonts are preloaded.',

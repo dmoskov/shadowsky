@@ -2,7 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { TrendingUp, Activity, HelpCircle } from 'lucide-react'
 import { Tooltip } from '../ui/Tooltip'
-import type { NetworkMetrics } from '../../services/atproto/analytics'
+import type { NetworkMetrics } from '@bsky/shared'
 
 interface Props {
   metrics: NetworkMetrics

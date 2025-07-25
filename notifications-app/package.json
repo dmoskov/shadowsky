@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@atproto/api": "^0.13.14",
+    "@bsky/shared": "file:../packages/shared",
     "@tanstack/react-query": "^5.0.0",
     "date-fns": "^3.0.0",
     "framer-motion": "^10.16.4",

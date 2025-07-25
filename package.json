@@ -22,6 +22,7 @@
     "@atproto/api": "^0.15.13",
     "@atproto/lexicon": "^0.4.11",
     "@atproto/xrpc": "^0.7.0",
+    "@bsky/shared": "file:./packages/shared",
     "@tanstack/react-query": "^5.80.6",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

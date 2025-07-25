@@ -7,9 +7,11 @@ import {
   FeedService,
   AnalyticsService,
   type ATProtoConfig
-} from '@bsky/shared/services/atproto'
-import { getInteractionsService } from '@bsky/shared/services/atproto/interactions'
-import { getThreadService } from '@bsky/shared/services/atproto/thread'
+} from '@bsky/shared'
+import { getInteractionsService } from '@bsky/shared'
+import { getThreadService } from '@bsky/shared'
+import { getProfileService } from '@bsky/shared'
+import { getSearchService } from '@bsky/shared'
 
 // Create singleton instances
 export const atProtoClient = new ATProtoClient({
@@ -28,5 +30,7 @@ export {
   AnalyticsService,
   type ATProtoConfig,
   getInteractionsService,
-  getThreadService
+  getThreadService,
+  getProfileService,
+  getSearchService
 }

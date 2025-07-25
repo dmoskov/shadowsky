@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import type { ReactNode } from 'react'
-import { atProtoClient, ATProtoClient } from '@bsky/shared/services/atproto'
-import type { Session } from '@bsky/shared/types/atproto'
-import { SessionExpiredError, AuthenticationError, NetworkError } from '@bsky/shared/lib/errors'
-import { queryClient } from '@bsky/shared/lib/query-client'
+import { ATProtoClient } from '@bsky/shared'
+import type { Session } from '@bsky/shared'
+import { SessionExpiredError, AuthenticationError, NetworkError } from '@bsky/shared'
+import { queryClient } from '@bsky/shared'
 
 interface AuthContextType {
   isAuthenticated: boolean
@@ -28,6 +28,9 @@ export const useAuth = () => {
 interface AuthProviderProps {
   children: ReactNode
 }
+
+// Create a singleton instance of the AT Protocol client
+const atProtoClient = new ATProtoClient()
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)

@@ -5,7 +5,7 @@ import { ComposeModal } from '../modals/ComposeModal'
 import { SkeletonPost } from '../ui/SkeletonLoaders'
 import { EmptyFeed } from '../ui/EmptyStates'
 import { FeedError } from '../ui/ErrorStates'
-import type { Post } from '@bsky/shared/types/atproto'
+import type { Post } from '@bsky/shared'
 
 interface FeedProps {
   onViewThread?: (uri: string) => void

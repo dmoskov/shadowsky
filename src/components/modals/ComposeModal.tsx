@@ -2,10 +2,10 @@ import React, { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { X, Send, Image, AtSign, Hash, Loader2 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { getInteractionsService } from '@bsky/shared/services/atproto'
+import { getInteractionsService } from '@bsky/shared'
 import { useAuth } from '../../contexts/AuthContext'
 import { useErrorHandler } from '../../hooks/useErrorHandler'
-import type { Post } from '@bsky/shared/types/atproto'
+import type { Post } from '@bsky/shared'
 
 interface ComposeModalProps {
   isOpen: boolean

@@ -5,7 +5,7 @@ import clsx from 'clsx'
 import { PostCardNative } from '../feed/PostCardNative'
 import { ErrorBoundary } from '../core/ErrorBoundary'
 import { ThreadService } from '../../services/atproto/thread'
-import type { Post, FeedItem } from '@bsky/shared/types/atproto'
+import type { Post, FeedItem } from '@bsky/shared'
 import type { ThreadViewPost } from '../../services/atproto/thread'
 import type { AppBskyFeedDefs } from '@atproto/api'
 

@@ -14,9 +14,9 @@ import {
   isRateLimitError,
   isAuthenticationError,
   isSessionExpiredError
-} from '@bsky/shared/lib/errors'
-import { trackError } from '@bsky/shared/lib/error-tracking'
-import type { ErrorCategory } from '@bsky/shared/lib/error-tracking'
+} from '@bsky/shared'
+import { trackError } from '@bsky/shared'
+import type { ErrorCategory } from '@bsky/shared'
 
 interface ErrorHandlerOptions {
   onRateLimit?: (resetAt: Date) => void

@@ -5,7 +5,7 @@ import type {
   EngagementQualityScore as EngagementQuality,
   NetworkMetrics,
   TemporalPattern
-} from './analytics'
+} from '@bsky/shared'
 import type { AppBskyActorDefs, AppBskyFeedDefs } from '@atproto/api'
 
 export interface AnalyticsData {

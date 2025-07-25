@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Lightbulb, TrendingUp, Users, MessageSquare } from 'lucide-react'
-import type { NetworkMetrics } from '../../services/atproto/analytics'
+import type { NetworkMetrics } from '@bsky/shared'
 
 interface Props {
   metrics: NetworkMetrics

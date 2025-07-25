@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import type { TemporalPattern } from '../../services/atproto/analytics'
+import type { TemporalPattern } from '@bsky/shared'
 
 interface Props {
   patterns: TemporalPattern[]

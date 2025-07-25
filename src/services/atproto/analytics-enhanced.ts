@@ -9,7 +9,7 @@ import type {
   TemporalPattern,
   NetworkMetrics,
   EngagementQualityScore
-} from './analytics'
+} from '@bsky/shared'
 
 export class EnhancedAnalyticsService {
   constructor(private agent: BskyAgent) {}

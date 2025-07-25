@@ -5,9 +5,9 @@
 
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { AuthProvider, useAuth } from '../AuthContext'
-import { atProtoClient, ATProtoClient } from '@bsky/shared/services/atproto'
-import type { Session } from '@bsky/shared/types/atproto'
-import { SessionExpiredError, AuthenticationError, NetworkError } from '@bsky/shared/lib/errors'
+import { atProtoClient, ATProtoClient } from '@bsky/shared'
+import type { Session } from '@bsky/shared'
+import { SessionExpiredError, AuthenticationError, NetworkError } from '@bsky/shared'
 
 // Mock the atproto client module
 jest.mock('../../services/atproto', () => ({

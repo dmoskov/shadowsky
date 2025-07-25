@@ -31,7 +31,7 @@ import { TailwindTest } from './components/TailwindTest'
 import { LoadingScreen } from './components/ui/LoadingScreen'
 import { WelcomeScreen } from './components/ui/WelcomeScreen'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
-import { queryClient } from './lib/query-client'
+import { queryClient } from '@bsky/shared'
 import { PenSquare } from 'lucide-react'
 import './App.css'
 

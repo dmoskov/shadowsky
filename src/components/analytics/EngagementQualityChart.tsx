@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { HelpCircle } from 'lucide-react'
-import type { EngagementQualityScore } from '../../services/atproto/analytics'
+import type { EngagementQualityScore } from '@bsky/shared'
 import { Tooltip } from '../ui/Tooltip'
 
 interface Props {

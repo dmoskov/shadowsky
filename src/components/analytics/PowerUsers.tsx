@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { MessageCircle, Repeat, Heart, Star } from 'lucide-react'
-import type { NetworkMetrics } from '../../services/atproto/analytics'
+import type { NetworkMetrics } from '@bsky/shared'
 
 interface Props {
   topEngagers: NetworkMetrics['topEngagers']

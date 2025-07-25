@@ -13,7 +13,7 @@ import {
 import { useSearchActors, useSearchPosts, useSearchTypeahead } from '../../hooks/useSearch'
 import { PostCard } from '../feed/PostCard'
 import { ComposeModal } from '../modals/ComposeModal'
-import type { Post } from '@bsky/shared/types/atproto'
+import type { Post } from '@bsky/shared'
 import type { ProfileView } from '@atproto/api/dist/client/types/app/bsky/actor/defs'
 
 type SearchTab = 'posts' | 'users'

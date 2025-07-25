@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { ATProtoError, RateLimitError, AuthenticationError } from '@bsky/shared/lib/errors'
-import { performanceTracker } from '@bsky/shared/lib/performance-tracking'
+import { ATProtoError, RateLimitError, AuthenticationError } from '@bsky/shared'
+import { performanceTracker } from '@bsky/shared'
 
 export const Login: React.FC = () => {
   const [identifier, setIdentifier] = useState('')

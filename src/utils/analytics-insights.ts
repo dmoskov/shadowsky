@@ -1,4 +1,4 @@
-import type { TemporalPattern } from '../services/atproto/analytics'
+import type { TemporalPattern } from '@bsky/shared'
 
 export function generateInsights(data: {
   temporalPatterns: TemporalPattern[]

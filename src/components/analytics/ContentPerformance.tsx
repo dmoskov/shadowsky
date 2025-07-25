@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Heart, MessageSquare, Repeat, Quote, TrendingUp } from 'lucide-react'
 import type { AppBskyFeedDefs } from '@atproto/api'
-import type { ContentAnalysis } from '../../services/atproto/analytics'
+import type { ContentAnalysis } from '@bsky/shared'
 import { formatNumber, formatRelativeTime } from '../../utils/format-helpers'
 
 interface Props {
