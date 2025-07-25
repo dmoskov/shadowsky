@@ -236,8 +236,8 @@ export const NotificationsFeed: React.FC = () => {
             <p className="text-sm mt-2">Check back later for updates</p>
           </div>
         ) : (
-          filter === 'all' ? (
-            // Show aggregated notifications for "All" tab
+          ['all', 'likes', 'reposts', 'follows'].includes(filter) ? (
+            // Show aggregated notifications for tabs that support aggregation
             (() => {
               const processedNotifications = aggregateNotifications(filteredNotifications)
               
@@ -301,7 +301,7 @@ export const NotificationsFeed: React.FC = () => {
               })
             })()
           ) : (
-            // Show regular notifications for filtered views
+            // Show regular notifications for mentions, replies, and images tabs (no aggregation)
             filteredNotifications.map((notification: Notification) => (
               <NotificationItem 
                 key={`${notification.uri}-${notification.indexedAt}`}

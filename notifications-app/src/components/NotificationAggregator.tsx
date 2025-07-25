@@ -26,15 +26,19 @@ type ProcessedNotification = AggregatedNotification | SingleNotification
 
 export function aggregateNotifications(notifications: Notification[]): ProcessedNotification[] {
   const processed: ProcessedNotification[] = []
-  const aggregationWindow = 4 * 60 * 60 * 1000 // 4 hours in milliseconds
+  const aggregationWindow = 24 * 60 * 60 * 1000 // 24 hours in milliseconds for better grouping
   
-  // Group notifications by reason and time window
+  // Group notifications by reason and URI (for post-specific grouping)
   const groups = new Map<string, Notification[]>()
   
   notifications.forEach(notification => {
     // Only aggregate certain types
     if (['like', 'repost', 'follow'].includes(notification.reason)) {
-      const key = `${notification.reason}-${notification.uri || 'no-uri'}`
+      // For follows, group all together. For likes/reposts, group by post URI
+      const key = notification.reason === 'follow' 
+        ? 'follow-all'
+        : `${notification.reason}-${notification.uri || 'no-uri'}`
+      
       if (!groups.has(key)) {
         groups.set(key, [])
       }
@@ -49,13 +53,16 @@ export function aggregateNotifications(notifications: Notification[]): Processed
   groups.forEach((groupNotifications, key) => {
     const [reason] = key.split('-')
     
-    // Sort by timestamp
+    // Sort by timestamp (newest first)
     groupNotifications.sort((a, b) => 
       new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime()
     )
     
+    // Different thresholds for different notification types
+    const minAggregationCount = reason === 'follow' ? 2 : 3
+    
     // Check if we should aggregate
-    if (groupNotifications.length >= 3) {
+    if (groupNotifications.length >= minAggregationCount) {
       // Find time clusters
       const clusters: Notification[][] = []
       let currentCluster: Notification[] = [groupNotifications[0]]
@@ -67,7 +74,8 @@ export function aggregateNotifications(notifications: Notification[]): Processed
         if (timeDiff <= aggregationWindow) {
           currentCluster.push(groupNotifications[i])
         } else {
-          if (currentCluster.length >= 3) {
+          // Process current cluster
+          if (currentCluster.length >= minAggregationCount) {
             clusters.push(currentCluster)
           } else {
             // Add as individual notifications
@@ -78,7 +86,7 @@ export function aggregateNotifications(notifications: Notification[]): Processed
       }
       
       // Handle last cluster
-      if (currentCluster.length >= 3) {
+      if (currentCluster.length >= minAggregationCount) {
         clusters.push(currentCluster)
       } else {
         currentCluster.forEach(n => processed.push({ type: 'single', notification: n }))
@@ -144,10 +152,14 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
   
   const getActionText = () => {
     switch (item.reason) {
-      case 'like': return 'liked your post'
-      case 'repost': return 'reposted your post'
-      case 'follow': return item.count === 1 ? 'followed you' : 'new followers'
-      default: return 'interacted with your post'
+      case 'like': 
+        return item.count === 1 ? 'liked your post' : `recent likes on your post`
+      case 'repost': 
+        return item.count === 1 ? 'reposted your post' : `reposts of your post`
+      case 'follow': 
+        return item.count === 1 ? 'followed you' : 'new followers'
+      default: 
+        return 'interacted with your post'
     }
   }
   
