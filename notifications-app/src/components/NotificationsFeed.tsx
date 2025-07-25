@@ -1,17 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, CheckCheck, Image, Loader, ChevronUp } from 'lucide-react'
+import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, CheckCheck, Image, Loader, ChevronUp, Crown, Settings } from 'lucide-react'
 import { useNotifications, useUnreadCount, useMarkNotificationsRead } from '../hooks/useNotifications'
 import { useNotificationPosts, postHasImages } from '../hooks/useNotificationPosts'
 import { formatDistanceToNow } from 'date-fns'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { aggregateNotifications, AggregatedNotificationItem } from './NotificationAggregator'
+import { TopAccountsView } from './TopAccountsView'
 
-type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies' | 'quotes' | 'images'
+type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies' | 'quotes' | 'images' | 'top-accounts'
 
 export const NotificationsFeed: React.FC = () => {
   const [filter, setFilter] = useState<NotificationFilter>('all')
   const [showUnreadOnly, setShowUnreadOnly] = useState(false)
   const [expandedAggregations, setExpandedAggregations] = useState<Set<string>>(new Set())
+  const [minFollowerCount, setMinFollowerCount] = useState(10000)
+  const [showConfigModal, setShowConfigModal] = useState(false)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   
   const { 
@@ -231,12 +234,24 @@ export const NotificationsFeed: React.FC = () => {
             icon={<Image size={16} />}
             label="Images"
           />
+          <FilterTab
+            active={filter === 'top-accounts'}
+            onClick={() => setFilter('top-accounts')}
+            icon={<Crown size={16} />}
+            label="Top Accounts"
+          />
         </div>
       </div>
 
       {/* Notifications list */}
       <div>
-        {filteredNotifications.length === 0 ? (
+        {filter === 'top-accounts' ? (
+          <TopAccountsView 
+            notifications={notifications} 
+            minFollowerCount={minFollowerCount}
+            onConfigClick={() => setShowConfigModal(true)}
+          />
+        ) : filteredNotifications.length === 0 ? (
           <div className="p-12 text-center" style={{ color: 'var(--bsky-text-tertiary)' }}>
             <div className="text-5xl mb-4 opacity-20">📭</div>
             <p className="text-lg">No notifications to show</p>
@@ -353,6 +368,54 @@ export const NotificationsFeed: React.FC = () => {
           </div>
         )}
       </div>
+      
+      {/* Configuration Modal */}
+      {showConfigModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bsky-card p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--bsky-text-primary)' }}>
+              Top Accounts Settings
+            </h3>
+            
+            <div className="mb-4">
+              <label className="block text-sm mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>
+                Minimum Follower Count
+              </label>
+              <input
+                type="number"
+                value={minFollowerCount}
+                onChange={(e) => setMinFollowerCount(Number(e.target.value))}
+                className="w-full px-3 py-2 rounded bsky-input"
+                style={{ 
+                  backgroundColor: 'var(--bsky-bg-secondary)',
+                  border: '1px solid var(--bsky-border-primary)',
+                  color: 'var(--bsky-text-primary)'
+                }}
+                min="0"
+                step="1000"
+              />
+              <p className="text-xs mt-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                Show accounts with at least this many followers
+              </p>
+            </div>
+            
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setShowConfigModal(false)}
+                className="bsky-button-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => setShowConfigModal(false)}
+                className="bsky-button-primary"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

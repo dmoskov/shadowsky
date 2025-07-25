@@ -215,7 +215,7 @@ export const VisualTimeline: React.FC = () => {
                       </div>
 
                       {/* Actor avatars */}
-                      <div className="flex -space-x-2">
+                      <div className="flex -space-x-2 avatar-stack">
                         {event.notifications.slice(0, 8).map((notif, i) => (
                           <img 
                             key={`${notif.uri}-${i}`}
@@ -251,7 +251,7 @@ export const VisualTimeline: React.FC = () => {
               {/* Visual gap indicator for large time gaps */}
               {previousEvent && differenceInHours(previousEvent.time, event.time) >= 6 && (
                 <div 
-                  className="absolute left-12 -top-8 text-xs px-2 py-1 rounded"
+                  className="absolute left-12 -top-8 text-xs px-2 py-1 rounded timeline-gap-indicator"
                   style={{ 
                     backgroundColor: 'var(--bsky-bg-tertiary)',
                     color: 'var(--bsky-text-secondary)',
