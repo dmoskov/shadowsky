@@ -11,7 +11,7 @@ export const NotificationsDashboard: React.FC = () => {
     queryKey: ['notifications-summary'],
     queryFn: async () => {
       if (!agent) throw new Error('Not authenticated')
-      const response = await agent.listNotifications({ limit: 50 })
+      const response = await agent.app.bsky.notification.listNotifications({ limit: 50 })
       return response.data
     },
     refetchInterval: 30000 // Refresh every 30 seconds

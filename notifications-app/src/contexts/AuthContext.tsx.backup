@@ -4,7 +4,6 @@ import { atProtoClient, ATProtoClient } from '../services/atproto'
 import type { Session } from '../types/atproto'
 import { SessionExpiredError, AuthenticationError, NetworkError } from '../lib/errors'
 import { queryClient } from '../lib/query-client'
-import type { BskyAgent } from '@atproto/api'
 
 interface AuthContextType {
   isAuthenticated: boolean
@@ -13,7 +12,6 @@ interface AuthContextType {
   logout: () => void
   session: Session | null
   client: ATProtoClient
-  agent: BskyAgent | null
   refreshSession: () => Promise<boolean>
 }
 
@@ -143,7 +141,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       logout, 
       session,
       client: atProtoClient,
-      agent: isAuthenticated ? atProtoClient.agent : null,
       refreshSession
     }}>
       {children}
