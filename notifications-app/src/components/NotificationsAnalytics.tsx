@@ -11,8 +11,40 @@ export const NotificationsAnalytics: React.FC = () => {
     queryKey: ['notifications-analytics'],
     queryFn: async () => {
       if (!agent) throw new Error('Not authenticated')
-      const response = await agent.listNotifications({ limit: 100 })
-      return response.data
+      
+      // Fetch notifications until we have 7 days worth of data
+      const allNotifications: typeof agent.app.bsky.notification.listNotifications._output.notifications = []
+      let cursor: string | undefined
+      const sevenDaysAgo = subDays(new Date(), 7)
+      let hasMoreToFetch = true
+      
+      while (hasMoreToFetch) {
+        const response = await agent.app.bsky.notification.listNotifications({ 
+          limit: 100,
+          cursor 
+        })
+        
+        allNotifications.push(...response.data.notifications)
+        cursor = response.data.cursor
+        
+        // Check if we've fetched notifications older than 7 days or no more cursor
+        const oldestNotification = response.data.notifications[response.data.notifications.length - 1]
+        if (!cursor || (oldestNotification && new Date(oldestNotification.indexedAt) < sevenDaysAgo)) {
+          hasMoreToFetch = false
+        }
+        
+        // Safety limit to prevent infinite loops
+        if (allNotifications.length > 1000) {
+          hasMoreToFetch = false
+        }
+      }
+      
+      // Filter to only include notifications from the last 7 days
+      const filteredNotifications = allNotifications.filter(
+        notif => new Date(notif.indexedAt) >= sevenDaysAgo
+      )
+      
+      return { notifications: filteredNotifications }
     }
   })
 
