@@ -45,6 +45,18 @@ A custom Bluesky client built with React, TypeScript, and Vite that provides a c
   - Error detection and monitoring
   - Git hooks for stability
 
+## Architecture Documentation
+
+**IMPORTANT**: See `ARCHITECTURE.md` for detailed technical architecture documentation. This file provides comprehensive information about:
+- System architecture and data flow
+- Component structure and patterns
+- Security considerations
+- Performance optimization strategies
+- Development guidelines
+- Known issues and future plans
+
+All developers (human and AI) should reference `ARCHITECTURE.md` for technical details.
+
 ## Project Structure
 ```
 BSKY/
@@ -77,6 +89,7 @@ BSKY/
 │   │   ├── thread.css       # Thread UI styles
 │   │   └── ...
 │   └── utils/           # Utility functions (future)
+├── notifications-app/   # Separate notifications analytics app
 ├── progress/            # Session logs and progress tracking
 │   ├── TEMPLATE-session.md  # Session template
 │   ├── screenshots/         # Visual progress
@@ -85,6 +98,7 @@ BSKY/
 │   ├── dev-server.sh       # Server management
 │   ├── open-chrome.sh      # Browser launcher
 │   └── check-dev-errors.js # Error monitoring
+├── ARCHITECTURE.md     # Detailed technical architecture
 ├── CLAUDE.md           # This file - project documentation
 ├── README.md           # GitHub readme
 ├── SESSION_NOTES.md    # Current working state
