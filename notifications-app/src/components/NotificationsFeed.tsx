@@ -64,19 +64,10 @@ export const NotificationsFeed: React.FC = () => {
     let filtered = notifications
 
     if (filter === 'images') {
-      // Filter for notifications that contain images
-      filtered = filtered.filter((n: Notification) => {
-        // Check if the notification has a record with embed containing images
-        if (n.record && typeof n.record === 'object' && 'embed' in n.record) {
-          const embed = (n.record as any).embed
-          return embed && (
-            embed.$type === 'app.bsky.embed.images' ||
-            embed.$type === 'app.bsky.embed.images#view' ||
-            (embed.images && Array.isArray(embed.images))
-          )
-        }
-        return false
-      })
+      // For now, we can't filter by images because notifications don't include full post data
+      // TODO: Implement by fetching post data for each notification
+      // This would require additional API calls to get the actual post content
+      filtered = []
     } else if (filter !== 'all') {
       const filterMap: Record<Exclude<NotificationFilter, 'all' | 'images'>, string[]> = {
         likes: ['like'],
