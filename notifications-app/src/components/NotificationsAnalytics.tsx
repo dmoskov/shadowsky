@@ -11,7 +11,7 @@ export const NotificationsAnalytics: React.FC = () => {
     queryKey: ['notifications-analytics'],
     queryFn: async () => {
       if (!agent) throw new Error('Not authenticated')
-      const response = await agent.listNotifications({ limit: 300 })
+      const response = await agent.listNotifications({ limit: 100 })
       return response.data
     }
   })

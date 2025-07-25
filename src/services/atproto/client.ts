@@ -6,6 +6,7 @@ import { BskyAgent } from '@atproto/api'
 import { mapATProtoError } from '../../lib/errors'
 // import { measureAsync } from '../../lib/performance-tracking'
 import type { Session } from '../../types/atproto'
+import { sessionCookies } from '../../lib/cookies'
 
 export interface ATProtoConfig {
   service?: string
@@ -126,7 +127,9 @@ export class ATProtoClient {
         refreshJwt: session.refreshJwt,
         active: session.active
       }
+      // Save to both localStorage (for backward compatibility) and cookies
       localStorage.setItem('bsky_session', JSON.stringify(sessionData))
+      sessionCookies.save(sessionData)
     } catch (error) {
       console.error('Failed to save session:', error)
     }
@@ -135,6 +138,7 @@ export class ATProtoClient {
   private clearSession(): void {
     try {
       localStorage.removeItem('bsky_session')
+      sessionCookies.clear()
     } catch (error) {
       console.error('Failed to clear session:', error)
     }
@@ -142,15 +146,28 @@ export class ATProtoClient {
 
   static loadSavedSession(): Session | null {
     try {
-      const saved = localStorage.getItem('bsky_session')
-      if (!saved) return null
+      // Try to load from cookie first (preferred for cross-port sharing)
+      let session = sessionCookies.load()
       
-      const session = JSON.parse(saved)
+      // Fall back to localStorage if no cookie found
+      if (!session) {
+        const saved = localStorage.getItem('bsky_session')
+        if (saved) {
+          session = JSON.parse(saved)
+          // Migrate to cookie storage
+          if (session) {
+            sessionCookies.save(session)
+          }
+        }
+      }
+      
+      if (!session) return null
       
       // Validate session has required fields
       if (!session.accessJwt || !session.refreshJwt || !session.did) {
         console.warn('Invalid session format, clearing...')
         localStorage.removeItem('bsky_session')
+        sessionCookies.clear()
         return null
       }
       
@@ -160,8 +177,9 @@ export class ATProtoClient {
       // Clear corrupted session data
       try {
         localStorage.removeItem('bsky_session')
+        sessionCookies.clear()
       } catch {
-        // Ignore localStorage errors
+        // Ignore storage errors
       }
       return null
     }

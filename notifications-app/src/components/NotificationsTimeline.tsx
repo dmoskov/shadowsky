@@ -11,7 +11,7 @@ export const NotificationsTimeline: React.FC = () => {
     queryKey: ['notifications-timeline'],
     queryFn: async () => {
       if (!agent) throw new Error('Not authenticated')
-      const response = await agent.listNotifications({ limit: 200 })
+      const response = await agent.listNotifications({ limit: 100 })
       return response.data
     }
   })

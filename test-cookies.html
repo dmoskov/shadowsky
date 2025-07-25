@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cookie Test</title>
+</head>
+<body>
+    <h1>Cookie Persistence Test</h1>
+    <p>Open this file in your browser to test cookie persistence.</p>
+    
+    <div>
+        <h2>Main App (Port 5173)</h2>
+        <iframe id="main-app" src="http://127.0.0.1:5173" width="400" height="300"></iframe>
+    </div>
+    
+    <div>
+        <h2>Notifications App (Port 5174)</h2>
+        <iframe id="notif-app" src="http://127.0.0.1:5174" width="400" height="300"></iframe>
+    </div>
+    
+    <div>
+        <h2>Cookie Status</h2>
+        <pre id="cookie-status"></pre>
+    </div>
+    
+    <script>
+        // Check cookies every second
+        setInterval(() => {
+            const cookies = document.cookie;
+            document.getElementById('cookie-status').textContent = 
+                'Current cookies:\n' + (cookies || '(none)');
+        }, 1000);
+    </script>
+</body>
+</html>
