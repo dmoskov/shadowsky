@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { MoreHorizontal } from 'lucide-react';
 import { formatPostTime } from '../../utils/post-helpers';
+import { getBskyProfileUrl } from '../../utils/url-helpers';
 import type { Post } from '@bsky/shared';
 
 interface PostHeaderProps {
@@ -13,9 +14,10 @@ export const PostHeader: React.FC<PostHeaderProps> = ({ post, onMenuToggle }) =>
   return (
     <div className="post-header">
       <a 
-        href={`/profile/${post.author.handle}`}
+        href={getBskyProfileUrl(post.author.handle)}
         className="post-author"
-        onClick={(e) => e.preventDefault()}
+        target="_blank"
+        rel="noopener noreferrer"
       >
         {post.author.avatar ? (
           <img 

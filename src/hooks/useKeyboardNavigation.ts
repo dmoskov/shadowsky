@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { getBskyProfileUrl } from '../utils/url-helpers'
 
 interface KeyboardShortcuts {
   [key: string]: {
@@ -31,7 +32,7 @@ export function useKeyboardNavigation() {
       handler: () => {
         // Navigate to own profile - would need auth context
         const handle = sessionStorage.getItem('userHandle')
-        if (handle) navigate(`/profile/${handle}`)
+        if (handle) window.open(getBskyProfileUrl(handle), '_blank', 'noopener,noreferrer')
       },
       description: 'Go to Profile'
     },

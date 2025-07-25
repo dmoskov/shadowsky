@@ -11,7 +11,6 @@ import { NotificationsTimeline } from './components/NotificationsTimeline'
 import { VisualTimeline } from './components/VisualTimeline'
 import { NotificationsAnalytics } from './components/NotificationsAnalytics'
 import { NotificationsSettings } from './components/NotificationsSettings'
-import { Profile } from './components/Profile'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,7 +57,6 @@ function AppContent() {
             <Route path="/timeline" element={<VisualTimeline />} />
             <Route path="/analytics" element={<NotificationsAnalytics />} />
             <Route path="/settings" element={<NotificationsSettings />} />
-            <Route path="/profile/:handle" element={<Profile />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

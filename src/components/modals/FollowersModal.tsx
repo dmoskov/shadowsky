@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Users, UserCheck } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import { useFollowers, useFollowing } from '../../hooks/useProfile'
+import { getBskyProfileUrl } from '../../utils/url-helpers'
 import type { ProfileView } from '@atproto/api/dist/client/types/app/bsky/actor/defs'
 
 interface FollowersModalProps {
@@ -18,14 +18,13 @@ export const FollowersModal: React.FC<FollowersModalProps> = ({
   handle,
   initialTab
 }) => {
-  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState(initialTab)
   
   const { data: followersData, isLoading: followersLoading } = useFollowers(handle)
   const { data: followingData, isLoading: followingLoading } = useFollowing(handle)
 
   const handleUserClick = (userHandle: string) => {
-    navigate(`/profile/${userHandle}`)
+    window.open(getBskyProfileUrl(userHandle), '_blank', 'noopener,noreferrer')
     onClose()
   }
 

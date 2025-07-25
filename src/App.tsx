@@ -11,7 +11,6 @@ import {
   ErrorBoundary,
   ComposeModal,
   ThreadView,
-  Profile,
   Notifications,
   Search,
   KeyboardShortcutsModal,
@@ -111,7 +110,6 @@ function AppContent() {
                 <Feed onViewThread={(uri) => navigate(`/thread/${encodeURIComponent(uri)}`)} />
               } />
               <Route path="/thread/:uri" element={<ThreadViewWrapper />} />
-              <Route path="/profile/:handle" element={<Profile />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/search" element={<Search />} />
               <Route path="/settings" element={<Settings />} />

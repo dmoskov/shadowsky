@@ -10,7 +10,7 @@ import {
   Zap,
   Heart
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { getBskyProfileUrl } from '../../utils/url-helpers'
 import type { NetworkMetrics } from '@bsky/shared'
 
 interface Props {
@@ -54,7 +54,6 @@ export const NetworkHealthActionable: React.FC<Props> = ({
   followerGrowth,
   onComposePost
 }) => {
-  const navigate = useNavigate()
   const [showDetails, setShowDetails] = useState(false)
   
   // Calculate health score (reusing logic from NetworkHealth)
@@ -170,7 +169,7 @@ export const NetworkHealthActionable: React.FC<Props> = ({
         title: 'Engage with your top supporters',
         description: `@${topFan.handle} liked ${topFan.interactions} of your posts`,
         actionLabel: 'Reply to Their Latest',
-        onClick: () => navigate(`/profile/${topFan.handle}`),
+        onClick: () => window.open(getBskyProfileUrl(topFan.handle), '_blank', 'noopener,noreferrer'),
         expectedImpact: 'Strengthen core network'
       })
     }

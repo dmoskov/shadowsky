@@ -13,6 +13,7 @@ import {
 import { useSearchActors, useSearchPosts, useSearchTypeahead } from '../../hooks/useSearch'
 import { PostCard } from '../feed/PostCard'
 import { ComposeModal } from '../modals/ComposeModal'
+import { getBskyProfileUrl } from '../../utils/url-helpers'
 import type { Post } from '@bsky/shared'
 import type { ProfileView } from '@atproto/api/dist/client/types/app/bsky/actor/defs'
 
@@ -51,7 +52,7 @@ export const Search: React.FC = () => {
   }
 
   const handleViewProfile = (handle: string) => {
-    navigate(`/profile/${handle}`)
+    window.open(getBskyProfileUrl(handle), '_blank', 'noopener,noreferrer')
   }
 
   const handleSuggestionClick = (handle: string) => {

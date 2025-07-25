@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import { Users, TrendingUp, Settings, Loader } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-import { Link } from 'react-router-dom'
+import { getBskyProfileUrl } from '../utils/url-helpers'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 
 interface TopAccountsViewProps {
@@ -235,10 +235,12 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
 
       <div className="space-y-3">
         {topAccounts.map((account, index) => (
-          <Link
+          <a
             key={account.did}
-            to={`/profile/${account.handle}`}
-            className="bsky-card p-4 block hover:opacity-90 transition-opacity"
+            href={getBskyProfileUrl(account.handle)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bsky-card p-4 block hover:opacity-90 transition-opacity no-underline"
           >
             <div className="flex items-start gap-4">
               {/* Rank badge */}
@@ -341,7 +343,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
                 </p>
               </div>
             </div>
-          </Link>
+          </a>
         ))}
       </div>
     </div>

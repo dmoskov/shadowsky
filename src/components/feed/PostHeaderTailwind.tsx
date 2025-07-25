@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { MoreHorizontal } from 'lucide-react';
 import { formatPostTime } from '../../utils/post-helpers';
+import { getBskyProfileUrl } from '../../utils/url-helpers';
 import type { Post } from '@bsky/shared';
 
 interface PostHeaderProps {
@@ -13,9 +14,10 @@ export const PostHeaderTailwind: React.FC<PostHeaderProps> = ({ post, onMenuTogg
   return (
     <div className="twflex twitems-start twgap-3 twmb-2">
       <a 
-        href={`/profile/${post.author.handle}`}
+        href={getBskyProfileUrl(post.author.handle)}
         className="twflex twitems-start twgap-3 twflex-1 twno-underline"
-        onClick={(e) => e.preventDefault()}
+        target="_blank"
+        rel="noopener noreferrer"
       >
         {/* Avatar */}
         {post.author.avatar ? (

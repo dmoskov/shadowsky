@@ -89,3 +89,12 @@ export async function shareUrl(url: string, title?: string, text?: string): Prom
     return false
   }
 }
+
+/**
+ * Generate a Bluesky profile URL from a handle
+ */
+export function getBskyProfileUrl(handle: string): string {
+  // Remove @ if present
+  const cleanHandle = handle.startsWith('@') ? handle.slice(1) : handle
+  return `https://bsky.app/profile/${cleanHandle}`
+}

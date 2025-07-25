@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext'
 import { useUnreadNotificationCount } from '../../hooks/useNotifications'
 import { useToast } from '../ui/Toast'
+import { getBskyProfileUrl } from '../../utils/url-helpers'
 
 interface HeaderProps {
   onMenuToggle?: () => void;
@@ -218,17 +219,17 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <button 
+                    <a 
                       className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 
-                                transition-colors text-gray-200"
-                      onClick={() => {
-                        navigate(`/profile/${session?.handle}`)
-                        setShowDropdown(false)
-                      }}
+                                transition-colors text-gray-200 no-underline"
+                      href={getBskyProfileUrl(session?.handle || '')}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setShowDropdown(false)}
                     >
                       <User size={18} />
                       <span>Profile</span>
-                    </button>
+                    </a>
                     <button 
                       className="w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-700 
                                 transition-colors text-gray-200"

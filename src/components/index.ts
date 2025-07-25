@@ -27,7 +27,6 @@ export { FollowersModal } from './modals/FollowersModal'
 export { KeyboardShortcutsModal } from './modals/KeyboardShortcutsModal'
 
 // Profile components
-export { Profile } from './profile/Profile'
 export { Notifications } from './profile/Notifications'
 export { Search } from './profile/Search'
 
