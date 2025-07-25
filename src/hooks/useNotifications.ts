@@ -6,6 +6,7 @@ import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notif
 
 export function useNotifications(priority?: boolean) {
   const { session } = useAuth()
+  const { handleError } = useErrorHandler()
 
   return useQuery({
     queryKey: ['notifications', priority],
@@ -19,6 +20,10 @@ export function useNotifications(priority?: boolean) {
     enabled: !!session,
     staleTime: 30 * 1000, // 30 seconds
     refetchInterval: 60 * 1000, // Refetch every minute
+    onError: (error) => {
+      console.error('Notifications error:', error)
+      handleError(error)
+    }
   })
 }
 

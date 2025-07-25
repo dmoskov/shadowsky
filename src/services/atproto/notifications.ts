@@ -19,12 +19,21 @@ export class NotificationService {
       try {
         const response = await this.agent.app.bsky.notification.listNotifications({
           limit: 50,
-          cursor,
-          priority
+          cursor
         })
         
+        // If priority is true, filter to only show notifications from people the user follows
+        let notifications = response.data.notifications
+        if (priority) {
+          // Filter notifications to only those where the author is followed
+          notifications = notifications.filter(notification => {
+            // Check if the viewer (current user) follows this author
+            return notification.author.viewer?.following
+          })
+        }
+        
         return {
-          notifications: response.data.notifications,
+          notifications,
           cursor: response.data.cursor
         }
       } catch (error) {
