@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, CheckCheck, Image, Loader } from 'lucide-react'
 import { useNotifications, useUnreadCount, useMarkNotificationsRead } from '../hooks/useNotifications'
+import { useNotificationPosts, postHasImages } from '../hooks/useNotificationPosts'
 import { formatDistanceToNow } from 'date-fns'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 
@@ -26,6 +27,10 @@ export const NotificationsFeed: React.FC = () => {
     if (!data?.pages) return []
     return data.pages.flatMap((page: any) => page.notifications)
   }, [data])
+
+  // Fetch posts for notifications that might have images
+  // We always fetch posts to show images in all views
+  const { data: posts } = useNotificationPosts(notifications)
 
   // Set up intersection observer to load more notifications
   useEffect(() => {
@@ -64,10 +69,19 @@ export const NotificationsFeed: React.FC = () => {
     let filtered = notifications
 
     if (filter === 'images') {
-      // For now, we can't filter by images because notifications don't include full post data
-      // TODO: Implement by fetching post data for each notification
-      // This would require additional API calls to get the actual post content
-      filtered = []
+      // Filter notifications that have posts with images
+      if (posts && posts.length > 0) {
+        const postsWithImages = new Set(
+          posts.filter(postHasImages).map(post => post.uri)
+        )
+        filtered = filtered.filter((n: Notification) => 
+          ['like', 'repost', 'reply', 'quote'].includes(n.reason) && 
+          postsWithImages.has(n.uri)
+        )
+      } else {
+        // While posts are loading, show empty
+        filtered = []
+      }
     } else if (filter !== 'all') {
       const filterMap: Record<Exclude<NotificationFilter, 'all' | 'images'>, string[]> = {
         likes: ['like'],
@@ -84,16 +98,22 @@ export const NotificationsFeed: React.FC = () => {
     }
 
     return filtered
-  }, [notifications, filter, showUnreadOnly])
+  }, [notifications, filter, showUnreadOnly, posts])
+
+  // Create a map for quick post lookup
+  const postMap = React.useMemo(() => {
+    if (!posts) return new Map()
+    return new Map(posts.map(post => [post.uri, post]))
+  }, [posts])
 
   const getNotificationIcon = (reason: string) => {
     switch (reason) {
-      case 'like': return <Heart size={18} className="text-pink-500" />
-      case 'repost': return <Repeat2 size={18} className="text-green-500" />
-      case 'follow': return <UserPlus size={18} className="text-blue-500" />
-      case 'mention': return <AtSign size={18} className="text-purple-500" />
-      case 'reply': return <MessageCircle size={18} className="text-sky-500" />
-      case 'quote': return <Quote size={18} className="text-indigo-500" />
+      case 'like': return <Heart size={18} style={{ color: 'var(--bsky-like)' }} fill="currentColor" />
+      case 'repost': return <Repeat2 size={18} style={{ color: 'var(--bsky-repost)' }} />
+      case 'follow': return <UserPlus size={18} style={{ color: 'var(--bsky-follow)' }} />
+      case 'mention': return <AtSign size={18} style={{ color: 'var(--bsky-mention)' }} />
+      case 'reply': return <MessageCircle size={18} style={{ color: 'var(--bsky-reply)' }} />
+      case 'quote': return <Quote size={18} style={{ color: 'var(--bsky-quote)' }} />
       default: return null
     }
   }
@@ -101,9 +121,9 @@ export const NotificationsFeed: React.FC = () => {
   if (isLoading) {
     return (
       <div className="p-6">
-        <div className="animate-pulse space-y-4">
+        <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-gray-800 rounded-lg p-4 h-20"></div>
+            <div key={i} className="bsky-card p-4 h-20 bsky-loading"></div>
           ))}
         </div>
       </div>
@@ -113,28 +133,28 @@ export const NotificationsFeed: React.FC = () => {
   if (error) {
     return (
       <div className="p-6">
-        <div className="bg-red-900/20 border border-red-500/20 rounded-lg p-4 text-red-400">
-          Failed to load notifications
+        <div className="bsky-card p-4" style={{ borderColor: 'var(--bsky-error)', backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
+          <p style={{ color: 'var(--bsky-error)' }}>Failed to load notifications</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-2xl mx-auto bsky-font">
       {/* Header with filters */}
-      <div className="sticky top-0 bg-gray-900 border-b border-gray-800 p-4 z-10">
+      <div className="sticky top-0 bsky-glass p-4 z-10" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-semibold">
-            All Notifications 
+          <h1 className="text-2xl font-bold bsky-gradient-text">
+            Notifications
             {unreadCount && unreadCount > 0 && (
-              <span className="ml-2 text-sm font-normal text-gray-400">
-                ({unreadCount} unread)
+              <span className="ml-2 text-sm font-normal" style={{ color: 'var(--bsky-text-secondary)' }}>
+                {unreadCount} new
               </span>
             )}
             {notifications.length > 0 && (
-              <span className="ml-2 text-sm font-normal text-gray-500">
-                · {notifications.length} loaded
+              <span className="ml-2 text-xs font-normal" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                · {notifications.length} total
               </span>
             )}
           </h1>
@@ -143,7 +163,7 @@ export const NotificationsFeed: React.FC = () => {
               <button
                 onClick={() => markAllAsRead()}
                 disabled={isMarkingAsRead}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                className="bsky-button-primary flex items-center gap-1.5 text-sm disabled:opacity-50"
               >
                 <CheckCheck size={16} />
                 Mark all read
@@ -151,19 +171,15 @@ export const NotificationsFeed: React.FC = () => {
             )}
             <button
               onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                showUnreadOnly 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-              }`}
+              className={showUnreadOnly ? 'bsky-button-primary text-sm' : 'bsky-button-secondary text-sm'}
             >
-              Unread Only
+              {showUnreadOnly ? '✓ ' : ''}Unread Only
             </button>
           </div>
         </div>
 
         {/* Filter tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-2">
+        <div className="flex gap-1 overflow-x-auto mt-4 border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
           <FilterTab
             active={filter === 'all'}
             onClick={() => setFilter('all')}
@@ -210,17 +226,19 @@ export const NotificationsFeed: React.FC = () => {
       </div>
 
       {/* Notifications list */}
-      <div className="divide-y divide-gray-800">
+      <div>
         {filteredNotifications.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">
-            No notifications to show
+          <div className="p-12 text-center" style={{ color: 'var(--bsky-text-tertiary)' }}>
+            <div className="text-5xl mb-4 opacity-20">📭</div>
+            <p className="text-lg">No notifications to show</p>
+            <p className="text-sm mt-2">Check back later for updates</p>
           </div>
         ) : (
           filteredNotifications.map((notification: Notification) => (
             <div
               key={`${notification.uri}-${notification.indexedAt}`}
-              className={`flex gap-3 p-4 hover:bg-gray-800/50 transition-colors cursor-pointer ${
-                !notification.isRead ? 'bg-blue-900/10' : ''
+              className={`bsky-notification flex gap-3 p-4 cursor-pointer ${
+                !notification.isRead ? 'bsky-notification-unread' : ''
               }`}
             >
               <div className="flex-shrink-0 pt-1">
@@ -233,54 +251,72 @@ export const NotificationsFeed: React.FC = () => {
                     <img 
                       src={notification.author.avatar} 
                       alt={notification.author.handle}
-                      className="w-10 h-10 rounded-full"
+                      className="w-10 h-10 bsky-avatar"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
-                      {notification.author.handle.charAt(0).toUpperCase()}
+                    <div className="w-10 h-10 bsky-avatar flex items-center justify-center" style={{ background: 'var(--bsky-bg-tertiary)' }}>
+                      <span className="text-sm font-semibold">{notification.author.handle.charAt(0).toUpperCase()}</span>
                     </div>
                   )}
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <p className="text-sm">
-                    <span className="font-medium">
+                    <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
                       {notification.author.displayName || notification.author.handle}
                     </span>
                     {' '}
-                    <span className="text-gray-400">
+                    <span style={{ color: 'var(--bsky-text-secondary)' }}>
                       {getNotificationText(notification.reason)}
                     </span>
                   </p>
                   {notification.record && typeof notification.record === 'object' && 'text' in notification.record && (
-                    <p className="text-gray-400 text-sm mt-1 line-clamp-2">
+                    <p className="text-sm mt-1 line-clamp-2" style={{ color: 'var(--bsky-text-secondary)' }}>
                       {(notification.record as { text?: string }).text}
                     </p>
                   )}
                   {/* Display images if present */}
-                  {notification.record && typeof notification.record === 'object' && 'embed' in notification.record && (
-                    <div className="mt-2">
-                      {(() => {
-                        const embed = (notification.record as any).embed
-                        if (embed && embed.images && Array.isArray(embed.images)) {
-                          return (
-                            <div className="grid grid-cols-2 gap-2 max-w-sm">
-                              {embed.images.slice(0, 4).map((img: any, idx: number) => (
-                                <img 
-                                  key={idx}
-                                  src={img.thumb || img.fullsize}
-                                  alt={img.alt || ''}
-                                  className="rounded-lg object-cover w-full h-24"
-                                />
-                              ))}
-                            </div>
-                          )
-                        }
-                        return null
-                      })()}
-                    </div>
-                  )}
-                  <time className="text-gray-500 text-xs mt-1 block">
+                  {(() => {
+                    // Get the post for this notification if it's about a post
+                    const post = ['like', 'repost', 'reply', 'quote'].includes(notification.reason) 
+                      ? postMap.get(notification.uri) 
+                      : undefined
+                    
+                    if (!post?.embed) return null
+                    
+                    let images: Array<{ thumb: string; fullsize: string; alt?: string }> = []
+                    
+                    // Extract images from different embed types
+                    if (post.embed.$type === 'app.bsky.embed.images#view' && post.embed.images) {
+                      images = post.embed.images
+                    } else if (
+                      post.embed.$type === 'app.bsky.embed.recordWithMedia#view' && 
+                      post.embed.media?.$type === 'app.bsky.embed.images#view' &&
+                      post.embed.media.images
+                    ) {
+                      images = post.embed.media.images
+                    }
+                    
+                    if (images.length === 0) return null
+                    
+                    return (
+                      <div className="mt-2">
+                        <div className="grid grid-cols-2 gap-2 max-w-sm">
+                          {images.slice(0, 4).map((img, idx) => (
+                            <img 
+                              key={idx}
+                              src={img.thumb}
+                              alt={img.alt || ''}
+                              className="rounded-lg object-cover w-full h-24 border" 
+                              style={{ borderColor: 'var(--bsky-border-primary)' }}
+                              loading="lazy"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })()}
+                  <time className="text-xs mt-1 block" style={{ color: 'var(--bsky-text-tertiary)' }}>
                     {formatDistanceToNow(new Date(notification.indexedAt), { addSuffix: true })}
                   </time>
                 </div>
@@ -291,15 +327,15 @@ export const NotificationsFeed: React.FC = () => {
         
         {/* Loading more indicator */}
         {(hasNextPage || isFetchingNextPage) && (
-          <div ref={loadMoreRef} className="p-6 flex justify-center">
+          <div ref={loadMoreRef} className="p-8 flex justify-center">
             {isFetchingNextPage ? (
-              <div className="flex items-center gap-2 text-gray-400">
-                <Loader className="animate-spin" size={20} />
-                <span>Loading more notifications...</span>
+              <div className="flex items-center gap-2" style={{ color: 'var(--bsky-text-secondary)' }}>
+                <Loader className="animate-spin" size={20} style={{ color: 'var(--bsky-primary)' }} />
+                <span className="text-sm">Loading more...</span>
               </div>
             ) : (
-              <div className="text-gray-500 text-sm">
-                Scroll to load more
+              <div className="text-sm" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                <div className="animate-pulse">↓ Scroll for more</div>
               </div>
             )}
           </div>
@@ -307,10 +343,17 @@ export const NotificationsFeed: React.FC = () => {
         
         {/* End of notifications message */}
         {!hasNextPage && notifications.length > 0 && (
-          <div className="p-6 text-center text-gray-500 text-sm">
-            {notifications.length >= 1000 
-              ? `Showing maximum of 1,000 notifications`
-              : `No more notifications from the last 14 days`}
+          <div className="p-8 text-center">
+            <div className="bsky-badge mb-2">
+              {notifications.length >= 1000 
+                ? `1,000 notifications max`
+                : `End of notifications`}
+            </div>
+            <p className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+              {notifications.length >= 1000 
+                ? 'Showing the most recent 1,000 notifications'
+                : 'No more notifications from the last 14 days'}
+            </p>
           </div>
         )}
       </div>
@@ -329,14 +372,10 @@ const FilterTab: React.FC<FilterTabProps> = ({ active, onClick, icon, label }) =
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-        active 
-          ? 'bg-blue-600 text-white' 
-          : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-      }`}
+      className={`bsky-tab flex items-center gap-1.5 ${active ? 'bsky-tab-active' : ''}`}
     >
-      {icon}
-      {label}
+      <span style={{ opacity: active ? 1 : 0.7 }}>{icon}</span>
+      <span>{label}</span>
     </button>
   )
 }

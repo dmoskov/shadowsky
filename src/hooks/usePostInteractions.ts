@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { getInteractionsService } from '../services/atproto'
-import type { Post, FeedItem } from '../types/atproto'
+import { getInteractionsService } from '@bsky/shared/services/atproto'
+import type { Post, FeedItem } from '@bsky/shared/types/atproto'
 import { useErrorHandler } from './useErrorHandler'
-import { performanceTracker } from '../lib/performance-tracking'
+import { performanceTracker } from '@bsky/shared/lib/performance-tracking'
 
 export interface UsePostInteractionsReturn {
   likePost: (post: Post) => Promise<void>

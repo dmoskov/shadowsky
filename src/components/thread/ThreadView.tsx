@@ -9,7 +9,7 @@ import { ThreadViewModes } from './ThreadViewModes'
 import { ThreadPostListBluesky } from './ThreadPostListBluesky'
 import { useThreadData } from '../../hooks/useThreadData'
 
-import type { Post } from '../../types/atproto'
+import type { Post } from '@bsky/shared/types/atproto'
 
 interface ThreadViewProps {
   postUri: string

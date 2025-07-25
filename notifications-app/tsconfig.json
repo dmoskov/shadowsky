@@ -18,8 +18,18 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /* Path mappings */
+    "baseUrl": ".",
+    "paths": {
+      "@bsky/shared": ["../packages/shared/src"],
+      "@bsky/shared/*": ["../packages/shared/src/*"]
+    }
   },
   "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "references": [
+    { "path": "./tsconfig.node.json" },
+    { "path": "../packages/shared/tsconfig.json" }
+  ]
 }

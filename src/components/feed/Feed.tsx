@@ -7,8 +7,8 @@ import { FeedLoading, InlineLoader } from '../ui/SkeletonLoaders'
 import { FeedError } from '../ui/ErrorStates'
 import { FeedEmpty } from '../ui/EmptyStates'
 import { ResponsiveContainer } from '../ui/ResponsiveContainer'
-import { performanceTracker, useRenderTracking } from '../../lib/performance-tracking'
-import type { Post } from '../../types/atproto'
+import { performanceTracker, useRenderTracking } from '@bsky/shared/lib/performance-tracking'
+import type { Post } from '@bsky/shared/types/atproto'
 
 interface FeedProps {
   onViewThread?: (uri: string) => void

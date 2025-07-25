@@ -22,7 +22,17 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": false,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
+    /* Path mappings */
+    "baseUrl": ".",
+    "paths": {
+      "@bsky/shared": ["./packages/shared/src"],
+      "@bsky/shared/*": ["./packages/shared/src/*"]
+    }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "references": [
+    { "path": "./packages/shared/tsconfig.json" }
+  ]
 }

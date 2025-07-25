@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { MoreHorizontal } from 'lucide-react';
 import { formatPostTime } from '../../utils/post-helpers';
-import type { Post } from '../../types/atproto';
+import type { Post } from '@bsky/shared/types/atproto';
 
 interface PostHeaderProps {
   post: Post;

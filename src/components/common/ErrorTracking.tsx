@@ -3,7 +3,7 @@
  */
 
 import { useEffect } from 'react';
-import { trackError } from '../../lib/error-tracking';
+import { trackError } from '@bsky/shared/lib/error-tracking';
 
 /**
  * Hook to track component mount errors

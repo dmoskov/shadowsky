@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getErrorCount, getErrorSummary, clearErrors } from '../../lib/error-tracking';
+import { getErrorCount, getErrorSummary, clearErrors } from '@bsky/shared/lib/error-tracking';
 
 /**
  * Floating error badge for local development

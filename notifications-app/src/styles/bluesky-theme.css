@@ -1,0 +1,197 @@
+/* Bluesky-inspired theme with distinct variations */
+:root {
+  /* Primary colors - shifted towards a unique blue-purple gradient */
+  --bsky-primary: #0085ff;
+  --bsky-primary-dark: #0066cc;
+  --bsky-primary-light: #4da3ff;
+  --bsky-accent: #7c3aed; /* Purple accent for distinction */
+  
+  /* Background colors - slightly warmer than original */
+  --bsky-bg-primary: #0a0f1b;
+  --bsky-bg-secondary: #111827;
+  --bsky-bg-tertiary: #1a2332;
+  --bsky-bg-hover: #1f2937;
+  --bsky-bg-active: #2d3748;
+  
+  /* Text colors */
+  --bsky-text-primary: #f0f4f8;
+  --bsky-text-secondary: #a8b3cf;
+  --bsky-text-tertiary: #6b7c93;
+  --bsky-text-link: var(--bsky-primary-light);
+  
+  /* Border colors */
+  --bsky-border-primary: #2d3748;
+  --bsky-border-secondary: #374151;
+  --bsky-border-light: #1f2937;
+  
+  /* Notification type colors - more vibrant */
+  --bsky-like: #f91880;
+  --bsky-repost: #00ba7c;
+  --bsky-follow: var(--bsky-primary);
+  --bsky-mention: #a855f7;
+  --bsky-reply: #06b6d4;
+  --bsky-quote: #8b5cf6;
+  
+  /* Status colors */
+  --bsky-success: #10b981;
+  --bsky-warning: #f59e0b;
+  --bsky-error: #ef4444;
+  --bsky-info: #3b82f6;
+  
+  /* Shadows and effects */
+  --bsky-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --bsky-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --bsky-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --bsky-glow: 0 0 20px rgba(0, 133, 255, 0.3);
+}
+
+/* Typography */
+.bsky-font {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Button styles */
+.bsky-button {
+  @apply px-4 py-2 rounded-full font-medium transition-all duration-200;
+  @apply hover:shadow-md active:scale-95;
+}
+
+.bsky-button-primary {
+  @apply bsky-button;
+  background: linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%);
+  color: white;
+  @apply hover:opacity-90;
+}
+
+.bsky-button-secondary {
+  @apply bsky-button;
+  background: var(--bsky-bg-tertiary);
+  color: var(--bsky-text-primary);
+  border: 1px solid var(--bsky-border-primary);
+  @apply hover:bg-opacity-80;
+}
+
+.bsky-button-ghost {
+  @apply bsky-button;
+  background: transparent;
+  color: var(--bsky-text-secondary);
+  @apply hover:bg-white hover:bg-opacity-10;
+}
+
+/* Card styles */
+.bsky-card {
+  background: var(--bsky-bg-secondary);
+  border: 1px solid var(--bsky-border-primary);
+  @apply rounded-xl shadow-sm;
+}
+
+.bsky-card-hover {
+  @apply bsky-card transition-all duration-200;
+  @apply hover:border-opacity-60 hover:shadow-md;
+  @apply hover:bg-opacity-90;
+}
+
+/* Avatar styles */
+.bsky-avatar {
+  @apply rounded-full border-2;
+  border-color: var(--bsky-bg-primary);
+  @apply shadow-sm;
+}
+
+.bsky-avatar-glow {
+  @apply bsky-avatar;
+  box-shadow: var(--bsky-glow);
+}
+
+/* Badge styles */
+.bsky-badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  background: var(--bsky-bg-tertiary);
+  color: var(--bsky-text-secondary);
+  border: 1px solid var(--bsky-border-primary);
+}
+
+/* Notification item styles */
+.bsky-notification {
+  @apply relative overflow-hidden;
+  background: var(--bsky-bg-secondary);
+  border-bottom: 1px solid var(--bsky-border-light);
+  @apply transition-all duration-200;
+}
+
+.bsky-notification:hover {
+  background: var(--bsky-bg-hover);
+}
+
+.bsky-notification-unread {
+  border-left: 3px solid var(--bsky-primary);
+  background: linear-gradient(90deg, rgba(0, 133, 255, 0.1) 0%, transparent 100%);
+}
+
+/* Tab styles */
+.bsky-tab {
+  @apply relative px-4 py-2 font-medium text-sm transition-all duration-200;
+  color: var(--bsky-text-secondary);
+  @apply hover:text-opacity-80;
+}
+
+.bsky-tab-active {
+  color: var(--bsky-text-primary);
+}
+
+.bsky-tab-active::after {
+  content: '';
+  @apply absolute bottom-0 left-0 right-0 h-0.5;
+  background: linear-gradient(90deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%);
+}
+
+/* Loading animation */
+@keyframes bsky-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.bsky-loading {
+  animation: bsky-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Scrollbar styling */
+.bsky-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.bsky-scrollbar::-webkit-scrollbar-track {
+  background: var(--bsky-bg-primary);
+  border-radius: 5px;
+}
+
+.bsky-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--bsky-bg-tertiary);
+  border-radius: 5px;
+  border: 2px solid var(--bsky-bg-primary);
+}
+
+.bsky-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--bsky-bg-hover);
+}
+
+/* Glass effect */
+.bsky-glass {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Gradient text */
+.bsky-gradient-text {
+  background: linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

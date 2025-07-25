@@ -1,7 +1,7 @@
 import React from 'react'
 import { MessageCircle, CornerDownRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import type { Post, Reply } from '../../types/atproto'
+import type { Post, Reply } from '@bsky/shared/types/atproto'
 
 interface ReplyContextProps {
   reply?: Reply

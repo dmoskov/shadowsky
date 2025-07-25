@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Repeat2, MessageCircle, Heart, Share, MoreHorizontal } from 'lucide-react'
-import type { FeedItem, Post } from '../../types/atproto'
+import type { FeedItem, Post } from '@bsky/shared/types/atproto'
 import { usePostInteractions } from '../../hooks/usePostInteractions'
 import { atUriToWebUrl, copyToClipboard, shareUrl } from '../../utils/url-helpers'
 import { getPostText, formatPostTime } from '../../utils/post-helpers'

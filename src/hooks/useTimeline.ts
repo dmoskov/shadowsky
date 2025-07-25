@@ -3,10 +3,10 @@
  */
 
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { feedService } from '../services/atproto'
+import { feedService } from '@bsky/shared/services/atproto'
 import { useErrorHandler } from './useErrorHandler'
 import { useAuth } from '../contexts/AuthContext'
-import type { TimelineResponse } from '../types/atproto'
+import type { TimelineResponse } from '@bsky/shared/types/atproto'
 
 export const useTimeline = () => {
   const { logout } = useAuth()

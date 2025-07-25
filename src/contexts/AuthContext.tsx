@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import type { ReactNode } from 'react'
-import { atProtoClient, ATProtoClient } from '../services/atproto'
-import type { Session } from '../types/atproto'
-import { SessionExpiredError, AuthenticationError, NetworkError } from '../lib/errors'
-import { queryClient } from '../lib/query-client'
+import { atProtoClient, ATProtoClient } from '@bsky/shared/services/atproto'
+import type { Session } from '@bsky/shared/types/atproto'
+import { SessionExpiredError, AuthenticationError, NetworkError } from '@bsky/shared/lib/errors'
+import { queryClient } from '@bsky/shared/lib/query-client'
 
 interface AuthContextType {
   isAuthenticated: boolean

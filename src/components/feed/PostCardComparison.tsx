@@ -1,7 +1,7 @@
 import React from 'react'
 import { PostCard } from './PostCard'
 import { PostCardTailwind } from './PostCardTailwind'
-import type { FeedItem } from '../../types/atproto'
+import type { FeedItem } from '@bsky/shared/types/atproto'
 
 // Mock data for testing
 const mockPost: FeedItem = {

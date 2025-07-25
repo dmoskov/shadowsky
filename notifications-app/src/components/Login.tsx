@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Bell } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 export const Login: React.FC = () => {
@@ -23,22 +24,31 @@ export const Login: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 bsky-font" style={{ background: 'var(--bsky-bg-primary)' }}>
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Bluesky Notifications</h1>
-          <p className="text-gray-400">Sign in to view your notifications</p>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" 
+               style={{ background: 'linear-gradient(135deg, var(--bsky-primary), var(--bsky-accent))' }}>
+            <Bell size={32} className="text-white" />
+          </div>
+          <h1 className="text-3xl font-bold bsky-gradient-text mb-2">Notifications+</h1>
+          <p style={{ color: 'var(--bsky-text-secondary)' }}>Sign in to your Bluesky account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-gray-800 rounded-lg p-8 shadow-xl">
+        <form onSubmit={handleSubmit} className="bsky-card p-8 shadow-lg">
           {error && (
-            <div className="mb-4 p-3 bg-red-900/20 border border-red-500/20 rounded-lg text-red-400 text-sm">
+            <div className="mb-4 p-3 rounded-lg text-sm" 
+                 style={{ 
+                   backgroundColor: 'rgba(239, 68, 68, 0.1)', 
+                   border: '1px solid var(--bsky-error)',
+                   color: 'var(--bsky-error)'
+                 }}>
               {error}
             </div>
           )}
 
           <div className="mb-4">
-            <label htmlFor="identifier" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="identifier" className="block text-sm font-medium mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>
               Handle or Email
             </label>
             <input
@@ -46,15 +56,22 @@ export const Login: React.FC = () => {
               id="identifier"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white 
-                       placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-xl text-white transition-all
+                       focus:outline-none focus:ring-2 focus:ring-opacity-50"
+              style={{ 
+                backgroundColor: 'var(--bsky-bg-tertiary)',
+                border: '1px solid var(--bsky-border-primary)',
+                color: 'var(--bsky-text-primary)'
+              }}
+              onFocus={(e) => e.target.style.borderColor = 'var(--bsky-primary)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--bsky-border-primary)'}
               placeholder="@handle.bsky.social"
               required
             />
           </div>
 
           <div className="mb-6">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>
               Password
             </label>
             <input
@@ -62,8 +79,15 @@ export const Login: React.FC = () => {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white 
-                       placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 rounded-xl text-white transition-all
+                       focus:outline-none focus:ring-2 focus:ring-opacity-50"
+              style={{ 
+                backgroundColor: 'var(--bsky-bg-tertiary)',
+                border: '1px solid var(--bsky-border-primary)',
+                color: 'var(--bsky-text-primary)'
+              }}
+              onFocus={(e) => e.target.style.borderColor = 'var(--bsky-primary)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--bsky-border-primary)'}
               placeholder="Enter your password"
               required
             />
@@ -72,12 +96,15 @@ export const Login: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 
-                     text-white font-medium rounded-lg transition-colors duration-200 
-                     disabled:cursor-not-allowed"
+            className="w-full py-3 px-4 bsky-button-primary text-white font-semibold
+                     disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
+          
+          <p className="text-center text-xs mt-6" style={{ color: 'var(--bsky-text-tertiary)' }}>
+            Use your Bluesky credentials to sign in
+          </p>
         </form>
       </div>
     </div>

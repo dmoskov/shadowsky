@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { MessageCircle } from 'lucide-react'
 import { PostCardBluesky } from '../feed/PostCardBluesky'
 import { ErrorBoundary } from '../core/ErrorBoundary'
-import type { Post, FeedItem } from '../../types/atproto'
+import type { Post, FeedItem } from '@bsky/shared/types/atproto'
 import type { ThreadViewPost } from '../../services/atproto/thread'
 import type { AppBskyFeedDefs } from '@atproto/api'
 

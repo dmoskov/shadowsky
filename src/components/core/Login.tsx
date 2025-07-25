@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { ATProtoError, RateLimitError, AuthenticationError } from '../../lib/errors'
-import { performanceTracker } from '../../lib/performance-tracking'
+import { ATProtoError, RateLimitError, AuthenticationError } from '@bsky/shared/lib/errors'
+import { performanceTracker } from '@bsky/shared/lib/performance-tracking'
 import { Cloud, Sparkles, Users, Lock, Globe, MessageSquare } from 'lucide-react'
 
 export const Login: React.FC = () => {

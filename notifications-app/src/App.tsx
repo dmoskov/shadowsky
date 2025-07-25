@@ -32,10 +32,10 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bsky-bg-primary)' }}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-400">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto" style={{ borderColor: 'var(--bsky-primary)' }}></div>
+          <p className="mt-4" style={{ color: 'var(--bsky-text-secondary)' }}>Loading...</p>
         </div>
       </div>
     )
@@ -46,7 +46,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bsky-font" style={{ background: 'var(--bsky-bg-primary)' }}>
       <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div className="flex">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />

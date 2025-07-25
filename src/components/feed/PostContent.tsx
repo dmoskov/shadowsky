@@ -1,7 +1,7 @@
 import React from 'react';
 import { ReplyContext } from '../ui/ReplyContext';
 import { PostEmbeds } from './PostEmbeds';
-import type { FeedItem, Post } from '../../types/atproto';
+import type { FeedItem, Post } from '@bsky/shared/types/atproto';
 import { getPostText } from '../../utils/post-helpers';
 
 interface PostContentProps {

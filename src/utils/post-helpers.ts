@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
-import type { Post } from '../types/atproto';
+import type { Post } from '@bsky/shared/types/atproto';
 
 /**
  * Extract text content from a post record

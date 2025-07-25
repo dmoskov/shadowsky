@@ -7,7 +7,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient } from '@tanstack/react-query';
 import { usePostInteractions } from '../usePostInteractions';
 import { AllTheProviders, createMockPost, createMockFeedItem } from '../../test/utils';
-import type { Post, FeedItem } from '../../types/atproto';
+import type { Post, FeedItem } from '@bsky/shared/types/atproto';
 
 // Mock the atproto service module
 jest.mock('../../services/atproto', () => ({
