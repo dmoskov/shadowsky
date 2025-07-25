@@ -21,7 +21,7 @@ export const Profile: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="p-6">
         <div className="animate-pulse">
           <div className="h-48 rounded-t-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}></div>
           <div className="rounded-b-lg p-6" style={{ backgroundColor: 'var(--bsky-bg-secondary)' }}>
@@ -36,7 +36,7 @@ export const Profile: React.FC = () => {
 
   if (error || !profile) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="p-6">
         <div className="bsky-card p-4" style={{ borderColor: 'var(--bsky-error)', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--bsky-error)' }}>
           Failed to load profile
         </div>
@@ -45,7 +45,7 @@ export const Profile: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="">
       {/* Header/Banner */}
       <div className="relative">
         {profile.banner ? (

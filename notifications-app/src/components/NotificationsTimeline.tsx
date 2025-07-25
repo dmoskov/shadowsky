@@ -58,7 +58,7 @@ export const NotificationsTimeline: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold mb-2 flex items-center gap-2">
           <Calendar className="text-blue-500" />

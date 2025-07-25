@@ -143,7 +143,7 @@ export const NotificationsFeed: React.FC = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto bsky-font">
+    <div className="bsky-font">
       {/* Header with filters */}
       <div className="sticky top-0 bsky-glass p-4 z-10" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
         <div className="flex items-center justify-between mb-4">
