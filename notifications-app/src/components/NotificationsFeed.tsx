@@ -6,7 +6,7 @@ import { formatDistanceToNow } from 'date-fns'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { aggregateNotifications, AggregatedNotificationItem } from './NotificationAggregator'
 
-type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies' | 'images'
+type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies' | 'quotes' | 'images'
 
 export const NotificationsFeed: React.FC = () => {
   const [filter, setFilter] = useState<NotificationFilter>('all')
@@ -90,7 +90,8 @@ export const NotificationsFeed: React.FC = () => {
         reposts: ['repost'],
         follows: ['follow'],
         mentions: ['mention'],
-        replies: ['reply']
+        replies: ['reply'],
+        quotes: ['quote']
       }
       filtered = filtered.filter((n: Notification) => filterMap[filter as Exclude<NotificationFilter, 'all' | 'images'>].includes(n.reason))
     }
@@ -219,6 +220,12 @@ export const NotificationsFeed: React.FC = () => {
             label="Replies"
           />
           <FilterTab
+            active={filter === 'quotes'}
+            onClick={() => setFilter('quotes')}
+            icon={<Quote size={16} />}
+            label="Quotes"
+          />
+          <FilterTab
             active={filter === 'images'}
             onClick={() => setFilter('images')}
             icon={<Image size={16} />}
@@ -236,7 +243,7 @@ export const NotificationsFeed: React.FC = () => {
             <p className="text-sm mt-2">Check back later for updates</p>
           </div>
         ) : (
-          ['all', 'likes', 'reposts', 'follows'].includes(filter) ? (
+          ['all', 'likes', 'reposts', 'follows', 'quotes'].includes(filter) ? (
             // Show aggregated notifications for tabs that support aggregation
             (() => {
               const processedNotifications = aggregateNotifications(filteredNotifications)
@@ -250,6 +257,7 @@ export const NotificationsFeed: React.FC = () => {
                     <div key={aggregationKey}>
                       <AggregatedNotificationItem
                         item={item}
+                        postMap={postMap}
                         onExpand={() => {
                           const newExpanded = new Set(expandedAggregations)
                           if (isExpanded) {

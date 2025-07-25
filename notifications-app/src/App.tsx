@@ -8,6 +8,7 @@ import { Login } from './components/Login'
 import { NotificationsDashboard } from './components/NotificationsDashboard'
 import { NotificationsFeed } from './components/NotificationsFeed'
 import { NotificationsTimeline } from './components/NotificationsTimeline'
+import { VisualTimeline } from './components/VisualTimeline'
 import { NotificationsAnalytics } from './components/NotificationsAnalytics'
 import { NotificationsSettings } from './components/NotificationsSettings'
 import { Profile } from './components/Profile'
@@ -54,7 +55,7 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<NotificationsDashboard />} />
             <Route path="/notifications" element={<NotificationsFeed />} />
-            <Route path="/timeline" element={<NotificationsTimeline />} />
+            <Route path="/timeline" element={<VisualTimeline />} />
             <Route path="/analytics" element={<NotificationsAnalytics />} />
             <Route path="/settings" element={<NotificationsSettings />} />
             <Route path="/profile/:handle" element={<Profile />} />

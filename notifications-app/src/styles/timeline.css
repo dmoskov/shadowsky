@@ -1,0 +1,114 @@
+/* Visual Timeline Styles */
+
+.timeline-event {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Large gap indicator styling */
+.timeline-gap-indicator {
+  position: relative;
+}
+
+.timeline-gap-indicator::before,
+.timeline-gap-indicator::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 8px;
+  background-color: var(--bsky-border-color);
+  opacity: 0.3;
+}
+
+.timeline-gap-indicator::before {
+  top: -12px;
+}
+
+.timeline-gap-indicator::after {
+  bottom: -12px;
+}
+
+/* Event card hover effects */
+.timeline-event-card {
+  transition: all 0.2s ease-out;
+}
+
+.timeline-event-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Aggregated event styling */
+.timeline-aggregated {
+  background: linear-gradient(135deg, 
+    var(--bsky-bg-secondary) 0%, 
+    var(--bsky-bg-tertiary) 100%
+  );
+}
+
+/* Timeline dot pulse for recent events */
+.timeline-dot-recent {
+  position: relative;
+}
+
+.timeline-dot-recent::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--bsky-primary);
+  opacity: 0.3;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.3;
+  }
+}
+
+/* Time label styling */
+.timeline-time-label {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+}
+
+/* Avatar stack styling */
+.avatar-stack {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-stack img {
+  transition: transform 0.2s ease-out;
+}
+
+.avatar-stack img:hover {
+  transform: scale(1.1) translateY(-2px);
+  z-index: 10;
+}

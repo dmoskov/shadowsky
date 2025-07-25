@@ -1,5 +1,5 @@
 import React from 'react'
-import { Heart, Repeat2, UserPlus } from 'lucide-react'
+import { Heart, Repeat2, UserPlus, Quote } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 
@@ -33,8 +33,8 @@ export function aggregateNotifications(notifications: Notification[]): Processed
   
   notifications.forEach(notification => {
     // Only aggregate certain types
-    if (['like', 'repost', 'follow'].includes(notification.reason)) {
-      // For follows, group all together. For likes/reposts, group by post URI
+    if (['like', 'repost', 'follow', 'quote'].includes(notification.reason)) {
+      // For follows, group all together. For likes/reposts/quotes, group by post URI
       const key = notification.reason === 'follow' 
         ? 'follow-all'
         : `${notification.reason}-${notification.uri || 'no-uri'}`
@@ -44,7 +44,7 @@ export function aggregateNotifications(notifications: Notification[]): Processed
       }
       groups.get(key)!.push(notification)
     } else {
-      // Don't aggregate replies, mentions, quotes - they're more important individually
+      // Don't aggregate replies, mentions - they're more important individually
       processed.push({ type: 'single', notification })
     }
   })
@@ -138,14 +138,16 @@ export function aggregateNotifications(notifications: Notification[]): Processed
 interface AggregatedNotificationItemProps {
   item: AggregatedNotification
   onExpand?: () => void
+  postMap?: Map<string, any>
 }
 
-export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProps> = ({ item, onExpand }) => {
+export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProps> = ({ item, onExpand, postMap }) => {
   const getIcon = () => {
     switch (item.reason) {
       case 'like': return <Heart size={18} style={{ color: 'var(--bsky-like)' }} fill="currentColor" />
       case 'repost': return <Repeat2 size={18} style={{ color: 'var(--bsky-repost)' }} />
       case 'follow': return <UserPlus size={18} style={{ color: 'var(--bsky-follow)' }} />
+      case 'quote': return <Quote size={18} style={{ color: 'var(--bsky-quote)' }} />
       default: return null
     }
   }
@@ -158,6 +160,8 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
         return item.count === 1 ? 'reposted your post' : `reposts of your post`
       case 'follow': 
         return item.count === 1 ? 'followed you' : 'new followers'
+      case 'quote':
+        return item.count === 1 ? 'quoted your post' : `quotes of your post`
       default: 
         return 'interacted with your post'
     }
@@ -242,12 +246,65 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
         </p>
         
         {/* Post preview if applicable */}
-        {item.reason !== 'follow' && item.notifications[0].record && 
-         typeof item.notifications[0].record === 'object' && 'text' in item.notifications[0].record && (
-          <p className="text-sm mt-2 line-clamp-2" style={{ color: 'var(--bsky-text-secondary)' }}>
-            {(item.notifications[0].record as { text?: string }).text}
-          </p>
-        )}
+        {item.reason !== 'follow' && (() => {
+          // Try to get the post from postMap first for richer content
+          const postUri = item.notifications[0].uri
+          const post = postMap?.get(postUri)
+          
+          if (post) {
+            // We have full post data with author info
+            const postText = post.record?.text || ''
+            const postAuthor = post.author
+            const hasImages = post.embed?.$type === 'app.bsky.embed.images#view' || 
+                            (post.embed?.$type === 'app.bsky.embed.recordWithMedia#view' && 
+                             post.embed.media?.$type === 'app.bsky.embed.images#view')
+            
+            return (
+              <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-secondary)' }}>
+                <div className="flex items-center gap-2 mb-2">
+                  {postAuthor?.avatar ? (
+                    <img 
+                      src={postAuthor.avatar} 
+                      alt={postAuthor.handle}
+                      className="w-5 h-5 bsky-avatar"
+                    />
+                  ) : (
+                    <div className="w-5 h-5 bsky-avatar flex items-center justify-center text-xs" 
+                         style={{ background: 'var(--bsky-bg-tertiary)' }}>
+                      {postAuthor?.handle?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-xs font-medium">
+                    {postAuthor?.displayName || postAuthor?.handle || 'You'}
+                  </span>
+                  {hasImages && (
+                    <span className="text-xs flex items-center gap-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                      · 📷
+                    </span>
+                  )}
+                </div>
+                {postText && (
+                  <p className="text-sm line-clamp-3" style={{ color: 'var(--bsky-text-primary)' }}>
+                    {postText}
+                  </p>
+                )}
+              </div>
+            )
+          } else if (item.notifications[0].record && 
+                     typeof item.notifications[0].record === 'object' && 
+                     'text' in item.notifications[0].record) {
+            // Fallback to record text
+            return (
+              <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-secondary)' }}>
+                <p className="text-sm line-clamp-3" style={{ color: 'var(--bsky-text-primary)' }}>
+                  {(item.notifications[0].record as { text?: string }).text}
+                </p>
+              </div>
+            )
+          }
+          
+          return null
+        })()}
         
         <time className="text-xs mt-1 block" style={{ color: 'var(--bsky-text-tertiary)' }}>
           {formatDistanceToNow(new Date(item.latestTimestamp), { addSuffix: true })}
