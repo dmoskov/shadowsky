@@ -87,8 +87,8 @@ export const NotificationsFeed: React.FC = () => {
         // While posts are loading, show empty
         filtered = []
       }
-    } else if (filter !== 'all') {
-      const filterMap: Record<Exclude<NotificationFilter, 'all' | 'images'>, string[]> = {
+    } else if (filter !== 'all' && filter !== 'top-accounts') {
+      const filterMap: Record<Exclude<NotificationFilter, 'all' | 'images' | 'top-accounts'>, string[]> = {
         likes: ['like'],
         reposts: ['repost'],
         follows: ['follow'],
@@ -96,7 +96,7 @@ export const NotificationsFeed: React.FC = () => {
         replies: ['reply'],
         quotes: ['quote']
       }
-      filtered = filtered.filter((n: Notification) => filterMap[filter as Exclude<NotificationFilter, 'all' | 'images'>].includes(n.reason))
+      filtered = filtered.filter((n: Notification) => filterMap[filter as Exclude<NotificationFilter, 'all' | 'images' | 'top-accounts'>].includes(n.reason))
     }
 
     if (showUnreadOnly) {
