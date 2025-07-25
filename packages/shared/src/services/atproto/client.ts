@@ -11,6 +11,7 @@ import { sessionCookies } from '../../lib/cookies'
 export interface ATProtoConfig {
   service?: string
   persistSession?: boolean
+  sessionPrefix?: string
 }
 
 export class ATProtoClient {
@@ -20,7 +21,8 @@ export class ATProtoClient {
   constructor(config: ATProtoConfig = {}) {
     this.config = {
       service: config.service || 'https://bsky.social',
-      persistSession: config.persistSession !== false
+      persistSession: config.persistSession !== false,
+      sessionPrefix: config.sessionPrefix || ''
     }
     
     this._agent = new BskyAgent({
@@ -114,6 +116,10 @@ export class ATProtoClient {
     return this._agent.session !== undefined
   }
 
+  getSessionPrefix(): string {
+    return this.config.sessionPrefix
+  }
+
   private saveSession(session: any): void {
     try {
       // Ensure we're saving all required fields
@@ -127,9 +133,10 @@ export class ATProtoClient {
         refreshJwt: session.refreshJwt,
         active: session.active
       }
+      const storageKey = `${this.config.sessionPrefix}bsky_session`
       // Save to both localStorage (for backward compatibility) and cookies
-      localStorage.setItem('bsky_session', JSON.stringify(sessionData))
-      sessionCookies.save(sessionData)
+      localStorage.setItem(storageKey, JSON.stringify(sessionData))
+      sessionCookies.save(sessionData, this.config.sessionPrefix)
     } catch (error) {
       console.error('Failed to save session:', error)
     }
@@ -137,26 +144,29 @@ export class ATProtoClient {
 
   private clearSession(): void {
     try {
-      localStorage.removeItem('bsky_session')
-      sessionCookies.clear()
+      const storageKey = `${this.config.sessionPrefix}bsky_session`
+      localStorage.removeItem(storageKey)
+      sessionCookies.clear(this.config.sessionPrefix)
     } catch (error) {
       console.error('Failed to clear session:', error)
     }
   }
 
-  static loadSavedSession(): Session | null {
+  static loadSavedSession(sessionPrefix: string = ''): Session | null {
     try {
+      const storageKey = `${sessionPrefix}bsky_session`
+      
       // Try to load from cookie first (preferred for cross-port sharing)
-      let session = sessionCookies.load()
+      let session = sessionCookies.load(sessionPrefix)
       
       // Fall back to localStorage if no cookie found
       if (!session) {
-        const saved = localStorage.getItem('bsky_session')
+        const saved = localStorage.getItem(storageKey)
         if (saved) {
           session = JSON.parse(saved)
           // Migrate to cookie storage
           if (session) {
-            sessionCookies.save(session)
+            sessionCookies.save(session, sessionPrefix)
           }
         }
       }
@@ -166,8 +176,8 @@ export class ATProtoClient {
       // Validate session has required fields
       if (!session.accessJwt || !session.refreshJwt || !session.did) {
         console.warn('Invalid session format, clearing...')
-        localStorage.removeItem('bsky_session')
-        sessionCookies.clear()
+        localStorage.removeItem(storageKey)
+        sessionCookies.clear(sessionPrefix)
         return null
       }
       
@@ -176,8 +186,9 @@ export class ATProtoClient {
       console.error('Failed to load saved session:', error)
       // Clear corrupted session data
       try {
-        localStorage.removeItem('bsky_session')
-        sessionCookies.clear()
+        const storageKey = `${sessionPrefix}bsky_session`
+        localStorage.removeItem(storageKey)
+        sessionCookies.clear(sessionPrefix)
       } catch {
         // Ignore storage errors
       }

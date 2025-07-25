@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
-import { getSearchService } from '../services/atproto/search'
+import { getSearchService } from '@bsky/shared'
 import { useDebounce } from './useDebounce'
 
 export function useSearchActors(query: string) {

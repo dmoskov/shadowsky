@@ -6,23 +6,23 @@
   --bsky-primary-light: #4da3ff;
   --bsky-accent: #7c3aed; /* Purple accent for distinction */
   
-  /* Background colors - slightly warmer than original */
-  --bsky-bg-primary: #0a0f1b;
-  --bsky-bg-secondary: #111827;
-  --bsky-bg-tertiary: #1a2332;
-  --bsky-bg-hover: #1f2937;
-  --bsky-bg-active: #2d3748;
+  /* Background colors - much lighter for better readability */
+  --bsky-bg-primary: #f8fafc;
+  --bsky-bg-secondary: #ffffff;
+  --bsky-bg-tertiary: #f1f5f9;
+  --bsky-bg-hover: #e2e8f0;
+  --bsky-bg-active: #cbd5e1;
   
-  /* Text colors */
-  --bsky-text-primary: #f0f4f8;
-  --bsky-text-secondary: #a8b3cf;
-  --bsky-text-tertiary: #6b7c93;
+  /* Text colors - dark for light background */
+  --bsky-text-primary: #0f172a;
+  --bsky-text-secondary: #475569;
+  --bsky-text-tertiary: #64748b;
   --bsky-text-link: var(--bsky-primary-light);
   
-  /* Border colors */
-  --bsky-border-primary: #2d3748;
-  --bsky-border-secondary: #374151;
-  --bsky-border-light: #1f2937;
+  /* Border colors - light gray for light theme */
+  --bsky-border-primary: #e2e8f0;
+  --bsky-border-secondary: #cbd5e1;
+  --bsky-border-light: #f1f5f9;
   
   /* Notification type colors - more vibrant */
   --bsky-like: #f91880;
@@ -160,32 +160,34 @@
 }
 
 /* Scrollbar styling */
-.bsky-scrollbar::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
+@layer components {
+  .bsky-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
 
-.bsky-scrollbar::-webkit-scrollbar-track {
-  background: var(--bsky-bg-primary);
-  border-radius: 5px;
-}
+  .bsky-scrollbar::-webkit-scrollbar-track {
+    background: var(--bsky-bg-primary);
+    border-radius: 5px;
+  }
 
-.bsky-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--bsky-bg-tertiary);
-  border-radius: 5px;
-  border: 2px solid var(--bsky-bg-primary);
-}
+  .bsky-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--bsky-bg-tertiary);
+    border-radius: 5px;
+    border: 2px solid var(--bsky-bg-primary);
+  }
 
-.bsky-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--bsky-bg-hover);
+  .bsky-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--bsky-bg-hover);
+  }
 }
 
 /* Glass effect */
 .bsky-glass {
-  background: rgba(17, 24, 39, 0.8);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 /* Gradient text */

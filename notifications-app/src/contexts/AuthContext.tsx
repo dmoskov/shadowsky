@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const savedSession = ATProtoClient.loadSavedSession()
+        const savedSession = ATProtoClient.loadSavedSession(atProtoClient.getSessionPrefix())
         if (savedSession) {
           initAttempts.current++
           

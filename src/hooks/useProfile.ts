@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
-import { getProfileService } from '../services/atproto/profile'
+import { getProfileService } from '@bsky/shared'
 import { useErrorHandler } from './useErrorHandler'
 import type { ProfileViewDetailed } from '@atproto/api/dist/client/types/app/bsky/actor/defs'
 

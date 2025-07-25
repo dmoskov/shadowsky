@@ -29,7 +29,6 @@ import { MobileTabBar } from './components/core/MobileTabBar'
 import { ErrorBadge } from './components/common/ErrorBadge'
 import { TailwindTest } from './components/TailwindTest'
 import { LoadingScreen } from './components/ui/LoadingScreen'
-import { WelcomeScreen } from './components/ui/WelcomeScreen'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
 import { queryClient } from '@bsky/shared'
 import { PenSquare } from 'lucide-react'
@@ -60,26 +59,10 @@ function AppContent() {
   const [isComposeOpen, setIsComposeOpen] = useState(false)
   const [composeTemplate, setComposeTemplate] = useState<string | undefined>()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [showWelcome, setShowWelcome] = useState(false)
   const navigate = useNavigate()
   
   // Enable keyboard navigation
   useKeyboardNavigation()
-  
-  // Check if user has seen welcome screen
-  useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      const hasSeenWelcome = localStorage.getItem('hasSeenWelcome')
-      if (!hasSeenWelcome) {
-        setShowWelcome(true)
-      }
-    }
-  }, [isAuthenticated, isLoading])
-  
-  const handleWelcomeComplete = () => {
-    localStorage.setItem('hasSeenWelcome', 'true')
-    setShowWelcome(false)
-  }
   
   // Track route changes for performance monitoring
   // useEffect(() => {
@@ -179,9 +162,6 @@ function AppContent() {
       {/* Toast Notifications */}
       <ToastContainer />
       {import.meta.env.DEV && <ErrorBadge />}
-      
-      {/* Welcome Screen for first-time users */}
-      {showWelcome && <WelcomeScreen onComplete={handleWelcomeComplete} />}
     </>
   )
 }

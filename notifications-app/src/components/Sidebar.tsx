@@ -47,7 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           <h2 className="text-lg font-bold bsky-gradient-text">Menu</h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white hover:bg-opacity-10 transition-all"
+            className="p-2 rounded-lg hover:bg-gray-100 transition-all"
           >
             <X size={20} style={{ color: 'var(--bsky-text-secondary)' }} />
           </button>
@@ -62,8 +62,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               className={({ isActive }) => `
                 flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group
                 ${isActive 
-                  ? 'bsky-button-primary shadow-md' 
-                  : 'hover:bg-white hover:bg-opacity-5'
+                  ? 'bg-blue-500 text-white shadow-md' 
+                  : 'hover:bg-gray-100'
                 }
               `}
               style={({ isActive }) => ({
@@ -71,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               })}
             >
               <item.icon size={20} className="group-hover:scale-110 transition-transform" />
-              <span className="font-medium group-hover:text-white transition-colors">{item.label}</span>
+              <span className="font-medium transition-colors">{item.label}</span>
             </NavLink>
           ))}
         </nav>
@@ -85,11 +85,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             href="https://bsky.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white hover:bg-opacity-5 transition-all duration-200 group"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 group"
             style={{ color: 'var(--bsky-text-secondary)' }}
           >
             <ExternalLink size={20} className="group-hover:scale-110 transition-transform" />
-            <span className="font-medium group-hover:text-white transition-colors">Open Bluesky</span>
+            <span className="font-medium transition-colors">Open Bluesky</span>
           </a>
         </div>
 

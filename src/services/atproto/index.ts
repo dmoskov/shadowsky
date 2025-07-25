@@ -12,6 +12,7 @@ import { getInteractionsService } from '@bsky/shared'
 import { getThreadService } from '@bsky/shared'
 import { getProfileService } from '@bsky/shared'
 import { getSearchService } from '@bsky/shared'
+import { getNotificationService } from './notifications'
 
 // Create singleton instances
 export const atProtoClient = new ATProtoClient({
@@ -32,5 +33,6 @@ export {
   getInteractionsService,
   getThreadService,
   getProfileService,
-  getSearchService
+  getSearchService,
+  getNotificationService
 }

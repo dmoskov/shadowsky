@@ -4,8 +4,8 @@ import { getNotificationService } from '../services/atproto/notifications'
 import { useErrorHandler } from './useErrorHandler'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 
-const MAX_NOTIFICATIONS = 1000
-const MAX_DAYS = 14
+const MAX_NOTIFICATIONS = 10000
+const MAX_DAYS = 7
 
 export function useNotifications(priority?: boolean) {
   const { session } = useAuth()
@@ -29,16 +29,16 @@ export function useNotifications(priority?: boolean) {
         return undefined
       }
 
-      // Check if oldest notification is beyond 14 days
+      // Check if oldest notification is beyond 7 days
       if (allPages.length > 0) {
         const allNotifications = allPages.flatMap(page => page.notifications)
         if (allNotifications.length > 0) {
           const oldestNotification = allNotifications[allNotifications.length - 1]
           const oldestDate = new Date(oldestNotification.indexedAt)
-          const fourteenDaysAgo = new Date()
-          fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - MAX_DAYS)
+          const sevenDaysAgo = new Date()
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - MAX_DAYS)
           
-          if (oldestDate < fourteenDaysAgo) {
+          if (oldestDate < sevenDaysAgo) {
             return undefined
           }
         }

@@ -11,10 +11,11 @@ import {
 import { getInteractionsService } from '@bsky/shared'
 import { getThreadService } from '@bsky/shared'
 
-// Create singleton instances
+// Create singleton instances with app-specific session storage
 export const atProtoClient = new ATProtoClient({
   service: 'https://bsky.social',
-  persistSession: true
+  persistSession: true,
+  sessionPrefix: 'notifications_' // This will use 'notifications_bsky_session' as the storage key
 })
 
 export const feedService = new FeedService(atProtoClient)

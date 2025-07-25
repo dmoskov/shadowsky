@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { getThreadService } from '../services/atproto/thread'
+import { getThreadService } from '@bsky/shared'
 import { useErrorHandler } from './useErrorHandler'
 
 interface UseThreadDataOptions {

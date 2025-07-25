@@ -91,12 +91,14 @@ export const cookies = {
 
 // Specialized session cookie functions
 export const sessionCookies = {
-  COOKIE_NAME: 'bsky_session',
+  getCookieName(prefix: string = ''): string {
+    return `${prefix}bsky_session`
+  },
   
-  save(session: any): void {
+  save(session: any, prefix: string = ''): void {
     try {
       const sessionStr = JSON.stringify(session)
-      cookies.set(this.COOKIE_NAME, sessionStr, {
+      cookies.set(this.getCookieName(prefix), sessionStr, {
         domain: cookies.getSharedDomain(),
         secure: window.location.protocol === 'https:',
         sameSite: 'lax',
@@ -107,9 +109,9 @@ export const sessionCookies = {
     }
   },
   
-  load(): any | null {
+  load(prefix: string = ''): any | null {
     try {
-      const sessionStr = cookies.get(this.COOKIE_NAME)
+      const sessionStr = cookies.get(this.getCookieName(prefix))
       if (!sessionStr) return null
       
       return JSON.parse(sessionStr)
@@ -119,8 +121,8 @@ export const sessionCookies = {
     }
   },
   
-  clear(): void {
-    cookies.remove(this.COOKIE_NAME, {
+  clear(prefix: string = ''): void {
+    cookies.remove(this.getCookieName(prefix), {
       domain: cookies.getSharedDomain()
     })
   }
