@@ -42,7 +42,9 @@ jobs:
       - name: Build app
         run: |
           cd notifications-app
-          npm run build -- --base=/notifications-app/
+          npm run build -- --base=/
+          echo "shadowsky.io" > dist/CNAME
+          touch dist/.nojekyll
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
