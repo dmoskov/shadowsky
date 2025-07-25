@@ -1,24 +1,59 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import { getNotificationService } from '../services/atproto/notifications'
 import { useErrorHandler } from './useErrorHandler'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 
+const MAX_NOTIFICATIONS = 1000
+const MAX_DAYS = 14
+
 export function useNotifications(priority?: boolean) {
   const { session } = useAuth()
+  const { handleError } = useErrorHandler()
 
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ['notifications', priority],
-    queryFn: async () => {
+    queryFn: async ({ pageParam }) => {
       const { atProtoClient } = await import('../services/atproto')
       const agent = atProtoClient.agent
       if (!agent) throw new Error('Not authenticated')
       const notificationService = getNotificationService(agent)
-      return notificationService.listNotifications(undefined, priority)
+      return notificationService.listNotifications(pageParam, priority)
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage, allPages) => {
+      // Calculate total notifications loaded
+      const totalNotifications = allPages.reduce((sum, page) => sum + page.notifications.length, 0)
+      
+      // Stop if we've reached max notifications
+      if (totalNotifications >= MAX_NOTIFICATIONS) {
+        return undefined
+      }
+
+      // Check if oldest notification is beyond 14 days
+      if (allPages.length > 0) {
+        const allNotifications = allPages.flatMap(page => page.notifications)
+        if (allNotifications.length > 0) {
+          const oldestNotification = allNotifications[allNotifications.length - 1]
+          const oldestDate = new Date(oldestNotification.indexedAt)
+          const fourteenDaysAgo = new Date()
+          fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - MAX_DAYS)
+          
+          if (oldestDate < fourteenDaysAgo) {
+            return undefined
+          }
+        }
+      }
+
+      // Continue pagination if we have a cursor
+      return lastPage.cursor
     },
     enabled: !!session,
     staleTime: 30 * 1000, // 30 seconds
     refetchInterval: 60 * 1000, // Refetch every minute
+    onError: (error) => {
+      handleError(error)
+    }
   })
 }
 

@@ -1,35 +1,59 @@
 import React, { useState } from 'react'
-import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, CheckCheck } from 'lucide-react'
+import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, CheckCheck, Image } from 'lucide-react'
 import { useNotifications, useUnreadCount, useMarkNotificationsRead } from '../hooks/useNotifications'
 import { formatDistanceToNow } from 'date-fns'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 
-type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies'
+type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies' | 'images'
 
 export const NotificationsFeed: React.FC = () => {
   const [filter, setFilter] = useState<NotificationFilter>('all')
   const [showUnreadOnly, setShowUnreadOnly] = useState(false)
   
-  const { data, isLoading, error } = useNotifications()
+  const { 
+    data, 
+    isLoading, 
+    error, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage 
+  } = useNotifications()
   const { data: unreadCount } = useUnreadCount()
   const { mutate: markAllAsRead, isPending: isMarkingAsRead } = useMarkNotificationsRead()
   
-  const notifications = data?.notifications || []
+  const notifications = React.useMemo(() => {
+    if (!data?.pages) return []
+    return data.pages.flatMap(page => page.notifications)
+  }, [data])
 
   const filteredNotifications = React.useMemo(() => {
     if (!notifications) return []
     
     let filtered = notifications
 
-    if (filter !== 'all') {
-      const filterMap: Record<Exclude<NotificationFilter, 'all'>, string[]> = {
+    if (filter === 'images') {
+      // Filter for notifications that contain images
+      filtered = filtered.filter((n: Notification) => {
+        // Check if the notification has a record with embed containing images
+        if (n.record && typeof n.record === 'object' && 'embed' in n.record) {
+          const embed = (n.record as any).embed
+          return embed && (
+            embed.$type === 'app.bsky.embed.images' ||
+            embed.$type === 'app.bsky.embed.images#view' ||
+            (embed.images && Array.isArray(embed.images))
+          )
+        }
+        return false
+      })
+    } else if (filter !== 'all') {
+      const filterMap: Record<Exclude<NotificationFilter, 'all' | 'images'>, string[]> = {
         likes: ['like'],
         reposts: ['repost'],
         follows: ['follow'],
         mentions: ['mention'],
         replies: ['reply']
       }
-      filtered = filtered.filter((n: Notification) => filterMap[filter as Exclude<NotificationFilter, 'all'>].includes(n.reason))
+      filtered = filtered.filter((n: Notification) => filterMap[filter as Exclude<NotificationFilter, 'all' | 'images'>].includes(n.reason))
     }
 
     if (showUnreadOnly) {
@@ -148,6 +172,12 @@ export const NotificationsFeed: React.FC = () => {
             icon={<MessageCircle size={16} />}
             label="Replies"
           />
+          <FilterTab
+            active={filter === 'images'}
+            onClick={() => setFilter('images')}
+            icon={<Image size={16} />}
+            label="Images"
+          />
         </div>
       </div>
 
@@ -198,6 +228,29 @@ export const NotificationsFeed: React.FC = () => {
                     <p className="text-gray-400 text-sm mt-1 line-clamp-2">
                       {(notification.record as { text?: string }).text}
                     </p>
+                  )}
+                  {/* Display images if present */}
+                  {notification.record && typeof notification.record === 'object' && 'embed' in notification.record && (
+                    <div className="mt-2">
+                      {(() => {
+                        const embed = (notification.record as any).embed
+                        if (embed && embed.images && Array.isArray(embed.images)) {
+                          return (
+                            <div className="grid grid-cols-2 gap-2 max-w-sm">
+                              {embed.images.slice(0, 4).map((img: any, idx: number) => (
+                                <img 
+                                  key={idx}
+                                  src={img.thumb || img.fullsize}
+                                  alt={img.alt || ''}
+                                  className="rounded-lg object-cover w-full h-24"
+                                />
+                              ))}
+                            </div>
+                          )
+                        }
+                        return null
+                      })()}
+                    </div>
                   )}
                   <time className="text-gray-500 text-xs mt-1 block">
                     {formatDistanceToNow(new Date(notification.indexedAt), { addSuffix: true })}

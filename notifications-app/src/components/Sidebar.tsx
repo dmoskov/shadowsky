@@ -7,9 +7,7 @@ import {
   BarChart3,
   Settings,
   User,
-  Search,
-  MessageSquare,
-  Bookmark,
+  ExternalLink,
   X
 } from 'lucide-react'
 
@@ -24,9 +22,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { path: '/notifications', label: 'All Notifications', icon: Bell },
     { path: '/timeline', label: 'Timeline View', icon: Clock },
     { path: '/analytics', label: 'Analytics', icon: BarChart3 },
-    { path: '/search', label: 'Search', icon: Search },
-    { path: '/messages', label: 'Messages', icon: MessageSquare },
-    { path: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
     { path: '/profile/me', label: 'Profile', icon: User },
     { path: '/settings', label: 'Settings', icon: Settings },
   ]
@@ -77,6 +72,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </NavLink>
           ))}
         </nav>
+
+        {/* Divider */}
+        <div className="my-4 mx-4 border-t border-gray-800"></div>
+
+        {/* External Links */}
+        <div className="px-4 space-y-1">
+          <a
+            href="https://bsky.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200"
+          >
+            <ExternalLink size={20} />
+            <span className="font-medium">Open Bluesky</span>
+          </a>
+        </div>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800">
           <div className="text-xs text-gray-500 text-center">

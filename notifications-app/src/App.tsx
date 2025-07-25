@@ -11,9 +11,6 @@ import { NotificationsTimeline } from './components/NotificationsTimeline'
 import { NotificationsAnalytics } from './components/NotificationsAnalytics'
 import { NotificationsSettings } from './components/NotificationsSettings'
 import { Profile } from './components/Profile'
-import { Search } from './components/Search'
-import { Messages } from './components/Messages'
-import { Bookmarks } from './components/Bookmarks'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,9 +58,6 @@ function AppContent() {
             <Route path="/analytics" element={<NotificationsAnalytics />} />
             <Route path="/settings" element={<NotificationsSettings />} />
             <Route path="/profile/:handle" element={<Profile />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/bookmarks" element={<Bookmarks />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
