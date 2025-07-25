@@ -33,6 +33,31 @@ export const NotificationsFeed: React.FC = () => {
     return data.pages.flatMap((page: any) => page.notifications)
   }, [data])
 
+  // Update page title with unread count
+  useEffect(() => {
+    console.log('NotificationsFeed: unreadCount =', unreadCount)
+    
+    // Set an interval to ensure our title persists
+    const updateTitle = () => {
+      if (unreadCount && unreadCount > 0) {
+        document.title = `(${unreadCount}) Bluesky Notifications`
+      } else {
+        document.title = 'Bluesky Notifications'
+      }
+    }
+    
+    updateTitle() // Set immediately
+    
+    // Set an interval to re-assert our title in case something else changes it
+    const interval = setInterval(updateTitle, 1000)
+    
+    // Cleanup
+    return () => {
+      clearInterval(interval)
+      document.title = 'Bluesky Notifications'
+    }
+  }, [unreadCount])
+
   // Fetch posts for notifications that might have images
   // We always fetch posts to show images in all views
   const { data: posts } = useNotificationPosts(notifications)
