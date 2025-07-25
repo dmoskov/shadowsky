@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, CheckCheck } from 'lucide-react'
-import { useNotifications, useUnreadCount } from '../hooks/useNotifications'
+import { useNotifications, useUnreadCount, useMarkNotificationsRead } from '../hooks/useNotifications'
 import { formatDistanceToNow } from 'date-fns'
-import { NotificationReason } from '../types/notifications'
+import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 
 type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies'
 
@@ -10,8 +10,11 @@ export const NotificationsFeed: React.FC = () => {
   const [filter, setFilter] = useState<NotificationFilter>('all')
   const [showUnreadOnly, setShowUnreadOnly] = useState(false)
   
-  const { notifications, isLoading, error, markAllAsRead, isMarkingAsRead } = useNotifications(100)
+  const { data, isLoading, error } = useNotifications()
   const { data: unreadCount } = useUnreadCount()
+  const { mutate: markAllAsRead, isPending: isMarkingAsRead } = useMarkNotificationsRead()
+  
+  const notifications = data?.notifications || []
 
   const filteredNotifications = React.useMemo(() => {
     if (!notifications) return []
@@ -19,19 +22,18 @@ export const NotificationsFeed: React.FC = () => {
     let filtered = notifications
 
     if (filter !== 'all') {
-      const filterMap: Record<NotificationFilter, string[]> = {
-        all: [],
+      const filterMap: Record<Exclude<NotificationFilter, 'all'>, string[]> = {
         likes: ['like'],
         reposts: ['repost'],
         follows: ['follow'],
         mentions: ['mention'],
         replies: ['reply']
       }
-      filtered = filtered.filter(n => filterMap[filter].includes(n.reason))
+      filtered = filtered.filter((n: Notification) => filterMap[filter as Exclude<NotificationFilter, 'all'>].includes(n.reason))
     }
 
     if (showUnreadOnly) {
-      filtered = filtered.filter(n => !n.isRead)
+      filtered = filtered.filter((n: Notification) => !n.isRead)
     }
 
     return filtered
@@ -156,7 +158,7 @@ export const NotificationsFeed: React.FC = () => {
             No notifications to show
           </div>
         ) : (
-          filteredNotifications.map((notification) => (
+          filteredNotifications.map((notification: Notification) => (
             <div
               key={`${notification.uri}-${notification.indexedAt}`}
               className={`flex gap-3 p-4 hover:bg-gray-800/50 transition-colors cursor-pointer ${
