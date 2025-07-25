@@ -9,7 +9,6 @@ const MAX_DAYS = 14
 
 export function useNotifications(priority?: boolean) {
   const { session } = useAuth()
-  const { handleError } = useErrorHandler()
 
   return useInfiniteQuery({
     queryKey: ['notifications', priority],
@@ -51,9 +50,6 @@ export function useNotifications(priority?: boolean) {
     enabled: !!session,
     staleTime: 30 * 1000, // 30 seconds
     refetchInterval: 60 * 1000, // Refetch every minute
-    onError: (error) => {
-      handleError(error)
-    }
   })
 }
 
@@ -95,8 +91,25 @@ export function useMarkNotificationsRead() {
     onSuccess: () => {
       // Reset notification count
       queryClient.setQueryData(['notificationCount'], 0)
-      // Invalidate notifications to update their seen status
-      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      
+      // Update notifications in place to mark them as read
+      queryClient.setQueriesData(
+        { queryKey: ['notifications'] },
+        (oldData: any) => {
+          if (!oldData?.pages) return oldData
+          
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => ({
+              ...page,
+              notifications: page.notifications.map((notification: Notification) => ({
+                ...notification,
+                isRead: true
+              }))
+            }))
+          }
+        }
+      )
     },
     onError: (error) => {
       handleError(error)

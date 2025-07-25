@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, CheckCheck, Image } from 'lucide-react'
+import React, { useState, useRef, useEffect } from 'react'
+import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, CheckCheck, Image, Loader } from 'lucide-react'
 import { useNotifications, useUnreadCount, useMarkNotificationsRead } from '../hooks/useNotifications'
 import { formatDistanceToNow } from 'date-fns'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
@@ -9,6 +9,7 @@ type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' |
 export const NotificationsFeed: React.FC = () => {
   const [filter, setFilter] = useState<NotificationFilter>('all')
   const [showUnreadOnly, setShowUnreadOnly] = useState(false)
+  const loadMoreRef = useRef<HTMLDivElement>(null)
   
   const { 
     data, 
@@ -23,8 +24,39 @@ export const NotificationsFeed: React.FC = () => {
   
   const notifications = React.useMemo(() => {
     if (!data?.pages) return []
-    return data.pages.flatMap(page => page.notifications)
+    return data.pages.flatMap((page: any) => page.notifications)
   }, [data])
+
+  // Set up intersection observer to load more notifications
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchNextPage()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(loadMoreRef.current)
+
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+
+  // Automatically load more notifications on first load
+  useEffect(() => {
+    if (data?.pages && data.pages.length === 1 && hasNextPage && !isFetchingNextPage) {
+      // Load at least a few pages automatically
+      const loadInitialPages = async () => {
+        for (let i = 0; i < 3 && hasNextPage; i++) {
+          await fetchNextPage()
+        }
+      }
+      loadInitialPages()
+    }
+  }, [data?.pages?.length])
 
   const filteredNotifications = React.useMemo(() => {
     if (!notifications) return []
@@ -107,6 +139,11 @@ export const NotificationsFeed: React.FC = () => {
             {unreadCount && unreadCount > 0 && (
               <span className="ml-2 text-sm font-normal text-gray-400">
                 ({unreadCount} unread)
+              </span>
+            )}
+            {notifications.length > 0 && (
+              <span className="ml-2 text-sm font-normal text-gray-500">
+                · {notifications.length} loaded
               </span>
             )}
           </h1>
@@ -259,6 +296,31 @@ export const NotificationsFeed: React.FC = () => {
               </div>
             </div>
           ))
+        )}
+        
+        {/* Loading more indicator */}
+        {(hasNextPage || isFetchingNextPage) && (
+          <div ref={loadMoreRef} className="p-6 flex justify-center">
+            {isFetchingNextPage ? (
+              <div className="flex items-center gap-2 text-gray-400">
+                <Loader className="animate-spin" size={20} />
+                <span>Loading more notifications...</span>
+              </div>
+            ) : (
+              <div className="text-gray-500 text-sm">
+                Scroll to load more
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* End of notifications message */}
+        {!hasNextPage && notifications.length > 0 && (
+          <div className="p-6 text-center text-gray-500 text-sm">
+            {notifications.length >= 1000 
+              ? `Showing maximum of 1,000 notifications`
+              : `No more notifications from the last 14 days`}
+          </div>
         )}
       </div>
     </div>
