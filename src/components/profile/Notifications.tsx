@@ -10,12 +10,16 @@ import {
   MessageCircle,
   AtSign,
   Quote,
-  Users
+  Users,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react'
 import { useNotifications, useMarkNotificationsRead, getNotificationText } from '../../hooks/useNotifications'
 import { NotificationsEmpty } from '../ui/EmptyStates'
 import { PageLoader } from '../ui/SkeletonLoaders'
+import { aggregateNotifications, getAggregatedText } from '../../utils/notification-helpers'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
+import type { ProcessedNotification } from '../../utils/notification-helpers'
 
 export const Notifications: React.FC = () => {
   const navigate = useNavigate()
@@ -26,8 +30,17 @@ export const Notifications: React.FC = () => {
     return saved === 'true'
   })
   
+  // Track expanded aggregations
+  const [expandedAggregations, setExpandedAggregations] = useState<Set<string>>(new Set())
+  
   const { data, isLoading, error } = useNotifications(priorityOnly)
   const { mutate: markAsRead } = useMarkNotificationsRead()
+  
+  // Process notifications for aggregation
+  const processedNotifications = React.useMemo(() => {
+    if (!data?.notifications) return []
+    return aggregateNotifications(data.notifications)
+  }, [data?.notifications])
 
   // Mark notifications as read when viewing the page
   useEffect(() => {
@@ -59,6 +72,16 @@ export const Notifications: React.FC = () => {
     } else if (notification.uri) {
       navigate(`/thread/${encodeURIComponent(notification.uri)}`)
     }
+  }
+  
+  const toggleAggregation = (key: string) => {
+    const newExpanded = new Set(expandedAggregations)
+    if (newExpanded.has(key)) {
+      newExpanded.delete(key)
+    } else {
+      newExpanded.add(key)
+    }
+    setExpandedAggregations(newExpanded)
   }
 
   const getNotificationIcon = (reason: string) => {
@@ -150,55 +173,172 @@ export const Notifications: React.FC = () => {
       <div className="divide-y divide-gray-800">
         {isLoading ? (
           <PageLoader message="Loading notifications..." />
-        ) : data?.notifications && data.notifications.length > 0 ? (
+        ) : processedNotifications.length > 0 ? (
           <AnimatePresence mode="popLayout">
-            {data.notifications.map((notification, index) => (
-              <motion.div
-                key={`${notification.uri}-${notification.indexedAt}`}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ delay: index * 0.05 }}
-                className={`flex gap-3 p-4 hover:bg-gray-800/50 cursor-pointer transition-colors ${
-                  notification.isRead ? 'opacity-70' : 'bg-blue-900/10'
-                }`}
-                onClick={() => handleNotificationClick(notification)}
-              >
-                <div className="flex-shrink-0 pt-1">
-                  {getNotificationIcon(notification.reason)}
-                </div>
+            {processedNotifications.map((item, index) => {
+              if (item.type === 'aggregated') {
+                const aggregationKey = `${item.reason}-${item.latestTimestamp}`
+                const isExpanded = expandedAggregations.has(aggregationKey)
                 
-                <div className="flex gap-3 flex-1 min-w-0">
-                  <div className="flex-shrink-0">
-                    {notification.author.avatar ? (
-                      <img 
-                        src={notification.author.avatar} 
-                        alt={notification.author.handle}
-                        className="w-10 h-10 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-sm font-medium">
-                        {notification.author.handle.charAt(0).toUpperCase()}
+                return (
+                  <div key={aggregationKey}>
+                    {/* Aggregated notification header */}
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="flex gap-3 p-4 hover:bg-gray-800/50 transition-colors"
+                    >
+                      <div className="flex-shrink-0 pt-1">
+                        {getNotificationIcon(item.reason)}
+                      </div>
+                      
+                      <div className="flex-1">
+                        {/* Author avatars */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex -space-x-2">
+                            {item.authors.slice(0, 4).map((author, idx) => (
+                              <div key={idx} className="relative">
+                                {author.avatar ? (
+                                  <img 
+                                    src={author.avatar} 
+                                    alt={author.handle}
+                                    className="w-8 h-8 rounded-full border-2 border-gray-900"
+                                  />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-900 flex items-center justify-center text-xs font-medium">
+                                    {author.handle.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                            {item.count > 4 && (
+                              <div className="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-900 flex items-center justify-center text-xs font-medium">
+                                +{item.count - 4}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleAggregation(aggregationKey)
+                            }}
+                            className="ml-auto p-1 rounded hover:bg-gray-700 transition-colors"
+                          >
+                            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          </button>
+                        </div>
+                        
+                        <p className="text-gray-100">
+                          {getAggregatedText(item)}
+                        </p>
+                        
+                        {item.postText && (
+                          <p className="text-gray-400 text-sm mt-1 truncate">
+                            {item.postText}
+                          </p>
+                        )}
+                        
+                        <time className="text-gray-500 text-xs mt-1 block">
+                          {formatDistanceToNow(new Date(item.latestTimestamp), { addSuffix: true })}
+                        </time>
+                      </div>
+                    </motion.div>
+                    
+                    {/* Expanded individual notifications */}
+                    {isExpanded && (
+                      <div className="ml-12 border-l-2 border-gray-700">
+                        {item.notifications.map((notification) => (
+                          <motion.div
+                            key={`${notification.uri}-${notification.indexedAt}`}
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="flex gap-3 p-4 pl-6 hover:bg-gray-800/50 cursor-pointer transition-colors"
+                            onClick={() => handleNotificationClick(notification)}
+                          >
+                            <div className="flex-shrink-0">
+                              {notification.author.avatar ? (
+                                <img 
+                                  src={notification.author.avatar} 
+                                  alt={notification.author.handle}
+                                  className="w-8 h-8 rounded-full"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-medium">
+                                  {notification.author.handle.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="flex-1">
+                              <p className="text-gray-300 text-sm">
+                                <span className="font-medium">{notification.author.displayName || notification.author.handle}</span>
+                              </p>
+                              <time className="text-gray-500 text-xs">
+                                {formatDistanceToNow(new Date(notification.indexedAt), { addSuffix: true })}
+                              </time>
+                            </div>
+                          </motion.div>
+                        ))}
                       </div>
                     )}
                   </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <p className="text-gray-100">
-                      {getNotificationText(notification)}
-                    </p>
-                    {notification.record && typeof notification.record === 'object' && 'text' in notification.record && (
-                      <p className="text-gray-400 text-sm mt-1 truncate">
-                        {(notification.record as { text?: string }).text}
-                      </p>
-                    )}
-                    <time className="text-gray-500 text-xs mt-1 block">
-                      {formatDistanceToNow(new Date(notification.indexedAt), { addSuffix: true })}
-                    </time>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                )
+              } else {
+                // Single notification
+                const notification = item.notification
+                return (
+                  <motion.div
+                    key={`${notification.uri}-${notification.indexedAt}`}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ delay: index * 0.05 }}
+                    className={`flex gap-3 p-4 hover:bg-gray-800/50 cursor-pointer transition-colors ${
+                      notification.isRead ? 'opacity-70' : 'bg-blue-900/10'
+                    }`}
+                    onClick={() => handleNotificationClick(notification)}
+                  >
+                    <div className="flex-shrink-0 pt-1">
+                      {getNotificationIcon(notification.reason)}
+                    </div>
+                    
+                    <div className="flex gap-3 flex-1 min-w-0">
+                      <div className="flex-shrink-0">
+                        {notification.author.avatar ? (
+                          <img 
+                            src={notification.author.avatar} 
+                            alt={notification.author.handle}
+                            className="w-10 h-10 rounded-full"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-sm font-medium">
+                            {notification.author.handle.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <p className="text-gray-100">
+                          {getNotificationText(notification)}
+                        </p>
+                        {notification.record && typeof notification.record === 'object' && 'text' in notification.record && (
+                          <p className="text-gray-400 text-sm mt-1 truncate">
+                            {(notification.record as { text?: string }).text}
+                          </p>
+                        )}
+                        <time className="text-gray-500 text-xs mt-1 block">
+                          {formatDistanceToNow(new Date(notification.indexedAt), { addSuffix: true })}
+                        </time>
+                      </div>
+                    </div>
+                  </motion.div>
+                )
+              }
+            })}
           </AnimatePresence>
         ) : (
           <NotificationsEmpty />
