@@ -147,11 +147,11 @@ export const postRateLimiter = new RateLimiter({
   minDelay: 200 // 200ms minimum between requests
 })
 
-// Notification fetch rate limiter - 10 requests per minute
+// Notification fetch rate limiter - 1 request per second
 export const notificationRateLimiter = new RateLimiter({
-  maxTokens: 10,
-  refillRate: 0.17,
-  minDelay: 500 // 500ms minimum between requests
+  maxTokens: 60,
+  refillRate: 1,
+  minDelay: 1000 // 1000ms minimum between requests
 })
 
 // Export stats function for UI

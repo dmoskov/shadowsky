@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { MessageCircle, Search, ArrowLeft, Users, Loader2, ExternalLink, CornerDownRight } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
-import { useNotifications } from '../hooks/useNotifications'
+import { useReplyNotifications } from '../hooks/useNotificationsByType'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
 import { usePostsByUris } from '../hooks/usePostsByUris'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
@@ -34,7 +34,7 @@ export const Conversations: React.FC = () => {
   const [selectedConvo, setSelectedConvo] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Fetch all notifications
+  // Fetch reply notifications specifically
   const { 
     data, 
     isLoading, 
@@ -42,17 +42,13 @@ export const Conversations: React.FC = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage
-  } = useNotifications()
+  } = useReplyNotifications()
 
-  const notifications = React.useMemo(() => {
+  // Extract reply notifications from paginated data
+  const replyNotifications = React.useMemo(() => {
     if (!data?.pages) return []
     return data.pages.flatMap((page: any) => page.notifications)
   }, [data])
-
-  // Filter for reply notifications only
-  const replyNotifications = useMemo(() => {
-    return notifications.filter((n: Notification) => n.reason === 'reply')
-  }, [notifications])
 
   // Fetch posts for the reply notifications
   const { data: posts } = useNotificationPosts(replyNotifications)
@@ -73,8 +69,9 @@ export const Conversations: React.FC = () => {
       
       // If this is a reply, try to find the actual root of the thread
       const post = replyPostMap.get(notification.uri)
-      if (post?.record?.reply?.root?.uri) {
-        rootUri = post.record.reply.root.uri
+      const record = post?.record as any
+      if (record?.reply?.root?.uri) {
+        rootUri = record.reply.root.uri
       }
       
       // Only add if we don't already have this post
@@ -116,8 +113,9 @@ export const Conversations: React.FC = () => {
       
       // If this is a reply, try to find the actual root of the thread
       const post = postMap.get(notification.uri)
-      if (post?.record?.reply?.root?.uri) {
-        rootUri = post.record.reply.root.uri
+      const record = post?.record as any
+      if (record?.reply?.root?.uri) {
+        rootUri = record.reply.root.uri
       }
       
       if (!threadMap.has(rootUri)) {
@@ -159,12 +157,14 @@ export const Conversations: React.FC = () => {
       )
       
       // Search in root post text if available
-      const rootPostMatch = convo.rootPost?.record?.text?.toLowerCase().includes(searchQuery.toLowerCase())
+      const rootRecord = convo.rootPost?.record as any
+      const rootPostMatch = rootRecord?.text?.toLowerCase().includes(searchQuery.toLowerCase())
       
       // Search in reply text
       const replyMatch = convo.replies.some(reply => {
         const replyPost = postMap.get(reply.uri)
-        return replyPost?.record?.text?.toLowerCase().includes(searchQuery.toLowerCase())
+        const replyRecord = replyPost?.record as any
+        return replyRecord?.text?.toLowerCase().includes(searchQuery.toLowerCase())
       })
       
       return participantMatch || rootPostMatch || replyMatch
@@ -227,7 +227,8 @@ export const Conversations: React.FC = () => {
       if (!childNode) return
       
       // Get the parent URI from the reply
-      const parentUri = post?.record?.reply?.parent?.uri
+      const postRecord = post?.record as any
+      const parentUri = postRecord?.reply?.parent?.uri
       
       if (parentUri) {
         const parentNode = nodeMap.get(parentUri)
@@ -262,18 +263,18 @@ export const Conversations: React.FC = () => {
     return rootNodes
   }, [selectedConversation, postMap])
 
-  // Load more notifications automatically
+  // Load more reply notifications automatically and aggressively
   React.useEffect(() => {
-    if (data?.pages && data.pages.length === 1 && hasNextPage && !isFetchingNextPage) {
-      // Load at least a few pages automatically
-      const loadInitialPages = async () => {
-        for (let i = 0; i < 3 && hasNextPage; i++) {
-          await fetchNextPage()
-        }
+    if (data?.pages && hasNextPage && !isFetchingNextPage) {
+      // For conversations, we want to fetch more aggressively to get a good thread view
+      const currentNotificationCount = data.pages.reduce((sum, page) => sum + page.notifications.length, 0)
+      
+      // Keep fetching until we have at least 100 reply notifications or no more pages
+      if (currentNotificationCount < 100) {
+        fetchNextPage()
       }
-      loadInitialPages()
     }
-  }, [data?.pages?.length, hasNextPage, isFetchingNextPage, fetchNextPage])
+  }, [data?.pages, hasNextPage, isFetchingNextPage, fetchNextPage])
 
   // Render thread nodes recursively
   const renderThreadNodes = (nodes: ThreadNode[], postMap: Map<string, Post>) => {
@@ -420,19 +421,19 @@ export const Conversations: React.FC = () => {
                   </div>
                   
                   <p className="text-sm break-words" style={{ color: 'var(--bsky-text-primary)', lineHeight: '1.5' }}>
-                    {post?.record?.text || '[No text]'}
+                    {(post?.record as any)?.text || '[No text]'}
                   </p>
 
                   {/* Engagement metrics */}
-                  {(post?.replyCount > 0 || post?.repostCount > 0 || post?.likeCount > 0) && (
+                  {post && ((post.replyCount ?? 0) > 0 || (post.repostCount ?? 0) > 0 || (post.likeCount ?? 0) > 0) && (
                     <div className="flex items-center gap-4 mt-2">
-                      {post.replyCount > 0 && (
+                      {(post.replyCount ?? 0) > 0 && (
                         <span className="text-xs flex items-center gap-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
                           <MessageCircle size={12} />
                           {post.replyCount}
                         </span>
                       )}
-                      {post.repostCount > 0 && (
+                      {(post.repostCount ?? 0) > 0 && (
                         <span className="text-xs flex items-center gap-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3" />
@@ -440,7 +441,7 @@ export const Conversations: React.FC = () => {
                           {post.repostCount}
                         </span>
                       )}
-                      {post.likeCount > 0 && (
+                      {(post.likeCount ?? 0) > 0 && (
                         <span className="text-xs flex items-center gap-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -529,7 +530,8 @@ export const Conversations: React.FC = () => {
             />
           </div>
           <p className="text-xs mt-2" style={{ color: 'var(--bsky-text-secondary)' }}>
-            Showing {filteredConversations.length} conversation{filteredConversations.length !== 1 ? 's' : ''} from reply notifications
+            Showing {filteredConversations.length} conversation{filteredConversations.length !== 1 ? 's' : ''} from {replyNotifications.length} reply notifications
+            {isFetchingNextPage && ' (loading more...)'}
           </p>
         </div>
 
@@ -537,10 +539,10 @@ export const Conversations: React.FC = () => {
         <div className="flex-1 overflow-y-auto">
           {filteredConversations.map((convo) => {
             const isSelected = selectedConvo === convo.rootUri
-            const latestReplyPost = postMap.get(convo.latestReply.uri)
             // Always use root post for preview text
             // Never show reply text as the subject - only show the original post
-            const previewText = convo.rootPost?.record?.text || '[Loading original post...]'
+            const rootRecord = convo.rootPost?.record as any
+            const previewText = rootRecord?.text || '[Loading original post...]'
             const isGroup = convo.participants.size > 2
             const unreadCount = convo.replies.filter(r => !r.isRead).length
 

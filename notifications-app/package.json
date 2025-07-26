@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@atproto/api": "^0.13.14",
+    "@atproto/api": "^0.15.13",
     "@bsky/shared": "file:../packages/shared",
     "@tanstack/react-query": "^5.0.0",
     "date-fns": "^3.0.0",
