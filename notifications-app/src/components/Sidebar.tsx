@@ -5,6 +5,7 @@ import {
   Bell,
   Clock,
   BarChart3,
+  MessageSquare,
   ExternalLink,
   X
 } from 'lucide-react'
@@ -18,6 +19,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/notifications', label: 'All Notifications', icon: Bell },
+    { path: '/conversations', label: 'Conversations', icon: MessageSquare },
     { path: '/timeline', label: 'Visual Timeline', icon: Clock },
     { path: '/analytics', label: 'Notification Analytics', icon: BarChart3 },
   ]

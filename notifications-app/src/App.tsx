@@ -11,6 +11,7 @@ import { NotificationsTimeline } from './components/NotificationsTimeline'
 import { VisualTimeline } from './components/VisualTimeline'
 import { NotificationsAnalytics } from './components/NotificationsAnalytics'
 import { RateLimitStatus } from './components/RateLimitStatus'
+import { Conversations } from './components/Conversations'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,6 +57,7 @@ function AppContent() {
             <Route path="/notifications" element={<NotificationsFeed />} />
             <Route path="/timeline" element={<VisualTimeline />} />
             <Route path="/analytics" element={<NotificationsAnalytics />} />
+            <Route path="/conversations" element={<Conversations />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
