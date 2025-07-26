@@ -589,25 +589,6 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   
   // Helper to render post content box
   const renderPostContent = () => {
-    // Debug repost notifications
-    if (notification.reason === 'repost') {
-      console.log('[REPOST DEBUG] Notification:', notification)
-      console.log('[REPOST DEBUG] Notification URI:', notification.uri)
-      console.log('[REPOST DEBUG] ReasonSubject (actual post URI):', notification.reasonSubject)
-      console.log('[REPOST DEBUG] Post URI used for lookup:', postUri)
-      console.log('[REPOST DEBUG] Post from map:', post)
-      console.log('[REPOST DEBUG] PostMap size:', postMap.size)
-    }
-    
-    // Debug like notifications
-    if (notification.reason === 'like') {
-      console.log('[LIKE DEBUG] Notification:', notification)
-      console.log('[LIKE DEBUG] Notification URI:', notification.uri)
-      console.log('[LIKE DEBUG] ReasonSubject:', notification.reasonSubject)
-      console.log('[LIKE DEBUG] Post URI used for lookup:', postUri)
-      console.log('[LIKE DEBUG] Post from map:', post)
-      console.log('[LIKE DEBUG] PostMap size:', postMap.size)
-    }
     
     // For likes, reposts, replies, and quotes - show loading state if post not yet loaded
     if (['like', 'repost', 'reply', 'quote'].includes(notification.reason)) {
