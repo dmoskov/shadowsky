@@ -27,7 +27,7 @@ async function testThreadStyling() {
     const loginButton = await page.$('button:has-text("Sign in")');
     if (loginButton) {
       console.log('Logging in...');
-      await page.fill('input[placeholder*="alice"]', 'traviskimmel.bsky.social');
+      await page.fill('input[placeholder*="alice"]', 'test-account.bsky.social');
       await page.fill('input[type="password"]', process.env.BSKY_PASSWORD || 'your-password');
       await loginButton.click();
       await page.waitForSelector('.post-card', { timeout: 10000 });

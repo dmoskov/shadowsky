@@ -13,8 +13,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // The hardcoded credential to search for
-const HARDCODED_EMAIL = 'traviskimmel+bsky@gmail.com';
-const HARDCODED_PASSWORDS = ['N3wY0rkM3ts2024!', 'C%;,!2iO"]Wu%11T9+Y8'];
+const HARDCODED_EMAIL = 'test-account@example.com';
+const HARDCODED_PASSWORDS = ['[REDACTED]', '[REDACTED]'];
 
 // Files to migrate (from the audit + grep search)
 const TEST_FILES = [
@@ -147,9 +147,9 @@ async function migrateFile(filePath) {
 
     // Replace hardcoded credentials with getTestCredentials() call
     // Look for patterns like:
-    // identifier: 'traviskimmel+bsky@gmail.com'
+    // identifier: 'test-account+bsky@gmail.com'
     // password: 'N3wY0rkM3ts2024!'
-    // TEST_USER = 'traviskimmel+bsky@gmail.com'
+    // TEST_USER = 'test-account+bsky@gmail.com'
     
     // First, add credentials variable if we're replacing
     const needsCredentialsVar = newContent.includes(HARDCODED_EMAIL) || 
@@ -174,13 +174,13 @@ async function migrateFile(filePath) {
     // Replace patterns
     newContent = newContent
       // Replace object properties
-      .replace(/identifier:\s*['"`]traviskimmel\+bsky@gmail\.com['"`]/g, 'identifier: credentials.identifier')
+      .replace(/identifier:\s*['"`]test-account\+bsky@gmail\.com['"`]/g, 'identifier: credentials.identifier')
       // Replace variable assignments
-      .replace(/TEST_USER\s*=\s*['"`]traviskimmel\+bsky@gmail\.com['"`]/g, 'TEST_USER = credentials.identifier')
+      .replace(/TEST_USER\s*=\s*['"`]test-account\+bsky@gmail\.com['"`]/g, 'TEST_USER = credentials.identifier')
       // Replace in template literals
-      .replace(/\$\{['"`]traviskimmel\+bsky@gmail\.com['"`]\}/g, '${credentials.identifier}')
+      .replace(/\$\{['"`]test-account\+bsky@gmail\.com['"`]\}/g, '${credentials.identifier}')
       // Replace direct string usage
-      .replace(/(['"`])traviskimmel\+bsky@gmail\.com\1/g, 'credentials.identifier');
+      .replace(/(['"`])test-account\+bsky@gmail\.com\1/g, 'credentials.identifier');
       
     // Replace all password patterns
     for (const password of HARDCODED_PASSWORDS) {
