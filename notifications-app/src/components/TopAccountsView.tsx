@@ -1,11 +1,12 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
-import { Users, TrendingUp, Settings, Loader } from 'lucide-react'
+import { Users, TrendingUp, Settings, Loader, Database } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { getBskyProfileUrl } from '../utils/url-helpers'
-import { getProfileService } from '@bsky/shared'
+import { getProfileCacheService } from '../services/profile-cache-service'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
+import type { CachedProfile } from '../services/follower-cache-db'
 
 interface TopAccountsViewProps {
   notifications: Notification[]
@@ -21,6 +22,7 @@ interface AccountWithStats {
   followerCount?: number
   interactionCount: number
   latestInteraction: string
+  lastFetched?: Date
   interactions: {
     likes: number
     reposts: number
@@ -104,29 +106,49 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
     return [...new Set(accountStats.map(acc => acc.handle))]
   }, [accountStats])
 
-  // Fetch profiles for all unique accounts to get follower counts
-  const { data: profilesData } = useQuery({
-    queryKey: ['profiles', uniqueHandles],
+  // Update interaction stats in the database when notifications change
+  useEffect(() => {
+    if (agent && notifications.length > 0) {
+      const cacheService = getProfileCacheService(agent)
+      cacheService.updateInteractionStats(notifications).catch(console.error)
+    }
+  }, [agent, notifications])
+
+  // Fetch profiles for all unique accounts using cache
+  const { data: profilesData, isLoading: isLoadingProfiles } = useQuery({
+    queryKey: ['cached-profiles', uniqueHandles],
     queryFn: async () => {
       if (!agent || uniqueHandles.length === 0) return new Map()
       
       setLoadingProfiles(true)
       
       try {
-        // Use the rate-limited profile service
-        const profileService = getProfileService(agent)
-        const profileMap = await profileService.getProfiles(uniqueHandles)
+        // Use the cached profile service
+        const cacheService = getProfileCacheService(agent)
+        const profileMap = await cacheService.getProfilesWithCache(uniqueHandles)
         
         setLoadingProfiles(false)
         return profileMap
       } catch (error) {
         console.error('Error fetching profiles:', error)
         setLoadingProfiles(false)
-        return new Map()
+        return new Map<string, CachedProfile>()
       }
     },
     enabled: !!agent && uniqueHandles.length > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 60 * 60 * 1000, // 1 hour (since we have our own cache)
+  })
+  
+  // Query for cache statistics
+  const { data: cacheStats } = useQuery({
+    queryKey: ['cache-stats'],
+    queryFn: async () => {
+      if (!agent) return null
+      const cacheService = getProfileCacheService(agent)
+      return await cacheService.getCacheStats()
+    },
+    enabled: !!agent,
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
   })
 
   // Enrich account stats with follower counts and filter
@@ -137,7 +159,8 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
       const profile = profilesData.get(account.handle)
       return {
         ...account,
-        followerCount: profile?.followersCount || 0
+        followerCount: profile?.followersCount || 0,
+        lastFetched: profile?.lastFetched
       }
     })
     
@@ -204,12 +227,23 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-          Top Accounts
-          <span className="ml-2 text-sm font-normal" style={{ color: 'var(--bsky-text-secondary)' }}>
-            {topAccounts.length} accounts with {minFollowerCount.toLocaleString()}+ followers
-          </span>
-        </h2>
+        <div>
+          <h2 className="text-xl font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+            Top Accounts
+            <span className="ml-2 text-sm font-normal" style={{ color: 'var(--bsky-text-secondary)' }}>
+              {topAccounts.length} accounts with {minFollowerCount.toLocaleString()}+ followers
+            </span>
+          </h2>
+          {cacheStats && (
+            <div className="flex items-center gap-2 mt-1 text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+              <Database size={12} />
+              <span>
+                Cache: {cacheStats.totalProfiles} profiles
+                {cacheStats.staleProfiles > 0 && ` (${cacheStats.staleProfiles} stale)`}
+              </span>
+            </div>
+          )}
+        </div>
         <button
           onClick={onConfigClick}
           className="bsky-button-secondary flex items-center gap-2"
@@ -324,9 +358,17 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
                   )}
                 </div>
 
-                <p className="text-xs mt-2" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                  Last interaction {formatDistanceToNow(new Date(account.latestInteraction), { addSuffix: true })}
-                </p>
+                <div className="flex items-center gap-2 text-xs mt-2" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                  <span>Last interaction {formatDistanceToNow(new Date(account.latestInteraction), { addSuffix: true })}</span>
+                  {account.lastFetched && (
+                    <>
+                      <span>•</span>
+                      <span title={`Profile data fetched ${formatDistanceToNow(new Date(account.lastFetched), { addSuffix: true })}`}>
+                        {new Date().getTime() - new Date(account.lastFetched).getTime() < 60 * 1000 ? '🟢' : '💾'}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </a>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Bell, Volume2, Filter, Clock, Save } from 'lucide-react'
+import { Bell, Volume2, Filter, Clock, Save, Database } from 'lucide-react'
+import { CacheSettings } from './CacheSettings'
 
 interface NotificationSettings {
   soundEnabled: boolean
@@ -28,6 +29,7 @@ export const NotificationsSettings: React.FC = () => {
   })
 
   const [saved, setSaved] = useState(false)
+  const [showCacheSettings, setShowCacheSettings] = useState(false)
 
   useEffect(() => {
     localStorage.setItem('notification-settings', JSON.stringify(settings))
@@ -145,6 +147,31 @@ export const NotificationsSettings: React.FC = () => {
             onChange={() => handleToggle('hideFollows')}
           />
         </div>
+      </div>
+
+      {/* Cache Settings */}
+      <div className="bsky-card p-4">
+        <h3 className="font-semibold mb-4 flex items-center gap-2">
+          <Database size={18} />
+          Profile Cache
+        </h3>
+        
+        {showCacheSettings ? (
+          <CacheSettings onClose={() => setShowCacheSettings(false)} />
+        ) : (
+          <div>
+            <p className="text-sm mb-4" style={{ color: 'var(--bsky-text-secondary)' }}>
+              Manage cached profile data used for the Top Accounts view
+            </p>
+            <button
+              onClick={() => setShowCacheSettings(true)}
+              className="bsky-button-secondary flex items-center gap-2"
+            >
+              <Database size={16} />
+              Manage Cache
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Save indicator */}
