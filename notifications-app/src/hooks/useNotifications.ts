@@ -5,7 +5,7 @@ import { useErrorHandler } from './useErrorHandler'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 
 const MAX_NOTIFICATIONS = 10000
-const MAX_DAYS = 7
+const MAX_DAYS = 28 // 4 weeks
 
 export function useNotifications(priority?: boolean) {
   const { session } = useAuth()
@@ -24,21 +24,26 @@ export function useNotifications(priority?: boolean) {
       // Calculate total notifications loaded
       const totalNotifications = allPages.reduce((sum, page) => sum + page.notifications.length, 0)
       
+      // Log progress
+      console.log(`Fetched ${totalNotifications} notifications so far...`)
+      
       // Stop if we've reached max notifications
       if (totalNotifications >= MAX_NOTIFICATIONS) {
+        console.log(`Reached max notifications limit (${MAX_NOTIFICATIONS})`)
         return undefined
       }
 
-      // Check if oldest notification is beyond 7 days
+      // Check if oldest notification is beyond MAX_DAYS (4 weeks)
       if (allPages.length > 0) {
         const allNotifications = allPages.flatMap(page => page.notifications)
         if (allNotifications.length > 0) {
           const oldestNotification = allNotifications[allNotifications.length - 1]
           const oldestDate = new Date(oldestNotification.indexedAt)
-          const sevenDaysAgo = new Date()
-          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - MAX_DAYS)
+          const maxDaysAgo = new Date()
+          maxDaysAgo.setDate(maxDaysAgo.getDate() - MAX_DAYS)
           
-          if (oldestDate < sevenDaysAgo) {
+          if (oldestDate < maxDaysAgo) {
+            console.log(`Reached 4-week limit. Oldest notification: ${oldestDate.toLocaleDateString()}`)
             return undefined
           }
         }

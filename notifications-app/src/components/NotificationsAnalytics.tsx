@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { TrendingUp, Users, Heart, MessageCircle, BarChart3, Bell, Clock, Repeat2, UserPlus } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { format, subDays, startOfDay, formatDistanceToNow } from 'date-fns'
+import { ExtendedNotificationsFetcher } from './ExtendedNotificationsFetcher'
 
 export const NotificationsAnalytics: React.FC = () => {
   const { agent } = useAuth()
@@ -164,6 +165,9 @@ export const NotificationsAnalytics: React.FC = () => {
         </h1>
         <p style={{ color: 'var(--bsky-text-secondary)' }}>Monitor your Bluesky activity and engagement metrics</p>
       </div>
+
+      {/* Extended Notifications Fetcher */}
+      <ExtendedNotificationsFetcher />
 
       {/* Current Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
