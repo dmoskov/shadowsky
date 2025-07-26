@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { LoadingProvider } from './contexts/LoadingContext'
 // import { performanceTracker, setPerformanceContext } from './lib/performance-tracking'
 import { 
   Login,
@@ -174,11 +175,13 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
-            <ToastProvider>
-              <ErrorBoundary>
-                <AppContent />
-              </ErrorBoundary>
-            </ToastProvider>
+            <LoadingProvider>
+              <ToastProvider>
+                <ErrorBoundary>
+                  <AppContent />
+                </ErrorBoundary>
+              </ToastProvider>
+            </LoadingProvider>
           </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>

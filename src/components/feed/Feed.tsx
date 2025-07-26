@@ -8,6 +8,7 @@ import { FeedError } from '../ui/ErrorStates'
 import { FeedEmpty } from '../ui/EmptyStates'
 import { ResponsiveContainer } from '../ui/ResponsiveContainer'
 import { FeedLoadingProgress } from '../ui/FeedLoadingProgress'
+import { useLoading } from '../../contexts/LoadingContext'
 import { performanceTracker, useRenderTracking } from '@bsky/shared'
 import type { Post } from '@bsky/shared'
 
@@ -19,6 +20,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
   useRenderTracking('Feed')
   
   const [replyTo, setReplyTo] = useState<{ post: Post; root?: Post } | undefined>()
+  const { setLoading } = useLoading()
   const { 
     posts, 
     isLoading, 
@@ -30,14 +32,16 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
     refresh 
   } = useTimeline()
 
-  // Track feed loading performance
+  // Track feed loading performance and update global loading state
   useEffect(() => {
+    setLoading('feed', isLoading || isFetching)
+    
     if (!isLoading && posts.length > 0) {
       performanceTracker.trackCustomMetric('feed-posts-loaded', posts.length, {
         action: 'initial-load'
       })
     }
-  }, [isLoading, posts.length])
+  }, [isLoading, isFetching, posts.length, setLoading])
 
   const handleLoadMore = useCallback(() => {
     if (!isFetchingNextPage && hasNextPage) {
