@@ -173,7 +173,12 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
   const hasUnread = item.notifications.some(n => !n.isRead)
   
   // Get URL for the first notification (most recent)
-  const primaryUrl = getNotificationUrl(item.notifications[0])
+  const firstNotification = item.notifications[0]
+  const post = ['like', 'repost'].includes(firstNotification.reason) && postMap
+    ? postMap.get(firstNotification.uri)
+    : undefined
+  const postAuthorHandle = post?.author?.handle
+  const primaryUrl = getNotificationUrl(firstNotification, postAuthorHandle)
   
   const handleClick = (e: React.MouseEvent) => {
     // If clicking with modifier keys (Cmd/Ctrl), open in new tab and don't expand

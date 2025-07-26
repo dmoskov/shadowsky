@@ -485,7 +485,13 @@ interface NotificationItemProps {
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postMap, getNotificationIcon }) => {
-  const notificationUrl = getNotificationUrl(notification)
+  // Get the post for likes/reposts to extract the author handle
+  const post = ['like', 'repost'].includes(notification.reason) 
+    ? postMap.get(notification.uri) 
+    : undefined
+  const postAuthorHandle = post?.author?.handle
+  
+  const notificationUrl = getNotificationUrl(notification, postAuthorHandle)
   
   return (
     <a
