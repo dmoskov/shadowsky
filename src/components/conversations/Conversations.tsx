@@ -7,13 +7,13 @@ import { atClient } from '../../services/atproto'
 import { formatDistanceToNow } from 'date-fns'
 import { ChatBskyConvoDefs } from '@atproto/api'
 import { Loader2 } from 'lucide-react'
-import { useToast } from '../toasts/ToastProvider'
+import { useToast } from '../ui/Toast'
 
 type Conversation = ChatBskyConvoDefs.ConvoView
 
 export const Conversations: React.FC = () => {
   const { agent } = useAuth()
-  const { showToast } = useToast()
+  const toast = useToast()
   const queryClient = useQueryClient()
   const [selectedConvo, setSelectedConvo] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -88,11 +88,7 @@ export const Conversations: React.FC = () => {
       }, 100)
     },
     onError: (error: any) => {
-      showToast({
-        type: 'error',
-        title: 'Failed to send message',
-        message: error?.message || 'Please try again',
-      })
+      toast.error(error?.message || 'Failed to send message. Please try again.')
     },
   })
 
