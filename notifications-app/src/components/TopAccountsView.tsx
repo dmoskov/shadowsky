@@ -23,6 +23,7 @@ interface AccountWithStats {
   interactionCount: number
   latestInteraction: string
   lastFetched?: Date
+  fromCache?: boolean
   interactions: {
     likes: number
     reposts: number
@@ -160,7 +161,8 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
       return {
         ...account,
         followerCount: profile?.followersCount || 0,
-        lastFetched: profile?.lastFetched
+        lastFetched: profile?.lastFetched,
+        fromCache: profile?.fromCache
       }
     })
     
@@ -235,12 +237,14 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
             </span>
           </h2>
           {cacheStats && (
-            <div className="flex items-center gap-2 mt-1 text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
-              <Database size={12} />
-              <span>
-                Cache: {cacheStats.totalProfiles} profiles
-                {cacheStats.staleProfiles > 0 && ` (${cacheStats.staleProfiles} stale)`}
-              </span>
+            <div className="mt-1 space-y-1">
+              <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                <Database size={12} />
+                <span>
+                  Cache: {cacheStats.totalProfiles} profiles
+                  {cacheStats.staleProfiles > 0 && ` (${cacheStats.staleProfiles} stale)`}
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -363,8 +367,13 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
                   {account.lastFetched && (
                     <>
                       <span>•</span>
-                      <span title={`Profile data fetched ${formatDistanceToNow(new Date(account.lastFetched), { addSuffix: true })}`}>
-                        {new Date().getTime() - new Date(account.lastFetched).getTime() < 60 * 1000 ? '🟢' : '💾'}
+                      <span 
+                        title={`Profile data ${account.fromCache ? 'from cache' : 'freshly fetched'} ${formatDistanceToNow(new Date(account.lastFetched), { addSuffix: true })}`}
+                        style={{ 
+                          color: account.fromCache === false ? 'var(--bsky-green)' : 'inherit'
+                        }}
+                      >
+                        {account.fromCache === false ? '🔄 API' : '💾 Cache'}
                       </span>
                     </>
                   )}

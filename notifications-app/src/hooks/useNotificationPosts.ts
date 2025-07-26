@@ -1,7 +1,9 @@
+import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import type { Post } from '@bsky/shared'
+import { rateLimitedPostFetch } from '../services/rate-limiter'
 
 /**
  * Hook to fetch posts referenced in notifications
@@ -10,46 +12,61 @@ import type { Post } from '@bsky/shared'
 export function useNotificationPosts(notifications: Notification[] | undefined) {
   const { session } = useAuth()
 
+  // Create a stable query key based on unique post URIs, not the full notification list
+  const postUris = React.useMemo(() => {
+    if (!notifications || notifications.length === 0) return []
+    
+    const uniqueUris = new Set<string>()
+    notifications.forEach(notification => {
+      if (['like', 'repost', 'reply', 'quote'].includes(notification.reason)) {
+        uniqueUris.add(notification.uri)
+      }
+    })
+    
+    return Array.from(uniqueUris).sort() // Sort for stable key
+  }, [notifications])
+
   return useQuery({
-    queryKey: ['notification-posts', notifications?.map(n => n.uri).join(',')],
+    queryKey: ['notification-posts', postUris.slice(0, 100).join(',')], // Limit key size
     queryFn: async () => {
-      if (!notifications || notifications.length === 0) return []
+      if (postUris.length === 0) return []
       
       const { atProtoClient } = await import('../services/atproto')
       const agent = atProtoClient.agent
       if (!agent) throw new Error('Not authenticated')
       
-      // Get unique post URIs from notifications
-      // For likes, reposts, replies, and quotes, the URI refers to the original post
-      const postUris = new Set<string>()
+      // LIMIT: Only fetch first 100 posts to reduce API calls
+      const MAX_POSTS_TO_FETCH = 100
+      const urisToFetch = postUris.slice(0, MAX_POSTS_TO_FETCH)
       
-      notifications.forEach(notification => {
-        if (['like', 'repost', 'reply', 'quote'].includes(notification.reason)) {
-          // For these notifications, the uri field contains the post URI
-          postUris.add(notification.uri)
-        }
-      })
-      
-      if (postUris.size === 0) return []
+      console.log(`[POST FETCH] Fetching ${urisToFetch.length} unique posts (limited from ${postUris.length})`)
       
       // Batch fetch posts (Bluesky API supports up to 25 posts per request)
-      const urisArray = Array.from(postUris)
       const posts: Post[] = []
+      let apiCallCount = 0
       
-      for (let i = 0; i < urisArray.length; i += 25) {
-        const batch = urisArray.slice(i, i + 25)
+      for (let i = 0; i < urisToFetch.length; i += 25) {
+        const batch = urisToFetch.slice(i, i + 25)
         try {
-          const response = await agent.app.bsky.feed.getPosts({ uris: batch })
+          apiCallCount++
+          // Rate limit the API call
+          const response = await rateLimitedPostFetch(async () => 
+            agent.app.bsky.feed.getPosts({ uris: batch })
+          )
           posts.push(...(response.data.posts as Post[]))
         } catch (error) {
           console.error('Failed to fetch posts batch:', error)
         }
       }
       
+      console.log(`[POST FETCH] Made ${apiCallCount} API calls to fetch ${posts.length} posts`)
       return posts
     },
-    enabled: !!session && !!notifications && notifications.length > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!session && postUris.length > 0,
+    staleTime: 30 * 60 * 1000, // 30 minutes - posts don't change often
+    gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour (formerly cacheTime)
+    refetchOnWindowFocus: false, // Don't refetch posts on window focus
+    refetchOnMount: false, // Don't refetch when component remounts if data exists
   })
 }
 

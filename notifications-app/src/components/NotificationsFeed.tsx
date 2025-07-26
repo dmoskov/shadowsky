@@ -7,16 +7,28 @@ import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notif
 import { aggregateNotifications, AggregatedNotificationItem } from './NotificationAggregator'
 import { TopAccountsView } from './TopAccountsView'
 import { getNotificationUrl } from '../utils/url-helpers'
+import { useLocation } from 'react-router-dom'
 
 type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies' | 'quotes' | 'images' | 'top-accounts'
 
 export const NotificationsFeed: React.FC = () => {
+  const location = useLocation()
+  const searchParams = new URLSearchParams(location.search)
+  const showTopAccounts = searchParams.get('top') === '1'
+  
   const [filter, setFilter] = useState<NotificationFilter>('all')
   const [showUnreadOnly, setShowUnreadOnly] = useState(false)
   const [expandedAggregations, setExpandedAggregations] = useState<Set<string>>(new Set())
   const [minFollowerCount, setMinFollowerCount] = useState(10000)
   const [showConfigModal, setShowConfigModal] = useState(false)
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  
+  // Reset filter if top accounts is hidden but was selected
+  useEffect(() => {
+    if (!showTopAccounts && filter === 'top-accounts') {
+      setFilter('all')
+    }
+  }, [showTopAccounts, filter])
   
   const { 
     data, 
@@ -260,12 +272,14 @@ export const NotificationsFeed: React.FC = () => {
             icon={<Image size={16} />}
             label="Images"
           />
-          <FilterTab
-            active={filter === 'top-accounts'}
-            onClick={() => setFilter('top-accounts')}
-            icon={<Crown size={16} />}
-            label="Top Accounts"
-          />
+          {showTopAccounts && (
+            <FilterTab
+              active={filter === 'top-accounts'}
+              onClick={() => setFilter('top-accounts')}
+              icon={<Crown size={16} />}
+              label="Top Accounts"
+            />
+          )}
         </div>
       </div>
 

@@ -14,6 +14,7 @@ export interface CachedProfile {
   // Cache metadata
   lastFetched: Date
   lastInteraction?: Date
+  fromCache?: boolean  // Track if this data came from cache or API
 }
 
 export interface InteractionStats {
@@ -83,12 +84,20 @@ export class FollowerCacheDB {
   
   // Profile management
   async saveProfile(profile: CachedProfile): Promise<void> {
-    const tx = this.db!.transaction(['profiles'], 'readwrite')
+    if (!this.db) {
+      console.error('Database not initialized, cannot save profile')
+      return
+    }
+    const tx = this.db.transaction(['profiles'], 'readwrite')
     await tx.objectStore('profiles').put(profile)
   }
   
   async saveProfiles(profiles: CachedProfile[]): Promise<void> {
-    const tx = this.db!.transaction(['profiles'], 'readwrite')
+    if (!this.db) {
+      console.error('Database not initialized, cannot save profiles')
+      return
+    }
+    const tx = this.db.transaction(['profiles'], 'readwrite')
     const store = tx.objectStore('profiles')
     
     for (const profile of profiles) {
@@ -97,18 +106,30 @@ export class FollowerCacheDB {
   }
   
   async getProfile(did: string): Promise<CachedProfile | undefined> {
-    const tx = this.db!.transaction(['profiles'], 'readonly')
+    if (!this.db) {
+      console.warn('Database not initialized, returning undefined')
+      return undefined
+    }
+    const tx = this.db.transaction(['profiles'], 'readonly')
     return await tx.objectStore('profiles').get(did)
   }
   
   async getProfileByHandle(handle: string): Promise<CachedProfile | undefined> {
-    const tx = this.db!.transaction(['profiles'], 'readonly')
+    if (!this.db) {
+      console.warn('Database not initialized, returning undefined')
+      return undefined
+    }
+    const tx = this.db.transaction(['profiles'], 'readonly')
     const index = tx.objectStore('profiles').index('handle')
     return await index.get(handle)
   }
   
   async getProfiles(dids: string[]): Promise<Map<string, CachedProfile>> {
-    const tx = this.db!.transaction(['profiles'], 'readonly')
+    if (!this.db) {
+      console.warn('Database not initialized, returning empty map')
+      return new Map<string, CachedProfile>()
+    }
+    const tx = this.db.transaction(['profiles'], 'readonly')
     const store = tx.objectStore('profiles')
     const profileMap = new Map<string, CachedProfile>()
     
@@ -123,7 +144,12 @@ export class FollowerCacheDB {
   }
   
   async getProfilesByHandles(handles: string[]): Promise<Map<string, CachedProfile>> {
-    const tx = this.db!.transaction(['profiles'], 'readonly')
+    if (!this.db) {
+      console.warn('Database not initialized, returning empty map')
+      return new Map<string, CachedProfile>()
+    }
+    
+    const tx = this.db.transaction(['profiles'], 'readonly')
     const index = tx.objectStore('profiles').index('handle')
     const profileMap = new Map<string, CachedProfile>()
     
@@ -159,7 +185,11 @@ export class FollowerCacheDB {
   }
   
   async getTopProfiles(minFollowers: number, limit: number = 100): Promise<CachedProfile[]> {
-    const tx = this.db!.transaction(['profiles'], 'readonly')
+    if (!this.db) {
+      console.warn('Database not initialized, returning empty array')
+      return []
+    }
+    const tx = this.db.transaction(['profiles'], 'readonly')
     const index = tx.objectStore('profiles').index('followersCount')
     
     const profiles: CachedProfile[] = []
@@ -187,12 +217,20 @@ export class FollowerCacheDB {
   
   // Interaction stats management
   async saveInteractionStats(stats: InteractionStats): Promise<void> {
-    const tx = this.db!.transaction(['interactions'], 'readwrite')
+    if (!this.db) {
+      console.error('Database not initialized, cannot save interaction stats')
+      return
+    }
+    const tx = this.db.transaction(['interactions'], 'readwrite')
     await tx.objectStore('interactions').put(stats)
   }
   
   async saveMultipleInteractionStats(statsList: InteractionStats[]): Promise<void> {
-    const tx = this.db!.transaction(['interactions'], 'readwrite')
+    if (!this.db) {
+      console.error('Database not initialized, cannot save interaction stats')
+      return
+    }
+    const tx = this.db.transaction(['interactions'], 'readwrite')
     const store = tx.objectStore('interactions')
     
     for (const stats of statsList) {
@@ -201,12 +239,20 @@ export class FollowerCacheDB {
   }
   
   async getInteractionStats(did: string): Promise<InteractionStats | undefined> {
-    const tx = this.db!.transaction(['interactions'], 'readonly')
+    if (!this.db) {
+      console.warn('Database not initialized, returning undefined')
+      return undefined
+    }
+    const tx = this.db.transaction(['interactions'], 'readonly')
     return await tx.objectStore('interactions').get(did)
   }
   
   async getInteractionStatsForMultiple(dids: string[]): Promise<Map<string, InteractionStats>> {
-    const tx = this.db!.transaction(['interactions'], 'readonly')
+    if (!this.db) {
+      console.warn('Database not initialized, returning empty map')
+      return new Map<string, InteractionStats>()
+    }
+    const tx = this.db.transaction(['interactions'], 'readonly')
     const store = tx.objectStore('interactions')
     const statsMap = new Map<string, InteractionStats>()
     
@@ -221,7 +267,11 @@ export class FollowerCacheDB {
   }
   
   async getTopInteractors(limit: number = 100): Promise<InteractionStats[]> {
-    const tx = this.db!.transaction(['interactions'], 'readonly')
+    if (!this.db) {
+      console.warn('Database not initialized, returning empty array')
+      return []
+    }
+    const tx = this.db.transaction(['interactions'], 'readonly')
     const index = tx.objectStore('interactions').index('totalInteractions')
     
     const interactors: InteractionStats[] = []
@@ -248,7 +298,11 @@ export class FollowerCacheDB {
     did: string,
     updates: Partial<InteractionStats>
   ): Promise<void> {
-    const tx = this.db!.transaction(['interactions'], 'readwrite')
+    if (!this.db) {
+      console.error('Database not initialized, cannot update interaction stats')
+      return
+    }
+    const tx = this.db.transaction(['interactions'], 'readwrite')
     const store = tx.objectStore('interactions')
     
     const existing = await store.get(did)
@@ -304,13 +358,21 @@ export class FollowerCacheDB {
   
   // Utility methods
   async clearCache(): Promise<void> {
-    const tx = this.db!.transaction(['profiles', 'interactions'], 'readwrite')
+    if (!this.db) {
+      console.error('Database not initialized, cannot clear cache')
+      return
+    }
+    const tx = this.db.transaction(['profiles', 'interactions'], 'readwrite')
     await tx.objectStore('profiles').clear()
     await tx.objectStore('interactions').clear()
   }
   
   async clearStaleProfiles(): Promise<number> {
-    const tx = this.db!.transaction(['profiles'], 'readwrite')
+    if (!this.db) {
+      console.warn('Database not initialized, cannot clear stale profiles')
+      return 0
+    }
+    const tx = this.db.transaction(['profiles'], 'readwrite')
     const store = tx.objectStore('profiles')
     const index = store.index('lastFetched')
     
@@ -343,7 +405,17 @@ export class FollowerCacheDB {
     staleProfiles: number
     cacheSize: number
   }> {
-    const tx = this.db!.transaction(['profiles', 'interactions'], 'readonly')
+    if (!this.db) {
+      console.warn('Database not initialized, returning empty stats')
+      return {
+        totalProfiles: 0,
+        totalInteractions: 0,
+        staleProfiles: 0,
+        cacheSize: 0
+      }
+    }
+    
+    const tx = this.db.transaction(['profiles', 'interactions'], 'readonly')
     
     const profileCount = await tx.objectStore('profiles').count()
     const interactionCount = await tx.objectStore('interactions').count()
@@ -370,11 +442,23 @@ export class FollowerCacheDB {
 
 // Singleton instance
 let dbInstance: FollowerCacheDB | null = null
+let initializationPromise: Promise<FollowerCacheDB> | null = null
 
 export async function getFollowerCacheDB(): Promise<FollowerCacheDB> {
   if (!dbInstance) {
-    dbInstance = new FollowerCacheDB()
-    await dbInstance.initialize()
+    // If we're already initializing, wait for that to complete
+    if (initializationPromise) {
+      return initializationPromise
+    }
+    
+    // Start initialization
+    initializationPromise = (async () => {
+      dbInstance = new FollowerCacheDB()
+      await dbInstance.initialize()
+      return dbInstance
+    })()
+    
+    return initializationPromise
   }
   return dbInstance
 }

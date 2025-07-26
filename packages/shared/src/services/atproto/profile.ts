@@ -112,26 +112,19 @@ export class ProfileService {
   async getProfiles(handles: string[]): Promise<Map<string, ProfileViewDetailed>> {
     const profileMap = new Map<string, ProfileViewDetailed>()
     
-    // Fetch profiles in parallel but with a limit to avoid rate limiting
-    const batchSize = 10
-    for (let i = 0; i < handles.length; i += batchSize) {
-      const batch = handles.slice(i, i + batchSize)
-      const profiles = await Promise.all(
-        batch.map(async (handle) => {
-          try {
-            return await this.getProfile(handle)
-          } catch (error) {
-            console.error(`Failed to fetch profile for ${handle}:`, error)
-            return null
-          }
-        })
-      )
-      
-      profiles.forEach((profile, index) => {
+    // Fetch profiles sequentially to respect rate limits
+    // This is slower but much more respectful of the API
+    for (const handle of handles) {
+      try {
+        // Add a small delay between requests
+        await new Promise(resolve => setTimeout(resolve, 200)) // 200ms delay
+        const profile = await this.getProfile(handle)
         if (profile) {
-          profileMap.set(batch[index], profile)
+          profileMap.set(handle, profile)
         }
-      })
+      } catch (error) {
+        console.error(`Failed to fetch profile for ${handle}:`, error)
+      }
     }
     
     return profileMap

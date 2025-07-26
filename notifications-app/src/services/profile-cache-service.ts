@@ -7,6 +7,7 @@ import {
   type CachedProfile,
   type InteractionStats
 } from './follower-cache-db'
+import { rateLimitedProfileFetch } from './rate-limiter'
 
 export class ProfileCacheService {
   private agent: BskyAgent
@@ -36,7 +37,8 @@ export class ProfileCacheService {
         // Check if cache is still valid
         const isStale = await db.isProfileStale(cached.did)
         if (!isStale) {
-          profileMap.set(handle, cached)
+          // Mark as from cache
+          profileMap.set(handle, { ...cached, fromCache: true })
         } else {
           handlesToFetch.push(handle)
         }
@@ -47,17 +49,21 @@ export class ProfileCacheService {
     
     // Fetch stale/missing profiles from API
     if (handlesToFetch.length > 0) {
-      console.log(`Fetching ${handlesToFetch.length} profiles from API (${handles.length - handlesToFetch.length} from cache)`)
+      console.log(`[PROFILE FETCH] Fetching ${handlesToFetch.length} profiles from API (${handles.length - handlesToFetch.length} from cache)`)
       
       try {
-        const freshProfiles = await this.profileService.getProfiles(handlesToFetch)
+        // Rate limit the profile fetching
+        const freshProfiles = await rateLimitedProfileFetch(async () => 
+          this.profileService.getProfiles(handlesToFetch)
+        )
         const profilesToCache: CachedProfile[] = []
         
         // Convert and store fresh profiles
         for (const [handle, profile] of freshProfiles) {
           if (profile) {
             const cachedProfile = profileToCached(profile)
-            profileMap.set(handle, cachedProfile)
+            // Mark as from API
+            profileMap.set(handle, { ...cachedProfile, fromCache: false })
             profilesToCache.push(cachedProfile)
           }
         }
@@ -72,7 +78,7 @@ export class ProfileCacheService {
         for (const handle of handlesToFetch) {
           const stale = cachedProfiles.get(handle)
           if (stale) {
-            profileMap.set(handle, stale)
+            profileMap.set(handle, { ...stale, fromCache: true })
           }
         }
       }
@@ -109,7 +115,7 @@ export class ProfileCacheService {
     
     // Fetch stale/missing profiles
     if (didsToFetch.length > 0) {
-      console.log(`Fetching ${didsToFetch.length} profiles by DID from API`)
+      console.log(`[PROFILE FETCH] Fetching ${didsToFetch.length} profiles by DID from API`)
       
       try {
         // Note: This requires fetching profiles one by one since the API doesn't support batch by DID
@@ -117,10 +123,13 @@ export class ProfileCacheService {
         
         for (const did of didsToFetch) {
           try {
-            const response = await this.agent.getProfile({ actor: did })
+            // Rate limit individual profile fetches
+            const response = await rateLimitedProfileFetch(async () =>
+              this.agent.getProfile({ actor: did })
+            )
             if (response.data) {
               const cachedProfile = profileToCached(response.data)
-              profileMap.set(did, cachedProfile)
+              profileMap.set(did, { ...cachedProfile, fromCache: false })
               profilesToCache.push(cachedProfile)
             }
           } catch (error) {
@@ -138,7 +147,7 @@ export class ProfileCacheService {
         for (const did of didsToFetch) {
           const stale = cachedProfiles.get(did)
           if (stale) {
-            profileMap.set(did, stale)
+            profileMap.set(did, { ...stale, fromCache: true })
           }
         }
       }

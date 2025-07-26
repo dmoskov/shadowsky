@@ -11,6 +11,7 @@ import { NotificationsTimeline } from './components/NotificationsTimeline'
 import { VisualTimeline } from './components/VisualTimeline'
 import { NotificationsAnalytics } from './components/NotificationsAnalytics'
 import { NotificationsSettings } from './components/NotificationsSettings'
+import { RateLimitStatus } from './components/RateLimitStatus'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +62,7 @@ function AppContent() {
           </Routes>
         </main>
       </div>
+      <RateLimitStatus />
     </div>
   )
 }
