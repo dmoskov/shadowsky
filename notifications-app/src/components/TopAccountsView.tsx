@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Users, TrendingUp, Settings, Loader } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { getBskyProfileUrl } from '../utils/url-helpers'
-import { getProfileService } from '../../src/services/atproto'
+import { getProfileService } from '@bsky/shared'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 
 interface TopAccountsViewProps {
