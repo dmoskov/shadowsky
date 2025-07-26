@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
-import { getProfileService } from '@bsky/shared'
+import { getProfileService } from '../services/atproto'
 import { useErrorHandler } from './useErrorHandler'
 import type { ProfileViewDetailed } from '@atproto/api/dist/client/types/app/bsky/actor/defs'
 
@@ -132,5 +132,25 @@ export function useFollowing(handle: string, cursor?: string) {
     },
     enabled: !!session && !!handle,
     staleTime: 60 * 1000, // 1 minute
+  })
+}
+
+// Hook for bulk profile fetching with rate limiting
+export function useBulkProfiles(handles: string[]) {
+  const { session } = useAuth()
+
+  return useQuery({
+    queryKey: ['bulk-profiles', handles],
+    queryFn: async () => {
+      const { atProtoClient } = await import('../services/atproto')
+      const agent = atProtoClient.agent
+      if (!agent) throw new Error('Not authenticated')
+      const profileService = getProfileService(agent)
+      
+      // Use the new rate-limited getProfiles method
+      return profileService.getProfiles(handles)
+    },
+    enabled: !!session && handles.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }

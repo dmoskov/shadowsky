@@ -10,9 +10,10 @@ import {
 } from '@bsky/shared'
 import { getInteractionsService } from '@bsky/shared'
 import { getThreadService } from '@bsky/shared'
-import { getProfileService } from '@bsky/shared'
 import { getSearchService } from '@bsky/shared'
 import { getNotificationService } from './notifications'
+import { getProfileService } from './profile'
+import { RateLimitedFeedService } from './feed-wrapper'
 
 // Create singleton instances
 export const atProtoClient = new ATProtoClient({
@@ -21,7 +22,9 @@ export const atProtoClient = new ATProtoClient({
   sessionPrefix: 'main_' // Use 'main_bsky_session' as the storage key for main app
 })
 
-export const feedService = new FeedService(atProtoClient)
+// Create base feed service and wrap with rate limiting
+const baseFeedService = new FeedService(atProtoClient)
+export const feedService = new RateLimitedFeedService(baseFeedService)
 // Initialize deduplication after service creation
 feedService.initializeDeduplication()
 
@@ -33,7 +36,7 @@ export {
   type ATProtoConfig,
   getInteractionsService,
   getThreadService,
-  getProfileService,
   getSearchService,
-  getNotificationService
+  getNotificationService,
+  getProfileService
 }

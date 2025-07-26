@@ -1,17 +1,30 @@
 # Bluesky Client Session Notes
 
-## Last Updated: 2025-01-11 (Cleanup Session)
+## Last Updated: 2025-01-11 (Rate Limiting Implementation)
 
 ## Quick Status
 - 🟢 Dev Server: Running
-- 📍 Current Focus: Project cleanup and handoff preparation
+- 📍 Current Focus: Rate limiting for API calls
 - 🔐 Security Status: SECURE (all credentials migrated)
-- 📊 Features Complete: 11/25
+- 📊 Features Complete: 12/25
 
 ## Current State
 The Bluesky client is functional with a dark theme UI, proper feed structure matching Bluesky's native client, full thread navigation, and comprehensive analytics. Just completed major security audit and cleanup from a distinguished engineer's perspective.
 
 ## Today's Major Accomplishments (2025-01-11)
+
+### 5. Implemented Comprehensive Rate Limiting System
+- Created token bucket rate limiter with queuing support
+- Added profile service with automatic rate limiting and caching
+- Rate-limited feed service for timeline and author feed requests
+- Separate rate limits for different API endpoints:
+  - Profile fetching: 30 req/min (conservative for bulk operations)
+  - Feed fetching: 60 req/min
+  - General API calls: 100 req/min
+- Updated TopAccountsView to use rate-limited profile service
+- Added priority support for UI-critical requests
+- Implemented automatic cache management with 5-minute TTL
+- Created monitoring component for rate limiter statistics
 
 ### 1. Completed Security Audit & Credential Migration
 - Removed ALL hardcoded credentials from 33+ test files

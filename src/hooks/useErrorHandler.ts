@@ -17,7 +17,7 @@ import {
 } from '@bsky/shared'
 import { trackError } from '@bsky/shared'
 import type { ErrorCategory } from '@bsky/shared'
-import { useToast } from './useToast'
+import { useToast } from '../components/ui/Toast'
 
 interface ErrorHandlerOptions {
   onRateLimit?: (resetAt: Date) => void

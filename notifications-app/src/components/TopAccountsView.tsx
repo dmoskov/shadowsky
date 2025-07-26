@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Users, TrendingUp, Settings, Loader } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { getBskyProfileUrl } from '../utils/url-helpers'
+import { getProfileService } from '../../src/services/atproto'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 
 interface TopAccountsViewProps {
@@ -110,34 +111,19 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
       if (!agent || uniqueHandles.length === 0) return new Map()
       
       setLoadingProfiles(true)
-      const profileMap = new Map<string, any>()
       
-      // Batch fetch profiles (AT Protocol supports up to 25 at a time)
-      const batchSize = 25
-      for (let i = 0; i < uniqueHandles.length; i += batchSize) {
-        const batch = uniqueHandles.slice(i, i + batchSize)
+      try {
+        // Use the rate-limited profile service
+        const profileService = getProfileService(agent)
+        const profileMap = await profileService.getProfiles(uniqueHandles)
         
-        try {
-          const responses = await Promise.all(
-            batch.map(handle => 
-              agent.getProfile({ actor: handle })
-                .then(res => ({ handle, profile: res.data }))
-                .catch(() => ({ handle, profile: null }))
-            )
-          )
-          
-          responses.forEach(({ handle, profile }) => {
-            if (profile) {
-              profileMap.set(handle, profile)
-            }
-          })
-        } catch (error) {
-          console.error('Error fetching profiles batch:', error)
-        }
+        setLoadingProfiles(false)
+        return profileMap
+      } catch (error) {
+        console.error('Error fetching profiles:', error)
+        setLoadingProfiles(false)
+        return new Map()
       }
-      
-      setLoadingProfiles(false)
-      return profileMap
     },
     enabled: !!agent && uniqueHandles.length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
