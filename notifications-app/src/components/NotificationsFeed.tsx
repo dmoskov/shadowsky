@@ -51,7 +51,7 @@ export const NotificationsFeed: React.FC = () => {
     
     // Set an interval to ensure our title persists
     const updateTitle = () => {
-      if (unreadCount && unreadCount > 0) {
+      if (unreadCount !== undefined && unreadCount !== null && unreadCount > 0) {
         document.title = `(${unreadCount}) Bluesky Notifications`
       } else {
         document.title = 'Bluesky Notifications'
@@ -193,7 +193,7 @@ export const NotificationsFeed: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold bsky-gradient-text">
             Notifications
-            {unreadCount && unreadCount > 0 && (
+            {unreadCount !== undefined && unreadCount !== null && unreadCount > 0 && (
               <span className="ml-2 text-sm font-normal" style={{ color: 'var(--bsky-text-secondary)' }}>
                 {unreadCount} new
               </span>
@@ -205,7 +205,7 @@ export const NotificationsFeed: React.FC = () => {
             )}
           </h1>
           <div className="flex items-center gap-2">
-            {unreadCount && unreadCount > 0 && (
+            {unreadCount !== undefined && unreadCount !== null && unreadCount > 0 && (
               <button
                 onClick={() => markAllAsRead()}
                 disabled={isMarkingAsRead}

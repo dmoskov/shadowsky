@@ -15,7 +15,8 @@ import { getThreadService } from '@bsky/shared'
 export const atProtoClient = new ATProtoClient({
   service: 'https://bsky.social',
   persistSession: true,
-  sessionPrefix: 'notifications_' // This will use 'notifications_bsky_session' as the storage key
+  sessionPrefix: 'notifications_', // This will use 'notifications_bsky_session' as the storage key
+  enableRateLimiting: false // Temporarily disable to fix cookie persistence
 })
 
 export const feedService = new FeedService(atProtoClient)
