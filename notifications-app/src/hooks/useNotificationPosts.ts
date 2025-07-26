@@ -38,7 +38,6 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
       }
     })
     
-    console.log(`Ordered ${orderedUris.length} unique post URIs from ${notifications.length} notifications`)
     return orderedUris
   }, [notifications])
 
@@ -137,7 +136,6 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
       if (newPosts.length > 0) {
         queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
           const updatedData = [...(oldData || []), ...newPosts]
-          console.log(`Updated query data: ${oldData?.length || 0} -> ${updatedData.length} posts`)
           return updatedData
         })
         setFetchedCount(prev => prev + newPosts.length)
@@ -155,11 +153,6 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
     const timeoutId = setTimeout(fetchMorePosts, 2000)
     return () => clearTimeout(timeoutId)
   }, [session, queryResult.data, fetchedCount, postUris, isFetchingMore, queryClient, queryKey])
-
-  // Log current data state
-  React.useEffect(() => {
-    console.log(`Hook data state: ${queryResult.data?.length || 0} posts in data, fetchedCount: ${fetchedCount}`)
-  }, [queryResult.data, fetchedCount])
 
   // Calculate actual fetched count based on current data
   const actualFetchedCount = queryResult.data?.length || 0

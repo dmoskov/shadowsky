@@ -3,9 +3,6 @@
 ## Project Overview
 A custom Bluesky client built with React, TypeScript, and Vite that provides a clean, extensible interface for interacting with the AT Protocol. The client runs locally and is designed to be simple to understand, extend, and customize.
 
-## ⚠️ DEVELOPMENT WARNING
-**DO NOT PUSH TO PRODUCTION** - The notifications app is currently configured to fetch only 100 notifications (instead of the full history) for rapid testing purposes. This limit must be reverted before any production deployment.
-
 ## Project Goals
 1. **Create a functional Bluesky client** with core features (login, view feed, etc.)
 2. **Respect AT Protocol conventions** and follow best practices

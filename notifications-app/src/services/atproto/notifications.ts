@@ -10,15 +10,16 @@ export class NotificationService {
    * List notifications for the current user
    * @param cursor - Pagination cursor
    * @param priority - If true, only show notifications from followed accounts
+   * @param limit - Number of notifications to fetch (max 100)
    */
-  async listNotifications(cursor?: string, priority?: boolean): Promise<{
+  async listNotifications(cursor?: string, priority?: boolean, limit: number = 50): Promise<{
     notifications: Notification[]
     cursor?: string
   }> {
     return withRateLimit(rateLimiters.general, 'listNotifications', async () => {
       try {
         const response = await this.agent.app.bsky.notification.listNotifications({
-          limit: 100,
+          limit: Math.min(limit, 100), // API max is 100
           cursor,
           priority
         })

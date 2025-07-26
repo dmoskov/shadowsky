@@ -48,7 +48,6 @@ export const NotificationsFeed: React.FC = () => {
 
   // Update page title with unread count
   useEffect(() => {
-    console.log('NotificationsFeed: unreadCount =', unreadCount)
     
     // Set an interval to ensure our title persists
     const updateTitle = () => {
@@ -150,7 +149,6 @@ export const NotificationsFeed: React.FC = () => {
   const postMap = React.useMemo(() => {
     if (!posts) return new Map()
     const map = new Map(posts.map(post => [post.uri, post]))
-    console.log(`PostMap created with ${map.size} posts, fetchedPosts: ${fetchedPosts}, totalPosts: ${totalPosts}`)
     return map
   }, [posts, fetchedPosts]) // Add fetchedPosts to dependencies to ensure map updates
 
@@ -630,7 +628,6 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
         }
         
         // Post couldn't be loaded or doesn't exist
-        console.log(`Post not found: ${postUri}, postMap size: ${postMap.size}, fetchedPosts: ${fetchedPosts}/${totalPosts}`)
         return (
           <div className="mt-3 p-4 rounded-lg" style={{ 
             backgroundColor: 'var(--bsky-bg-secondary)', 
