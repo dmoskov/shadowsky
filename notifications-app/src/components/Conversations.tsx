@@ -539,7 +539,8 @@ export const Conversations: React.FC = () => {
             const isSelected = selectedConvo === convo.rootUri
             const latestReplyPost = postMap.get(convo.latestReply.uri)
             // Always use root post for preview text
-            const previewText = convo.rootPost?.record?.text || 'Loading original post...'
+            // Never show reply text as the subject - only show the original post
+            const previewText = convo.rootPost?.record?.text || '[Loading original post...]'
             const isGroup = convo.participants.size > 2
             const unreadCount = convo.replies.filter(r => !r.isRead).length
 
@@ -587,10 +588,11 @@ export const Conversations: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="font-medium truncate" style={{ color: 'var(--bsky-text-primary)' }}>
+                        {/* Always show root post author, never reply author */}
                         {convo.rootPost?.author?.displayName || convo.rootPost?.author?.handle || 
                          (isGroup 
                           ? `${convo.participants.size} participants`
-                          : (convo.latestReply.author.displayName || convo.latestReply.author.handle || 'Unknown'))
+                          : '[Loading author...]')
                         }
                       </h3>
                       <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
@@ -598,7 +600,14 @@ export const Conversations: React.FC = () => {
                       </span>
                     </div>
                     <p className="text-sm truncate" style={{ color: 'var(--bsky-text-secondary)' }}>
-                      {previewText.length > 50 ? previewText.substring(0, 50) + '...' : previewText}
+                      {convo.rootPost ? (
+                        <>
+                          <span className="font-medium">Original: </span>
+                          {previewText.length > 50 ? previewText.substring(0, 50) + '...' : previewText}
+                        </>
+                      ) : (
+                        <span className="italic">{previewText}</span>
+                      )}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
