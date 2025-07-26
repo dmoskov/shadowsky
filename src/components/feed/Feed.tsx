@@ -7,6 +7,7 @@ import { FeedLoading, InlineLoader } from '../ui/SkeletonLoaders'
 import { FeedError } from '../ui/ErrorStates'
 import { FeedEmpty } from '../ui/EmptyStates'
 import { ResponsiveContainer } from '../ui/ResponsiveContainer'
+import { FeedLoadingProgress } from '../ui/FeedLoadingProgress'
 import { performanceTracker, useRenderTracking } from '@bsky/shared'
 import type { Post } from '@bsky/shared'
 
@@ -99,6 +100,15 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
 
   return (
     <ResponsiveContainer>
+      {/* Loading Progress Indicator */}
+      {(isFetching || isFetchingNextPage) && (
+        <FeedLoadingProgress 
+          postsLoaded={posts.length}
+          isInitialLoad={posts.length === 0}
+          isFetchingMore={isFetchingNextPage}
+        />
+      )}
+      
       <div className="border-t border-gray-800">
         {posts.map((item, index) => (
           <ErrorBoundary 
@@ -137,14 +147,22 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
         className="py-8"
       >
         {isFetchingNextPage && (
-          <div className="flex items-center justify-center space-x-3 text-gray-400">
-            <InlineLoader />
-            <span>Loading more posts...</span>
+          <div className="flex flex-col items-center justify-center space-y-2">
+            <div className="flex items-center space-x-3 text-gray-400">
+              <InlineLoader />
+              <span>Loading more posts...</span>
+            </div>
+            <div className="text-sm text-gray-500">
+              {posts.length} posts loaded so far
+            </div>
           </div>
         )}
         {!hasNextPage && posts.length > 0 && (
-          <div className="text-center text-gray-500 py-4">
-            No more posts to load
+          <div className="text-center py-4">
+            <div className="text-gray-500">All caught up!</div>
+            <div className="text-sm text-gray-600 mt-1">
+              {posts.length} posts loaded in total
+            </div>
           </div>
         )}
       </div>
