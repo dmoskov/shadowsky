@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Calendar, Clock, Users, Heart, Repeat2, MessageCircle, Quote, UserPlus } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { format, differenceInMinutes, differenceInHours, startOfDay, isSameDay, isToday, isYesterday, formatDistanceToNow } from 'date-fns'
+import { useNotificationPosts } from '../hooks/useNotificationPosts'
 import '../styles/timeline.css'
 
 interface AggregatedEvent {
@@ -25,6 +26,16 @@ export const VisualTimeline: React.FC = () => {
       return response.data
     }
   })
+
+  // Fetch posts for notifications to show richer content
+  const notifications = data?.notifications || []
+  const { data: posts } = useNotificationPosts(notifications)
+  
+  // Create a map for quick post lookup
+  const postMap = React.useMemo(() => {
+    if (!posts) return new Map()
+    return new Map(posts.map(post => [post.uri, post]))
+  }, [posts])
 
   // Smart aggregation based on notification type and context
   const aggregatedEvents = React.useMemo(() => {
@@ -240,12 +251,54 @@ export const VisualTimeline: React.FC = () => {
                         </div>
                       </div>
                       {/* Show post preview for single notifications too */}
-                      {event.notifications[0].reason !== 'follow' && event.notifications[0].record?.value?.text && (
-                        <div className="mt-2 ml-11 p-2 rounded timeline-post-preview" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
-                          <p className="text-xs line-clamp-2" style={{ color: 'var(--bsky-text-secondary)' }}>
-                            {event.notifications[0].record.value.text}
-                          </p>
-                        </div>
+                      {event.notifications[0].reason !== 'follow' && (
+                        (() => {
+                          const notification = event.notifications[0]
+                          
+                          // Try to get full post data first
+                          const post = ['like', 'repost', 'reply', 'quote'].includes(notification.reason) 
+                            ? postMap.get(notification.uri) 
+                            : undefined
+                          
+                          if (post) {
+                            // We have full post data
+                            return (
+                              <div className="mt-2 ml-11 p-3 rounded timeline-post-preview" style={{ 
+                                backgroundColor: 'var(--bsky-bg-tertiary)',
+                                border: '1px solid var(--bsky-border-primary)' 
+                              }}>
+                                <p className="text-xs font-medium mb-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                                  {notification.reason === 'reply' ? 'Replying to your post:' : 
+                                   notification.reason === 'quote' ? 'Quoting your post:' : 'Your post:'}
+                                </p>
+                                <p className="text-xs line-clamp-2" style={{ color: 'var(--bsky-text-primary)' }}>
+                                  {post.record?.text || '[Post with no text]'}
+                                </p>
+                              </div>
+                            )
+                          }
+                          
+                          // Fallback for mentions or when post data isn't available
+                          const postText = notification.record?.text || 
+                                         (notification.record && typeof notification.record === 'object' && 'text' in notification.record ? 
+                                          (notification.record as { text?: string }).text : null)
+                          
+                          if (!postText) return null
+                          
+                          return (
+                            <div className="mt-2 ml-11 p-3 rounded timeline-post-preview" style={{ 
+                              backgroundColor: 'var(--bsky-bg-tertiary)',
+                              border: '1px solid var(--bsky-border-primary)' 
+                            }}>
+                              <p className="text-xs font-medium mb-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                                {notification.reason === 'mention' ? 'Mentioned you in:' : 'Post:'}
+                              </p>
+                              <p className="text-xs line-clamp-2" style={{ color: 'var(--bsky-text-primary)' }}>
+                                {postText}
+                              </p>
+                            </div>
+                          )
+                        })()
                       )}
                     </div>
                   ) : (
@@ -310,26 +363,73 @@ export const VisualTimeline: React.FC = () => {
                       </div>
                       
                       {/* Post preview for aggregated post notifications */}
-                      {event.aggregationType === 'post' && event.notifications[0].record?.value?.text && (
-                        <div className="mt-3 p-3 rounded timeline-post-preview" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
-                          <p className="text-xs font-medium mb-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                            Your post:
-                          </p>
-                          <p className="text-sm line-clamp-3" style={{ color: 'var(--bsky-text-primary)' }}>
-                            {event.notifications[0].record.value.text}
-                          </p>
-                          <div className="mt-2 text-xs flex items-center gap-2" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                            <span>{event.notifications.filter(n => n.reason === 'like').length} likes</span>
-                            <span>•</span>
-                            <span>{event.notifications.filter(n => n.reason === 'repost').length} reposts</span>
-                            {event.notifications.some(n => n.reason === 'quote') && (
-                              <>
+                      {event.aggregationType === 'post' && (
+                        (() => {
+                          const notification = event.notifications[0]
+                          
+                          // Try to get full post data
+                          const post = postMap.get(notification.uri)
+                          
+                          if (post) {
+                            // We have full post data
+                            return (
+                              <div className="mt-3 p-3 rounded timeline-post-preview" style={{ 
+                                backgroundColor: 'var(--bsky-bg-tertiary)',
+                                border: '1px solid var(--bsky-border-primary)' 
+                              }}>
+                                <p className="text-xs font-medium mb-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                                  Your post:
+                                </p>
+                                <p className="text-sm line-clamp-3" style={{ color: 'var(--bsky-text-primary)' }}>
+                                  {post.record?.text || '[Post with no text]'}
+                                </p>
+                                <div className="mt-2 text-xs flex items-center gap-2" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                                  <span>{event.notifications.filter(n => n.reason === 'like').length} likes</span>
+                                  <span>•</span>
+                                  <span>{event.notifications.filter(n => n.reason === 'repost').length} reposts</span>
+                                  {event.notifications.some(n => n.reason === 'quote') && (
+                                    <>
+                                      <span>•</span>
+                                      <span>{event.notifications.filter(n => n.reason === 'quote').length} quotes</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          }
+                          
+                          // Fallback when post data isn't available
+                          const postText = notification.record?.text || 
+                                         (notification.record && typeof notification.record === 'object' && 'text' in notification.record ? 
+                                          (notification.record as { text?: string }).text : null)
+                          
+                          if (!postText) return null
+                          
+                          return (
+                            <div className="mt-3 p-3 rounded timeline-post-preview" style={{ 
+                              backgroundColor: 'var(--bsky-bg-tertiary)',
+                              border: '1px solid var(--bsky-border-primary)' 
+                            }}>
+                              <p className="text-xs font-medium mb-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                                Your post:
+                              </p>
+                              <p className="text-sm line-clamp-3" style={{ color: 'var(--bsky-text-primary)' }}>
+                                {postText}
+                              </p>
+                              <div className="mt-2 text-xs flex items-center gap-2" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                                <span>{event.notifications.filter(n => n.reason === 'like').length} likes</span>
                                 <span>•</span>
-                                <span>{event.notifications.filter(n => n.reason === 'quote').length} quotes</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
+                                <span>{event.notifications.filter(n => n.reason === 'repost').length} reposts</span>
+                                {event.notifications.some(n => n.reason === 'quote') && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{event.notifications.filter(n => n.reason === 'quote').length} quotes</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        })()
                       )}
                     </div>
                   )}

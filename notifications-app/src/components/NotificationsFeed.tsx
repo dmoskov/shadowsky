@@ -525,6 +525,159 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postM
     }
   }
   
+  // Helper to render post content box
+  const renderPostContent = () => {
+    // For likes, reposts, replies, and quotes - show the referenced post
+    if (['like', 'repost', 'reply', 'quote'].includes(notification.reason) && post) {
+      const hasImages = post.embed?.$type === 'app.bsky.embed.images#view' || 
+                       (post.embed?.$type === 'app.bsky.embed.recordWithMedia#view' && 
+                        post.embed.media?.$type === 'app.bsky.embed.images#view')
+      
+      return (
+        <div className="mt-3 p-4 rounded-lg" style={{ 
+          backgroundColor: 'var(--bsky-bg-secondary)', 
+          border: '1px solid var(--bsky-border-primary)',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+        }}>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-medium" style={{ color: 'var(--bsky-text-tertiary)' }}>
+              {notification.reason === 'reply' ? 'Replying to your post:' : 
+               notification.reason === 'quote' ? 'Quoting your post:' : 
+               'Your post:'}
+            </span>
+            {post.author?.avatar ? (
+              <img 
+                src={post.author.avatar} 
+                alt={post.author.handle}
+                className="w-5 h-5 bsky-avatar"
+              />
+            ) : (
+              <div className="w-5 h-5 bsky-avatar flex items-center justify-center text-xs" 
+                   style={{ background: 'var(--bsky-bg-tertiary)' }}>
+                {post.author?.handle?.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <span className="text-xs font-medium" style={{ color: 'var(--bsky-text-secondary)' }}>
+              {post.author?.displayName || post.author?.handle || 'Unknown'}
+            </span>
+            {hasImages && (
+              <span className="text-xs flex items-center gap-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                · 📷
+              </span>
+            )}
+          </div>
+          
+          {post.record?.text ? (
+            <p className="text-sm" style={{ color: 'var(--bsky-text-primary)', lineHeight: '1.5' }}>
+              {post.record.text}
+            </p>
+          ) : (
+            <p className="text-sm italic" style={{ color: 'var(--bsky-text-tertiary)' }}>
+              [Post with no text]
+            </p>
+          )}
+          
+          {/* Display images if present */}
+          {(() => {
+            if (!post.embed) return null
+            
+            let images: Array<{ thumb: string; fullsize: string; alt?: string }> = []
+            
+            // Extract images from different embed types
+            if (post.embed.$type === 'app.bsky.embed.images#view' && post.embed.images) {
+              images = post.embed.images
+            } else if (
+              post.embed.$type === 'app.bsky.embed.recordWithMedia#view' && 
+              post.embed.media?.$type === 'app.bsky.embed.images#view' &&
+              post.embed.media.images
+            ) {
+              images = post.embed.media.images
+            }
+            
+            if (images.length === 0) return null
+            
+            return (
+              <div className="mt-3">
+                <div className={`grid gap-2 ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                  {images.slice(0, 4).map((img, idx) => (
+                    <img 
+                      key={idx}
+                      src={img.thumb}
+                      alt={img.alt || ''}
+                      className="rounded-lg object-cover w-full border" 
+                      style={{ 
+                        borderColor: 'var(--bsky-border-primary)',
+                        height: images.length === 1 ? '200px' : '120px'
+                      }}
+                      loading="lazy"
+                    />
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+      )
+    }
+    
+    // For mentions - show the post where you were mentioned
+    if (notification.reason === 'mention' && notification.record && typeof notification.record === 'object' && 'text' in notification.record) {
+      return (
+        <div className="mt-3 p-4 rounded-lg" style={{ 
+          backgroundColor: 'var(--bsky-bg-secondary)', 
+          border: '1px solid var(--bsky-border-primary)',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+        }}>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-medium" style={{ color: 'var(--bsky-text-tertiary)' }}>
+              Mentioned you in:
+            </span>
+            {notification.author.avatar ? (
+              <img 
+                src={notification.author.avatar} 
+                alt={notification.author.handle}
+                className="w-5 h-5 bsky-avatar"
+              />
+            ) : (
+              <div className="w-5 h-5 bsky-avatar flex items-center justify-center text-xs" 
+                   style={{ background: 'var(--bsky-bg-tertiary)' }}>
+                {notification.author.handle.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <span className="text-xs font-medium" style={{ color: 'var(--bsky-text-secondary)' }}>
+              {notification.author.displayName || notification.author.handle}
+            </span>
+          </div>
+          <p className="text-sm" style={{ color: 'var(--bsky-text-primary)', lineHeight: '1.5' }}>
+            {(notification.record as { text?: string }).text}
+          </p>
+        </div>
+      )
+    }
+    
+    // For follows - no post to show
+    if (notification.reason === 'follow') {
+      return null
+    }
+    
+    // Fallback for any other notification types with record text
+    if (notification.record && typeof notification.record === 'object' && 'text' in notification.record) {
+      return (
+        <div className="mt-3 p-4 rounded-lg" style={{ 
+          backgroundColor: 'var(--bsky-bg-secondary)', 
+          border: '1px solid var(--bsky-border-primary)',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+        }}>
+          <p className="text-sm" style={{ color: 'var(--bsky-text-primary)', lineHeight: '1.5' }}>
+            {(notification.record as { text?: string }).text}
+          </p>
+        </div>
+      )
+    }
+    
+    return null
+  }
+  
   return (
     <a
       href={notificationUrl}
@@ -577,97 +730,10 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postM
             </span>
           </p>
           
-          {/* Show post content for all notification types */}
-          {(['like', 'repost', 'reply', 'quote'].includes(notification.reason) && post) ? (
-            <div className="mt-2 p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-secondary)', border: '1px solid var(--bsky-border-primary)' }}>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>Your post:</span>
-                {post.author?.avatar ? (
-                  <img 
-                    src={post.author.avatar} 
-                    alt={post.author.handle}
-                    className="w-4 h-4 bsky-avatar"
-                  />
-                ) : (
-                  <div className="w-4 h-4 bsky-avatar flex items-center justify-center text-xs" 
-                       style={{ background: 'var(--bsky-bg-tertiary)' }}>
-                    {post.author?.handle?.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <span className="text-xs font-medium" style={{ color: 'var(--bsky-text-secondary)' }}>
-                  {post.author?.displayName || post.author?.handle || 'Unknown'}
-                </span>
-              </div>
-              {post.record?.text ? (
-                <p className="text-sm line-clamp-3" style={{ color: 'var(--bsky-text-primary)' }}>
-                  {post.record.text}
-                </p>
-              ) : (
-                <p className="text-sm italic" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                  [Post with no text]
-                </p>
-              )}
-            </div>
-          ) : notification.reason === 'mention' && notification.record && typeof notification.record === 'object' && 'text' in notification.record ? (
-            // For mentions, show the post where you were mentioned
-            <div className="mt-2 p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-secondary)', border: '1px solid var(--bsky-border-primary)' }}>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>Mentioned you in:</span>
-              </div>
-              <p className="text-sm line-clamp-3" style={{ color: 'var(--bsky-text-primary)' }}>
-                {(notification.record as { text?: string }).text}
-              </p>
-            </div>
-          ) : (
-            // Fallback for other cases
-            notification.record && typeof notification.record === 'object' && 'text' in notification.record && (
-              <p className="text-sm mt-1 line-clamp-2" style={{ color: 'var(--bsky-text-secondary)' }}>
-                {(notification.record as { text?: string }).text}
-              </p>
-            )
-          )}
-          {/* Display images if present */}
-          {(() => {
-            // Get the post for this notification if it's about a post
-            const post = ['like', 'repost', 'reply', 'quote'].includes(notification.reason) 
-              ? postMap.get(notification.uri) 
-              : undefined
-            
-            if (!post?.embed) return null
-            
-            let images: Array<{ thumb: string; fullsize: string; alt?: string }> = []
-            
-            // Extract images from different embed types
-            if (post.embed.$type === 'app.bsky.embed.images#view' && post.embed.images) {
-              images = post.embed.images
-            } else if (
-              post.embed.$type === 'app.bsky.embed.recordWithMedia#view' && 
-              post.embed.media?.$type === 'app.bsky.embed.images#view' &&
-              post.embed.media.images
-            ) {
-              images = post.embed.media.images
-            }
-            
-            if (images.length === 0) return null
-            
-            return (
-              <div className="mt-2">
-                <div className="grid grid-cols-2 gap-2 max-w-sm">
-                  {images.slice(0, 4).map((img, idx) => (
-                    <img 
-                      key={idx}
-                      src={img.thumb}
-                      alt={img.alt || ''}
-                      className="rounded-lg object-cover w-full h-24 border" 
-                      style={{ borderColor: 'var(--bsky-border-primary)' }}
-                      loading="lazy"
-                    />
-                  ))}
-                </div>
-              </div>
-            )
-          })()}
-          <time className="text-xs mt-1 block" style={{ color: 'var(--bsky-text-tertiary)' }}>
+          {/* Show the referenced post content */}
+          {renderPostContent()}
+          
+          <time className="text-xs mt-2 block" style={{ color: 'var(--bsky-text-tertiary)' }}>
             {formatDistanceToNow(new Date(notification.indexedAt), { addSuffix: true })}
           </time>
         </div>

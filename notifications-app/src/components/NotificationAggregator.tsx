@@ -305,10 +305,30 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                             (post.embed?.$type === 'app.bsky.embed.recordWithMedia#view' && 
                              post.embed.media?.$type === 'app.bsky.embed.images#view')
             
+            // Extract images if present
+            let images: Array<{ thumb: string; fullsize: string; alt?: string }> = []
+            if (post.embed) {
+              if (post.embed.$type === 'app.bsky.embed.images#view' && post.embed.images) {
+                images = post.embed.images
+              } else if (
+                post.embed.$type === 'app.bsky.embed.recordWithMedia#view' && 
+                post.embed.media?.$type === 'app.bsky.embed.images#view' &&
+                post.embed.media.images
+              ) {
+                images = post.embed.media.images
+              }
+            }
+            
             return (
-              <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-secondary)', border: '1px solid var(--bsky-border-primary)' }}>
+              <div className="mt-3 p-4 rounded-lg" style={{ 
+                backgroundColor: 'var(--bsky-bg-secondary)', 
+                border: '1px solid var(--bsky-border-primary)',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+              }}>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>Your post:</span>
+                  <span className="text-xs font-medium" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                    {item.reason === 'quote' ? 'Quoting your post:' : 'Your post:'}
+                  </span>
                   {postAuthor?.avatar ? (
                     <img 
                       src={postAuthor.avatar} 
@@ -321,7 +341,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                       {postAuthor?.handle?.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="text-xs font-medium">
+                  <span className="text-xs font-medium" style={{ color: 'var(--bsky-text-secondary)' }}>
                     {postAuthor?.displayName || postAuthor?.handle || 'You'}
                   </span>
                   {hasImages && (
@@ -331,13 +351,34 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                   )}
                 </div>
                 {postText ? (
-                  <p className="text-sm line-clamp-3" style={{ color: 'var(--bsky-text-primary)' }}>
+                  <p className="text-sm" style={{ color: 'var(--bsky-text-primary)', lineHeight: '1.5' }}>
                     {postText}
                   </p>
                 ) : (
                   <p className="text-sm italic" style={{ color: 'var(--bsky-text-tertiary)' }}>
                     [Post with no text]
                   </p>
+                )}
+                
+                {/* Display images if present */}
+                {images.length > 0 && (
+                  <div className="mt-3">
+                    <div className={`grid gap-2 ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                      {images.slice(0, 4).map((img, idx) => (
+                        <img 
+                          key={idx}
+                          src={img.thumb}
+                          alt={img.alt || ''}
+                          className="rounded-lg object-cover w-full border" 
+                          style={{ 
+                            borderColor: 'var(--bsky-border-primary)',
+                            height: images.length === 1 ? '160px' : '100px'
+                          }}
+                          loading="lazy"
+                        />
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             )
@@ -346,8 +387,12 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                      'text' in item.notifications[0].record) {
             // Fallback to record text
             return (
-              <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-secondary)' }}>
-                <p className="text-sm line-clamp-3" style={{ color: 'var(--bsky-text-primary)' }}>
+              <div className="mt-3 p-4 rounded-lg" style={{ 
+                backgroundColor: 'var(--bsky-bg-secondary)',
+                border: '1px solid var(--bsky-border-primary)',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+              }}>
+                <p className="text-sm" style={{ color: 'var(--bsky-text-primary)', lineHeight: '1.5' }}>
                   {(item.notifications[0].record as { text?: string }).text}
                 </p>
               </div>
