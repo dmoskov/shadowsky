@@ -29,7 +29,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
+          
+      - name: Install root dependencies
+        run: npm install
           
       - name: Install dependencies for shared package
         run: |
@@ -45,8 +47,12 @@ jobs:
         run: |
           cd notifications-app
           npm run build:prod -- --base=/
+          ls -la
+          mkdir -p dist
           echo "shadowsky.io" > dist/CNAME
           touch dist/.nojekyll
+          echo "Build completed. Contents of dist:"
+          ls -la dist/
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
