@@ -21,7 +21,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/notifications', label: 'All Notifications', icon: Bell },
     { path: '/timeline', label: 'Visual Timeline', icon: Clock },
-    { path: '/analytics', label: 'Analytics', icon: BarChart3 },
+    { path: '/analytics', label: 'Notification Analytics', icon: BarChart3 },
     { path: '/profile/me', label: 'Profile', icon: User },
     { path: '/settings', label: 'Settings', icon: Settings },
   ]

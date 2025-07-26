@@ -129,9 +129,9 @@ export const NotificationsAnalytics: React.FC = () => {
       <div>
         <h1 className="text-2xl font-bold mb-2 flex items-center gap-2">
           <BarChart3 className="text-blue-500" />
-          Analytics
+          Notifications Analytics
         </h1>
-        <p style={{ color: 'var(--bsky-text-secondary)' }}>Understand your notification patterns</p>
+        <p style={{ color: 'var(--bsky-text-secondary)' }}>Track how others are interacting with your posts and profile</p>
       </div>
 
       {/* Summary Stats */}
@@ -141,7 +141,7 @@ export const NotificationsAnalytics: React.FC = () => {
             <TrendingUp className="text-green-500" size={24} />
             <span className="text-2xl font-bold">{analytics.totalEngagement}</span>
           </div>
-          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Total Engagements (7 days)</p>
+          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Notifications Received (7 days)</p>
         </div>
         
         <div className="bsky-card p-4">
@@ -149,7 +149,7 @@ export const NotificationsAnalytics: React.FC = () => {
             <Users className="text-blue-500" size={24} />
             <span className="text-2xl font-bold">{analytics.uniqueUsers}</span>
           </div>
-          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Unique Users</p>
+          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Users Who Interacted</p>
         </div>
         
         <div className="bsky-card p-4">
@@ -157,13 +157,13 @@ export const NotificationsAnalytics: React.FC = () => {
             <MessageCircle className="text-purple-500" size={24} />
             <span className="text-2xl font-bold">{analytics.averagePerDay.toFixed(1)}</span>
           </div>
-          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Average per Day</p>
+          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Avg Notifications per Day</p>
         </div>
       </div>
 
       {/* Activity Chart */}
       <div className="bsky-card p-6">
-        <h2 className="text-lg font-semibold mb-4">7-Day Activity</h2>
+        <h2 className="text-lg font-semibold mb-4">Notifications Received by Type (7 Days)</h2>
         <div className="space-y-4">
           {analytics.last7Days.map((day) => (
             <div key={day.label} className="flex items-center gap-4">
@@ -175,7 +175,7 @@ export const NotificationsAnalytics: React.FC = () => {
                     width: `${(day.likes / maxValue) * 100}%`,
                     backgroundColor: 'var(--bsky-like)'
                   }}
-                  title={`${day.likes} likes`}
+                  title={`${day.likes} likes received`}
                 />
                 <div 
                   className="h-6 rounded transition-all duration-500"
@@ -183,7 +183,7 @@ export const NotificationsAnalytics: React.FC = () => {
                     width: `${(day.reposts / maxValue) * 100}%`,
                     backgroundColor: 'var(--bsky-repost)'
                   }}
-                  title={`${day.reposts} reposts`}
+                  title={`${day.reposts} reposts received`}
                 />
                 <div 
                   className="h-6 rounded transition-all duration-500"
@@ -191,7 +191,7 @@ export const NotificationsAnalytics: React.FC = () => {
                     width: `${(day.follows / maxValue) * 100}%`,
                     backgroundColor: 'var(--bsky-follow)'
                   }}
-                  title={`${day.follows} follows`}
+                  title={`${day.follows} new followers`}
                 />
                 <div 
                   className="h-6 rounded transition-all duration-500"
@@ -199,7 +199,7 @@ export const NotificationsAnalytics: React.FC = () => {
                     width: `${(day.replies / maxValue) * 100}%`,
                     backgroundColor: 'var(--bsky-reply)'
                   }}
-                  title={`${day.replies} replies`}
+                  title={`${day.replies} replies received`}
                 />
               </div>
               <span className="text-sm w-12 text-right" style={{ color: 'var(--bsky-text-primary)' }}>{day.total}</span>
@@ -231,7 +231,7 @@ export const NotificationsAnalytics: React.FC = () => {
       <div className="bsky-card p-6">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Heart style={{ color: 'var(--bsky-like)' }} size={20} />
-          Most Active Users
+          Top Users Engaging With Your Content
         </h2>
         <div className="space-y-3">
           {analytics.topUsers.map(({ handle, count, user }) => (
@@ -258,7 +258,7 @@ export const NotificationsAnalytics: React.FC = () => {
                 <p className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>{user?.displayName || handle}</p>
                 <p className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>@{handle}</p>
               </div>
-              <span className="text-sm" style={{ color: 'var(--bsky-text-primary)' }}>{count} interactions</span>
+              <span className="text-sm" style={{ color: 'var(--bsky-text-primary)' }}>{count} notifications from them</span>
             </div>
           ))}
         </div>
