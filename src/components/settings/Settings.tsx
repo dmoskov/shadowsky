@@ -17,6 +17,7 @@ import {
 import type { 
   AppBskyActorDefs
 } from '@atproto/api'
+import { rateLimiters } from '../../services/atproto/rate-limiter'
 
 type FeedViewPref = AppBskyActorDefs.FeedViewPref
 type ThreadViewPref = AppBskyActorDefs.ThreadViewPref
@@ -37,7 +38,9 @@ export const Settings: React.FC = () => {
     queryKey: ['preferences'],
     queryFn: async () => {
       if (!agent) throw new Error('Not authenticated')
-      const response = await agent.app.bsky.actor.getPreferences()
+      const response = await rateLimiters.general.execute(async () =>
+        agent.app.bsky.actor.getPreferences()
+      )
       return response.data
     },
     enabled: !!agent
@@ -92,9 +95,11 @@ export const Settings: React.FC = () => {
         }
       ]
 
-      await agent.app.bsky.actor.putPreferences({
-        preferences: prefsToSave
-      })
+      await rateLimiters.general.execute(async () =>
+        agent.app.bsky.actor.putPreferences({
+          preferences: prefsToSave
+        })
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['preferences'] })

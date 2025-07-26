@@ -10,12 +10,15 @@ import type {
   NetworkMetrics,
   EngagementQualityScore
 } from '@bsky/shared'
+import { rateLimiters } from './rate-limiter'
 
 export class EnhancedAnalyticsService {
   constructor(private agent: BskyAgent) {}
 
   async getEnhancedAnalytics(handle: string) {
-    const profileResponse = await this.agent.getProfile({ actor: handle })
+    const profileResponse = await rateLimiters.profile.execute(async () => 
+      this.agent.getProfile({ actor: handle })
+    )
     if (!profileResponse.data) throw new Error('Profile not found')
     const profile = profileResponse.data
 
@@ -55,11 +58,13 @@ export class EnhancedAnalyticsService {
     let cursor: string | undefined
 
     while (posts.length < limit) {
-      const response = await this.agent.app.bsky.feed.getAuthorFeed({
-        actor: handle,
-        limit: Math.min(50, limit - posts.length),
-        cursor
-      })
+      const response = await rateLimiters.feed.execute(async () =>
+        this.agent.app.bsky.feed.getAuthorFeed({
+          actor: handle,
+          limit: Math.min(50, limit - posts.length),
+          cursor
+        })
+      )
 
       // Filter out reposts, only keep original posts
       const originalPosts = response.data.feed
@@ -287,7 +292,9 @@ export class EnhancedAnalyticsService {
     handle: string,
     posts: AppBskyFeedDefs.PostView[]
   ): Promise<NetworkMetrics> {
-    const profileResponse = await this.agent.getProfile({ actor: handle })
+    const profileResponse = await rateLimiters.profile.execute(async () =>
+      this.agent.getProfile({ actor: handle })
+    )
     if (!profileResponse.data) throw new Error('Profile not found')
     const profile = profileResponse.data
 
@@ -304,10 +311,12 @@ export class EnhancedAnalyticsService {
       // Fetch likes for each top post
       for (const post of topPosts) {
         try {
-          const likesResponse = await this.agent.app.bsky.feed.getLikes({
-            uri: post.uri,
-            limit: 30 // Get top 30 likers per post
-          })
+          const likesResponse = await rateLimiters.feed.execute(async () =>
+            this.agent.app.bsky.feed.getLikes({
+              uri: post.uri,
+              limit: 30 // Get top 30 likers per post
+            })
+          )
           
           if (likesResponse.data.likes) {
             for (const like of likesResponse.data.likes) {

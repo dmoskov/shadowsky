@@ -4,38 +4,53 @@
  */
 
 import React, { useEffect, useState } from 'react'
-import { getRateLimitStatus } from '@bsky/shared'
+import { rateLimiters, getGlobalRateLimiterStats } from '../services/atproto/rate-limiter'
 
 interface RateLimitInfo {
-  available: boolean
-  waitTime: number
+  name: string
+  queueSize: number
+  isQueuing: boolean
 }
 
-interface RateLimitData {
-  general: RateLimitInfo
-  feed: RateLimitInfo
-  interactions: RateLimitInfo
-  search: RateLimitInfo
+interface GlobalStats {
+  queueSize: number
+  maxRequestsPerSecond: number
 }
 
 export function RateLimitStatus() {
-  const [status, setStatus] = useState<RateLimitData | null>(null)
+  const [limitInfo, setLimitInfo] = useState<RateLimitInfo[]>([])
+  const [globalStats, setGlobalStats] = useState<GlobalStats | null>(null)
   const [showDetails, setShowDetails] = useState(false)
 
   useEffect(() => {
     // Update status every second
     const interval = setInterval(() => {
-      const currentStatus = getRateLimitStatus()
-      setStatus(currentStatus)
+      const stats: RateLimitInfo[] = [
+        {
+          name: 'Profile',
+          queueSize: rateLimiters.profile.getQueueSize(),
+          isQueuing: rateLimiters.profile.getQueueSize() > 0
+        },
+        {
+          name: 'Feed',
+          queueSize: rateLimiters.feed.getQueueSize(),
+          isQueuing: rateLimiters.feed.getQueueSize() > 0
+        },
+        {
+          name: 'General',
+          queueSize: rateLimiters.general.getQueueSize(),
+          isQueuing: rateLimiters.general.getQueueSize() > 0
+        }
+      ]
+      setLimitInfo(stats)
+      setGlobalStats(getGlobalRateLimiterStats())
     }, 1000)
 
     return () => clearInterval(interval)
   }, [])
 
-  if (!status) return null
-
   // Check if any limits are being approached
-  const hasWarnings = Object.values(status).some(limit => !limit.available)
+  const hasWarnings = limitInfo.some(limit => limit.isQueuing) || (globalStats?.queueSize ?? 0) > 0
   
   if (!hasWarnings && !showDetails) {
     return null // Don't show anything if all is well
@@ -85,9 +100,24 @@ export function RateLimitStatus() {
       
       {showDetails && (
         <div style={{ marginTop: '8px' }}>
-          {Object.entries(status).map(([key, limit]) => (
+          <div style={{ 
+            marginBottom: '8px', 
+            paddingBottom: '8px', 
+            borderBottom: '1px solid var(--border-color)'
+          }}>
+            <div style={{ fontWeight: 500, marginBottom: '4px' }}>
+              Global Rate Limit: {globalStats?.maxRequestsPerSecond || 20} req/s
+            </div>
+            {globalStats && globalStats.queueSize > 0 && (
+              <div style={{ color: 'var(--warning-color)', fontSize: '12px' }}>
+                Global queue: {globalStats.queueSize} requests waiting
+              </div>
+            )}
+          </div>
+          
+          {limitInfo.map((limit) => (
             <div 
-              key={key}
+              key={limit.name}
               style={{ 
                 marginBottom: '4px',
                 display: 'flex',
@@ -95,12 +125,12 @@ export function RateLimitStatus() {
                 alignItems: 'center'
               }}
             >
-              <span style={{ textTransform: 'capitalize' }}>{key}:</span>
-              {limit.available ? (
-                <span style={{ color: 'var(--success-color)' }}>Available</span>
+              <span>{limit.name}:</span>
+              {limit.queueSize === 0 ? (
+                <span style={{ color: 'var(--success-color)' }}>Ready</span>
               ) : (
-                <span style={{ color: 'var(--error-color)' }}>
-                  Wait {Math.ceil(limit.waitTime / 1000)}s
+                <span style={{ color: 'var(--warning-color)' }}>
+                  {limit.queueSize} queued
                 </span>
               )}
             </div>

@@ -92,18 +92,34 @@ export class RateLimiter {
   private refillTokens() {
     const now = Date.now()
     const timePassed = now - this.lastRefill
-    const tokensToAdd = Math.floor(timePassed / this.config.windowMs) * this.config.maxRequests
     
-    if (tokensToAdd > 0) {
-      this.tokens = Math.min(this.config.maxRequests, this.tokens + tokensToAdd)
-      this.lastRefill = now
+    // For a rate of X requests per Y ms, we should add X * (timePassed / Y) tokens
+    const tokensToAdd = (this.config.maxRequests * timePassed) / this.config.windowMs
+    
+    if (tokensToAdd >= 1) {
+      // Only refill whole tokens
+      const wholeTokens = Math.floor(tokensToAdd)
+      this.tokens = Math.min(this.config.maxRequests, this.tokens + wholeTokens)
+      // Update lastRefill to account for the tokens we added
+      this.lastRefill = now - ((tokensToAdd - wholeTokens) * this.config.windowMs / this.config.maxRequests)
     }
   }
 
   private getMsUntilNextToken(): number {
-    const timeSinceLastRefill = Date.now() - this.lastRefill
-    const msUntilNextRefill = this.config.windowMs - timeSinceLastRefill
-    return Math.max(0, msUntilNextRefill)
+    const now = Date.now()
+    const timePassed = now - this.lastRefill
+    
+    // Calculate how many tokens we would have accumulated
+    const tokensAccumulated = (this.config.maxRequests * timePassed) / this.config.windowMs
+    
+    // If we haven't accumulated even 1 token yet, calculate time until we do
+    if (tokensAccumulated < 1) {
+      const msPerToken = this.config.windowMs / this.config.maxRequests
+      const msUntilNextToken = msPerToken - (timePassed % msPerToken)
+      return Math.max(0, msUntilNextToken)
+    }
+    
+    return 0 // We already have tokens available
   }
 
   private sleep(ms: number): Promise<void> {
@@ -129,27 +145,67 @@ export class RateLimiter {
 }
 
 /**
+ * Global rate limiter - enforces absolute maximum of 20 requests per second
+ */
+const globalRateLimiter = new RateLimiter({
+  maxRequests: 20,
+  windowMs: 1000, // 1 second
+  maxQueueSize: 300
+})
+
+/**
+ * Wrapper that enforces both global and endpoint-specific rate limits
+ */
+class GlobalRateLimitedWrapper {
+  constructor(private endpointLimiter: RateLimiter) {}
+
+  async execute<T>(fn: () => Promise<T>, priority = 0): Promise<T> {
+    // First check global limit
+    return globalRateLimiter.execute(async () => {
+      // Then check endpoint-specific limit
+      return this.endpointLimiter.execute(fn, priority)
+    }, priority)
+  }
+
+  getQueueSize(): number {
+    return this.endpointLimiter.getQueueSize() + globalRateLimiter.getQueueSize()
+  }
+}
+
+/**
  * Create rate limiters for different API endpoints
+ * AGGRESSIVE RATE LIMITING: No more than 20 requests per second total
+ * Individual endpoint limits ensure fair distribution
  */
 export const rateLimiters = {
-  // Profile fetching: 30 requests per minute (conservative)
-  profile: new RateLimiter({
-    maxRequests: 30,
-    windowMs: 60 * 1000, // 1 minute
+  // Profile fetching: 5 requests per second (conservative)
+  profile: new GlobalRateLimitedWrapper(new RateLimiter({
+    maxRequests: 5,
+    windowMs: 1000, // 1 second
     maxQueueSize: 200
-  }),
+  })),
 
-  // Feed fetching: 60 requests per minute
-  feed: new RateLimiter({
-    maxRequests: 60,
-    windowMs: 60 * 1000,
+  // Feed fetching: 8 requests per second
+  feed: new GlobalRateLimitedWrapper(new RateLimiter({
+    maxRequests: 8,
+    windowMs: 1000, // 1 second
     maxQueueSize: 50
-  }),
+  })),
 
-  // General API calls: 100 requests per minute
-  general: new RateLimiter({
-    maxRequests: 100,
-    windowMs: 60 * 1000,
+  // General API calls: 7 requests per second
+  general: new GlobalRateLimitedWrapper(new RateLimiter({
+    maxRequests: 7,
+    windowMs: 1000, // 1 second
     maxQueueSize: 100
-  })
+  }))
+}
+
+/**
+ * Get global rate limiter stats
+ */
+export function getGlobalRateLimiterStats() {
+  return {
+    queueSize: globalRateLimiter.getQueueSize(),
+    maxRequestsPerSecond: 20
+  }
 }

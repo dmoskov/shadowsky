@@ -1,6 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import type { AppBskyFeedDefs, AppBskyActorDefs } from '@atproto/api'
 import { getAnalyticsDB, type StoredPost, type StoredUser, type DailySnapshot, type EngagementHistory, type ActiveEngager } from './analytics-db'
+import { rateLimiters } from './atproto/rate-limiter'
 
 export class AnalyticsSyncService {
   constructor(private agent: AtpAgent) {}
@@ -18,7 +19,9 @@ export class AnalyticsSyncService {
     try {
       // 1. Get user profile
       progress('Fetching user profile...', 5)
-      const profileRes = await this.agent.getProfile({ actor: handle })
+      const profileRes = await rateLimiters.profile.execute(async () =>
+        this.agent.getProfile({ actor: handle })
+      )
       const profile = profileRes.data
       
       // Save user
@@ -86,11 +89,13 @@ export class AnalyticsSyncService {
     const allPosts: StoredPost[] = []
     
     do {
-      const response = await this.agent.getAuthorFeed({
-        actor: handle,
-        limit: 100,
-        cursor
-      })
+      const response = await rateLimiters.feed.execute(async () =>
+        this.agent.getAuthorFeed({
+          actor: handle,
+          limit: 100,
+          cursor
+        })
+      )
       
       const posts = response.data.feed
         .filter(item => {
@@ -145,11 +150,13 @@ export class AnalyticsSyncService {
     let foundOldPost = false
     
     do {
-      const response = await this.agent.getAuthorFeed({
-        actor: handle,
-        limit: 50,
-        cursor
-      })
+      const response = await rateLimiters.feed.execute(async () =>
+        this.agent.getAuthorFeed({
+          actor: handle,
+          limit: 50,
+          cursor
+        })
+      )
       
       for (const item of response.data.feed) {
         const post = item.post
@@ -319,10 +326,12 @@ export class AnalyticsSyncService {
       
       try {
         // Fetch likes
-        const likesRes = await this.agent.app.bsky.feed.getLikes({
-          uri: post.uri,
-          limit: 50
-        })
+        const likesRes = await rateLimiters.feed.execute(async () =>
+          this.agent.app.bsky.feed.getLikes({
+            uri: post.uri,
+            limit: 50
+          })
+        )
         
         for (const like of likesRes.data.likes) {
           let existing = engagerMap.get(like.actor.did)
