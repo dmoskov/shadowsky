@@ -108,6 +108,34 @@ export class ProfileService {
       throw mapATProtoError(error)
     }
   }
+
+  async getProfiles(handles: string[]): Promise<Map<string, ProfileViewDetailed>> {
+    const profileMap = new Map<string, ProfileViewDetailed>()
+    
+    // Fetch profiles in parallel but with a limit to avoid rate limiting
+    const batchSize = 10
+    for (let i = 0; i < handles.length; i += batchSize) {
+      const batch = handles.slice(i, i + batchSize)
+      const profiles = await Promise.all(
+        batch.map(async (handle) => {
+          try {
+            return await this.getProfile(handle)
+          } catch (error) {
+            console.error(`Failed to fetch profile for ${handle}:`, error)
+            return null
+          }
+        })
+      )
+      
+      profiles.forEach((profile, index) => {
+        if (profile) {
+          profileMap.set(batch[index], profile)
+        }
+      })
+    }
+    
+    return profileMap
+  }
 }
 
 // Factory function - create new instance per agent
