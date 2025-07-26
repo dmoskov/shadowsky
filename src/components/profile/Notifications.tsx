@@ -24,16 +24,16 @@ import type { ProcessedNotification } from '../../utils/notification-helpers'
 export const Notifications: React.FC = () => {
   const navigate = useNavigate()
   
-  // Load priority preference from localStorage
-  const [priorityOnly, setPriorityOnly] = useState(() => {
-    const saved = localStorage.getItem('notifications-priority')
-    return saved === 'true'
+  // Tab state: 'all' or 'following'
+  const [activeTab, setActiveTab] = useState<'all' | 'following'>(() => {
+    const saved = localStorage.getItem('notifications-tab')
+    return (saved === 'following' ? 'following' : 'all') as 'all' | 'following'
   })
   
   // Track expanded aggregations
   const [expandedAggregations, setExpandedAggregations] = useState<Set<string>>(new Set())
   
-  const { data, isLoading, error } = useNotifications(priorityOnly)
+  const { data, isLoading, error } = useNotifications(activeTab === 'following')
   const { mutate: markAsRead } = useMarkNotificationsRead()
   
   // Process notifications for aggregation
@@ -53,17 +53,17 @@ export const Notifications: React.FC = () => {
     }
   }, [data?.notifications, markAsRead])
 
-  // Save priority preference to localStorage
+  // Save tab preference to localStorage
   useEffect(() => {
-    localStorage.setItem('notifications-priority', priorityOnly.toString())
-  }, [priorityOnly])
+    localStorage.setItem('notifications-tab', activeTab)
+  }, [activeTab])
 
   const handleBack = () => {
     navigate('/')
   }
 
-  const handleTogglePriority = () => {
-    setPriorityOnly(!priorityOnly)
+  const handleTabChange = (tab: 'all' | 'following') => {
+    setActiveTab(tab)
   }
 
   const handleNotificationClick = (notification: Notification) => {
@@ -133,12 +133,12 @@ export const Notifications: React.FC = () => {
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <motion.header 
-        className="sticky top-16 z-10 bg-gray-900 border-b border-gray-800 px-4 py-3"
+        className="sticky top-16 z-10 bg-gray-900 border-b border-gray-800"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="px-4 py-3">
+          <div className="flex items-center gap-4 mb-3">
             <motion.button
               className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
               onClick={handleBack}
@@ -151,21 +151,48 @@ export const Notifications: React.FC = () => {
             <h1 className="text-xl font-semibold">Notifications</h1>
           </div>
           
-          {/* Priority Toggle */}
-          <motion.button
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-              priorityOnly 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-            }`}
-            onClick={handleTogglePriority}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title={priorityOnly ? "Show all notifications" : "Show only notifications from people you follow"}
-          >
-            <Users size={16} />
-            <span>{priorityOnly ? 'Following Only' : 'All'}</span>
-          </motion.button>
+          {/* Tab Navigation */}
+          <div className="flex gap-1">
+            <motion.button
+              className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition-all relative ${
+                activeTab === 'all'
+                  ? 'bg-gray-800 text-white' 
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+              onClick={() => handleTabChange('all')}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span>All notifications</span>
+              {activeTab === 'all' && (
+                <motion.div
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
+                  layoutId="activeTab"
+                />
+              )}
+            </motion.button>
+            
+            <motion.button
+              className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition-all relative ${
+                activeTab === 'following'
+                  ? 'bg-gray-800 text-white' 
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+              onClick={() => handleTabChange('following')}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              title="Show only notifications from people you follow"
+            >
+              <Users size={16} />
+              <span>Following</span>
+              {activeTab === 'following' && (
+                <motion.div
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
+                  layoutId="activeTab"
+                />
+              )}
+            </motion.button>
+          </div>
         </div>
       </motion.header>
 

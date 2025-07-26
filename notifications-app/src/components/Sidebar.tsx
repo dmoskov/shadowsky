@@ -5,7 +5,6 @@ import {
   Bell,
   Clock,
   BarChart3,
-  Settings,
   ExternalLink,
   X
 } from 'lucide-react'
@@ -21,7 +20,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { path: '/notifications', label: 'All Notifications', icon: Bell },
     { path: '/timeline', label: 'Visual Timeline', icon: Clock },
     { path: '/analytics', label: 'Notification Analytics', icon: BarChart3 },
-    { path: '/settings', label: 'Settings', icon: Settings },
   ]
 
   return (
