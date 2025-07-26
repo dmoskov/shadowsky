@@ -60,11 +60,11 @@ export const Login: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-primary flex items-center justify-center p-4">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-blue-500 rounded-full opacity-10 blur-3xl animate-pulse" />
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-purple-500 rounded-full opacity-10 blur-3xl animate-pulse animation-delay-2000" />
+        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-blue-500 rounded-full opacity-5 blur-3xl animate-pulse" />
+        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-purple-500 rounded-full opacity-5 blur-3xl animate-pulse animation-delay-2000" />
       </div>
       
       <div className="relative z-10 w-full max-w-md">
@@ -73,8 +73,8 @@ export const Login: React.FC = () => {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full shadow-2xl mb-4 transform hover:scale-110 transition-transform duration-300">
             <Cloud className="w-12 h-12 text-white" strokeWidth={2} />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">Bluesky</h1>
-          <p className="text-lg text-gray-300">Connect with the open social web</p>
+          <h1 className="text-4xl font-bold text-primary mb-2">Bluesky</h1>
+          <p className="text-lg text-secondary">Connect with the open social web</p>
         </div>
         
         {/* Features showcase */}
@@ -83,31 +83,31 @@ export const Login: React.FC = () => {
             <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mx-auto mb-2">
               <Globe className="w-6 h-6 text-blue-400" />
             </div>
-            <p className="text-xs text-gray-400">Decentralized</p>
+            <p className="text-xs text-tertiary">Decentralized</p>
           </div>
           <div className="text-center">
             <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-2">
               <Users className="w-6 h-6 text-purple-400" />
             </div>
-            <p className="text-xs text-gray-400">Community</p>
+            <p className="text-xs text-tertiary">Community</p>
           </div>
           <div className="text-center">
             <div className="w-12 h-12 bg-pink-500/20 rounded-lg flex items-center justify-center mx-auto mb-2">
               <Lock className="w-6 h-6 text-pink-400" />
             </div>
-            <p className="text-xs text-gray-400">Your Data</p>
+            <p className="text-xs text-tertiary">Your Data</p>
           </div>
         </div>
         
         {/* Login Card */}
-        <div className="bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-gray-700">
+        <div className="login-card backdrop-blur-xl rounded-2xl shadow-2xl p-8 border">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">Welcome back</h2>
+            <h2 className="text-2xl font-bold text-primary">Welcome back</h2>
             <Sparkles className="w-5 h-5 text-yellow-400" />
           </div>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-secondary mb-2">
                 Username or Email
               </label>
               <input
@@ -118,10 +118,10 @@ export const Login: React.FC = () => {
                 onBlur={() => setTouched({ ...touched, identifier: true })}
                 required
                 disabled={loading}
-                className={`w-full rounded-lg border px-4 py-3 text-base transition-all duration-200 bg-gray-900/50 text-white placeholder-gray-500 ${
+                className={`login-input w-full rounded-lg border px-4 py-3 text-base transition-all duration-200 bg-tertiary text-primary ${
                   touched.identifier && !identifier.trim()
                     ? 'border-red-500 focus:border-red-500'
-                    : 'border-gray-600 focus:border-blue-500'
+                    : 'border-opacity-50 focus:border-blue-500'
                 } ${
                   loading ? 'cursor-not-allowed opacity-50' : 'cursor-text'
                 } focus:ring-2 focus:ring-blue-500/20 focus:outline-none`}
@@ -135,7 +135,7 @@ export const Login: React.FC = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-secondary mb-2">
                 Password
               </label>
               <input
@@ -146,10 +146,10 @@ export const Login: React.FC = () => {
                 onBlur={() => setTouched({ ...touched, password: true })}
                 required
                 disabled={loading}
-                className={`w-full rounded-lg border px-4 py-3 text-base transition-all duration-200 bg-gray-900/50 text-white placeholder-gray-500 ${
+                className={`login-input w-full rounded-lg border px-4 py-3 text-base transition-all duration-200 bg-tertiary text-primary ${
                   touched.password && !password
                     ? 'border-red-500 focus:border-red-500'
-                    : 'border-gray-600 focus:border-blue-500'
+                    : 'border-opacity-50 focus:border-blue-500'
                 } ${
                   loading ? 'cursor-not-allowed opacity-50' : 'cursor-text'
                 } focus:ring-2 focus:ring-blue-500/20 focus:outline-none`}
@@ -189,8 +189,8 @@ export const Login: React.FC = () => {
           </form>
           
           {/* Additional options */}
-          <div className="mt-6 pt-6 border-t border-gray-700">
-            <p className="text-center text-sm text-gray-400">
+          <div className="mt-6 pt-6 border-t">
+            <p className="text-center text-sm text-tertiary">
               New to Bluesky?{' '}
               <a 
                 href="https://bsky.app" 

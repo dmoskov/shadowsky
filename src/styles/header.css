@@ -1,5 +1,10 @@
 /* Header Styles */
 
+.header-main {
+  background: var(--color-bg-primary);
+  border-color: var(--color-border);
+}
+
 .header {
   position: sticky;
   top: 0;

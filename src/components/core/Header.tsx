@@ -25,8 +25,8 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
   const { logout, session } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const [showDropdown, setShowDropdown] = useState(false)
-  const [darkMode, setDarkMode] = useState(true) // For now, always dark
   const [searchQuery, setSearchQuery] = useState('')
   const [isScrolled, setIsScrolled] = useState(false)
   const [isHidden, setIsHidden] = useState(false)
@@ -65,10 +65,6 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode)
-    // TODO: Implement theme switching
-  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
     <motion.header 
       className={`
         fixed top-0 left-0 right-0 z-50
-        bg-gray-900 border-b border-gray-800
+        header-main border-b
         transition-all duration-300
         ${isScrolled ? 'shadow-lg backdrop-blur-md bg-opacity-95' : ''}
         ${isHidden ? '-translate-y-full' : 'translate-y-0'}
@@ -165,13 +161,13 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
             {/* Theme Toggle */}
             <motion.button
               className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
-              onClick={toggleDarkMode}
+              onClick={toggleTheme}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-              aria-pressed={darkMode}
+              aria-label={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
+              aria-pressed={theme === 'dark'}
             >
-              {darkMode ? 
+              {theme === 'dark' ? 
                 <Sun className="text-gray-300" size={20} /> : 
                 <Moon className="text-gray-300" size={20} />
               }

@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from '
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { LoadingProvider } from './contexts/LoadingContext'
 import { AccessibilityProvider } from './contexts/AccessibilityContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 // import { performanceTracker, setPerformanceContext } from './lib/performance-tracking'
 import { 
   Login,
@@ -107,7 +108,7 @@ function AppContent() {
       <SkipLinks />
       <ScrollProgress />
       <GlobalLoadingIndicator />
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-primary">
         <Header onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
         <div className="flex relative">
           <Sidebar onCompose={() => setIsComposeOpen(true)} />
@@ -181,17 +182,19 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <AuthProvider>
-            <LoadingProvider>
-              <AccessibilityProvider>
-                <ToastProvider>
-                  <ErrorBoundary>
-                    <AppContent />
-                  </ErrorBoundary>
-                </ToastProvider>
-              </AccessibilityProvider>
-            </LoadingProvider>
-          </AuthProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <LoadingProvider>
+                <AccessibilityProvider>
+                  <ToastProvider>
+                    <ErrorBoundary>
+                      <AppContent />
+                    </ErrorBoundary>
+                  </ToastProvider>
+                </AccessibilityProvider>
+              </LoadingProvider>
+            </AuthProvider>
+          </ThemeProvider>
         </BrowserRouter>
       </QueryClientProvider>
     </ErrorBoundary>

@@ -1,0 +1,27 @@
+/* Login Page Styles */
+
+.login-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.login-card {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-border);
+}
+
+/* Light theme adjustments */
+[data-theme="light"] .login-card {
+  background-color: var(--color-bg-secondary);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .login-input {
+  background-color: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="light"] .login-input:focus {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-brand-primary);
+}
