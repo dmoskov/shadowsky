@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { LoadingProvider } from './contexts/LoadingContext'
+import { AccessibilityProvider } from './contexts/AccessibilityContext'
 // import { performanceTracker, setPerformanceContext } from './lib/performance-tracking'
 import { 
   Login,
@@ -32,6 +33,7 @@ import { LoadingScreen } from './components/ui/LoadingScreen'
 import { RateLimitStatus } from './components/RateLimitStatus'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
 import { GlobalLoadingIndicator } from './components/ui/GlobalLoadingIndicator'
+import { SkipLinks } from './components/ui/SkipLinks'
 import { queryClient } from '@bsky/shared'
 import { PenSquare } from 'lucide-react'
 import './App.css'
@@ -101,13 +103,14 @@ function AppContent() {
 
   return (
     <>
+      <SkipLinks />
       <ScrollProgress />
       <GlobalLoadingIndicator />
       <div className="min-h-screen bg-gray-900">
         <Header onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
         <div className="flex relative">
           <Sidebar onCompose={() => setIsComposeOpen(true)} />
-          <main className="flex-1 lg:pl-64 pt-16 min-h-screen w-full">
+          <main id="main-content" className="flex-1 lg:pl-64 pt-16 min-h-screen w-full" role="main">
             <div className="max-w-7xl mx-auto">
               <Routes>
               <Route path="/" element={
@@ -178,11 +181,13 @@ function App() {
         <BrowserRouter>
           <AuthProvider>
             <LoadingProvider>
-              <ToastProvider>
-                <ErrorBoundary>
-                  <AppContent />
-                </ErrorBoundary>
-              </ToastProvider>
+              <AccessibilityProvider>
+                <ToastProvider>
+                  <ErrorBoundary>
+                    <AppContent />
+                  </ErrorBoundary>
+                </ToastProvider>
+              </AccessibilityProvider>
             </LoadingProvider>
           </AuthProvider>
         </BrowserRouter>

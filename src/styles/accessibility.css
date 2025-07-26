@@ -1,0 +1,342 @@
+/* 
+ * Accessibility System
+ * Provides colorblind-friendly palettes, high contrast modes, and accessibility utilities
+ */
+
+/* ===== Colorblind-Safe Color Palettes ===== */
+:root {
+  /* Colorblind-safe palette (works for all types of color blindness) */
+  /* Using colors that are distinguishable by people with protanopia, deuteranopia, and tritanopia */
+  
+  /* Primary colors for different states/types */
+  --a11y-blue: #0066CC;      /* Primary actions, links */
+  --a11y-orange: #FF8800;    /* Warnings, attention */
+  --a11y-teal: #00A699;      /* Success, positive */
+  --a11y-purple: #8B4F9F;    /* Special actions */
+  --a11y-red: #DC3545;       /* Errors, destructive */
+  --a11y-gray: #6C757D;      /* Neutral, disabled */
+  
+  /* Semantic mappings */
+  --a11y-primary: var(--a11y-blue);
+  --a11y-success: var(--a11y-teal);
+  --a11y-warning: var(--a11y-orange);
+  --a11y-error: var(--a11y-red);
+  --a11y-info: var(--a11y-blue);
+  
+  /* Notification colors (colorblind-safe) */
+  --a11y-notification-like: var(--a11y-purple);
+  --a11y-notification-repost: var(--a11y-teal);
+  --a11y-notification-reply: var(--a11y-blue);
+  --a11y-notification-mention: var(--a11y-orange);
+  --a11y-notification-follow: var(--a11y-teal);
+  --a11y-notification-quote: var(--a11y-purple);
+}
+
+/* ===== Colorblind Mode ===== */
+[data-colorblind="true"] {
+  /* Override default colors with colorblind-safe ones */
+  --color-brand-primary: var(--a11y-primary);
+  --color-success: var(--a11y-success);
+  --color-warning: var(--a11y-warning);
+  --color-error: var(--a11y-error);
+  --color-info: var(--a11y-info);
+  
+  /* Notification colors */
+  --color-notification-like: var(--a11y-notification-like);
+  --color-notification-repost: var(--a11y-notification-repost);
+  --color-notification-reply: var(--a11y-notification-reply);
+  --color-notification-mention: var(--a11y-notification-mention);
+  --color-notification-follow: var(--a11y-notification-follow);
+  --color-notification-quote: var(--a11y-notification-quote);
+}
+
+/* ===== High Contrast Mode ===== */
+[data-contrast="high"] {
+  /* Maximum contrast for better visibility */
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #0A0A0A;
+  --color-bg-tertiary: #1A1A1A;
+  --color-bg-elevated: #2A2A2A;
+  
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #F0F0F0;
+  --color-text-tertiary: #D0D0D0;
+  
+  --color-border: #FFFFFF;
+  --color-border-hover: #FFFFFF;
+  --color-focus-ring: #FFFF00;
+  
+  /* Stronger shadows for depth perception */
+  --shadow-sm: 0 1px 2px 0 rgba(255, 255, 255, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(255, 255, 255, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(255, 255, 255, 0.4);
+}
+
+/* ===== Focus Indicators ===== */
+/* Enhanced focus indicators for keyboard navigation */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+  z-index: 9999;
+}
+
+/* High contrast focus */
+[data-contrast="high"] *:focus-visible {
+  outline: 4px solid var(--color-focus-ring);
+  outline-offset: 4px;
+}
+
+/* Button focus styles */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Form control focus */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 0;
+  border-color: transparent;
+}
+
+/* ===== Screen Reader Utilities ===== */
+/* Visually hidden but accessible to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Show on focus (for skip links) */
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: var(--spacing-2) var(--spacing-4);
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  border: 2px solid var(--color-focus-ring);
+  border-radius: var(--radius-md);
+  z-index: var(--z-tooltip);
+}
+
+/* ===== Motion Preferences ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ===== Text Readability ===== */
+/* Ensure minimum text sizes for readability */
+body {
+  font-size: max(16px, 1rem);
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+/* Prevent text from being too small */
+small,
+.text-xs,
+.text-sm {
+  font-size: max(14px, 0.875rem);
+}
+
+/* ===== Interactive Element Sizing ===== */
+/* Ensure touch targets meet WCAG guidelines (44x44px minimum) */
+button,
+a,
+[role="button"],
+[role="link"],
+input[type="checkbox"],
+input[type="radio"] {
+  min-height: 44px;
+  min-width: 44px;
+  position: relative;
+}
+
+/* For inline links and buttons, use pseudo-element for touch target */
+a:not(.button):not(.card),
+button.inline {
+  min-height: auto;
+  min-width: auto;
+}
+
+a:not(.button):not(.card)::after,
+button.inline::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* ===== Icon Accessibility ===== */
+/* Ensure icons have proper context */
+.icon-only {
+  position: relative;
+}
+
+.icon-only::after {
+  content: attr(aria-label);
+  position: absolute;
+  left: 100%;
+  margin-left: var(--spacing-2);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+
+.icon-only:hover::after,
+.icon-only:focus::after {
+  opacity: 1;
+}
+
+/* ===== Form Accessibility ===== */
+/* Ensure form labels are properly associated */
+label {
+  display: block;
+  margin-bottom: var(--spacing-1);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+/* Required field indicators */
+.required::after {
+  content: " *";
+  color: var(--color-error);
+  font-weight: var(--font-weight-bold);
+}
+
+/* Error messages */
+.error-message {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-1);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+/* ===== Skip Links ===== */
+.skip-links {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: var(--z-tooltip);
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  padding: var(--spacing-2) var(--spacing-4);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-focus-ring);
+}
+
+.skip-link:focus {
+  left: var(--spacing-2);
+  top: var(--spacing-2);
+}
+
+/* ===== Live Regions ===== */
+/* For screen reader announcements */
+.sr-live-region {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* ===== Loading States ===== */
+/* Ensure loading states are announced */
+.loading {
+  position: relative;
+}
+
+.loading::after {
+  content: attr(aria-label);
+  position: absolute;
+  left: -9999px;
+}
+
+/* ===== Patterns and Textures ===== */
+/* Add patterns for colorblind users to distinguish elements */
+[data-colorblind="true"] .like-button.liked {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 255, 255, 0.1) 10px,
+    rgba(255, 255, 255, 0.1) 20px
+  );
+}
+
+[data-colorblind="true"] .repost-button.reposted {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 255, 255, 0.1) 10px,
+    rgba(255, 255, 255, 0.1) 20px
+  );
+}
+
+/* ===== Print Styles ===== */
+@media print {
+  /* Hide decorative elements */
+  .icon-only::after,
+  .skip-links,
+  nav,
+  .sidebar,
+  .mobile-nav {
+    display: none !important;
+  }
+  
+  /* Ensure text is readable */
+  * {
+    color: #000 !important;
+    background: #fff !important;
+  }
+  
+  /* Show link URLs */
+  a[href]::after {
+    content: " (" attr(href) ")";
+  }
+}

@@ -88,8 +88,8 @@ export const PostCard: React.FC<PostCardProps> = ({
     <>
       {/* Repost indicator */}
       {reason && reason.$type === 'app.bsky.feed.defs#reasonRepost' && (
-        <div className="repost-indicator">
-          <Repeat2 size={16} />
+        <div className="repost-indicator" role="status" aria-label="Repost information">
+          <Repeat2 size={16} aria-hidden="true" />
           <span className="text-secondary text-sm">
             {reason.by.displayName || reason.by.handle} reposted
           </span>
@@ -107,6 +107,15 @@ export const PostCard: React.FC<PostCardProps> = ({
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
         onClick={handlePostClick}
+        role="article"
+        aria-label={`Post by ${post.author.displayName || post.author.handle}`}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            handlePostClick()
+          }
+        }}
       >
         {/* Header */}
         <PostHeader 

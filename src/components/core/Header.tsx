@@ -89,6 +89,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      role="banner"
+      aria-label="Main header"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -98,7 +100,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
             onClick={onMenuToggle}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            aria-label="Menu"
+            aria-label="Toggle navigation menu"
+            aria-expanded="false"
           >
             <div className="w-6 h-5 flex flex-col justify-between">
               <span className="w-full h-0.5 bg-gray-300 rounded-full transition-all"></span>
@@ -121,8 +124,11 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
 
           {/* Search Bar */}
           <form 
+            id="search"
             className="hidden md:flex flex-1 max-w-md mx-8" 
             onSubmit={handleSearch}
+            role="search"
+            aria-label="Search Bluesky"
           >
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -131,6 +137,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search Bluesky..." 
+                aria-label="Search query"
                 className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-full 
                           text-gray-200 placeholder-gray-400
                           focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20
@@ -149,7 +156,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
               onClick={() => navigate('/search')}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              title="Search"
+              aria-label="Go to search page"
             >
               <Search className="text-gray-300" size={20} />
             </motion.button>
@@ -160,7 +167,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
               onClick={toggleDarkMode}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+              aria-pressed={darkMode}
             >
               {darkMode ? 
                 <Sun className="text-gray-300" size={20} /> : 
@@ -174,12 +182,13 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
               onClick={() => navigate('/notifications')}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              title="Notifications"
+              aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ''}`}
             >
               <Bell className="text-gray-300" size={20} />
               {unreadCount !== undefined && unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs 
-                               rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                               rounded-full h-5 w-5 flex items-center justify-center font-medium"
+                      aria-hidden="true">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
@@ -196,6 +205,9 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
                 onClick={() => setShowDropdown(!showDropdown)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                aria-label="User menu"
+                aria-expanded={showDropdown}
+                aria-haspopup="menu"
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 
                                flex items-center justify-center text-white font-medium">

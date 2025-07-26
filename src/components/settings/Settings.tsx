@@ -12,8 +12,10 @@ import {
   Palette,
   Info,
   Save,
-  Check
+  Check,
+  Accessibility
 } from 'lucide-react'
+import { AccessibilitySettings } from './AccessibilitySettings'
 import type { 
   AppBskyActorDefs
 } from '@atproto/api'
@@ -141,6 +143,7 @@ export const Settings: React.FC = () => {
     { id: 'threads', label: 'Threads', icon: MessageSquare },
     { id: 'muted', label: 'Muted Words', icon: Shield },
     { id: 'appearance', label: 'Appearance', icon: Palette },
+    { id: 'accessibility', label: 'Accessibility', icon: Accessibility },
     { id: 'about', label: 'About', icon: Info }
   ]
 
@@ -426,6 +429,15 @@ export const Settings: React.FC = () => {
                   Theme settings coming soon. Currently using dark theme.
                 </p>
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'accessibility' && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <AccessibilitySettings />
             </motion.div>
           )}
 

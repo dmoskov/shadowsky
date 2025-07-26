@@ -1,5 +1,7 @@
 @import './styles/color-system.css';
 @import './styles/design-system.css';
+@import './styles/accessibility.css';
+@import './styles/font-size.css';
 @import './styles/layout.css';
 @import './styles/typography.css';
 @import './styles/interactive.css';

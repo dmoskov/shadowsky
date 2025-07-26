@@ -11,6 +11,7 @@ import { FeedLoadingProgress } from '../ui/FeedLoadingProgress'
 import { ContentEndIndicator } from '../ui/ContentEndIndicator'
 import { useLoading } from '../../contexts/LoadingContext'
 import { performanceTracker, useRenderTracking } from '@bsky/shared'
+import { useAnnouncement, useLoadingAnnouncement } from '../../hooks/useAnnouncement'
 import type { Post } from '@bsky/shared'
 
 interface FeedProps {
@@ -43,6 +44,19 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
       })
     }
   }, [isLoading, isFetching, posts.length, setLoading])
+
+  // Announce loading states for screen readers
+  useLoadingAnnouncement(
+    isLoading,
+    'Loading your timeline',
+    `Timeline loaded with ${posts.length} posts`
+  )
+  
+  // Announce new posts when fetching more
+  useAnnouncement(
+    isFetchingNextPage ? 'Loading more posts' : null,
+    'polite'
+  )
 
   const handleLoadMore = useCallback(() => {
     if (!isFetchingNextPage && hasNextPage) {
@@ -114,7 +128,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
         />
       )}
       
-      <div className="border-t border-gray-800">
+      <div className="border-t border-gray-800" role="feed" aria-busy={isFetching} aria-label="Timeline">
         {posts.map((item, index) => (
           <ErrorBoundary 
             key={item.post.uri}
@@ -150,12 +164,14 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
       <div 
         ref={loadMoreRef}
         className="py-8"
+        aria-live="polite"
+        aria-atomic="true"
       >
         {isFetchingNextPage && (
           <div className="flex flex-col items-center justify-center space-y-2">
             <div className="flex items-center space-x-3 text-gray-400">
               <InlineLoader />
-              <span>Loading more posts...</span>
+              <span aria-label="Loading more posts">Loading more posts...</span>
             </div>
             <div className="text-sm text-gray-500">
               {posts.length} posts loaded so far

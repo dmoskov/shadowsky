@@ -58,8 +58,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
 
   return (
     <aside className="hidden lg:flex flex-col fixed left-0 top-16 bottom-0 w-64 
-                     bg-gray-900 border-r border-gray-800 pt-4">
-      <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+                     bg-gray-900 border-r border-gray-800 pt-4"
+           role="navigation"
+           aria-label="Main navigation">
+      <nav id="main-navigation" className="flex-1 px-4 space-y-1 overflow-y-auto">
         <div className="space-y-1">
           {navItems.map((item) => (
             <NavLink
@@ -73,17 +75,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                 }
               `}
+              aria-current={isActive(item.path) ? 'page' : undefined}
             >
               <motion.div
                 className="flex items-center w-full"
                 whileHover={{ x: 4 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <item.icon size={22} className="mr-3" />
+                <item.icon size={22} className="mr-3" aria-hidden="true" />
                 <span className="font-medium">{item.label}</span>
                 {item.badge !== undefined && item.badge > 0 && (
                   <span className="ml-auto bg-blue-500 text-white text-xs 
-                                 rounded-full px-2 py-0.5 font-medium">
+                                 rounded-full px-2 py-0.5 font-medium"
+                        aria-label={`${item.badge} unread`}>
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 )}
@@ -117,13 +121,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                 }
               `}
+              aria-current={isActive(item.path) ? 'page' : undefined}
             >
               <motion.div
                 className="flex items-center w-full"
                 whileHover={{ x: 4 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <item.icon size={22} className="mr-3" />
+                <item.icon size={22} className="mr-3" aria-hidden="true" />
                 <span className="font-medium">{item.label}</span>
               </motion.div>
             </NavLink>
@@ -137,8 +142,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
           onClick={onCompose}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          aria-label="Compose new post"
         >
-          <PenSquare size={20} />
+          <PenSquare size={20} aria-hidden="true" />
           <span>Compose</span>
         </motion.button>
       </nav>
