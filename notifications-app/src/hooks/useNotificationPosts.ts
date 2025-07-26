@@ -16,18 +16,38 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
   const postUris = React.useMemo(() => {
     if (!notifications || notifications.length === 0) return []
     
-    const uniqueUris = new Set<string>()
+    // Separate URIs by notification type to prioritize reposts
+    const repostUris = new Set<string>()
+    const otherUris = new Set<string>()
+    let repostCount = 0
+    
     notifications.forEach(notification => {
       if (['like', 'repost', 'reply', 'quote'].includes(notification.reason)) {
-        uniqueUris.add(notification.uri)
+        if (notification.reason === 'repost') {
+          // For reposts, use reasonSubject which contains the original post URI
+          if (notification.reasonSubject) {
+            repostUris.add(notification.reasonSubject)
+          } else {
+            // Fallback to uri if reasonSubject is not available
+            repostUris.add(notification.uri)
+          }
+          repostCount++
+        } else {
+          otherUris.add(notification.uri)
+        }
       }
     })
     
-    return Array.from(uniqueUris).sort() // Sort for stable key
+    // Prioritize repost URIs by putting them first
+    const allUris = [...Array.from(repostUris), ...Array.from(otherUris)]
+    
+    console.log(`[POST URIS] Total notifications: ${notifications.length}, Repost notifications: ${repostCount}, Repost URIs: ${repostUris.size}, Other URIs: ${otherUris.size}, Total unique URIs: ${allUris.length}`)
+    
+    return allUris
   }, [notifications])
 
   return useQuery({
-    queryKey: ['notification-posts', postUris.slice(0, 100).join(',')], // Limit key size
+    queryKey: ['notification-posts', postUris.slice(0, 100).sort().join(',')], // Limit key size, sort for stability
     queryFn: async () => {
       if (postUris.length === 0) return []
       
@@ -35,8 +55,8 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
       const agent = atProtoClient.agent
       if (!agent) throw new Error('Not authenticated')
       
-      // LIMIT: Only fetch first 100 posts to reduce API calls
-      const MAX_POSTS_TO_FETCH = 100
+      // LIMIT: Fetch first 150 posts to ensure reposts are included (they're prioritized first)
+      const MAX_POSTS_TO_FETCH = 150
       const urisToFetch = postUris.slice(0, MAX_POSTS_TO_FETCH)
       
       console.log(`[POST FETCH] Fetching ${urisToFetch.length} unique posts (limited from ${postUris.length})`)

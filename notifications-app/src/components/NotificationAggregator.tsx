@@ -294,7 +294,11 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
         {/* Post preview if applicable */}
         {item.reason !== 'follow' && (() => {
           // Try to get the post from postMap first for richer content
-          const postUri = item.notifications[0].uri
+          // For reposts, use reasonSubject which contains the original post URI
+          const notification = item.notifications[0]
+          const postUri = item.reason === 'repost' && notification.reasonSubject 
+            ? notification.reasonSubject 
+            : notification.uri
           const post = postMap?.get(postUri)
           
           if (post) {
