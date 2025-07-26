@@ -11,7 +11,7 @@ This report presents findings from a comprehensive audit of the BSKY codebase, f
 
 Multiple test scripts contain hardcoded credentials that pose a severe security risk:
 
-- **Email exposed**: `traviskimmel+bsky@gmail.com` appears in 10+ test files
+- **Email exposed**: `test-account@example.com` appears in 10+ test files
 - **Password exposed**: `C%;,!2iO"]Wu%11T9+Y8` found in `capture-postcard-comparison.mjs`
 
 **Affected Files:**

@@ -7,7 +7,7 @@ This cleanup plan addresses critical security issues, organizational debt, and p
 
 ### 1. Remove Hardcoded Credentials
 - [ ] Update all 39 test files to use environment variables via `getTestCredentials()`
-- [ ] Remove hardcoded email `traviskimmel+bsky@gmail.com` from all files
+- [ ] Remove hardcoded email `test-account@example.com` from all files
 - [ ] Create migration script to update all test files automatically
 - [ ] Add pre-commit hook to prevent future credential commits
 

@@ -64,7 +64,7 @@ See `CREDENTIAL_MIGRATION_REPORT.json` for complete list. Key files:
 
 ```bash
 # Ensure no credentials in codebase
-git grep -i "password\|traviskimmel+bsky"
+git grep -i "password\|test-account@example"
 
 # Check environment setup
 node -e "console.log(process.env.VITE_TEST_IDENTIFIER ? '✅ Env vars loaded' : '❌ Env vars missing')"

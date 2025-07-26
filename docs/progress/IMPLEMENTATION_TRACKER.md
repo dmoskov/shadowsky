@@ -74,7 +74,7 @@
 - Created test-thread-secure.js as reference implementation
 **Verification**:
 - Test with env vars: ✅ (successful login and thread navigation)
-- Credentials masked in logs: ✅ (shows traviskimmel+bsky@****)
+- Credentials masked in logs: ✅ (shows test-account@****)
 - .env.local ignored by git: ✅
 - Vite detected env changes: ✅ (server restarted automatically)
 **Notes**: 

@@ -3,7 +3,7 @@
 Since automated login is blocked, please follow these steps to capture screenshots:
 
 ## Login Credentials
-- **Username**: traviskimmel+bsky@gmail.com
+- **Username**: test-account@example.com
 - **Password**: C%;,!2iO"]Wu%11T9+Y8
 
 ## Screenshots to Capture
