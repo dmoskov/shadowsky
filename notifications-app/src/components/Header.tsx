@@ -42,6 +42,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
               @{session?.handle || 'user'}
             </span>
           </div>
+          <ThemeToggle />
           <button
             onClick={logout}
             className="bsky-button-ghost flex items-center gap-1.5 text-sm"
