@@ -251,3 +251,54 @@
 .items-start {
   align-items: flex-start;
 }
+
+/* Clickable post preview styles */
+.timeline-post-preview {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+a.timeline-post-preview {
+  display: block;
+  text-decoration: none;
+}
+
+a.timeline-post-preview:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Avatar hover effects */
+.avatar-stack a {
+  display: inline-block;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.avatar-stack a:hover {
+  z-index: 10;
+  transform: scale(1.1);
+}
+
+/* Profile link styles */
+a[href*="bsky.app/profile"] {
+  transition: all 0.15s ease;
+}
+
+/* External link indicator for posts */
+.timeline-post-preview p svg {
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.timeline-post-preview:hover p svg {
+  opacity: 1;
+}
+
+/* Timeline gap indicator */
+.timeline-gap-indicator {
+  padding: 2px 6px;
+  background: var(--bsky-bg-secondary);
+  border-radius: 10px;
+  white-space: nowrap;
+}

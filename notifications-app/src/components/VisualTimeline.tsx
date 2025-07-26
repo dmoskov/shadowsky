@@ -644,13 +644,22 @@ export const VisualTimeline: React.FC = () => {
                           
                           if (post) {
                             // We have full post data
+                            const postUrl = getPostUrl(postUri, post.author?.handle)
                             return (
-                              <div className="mt-3 p-3 rounded timeline-post-preview" style={{ 
-                                backgroundColor: 'var(--bsky-bg-tertiary)',
-                                border: '1px solid var(--bsky-border-primary)' 
-                              }}>
-                                <p className="text-xs font-medium mb-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                              <a 
+                                href={postUrl || '#'}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block mt-3 p-3 rounded timeline-post-preview hover:opacity-90 transition-opacity" 
+                                style={{ 
+                                  backgroundColor: 'var(--bsky-bg-tertiary)',
+                                  border: '1px solid var(--bsky-border-primary)',
+                                  textDecoration: 'none'
+                                }}
+                              >
+                                <p className="text-xs font-medium mb-1 flex items-center gap-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
                                   Your post:
+                                  <ExternalLink size={10} />
                                 </p>
                                 <p className="text-sm line-clamp-3" style={{ color: 'var(--bsky-text-primary)' }}>
                                   {post.record?.text || '[Post with no text]'}
@@ -666,7 +675,7 @@ export const VisualTimeline: React.FC = () => {
                                     </>
                                   )}
                                 </div>
-                              </div>
+                              </a>
                             )
                           }
                           
