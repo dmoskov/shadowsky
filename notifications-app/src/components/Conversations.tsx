@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
 import { useNotifications } from '../hooks/useNotifications'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
+import { usePostsByUris } from '../hooks/usePostsByUris'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { getNotificationUrl, atUriToBskyUrl } from '../utils/url-helpers'
 import type { Post } from '@bsky/shared'
@@ -54,11 +55,54 @@ export const Conversations: React.FC = () => {
   // Fetch posts for the reply notifications
   const { data: posts } = useNotificationPosts(replyNotifications)
 
-  // Create a map for quick post lookup
-  const postMap = React.useMemo(() => {
+  // Create initial map for reply posts
+  const replyPostMap = React.useMemo(() => {
     if (!posts) return new Map()
     return new Map(posts.map(post => [post.uri, post]))
   }, [posts])
+
+  // Collect unique root post URIs that need to be fetched
+  const rootPostUris = React.useMemo(() => {
+    const rootUris = new Set<string>()
+    
+    replyNotifications.forEach((notification: Notification) => {
+      // Get the root post URI from the notification
+      let rootUri = notification.reasonSubject || notification.uri
+      
+      // If this is a reply, try to find the actual root of the thread
+      const post = replyPostMap.get(notification.uri)
+      if (post?.record?.reply?.root?.uri) {
+        rootUri = post.record.reply.root.uri
+      }
+      
+      // Only add if we don't already have this post
+      if (rootUri && !replyPostMap.has(rootUri)) {
+        rootUris.add(rootUri)
+      }
+    })
+    
+    return Array.from(rootUris)
+  }, [replyNotifications, replyPostMap])
+
+  // Fetch the root posts that we don't have
+  const { data: rootPosts } = usePostsByUris(rootPostUris)
+
+  // Create combined map with all posts (replies + roots)
+  const postMap = React.useMemo(() => {
+    const map = new Map<string, Post>()
+    
+    // Add reply posts
+    if (posts) {
+      posts.forEach(post => map.set(post.uri, post))
+    }
+    
+    // Add root posts
+    if (rootPosts) {
+      rootPosts.forEach(post => map.set(post.uri, post))
+    }
+    
+    return map
+  }, [posts, rootPosts])
 
   // Group notifications into conversation threads
   const conversations = useMemo(() => {
@@ -147,6 +191,17 @@ export const Conversations: React.FC = () => {
       }
       nodeMap.set(selectedConversation.rootUri, rootNode)
       rootNodes.push(rootNode)
+    } else {
+      // If we don't have the root post yet, create a placeholder
+      // This prevents the first reply from being shown as root
+      const rootNode: ThreadNode = {
+        post: undefined,
+        children: [],
+        depth: 0,
+        isRoot: true
+      }
+      nodeMap.set(selectedConversation.rootUri, rootNode)
+      rootNodes.push(rootNode)
     }
     
     // Create nodes for all replies
@@ -166,29 +221,26 @@ export const Conversations: React.FC = () => {
     // Build parent-child relationships
     selectedConversation.replies.forEach(notification => {
       const post = postMap.get(notification.uri)
-      if (post?.record?.reply?.parent?.uri) {
-        const parentUri = post.record.reply.parent.uri
+      const childNode = nodeMap.get(notification.uri)
+      if (!childNode) return
+      
+      // Get the parent URI from the reply
+      const parentUri = post?.record?.reply?.parent?.uri
+      
+      if (parentUri) {
         const parentNode = nodeMap.get(parentUri)
-        const childNode = nodeMap.get(notification.uri)
         
-        if (parentNode && childNode) {
+        if (parentNode) {
+          // Found parent in our nodes
           parentNode.children.push(childNode)
           childNode.depth = parentNode.depth + 1
-        } else if (childNode && !parentNode) {
-          // If parent is not in our notifications, attach to root
-          if (rootNodes.length > 0) {
+        } else {
+          // Parent not in our nodes, check if it should be attached to root
+          if (parentUri === selectedConversation.rootUri || rootNodes.length > 0) {
+            // This is a direct reply to the root post or we have a root node
             rootNodes[0].children.push(childNode)
             childNode.depth = 1
-          } else {
-            rootNodes.push(childNode)
           }
-        }
-      } else {
-        // No parent specified, attach to root
-        const node = nodeMap.get(notification.uri)
-        if (node && rootNodes.length > 0 && !rootNodes.includes(node)) {
-          rootNodes[0].children.push(node)
-          node.depth = 1
         }
       }
     })
@@ -231,6 +283,40 @@ export const Conversations: React.FC = () => {
       const postUrl = post?.uri && author?.handle 
         ? atUriToBskyUrl(post.uri, author.handle) 
         : notification ? getNotificationUrl(notification) : null
+
+      // Handle root node without post (loading state)
+      if (node.isRoot && !post) {
+        return (
+          <div key={selectedConversation?.rootUri || Math.random()} className="mb-4">
+            <div className="flex-1 p-4 rounded-lg" 
+                 style={{ 
+                   backgroundColor: 'var(--bsky-bg-secondary)',
+                   border: '1px solid var(--bsky-border-primary)'
+                 }}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-medium px-2 py-1 rounded-full" 
+                      style={{ 
+                        backgroundColor: 'var(--bsky-bg-primary)', 
+                        color: 'var(--bsky-text-secondary)',
+                        border: '1px solid var(--bsky-border-primary)'
+                      }}>
+                  Original Post
+                </span>
+              </div>
+              <div className="flex items-center justify-center py-8">
+                <Loader2 size={24} className="animate-spin" style={{ color: 'var(--bsky-text-tertiary)' }} />
+                <span className="ml-2 text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                  Loading original post...
+                </span>
+              </div>
+            </div>
+            {/* Render children even if root is loading */}
+            {node.children.length > 0 && (
+              <div>{renderThreadNodes(node.children, postMap)}</div>
+            )}
+          </div>
+        )
+      }
 
       return (
         <div key={post?.uri || notification?.uri || Math.random()} className="mb-4">

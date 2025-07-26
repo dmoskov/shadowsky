@@ -13,9 +13,12 @@ import {
   Info,
   Save,
   Check,
-  Accessibility
+  Accessibility,
+  Moon,
+  Sun
 } from 'lucide-react'
 import { AccessibilitySettings } from './AccessibilitySettings'
+import { useTheme } from '../../contexts/ThemeContext'
 import type { 
   AppBskyActorDefs
 } from '@atproto/api'
@@ -30,6 +33,7 @@ type MutedWordsPref = AppBskyActorDefs.MutedWordsPref
 export const Settings: React.FC = () => {
   const navigate = useNavigate()
   const { agent, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState('general')
   const [isSaving, setIsSaving] = useState(false)
@@ -418,16 +422,48 @@ export const Settings: React.FC = () => {
 
           {activeTab === 'appearance' && (
             <motion.div 
-              className="settings-section"
+              className="space-y-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
-              <h2>Appearance</h2>
+              <h2 className="text-xl font-semibold mb-4">Appearance</h2>
               
-              <div className="settings-group">
-                <p className="text-secondary">
-                  Theme settings coming soon. Currently using dark theme.
-                </p>
+              <div className="bg-gray-900 rounded-lg p-4 border border-gray-700 space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium mb-3">Theme</h3>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Color Mode</p>
+                      <p className="text-sm text-gray-400 mt-1">
+                        Choose between light and dark themes
+                      </p>
+                    </div>
+                    <button
+                      onClick={toggleTheme}
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 
+                               border border-gray-600 rounded-lg transition-colors"
+                    >
+                      {theme === 'dark' ? (
+                        <>
+                          <Moon size={18} />
+                          <span>Dark</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sun size={18} />
+                          <span>Light</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t border-gray-800">
+                  <p className="text-sm text-gray-400">
+                    More customization options coming soon, including custom accent colors 
+                    and font size adjustments.
+                  </p>
+                </div>
               </div>
             </motion.div>
           )}
