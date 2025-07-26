@@ -28,6 +28,7 @@ import { MobileTabBar } from './components/core/MobileTabBar'
 import { ErrorBadge } from './components/common/ErrorBadge'
 import { TailwindTest } from './components/TailwindTest'
 import { LoadingScreen } from './components/ui/LoadingScreen'
+import { RateLimitStatus } from './components/RateLimitStatus'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
 import { queryClient } from '@bsky/shared'
 import { PenSquare } from 'lucide-react'
@@ -160,6 +161,9 @@ function AppContent() {
       {/* Toast Notifications */}
       <ToastContainer />
       {import.meta.env.DEV && <ErrorBadge />}
+      
+      {/* Rate Limit Status */}
+      <RateLimitStatus />
     </>
   )
 }

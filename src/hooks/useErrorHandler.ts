@@ -17,6 +17,7 @@ import {
 } from '@bsky/shared'
 import { trackError } from '@bsky/shared'
 import type { ErrorCategory } from '@bsky/shared'
+import { useToast } from './useToast'
 
 interface ErrorHandlerOptions {
   onRateLimit?: (resetAt: Date) => void
@@ -28,6 +29,7 @@ interface ErrorHandlerOptions {
 }
 
 export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
+  const showToast = useToast()
 
   const handleError = useCallback((error: Error | unknown, action?: string) => {
     // Determine error category for tracking
@@ -50,14 +52,22 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
       if (options.onRateLimit) {
         options.onRateLimit(error.resetAt)
       } else {
-        const minutesUntilReset = Math.ceil(
-          (error.resetAt.getTime() - Date.now()) / 60000
+        const secondsUntilReset = Math.ceil(
+          (error.resetAt.getTime() - Date.now()) / 1000
         )
-        const message = `Rate limited. Please try again in ${minutesUntilReset} minute(s).`
+        const message = secondsUntilReset > 60 
+          ? `Rate limited. Please try again in ${Math.ceil(secondsUntilReset / 60)} minute(s).`
+          : `Rate limited. Please try again in ${secondsUntilReset} seconds.`
+        
         if (options.silent) {
           console.warn(message)
         } else {
-          alert(message)
+          // Use toast for rate limit errors
+          showToast({
+            message,
+            type: 'warning',
+            duration: Math.min(secondsUntilReset * 1000, 10000) // Show for wait time or max 10s
+          })
         }
       }
       return
@@ -115,7 +125,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
         alert('An unexpected error occurred. Please try again.')
       }
     }
-  }, [options])
+  }, [options, showToast])
 
   return { handleError }
 }

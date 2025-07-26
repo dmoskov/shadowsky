@@ -2,6 +2,7 @@ import React from 'react'
 import { Heart, Repeat2, UserPlus, Quote } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
+import { getNotificationUrl } from '../utils/url-helpers'
 
 interface AggregatedNotification {
   type: 'aggregated'
@@ -171,12 +172,27 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
   const remainingCount = item.users.length - displayUsers.length
   const hasUnread = item.notifications.some(n => !n.isRead)
   
+  // Get URL for the first notification (most recent)
+  const primaryUrl = getNotificationUrl(item.notifications[0])
+  
+  const handleClick = (e: React.MouseEvent) => {
+    // If clicking with modifier keys (Cmd/Ctrl), open in new tab and don't expand
+    if (e.metaKey || e.ctrlKey) {
+      window.open(primaryUrl, '_blank')
+      e.preventDefault()
+    } else {
+      // Otherwise, expand the aggregated view
+      if (onExpand) onExpand()
+    }
+  }
+  
   return (
     <div
       className={`bsky-notification flex gap-3 p-4 cursor-pointer ${
         hasUnread ? 'bsky-notification-unread' : ''
       }`}
-      onClick={onExpand}
+      onClick={handleClick}
+      title="Cmd/Ctrl+Click to open in Bluesky"
     >
       <div className="flex-shrink-0 pt-1">
         {getIcon()}

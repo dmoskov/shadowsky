@@ -7,11 +7,13 @@ import { mapATProtoError } from '../../lib/errors'
 // import { measureAsync } from '../../lib/performance-tracking'
 import type { Session } from '../../types/atproto'
 import { sessionCookies } from '../../lib/cookies'
+import { createRateLimitedAgent } from '../../lib/rate-limited-agent'
 
 export interface ATProtoConfig {
   service?: string
   persistSession?: boolean
   sessionPrefix?: string
+  enableRateLimiting?: boolean // New option to enable/disable rate limiting
 }
 
 export class ATProtoClient {
@@ -22,12 +24,18 @@ export class ATProtoClient {
     this.config = {
       service: config.service || 'https://bsky.social',
       persistSession: config.persistSession !== false,
-      sessionPrefix: config.sessionPrefix || ''
+      sessionPrefix: config.sessionPrefix || '',
+      enableRateLimiting: config.enableRateLimiting !== false // Default to true
     }
     
-    this._agent = new BskyAgent({
+    const baseAgent = new BskyAgent({
       service: this.config.service
     })
+    
+    // Apply rate limiting wrapper if enabled
+    this._agent = this.config.enableRateLimiting 
+      ? createRateLimitedAgent(baseAgent)
+      : baseAgent
   }
 
   async login(identifier: string, password: string): Promise<Session> {

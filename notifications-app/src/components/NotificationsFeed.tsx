@@ -6,6 +6,7 @@ import { formatDistanceToNow } from 'date-fns'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { aggregateNotifications, AggregatedNotificationItem } from './NotificationAggregator'
 import { TopAccountsView } from './TopAccountsView'
+import { getNotificationUrl } from '../utils/url-helpers'
 
 type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies' | 'quotes' | 'images' | 'top-accounts'
 
@@ -484,11 +485,17 @@ interface NotificationItemProps {
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postMap, getNotificationIcon }) => {
+  const notificationUrl = getNotificationUrl(notification)
+  
   return (
-    <div
-      className={`bsky-notification flex gap-3 p-4 cursor-pointer ${
+    <a
+      href={notificationUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`bsky-notification flex gap-3 p-4 cursor-pointer block no-underline ${
         !notification.isRead ? 'bsky-notification-unread' : ''
       }`}
+      style={{ textDecoration: 'none', color: 'inherit' }}
     >
       <div className="flex-shrink-0 pt-1">
         {getNotificationIcon(notification.reason)}
@@ -570,6 +577,6 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postM
           </time>
         </div>
       </div>
-    </div>
+    </a>
   )
 }
