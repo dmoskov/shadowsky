@@ -313,6 +313,7 @@ export const NotificationsFeed: React.FC = () => {
                       <AggregatedNotificationItem
                         item={item}
                         postMap={postMap}
+                        showTypeLabel={filter === 'all'}
                         onExpand={() => {
                           const newExpanded = new Set(expandedAggregations)
                           if (isExpanded) {
@@ -333,6 +334,7 @@ export const NotificationsFeed: React.FC = () => {
                               notification={notification}
                               postMap={postMap}
                               getNotificationIcon={getNotificationIcon}
+                              showTypeLabel={filter === 'all'}
                             />
                           ))}
                           <button
@@ -358,6 +360,7 @@ export const NotificationsFeed: React.FC = () => {
                       notification={item.notification}
                       postMap={postMap}
                       getNotificationIcon={getNotificationIcon}
+                      showTypeLabel={filter === 'all'}
                     />
                   )
                 }
@@ -371,6 +374,7 @@ export const NotificationsFeed: React.FC = () => {
                 notification={notification}
                 postMap={postMap}
                 getNotificationIcon={getNotificationIcon}
+                showTypeLabel={filter === 'all'}
               />
             ))
           )
@@ -496,9 +500,10 @@ interface NotificationItemProps {
   notification: Notification
   postMap: Map<string, any>
   getNotificationIcon: (reason: string) => React.ReactNode
+  showTypeLabel?: boolean
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postMap, getNotificationIcon }) => {
+const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postMap, getNotificationIcon, showTypeLabel = false }) => {
   // Get the post for all notification types that reference posts
   const post = ['like', 'repost', 'reply', 'quote'].includes(notification.reason) 
     ? postMap.get(notification.uri) 
@@ -507,6 +512,18 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postM
   
   const notificationUrl = getNotificationUrl(notification, postAuthorHandle)
   
+  // Get notification type label
+  const getNotificationTypeLabel = (reason: string): string => {
+    switch (reason) {
+      case 'like': return 'Like'
+      case 'repost': return 'Repost'
+      case 'follow': return 'Follow'
+      case 'mention': return 'Mention'
+      case 'reply': return 'Reply'
+      case 'quote': return 'Quote'
+      default: return reason.charAt(0).toUpperCase() + reason.slice(1)
+    }
+  }
   
   return (
     <a
@@ -538,6 +555,18 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postM
         </div>
         
         <div className="flex-1 min-w-0">
+          {showTypeLabel && (
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full" 
+                    style={{ 
+                      backgroundColor: 'var(--bsky-bg-secondary)', 
+                      color: 'var(--bsky-text-secondary)',
+                      border: '1px solid var(--bsky-border-primary)'
+                    }}>
+                {getNotificationTypeLabel(notification.reason)}
+              </span>
+            </div>
+          )}
           <p className="text-sm">
             <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
               {notification.author.displayName || notification.author.handle}

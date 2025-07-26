@@ -10,6 +10,8 @@ interface AggregatedEvent {
   notifications: any[]
   types: Set<string>
   actors: Set<string>
+  postUri?: string // For post-specific aggregations
+  aggregationType: 'post' | 'follow' | 'mixed' // Type of aggregation
 }
 
 export const VisualTimeline: React.FC = () => {
@@ -176,22 +178,20 @@ export const VisualTimeline: React.FC = () => {
                 >
                   {/* Single notification */}
                   {event.notifications.length === 1 ? (
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-center gap-3">
                       <img 
                         src={event.notifications[0].author.avatar} 
                         alt={event.notifications[0].author.handle}
-                        className="w-10 h-10 rounded-full"
+                        className="w-8 h-8 rounded-full"
                       />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          {getReasonIcon(event.notifications[0].reason)}
-                          <span className="font-medium">
-                            {event.notifications[0].author.displayName || event.notifications[0].author.handle}
-                          </span>
-                        </div>
-                        <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                      <div className="flex-1 flex items-center gap-2">
+                        {getReasonIcon(event.notifications[0].reason)}
+                        <span className="font-medium text-sm">
+                          {event.notifications[0].author.displayName || event.notifications[0].author.handle}
+                        </span>
+                        <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
                           {getActionText(event.notifications[0].reason)}
-                        </p>
+                        </span>
                       </div>
                     </div>
                   ) : (
@@ -243,25 +243,20 @@ export const VisualTimeline: React.FC = () => {
                       </div>
                     </div>
                   )}
-
-                  {/* Time ago label */}
-                  <div className="mt-2 text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                    {formatDistanceToNow(event.time, { addSuffix: true })}
-                  </div>
                 </div>
               </div>
 
               {/* Visual gap indicator for large time gaps */}
-              {previousEvent && differenceInHours(previousEvent.time, event.time) >= 6 && (
+              {previousEvent && differenceInHours(previousEvent.time, event.time) >= 12 && (
                 <div 
-                  className="absolute left-12 -top-8 text-xs px-2 py-1 rounded timeline-gap-indicator"
+                  className="absolute left-12 -top-3 text-xs timeline-gap-indicator"
                   style={{ 
-                    backgroundColor: 'var(--bsky-bg-tertiary)',
-                    color: 'var(--bsky-text-secondary)',
-                    transform: 'translateX(-50%)'
+                    color: 'var(--bsky-text-tertiary)',
+                    transform: 'translateX(-50%)',
+                    fontSize: '10px'
                   }}
                 >
-                  {Math.floor(differenceInHours(previousEvent.time, event.time))}h gap
+                  {Math.floor(differenceInHours(previousEvent.time, event.time))}h
                 </div>
               )}
             </div>

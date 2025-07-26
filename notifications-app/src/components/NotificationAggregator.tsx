@@ -140,9 +140,10 @@ interface AggregatedNotificationItemProps {
   item: AggregatedNotification
   onExpand?: () => void
   postMap?: Map<string, any>
+  showTypeLabel?: boolean
 }
 
-export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProps> = ({ item, onExpand, postMap }) => {
+export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProps> = ({ item, onExpand, postMap, showTypeLabel = false }) => {
   const getIcon = () => {
     switch (item.reason) {
       case 'like': return <Heart size={18} style={{ color: 'var(--bsky-like)' }} fill="currentColor" />
@@ -150,6 +151,16 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
       case 'follow': return <UserPlus size={18} style={{ color: 'var(--bsky-follow)' }} />
       case 'quote': return <Quote size={18} style={{ color: 'var(--bsky-quote)' }} />
       default: return null
+    }
+  }
+  
+  const getNotificationTypeLabel = (reason: string): string => {
+    switch (reason) {
+      case 'like': return 'Likes'
+      case 'repost': return 'Reposts'
+      case 'follow': return 'Follows'
+      case 'quote': return 'Quotes'
+      default: return reason.charAt(0).toUpperCase() + reason.slice(1) + 's'
     }
   }
   
@@ -247,6 +258,20 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--bsky-primary)' }}></div>
           )}
         </div>
+        
+        {/* Notification type label */}
+        {showTypeLabel && (
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full" 
+                  style={{ 
+                    backgroundColor: 'var(--bsky-bg-secondary)', 
+                    color: 'var(--bsky-text-secondary)',
+                    border: '1px solid var(--bsky-border-primary)'
+                  }}>
+              {getNotificationTypeLabel(item.reason)}
+            </span>
+          </div>
+        )}
         
         {/* Aggregated text */}
         <p className="text-sm">
