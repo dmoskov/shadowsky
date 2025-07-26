@@ -13,7 +13,7 @@ export const MobileTabBar: React.FC = () => {
   const tabs = [
     { path: '/', icon: Home, label: 'Home' },
     { path: '/search', icon: Search, label: 'Search' },
-    { path: '/conversations', icon: MessageSquare, label: 'Chat' },
+    { path: '/conversations', icon: MessageSquare, label: 'Conversations' },
     { path: '/notifications', icon: Bell, label: 'Notifications' },
   ]
 
