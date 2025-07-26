@@ -544,6 +544,42 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postM
       console.log('[REPOST DEBUG] PostMap size:', postMap.size)
     }
     
+    // For likes, reposts, replies, and quotes - show loading state if post not yet loaded
+    if (['like', 'repost', 'reply', 'quote'].includes(notification.reason)) {
+      // Show loading indicator if post should exist but isn't loaded yet
+      if (!post && postMap.size === 0) {
+        return (
+          <div className="mt-3 p-4 rounded-lg" style={{ 
+            backgroundColor: 'var(--bsky-bg-secondary)', 
+            border: '1px solid var(--bsky-border-primary)',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+          }}>
+            <div className="flex items-center gap-2">
+              <Loader className="animate-spin" size={16} style={{ color: 'var(--bsky-primary)' }} />
+              <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                Loading post content...
+              </span>
+            </div>
+          </div>
+        )
+      }
+      
+      if (!post) {
+        // Post couldn't be loaded or doesn't exist
+        return (
+          <div className="mt-3 p-4 rounded-lg" style={{ 
+            backgroundColor: 'var(--bsky-bg-secondary)', 
+            border: '1px solid var(--bsky-border-primary)',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+          }}>
+            <p className="text-sm italic" style={{ color: 'var(--bsky-text-tertiary)' }}>
+              [Unable to load post content]
+            </p>
+          </div>
+        )
+      }
+    }
+    
     // For likes, reposts, replies, and quotes - show the referenced post
     if (['like', 'repost', 'reply', 'quote'].includes(notification.reason) && post) {
       const hasImages = post.embed?.$type === 'app.bsky.embed.images#view' || 
@@ -675,42 +711,6 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postM
     // For follows - no post to show
     if (notification.reason === 'follow') {
       return null
-    }
-    
-    // Special handling for reposts when post isn't in map
-    if (notification.reason === 'repost' && !post) {
-      console.warn('[REPOST] Post not found in map for URI:', postUri, '(notification.uri:', notification.uri, ', reasonSubject:', notification.reasonSubject, ')')
-      // Check if we have record data directly on the notification
-      if (notification.record && typeof notification.record === 'object' && 'text' in notification.record) {
-        return (
-          <div className="mt-3 p-4 rounded-lg" style={{ 
-            backgroundColor: 'var(--bsky-bg-secondary)', 
-            border: '1px solid var(--bsky-border-primary)',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-          }}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-medium" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                Your post:
-              </span>
-            </div>
-            <p className="text-sm" style={{ color: 'var(--bsky-text-primary)', lineHeight: '1.5' }}>
-              {(notification.record as { text?: string }).text}
-            </p>
-          </div>
-        )
-      }
-      // If no record data either, show a placeholder
-      return (
-        <div className="mt-3 p-4 rounded-lg" style={{ 
-          backgroundColor: 'var(--bsky-bg-secondary)', 
-          border: '1px solid var(--bsky-border-primary)',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-        }}>
-          <p className="text-sm italic" style={{ color: 'var(--bsky-text-tertiary)' }}>
-            [Unable to load post content]
-          </p>
-        </div>
-      )
     }
     
     // Fallback for any other notification types with record text

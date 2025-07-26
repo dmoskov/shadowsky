@@ -301,6 +301,24 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
             : notification.uri
           const post = postMap?.get(postUri)
           
+          // Show loading indicator if posts are still being fetched
+          if (!post && postMap && postMap.size === 0) {
+            return (
+              <div className="mt-3 p-4 rounded-lg" style={{ 
+                backgroundColor: 'var(--bsky-bg-secondary)', 
+                border: '1px solid var(--bsky-border-primary)',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+              }}>
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin h-4 w-4 border-2 border-gray-300 rounded-full border-t-blue-500"></div>
+                  <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                    Loading post content...
+                  </span>
+                </div>
+              </div>
+            )
+          }
+          
           if (post) {
             // We have full post data with author info
             const postText = post.record?.text || ''
@@ -398,6 +416,19 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
               }}>
                 <p className="text-sm" style={{ color: 'var(--bsky-text-primary)', lineHeight: '1.5' }}>
                   {(item.notifications[0].record as { text?: string }).text}
+                </p>
+              </div>
+            )
+          } else if (!post && postMap && postMap.size > 0) {
+            // Post couldn't be loaded or doesn't exist
+            return (
+              <div className="mt-3 p-4 rounded-lg" style={{ 
+                backgroundColor: 'var(--bsky-bg-secondary)', 
+                border: '1px solid var(--bsky-border-primary)',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+              }}>
+                <p className="text-sm italic" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                  [Unable to load post content]
                 </p>
               </div>
             )
