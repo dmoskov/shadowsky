@@ -1,5 +1,5 @@
 import React from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import type { Post } from '@bsky/shared'
@@ -11,42 +11,41 @@ import { rateLimitedPostFetch } from '../services/rate-limiter'
  */
 export function useNotificationPosts(notifications: Notification[] | undefined) {
   const { session } = useAuth()
+  const queryClient = useQueryClient()
+  const [fetchedCount, setFetchedCount] = React.useState(0)
+  const [isFetchingMore, setIsFetchingMore] = React.useState(false)
 
-  // Create a stable query key based on unique post URIs, not the full notification list
+  // Create a stable query key based on unique post URIs, maintaining order
   const postUris = React.useMemo(() => {
     if (!notifications || notifications.length === 0) return []
     
-    // Separate URIs by notification type to prioritize reposts
-    const repostUris = new Set<string>()
-    const otherUris = new Set<string>()
-    let repostCount = 0
+    // Maintain order of notifications as they appear in the feed
+    const uriSet = new Set<string>()
+    const orderedUris: string[] = []
     
     notifications.forEach(notification => {
       if (['like', 'repost', 'reply', 'quote'].includes(notification.reason)) {
-        if (notification.reason === 'repost') {
-          // For reposts, use reasonSubject which contains the original post URI
-          if (notification.reasonSubject) {
-            repostUris.add(notification.reasonSubject)
-          } else {
-            // Fallback to uri if reasonSubject is not available
-            repostUris.add(notification.uri)
-          }
-          repostCount++
-        } else {
-          otherUris.add(notification.uri)
+        // For reposts and likes, use reasonSubject which contains the original post URI
+        const uri = (notification.reason === 'repost' || notification.reason === 'like') && notification.reasonSubject
+          ? notification.reasonSubject
+          : notification.uri
+        
+        // Only add if we haven't seen this URI before
+        if (!uriSet.has(uri)) {
+          uriSet.add(uri)
+          orderedUris.push(uri)
         }
       }
     })
     
-    // Prioritize repost URIs by putting them first
-    const allUris = [...Array.from(repostUris), ...Array.from(otherUris)]
-    
-    
-    return allUris
+    console.log(`Ordered ${orderedUris.length} unique post URIs from ${notifications.length} notifications`)
+    return orderedUris
   }, [notifications])
 
-  return useQuery({
-    queryKey: ['notification-posts', postUris.slice(0, 100).sort().join(',')], // Limit key size, sort for stability
+  const queryKey = ['notification-posts', postUris.slice(0, 100).sort().join(',')]
+
+  const queryResult = useQuery({
+    queryKey,
     queryFn: async () => {
       if (postUris.length === 0) return []
       
@@ -54,9 +53,9 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
       const agent = atProtoClient.agent
       if (!agent) throw new Error('Not authenticated')
       
-      // LIMIT: Fetch first 150 posts to ensure reposts are included (they're prioritized first)
-      const MAX_POSTS_TO_FETCH = 150
-      const urisToFetch = postUris.slice(0, MAX_POSTS_TO_FETCH)
+      // Initial fetch: Get first 150 posts quickly
+      const INITIAL_POSTS_TO_FETCH = 150
+      const urisToFetch = postUris.slice(0, INITIAL_POSTS_TO_FETCH)
       
       
       // Batch fetch posts (Bluesky API supports up to 25 posts per request)
@@ -77,6 +76,7 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
         }
       }
       
+      setFetchedCount(posts.length)
       return posts
     },
     enabled: !!session && postUris.length > 0,
@@ -85,6 +85,92 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
     refetchOnWindowFocus: false, // Don't refetch posts on window focus
     refetchOnMount: false, // Don't refetch when component remounts if data exists
   })
+
+  // Progressive fetch for remaining posts
+  React.useEffect(() => {
+    if (!session || !queryResult.data || isFetchingMore) return
+    
+    // Check if we have unfetched posts
+    const fetchedUris = new Set((queryResult.data || []).map(post => post.uri))
+    const unfetchedCount = postUris.filter(uri => !fetchedUris.has(uri)).length
+    
+    if (unfetchedCount === 0) return // All posts fetched
+
+    const fetchMorePosts = async () => {
+      setIsFetchingMore(true)
+      const { atProtoClient } = await import('../services/atproto')
+      const agent = atProtoClient.agent
+      if (!agent) return
+
+      const BATCH_SIZE = 50 // Fetch 50 posts at a time after initial load
+      const DELAY_BETWEEN_BATCHES = 2000 // 2 seconds between batches (faster for better UX)
+      
+      // Get already fetched URIs from current data
+      const fetchedUris = new Set((queryResult.data || []).map(post => post.uri))
+      
+      // Filter out URIs that have already been fetched
+      const unfetchedUris = postUris.filter(uri => !fetchedUris.has(uri))
+      
+      // Take the next batch of unfetched URIs in order (which naturally prioritizes top posts)
+      const urisToFetch = unfetchedUris.slice(0, BATCH_SIZE)
+
+      const newPosts: Post[] = []
+      
+      for (let i = 0; i < urisToFetch.length; i += 25) {
+        const batch = urisToFetch.slice(i, i + 25)
+        try {
+          const response = await rateLimitedPostFetch(async () => 
+            agent.app.bsky.feed.getPosts({ uris: batch })
+          )
+          newPosts.push(...(response.data.posts as Post[]))
+          
+          // Small delay between API calls within a batch
+          if (i + 25 < urisToFetch.length) {
+            await new Promise(resolve => setTimeout(resolve, 500))
+          }
+        } catch (error) {
+          console.error('Failed to fetch additional posts batch:', error)
+        }
+      }
+
+      // Update the query data with new posts
+      if (newPosts.length > 0) {
+        queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
+          const updatedData = [...(oldData || []), ...newPosts]
+          console.log(`Updated query data: ${oldData?.length || 0} -> ${updatedData.length} posts`)
+          return updatedData
+        })
+        setFetchedCount(prev => prev + newPosts.length)
+      }
+
+      setIsFetchingMore(false)
+
+      // Schedule next batch if there are more unfetched posts
+      if (unfetchedUris.length > BATCH_SIZE) {
+        setTimeout(fetchMorePosts, DELAY_BETWEEN_BATCHES)
+      }
+    }
+
+    // Start fetching more posts after a delay
+    const timeoutId = setTimeout(fetchMorePosts, 2000)
+    return () => clearTimeout(timeoutId)
+  }, [session, queryResult.data, fetchedCount, postUris, isFetchingMore, queryClient, queryKey])
+
+  // Log current data state
+  React.useEffect(() => {
+    console.log(`Hook data state: ${queryResult.data?.length || 0} posts in data, fetchedCount: ${fetchedCount}`)
+  }, [queryResult.data, fetchedCount])
+
+  // Calculate actual fetched count based on current data
+  const actualFetchedCount = queryResult.data?.length || 0
+  
+  return {
+    ...queryResult,
+    totalPosts: postUris.length,
+    fetchedPosts: actualFetchedCount,
+    isFetchingMore,
+    percentageFetched: postUris.length > 0 ? Math.round((actualFetchedCount / postUris.length) * 100) : 100
+  }
 }
 
 /**

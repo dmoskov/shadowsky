@@ -256,8 +256,8 @@ export const VisualTimeline: React.FC = () => {
                           const notification = event.notifications[0]
                           
                           // Try to get full post data first
-                          // For reposts, use reasonSubject which contains the original post URI
-                          const postUri = notification.reason === 'repost' && notification.reasonSubject 
+                          // For reposts and likes, use reasonSubject which contains the original post URI
+                          const postUri = (notification.reason === 'repost' || notification.reason === 'like') && notification.reasonSubject 
                             ? notification.reasonSubject 
                             : notification.uri
                           const post = ['like', 'repost', 'reply', 'quote'].includes(notification.reason) 
@@ -372,8 +372,8 @@ export const VisualTimeline: React.FC = () => {
                           const notification = event.notifications[0]
                           
                           // Try to get full post data
-                          // For reposts, use reasonSubject which contains the original post URI
-                          const postUri = notification.reason === 'repost' && notification.reasonSubject 
+                          // For reposts and likes, use reasonSubject which contains the original post URI
+                          const postUri = (notification.reason === 'repost' || notification.reason === 'like') && notification.reasonSubject 
                             ? notification.reasonSubject 
                             : notification.uri
                           const post = postMap.get(postUri)

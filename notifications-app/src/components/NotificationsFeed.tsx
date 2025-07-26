@@ -73,7 +73,7 @@ export const NotificationsFeed: React.FC = () => {
 
   // Fetch posts for notifications that might have images
   // We always fetch posts to show images in all views
-  const { data: posts } = useNotificationPosts(notifications)
+  const { data: posts, totalPosts, fetchedPosts, isFetchingMore, percentageFetched } = useNotificationPosts(notifications)
 
   // Set up intersection observer to load more notifications
   useEffect(() => {
@@ -119,8 +119,8 @@ export const NotificationsFeed: React.FC = () => {
         )
         filtered = filtered.filter((n: Notification) => {
           if (!['like', 'repost', 'reply', 'quote'].includes(n.reason)) return false
-          // For reposts, use reasonSubject which contains the original post URI
-          const postUri = n.reason === 'repost' && n.reasonSubject ? n.reasonSubject : n.uri
+          // For reposts and likes, use reasonSubject which contains the original post URI
+          const postUri = (n.reason === 'repost' || n.reason === 'like') && n.reasonSubject ? n.reasonSubject : n.uri
           return postsWithImages.has(postUri)
         })
       } else {
@@ -149,8 +149,10 @@ export const NotificationsFeed: React.FC = () => {
   // Create a map for quick post lookup
   const postMap = React.useMemo(() => {
     if (!posts) return new Map()
-    return new Map(posts.map(post => [post.uri, post]))
-  }, [posts])
+    const map = new Map(posts.map(post => [post.uri, post]))
+    console.log(`PostMap created with ${map.size} posts, fetchedPosts: ${fetchedPosts}, totalPosts: ${totalPosts}`)
+    return map
+  }, [posts, fetchedPosts]) // Add fetchedPosts to dependencies to ensure map updates
 
   const getNotificationIcon = (reason: string) => {
     switch (reason) {
@@ -285,6 +287,30 @@ export const NotificationsFeed: React.FC = () => {
         </div>
       </div>
 
+      {/* Post loading progress indicator */}
+      {isFetchingMore && percentageFetched < 100 && (
+        <div className="px-4 py-2 border-b" style={{ 
+          borderColor: 'var(--bsky-border-secondary)',
+          backgroundColor: 'var(--bsky-bg-secondary)',
+          fontSize: '0.875rem',
+          color: 'var(--bsky-text-secondary)'
+        }}>
+          <div className="flex items-center justify-between">
+            <span>Loading post content...</span>
+            <span>{percentageFetched}% ({fetchedPosts}/{totalPosts} posts)</span>
+          </div>
+          <div className="mt-1 h-1 bg-gray-200 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bsky-border-primary)' }}>
+            <div 
+              className="h-full transition-all duration-300 ease-out"
+              style={{ 
+                width: `${percentageFetched}%`,
+                backgroundColor: 'var(--bsky-primary)'
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Notifications list */}
       <div>
         {filter === 'top-accounts' ? (
@@ -316,6 +342,10 @@ export const NotificationsFeed: React.FC = () => {
                         item={item}
                         postMap={postMap}
                         showTypeLabel={filter === 'all'}
+                        isFetchingMore={isFetchingMore}
+                        fetchedPosts={fetchedPosts}
+                        totalPosts={totalPosts}
+                        percentageFetched={percentageFetched}
                         onExpand={() => {
                           const newExpanded = new Set(expandedAggregations)
                           if (isExpanded) {
@@ -337,6 +367,10 @@ export const NotificationsFeed: React.FC = () => {
                               postMap={postMap}
                               getNotificationIcon={getNotificationIcon}
                               showTypeLabel={filter === 'all'}
+                              isFetchingMore={isFetchingMore}
+                              fetchedPosts={fetchedPosts}
+                              totalPosts={totalPosts}
+                              percentageFetched={percentageFetched}
                             />
                           ))}
                           <button
@@ -363,6 +397,10 @@ export const NotificationsFeed: React.FC = () => {
                       postMap={postMap}
                       getNotificationIcon={getNotificationIcon}
                       showTypeLabel={filter === 'all'}
+                      isFetchingMore={isFetchingMore}
+                      fetchedPosts={fetchedPosts}
+                      totalPosts={totalPosts}
+                      percentageFetched={percentageFetched}
                     />
                   )
                 }
@@ -377,6 +415,10 @@ export const NotificationsFeed: React.FC = () => {
                 postMap={postMap}
                 getNotificationIcon={getNotificationIcon}
                 showTypeLabel={filter === 'all'}
+                isFetchingMore={isFetchingMore}
+                fetchedPosts={fetchedPosts}
+                totalPosts={totalPosts}
+                percentageFetched={percentageFetched}
               />
             ))
           )
@@ -503,12 +545,25 @@ interface NotificationItemProps {
   postMap: Map<string, any>
   getNotificationIcon: (reason: string) => React.ReactNode
   showTypeLabel?: boolean
+  isFetchingMore?: boolean
+  fetchedPosts?: number
+  totalPosts?: number
+  percentageFetched?: number
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postMap, getNotificationIcon, showTypeLabel = false }) => {
+const NotificationItem: React.FC<NotificationItemProps> = ({ 
+  notification, 
+  postMap, 
+  getNotificationIcon, 
+  showTypeLabel = false,
+  isFetchingMore = false,
+  fetchedPosts = 0,
+  totalPosts = 0,
+  percentageFetched = 100
+}) => {
   // Get the post for all notification types that reference posts
-  // For reposts, use reasonSubject which contains the original post URI
-  const postUri = notification.reason === 'repost' && notification.reasonSubject 
+  // For reposts and likes, use reasonSubject which contains the original post URI
+  const postUri = (notification.reason === 'repost' || notification.reason === 'like') && notification.reasonSubject 
     ? notification.reasonSubject 
     : notification.uri
   
@@ -544,6 +599,16 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postM
       console.log('[REPOST DEBUG] PostMap size:', postMap.size)
     }
     
+    // Debug like notifications
+    if (notification.reason === 'like') {
+      console.log('[LIKE DEBUG] Notification:', notification)
+      console.log('[LIKE DEBUG] Notification URI:', notification.uri)
+      console.log('[LIKE DEBUG] ReasonSubject:', notification.reasonSubject)
+      console.log('[LIKE DEBUG] Post URI used for lookup:', postUri)
+      console.log('[LIKE DEBUG] Post from map:', post)
+      console.log('[LIKE DEBUG] PostMap size:', postMap.size)
+    }
+    
     // For likes, reposts, replies, and quotes - show loading state if post not yet loaded
     if (['like', 'repost', 'reply', 'quote'].includes(notification.reason)) {
       // Show loading indicator if post should exist but isn't loaded yet
@@ -565,7 +630,26 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postM
       }
       
       if (!post) {
+        // Check if we're still fetching more posts
+        if (isFetchingMore && fetchedPosts < totalPosts) {
+          return (
+            <div className="mt-3 p-4 rounded-lg" style={{ 
+              backgroundColor: 'var(--bsky-bg-secondary)', 
+              border: '1px solid var(--bsky-border-primary)',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div className="flex items-center gap-2">
+                <Loader className="animate-spin" size={16} style={{ color: 'var(--bsky-primary)' }} />
+                <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                  Loading post content... ({percentageFetched}% loaded)
+                </span>
+              </div>
+            </div>
+          )
+        }
+        
         // Post couldn't be loaded or doesn't exist
+        console.log(`Post not found: ${postUri}, postMap size: ${postMap.size}, fetchedPosts: ${fetchedPosts}/${totalPosts}`)
         return (
           <div className="mt-3 p-4 rounded-lg" style={{ 
             backgroundColor: 'var(--bsky-bg-secondary)', 

@@ -141,9 +141,22 @@ interface AggregatedNotificationItemProps {
   onExpand?: () => void
   postMap?: Map<string, any>
   showTypeLabel?: boolean
+  isFetchingMore?: boolean
+  fetchedPosts?: number
+  totalPosts?: number
+  percentageFetched?: number
 }
 
-export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProps> = ({ item, onExpand, postMap, showTypeLabel = false }) => {
+export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProps> = ({ 
+  item, 
+  onExpand, 
+  postMap, 
+  showTypeLabel = false,
+  isFetchingMore = false,
+  fetchedPosts = 0,
+  totalPosts = 0,
+  percentageFetched = 100
+}) => {
   const getIcon = () => {
     switch (item.reason) {
       case 'like': return <Heart size={18} style={{ color: 'var(--bsky-like)' }} fill="currentColor" />
@@ -294,9 +307,9 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
         {/* Post preview if applicable */}
         {item.reason !== 'follow' && (() => {
           // Try to get the post from postMap first for richer content
-          // For reposts, use reasonSubject which contains the original post URI
+          // For reposts and likes, use reasonSubject which contains the original post URI
           const notification = item.notifications[0]
-          const postUri = item.reason === 'repost' && notification.reasonSubject 
+          const postUri = (item.reason === 'repost' || item.reason === 'like') && notification.reasonSubject 
             ? notification.reasonSubject 
             : notification.uri
           const post = postMap?.get(postUri)
@@ -420,6 +433,24 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
               </div>
             )
           } else if (!post && postMap && postMap.size > 0) {
+            // Check if we're still fetching more posts
+            if (isFetchingMore && fetchedPosts < totalPosts) {
+              return (
+                <div className="mt-3 p-4 rounded-lg" style={{ 
+                  backgroundColor: 'var(--bsky-bg-secondary)', 
+                  border: '1px solid var(--bsky-border-primary)',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                }}>
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin h-4 w-4 border-2 border-gray-300 border-t-blue-500 rounded-full" />
+                    <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                      Loading post content... ({percentageFetched}% loaded)
+                    </span>
+                  </div>
+                </div>
+              )
+            }
+            
             // Post couldn't be loaded or doesn't exist
             return (
               <div className="mt-3 p-4 rounded-lg" style={{ 
