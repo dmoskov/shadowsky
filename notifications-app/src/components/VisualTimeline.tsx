@@ -26,7 +26,7 @@ export const VisualTimeline: React.FC = () => {
     }
   })
 
-  // Aggregate notifications that happen close together (within 5 minutes)
+  // Smart aggregation based on notification type and context
   const aggregatedEvents = React.useMemo(() => {
     if (!data?.notifications) return []
 
@@ -35,23 +35,58 @@ export const VisualTimeline: React.FC = () => {
       new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime()
     )
 
+    // Group follow notifications together, and post-related notifications by post URI
     sorted.forEach(notification => {
       const notifTime = new Date(notification.indexedAt)
-      const lastEvent = events[events.length - 1]
-
-      if (lastEvent && differenceInMinutes(lastEvent.time, notifTime) <= 30) {
-        // Aggregate with the last event
-        lastEvent.notifications.push(notification)
-        lastEvent.types.add(notification.reason)
-        lastEvent.actors.add(notification.author.handle)
-      } else {
+      
+      // Find an existing event to potentially aggregate with
+      let aggregated = false
+      
+      if (notification.reason === 'follow') {
+        // Look for recent follow events to aggregate with
+        for (let i = events.length - 1; i >= 0; i--) {
+          const event = events[i]
+          if (event.aggregationType === 'follow' && 
+              differenceInMinutes(event.time, notifTime) <= 60) {
+            // Aggregate follows within 60 minutes
+            event.notifications.push(notification)
+            event.actors.add(notification.author.handle)
+            aggregated = true
+            break
+          }
+        }
+      } else if (['like', 'repost', 'quote'].includes(notification.reason) && notification.uri) {
+        // Look for events about the same post
+        for (let i = events.length - 1; i >= 0; i--) {
+          const event = events[i]
+          if (event.postUri === notification.uri && 
+              differenceInHours(event.time, notifTime) <= 24) {
+            // Aggregate post interactions within 24 hours
+            event.notifications.push(notification)
+            event.types.add(notification.reason)
+            event.actors.add(notification.author.handle)
+            aggregated = true
+            break
+          }
+        }
+      }
+      
+      if (!aggregated) {
         // Create a new event
-        events.push({
+        const newEvent: AggregatedEvent = {
           time: notifTime,
           notifications: [notification],
           types: new Set([notification.reason]),
-          actors: new Set([notification.author.handle])
-        })
+          actors: new Set([notification.author.handle]),
+          aggregationType: notification.reason === 'follow' ? 'follow' : 
+                          ['like', 'repost', 'quote'].includes(notification.reason) ? 'post' : 'mixed'
+        }
+        
+        if (notification.uri && ['like', 'repost', 'quote'].includes(notification.reason)) {
+          newEvent.postUri = notification.uri
+        }
+        
+        events.push(newEvent)
       }
     })
 
@@ -161,16 +196,25 @@ export const VisualTimeline: React.FC = () => {
                 </div>
 
                 {/* Timeline dot */}
-                <div className="relative flex-shrink-0">
+                <div className="relative flex-shrink-0" style={{ paddingTop: '14px' }}>
                   <div 
-                    className={`w-2 h-2 rounded-full mt-3 ${differenceInHours(new Date(), event.time) < 1 ? 'timeline-dot-recent' : ''}`}
-                    style={{ backgroundColor: event.notifications.length > 3 ? 'var(--bsky-primary)' : 'var(--bsky-text-secondary)' }}
+                    className={`w-2 h-2 rounded-full ${differenceInHours(new Date(), event.time) < 1 ? 'timeline-dot-recent' : ''}`}
+                    style={{ 
+                      backgroundColor: event.aggregationType === 'post' ? 'var(--bsky-primary)' : 
+                                      event.aggregationType === 'follow' ? 'var(--bsky-follow)' :
+                                      'var(--bsky-text-secondary)'
+                    }}
                   />
                 </div>
 
                 {/* Event card */}
                 <div 
-                  className={`flex-1 p-3 rounded-lg timeline-event-card ${event.notifications.length > 1 ? 'timeline-aggregated' : ''}`}
+                  className={`flex-1 p-3 rounded-lg timeline-event-card ${
+                    event.notifications.length > 1 ? 'timeline-aggregated' : ''
+                  } ${
+                    event.aggregationType === 'follow' ? 'timeline-follow-aggregate' : 
+                    event.aggregationType === 'post' ? 'timeline-post-aggregate' : ''
+                  }`}
                   style={{ 
                     backgroundColor: event.notifications.length === 1 ? 'var(--bsky-bg-secondary)' : undefined,
                     border: '1px solid var(--bsky-border-color)'
@@ -178,69 +222,115 @@ export const VisualTimeline: React.FC = () => {
                 >
                   {/* Single notification */}
                   {event.notifications.length === 1 ? (
-                    <div className="flex items-center gap-3">
-                      <img 
-                        src={event.notifications[0].author.avatar} 
-                        alt={event.notifications[0].author.handle}
-                        className="w-8 h-8 rounded-full"
-                      />
-                      <div className="flex-1 flex items-center gap-2">
-                        {getReasonIcon(event.notifications[0].reason)}
-                        <span className="font-medium text-sm">
-                          {event.notifications[0].author.displayName || event.notifications[0].author.handle}
-                        </span>
-                        <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
-                          {getActionText(event.notifications[0].reason)}
-                        </span>
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src={event.notifications[0].author.avatar} 
+                          alt={event.notifications[0].author.handle}
+                          className="w-8 h-8 rounded-full"
+                        />
+                        <div className="flex-1 flex items-center gap-2">
+                          {getReasonIcon(event.notifications[0].reason)}
+                          <span className="font-medium text-sm">
+                            {event.notifications[0].author.displayName || event.notifications[0].author.handle}
+                          </span>
+                          <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                            {getActionText(event.notifications[0].reason)}
+                          </span>
+                        </div>
                       </div>
+                      {/* Show post preview for single notifications too */}
+                      {event.notifications[0].reason !== 'follow' && event.notifications[0].record?.value?.text && (
+                        <div className="mt-2 ml-11 p-2 rounded timeline-post-preview" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
+                          <p className="text-xs line-clamp-2" style={{ color: 'var(--bsky-text-secondary)' }}>
+                            {event.notifications[0].record.value.text}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     /* Aggregated notifications */
-                    <div className="flex items-center gap-3">
-                      {/* Actor avatars */}
-                      <div className="flex -space-x-2 avatar-stack flex-shrink-0">
-                        {event.notifications.slice(0, 5).map((notif, i) => (
-                          <img 
-                            key={`${notif.uri}-${i}`}
-                            src={notif.author.avatar} 
-                            alt={notif.author.handle}
-                            className="w-6 h-6 rounded-full border-2"
-                            style={{ borderColor: 'var(--bsky-bg-secondary)' }}
-                            title={notif.author.displayName || notif.author.handle}
-                          />
-                        ))}
-                        {event.notifications.length > 5 && (
-                          <div 
-                            className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-medium"
-                            style={{ 
-                              backgroundColor: 'var(--bsky-bg-tertiary)',
-                              borderColor: 'var(--bsky-bg-secondary)',
-                              fontSize: '10px'
-                            }}
-                          >
-                            +{event.notifications.length - 5}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Compact summary */}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-sm">
-                            {event.actors.size} {event.actors.size === 1 ? 'person' : 'people'}
-                          </span>
-                          <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>•</span>
-                          {Array.from(event.types).map((type, i) => (
-                            <span key={type} className="flex items-center gap-1 text-sm">
-                              {getReasonIcon(type)}
-                              <span style={{ color: 'var(--bsky-text-secondary)' }}>
-                                {getActionCount(event.notifications, type)}
-                              </span>
-                              {i < event.types.size - 1 && <span style={{ color: 'var(--bsky-text-secondary)' }}>•</span>}
-                            </span>
+                    <div>
+                      <div className="flex items-center gap-3">
+                        {/* Actor avatars */}
+                        <div className="flex -space-x-2 avatar-stack flex-shrink-0">
+                          {event.notifications.slice(0, 5).map((notif, i) => (
+                            <img 
+                              key={`${notif.uri}-${i}`}
+                              src={notif.author.avatar} 
+                              alt={notif.author.handle}
+                              className="w-6 h-6 rounded-full border-2"
+                              style={{ borderColor: 'var(--bsky-bg-secondary)' }}
+                              title={notif.author.displayName || notif.author.handle}
+                            />
                           ))}
+                          {event.notifications.length > 5 && (
+                            <div 
+                              className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-medium"
+                              style={{ 
+                                backgroundColor: 'var(--bsky-bg-tertiary)',
+                                borderColor: 'var(--bsky-bg-secondary)',
+                                fontSize: '10px'
+                              }}
+                            >
+                              +{event.notifications.length - 5}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Compact summary */}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {event.aggregationType === 'follow' ? (
+                              <>
+                                <span className="font-medium text-sm">
+                                  {event.actors.size} new {event.actors.size === 1 ? 'follower' : 'followers'}
+                                </span>
+                                {getReasonIcon('follow')}
+                              </>
+                            ) : (
+                              <>
+                                <span className="font-medium text-sm">
+                                  {event.actors.size} {event.actors.size === 1 ? 'person' : 'people'}
+                                </span>
+                                <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>•</span>
+                                {Array.from(event.types).map((type, i) => (
+                                  <span key={type} className="flex items-center gap-1 text-sm">
+                                    {getReasonIcon(type)}
+                                    <span style={{ color: 'var(--bsky-text-secondary)' }}>
+                                      {getActionCount(event.notifications, type)}
+                                    </span>
+                                    {i < event.types.size - 1 && <span style={{ color: 'var(--bsky-text-secondary)' }}>•</span>}
+                                  </span>
+                                ))}
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
+                      
+                      {/* Post preview for aggregated post notifications */}
+                      {event.aggregationType === 'post' && event.notifications[0].record?.value?.text && (
+                        <div className="mt-3 p-3 rounded timeline-post-preview" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
+                          <p className="text-xs font-medium mb-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                            Your post:
+                          </p>
+                          <p className="text-sm line-clamp-3" style={{ color: 'var(--bsky-text-primary)' }}>
+                            {event.notifications[0].record.value.text}
+                          </p>
+                          <div className="mt-2 text-xs flex items-center gap-2" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                            <span>{event.notifications.filter(n => n.reason === 'like').length} likes</span>
+                            <span>•</span>
+                            <span>{event.notifications.filter(n => n.reason === 'repost').length} reposts</span>
+                            {event.notifications.some(n => n.reason === 'quote') && (
+                              <>
+                                <span>•</span>
+                                <span>{event.notifications.filter(n => n.reason === 'quote').length} quotes</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

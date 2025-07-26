@@ -112,3 +112,37 @@
   transform: scale(1.1) translateY(-2px);
   z-index: 10;
 }
+
+/* Post preview styling */
+.timeline-post-preview {
+  position: relative;
+  overflow: hidden;
+}
+
+.timeline-post-preview::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: var(--bsky-primary);
+  opacity: 0.5;
+}
+
+/* Aggregation type indicators */
+.timeline-follow-aggregate {
+  border-left: 3px solid var(--bsky-follow);
+  padding-left: 12px;
+}
+
+.timeline-post-aggregate {
+  border-left: 3px solid var(--bsky-primary);
+  padding-left: 12px;
+}
+
+/* Enhanced hover effects for aggregated cards */
+.timeline-event-card.timeline-aggregated:hover {
+  transform: translateX(6px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
