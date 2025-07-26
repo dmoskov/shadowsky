@@ -27,7 +27,8 @@ jobs:
         run: |
           npm install
           cd packages/shared && npm install
-          cd ../notifications-app && npm install
+          cd ../..
+          cd notifications-app && npm install
           
       - name: Build app
         run: |
