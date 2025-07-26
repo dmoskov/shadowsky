@@ -26,6 +26,7 @@
 @import './styles/mobile-tab-bar.css';
 @import './styles/settings.css';
 @import './styles/analytics.css';
+@import './styles/theme-toggle.css';
 
 /* Tailwind CSS is imported in main.tsx to avoid conflicts */
 

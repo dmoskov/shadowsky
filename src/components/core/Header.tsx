@@ -13,6 +13,7 @@ import {
   ChevronDown
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import { useTheme } from '../../contexts/ThemeContext'
 import { useUnreadNotificationCount } from '../../hooks/useNotifications'
 import { useToast } from '../ui/Toast'
 import { getBskyProfileUrl } from '../../utils/url-helpers'

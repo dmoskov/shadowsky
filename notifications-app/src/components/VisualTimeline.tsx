@@ -1,6 +1,6 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Calendar, Clock, Users, Heart, Repeat2, MessageCircle, Quote, UserPlus } from 'lucide-react'
+import { Calendar, Clock, Users, Heart, Repeat2, MessageCircle, Quote, UserPlus, ExternalLink } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { format, differenceInMinutes, differenceInHours, startOfDay, isSameDay, isToday, isYesterday, formatDistanceToNow } from 'date-fns'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
@@ -17,6 +17,33 @@ interface AggregatedEvent {
   latestTime?: Date // Track the latest notification in the group
   burstIntensity?: 'low' | 'medium' | 'high' // For post bursts
   postText?: string // Cache the post text for burst events
+}
+
+// Helper function to extract handle and rkey from AT URI
+const parseAtUri = (uri: string) => {
+  const match = uri.match(/at:\/\/(.+?)\/(.+?)\/(.+)/)
+  if (!match) return null
+  return {
+    did: match[1],
+    collection: match[2],
+    rkey: match[3]
+  }
+}
+
+// Helper function to generate Bluesky app URL for a post
+const getPostUrl = (uri: string, authorHandle?: string) => {
+  const parsed = parseAtUri(uri)
+  if (!parsed || !authorHandle) return null
+  
+  // Bluesky post URLs follow the pattern: https://bsky.app/profile/{handle}/post/{rkey}
+  return `https://bsky.app/profile/${authorHandle}/post/${parsed.rkey}`
+}
+
+// Helper function to generate Bluesky app URL for a profile
+const getProfileUrl = (handle: string) => {
+  // Remove @ if present
+  const cleanHandle = handle.startsWith('@') ? handle.slice(1) : handle
+  return `https://bsky.app/profile/${cleanHandle}`
 }
 
 export const VisualTimeline: React.FC = () => {
@@ -340,16 +367,29 @@ export const VisualTimeline: React.FC = () => {
                   {event.notifications.length === 1 ? (
                     <div>
                       <div className="flex items-center gap-3">
-                        <img 
-                          src={event.notifications[0].author.avatar} 
-                          alt={event.notifications[0].author.handle}
-                          className="w-8 h-8 rounded-full"
-                        />
+                        <a 
+                          href={getProfileUrl(event.notifications[0].author.handle)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                        >
+                          <img 
+                            src={event.notifications[0].author.avatar} 
+                            alt={event.notifications[0].author.handle}
+                            className="w-8 h-8 rounded-full"
+                          />
+                        </a>
                         <div className="flex-1 flex items-center gap-2">
                           {getReasonIcon(event.notifications[0].reason)}
-                          <span className="font-medium text-sm">
+                          <a 
+                            href={getProfileUrl(event.notifications[0].author.handle)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium text-sm hover:underline"
+                            style={{ color: 'var(--bsky-primary)' }}
+                          >
                             {event.notifications[0].author.displayName || event.notifications[0].author.handle}
-                          </span>
+                          </a>
                           <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
                             {getActionText(event.notifications[0].reason)}
                           </span>
@@ -371,19 +411,28 @@ export const VisualTimeline: React.FC = () => {
                           
                           if (post) {
                             // We have full post data
+                            const postUrl = getPostUrl(postUri, post.author?.handle)
                             return (
-                              <div className="mt-2 ml-11 p-3 rounded timeline-post-preview" style={{ 
-                                backgroundColor: 'var(--bsky-bg-tertiary)',
-                                border: '1px solid var(--bsky-border-primary)' 
-                              }}>
-                                <p className="text-xs font-medium mb-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                              <a 
+                                href={postUrl || '#'}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block mt-2 ml-11 p-3 rounded timeline-post-preview hover:opacity-90 transition-opacity" 
+                                style={{ 
+                                  backgroundColor: 'var(--bsky-bg-tertiary)',
+                                  border: '1px solid var(--bsky-border-primary)',
+                                  textDecoration: 'none'
+                                }}
+                              >
+                                <p className="text-xs font-medium mb-1 flex items-center gap-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
                                   {notification.reason === 'reply' ? 'Replying to your post:' : 
                                    notification.reason === 'quote' ? 'Quoting your post:' : 'Your post:'}
+                                  <ExternalLink size={10} />
                                 </p>
                                 <p className="text-xs line-clamp-2" style={{ color: 'var(--bsky-text-primary)' }}>
                                   {post.record?.text || '[Post with no text]'}
                                 </p>
-                              </div>
+                              </a>
                             )
                           }
                           
@@ -484,13 +533,20 @@ export const VisualTimeline: React.FC = () => {
                           <div className="mb-3">
                             <div className="flex flex-wrap gap-1">
                               {event.notifications.slice(0, 12).map((notif, i) => (
-                                <img 
+                                <a
                                   key={`${notif.uri}-${i}`}
-                                  src={notif.author.avatar} 
-                                  alt={notif.author.handle}
-                                  className="w-8 h-8 rounded-full"
-                                  title={notif.author.displayName || notif.author.handle}
-                                />
+                                  href={getProfileUrl(notif.author.handle)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="hover:opacity-80 transition-opacity"
+                                >
+                                  <img 
+                                    src={notif.author.avatar} 
+                                    alt={notif.author.handle}
+                                    className="w-8 h-8 rounded-full"
+                                    title={notif.author.displayName || notif.author.handle}
+                                  />
+                                </a>
                               ))}
                               {event.notifications.length > 12 && (
                                 <div 
@@ -512,14 +568,21 @@ export const VisualTimeline: React.FC = () => {
                           {/* Actor avatars */}
                           <div className="flex -space-x-2 avatar-stack flex-shrink-0">
                             {event.notifications.slice(0, 5).map((notif, i) => (
-                              <img 
+                              <a
                                 key={`${notif.uri}-${i}`}
-                                src={notif.author.avatar} 
-                                alt={notif.author.handle}
-                                className="w-6 h-6 rounded-full border-2"
-                                style={{ borderColor: 'var(--bsky-bg-secondary)' }}
-                                title={notif.author.displayName || notif.author.handle}
-                              />
+                                href={getProfileUrl(notif.author.handle)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:z-10 hover:scale-110 transition-transform"
+                              >
+                                <img 
+                                  src={notif.author.avatar} 
+                                  alt={notif.author.handle}
+                                  className="w-6 h-6 rounded-full border-2"
+                                  style={{ borderColor: 'var(--bsky-bg-secondary)' }}
+                                  title={notif.author.displayName || notif.author.handle}
+                                />
+                              </a>
                             ))}
                             {event.notifications.length > 5 && (
                               <div 
@@ -566,7 +629,6 @@ export const VisualTimeline: React.FC = () => {
                           </div>
                         </div>
                       )}
-                      </div>
                       
                       {/* Post preview for aggregated post notifications */}
                       {(event.aggregationType === 'post' || event.aggregationType === 'post-burst') && (

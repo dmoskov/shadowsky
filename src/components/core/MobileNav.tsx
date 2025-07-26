@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Search, Bell, Plus } from 'lucide-react';
+import { Home, Search, Bell, Plus, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -12,7 +12,7 @@ export const MobileNav: React.FC = () => {
   const navItems = [
     { icon: Home, label: 'Home', path: '/', type: 'link' as const },
     { icon: Search, label: 'Search', path: '/search', type: 'link' as const },
-    { icon: Plus, label: 'Post', path: '/compose', type: 'compose' as const },
+    { icon: MessageSquare, label: 'Chat', path: '/conversations', type: 'link' as const },
     { icon: Bell, label: 'Alerts', path: '/notifications', type: 'link' as const },
   ];
   
