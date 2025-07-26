@@ -31,6 +31,7 @@ import { TailwindTest } from './components/TailwindTest'
 import { LoadingScreen } from './components/ui/LoadingScreen'
 import { RateLimitStatus } from './components/RateLimitStatus'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
+import { GlobalLoadingIndicator } from './components/ui/GlobalLoadingIndicator'
 import { queryClient } from '@bsky/shared'
 import { PenSquare } from 'lucide-react'
 import './App.css'
@@ -101,6 +102,7 @@ function AppContent() {
   return (
     <>
       <ScrollProgress />
+      <GlobalLoadingIndicator />
       <div className="min-h-screen bg-gray-900">
         <Header onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
         <div className="flex relative">

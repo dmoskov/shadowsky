@@ -8,6 +8,7 @@ import { FeedError } from '../ui/ErrorStates'
 import { FeedEmpty } from '../ui/EmptyStates'
 import { ResponsiveContainer } from '../ui/ResponsiveContainer'
 import { FeedLoadingProgress } from '../ui/FeedLoadingProgress'
+import { ContentEndIndicator } from '../ui/ContentEndIndicator'
 import { useLoading } from '../../contexts/LoadingContext'
 import { performanceTracker, useRenderTracking } from '@bsky/shared'
 import type { Post } from '@bsky/shared'
@@ -161,14 +162,12 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
             </div>
           </div>
         )}
-        {!hasNextPage && posts.length > 0 && (
-          <div className="text-center py-4">
-            <div className="text-gray-500">All caught up!</div>
-            <div className="text-sm text-gray-600 mt-1">
-              {posts.length} posts loaded in total
-            </div>
-          </div>
-        )}
+        {/* End of content indicator */}
+        <ContentEndIndicator 
+          hasMore={hasNextPage}
+          totalLoaded={posts.length}
+          isLoading={isFetchingNextPage}
+        />
       </div>
       
       {/* Manual load more button as fallback */}

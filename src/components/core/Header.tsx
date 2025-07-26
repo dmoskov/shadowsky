@@ -16,6 +16,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useUnreadNotificationCount } from '../../hooks/useNotifications'
 import { useToast } from '../ui/Toast'
 import { getBskyProfileUrl } from '../../utils/url-helpers'
+import { HeaderLoadingIndicator } from '../ui/GlobalLoadingIndicator'
 
 interface HeaderProps {
   onMenuToggle?: () => void;
@@ -140,6 +141,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
 
           {/* Actions */}
           <div className="flex items-center space-x-2">
+            {/* Loading Indicator */}
+            <HeaderLoadingIndicator />
             {/* Search Button (Mobile) */}
             <motion.button
               className="md:hidden p-2 rounded-lg hover:bg-gray-800 transition-colors"
