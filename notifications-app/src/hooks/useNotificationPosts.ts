@@ -2,7 +2,9 @@ import React from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
-import type { Post } from '@bsky/shared'
+import type { AppBskyFeedDefs } from '@atproto/api'
+
+type Post = AppBskyFeedDefs.PostView
 import { rateLimitedPostFetch } from '../services/rate-limiter'
 
 /**

@@ -1,8 +1,9 @@
-import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
-import type { Post } from '@bsky/shared'
+import type { AppBskyFeedDefs } from '@atproto/api'
 import { rateLimitedPostFetch } from '../services/rate-limiter'
+
+type Post = AppBskyFeedDefs.PostView
 
 /**
  * Hook to fetch posts by their URIs

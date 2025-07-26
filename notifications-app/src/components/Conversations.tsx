@@ -7,7 +7,9 @@ import { useNotificationPosts } from '../hooks/useNotificationPosts'
 import { usePostsByUris } from '../hooks/usePostsByUris'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { getNotificationUrl, atUriToBskyUrl } from '../utils/url-helpers'
-import type { Post } from '@bsky/shared'
+import type { AppBskyFeedDefs } from '@atproto/api'
+
+type Post = AppBskyFeedDefs.PostView
 import '../styles/conversations.css'
 
 interface ConversationThread {
