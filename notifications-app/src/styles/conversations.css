@@ -1,0 +1,134 @@
+/* Conversations Component Styles */
+
+.thread-connector {
+  position: relative;
+}
+
+.thread-line {
+  position: absolute;
+  left: 20px;
+  top: -24px;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--bsky-border-primary);
+  opacity: 0.5;
+}
+
+.thread-branch {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  width: 24px;
+  height: 2px;
+  background-color: var(--bsky-border-primary);
+  opacity: 0.5;
+}
+
+.thread-post {
+  transition: all 0.2s ease;
+}
+
+.thread-post:hover {
+  transform: translateX(2px);
+}
+
+.thread-post-clickable {
+  cursor: pointer;
+}
+
+.thread-post-clickable:hover .post-external-link {
+  opacity: 1;
+}
+
+.post-external-link {
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+/* Thread depth indicators */
+.thread-depth-indicator {
+  position: relative;
+  padding-left: 48px;
+}
+
+.thread-depth-1 {
+  margin-left: 48px;
+}
+
+.thread-depth-2 {
+  margin-left: 96px;
+}
+
+.thread-depth-3 {
+  margin-left: 144px;
+}
+
+.thread-depth-4 {
+  margin-left: 192px;
+}
+
+/* Conversation list improvements */
+.conversation-item {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.conversation-item:hover {
+  background-color: rgba(0, 133, 255, 0.05);
+}
+
+.conversation-item.selected {
+  background-color: rgba(0, 133, 255, 0.1);
+}
+
+.conversation-item.selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: var(--bsky-primary);
+}
+
+/* Thread animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.thread-node {
+  animation: slideIn 0.3s ease;
+}
+
+/* Improved threading visuals */
+.thread-container {
+  position: relative;
+}
+
+.thread-stem {
+  position: absolute;
+  left: 20px;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--bsky-border-primary) 0%,
+    transparent 100%
+  );
+}
+
+.thread-corner {
+  position: absolute;
+  left: 20px;
+  width: 20px;
+  height: 20px;
+  border-left: 2px solid var(--bsky-border-primary);
+  border-bottom: 2px solid var(--bsky-border-primary);
+  border-bottom-left-radius: 8px;
+}

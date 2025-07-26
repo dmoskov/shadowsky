@@ -5,7 +5,6 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { Sidebar } from './components/Sidebar'
 import { Header } from './components/Header'
 import { Login } from './components/Login'
-import { NotificationsDashboard } from './components/NotificationsDashboard'
 import { NotificationsFeed } from './components/NotificationsFeed'
 import { NotificationsTimeline } from './components/NotificationsTimeline'
 import { VisualTimeline } from './components/VisualTimeline'
@@ -53,8 +52,7 @@ function AppContent() {
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <main className="flex-1 lg:ml-64 mt-16">
           <Routes>
-            <Route path="/" element={<NotificationsDashboard />} />
-            <Route path="/notifications" element={<NotificationsFeed />} />
+            <Route path="/" element={<NotificationsFeed />} />
             <Route path="/timeline" element={<VisualTimeline />} />
             <Route path="/analytics" element={<NotificationsAnalytics />} />
             <Route path="/conversations" element={<Conversations />} />

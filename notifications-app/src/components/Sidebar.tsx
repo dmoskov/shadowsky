@@ -17,11 +17,10 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const navItems = [
-    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/notifications', label: 'All Notifications', icon: Bell },
+    { path: '/', label: 'All Notifications', icon: Bell },
     { path: '/conversations', label: 'Conversations', icon: MessageSquare },
     { path: '/timeline', label: 'Visual Timeline', icon: Clock },
-    { path: '/analytics', label: 'Notification Analytics', icon: BarChart3 },
+    { path: '/analytics', label: 'Analytics', icon: BarChart3 },
   ]
 
   return (
