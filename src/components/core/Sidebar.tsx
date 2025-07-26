@@ -6,7 +6,6 @@ import {
   Search, 
   Bell, 
   Mail, 
-  User, 
   Settings,
   Bookmark,
   Hash,

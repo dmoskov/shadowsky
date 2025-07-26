@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Search, Bell, Plus, User } from 'lucide-react';
+import { Home, Search, Bell, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -14,7 +14,6 @@ export const MobileNav: React.FC = () => {
     { icon: Search, label: 'Search', path: '/search', type: 'link' as const },
     { icon: Plus, label: 'Post', path: '/compose', type: 'compose' as const },
     { icon: Bell, label: 'Alerts', path: '/notifications', type: 'link' as const },
-    { icon: User, label: 'Profile', path: `/profile/${user?.handle || ''}`, type: 'link' as const }
   ];
   
   const isActive = (path: string) => {
@@ -40,7 +39,7 @@ export const MobileNav: React.FC = () => {
   
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 lg:hidden z-40" role="navigation" aria-label="Main navigation">
-      <div className="grid grid-cols-5 h-16">
+      <div className="grid grid-cols-4 h-16">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
