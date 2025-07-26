@@ -98,12 +98,26 @@ export const sessionCookies = {
   save(session: any, prefix: string = ''): void {
     try {
       const sessionStr = JSON.stringify(session)
-      cookies.set(this.getCookieName(prefix), sessionStr, {
+      const cookieName = this.getCookieName(prefix)
+      
+      // Don't use secure flag on localhost to ensure cookie is set
+      const isLocalhost = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1'
+      
+      cookies.set(cookieName, sessionStr, {
         domain: cookies.getSharedDomain(),
-        secure: window.location.protocol === 'https:',
+        secure: !isLocalhost && window.location.protocol === 'https:',
         sameSite: 'lax',
         maxAge: 30 * 24 * 60 * 60 // 30 days
       })
+      
+      // Verify cookie was set
+      const savedCookie = cookies.get(cookieName)
+      if (!savedCookie) {
+        console.error('Cookie was not set successfully for', cookieName)
+      } else {
+        console.log(`Session cookie saved successfully: ${cookieName} (${sessionStr.length} chars)`)
+      }
     } catch (error) {
       console.error('Failed to save session to cookie:', error)
     }
@@ -111,10 +125,23 @@ export const sessionCookies = {
   
   load(prefix: string = ''): any | null {
     try {
-      const sessionStr = cookies.get(this.getCookieName(prefix))
+      const cookieName = this.getCookieName(prefix)
+      console.log('Loading cookie:', cookieName)
+      
+      const sessionStr = cookies.get(cookieName)
+      console.log('Cookie value length:', sessionStr ? sessionStr.length : 0)
+      
       if (!sessionStr) return null
       
-      return JSON.parse(sessionStr)
+      const session = JSON.parse(sessionStr)
+      console.log('Parsed session from cookie:', {
+        handle: session.handle,
+        hasDid: !!session.did,
+        hasAccessJwt: !!session.accessJwt,
+        hasRefreshJwt: !!session.refreshJwt,
+        keys: Object.keys(session)
+      })
+      return session
     } catch (error) {
       console.error('Failed to load session from cookie:', error)
       return null
@@ -122,7 +149,9 @@ export const sessionCookies = {
   },
   
   clear(prefix: string = ''): void {
-    cookies.remove(this.getCookieName(prefix), {
+    const cookieName = this.getCookieName(prefix)
+    console.log('Clearing cookie:', cookieName)
+    cookies.remove(cookieName, {
       domain: cookies.getSharedDomain()
     })
   }

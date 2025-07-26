@@ -29,7 +29,20 @@ export class ATProtoClient {
     }
     
     const baseAgent = new BskyAgent({
-      service: this.config.service
+      service: this.config.service,
+      persistSession: (evt: any, session: any) => {
+        console.log('BskyAgent persistSession event:', evt, {
+          hasSession: !!session,
+          sessionKeys: session ? Object.keys(session) : []
+        })
+        
+        // Only save if we have a complete session
+        if (this.config.persistSession && session && session.accessJwt && session.refreshJwt) {
+          this.saveSession(session)
+        } else if (session && (!session.accessJwt || !session.refreshJwt)) {
+          console.warn('Skipping save - incomplete session data')
+        }
+      }
     })
     
     // Apply rate limiting wrapper if enabled
@@ -40,9 +53,10 @@ export class ATProtoClient {
 
   async login(identifier: string, password: string): Promise<Session> {
     try {
-      const response = await this._agent.login({ identifier, password })
+      await this._agent.login({ identifier, password })
       
-      const sessionData = response.data as any
+      // After login, the agent's session property is updated
+      const sessionData = this._agent.session
       if (this.config.persistSession && sessionData) {
         this.saveSession(sessionData)
       }
@@ -55,14 +69,19 @@ export class ATProtoClient {
 
   async resumeSession(session: Session): Promise<Session> {
     try {
+      console.log('Attempting to resume session for:', session.handle)
+      
       // Convert our Session type to AtpSessionData
       const atpSession = {
         ...session,
         active: session.active ?? true
       }
-      const response = await this._agent.resumeSession(atpSession)
+      await this._agent.resumeSession(atpSession)
       
-      const sessionData = response.data as any
+      console.log('Session resumed successfully')
+      
+      // After resumeSession, the agent's session property is updated
+      const sessionData = this._agent.session
       if (this.config.persistSession && sessionData) {
         this.saveSession(sessionData)
       }
@@ -70,7 +89,7 @@ export class ATProtoClient {
       return sessionData as Session
     } catch (error) {
       // Log the raw error for debugging
-      console.debug('Raw resumeSession error:', error)
+      console.error('Failed to resume session:', error)
       throw mapATProtoError(error)
     }
   }
@@ -84,9 +103,10 @@ export class ATProtoClient {
       const currentSession = this._agent.session
       if (!currentSession) return null
       
-      const response = await this._agent.resumeSession(currentSession)
+      await this._agent.resumeSession(currentSession)
       
-      const sessionData = response.data as any
+      // After resumeSession, the agent's session property is updated
+      const sessionData = this._agent.session
       if (this.config.persistSession && sessionData) {
         this.saveSession(sessionData)
       }
@@ -98,6 +118,9 @@ export class ATProtoClient {
   }
 
   logout(): void {
+    console.log('ATProtoClient.logout() called')
+    console.trace('Logout call stack')
+    
     // Clear persisted session first
     if (this.config.persistSession) {
       this.clearSession()
@@ -130,6 +153,14 @@ export class ATProtoClient {
 
   private saveSession(session: any): void {
     try {
+      console.log('Saving session:', {
+        hasDid: !!session.did,
+        hasHandle: !!session.handle,
+        hasAccessJwt: !!session.accessJwt,
+        hasRefreshJwt: !!session.refreshJwt,
+        sessionKeys: Object.keys(session)
+      })
+      
       // Ensure we're saving all required fields
       const sessionData: Session = {
         did: session.did,
@@ -152,6 +183,7 @@ export class ATProtoClient {
 
   private clearSession(): void {
     try {
+      console.log('Clearing session with prefix:', this.config.sessionPrefix)
       const storageKey = `${this.config.sessionPrefix}bsky_session`
       localStorage.removeItem(storageKey)
       sessionCookies.clear(this.config.sessionPrefix)
@@ -163,15 +195,23 @@ export class ATProtoClient {
   static loadSavedSession(sessionPrefix: string = ''): Session | null {
     try {
       const storageKey = `${sessionPrefix}bsky_session`
+      console.log('Loading saved session with prefix:', sessionPrefix)
       
       // Try to load from cookie first (preferred for cross-port sharing)
       let session = sessionCookies.load(sessionPrefix)
+      
+      if (session) {
+        console.log('Session loaded from cookie:', session.handle)
+      } else {
+        console.log('No session found in cookie, checking localStorage')
+      }
       
       // Fall back to localStorage if no cookie found
       if (!session) {
         const saved = localStorage.getItem(storageKey)
         if (saved) {
           session = JSON.parse(saved)
+          console.log('Session loaded from localStorage:', session?.handle)
           // Migrate to cookie storage
           if (session) {
             sessionCookies.save(session, sessionPrefix)
@@ -183,7 +223,12 @@ export class ATProtoClient {
       
       // Validate session has required fields
       if (!session.accessJwt || !session.refreshJwt || !session.did) {
-        console.warn('Invalid session format, clearing...')
+        console.warn('Invalid session format, clearing...', {
+          hasAccessJwt: !!session.accessJwt,
+          hasRefreshJwt: !!session.refreshJwt,
+          hasDid: !!session.did,
+          sessionKeys: Object.keys(session)
+        })
         localStorage.removeItem(storageKey)
         sessionCookies.clear(sessionPrefix)
         return null
