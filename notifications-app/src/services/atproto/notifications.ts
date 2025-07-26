@@ -18,7 +18,7 @@ export class NotificationService {
     return withRateLimit(rateLimiters.general, 'listNotifications', async () => {
       try {
         const response = await this.agent.app.bsky.notification.listNotifications({
-          limit: 50,
+          limit: 100,
           cursor,
           priority
         })
