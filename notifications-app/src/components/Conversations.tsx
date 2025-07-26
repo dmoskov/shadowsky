@@ -538,7 +538,8 @@ export const Conversations: React.FC = () => {
           {filteredConversations.map((convo) => {
             const isSelected = selectedConvo === convo.rootUri
             const latestReplyPost = postMap.get(convo.latestReply.uri)
-            const previewText = latestReplyPost?.record?.text || convo.rootPost?.record?.text || 'No preview available'
+            // Always use root post for preview text
+            const previewText = convo.rootPost?.record?.text || 'Loading original post...'
             const isGroup = convo.participants.size > 2
             const unreadCount = convo.replies.filter(r => !r.isRead).length
 
@@ -560,15 +561,17 @@ export const Conversations: React.FC = () => {
                         <Users size={24} style={{ color: 'var(--bsky-text-tertiary)' }} />
                       </div>
                     ) : (
-                      convo.latestReply.author.avatar ? (
+                      // Use root post author's avatar if available
+                      (convo.rootPost?.author?.avatar || convo.latestReply.author.avatar) ? (
                         <img 
-                          src={convo.latestReply.author.avatar} 
-                          alt={convo.latestReply.author.handle}
+                          src={convo.rootPost?.author?.avatar || convo.latestReply.author.avatar} 
+                          alt={convo.rootPost?.author?.handle || convo.latestReply.author.handle}
                           className="w-12 h-12 rounded-full object-cover"
                         />
                       ) : (
                         <div className="w-12 h-12 rounded-full bsky-gradient flex items-center justify-center text-white font-medium">
-                          {convo.latestReply.author.displayName?.[0] || convo.latestReply.author.handle?.[0] || 'U'}
+                          {convo.rootPost?.author?.displayName?.[0] || convo.rootPost?.author?.handle?.[0] || 
+                           convo.latestReply.author.displayName?.[0] || convo.latestReply.author.handle?.[0] || 'U'}
                         </div>
                       )
                     )}
@@ -584,9 +587,10 @@ export const Conversations: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="font-medium truncate" style={{ color: 'var(--bsky-text-primary)' }}>
-                        {isGroup 
+                        {convo.rootPost?.author?.displayName || convo.rootPost?.author?.handle || 
+                         (isGroup 
                           ? `${convo.participants.size} participants`
-                          : (convo.latestReply.author.displayName || convo.latestReply.author.handle || 'Unknown')
+                          : (convo.latestReply.author.displayName || convo.latestReply.author.handle || 'Unknown'))
                         }
                       </h3>
                       <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>

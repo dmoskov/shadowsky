@@ -1,6 +1,7 @@
 import React from 'react'
 import { Menu, Bell, LogOut } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { ThemeToggle } from './ThemeToggle'
 
 interface HeaderProps {
   onMenuToggle: () => void

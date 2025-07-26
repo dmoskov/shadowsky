@@ -45,6 +45,53 @@
   --bsky-glow: 0 0 20px rgba(0, 133, 255, 0.3);
 }
 
+/* Dark theme */
+[data-theme="dark"] {
+  /* Primary colors remain similar for consistency */
+  --bsky-primary: #0085ff;
+  --bsky-primary-dark: #0066cc;
+  --bsky-primary-light: #4da3ff;
+  --bsky-accent: #a78bfa; /* Lighter purple for dark mode */
+  
+  /* Background colors - dark theme */
+  --bsky-bg-primary: #0f172a;
+  --bsky-bg-secondary: #1e293b;
+  --bsky-bg-tertiary: #334155;
+  --bsky-bg-hover: #475569;
+  --bsky-bg-active: #64748b;
+  
+  /* Text colors - light for dark background */
+  --bsky-text-primary: #f1f5f9;
+  --bsky-text-secondary: #cbd5e1;
+  --bsky-text-tertiary: #94a3b8;
+  --bsky-text-link: var(--bsky-primary-light);
+  
+  /* Border colors - darker for dark theme */
+  --bsky-border-primary: #334155;
+  --bsky-border-secondary: #475569;
+  --bsky-border-light: #1e293b;
+  
+  /* Notification type colors - adjusted for dark mode */
+  --bsky-like: #f472b6;
+  --bsky-repost: #34d399;
+  --bsky-follow: var(--bsky-primary);
+  --bsky-mention: #c084fc;
+  --bsky-reply: #38bdf8;
+  --bsky-quote: #a78bfa;
+  
+  /* Status colors - adjusted for dark mode */
+  --bsky-success: #34d399;
+  --bsky-warning: #fbbf24;
+  --bsky-error: #f87171;
+  --bsky-info: #60a5fa;
+  
+  /* Shadows and effects for dark theme */
+  --bsky-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --bsky-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.6);
+  --bsky-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.7);
+  --bsky-glow: 0 0 20px rgba(0, 133, 255, 0.5);
+}
+
 /* Typography */
 .bsky-font {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -188,6 +235,11 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .bsky-glass {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Gradient text */
