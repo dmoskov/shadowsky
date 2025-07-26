@@ -485,8 +485,8 @@ interface NotificationItemProps {
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postMap, getNotificationIcon }) => {
-  // Get the post for likes/reposts to extract the author handle
-  const post = ['like', 'repost'].includes(notification.reason) 
+  // Get the post for all notification types that reference posts
+  const post = ['like', 'repost', 'reply', 'quote'].includes(notification.reason) 
     ? postMap.get(notification.uri) 
     : undefined
   const postAuthorHandle = post?.author?.handle
@@ -532,10 +532,40 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postM
               {getNotificationText(notification.reason)}
             </span>
           </p>
-          {notification.record && typeof notification.record === 'object' && 'text' in notification.record && (
-            <p className="text-sm mt-1 line-clamp-2" style={{ color: 'var(--bsky-text-secondary)' }}>
-              {(notification.record as { text?: string }).text}
-            </p>
+          
+          {/* Show post content for all notification types */}
+          {(['like', 'repost', 'reply', 'quote'].includes(notification.reason) && post) ? (
+            <div className="mt-2 p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-secondary)' }}>
+              <div className="flex items-center gap-2 mb-1">
+                {post.author?.avatar ? (
+                  <img 
+                    src={post.author.avatar} 
+                    alt={post.author.handle}
+                    className="w-4 h-4 bsky-avatar"
+                  />
+                ) : (
+                  <div className="w-4 h-4 bsky-avatar flex items-center justify-center text-xs" 
+                       style={{ background: 'var(--bsky-bg-tertiary)' }}>
+                    {post.author?.handle?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span className="text-xs font-medium" style={{ color: 'var(--bsky-text-secondary)' }}>
+                  {post.author?.displayName || post.author?.handle || 'Unknown'}
+                </span>
+              </div>
+              {post.record?.text && (
+                <p className="text-sm line-clamp-2" style={{ color: 'var(--bsky-text-primary)' }}>
+                  {post.record.text}
+                </p>
+              )}
+            </div>
+          ) : (
+            // Fallback to notification record text if available
+            notification.record && typeof notification.record === 'object' && 'text' in notification.record && (
+              <p className="text-sm mt-1 line-clamp-2" style={{ color: 'var(--bsky-text-secondary)' }}>
+                {(notification.record as { text?: string }).text}
+              </p>
+            )
           )}
           {/* Display images if present */}
           {(() => {

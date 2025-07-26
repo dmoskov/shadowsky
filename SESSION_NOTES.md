@@ -1,26 +1,47 @@
 # Bluesky Client Session Notes
 
-## Last Updated: 2025-01-11 (Rate Limiting Implementation)
+## Last Updated: 2025-01-11 (Notifications App Post Display Update)
 
 ## Quick Status
 - 🟢 Dev Server: Running
-- 📍 Current Focus: Rate limiting for API calls
+- 📍 Current Focus: Improved notifications app post content display
 - 🔐 Security Status: SECURE (all credentials migrated)
-- 📊 Features Complete: 12/25
+- 📊 Features Complete: 13/25
 
 ## Current State
 The Bluesky client is functional with a dark theme UI, proper feed structure matching Bluesky's native client, full thread navigation, and comprehensive analytics. Just completed major security audit and cleanup from a distinguished engineer's perspective.
 
 ## Today's Major Accomplishments (2025-01-11)
 
-### 5. Implemented Comprehensive Rate Limiting System
+### 7. Enhanced Notifications App Post Display
+- **Updated NotificationItem**: Now shows full post content for all notification types
+- **Rich Post Preview**: Displays post author avatar, name, and text in styled card
+- **Consistent UI**: Matches the aggregated notification display style
+- **Better Context**: Users can now see which post is being acted on in all tabs
+- **Maintained Fallback**: Still shows notification.record.text when post data unavailable
+
+### 6. Implemented AGGRESSIVE Rate Limiting (20 req/s max)
+- **Global Rate Limit**: Enforces absolute maximum of 20 requests per second
+- **Two-Layer System**: Global limiter wraps endpoint-specific limiters
+- **Per-Second Limits** (was per-minute):
+  - Profile fetching: 5 req/s
+  - Feed fetching: 8 req/s  
+  - General API calls: 7 req/s
+  - Total cannot exceed 20 req/s globally
+- **Fixed Token Bucket Algorithm**: More accurate token refill calculation
+- **Wrapped ALL API Calls**: Found and wrapped direct calls in:
+  - analytics-enhanced.ts
+  - analytics-sync.ts
+  - Settings.tsx
+  - notifications.ts
+  - profile.ts
+- **Updated UI**: RateLimitStatus component shows queue sizes in real-time
+- **Pre-emptive Queuing**: Requests queue automatically when limits reached
+
+### 5. Implemented Comprehensive Rate Limiting System (Earlier)
 - Created token bucket rate limiter with queuing support
 - Added profile service with automatic rate limiting and caching
 - Rate-limited feed service for timeline and author feed requests
-- Separate rate limits for different API endpoints:
-  - Profile fetching: 30 req/min (conservative for bulk operations)
-  - Feed fetching: 60 req/min
-  - General API calls: 100 req/min
 - Updated TopAccountsView to use rate-limited profile service
 - Added priority support for UI-critical requests
 - Implemented automatic cache management with 5-minute TTL
