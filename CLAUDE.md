@@ -57,6 +57,14 @@ A custom Bluesky client built with React, TypeScript, and Vite that provides a c
 
 All developers (human and AI) should reference `ARCHITECTURE.md` for technical details.
 
+## CRITICAL: Two Applications in This Repository
+
+**⚠️ IMPORTANT**: See `APP_DISTINCTION_GUIDE.md` for understanding the two separate applications:
+1. **Main Bluesky Client** (root directory) - Port 5173
+2. **Notifications Analytics App** (`/notifications-app/`) - Port 5174
+
+These are COMPLETELY SEPARATE applications. Always verify which one you're working on before making changes.
+
 ## Project Structure
 ```
 BSKY/

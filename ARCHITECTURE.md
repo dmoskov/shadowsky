@@ -8,6 +8,13 @@ This document describes the architecture of the Bluesky client - a custom AT Pro
 **Current Branch**: refactor/split-components
 **Project Status**: Active Development (11/25 features complete)
 
+## ⚠️ CRITICAL: This Repository Contains Two Separate Applications
+
+**IMPORTANT**: This architecture document covers the **Main Bluesky Client** only. For information about application distinction, see `APP_DISTINCTION_GUIDE.md`.
+
+- **Main Client** (this document): Root directory, port 5173
+- **Notifications App** (separate): `/notifications-app/`, port 5174
+
 ## System Architecture
 
 ### High-Level Architecture
