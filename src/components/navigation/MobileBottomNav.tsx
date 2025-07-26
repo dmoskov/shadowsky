@@ -4,8 +4,7 @@ import {
   Home, 
   Search, 
   Plus, 
-  Bell, 
-  User 
+  Bell
 } from 'lucide-react'
 
 const MobileBottomNav: React.FC = () => {
@@ -35,12 +34,6 @@ const MobileBottomNav: React.FC = () => {
       icon: Bell, 
       label: 'Alerts',
       isActive: pathname === '/notifications'
-    },
-    { 
-      path: '/profile', 
-      icon: User, 
-      label: 'Profile',
-      isActive: pathname.startsWith('/profile')
     },
   ]
   

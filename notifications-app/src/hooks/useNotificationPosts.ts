@@ -41,7 +41,6 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
     // Prioritize repost URIs by putting them first
     const allUris = [...Array.from(repostUris), ...Array.from(otherUris)]
     
-    console.log(`[POST URIS] Total notifications: ${notifications.length}, Repost notifications: ${repostCount}, Repost URIs: ${repostUris.size}, Other URIs: ${otherUris.size}, Total unique URIs: ${allUris.length}`)
     
     return allUris
   }, [notifications])
@@ -59,7 +58,6 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
       const MAX_POSTS_TO_FETCH = 150
       const urisToFetch = postUris.slice(0, MAX_POSTS_TO_FETCH)
       
-      console.log(`[POST FETCH] Fetching ${urisToFetch.length} unique posts (limited from ${postUris.length})`)
       
       // Batch fetch posts (Bluesky API supports up to 25 posts per request)
       const posts: Post[] = []
@@ -79,7 +77,6 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
         }
       }
       
-      console.log(`[POST FETCH] Made ${apiCallCount} API calls to fetch ${posts.length} posts`)
       return posts
     },
     enabled: !!session && postUris.length > 0,
