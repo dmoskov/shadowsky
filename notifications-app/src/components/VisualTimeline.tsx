@@ -12,7 +12,11 @@ interface AggregatedEvent {
   types: Set<string>
   actors: Set<string>
   postUri?: string // For post-specific aggregations
-  aggregationType: 'post' | 'follow' | 'mixed' // Type of aggregation
+  aggregationType: 'post' | 'follow' | 'mixed' | 'post-burst' // Type of aggregation
+  earliestTime?: Date // Track the earliest notification in the group
+  latestTime?: Date // Track the latest notification in the group
+  burstIntensity?: 'low' | 'medium' | 'high' // For post bursts
+  postText?: string // Cache the post text for burst events
 }
 
 export const VisualTimeline: React.FC = () => {
@@ -46,63 +50,152 @@ export const VisualTimeline: React.FC = () => {
       new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime()
     )
 
-    // Group follow notifications together, and post-related notifications by post URI
+    // First pass: Group notifications by post URI to identify post bursts
+    const postGroups = new Map<string, any[]>()
+    const followGroups: any[] = []
+    const otherNotifications: any[] = []
+
     sorted.forEach(notification => {
-      const notifTime = new Date(notification.indexedAt)
-      
-      // Find an existing event to potentially aggregate with
-      let aggregated = false
-      
-      if (notification.reason === 'follow') {
-        // Look for recent follow events to aggregate with
-        for (let i = events.length - 1; i >= 0; i--) {
-          const event = events[i]
-          if (event.aggregationType === 'follow' && 
-              differenceInMinutes(event.time, notifTime) <= 60) {
-            // Aggregate follows within 60 minutes
-            event.notifications.push(notification)
-            event.actors.add(notification.author.handle)
-            aggregated = true
-            break
-          }
-        }
-      } else if (['like', 'repost', 'quote'].includes(notification.reason) && notification.uri) {
-        // Look for events about the same post
-        for (let i = events.length - 1; i >= 0; i--) {
-          const event = events[i]
-          if (event.postUri === notification.uri && 
-              differenceInHours(event.time, notifTime) <= 24) {
-            // Aggregate post interactions within 24 hours
-            event.notifications.push(notification)
-            event.types.add(notification.reason)
-            event.actors.add(notification.author.handle)
-            aggregated = true
-            break
-          }
-        }
-      }
-      
-      if (!aggregated) {
-        // Create a new event
-        const newEvent: AggregatedEvent = {
-          time: notifTime,
-          notifications: [notification],
-          types: new Set([notification.reason]),
-          actors: new Set([notification.author.handle]),
-          aggregationType: notification.reason === 'follow' ? 'follow' : 
-                          ['like', 'repost', 'quote'].includes(notification.reason) ? 'post' : 'mixed'
-        }
+      if (['like', 'repost', 'quote', 'reply'].includes(notification.reason)) {
+        // For likes and reposts, use reasonSubject which contains the original post URI
+        const postUri = (notification.reason === 'repost' || notification.reason === 'like') && notification.reasonSubject 
+          ? notification.reasonSubject 
+          : notification.uri
         
-        if (notification.uri && ['like', 'repost', 'quote'].includes(notification.reason)) {
-          newEvent.postUri = notification.uri
+        if (postUri) {
+          if (!postGroups.has(postUri)) {
+            postGroups.set(postUri, [])
+          }
+          postGroups.get(postUri)!.push(notification)
         }
-        
-        events.push(newEvent)
+      } else if (notification.reason === 'follow') {
+        followGroups.push(notification)
+      } else {
+        otherNotifications.push(notification)
       }
     })
 
+    // Process post groups to create burst events
+    postGroups.forEach((notifications, postUri) => {
+      if (notifications.length >= 3) {
+        // This is a burst of activity on a single post
+        const times = notifications.map(n => new Date(n.indexedAt).getTime())
+        const earliestTime = new Date(Math.min(...times))
+        const latestTime = new Date(Math.max(...times))
+        const timeSpanHours = differenceInHours(latestTime, earliestTime)
+        
+        // Determine burst intensity based on notification count and time span
+        let burstIntensity: 'low' | 'medium' | 'high' = 'low'
+        if (notifications.length >= 10 && timeSpanHours <= 6) {
+          burstIntensity = 'high'
+        } else if (notifications.length >= 5 && timeSpanHours <= 12) {
+          burstIntensity = 'medium'
+        }
+
+        // Get post text from post map if available
+        const post = postMap.get(postUri)
+        const postText = post?.record?.text
+
+        const burstEvent: AggregatedEvent = {
+          time: latestTime, // Use latest time for sorting
+          notifications: notifications,
+          types: new Set(notifications.map(n => n.reason)),
+          actors: new Set(notifications.map(n => n.author.handle)),
+          postUri: postUri,
+          aggregationType: 'post-burst',
+          earliestTime: earliestTime,
+          latestTime: latestTime,
+          burstIntensity: burstIntensity,
+          postText: postText
+        }
+        events.push(burstEvent)
+      } else {
+        // Too few notifications for a burst, create individual or small grouped events
+        notifications.forEach(notification => {
+          events.push({
+            time: new Date(notification.indexedAt),
+            notifications: [notification],
+            types: new Set([notification.reason]),
+            actors: new Set([notification.author.handle]),
+            postUri: postUri,
+            aggregationType: 'post'
+          })
+        })
+      }
+    })
+
+    // Process follow notifications with wider time window
+    const followBursts: any[] = []
+    let currentFollowBurst: any[] = []
+    
+    followGroups.forEach((notification, index) => {
+      if (currentFollowBurst.length === 0) {
+        currentFollowBurst.push(notification)
+      } else {
+        const lastTime = new Date(currentFollowBurst[currentFollowBurst.length - 1].indexedAt)
+        const currentTime = new Date(notification.indexedAt)
+        
+        // Group follows within 2 hours
+        if (differenceInHours(lastTime, currentTime) <= 2) {
+          currentFollowBurst.push(notification)
+        } else {
+          // Save current burst and start new one
+          if (currentFollowBurst.length > 0) {
+            followBursts.push([...currentFollowBurst])
+          }
+          currentFollowBurst = [notification]
+        }
+      }
+      
+      // Save last burst
+      if (index === followGroups.length - 1 && currentFollowBurst.length > 0) {
+        followBursts.push(currentFollowBurst)
+      }
+    })
+
+    // Create events for follow bursts
+    followBursts.forEach(burst => {
+      if (burst.length >= 2) {
+        const times = burst.map(n => new Date(n.indexedAt).getTime())
+        const latestTime = new Date(Math.max(...times))
+        
+        events.push({
+          time: latestTime,
+          notifications: burst,
+          types: new Set(['follow']),
+          actors: new Set(burst.map(n => n.author.handle)),
+          aggregationType: 'follow',
+          earliestTime: new Date(Math.min(...times)),
+          latestTime: latestTime
+        })
+      } else {
+        // Single follow
+        events.push({
+          time: new Date(burst[0].indexedAt),
+          notifications: burst,
+          types: new Set(['follow']),
+          actors: new Set([burst[0].author.handle]),
+          aggregationType: 'follow'
+        })
+      }
+    })
+
+    // Add other notifications as individual events
+    otherNotifications.forEach(notification => {
+      events.push({
+        time: new Date(notification.indexedAt),
+        notifications: [notification],
+        types: new Set([notification.reason]),
+        actors: new Set([notification.author.handle]),
+        aggregationType: 'mixed'
+      })
+    })
+
+    // Sort all events by time (newest first)
+    events.sort((a, b) => b.time.getTime() - a.time.getTime())
+
     return events
-  }, [data])
+  }, [data, postMap])
 
   // Calculate visual spacing based on time gaps
   const getSpacingClass = (currentTime: Date, previousTime?: Date) => {
@@ -209,11 +302,17 @@ export const VisualTimeline: React.FC = () => {
                 {/* Timeline dot */}
                 <div className="relative flex-shrink-0" style={{ paddingTop: '14px' }}>
                   <div 
-                    className={`w-2 h-2 rounded-full ${differenceInHours(new Date(), event.time) < 1 ? 'timeline-dot-recent' : ''}`}
+                    className={`${event.aggregationType === 'post-burst' ? 'w-4 h-4' : 'w-2 h-2'} rounded-full ${differenceInHours(new Date(), event.time) < 1 ? 'timeline-dot-recent' : ''}`}
                     style={{ 
-                      backgroundColor: event.aggregationType === 'post' ? 'var(--bsky-primary)' : 
+                      backgroundColor: event.aggregationType === 'post-burst' ? 
+                                      (event.burstIntensity === 'high' ? '#ff4757' : 
+                                       event.burstIntensity === 'medium' ? '#ffa502' : 
+                                       'var(--bsky-primary)') :
+                                      event.aggregationType === 'post' ? 'var(--bsky-primary)' : 
                                       event.aggregationType === 'follow' ? 'var(--bsky-follow)' :
-                                      'var(--bsky-text-secondary)'
+                                      'var(--bsky-text-secondary)',
+                      boxShadow: event.aggregationType === 'post-burst' && event.burstIntensity === 'high' ? 
+                                '0 0 0 4px rgba(255, 71, 87, 0.2)' : undefined
                     }}
                   />
                 </div>
@@ -224,11 +323,17 @@ export const VisualTimeline: React.FC = () => {
                     event.notifications.length > 1 ? 'timeline-aggregated' : ''
                   } ${
                     event.aggregationType === 'follow' ? 'timeline-follow-aggregate' : 
-                    event.aggregationType === 'post' ? 'timeline-post-aggregate' : ''
+                    event.aggregationType === 'post' ? 'timeline-post-aggregate' : 
+                    event.aggregationType === 'post-burst' ? 'timeline-post-burst' : ''
                   }`}
                   style={{ 
-                    backgroundColor: event.notifications.length === 1 ? 'var(--bsky-bg-secondary)' : undefined,
-                    border: '1px solid var(--bsky-border-color)'
+                    backgroundColor: event.notifications.length === 1 && event.aggregationType !== 'post-burst' ? 'var(--bsky-bg-secondary)' : undefined,
+                    border: event.aggregationType === 'post-burst' ? 
+                           `2px solid ${event.burstIntensity === 'high' ? '#ff4757' : 
+                                        event.burstIntensity === 'medium' ? '#ffa502' : 
+                                        'var(--bsky-primary)'}` :
+                           '1px solid var(--bsky-border-color)',
+                    borderRadius: event.aggregationType === 'post-burst' ? '12px' : '8px'
                   }}
                 >
                   {/* Single notification */}
@@ -308,66 +413,163 @@ export const VisualTimeline: React.FC = () => {
                   ) : (
                     /* Aggregated notifications */
                     <div>
-                      <div className="flex items-center gap-3">
-                        {/* Actor avatars */}
-                        <div className="flex -space-x-2 avatar-stack flex-shrink-0">
-                          {event.notifications.slice(0, 5).map((notif, i) => (
-                            <img 
-                              key={`${notif.uri}-${i}`}
-                              src={notif.author.avatar} 
-                              alt={notif.author.handle}
-                              className="w-6 h-6 rounded-full border-2"
-                              style={{ borderColor: 'var(--bsky-bg-secondary)' }}
-                              title={notif.author.displayName || notif.author.handle}
-                            />
-                          ))}
-                          {event.notifications.length > 5 && (
-                            <div 
-                              className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-medium"
-                              style={{ 
-                                backgroundColor: 'var(--bsky-bg-tertiary)',
-                                borderColor: 'var(--bsky-bg-secondary)',
-                                fontSize: '10px'
-                              }}
-                            >
-                              +{event.notifications.length - 5}
+                      {event.aggregationType === 'post-burst' ? (
+                        // Special layout for post bursts
+                        <div>
+                          <div className="flex items-start gap-3 mb-3">
+                            <div className="flex-shrink-0">
+                              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{
+                                backgroundColor: event.burstIntensity === 'high' ? 'rgba(255, 71, 87, 0.1)' : 
+                                               event.burstIntensity === 'medium' ? 'rgba(255, 165, 2, 0.1)' : 
+                                               'rgba(0, 149, 246, 0.1)'
+                              }}>
+                                <span className="text-2xl">🔥</span>
+                              </div>
                             </div>
-                          )}
-                        </div>
-                        
-                        {/* Compact summary */}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {event.aggregationType === 'follow' ? (
-                              <>
-                                <span className="font-medium text-sm">
-                                  {event.actors.size} new {event.actors.size === 1 ? 'follower' : 'followers'}
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-bold text-base">
+                                  Post Activity Burst
                                 </span>
-                                {getReasonIcon('follow')}
-                              </>
-                            ) : (
-                              <>
-                                <span className="font-medium text-sm">
-                                  {event.actors.size} {event.actors.size === 1 ? 'person' : 'people'}
-                                </span>
-                                <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>•</span>
-                                {Array.from(event.types).map((type, i) => (
-                                  <span key={type} className="flex items-center gap-1 text-sm">
-                                    {getReasonIcon(type)}
-                                    <span style={{ color: 'var(--bsky-text-secondary)' }}>
-                                      {getActionCount(event.notifications, type)}
-                                    </span>
-                                    {i < event.types.size - 1 && <span style={{ color: 'var(--bsky-text-secondary)' }}>•</span>}
+                                {event.burstIntensity === 'high' && (
+                                  <span className="px-2 py-0.5 rounded-full text-xs font-medium text-white" style={{ backgroundColor: '#ff4757' }}>
+                                    High Activity
                                   </span>
-                                ))}
-                              </>
+                                )}
+                                {event.burstIntensity === 'medium' && (
+                                  <span className="px-2 py-0.5 rounded-full text-xs font-medium text-white" style={{ backgroundColor: '#ffa502' }}>
+                                    Medium Activity
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                                {event.actors.size} {event.actors.size === 1 ? 'person' : 'people'} engaged over {
+                                  event.earliestTime && event.latestTime ? 
+                                  formatDistanceToNow(event.earliestTime, { addSuffix: false }) : 
+                                  'time'
+                                }
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* Engagement breakdown */}
+                          <div className="grid grid-cols-3 gap-2 mb-3">
+                            {event.notifications.filter(n => n.reason === 'like').length > 0 && (
+                              <div className="flex items-center gap-2 p-2 rounded" style={{ backgroundColor: 'rgba(255, 71, 87, 0.1)' }}>
+                                <Heart size={20} className="text-red-500" />
+                                <span className="font-semibold">{event.notifications.filter(n => n.reason === 'like').length}</span>
+                              </div>
+                            )}
+                            {event.notifications.filter(n => n.reason === 'repost').length > 0 && (
+                              <div className="flex items-center gap-2 p-2 rounded" style={{ backgroundColor: 'rgba(52, 211, 153, 0.1)' }}>
+                                <Repeat2 size={20} className="text-green-500" />
+                                <span className="font-semibold">{event.notifications.filter(n => n.reason === 'repost').length}</span>
+                              </div>
+                            )}
+                            {event.notifications.filter(n => n.reason === 'reply').length > 0 && (
+                              <div className="flex items-center gap-2 p-2 rounded" style={{ backgroundColor: 'rgba(147, 51, 234, 0.1)' }}>
+                                <MessageCircle size={20} className="text-purple-500" />
+                                <span className="font-semibold">{event.notifications.filter(n => n.reason === 'reply').length}</span>
+                              </div>
+                            )}
+                            {event.notifications.filter(n => n.reason === 'quote').length > 0 && (
+                              <div className="flex items-center gap-2 p-2 rounded" style={{ backgroundColor: 'rgba(251, 146, 60, 0.1)' }}>
+                                <Quote size={20} className="text-orange-500" />
+                                <span className="font-semibold">{event.notifications.filter(n => n.reason === 'quote').length}</span>
+                              </div>
                             )}
                           </div>
+                          
+                          {/* Actor avatars in a grid for bursts */}
+                          <div className="mb-3">
+                            <div className="flex flex-wrap gap-1">
+                              {event.notifications.slice(0, 12).map((notif, i) => (
+                                <img 
+                                  key={`${notif.uri}-${i}`}
+                                  src={notif.author.avatar} 
+                                  alt={notif.author.handle}
+                                  className="w-8 h-8 rounded-full"
+                                  title={notif.author.displayName || notif.author.handle}
+                                />
+                              ))}
+                              {event.notifications.length > 12 && (
+                                <div 
+                                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                                  style={{ 
+                                    backgroundColor: 'var(--bsky-bg-tertiary)',
+                                    color: 'var(--bsky-text-primary)'
+                                  }}
+                                >
+                                  +{event.notifications.length - 12}
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
+                      ) : (
+                        // Regular aggregated layout
+                        <div className="flex items-center gap-3">
+                          {/* Actor avatars */}
+                          <div className="flex -space-x-2 avatar-stack flex-shrink-0">
+                            {event.notifications.slice(0, 5).map((notif, i) => (
+                              <img 
+                                key={`${notif.uri}-${i}`}
+                                src={notif.author.avatar} 
+                                alt={notif.author.handle}
+                                className="w-6 h-6 rounded-full border-2"
+                                style={{ borderColor: 'var(--bsky-bg-secondary)' }}
+                                title={notif.author.displayName || notif.author.handle}
+                              />
+                            ))}
+                            {event.notifications.length > 5 && (
+                              <div 
+                                className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-medium"
+                                style={{ 
+                                  backgroundColor: 'var(--bsky-bg-tertiary)',
+                                  borderColor: 'var(--bsky-bg-secondary)',
+                                  fontSize: '10px'
+                                }}
+                              >
+                                +{event.notifications.length - 5}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Compact summary */}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {event.aggregationType === 'follow' ? (
+                                <>
+                                  <span className="font-medium text-sm">
+                                    {event.actors.size} new {event.actors.size === 1 ? 'follower' : 'followers'}
+                                  </span>
+                                  {getReasonIcon('follow')}
+                                </>
+                              ) : (
+                                <>
+                                  <span className="font-medium text-sm">
+                                    {event.actors.size} {event.actors.size === 1 ? 'person' : 'people'}
+                                  </span>
+                                  <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>•</span>
+                                  {Array.from(event.types).map((type, i) => (
+                                    <span key={type} className="flex items-center gap-1 text-sm">
+                                      {getReasonIcon(type)}
+                                      <span style={{ color: 'var(--bsky-text-secondary)' }}>
+                                        {getActionCount(event.notifications, type)}
+                                      </span>
+                                      {i < event.types.size - 1 && <span style={{ color: 'var(--bsky-text-secondary)' }}>•</span>}
+                                    </span>
+                                  ))}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       </div>
                       
                       {/* Post preview for aggregated post notifications */}
-                      {event.aggregationType === 'post' && (
+                      {(event.aggregationType === 'post' || event.aggregationType === 'post-burst') && (
                         (() => {
                           const notification = event.notifications[0]
                           

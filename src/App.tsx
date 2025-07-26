@@ -24,6 +24,7 @@ import {
 // Import directly since they're not in the index
 import { Settings } from './components/settings/Settings'
 import { Analytics } from './components/analytics/Analytics'
+import { Conversations } from './components/conversations/Conversations'
 // These components are not in the index export
 import { MobileMenu } from './components/core/MobileMenu'
 import { MobileTabBar } from './components/core/MobileTabBar'
@@ -118,6 +119,7 @@ function AppContent() {
               } />
               <Route path="/thread/:uri" element={<ThreadViewWrapper />} />
               <Route path="/notifications" element={<Notifications />} />
+              <Route path="/conversations" element={<Conversations />} />
               <Route path="/search" element={<Search />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/analytics" element={<Analytics />} />

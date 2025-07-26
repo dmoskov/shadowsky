@@ -37,7 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
     { path: '/', label: 'Home', icon: Home },
     { path: '/search', label: 'Search', icon: Search },
     { path: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
-    { path: '/messages', label: 'Messages', icon: Mail },
+    { path: '/conversations', label: 'Conversations', icon: Mail },
     { path: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
     { path: '/analytics', label: 'Analytics', icon: BarChart3 },
     { path: '/settings', label: 'Settings', icon: Settings },
