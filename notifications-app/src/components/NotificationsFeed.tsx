@@ -507,18 +507,6 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postM
   
   const notificationUrl = getNotificationUrl(notification, postAuthorHandle)
   
-  // Get notification type label
-  const getNotificationTypeLabel = (reason: string): string => {
-    switch (reason) {
-      case 'like': return 'Like'
-      case 'repost': return 'Repost'
-      case 'follow': return 'Follow'
-      case 'mention': return 'Mention'
-      case 'reply': return 'Reply'
-      case 'quote': return 'Quote'
-      default: return reason.charAt(0).toUpperCase() + reason.slice(1)
-    }
-  }
   
   return (
     <a
@@ -550,16 +538,6 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postM
         </div>
         
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full" 
-                  style={{ 
-                    backgroundColor: 'var(--bsky-bg-secondary)', 
-                    color: 'var(--bsky-text-secondary)',
-                    border: '1px solid var(--bsky-border-primary)'
-                  }}>
-              {getNotificationTypeLabel(notification.reason)}
-            </span>
-          </div>
           <p className="text-sm">
             <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
               {notification.author.displayName || notification.author.handle}
@@ -572,8 +550,9 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postM
           
           {/* Show post content for all notification types */}
           {(['like', 'repost', 'reply', 'quote'].includes(notification.reason) && post) ? (
-            <div className="mt-2 p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-secondary)' }}>
+            <div className="mt-2 p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-secondary)', border: '1px solid var(--bsky-border-primary)' }}>
               <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>Your post:</span>
                 {post.author?.avatar ? (
                   <img 
                     src={post.author.avatar} 
@@ -590,14 +569,28 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, postM
                   {post.author?.displayName || post.author?.handle || 'Unknown'}
                 </span>
               </div>
-              {post.record?.text && (
-                <p className="text-sm line-clamp-2" style={{ color: 'var(--bsky-text-primary)' }}>
+              {post.record?.text ? (
+                <p className="text-sm line-clamp-3" style={{ color: 'var(--bsky-text-primary)' }}>
                   {post.record.text}
+                </p>
+              ) : (
+                <p className="text-sm italic" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                  [Post with no text]
                 </p>
               )}
             </div>
+          ) : notification.reason === 'mention' && notification.record && typeof notification.record === 'object' && 'text' in notification.record ? (
+            // For mentions, show the post where you were mentioned
+            <div className="mt-2 p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-secondary)', border: '1px solid var(--bsky-border-primary)' }}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>Mentioned you in:</span>
+              </div>
+              <p className="text-sm line-clamp-3" style={{ color: 'var(--bsky-text-primary)' }}>
+                {(notification.record as { text?: string }).text}
+              </p>
+            </div>
           ) : (
-            // Fallback to notification record text if available
+            // Fallback for other cases
             notification.record && typeof notification.record === 'object' && 'text' in notification.record && (
               <p className="text-sm mt-1 line-clamp-2" style={{ color: 'var(--bsky-text-secondary)' }}>
                 {(notification.record as { text?: string }).text}

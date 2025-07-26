@@ -153,16 +153,6 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
     }
   }
   
-  const getNotificationTypeLabel = (reason: string): string => {
-    switch (reason) {
-      case 'like': return 'Likes'
-      case 'repost': return 'Reposts'
-      case 'follow': return 'Follows'
-      case 'quote': return 'Quotes'
-      default: return reason.charAt(0).toUpperCase() + reason.slice(1) + 's'
-    }
-  }
-  
   const getActionText = () => {
     switch (item.reason) {
       case 'like': 
@@ -258,18 +248,6 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
           )}
         </div>
         
-        {/* Notification type label */}
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-medium px-2 py-0.5 rounded-full" 
-                style={{ 
-                  backgroundColor: 'var(--bsky-bg-secondary)', 
-                  color: 'var(--bsky-text-secondary)',
-                  border: '1px solid var(--bsky-border-primary)'
-                }}>
-            {getNotificationTypeLabel(item.reason)}
-          </span>
-        </div>
-        
         {/* Aggregated text */}
         <p className="text-sm">
           <span className="font-bold" style={{ color: 'var(--bsky-text-primary)' }}>
@@ -303,8 +281,9 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                              post.embed.media?.$type === 'app.bsky.embed.images#view')
             
             return (
-              <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-secondary)' }}>
+              <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-secondary)', border: '1px solid var(--bsky-border-primary)' }}>
                 <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>Your post:</span>
                   {postAuthor?.avatar ? (
                     <img 
                       src={postAuthor.avatar} 
@@ -326,9 +305,13 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                     </span>
                   )}
                 </div>
-                {postText && (
+                {postText ? (
                   <p className="text-sm line-clamp-3" style={{ color: 'var(--bsky-text-primary)' }}>
                     {postText}
+                  </p>
+                ) : (
+                  <p className="text-sm italic" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                    [Post with no text]
                   </p>
                 )}
               </div>

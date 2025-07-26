@@ -37,7 +37,7 @@ export const VisualTimeline: React.FC = () => {
       const notifTime = new Date(notification.indexedAt)
       const lastEvent = events[events.length - 1]
 
-      if (lastEvent && differenceInMinutes(lastEvent.time, notifTime) <= 5) {
+      if (lastEvent && differenceInMinutes(lastEvent.time, notifTime) <= 30) {
         // Aggregate with the last event
         lastEvent.notifications.push(notification)
         lastEvent.types.add(notification.reason)
@@ -62,12 +62,12 @@ export const VisualTimeline: React.FC = () => {
     
     const hoursDiff = differenceInHours(previousTime, currentTime)
     
-    if (hoursDiff >= 24) return 'mt-24'
-    if (hoursDiff >= 12) return 'mt-20'
-    if (hoursDiff >= 6) return 'mt-16'
-    if (hoursDiff >= 3) return 'mt-12'
-    if (hoursDiff >= 1) return 'mt-8'
-    return 'mt-4'
+    if (hoursDiff >= 24) return 'mt-12'
+    if (hoursDiff >= 12) return 'mt-8'
+    if (hoursDiff >= 6) return 'mt-6'
+    if (hoursDiff >= 3) return 'mt-4'
+    if (hoursDiff >= 1) return 'mt-3'
+    return 'mt-2'
   }
 
   const getTimeLabel = (date: Date) => {
@@ -138,13 +138,13 @@ export const VisualTimeline: React.FC = () => {
             >
               {/* Day label */}
               {showDayLabel && (
-                <div className="mb-6">
-                  <div className="flex items-center gap-3">
+                <div className="mb-3">
+                  <div className="flex items-center gap-2">
                     <div 
-                      className="w-3 h-3 rounded-full"
+                      className="w-2 h-2 rounded-full"
                       style={{ backgroundColor: 'var(--bsky-primary)' }}
                     />
-                    <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+                    <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--bsky-text-secondary)' }}>
                       {dayLabel}
                     </h2>
                   </div>
@@ -168,7 +168,7 @@ export const VisualTimeline: React.FC = () => {
 
                 {/* Event card */}
                 <div 
-                  className={`flex-1 p-4 rounded-lg timeline-event-card ${event.notifications.length > 1 ? 'timeline-aggregated' : ''}`}
+                  className={`flex-1 p-3 rounded-lg timeline-event-card ${event.notifications.length > 1 ? 'timeline-aggregated' : ''}`}
                   style={{ 
                     backgroundColor: event.notifications.length === 1 ? 'var(--bsky-bg-secondary)' : undefined,
                     border: '1px solid var(--bsky-border-color)'
@@ -196,47 +196,50 @@ export const VisualTimeline: React.FC = () => {
                     </div>
                   ) : (
                     /* Aggregated notifications */
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <Users size={20} className="text-blue-500" />
-                        <span className="font-medium">
-                          {event.actors.size} {event.actors.size === 1 ? 'person' : 'people'}
-                        </span>
-                      </div>
-                      
-                      {/* Action summary */}
-                      <div className="flex flex-wrap gap-3 mb-3">
-                        {Array.from(event.types).map(type => (
-                          <div key={type} className="flex items-center gap-1.5 text-sm">
-                            {getReasonIcon(type)}
-                            <span>{getActionCount(event.notifications, type)} {type}s</span>
-                          </div>
-                        ))}
-                      </div>
-
+                    <div className="flex items-center gap-3">
                       {/* Actor avatars */}
-                      <div className="flex -space-x-2 avatar-stack">
-                        {event.notifications.slice(0, 8).map((notif, i) => (
+                      <div className="flex -space-x-2 avatar-stack flex-shrink-0">
+                        {event.notifications.slice(0, 5).map((notif, i) => (
                           <img 
                             key={`${notif.uri}-${i}`}
                             src={notif.author.avatar} 
                             alt={notif.author.handle}
-                            className="w-8 h-8 rounded-full border-2"
+                            className="w-6 h-6 rounded-full border-2"
                             style={{ borderColor: 'var(--bsky-bg-secondary)' }}
                             title={notif.author.displayName || notif.author.handle}
                           />
                         ))}
-                        {event.notifications.length > 8 && (
+                        {event.notifications.length > 5 && (
                           <div 
-                            className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-medium"
+                            className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-medium"
                             style={{ 
                               backgroundColor: 'var(--bsky-bg-tertiary)',
-                              borderColor: 'var(--bsky-bg-secondary)'
+                              borderColor: 'var(--bsky-bg-secondary)',
+                              fontSize: '10px'
                             }}
                           >
-                            +{event.notifications.length - 8}
+                            +{event.notifications.length - 5}
                           </div>
                         )}
+                      </div>
+                      
+                      {/* Compact summary */}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-sm">
+                            {event.actors.size} {event.actors.size === 1 ? 'person' : 'people'}
+                          </span>
+                          <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>•</span>
+                          {Array.from(event.types).map((type, i) => (
+                            <span key={type} className="flex items-center gap-1 text-sm">
+                              {getReasonIcon(type)}
+                              <span style={{ color: 'var(--bsky-text-secondary)' }}>
+                                {getActionCount(event.notifications, type)}
+                              </span>
+                              {i < event.types.size - 1 && <span style={{ color: 'var(--bsky-text-secondary)' }}>•</span>}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}
