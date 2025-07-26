@@ -153,6 +153,16 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
     }
   }
   
+  const getNotificationTypeLabel = (reason: string): string => {
+    switch (reason) {
+      case 'like': return 'Likes'
+      case 'repost': return 'Reposts'
+      case 'follow': return 'Follows'
+      case 'quote': return 'Quotes'
+      default: return reason.charAt(0).toUpperCase() + reason.slice(1) + 's'
+    }
+  }
+  
   const getActionText = () => {
     switch (item.reason) {
       case 'like': 
@@ -246,6 +256,18 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
           {hasUnread && (
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--bsky-primary)' }}></div>
           )}
+        </div>
+        
+        {/* Notification type label */}
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-medium px-2 py-0.5 rounded-full" 
+                style={{ 
+                  backgroundColor: 'var(--bsky-bg-secondary)', 
+                  color: 'var(--bsky-text-secondary)',
+                  border: '1px solid var(--bsky-border-primary)'
+                }}>
+            {getNotificationTypeLabel(item.reason)}
+          </span>
         </div>
         
         {/* Aggregated text */}

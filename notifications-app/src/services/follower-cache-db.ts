@@ -233,9 +233,17 @@ export class FollowerCacheDB {
     const tx = this.db.transaction(['interactions'], 'readwrite')
     const store = tx.objectStore('interactions')
     
-    for (const stats of statsList) {
-      await store.put(stats)
-    }
+    // Create all put operations
+    const promises = statsList.map(stats => store.put(stats))
+    
+    // Wait for all operations to complete
+    await Promise.all(promises)
+    
+    // Wait for the transaction to complete
+    await new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
   }
   
   async getInteractionStats(did: string): Promise<InteractionStats | undefined> {

@@ -40,7 +40,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
     { path: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
     { path: '/messages', label: 'Messages', icon: Mail },
     { path: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
-    { path: `/profile/${session?.handle}`, label: 'Profile', icon: User },
     { path: '/analytics', label: 'Analytics', icon: BarChart3 },
     { path: '/settings', label: 'Settings', icon: Settings },
   ]
