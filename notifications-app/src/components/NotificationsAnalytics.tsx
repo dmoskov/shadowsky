@@ -2,7 +2,7 @@ import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { TrendingUp, Users, Heart, MessageCircle, BarChart3, Bell, Clock, Repeat2, UserPlus } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { format, subDays, startOfDay, formatDistanceToNow } from 'date-fns'
+import { format, subDays, startOfDay } from 'date-fns'
 import { ExtendedNotificationsFetcher } from './ExtendedNotificationsFetcher'
 
 export const NotificationsAnalytics: React.FC = () => {
@@ -140,8 +140,6 @@ export const NotificationsAnalytics: React.FC = () => {
 
     return counts
   }, [currentStats])
-
-  const recentNotifications = currentStats?.notifications.slice(0, 5) || []
 
   if (!analytics || isLoadingStats) {
     return (
@@ -339,42 +337,6 @@ export const NotificationsAnalytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="bsky-card p-6">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <TrendingUp size={20} />
-          Recent Activity
-        </h2>
-        <div className="space-y-3">
-          {recentNotifications.map((notification) => (
-            <div key={notification.uri} className="flex items-start gap-3 p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
-              <div className="flex-shrink-0">
-                {notification.author.avatar ? (
-                  <img 
-                    src={notification.author.avatar} 
-                    alt={notification.author.handle}
-                    className="w-10 h-10 rounded-full"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--bsky-bg-hover)' }}>
-                    {notification.author.handle.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm">
-                  <span className="font-medium">{notification.author.displayName || notification.author.handle}</span>
-                  {' '}
-                  {getNotificationAction(notification.reason)}
-                </p>
-                <p className="text-xs mt-1" style={{ color: 'var(--bsky-text-secondary)' }}>
-                  {formatDistanceToNow(new Date(notification.indexedAt), { addSuffix: true })}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }

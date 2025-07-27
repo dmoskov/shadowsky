@@ -83,6 +83,22 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       }
     }
     
+    // Final progress update
+    if (data?.pages) {
+      const allNotifications = data.pages.flatMap(page => page.notifications)
+      if (allNotifications.length > 0) {
+        const oldestNotification = allNotifications[allNotifications.length - 1]
+        const oldestDate = new Date(oldestNotification.indexedAt)
+        const daysReached = Math.floor((new Date().getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24))
+        
+        setProgress({
+          totalNotifications: allNotifications.length,
+          daysReached,
+          oldestDate
+        })
+      }
+    }
+    
     setFetchingStatus('complete')
   }
 
@@ -154,7 +170,11 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
             <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
               <p className="text-sm font-medium mb-2">Fetch Complete!</p>
               <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
-                Successfully fetched {allNotifications.length} notifications spanning {progress.daysReached} days.
+                Successfully fetched {allNotifications.length} notifications spanning {
+                  allNotifications.length > 0 
+                    ? Math.floor((new Date().getTime() - new Date(allNotifications[allNotifications.length - 1].indexedAt).getTime()) / (1000 * 60 * 60 * 24))
+                    : 0
+                } days.
                 The data is now available for all analytics views.
               </p>
             </div>
