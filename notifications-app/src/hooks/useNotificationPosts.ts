@@ -51,8 +51,8 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
     queryFn: async () => {
       if (postUris.length === 0) return []
       
-      // Initial fetch: Get first 150 posts quickly
-      const INITIAL_POSTS_TO_FETCH = 150
+      // Initial fetch: Get first 200 posts quickly for better UX
+      const INITIAL_POSTS_TO_FETCH = 200
       const urisToFetch = postUris.slice(0, INITIAL_POSTS_TO_FETCH)
       
       // Check cache first
@@ -116,8 +116,10 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
       const agent = atProtoClient.agent
       if (!agent) return
 
-      const BATCH_SIZE = 50 // Fetch 50 posts at a time after initial load
-      const DELAY_BETWEEN_BATCHES = 2000 // 2 seconds between batches (faster for better UX)
+      // Adaptive batch sizing: start aggressive, then slow down
+      const batchNumber = Math.floor(fetchedCount / 50) + 1
+      const BATCH_SIZE = batchNumber <= 2 ? 100 : 50 // First 2 batches: 100 posts, then 50
+      const DELAY_BETWEEN_BATCHES = batchNumber <= 2 ? 500 : 2000 // First 2 batches: 500ms, then 2s
       
       // Get already fetched URIs from current data
       const fetchedUris = new Set((queryResult.data || []).map(post => post.uri))
@@ -146,9 +148,10 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
             // Cache the newly fetched posts
             PostCache.save(fetchedPosts)
             
-            // Small delay between API calls within a batch
+            // Adaptive delay between API calls within a batch
             if (i + 25 < missingBatch.length) {
-              await new Promise(resolve => setTimeout(resolve, 500))
+              const delay = batchNumber <= 2 ? 100 : 500 // Faster for initial batches
+              await new Promise(resolve => setTimeout(resolve, delay))
             }
           } catch (error) {
             console.error('Failed to fetch additional posts batch:', error)
@@ -173,8 +176,9 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
       }
     }
 
-    // Start fetching more posts after a delay
-    const timeoutId = setTimeout(fetchMorePosts, 2000)
+    // Start fetching more posts after a delay (faster for initial load)
+    const initialDelay = fetchedCount === 0 ? 100 : 1000 // 100ms for first batch, 1s for subsequent
+    const timeoutId = setTimeout(fetchMorePosts, initialDelay)
     return () => clearTimeout(timeoutId)
   }, [session, queryResult.data, fetchedCount, postUris, isFetchingMore, queryClient, queryKey])
 

@@ -10,6 +10,9 @@ interface RateLimiterConfig {
   refillRate: number         // Tokens added per second
   initialTokens?: number     // Starting tokens (defaults to maxTokens)
   minDelay?: number         // Minimum delay between requests in ms
+  adaptive?: boolean        // Whether to use adaptive rate limiting
+  burstTokens?: number      // Extra tokens for initial burst (adaptive mode)
+  slowdownAfter?: number    // Number of requests before slowing down (adaptive mode)
 }
 
 interface RateLimiterStats {
@@ -31,6 +34,11 @@ class RateLimiter {
   private queue: Array<() => void> = []
   private totalRequests: number = 0
   private throttledRequests: number = 0
+  private adaptive: boolean
+  private burstTokens: number
+  private slowdownAfter: number
+  private baseMinDelay: number
+  private baseRefillRate: number
 
   constructor(config: RateLimiterConfig) {
     this.maxTokens = config.maxTokens
@@ -38,6 +46,18 @@ class RateLimiter {
     this.refillRate = config.refillRate
     this.minDelay = config.minDelay ?? 0
     this.lastRefill = Date.now()
+    
+    // Adaptive rate limiting settings
+    this.adaptive = config.adaptive ?? false
+    this.burstTokens = config.burstTokens ?? 0
+    this.slowdownAfter = config.slowdownAfter ?? 50
+    this.baseMinDelay = this.minDelay
+    this.baseRefillRate = this.refillRate
+    
+    // If adaptive, start with burst tokens
+    if (this.adaptive && this.burstTokens > 0) {
+      this.tokens += this.burstTokens
+    }
   }
 
   private refillTokens() {
@@ -75,6 +95,16 @@ class RateLimiter {
 
   async acquire(): Promise<void> {
     this.totalRequests++
+    
+    // Adaptive rate limiting: slow down after initial burst
+    if (this.adaptive) {
+      if (this.totalRequests > this.slowdownAfter) {
+        // Gradually increase delay and decrease refill rate
+        const factor = Math.min(3, 1 + (this.totalRequests - this.slowdownAfter) / 100)
+        this.minDelay = Math.floor(this.baseMinDelay * factor)
+        this.refillRate = this.baseRefillRate / factor
+      }
+    }
     
     return new Promise((resolve) => {
       // Check minimum delay
@@ -140,18 +170,24 @@ export const profileRateLimiter = new RateLimiter({
   minDelay: 200 // 200ms minimum between requests
 })
 
-// Post fetch rate limiter - 20 requests per minute
+// Post fetch rate limiter - Adaptive: fast initial burst, then slows down
 export const postRateLimiter = new RateLimiter({
   maxTokens: 20,
-  refillRate: 0.33,
-  minDelay: 200 // 200ms minimum between requests
+  refillRate: 0.5,  // Start faster
+  minDelay: 50,     // Start with 50ms minimum delay
+  adaptive: true,
+  burstTokens: 30,  // Allow 50 total tokens initially (20 + 30)
+  slowdownAfter: 25 // Start slowing down after 25 requests
 })
 
-// Notification fetch rate limiter - 1 request per second
+// Notification fetch rate limiter - Adaptive for initial load
 export const notificationRateLimiter = new RateLimiter({
   maxTokens: 60,
-  refillRate: 1,
-  minDelay: 1000 // 1000ms minimum between requests
+  refillRate: 2,    // Start at 2 requests per second
+  minDelay: 200,    // Start with 200ms minimum delay
+  adaptive: true,
+  burstTokens: 40,  // Allow 100 total tokens initially
+  slowdownAfter: 50 // Start slowing down after 50 requests
 })
 
 // Export stats function for UI

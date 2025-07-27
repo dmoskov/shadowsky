@@ -80,8 +80,11 @@ export function useNotificationsByType(options: UseNotificationsByTypeOptions = 
       return lastPage.cursor
     },
     enabled: !!session,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
+    staleTime: 30 * 60 * 1000, // 30 minutes - conversations don't change that often
+    refetchInterval: false, // Disable automatic refetching - causes UI glitches
+    refetchOnWindowFocus: false, // Already disabled globally, but be explicit
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    placeholderData: (previousData) => previousData, // Keep showing old data while fetching new
   })
 }
 

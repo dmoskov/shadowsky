@@ -33,6 +33,7 @@ export const Conversations: React.FC = () => {
   const { } = useAuth()
   const [selectedConvo, setSelectedConvo] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const previousPostMapRef = React.useRef<Map<string, Post>>(new Map())
 
   // Fetch reply notifications specifically
   const { 
@@ -51,11 +52,11 @@ export const Conversations: React.FC = () => {
   }, [data])
 
   // Fetch posts for the reply notifications
-  const { data: posts } = useNotificationPosts(replyNotifications)
+  const { data: posts, isLoading: isLoadingPosts } = useNotificationPosts(replyNotifications)
 
   // Create initial map for reply posts
   const replyPostMap = React.useMemo(() => {
-    if (!posts) return new Map()
+    if (!posts || posts.length === 0) return new Map()
     return new Map(posts.map(post => [post.uri, post]))
   }, [posts])
 
@@ -84,24 +85,54 @@ export const Conversations: React.FC = () => {
   }, [replyNotifications, replyPostMap])
 
   // Fetch the root posts that we don't have
-  const { data: rootPosts } = usePostsByUris(rootPostUris)
+  const { data: rootPosts, isLoading: isLoadingRootPosts } = usePostsByUris(rootPostUris)
 
   // Create combined map with all posts (replies + roots)
   const postMap = React.useMemo(() => {
     const map = new Map<string, Post>()
     
+    // Start with posts from previous render to prevent flashing
+    previousPostMapRef.current.forEach((post, uri) => {
+      map.set(uri, post)
+    })
+    
     // Add reply posts
-    if (posts) {
-      posts.forEach(post => map.set(post.uri, post))
+    if (posts && posts.length > 0) {
+      posts.forEach(post => {
+        if (post && post.uri) {
+          map.set(post.uri, post)
+        }
+      })
     }
     
     // Add root posts
-    if (rootPosts) {
-      rootPosts.forEach(post => map.set(post.uri, post))
+    if (rootPosts && rootPosts.length > 0) {
+      rootPosts.forEach(post => {
+        if (post && post.uri) {
+          map.set(post.uri, post)
+        }
+      })
     }
+    
+    // Update ref for next render
+    previousPostMapRef.current = map
     
     return map
   }, [posts, rootPosts])
+  
+  // Add debug logging
+  React.useEffect(() => {
+    console.log('[Conversations] Loading state:', { 
+      isLoading, 
+      isLoadingPosts,
+      isLoadingRootPosts,
+      hasData: !!data, 
+      pageCount: data?.pages?.length,
+      notificationCount: replyNotifications.length,
+      postCount: posts?.length || 0,
+      rootPostCount: rootPosts?.length || 0
+    })
+  }, [isLoading, isLoadingPosts, isLoadingRootPosts, data, replyNotifications.length, posts?.length, rootPosts?.length])
 
   // Group notifications into conversation threads
   const conversations = useMemo(() => {
@@ -269,8 +300,9 @@ export const Conversations: React.FC = () => {
       // For conversations, we want to fetch more aggressively to get a good thread view
       const currentNotificationCount = data.pages.reduce((sum, page) => sum + page.notifications.length, 0)
       
-      // Keep fetching until we have at least 100 reply notifications or no more pages
-      if (currentNotificationCount < 100) {
+      // Keep fetching until we have at least 150 reply notifications or no more pages
+      // This ensures we get enough data for good conversation threads
+      if (currentNotificationCount < 150) {
         fetchNextPage()
       }
     }
@@ -288,7 +320,8 @@ export const Conversations: React.FC = () => {
         : notification ? getNotificationUrl(notification) : null
 
       // Handle root node without post (loading state)
-      if (node.isRoot && !post) {
+      // Only show loading if we're actually loading root posts and this is the first render
+      if (node.isRoot && !post && isLoadingRootPosts && rootPostUris.includes(selectedConversation?.rootUri || '')) {
         return (
           <div key={selectedConversation?.rootUri || Math.random()} className="mb-4">
             <div className="flex-1 p-4 rounded-lg" 
@@ -320,9 +353,18 @@ export const Conversations: React.FC = () => {
           </div>
         )
       }
+      
+      // If root post is missing but we're not loading, just skip rendering it
+      if (node.isRoot && !post) {
+        // Still render children
+        if (node.children.length > 0) {
+          return <div key={selectedConversation?.rootUri || Math.random()}>{renderThreadNodes(node.children, postMap)}</div>
+        }
+        return null
+      }
 
       return (
-        <div key={post?.uri || notification?.uri || Math.random()} className="mb-4">
+        <div key={post?.uri || notification?.uri || `node-${node.depth}-${notification?.indexedAt}`} className="mb-4">
           {/* Thread line connector for nested replies */}
           {node.depth > 0 && (
             <div className="flex">
@@ -475,8 +517,8 @@ export const Conversations: React.FC = () => {
     })
   }
 
-  // Show loading state
-  if (isLoading) {
+  // Show loading state only on initial load when we have no data at all
+  if (isLoading && !data) {
     return (
       <div className="flex items-center justify-center h-screen" style={{ background: 'var(--bsky-bg-primary)' }}>
         <div className="text-center">
@@ -487,8 +529,8 @@ export const Conversations: React.FC = () => {
     )
   }
 
-  // Show error or empty state
-  if (error || conversations.length === 0) {
+  // Show error or empty state (but not while loading more pages)
+  if ((error || conversations.length === 0) && !isFetchingNextPage) {
     return (
       <div className="flex items-center justify-center h-screen" style={{ background: 'var(--bsky-bg-primary)' }}>
         <div className="text-center max-w-md">
@@ -503,7 +545,17 @@ export const Conversations: React.FC = () => {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]" style={{ background: 'var(--bsky-bg-primary)' }}>
+    <div className="flex h-[calc(100vh-4rem)] relative" style={{ background: 'var(--bsky-bg-primary)' }}>
+      {/* Loading overlay for background fetches */}
+      {isLoading && data && (
+        <div className="absolute inset-0 bg-black bg-opacity-10 flex items-center justify-center z-50" 
+             style={{ backdropFilter: 'blur(2px)' }}>
+          <div className="bg-white rounded-lg p-4 shadow-lg" style={{ background: 'var(--bsky-bg-secondary)' }}>
+            <Loader2 size={24} className="animate-spin mb-2 mx-auto" style={{ color: 'var(--bsky-primary)' }} />
+            <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Updating conversations...</p>
+          </div>
+        </div>
+      )}
       {/* Left Panel - Conversations List */}
       <div className={`${selectedConvo ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-96`} 
            style={{ borderRight: '1px solid var(--bsky-border-primary)' }}>
@@ -531,7 +583,7 @@ export const Conversations: React.FC = () => {
           </div>
           <p className="text-xs mt-2" style={{ color: 'var(--bsky-text-secondary)' }}>
             Showing {filteredConversations.length} conversation{filteredConversations.length !== 1 ? 's' : ''} from {replyNotifications.length} reply notifications
-            {isFetchingNextPage && ' (loading more...)'}
+            {isFetchingNextPage && !isLoading && ' (loading more...)'}
           </p>
         </div>
 

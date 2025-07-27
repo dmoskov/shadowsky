@@ -16,6 +16,7 @@ export const NotificationsFeed: React.FC = () => {
   const location = useLocation()
   const searchParams = new URLSearchParams(location.search)
   const showTopAccounts = searchParams.get('top') === '1'
+  const debugMode = searchParams.has('debug')
   
   const [filter, setFilter] = useState<NotificationFilter>('all')
   const [showUnreadOnly, setShowUnreadOnly] = useState(false)
@@ -250,7 +251,7 @@ export const NotificationsFeed: React.FC = () => {
                 · {notifications.length} total
               </span>
             )}
-            {isFromCache && (
+            {isFromCache && debugMode && (
               <span className="ml-2 text-xs font-normal flex items-center gap-1" style={{ 
                 color: 'var(--bsky-primary)',
                 opacity: 0.7,

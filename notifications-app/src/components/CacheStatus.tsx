@@ -6,6 +6,10 @@ export function CacheStatus() {
   const [cacheInfo, setCacheInfo] = useState(NotificationCache.getCacheInfo())
   const [postCacheInfo, setPostCacheInfo] = useState(PostCache.getCacheInfo())
   const [showDetails, setShowDetails] = useState(false)
+  
+  // Check for debug mode
+  const urlParams = new URLSearchParams(window.location.search)
+  const debugMode = urlParams.has('debug')
 
   useEffect(() => {
     // Update cache info every 5 seconds when details are shown
@@ -58,6 +62,11 @@ export function CacheStatus() {
   const totalNotifications = cacheInfo.priorityCacheSize + cacheInfo.allCacheSize
   const totalCached = totalNotifications + postCacheInfo.postCount
 
+  // Only show if debug mode is enabled
+  if (!debugMode) {
+    return null
+  }
+  
   if (totalCached === 0 && !showDetails) {
     return null
   }
