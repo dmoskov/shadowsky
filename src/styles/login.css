@@ -9,6 +9,30 @@
   border-color: var(--color-border);
 }
 
+/* Animation for security info */
+@keyframes slide-in-from-top {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.slide-in-from-top-2 {
+  animation-name: slide-in-from-top;
+}
+
+.duration-300 {
+  animation-duration: 300ms;
+}
+
 /* Light theme adjustments */
 [data-theme="light"] .login-card {
   background-color: var(--color-bg-secondary);

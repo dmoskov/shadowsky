@@ -100,6 +100,96 @@ export const Login: React.FC = () => {
           </div>
         </div>
         
+        {/* Security Trust Banner */}
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={() => setShowSecurityInfo(!showSecurityInfo)}
+            className="w-full bg-green-500/10 border border-green-500/20 rounded-xl p-4 text-left hover:bg-green-500/15 transition-all duration-200"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Shield className="w-5 h-5 text-green-400" />
+                <span className="text-sm font-medium text-green-400">Your credentials are safe</span>
+              </div>
+              <ArrowRight className={`w-4 h-4 text-green-400 transition-transform duration-200 ${showSecurityInfo ? 'rotate-90' : ''}`} />
+            </div>
+          </button>
+          
+          {showSecurityInfo && (
+            <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
+              {/* Security Diagram */}
+              <div className="bg-secondary/30 rounded-xl p-6 border border-border">
+                <h3 className="text-sm font-semibold text-primary mb-4 text-center">How Your Login Works</h3>
+                
+                {/* Simple flow diagram */}
+                <div className="flex items-center justify-between max-w-sm mx-auto">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <Smartphone className="w-8 h-8 text-blue-400" />
+                    </div>
+                    <p className="text-xs text-secondary">Your Device</p>
+                    <p className="text-xs text-tertiary mt-1">This client</p>
+                  </div>
+                  
+                  <div className="flex-1 px-4">
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-dashed border-green-400/40"></div>
+                      </div>
+                      <div className="relative flex justify-center">
+                        <ArrowRight className="w-6 h-6 text-green-400 bg-primary" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-green-400 text-center mt-2">Direct & Secure</p>
+                  </div>
+                  
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <Server className="w-8 h-8 text-green-400" />
+                    </div>
+                    <p className="text-xs text-secondary">Bluesky</p>
+                    <p className="text-xs text-tertiary mt-1">Official servers</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Trust points */}
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-2 h-2 bg-green-400 rounded-full" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-primary font-medium">No credential storage</p>
+                    <p className="text-xs text-tertiary">We never store your password - it goes directly to Bluesky</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-2 h-2 bg-green-400 rounded-full" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-primary font-medium">Open source client</p>
+                    <p className="text-xs text-tertiary">This is just a frontend that talks to Bluesky's official API</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-2 h-2 bg-green-400 rounded-full" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-primary font-medium">Session-based auth</p>
+                    <p className="text-xs text-tertiary">After login, we only keep a session token from Bluesky</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        
         {/* Login Card */}
         <div className="login-card backdrop-blur-xl rounded-2xl shadow-2xl p-8 border">
           <div className="flex items-center justify-between mb-6">
