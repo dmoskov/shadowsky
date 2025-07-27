@@ -499,89 +499,131 @@ export const NotificationsAnalytics: React.FC = () => {
             </button>
           </div>
         </div>
-        <div className="space-y-2">
-          {analytics.buckets.map((bucket, index) => (
-            <div key={`${bucket.label}-${index}`} className="group flex items-center gap-3 p-2 rounded-lg transition-all hover:bg-opacity-50" style={{
-              backgroundColor: 'transparent'
-            }}>
-              <span className="text-xs w-20 font-medium text-right" style={{ color: 'var(--bsky-text-secondary)' }}>{bucket.label}</span>
-              <div className="flex-1 relative h-10 rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
-                <div className="absolute inset-0 flex h-full">
-                  {/* Stacked bar segments */}
-                  <div 
-                    className="h-full transition-all duration-500 relative overflow-hidden flex items-center justify-center"
-                    style={{ 
-                      width: maxValue > 0 ? `${(bucket.likes / maxValue) * 100}%` : '0%',
-                      background: 'linear-gradient(135deg, var(--bsky-like) 0%, #e11d48 100%)'
-                    }}
-                    title={`${bucket.likes} likes`}
-                  >
-                    {bucket.likes > 0 && (
-                      <span className="text-xs font-bold text-white mix-blend-difference">{bucket.likes}</span>
-                    )}
-                  </div>
-                  <div 
-                    className="h-full transition-all duration-500 relative overflow-hidden flex items-center justify-center"
-                    style={{ 
-                      width: maxValue > 0 ? `${(bucket.reposts / maxValue) * 100}%` : '0%',
-                      background: 'linear-gradient(135deg, var(--bsky-repost) 0%, #059669 100%)'
-                    }}
-                    title={`${bucket.reposts} reposts`}
-                  >
-                    {bucket.reposts > 0 && (
-                      <span className="text-xs font-bold text-white mix-blend-difference">{bucket.reposts}</span>
-                    )}
-                  </div>
-                  <div 
-                    className="h-full transition-all duration-500 relative overflow-hidden flex items-center justify-center"
-                    style={{ 
-                      width: maxValue > 0 ? `${(bucket.follows / maxValue) * 100}%` : '0%',
-                      background: 'linear-gradient(135deg, var(--bsky-follow) 0%, #0066cc 100%)'
-                    }}
-                    title={`${bucket.follows} follows`}
-                  >
-                    {bucket.follows > 0 && (
-                      <span className="text-xs font-bold text-white mix-blend-difference">{bucket.follows}</span>
-                    )}
-                  </div>
-                  <div 
-                    className="h-full transition-all duration-500 relative overflow-hidden flex items-center justify-center"
-                    style={{ 
-                      width: maxValue > 0 ? `${(bucket.replies / maxValue) * 100}%` : '0%',
-                      background: 'linear-gradient(135deg, var(--bsky-reply) 0%, #0891b2 100%)'
-                    }}
-                    title={`${bucket.replies} replies`}
-                  >
-                    {bucket.replies > 0 && (
-                      <span className="text-xs font-bold text-white mix-blend-difference">{bucket.replies}</span>
-                    )}
-                  </div>
-                  <div 
-                    className="h-full transition-all duration-500 relative overflow-hidden flex items-center justify-center"
-                    style={{ 
-                      width: maxValue > 0 ? `${(bucket.mentions / maxValue) * 100}%` : '0%',
-                      background: 'linear-gradient(135deg, var(--bsky-accent) 0%, #7c3aed 100%)'
-                    }}
-                    title={`${bucket.mentions} mentions`}
-                  >
-                    {bucket.mentions > 0 && (
-                      <span className="text-xs font-bold text-white mix-blend-difference">{bucket.mentions}</span>
-                    )}
-                  </div>
-                </div>
-                {/* Show total on hover */}
-                <div className="absolute inset-0 flex items-center justify-end pr-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  <span className="text-sm font-bold px-2 py-1 rounded" style={{ 
-                    backgroundColor: 'var(--bsky-bg-primary)',
-                    color: 'var(--bsky-text-primary)'
-                  }}>
-                    {bucket.total} total
-                  </span>
-                </div>
-              </div>
-              <span className="text-sm w-12 text-right font-bold group-hover:scale-110 transition-transform" style={{ color: 'var(--bsky-text-primary)' }}>{bucket.total}</span>
+        <div className="relative" style={{ height: '300px', marginTop: '20px' }}>
+          {/* Y-axis labels */}
+          <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-xs" style={{ width: '40px', color: 'var(--bsky-text-secondary)' }}>
+            <span>{maxValue}</span>
+            <span>{Math.round(maxValue * 0.75)}</span>
+            <span>{Math.round(maxValue * 0.5)}</span>
+            <span>{Math.round(maxValue * 0.25)}</span>
+            <span>0</span>
+          </div>
+          
+          {/* Chart area */}
+          <div className="ml-12 h-full relative">
+            {/* Grid lines */}
+            <div className="absolute inset-0">
+              {[0, 0.25, 0.5, 0.75, 1].map((fraction) => (
+                <div
+                  key={fraction}
+                  className="absolute w-full"
+                  style={{
+                    bottom: `${fraction * 100}%`,
+                    borderBottom: '1px solid',
+                    borderColor: 'var(--bsky-border-secondary)',
+                    opacity: fraction === 0 ? 1 : 0.2
+                  }}
+                />
+              ))}
             </div>
-          ))}
+            
+            {/* Bars */}
+            <div className="relative h-full flex items-end justify-between" style={{ gap: '4px', paddingBottom: '30px' }}>
+              {analytics.buckets.map((bucket, index) => {
+                const barWidth = `${100 / analytics.buckets.length - 1}%`
+                return (
+                  <div
+                    key={`${bucket.label}-${index}`}
+                    className="relative group"
+                    style={{ width: barWidth, minWidth: '20px', maxWidth: '60px' }}
+                  >
+                    {/* Stacked bar */}
+                    <div className="absolute bottom-0 left-0 right-0 flex flex-col-reverse rounded-t-lg overflow-hidden transition-all duration-300 hover:opacity-90">
+                      {/* Likes - bottom of stack */}
+                      {bucket.likes > 0 && (
+                        <div
+                          className="w-full transition-all duration-500"
+                          style={{
+                            height: `${(bucket.likes / maxValue) * 270}px`,
+                            background: 'linear-gradient(180deg, #ec4899 0%, #e11d48 100%)'
+                          }}
+                          title={`${bucket.likes} likes`}
+                        />
+                      )}
+                      {/* Reposts */}
+                      {bucket.reposts > 0 && (
+                        <div
+                          className="w-full transition-all duration-500"
+                          style={{
+                            height: `${(bucket.reposts / maxValue) * 270}px`,
+                            background: 'linear-gradient(180deg, #10b981 0%, #059669 100%)'
+                          }}
+                          title={`${bucket.reposts} reposts`}
+                        />
+                      )}
+                      {/* Follows */}
+                      {bucket.follows > 0 && (
+                        <div
+                          className="w-full transition-all duration-500"
+                          style={{
+                            height: `${(bucket.follows / maxValue) * 270}px`,
+                            background: 'linear-gradient(180deg, #0085ff 0%, #0066cc 100%)'
+                          }}
+                          title={`${bucket.follows} follows`}
+                        />
+                      )}
+                      {/* Replies */}
+                      {bucket.replies > 0 && (
+                        <div
+                          className="w-full transition-all duration-500"
+                          style={{
+                            height: `${(bucket.replies / maxValue) * 270}px`,
+                            background: 'linear-gradient(180deg, #06b6d4 0%, #0891b2 100%)'
+                          }}
+                          title={`${bucket.replies} replies`}
+                        />
+                      )}
+                      {/* Mentions - top of stack */}
+                      {bucket.mentions > 0 && (
+                        <div
+                          className="w-full transition-all duration-500"
+                          style={{
+                            height: `${(bucket.mentions / maxValue) * 270}px`,
+                            background: 'linear-gradient(180deg, #9333ea 0%, #7c3aed 100%)'
+                          }}
+                          title={`${bucket.mentions} mentions`}
+                        />
+                      )}
+                    </div>
+                    
+                    {/* Hover tooltip */}
+                    <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                      <div className="px-3 py-2 rounded-lg text-xs whitespace-nowrap" style={{
+                        backgroundColor: 'var(--bsky-bg-primary)',
+                        color: 'var(--bsky-text-primary)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                        border: '1px solid var(--bsky-border-primary)'
+                      }}>
+                        <div className="font-bold mb-1">{bucket.total} total</div>
+                        {bucket.likes > 0 && <div style={{ color: '#ec4899' }}>{bucket.likes} likes</div>}
+                        {bucket.reposts > 0 && <div style={{ color: '#10b981' }}>{bucket.reposts} reposts</div>}
+                        {bucket.follows > 0 && <div style={{ color: '#0085ff' }}>{bucket.follows} follows</div>}
+                        {bucket.replies > 0 && <div style={{ color: '#06b6d4' }}>{bucket.replies} replies</div>}
+                        {bucket.mentions > 0 && <div style={{ color: '#9333ea' }}>{bucket.mentions} mentions</div>}
+                      </div>
+                    </div>
+                    
+                    {/* X-axis label */}
+                    <div className="absolute top-full mt-1 left-0 right-0 text-center">
+                      <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)', fontSize: '10px' }}>
+                        {bucket.label}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         </div>
         
         <div className="flex flex-wrap gap-3 mt-4 text-xs">
