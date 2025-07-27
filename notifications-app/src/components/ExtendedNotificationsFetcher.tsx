@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
-import { Download, Loader2, Calendar, CheckCircle, RefreshCw } from 'lucide-react'
+import { Download, Loader2, Calendar, CheckCircle, RefreshCw, HardDrive } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getNotificationService } from '../services/atproto/notifications'
 import { format, subDays } from 'date-fns'
 import { ExtendedFetchCache } from '../utils/extendedFetchCache'
+import { StorageManager } from '../utils/storageManager'
 
 export const ExtendedNotificationsFetcher: React.FC = () => {
   const { session } = useAuth()
@@ -470,16 +471,32 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           )}
           
           {fetchingStatus === 'complete' && (
-            <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
-              <p className="text-sm font-medium mb-2">Fetch Complete!</p>
-              <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
-                Successfully fetched {allNotifications.length} notifications spanning {
-                  allNotifications.length > 0 
-                    ? Math.floor((new Date().getTime() - new Date(allNotifications[allNotifications.length - 1].indexedAt).getTime()) / (1000 * 60 * 60 * 24))
-                    : 0
-                } days.
-                The data is now available for all analytics views.
-              </p>
+            <div className="mt-4 space-y-3">
+              <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
+                <p className="text-sm font-medium mb-2">Fetch Complete!</p>
+                <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                  Successfully fetched {allNotifications.length} notifications spanning {
+                    allNotifications.length > 0 
+                      ? Math.floor((new Date().getTime() - new Date(allNotifications[allNotifications.length - 1].indexedAt).getTime()) / (1000 * 60 * 60 * 24))
+                      : 0
+                  } days.
+                  The data is now available for all analytics views.
+                </p>
+              </div>
+              
+              {/* Storage optimization info */}
+              <div className="p-3 rounded-lg flex items-center gap-3" style={{ 
+                backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                border: '1px solid rgba(59, 130, 246, 0.2)'
+              }}>
+                <HardDrive size={16} style={{ color: 'var(--bsky-primary)' }} />
+                <div className="text-sm">
+                  <p className="font-medium">Storage Optimized</p>
+                  <p style={{ color: 'var(--bsky-text-secondary)' }}>
+                    Data automatically compressed to maximize storage efficiency
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </div>

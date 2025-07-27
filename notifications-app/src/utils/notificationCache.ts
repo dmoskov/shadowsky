@@ -1,8 +1,9 @@
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
+import { StorageManager } from './storageManager'
 
 const CACHE_KEY_PREFIX = 'bsky_notifications_'
 const CACHE_EXPIRY_KEY = 'bsky_notifications_expiry'
-const CACHE_VERSION = 'v1' // Increment this to invalidate old caches
+const CACHE_VERSION = 'v2' // Increment this to invalidate old caches
 const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
 
 interface CachedData {
@@ -13,6 +14,7 @@ interface CachedData {
     cursor?: string
   }>
   priority?: boolean
+  compressed?: boolean
 }
 
 /**
@@ -36,17 +38,44 @@ export class NotificationCache {
     
     console.log(`🟡 [${timestamp}] CACHE SAVE ATTEMPT: ${notificationCount} notifications (priority: ${priority})`)
     
+    // Check storage health before saving
+    const storageHealth = StorageManager.getStorageHealth()
+    if (storageHealth.status === 'critical') {
+      console.log(`⚠️ [${timestamp}] Storage critical - cleaning up before save`)
+      StorageManager.cleanupStorage(14) // Keep only 2 weeks when critical
+    }
+    
     try {
       const cacheKey = this.getCacheKey(priority)
-      const data: CachedData = {
-        version: CACHE_VERSION,
-        timestamp: Date.now(),
-        pages,
-        priority
+      
+      // Check if we need to compress data
+      const metrics = StorageManager.getStorageMetrics()
+      const shouldCompress = metrics.usagePercentage > 50 || notificationCount > 1000
+      
+      let dataToStore: CachedData
+      
+      if (shouldCompress) {
+        console.log(`📦 [${timestamp}] Compressing notifications for efficient storage`)
+        const compressedPages = StorageManager.pruneNotifications(pages)
+        dataToStore = {
+          version: CACHE_VERSION,
+          timestamp: Date.now(),
+          pages: compressedPages as any,
+          priority,
+          compressed: true
+        }
+      } else {
+        dataToStore = {
+          version: CACHE_VERSION,
+          timestamp: Date.now(),
+          pages,
+          priority,
+          compressed: false
+        }
       }
       
       // Store in chunks if data is too large
-      const dataStr = JSON.stringify(data)
+      const dataStr = JSON.stringify(dataToStore)
       const chunkSize = 1024 * 1024 // 1MB chunks
       const chunks = Math.ceil(dataStr.length / chunkSize)
       
@@ -73,6 +102,11 @@ export class NotificationCache {
       const expiryDate = new Date(expiryTime)
       console.log(`✅ [${timestamp}] CACHE SAVED: ${notificationCount} notifications (priority: ${priority})`)
       console.log(`⏰ [${timestamp}] Cache expires: ${expiryDate.toLocaleString()}`)
+      
+      // Log storage metrics after save
+      const postSaveMetrics = StorageManager.getStorageMetrics()
+      console.log(`📊 [${timestamp}] Storage usage: ${postSaveMetrics.usagePercentage.toFixed(1)}% (${StorageManager.formatBytes(postSaveMetrics.totalSize)} / ~5MB)`)
+      console.log(`📊 [${timestamp}] Notification data: ${StorageManager.formatBytes(postSaveMetrics.notificationDataSize)}`)
       
       // Verify the save worked
       const verification = localStorage.getItem(cacheKey) || localStorage.getItem(`${cacheKey}_chunk_0`)
@@ -193,6 +227,17 @@ export class NotificationCache {
       
       console.log(`✅ [${timestamp}] CACHE HIT: ${notificationCount} notifications loaded (priority: ${priority})`)
       console.log(`📊 [${timestamp}] Cache age: ${cacheAge} minutes, ${cachedData.pages.length} pages`)
+      
+      // If data is compressed, decompress it
+      if (cachedData.compressed) {
+        console.log(`📦 [${timestamp}] Decompressing notification data`)
+        cachedData.pages = cachedData.pages.map(page => ({
+          ...page,
+          notifications: page.notifications.map(n => 
+            StorageManager.decompressNotification(n as any) as Notification
+          )
+        }))
+      }
       
       return cachedData
     } catch (error) {

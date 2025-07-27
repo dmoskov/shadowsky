@@ -4,6 +4,7 @@ import { TrendingUp, Users, Heart, MessageCircle, BarChart3, Bell, Clock, Repeat
 import { useAuth } from '../contexts/AuthContext'
 import { format, subDays, startOfDay } from 'date-fns'
 import { ExtendedNotificationsFetcher } from './ExtendedNotificationsFetcher'
+import { StorageAnalytics } from './StorageAnalytics'
 
 export const NotificationsAnalytics: React.FC = () => {
   const { agent } = useAuth()
@@ -206,6 +207,9 @@ export const NotificationsAnalytics: React.FC = () => {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Storage Analytics */}
+      <StorageAnalytics />
+      
       {/* Extended Notifications Fetcher */}
       <ExtendedNotificationsFetcher />
 
