@@ -191,7 +191,7 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
     const initialDelay = fetchedCount === 0 ? 100 : 1000 // 100ms for first batch, 1s for subsequent
     const timeoutId = setTimeout(fetchMorePosts, initialDelay)
     return () => clearTimeout(timeoutId)
-  }, [session, queryResult.data, fetchedCount, postUris, isFetchingMore, queryClient, queryKey])
+  }, [session, queryResult.data, isFetchingMore, postUris.length, queryClient, queryKey]) // Removed fetchedCount from dependencies
 
   // Calculate actual fetched count based on current data
   const actualFetchedCount = queryResult.data?.length || 0

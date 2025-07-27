@@ -96,24 +96,14 @@ export const NotificationsFeed: React.FC = () => {
 
   // Update page title with unread count
   useEffect(() => {
-    
-    // Set an interval to ensure our title persists
-    const updateTitle = () => {
-      if (unreadCount !== undefined && unreadCount !== null && unreadCount > 0) {
-        document.title = `(${unreadCount}) Bluesky Notifications`
-      } else {
-        document.title = 'Bluesky Notifications'
-      }
+    if (unreadCount !== undefined && unreadCount !== null && unreadCount > 0) {
+      document.title = `(${unreadCount}) Bluesky Notifications`
+    } else {
+      document.title = 'Bluesky Notifications'
     }
-    
-    updateTitle() // Set immediately
-    
-    // Set an interval to re-assert our title in case something else changes it
-    const interval = setInterval(updateTitle, 1000)
     
     // Cleanup
     return () => {
-      clearInterval(interval)
       document.title = 'Bluesky Notifications'
     }
   }, [unreadCount])
