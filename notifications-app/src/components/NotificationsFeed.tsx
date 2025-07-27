@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, CheckCheck, Image, Loader, ChevronUp, Crown, Settings, Database } from 'lucide-react'
+import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, CheckCheck, Image, Loader, ChevronUp, Crown, Settings, Database, Users } from 'lucide-react'
 import { useNotifications, useUnreadCount, useMarkNotificationsRead } from '../hooks/useNotifications'
 import { useNotificationPosts, postHasImages } from '../hooks/useNotificationPosts'
+import { useFollowing } from '../hooks/useFollowing'
 import { formatDistanceToNow } from 'date-fns'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { aggregateNotifications, AggregatedNotificationItem } from './NotificationAggregator'
@@ -10,7 +11,7 @@ import { getNotificationUrl } from '../utils/url-helpers'
 import { useLocation } from 'react-router-dom'
 import { NotificationCache } from '../utils/notificationCache'
 
-type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies' | 'quotes' | 'images' | 'top-accounts'
+type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies' | 'quotes' | 'images' | 'top-accounts' | 'from-following'
 
 export const NotificationsFeed: React.FC = () => {
   const location = useLocation()
@@ -43,6 +44,7 @@ export const NotificationsFeed: React.FC = () => {
   } = useNotifications()
   const { data: unreadCount } = useUnreadCount()
   const { mutate: markAllAsRead, isPending: isMarkingAsRead } = useMarkNotificationsRead()
+  const { data: followingSet, isLoading: isLoadingFollowing } = useFollowing()
   
   const notifications = React.useMemo(() => {
     const timestamp = new Date().toLocaleTimeString()
@@ -155,7 +157,7 @@ export const NotificationsFeed: React.FC = () => {
         filtered = []
       }
     } else if (filter !== 'all' && filter !== 'top-accounts') {
-      const filterMap: Record<Exclude<NotificationFilter, 'all' | 'images' | 'top-accounts'>, string[]> = {
+      const filterMap: Record<Exclude<NotificationFilter, 'all' | 'images' | 'top-accounts' | 'from-following'>, string[]> = {
         likes: ['like'],
         reposts: ['repost'],
         follows: ['follow'],
@@ -163,7 +165,12 @@ export const NotificationsFeed: React.FC = () => {
         replies: ['reply'],
         quotes: ['quote']
       }
-      filtered = filtered.filter((n: Notification) => filterMap[filter as Exclude<NotificationFilter, 'all' | 'images' | 'top-accounts'>].includes(n.reason))
+      filtered = filtered.filter((n: Notification) => filterMap[filter as Exclude<NotificationFilter, 'all' | 'images' | 'top-accounts' | 'from-following'>].includes(n.reason))
+    }
+    
+    // Filter for notifications from people you follow
+    if (filter === 'from-following' && followingSet) {
+      filtered = filtered.filter((n: Notification) => followingSet.has(n.author.did))
     }
 
     if (showUnreadOnly) {
@@ -171,7 +178,7 @@ export const NotificationsFeed: React.FC = () => {
     }
 
     return filtered
-  }, [notifications, filter, showUnreadOnly, posts])
+  }, [notifications, filter, showUnreadOnly, posts, followingSet])
 
   // Create a map for quick post lookup
   const postMap = React.useMemo(() => {
@@ -289,6 +296,13 @@ export const NotificationsFeed: React.FC = () => {
             icon={<Image size={16} />}
             label="Images"
           />
+          <FilterTab
+            active={filter === 'from-following'}
+            onClick={() => setFilter('from-following')}
+            icon={<Users size={16} />}
+            label="Following"
+            disabled={isLoadingFollowing}
+          />
           {showTopAccounts && (
             <FilterTab
               active={filter === 'top-accounts'}
@@ -339,7 +353,7 @@ export const NotificationsFeed: React.FC = () => {
             <p className="text-sm mt-2">Check back later for updates</p>
           </div>
         ) : (
-          ['all', 'likes', 'reposts', 'follows', 'quotes'].includes(filter) ? (
+          ['all', 'likes', 'reposts', 'follows', 'quotes', 'from-following'].includes(filter) ? (
             // Show aggregated notifications for tabs that support aggregation
             (() => {
               const processedNotifications = aggregateNotifications(filteredNotifications)
@@ -526,14 +540,16 @@ interface FilterTabProps {
   onClick: () => void
   icon: React.ReactNode
   label: string
+  disabled?: boolean
 }
 
-const FilterTab: React.FC<FilterTabProps> = ({ active, onClick, icon, label }) => {
+const FilterTab: React.FC<FilterTabProps> = ({ active, onClick, icon, label, disabled }) => {
   return (
     <button
       onClick={onClick}
-      className={`bsky-tab flex items-center gap-1.5 ${active ? 'bsky-tab-active' : ''}`}
+      className={`bsky-tab flex items-center gap-1.5 ${active ? 'bsky-tab-active' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       title={label}
+      disabled={disabled}
     >
       <span style={{ opacity: active ? 1 : 0.7 }}>{icon}</span>
       <span className="bsky-tab-label">{label}</span>
