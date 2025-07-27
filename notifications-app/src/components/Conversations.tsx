@@ -387,35 +387,6 @@ export const Conversations: React.FC = () => {
     }
   }, [data?.pages, hasNextPage, isFetchingNextPage, fetchNextPage])
 
-  // Auto-scroll to most recent notification when conversation is selected
-  useEffect(() => {
-    if (selectedConvo && selectedConversation && threadContainerRef.current) {
-      // Give a small delay for the content to render and layout to stabilize
-      const scrollTimeout = setTimeout(() => {
-        // Find the most recent notification element
-        const mostRecentElement = document.querySelector(`[data-notification-uri="${selectedConversation.latestReply.uri}"]`)
-        
-        if (mostRecentElement) {
-          // First, ensure the thread container is at the top
-          threadContainerRef.current?.scrollTo(0, 0)
-          
-          // Then scroll to the most recent notification
-          mostRecentElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-          })
-          
-          // Add a visual highlight effect
-          mostRecentElement.classList.add('highlight-recent')
-          setTimeout(() => {
-            mostRecentElement.classList.remove('highlight-recent')
-          }, 2000)
-        }
-      }, 500) // Increased delay to ensure content is fully loaded
-      
-      return () => clearTimeout(scrollTimeout)
-    }
-  }, [selectedConvo, selectedConversation?.latestReply.uri])
 
   // Render thread nodes recursively
   const renderThreadNodes = (nodes: ThreadNode[], postMap: Map<string, Post>) => {
@@ -913,35 +884,112 @@ export const Conversations: React.FC = () => {
 
           {/* Thread View */}
           <div className="flex-1 overflow-y-auto p-4" ref={threadContainerRef}>
-            {/* Jump to recent button */}
-            {selectedConversation && selectedConversation.totalReplies > 3 && (
-              <div className="sticky top-0 z-10 flex justify-end mb-2">
-                <button
-                  onClick={() => {
-                    const mostRecentElement = document.querySelector(`[data-notification-uri="${selectedConversation.latestReply.uri}"]`)
-                    if (mostRecentElement) {
-                      mostRecentElement.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center'
-                      })
-                      // Add highlight effect
-                      mostRecentElement.classList.add('highlight-recent')
-                      setTimeout(() => {
-                        mostRecentElement.classList.remove('highlight-recent')
-                      }, 2000)
-                    }
-                  }}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium shadow-md transition-all hover:shadow-lg"
-                  style={{
-                    backgroundColor: 'var(--bsky-primary)',
-                    color: 'white'
-                  }}
-                >
-                  <ChevronDown size={16} />
-                  Jump to most recent
-                </button>
-              </div>
-            )}
+            {/* Most Recent Notification Summary Card */}
+            {selectedConversation && (() => {
+              const latestReplyPost = postMap.get(selectedConversation.latestReply.uri)
+              const latestReplyRecord = latestReplyPost?.record as any
+              const latestReplyAuthor = selectedConversation.latestReply.author
+              const latestReplyText = latestReplyRecord?.text || '[Loading reply...]'
+              const latestReplyUrl = latestReplyPost?.uri && latestReplyAuthor?.handle 
+                ? atUriToBskyUrl(latestReplyPost.uri, latestReplyAuthor.handle) 
+                : getNotificationUrl(selectedConversation.latestReply)
+              
+              return (
+                <div className="mb-4 p-4 rounded-lg shadow-sm" 
+                     style={{ 
+                       backgroundColor: 'var(--bsky-bg-tertiary)',
+                       border: '2px solid var(--bsky-primary)'
+                     }}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wide px-2 py-1 rounded" 
+                            style={{ 
+                              backgroundColor: 'var(--bsky-primary)', 
+                              color: 'white'
+                            }}>
+                        Most Recent Notification
+                      </span>
+                      <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
+                        {formatDistanceToNow(new Date(selectedConversation.latestReply.indexedAt), { addSuffix: true })}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const mostRecentElement = document.querySelector(`[data-notification-uri="${selectedConversation.latestReply.uri}"]`)
+                        if (mostRecentElement) {
+                          mostRecentElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                          })
+                          // Add highlight effect
+                          mostRecentElement.classList.add('highlight-recent')
+                          setTimeout(() => {
+                            mostRecentElement.classList.remove('highlight-recent')
+                          }, 2000)
+                        }
+                      }}
+                      className="text-xs px-2 py-1 rounded hover:bg-opacity-10 hover:bg-blue-500 transition-all flex items-center gap-1"
+                      style={{ color: 'var(--bsky-primary)' }}
+                    >
+                      <ChevronDown size={14} />
+                      Jump to context
+                    </button>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    {/* Avatar */}
+                    <div className="flex-shrink-0">
+                      {latestReplyAuthor?.avatar ? (
+                        <img 
+                          src={latestReplyAuthor.avatar} 
+                          alt={latestReplyAuthor.handle}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center" 
+                             style={{ background: 'var(--bsky-bg-secondary)' }}>
+                          <span className="text-sm font-semibold">
+                            {latestReplyAuthor?.handle?.charAt(0).toUpperCase() || 'U'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-1 mb-1">
+                        <span className="font-semibold text-sm" style={{ color: 'var(--bsky-text-primary)' }}>
+                          {latestReplyAuthor?.displayName || latestReplyAuthor?.handle || 'Unknown'}
+                        </span>
+                        <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
+                          @{latestReplyAuthor?.handle || 'unknown'}
+                        </span>
+                        <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                          replied to this thread
+                        </span>
+                      </div>
+                      
+                      <p className="text-sm mb-2" style={{ color: 'var(--bsky-text-primary)', lineHeight: '1.4' }}>
+                        {latestReplyText.length > 200 ? latestReplyText.substring(0, 200) + '...' : latestReplyText}
+                      </p>
+                      
+                      <a
+                        href={latestReplyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs hover:underline"
+                        style={{ color: 'var(--bsky-primary)' }}
+                      >
+                        <ExternalLink size={12} />
+                        View on Bluesky
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+            
+            {/* Thread content */}
             {threadTree && renderThreadNodes(threadTree, postMap)}
           </div>
 

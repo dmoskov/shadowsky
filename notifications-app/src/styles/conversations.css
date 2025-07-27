@@ -155,7 +155,7 @@ html {
   animation: slideIn 0.3s ease;
 }
 
-/* Highlight recent notification on scroll */
+/* Highlight effect for jump to context action */
 @keyframes highlightFlash {
   0% {
     box-shadow: 0 0 0 0 rgba(0, 133, 255, 0.8);
