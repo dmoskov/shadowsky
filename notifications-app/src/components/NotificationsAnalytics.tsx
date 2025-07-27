@@ -78,6 +78,10 @@ export const NotificationsAnalytics: React.FC = () => {
     },
     // Re-run when extended data changes
     enabled: !!agent,
+    staleTime: hasExtendedData ? 60 * 60 * 1000 : 30 * 60 * 1000, // 1 hour for extended data, 30 min for regular
+    gcTime: 2 * 60 * 60 * 1000, // Keep in cache for 2 hours
+    refetchOnMount: false, // Don't refetch on mount if data exists
+    refetchOnWindowFocus: false // Don't refetch on window focus
   })
 
   const analytics = React.useMemo(() => {
@@ -463,7 +467,7 @@ export const NotificationsAnalytics: React.FC = () => {
           background: 'radial-gradient(circle, var(--bsky-primary) 0%, transparent 70%)',
           transform: 'translate(30%, -30%)'
         }} />
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4" style={{ position: 'relative', zIndex: 10 }}>
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <Activity className="text-green-500" size={20} />
             Activity Timeline

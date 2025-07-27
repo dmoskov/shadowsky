@@ -44,7 +44,13 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
     return orderedUris
   }, [notifications])
 
-  const queryKey = ['notification-posts', postUris.slice(0, 100).sort().join(',')]
+  // Create a more stable query key that doesn't change with minor reordering
+  const queryKey = React.useMemo(() => {
+    // Use a hash of the first 100 URIs for stability
+    const urisForKey = postUris.slice(0, 100).sort()
+    const keyString = urisForKey.length > 0 ? urisForKey.join(',') : 'empty'
+    return ['notification-posts', keyString]
+  }, [postUris])
 
   const queryResult = useQuery({
     queryKey,
@@ -94,10 +100,11 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
       return posts
     },
     enabled: !!session && postUris.length > 0,
-    staleTime: 30 * 60 * 1000, // 30 minutes - posts don't change often
-    gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour (formerly cacheTime)
+    staleTime: 60 * 60 * 1000, // 1 hour - posts rarely change
+    gcTime: 2 * 60 * 60 * 1000, // Keep in cache for 2 hours
     refetchOnWindowFocus: false, // Don't refetch posts on window focus
     refetchOnMount: false, // Don't refetch when component remounts if data exists
+    refetchOnReconnect: false // Don't refetch on reconnect
   })
 
   // Progressive fetch for remaining posts

@@ -17,8 +17,8 @@ import { CacheStatus } from './components/CacheStatus'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
+      staleTime: 30 * 60 * 1000, // 30 minutes - increased to prevent frequent refetches
+      gcTime: 2 * 60 * 60 * 1000, // 2 hours - keep data in cache much longer
       retry: (failureCount, error: any) => {
         if (error?.status === 429) return false // Don't retry rate limits
         if (error?.status === 401) return false // Don't retry auth errors
@@ -27,7 +27,9 @@ const queryClient = new QueryClient({
       // Keep previous data while fetching new data
       keepPreviousData: true,
       // Don't refetch on window focus by default
-      refetchOnWindowFocus: false
+      refetchOnWindowFocus: false,
+      // Don't refetch on mount if data exists
+      refetchOnMount: false
     }
   }
 })
