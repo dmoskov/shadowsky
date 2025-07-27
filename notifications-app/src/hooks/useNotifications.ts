@@ -1,3 +1,4 @@
+import React from 'react'
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import { getNotificationService } from '../services/atproto/notifications'
@@ -12,7 +13,27 @@ export function useNotifications(priority?: boolean) {
   const { session } = useAuth()
   const queryClient = useQueryClient()
 
-  return useInfiniteQuery({
+  // Load cached data on mount
+  React.useEffect(() => {
+    if (session) {
+      try {
+        const cachedData = NotificationCache.load(priority)
+        if (cachedData && cachedData.pages && cachedData.pages.length > 0) {
+          console.log(`Loading ${cachedData.pages.reduce((sum, p) => sum + p.notifications.length, 0)} notifications from cache`)
+          queryClient.setQueryData(['notifications', priority], {
+            pages: cachedData.pages,
+            pageParams: [undefined, ...cachedData.pages.slice(0, -1).map(p => p.cursor)]
+          })
+        }
+      } catch (error) {
+        console.error('Failed to load from cache:', error)
+        // Clear corrupted cache
+        NotificationCache.clear(priority)
+      }
+    }
+  }, [session, priority, queryClient])
+
+  const query = useInfiniteQuery({
     queryKey: ['notifications', priority],
     queryFn: async ({ pageParam }) => {
       const { atProtoClient } = await import('../services/atproto')
@@ -57,25 +78,20 @@ export function useNotifications(priority?: boolean) {
     enabled: !!session,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes (was every minute!)
-    // Add React Query's persistence adapter for caching
-    onSuccess: (data) => {
-      // Save to localStorage when data is successfully fetched
-      if (data?.pages && data.pages.length > 0) {
-        NotificationCache.save(data.pages, priority)
-      }
-    },
-    // Try to load from cache on mount
-    placeholderData: () => {
-      const cachedData = NotificationCache.load(priority)
-      if (cachedData) {
-        return {
-          pages: cachedData.pages,
-          pageParams: [undefined, ...cachedData.pages.slice(0, -1).map(p => p.cursor)]
-        }
-      }
-      return undefined
-    }
   })
+
+  // Save to cache when data changes
+  React.useEffect(() => {
+    if (query.data?.pages && query.data.pages.length > 0 && !query.isLoading) {
+      try {
+        NotificationCache.save(query.data.pages, priority)
+      } catch (error) {
+        console.error('Failed to save to cache:', error)
+      }
+    }
+  }, [query.data, priority, query.isLoading])
+
+  return query
 }
 
 export function useUnreadNotificationCount() {
