@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
-import { Download, Loader2, Calendar, CheckCircle, RefreshCw, HardDrive } from 'lucide-react'
+import { Download, Loader2, Calendar, CheckCircle, RefreshCw, HardDrive, Database } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getNotificationService } from '../services/atproto/notifications'
 import { format, subDays } from 'date-fns'
 import { ExtendedFetchCache } from '../utils/extendedFetchCache'
 import { StorageManager } from '../utils/storageManager'
+import { NotificationCacheService } from '../services/notification-cache-service'
 
 export const ExtendedNotificationsFetcher: React.FC = () => {
   const { session } = useAuth()
@@ -18,6 +19,8 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
   })
   const [autoFetchTriggered, setAutoFetchTriggered] = useState(false)
   const [loadedFromStorage, setLoadedFromStorage] = useState(false)
+  const [cacheService] = useState(() => NotificationCacheService.getInstance())
+  const [isIndexedDBReady, setIsIndexedDBReady] = useState(false)
   
   // Check if we already have cached data
   const cachedData = queryClient.getQueryData(['notifications-extended']) as any
@@ -62,36 +65,94 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     staleTime: Infinity, // Don't auto-refetch
   })
 
-  // Load persisted data from localStorage on mount
+  // Initialize IndexedDB
   useEffect(() => {
-    if (!session || hasCachedData) return
-    
-    const persistedData = ExtendedFetchCache.loadData()
-    if (persistedData) {
-      console.log('📊 Loading extended notifications from localStorage')
-      // Set the data in React Query cache
-      queryClient.setQueryData(['notifications-extended'], {
-        pages: persistedData.pages,
-        pageParams: [undefined, ...persistedData.pages.slice(0, -1).map(p => p.cursor)]
-      })
-      
-      // Update progress state
-      const allNotifications = persistedData.pages.flatMap(page => page.notifications)
-      if (allNotifications.length > 0) {
-        const oldestNotification = allNotifications[allNotifications.length - 1]
-        const oldestDate = new Date(oldestNotification.indexedAt)
-        const daysReached = Math.floor((new Date().getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24))
-        
-        setProgress({
-          totalNotifications: allNotifications.length,
-          daysReached,
-          oldestDate
-        })
-        
-        setLoadedFromStorage(true)
+    const initCache = async () => {
+      try {
+        await cacheService.init()
+        setIsIndexedDBReady(true)
+      } catch (error) {
+        console.error('Failed to initialize IndexedDB:', error)
+        // Fall back to localStorage behavior
+        setIsIndexedDBReady(false)
       }
     }
-  }, [session])
+    initCache()
+  }, [])
+
+  // Load persisted data from IndexedDB or localStorage on mount
+  useEffect(() => {
+    if (!session || hasCachedData || !isIndexedDBReady) return
+    
+    const loadCachedData = async () => {
+      // First try IndexedDB
+      const hasCached = await cacheService.hasCachedData()
+      if (hasCached) {
+        console.log('📊 Loading extended notifications from IndexedDB')
+        const cachedResult = await cacheService.getCachedNotifications(10000) // Load up to 10k notifications
+        
+        if (cachedResult.notifications.length > 0) {
+          // Convert to React Query format
+          const pages = []
+          const pageSize = 100
+          for (let i = 0; i < cachedResult.notifications.length; i += pageSize) {
+            const pageNotifications = cachedResult.notifications.slice(i, i + pageSize)
+            pages.push({
+              notifications: pageNotifications,
+              cursor: i + pageSize < cachedResult.notifications.length ? `page-${i + pageSize}` : undefined
+            })
+          }
+          
+          queryClient.setQueryData(['notifications-extended'], {
+            pages,
+            pageParams: [undefined, ...pages.slice(0, -1).map((_, i) => `page-${(i + 1) * pageSize}`)]
+          })
+          
+          const oldestNotification = cachedResult.notifications[cachedResult.notifications.length - 1]
+          const oldestDate = new Date(oldestNotification.indexedAt)
+          const daysReached = Math.floor((new Date().getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24))
+          
+          setProgress({
+            totalNotifications: cachedResult.notifications.length,
+            daysReached,
+            oldestDate
+          })
+          
+          setLoadedFromStorage(true)
+          return
+        }
+      }
+      
+      // Fall back to localStorage if no IndexedDB data
+      const persistedData = ExtendedFetchCache.loadData()
+      if (persistedData) {
+        console.log('📊 Loading extended notifications from localStorage')
+        // Set the data in React Query cache
+        queryClient.setQueryData(['notifications-extended'], {
+          pages: persistedData.pages,
+          pageParams: [undefined, ...persistedData.pages.slice(0, -1).map(p => p.cursor)]
+        })
+        
+        // Update progress state
+        const allNotifications = persistedData.pages.flatMap(page => page.notifications)
+        if (allNotifications.length > 0) {
+          const oldestNotification = allNotifications[allNotifications.length - 1]
+          const oldestDate = new Date(oldestNotification.indexedAt)
+          const daysReached = Math.floor((new Date().getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24))
+          
+          setProgress({
+            totalNotifications: allNotifications.length,
+            daysReached,
+            oldestDate
+          })
+          
+          setLoadedFromStorage(true)
+        }
+      }
+    }
+    
+    loadCachedData()
+  }, [session, hasCachedData, isIndexedDBReady])
 
   // Auto-fetch missing notifications if we have recent 4-week data
   useEffect(() => {
@@ -234,7 +295,17 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           oldestDate
         })
         
-        // Save data and metadata about this fetch
+        // Save to IndexedDB
+        if (isIndexedDBReady) {
+          console.log('💾 Saving notifications to IndexedDB...')
+          for (let i = 0; i < finalData.pages.length; i++) {
+            const page = finalData.pages[i]
+            await cacheService.cacheNotifications(page.notifications, i + 1)
+          }
+          console.log('✅ Saved to IndexedDB')
+        }
+        
+        // Also save to localStorage for backward compatibility
         ExtendedFetchCache.saveData(
           finalData.pages,
           allNotifications.length,
@@ -327,11 +398,17 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
 
   const allNotifications = data?.pages.flatMap(page => page.notifications) || []
   
-  const handleClearData = () => {
+  const handleClearData = async () => {
     queryClient.removeQueries({ queryKey: ['notifications-extended'] })
     setFetchingStatus('idle')
     setProgress({ totalNotifications: 0, daysReached: 0, oldestDate: null })
     setLoadedFromStorage(false)
+    
+    // Clear IndexedDB
+    if (isIndexedDBReady) {
+      await cacheService.clearCache()
+    }
+    
     // Clear the metadata and data so we don't auto-fetch on next load
     ExtendedFetchCache.clearAll()
     // Invalidate the analytics query to refresh without extended data
@@ -556,11 +633,11 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
                 backgroundColor: 'rgba(59, 130, 246, 0.05)',
                 border: '1px solid rgba(59, 130, 246, 0.2)'
               }}>
-                <HardDrive size={16} style={{ color: 'var(--bsky-primary)' }} />
+                <Database size={16} style={{ color: 'var(--bsky-primary)' }} />
                 <div className="text-sm">
-                  <p className="font-medium">Storage Optimized</p>
+                  <p className="font-medium">IndexedDB Storage</p>
                   <p style={{ color: 'var(--bsky-text-secondary)' }}>
-                    Data automatically compressed to maximize storage efficiency
+                    Data stored in high-performance IndexedDB for instant access
                   </p>
                 </div>
               </div>

@@ -205,7 +205,7 @@ export function DebugConsole() {
             fontSize: '16px',
             fontWeight: 600
           }}>
-            Debug Console
+            Debug Console {indexedDBReady && '(IndexedDB)'}
           </span>
           {storageHealth && getHealthIcon()}
         </div>
@@ -394,6 +394,44 @@ export function DebugConsole() {
                     </div>
                   </div>
                 )}
+
+                {indexedDBStats && (
+                  <div style={{ 
+                    padding: '8px',
+                    background: 'var(--bsky-bg-primary)',
+                    borderRadius: '4px',
+                    border: '1px solid var(--bsky-success)'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <span style={{ fontSize: '12px', color: 'var(--bsky-text-secondary)' }}>
+                        IndexedDB Storage
+                      </span>
+                      <Database size={14} style={{ color: 'var(--bsky-success)' }} />
+                    </div>
+                    <div style={{ 
+                      fontSize: '14px', 
+                      color: 'var(--bsky-text-primary)',
+                      marginTop: '2px'
+                    }}>
+                      {indexedDBStats.totalNotifications.toLocaleString()} notifications
+                    </div>
+                    <div style={{ 
+                      fontSize: '11px', 
+                      color: 'var(--bsky-text-secondary)',
+                      marginTop: '2px'
+                    }}>
+                      {indexedDBStats.unreadCount} unread • {
+                        indexedDBStats.oldestNotification && indexedDBStats.newestNotification
+                          ? `${Math.floor((indexedDBStats.newestNotification.getTime() - indexedDBStats.oldestNotification.getTime()) / (1000 * 60 * 60 * 24))} days`
+                          : 'No data'
+                      }
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -468,6 +506,80 @@ export function DebugConsole() {
                 </div>
               </div>
 
+              {/* IndexedDB Stats */}
+              {indexedDBStats && (
+                <div style={{
+                  padding: '8px',
+                  background: 'var(--bsky-bg-primary)',
+                  borderRadius: '4px',
+                  marginBottom: '12px',
+                  border: '1px solid var(--bsky-success)20'
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    gap: '8px',
+                    marginBottom: '8px'
+                  }}>
+                    <Database size={16} style={{ color: 'var(--bsky-success)' }} />
+                    <span style={{ 
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      color: 'var(--bsky-text-primary)'
+                    }}>
+                      IndexedDB Storage
+                    </span>
+                  </div>
+                  <div style={{ 
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '8px',
+                    fontSize: '11px'
+                  }}>
+                    <div>
+                      <span style={{ color: 'var(--bsky-text-tertiary)' }}>Total Notifications:</span>
+                      <span style={{ color: 'var(--bsky-text-primary)', marginLeft: '4px' }}>
+                        {indexedDBStats.totalNotifications.toLocaleString()}
+                      </span>
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--bsky-text-tertiary)' }}>Unread:</span>
+                      <span style={{ color: 'var(--bsky-text-primary)', marginLeft: '4px' }}>
+                        {indexedDBStats.unreadCount.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  {Object.entries(indexedDBStats.reasonCounts).length > 0 && (
+                    <div style={{ marginTop: '8px' }}>
+                      <span style={{ 
+                        fontSize: '11px',
+                        color: 'var(--bsky-text-tertiary)'
+                      }}>
+                        By Type:
+                      </span>
+                      <div style={{ 
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '4px',
+                        marginTop: '4px'
+                      }}>
+                        {Object.entries(indexedDBStats.reasonCounts).map(([reason, count]) => (
+                          <span key={reason} style={{
+                            fontSize: '10px',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            background: 'var(--bsky-bg-secondary)',
+                            color: 'var(--bsky-text-secondary)'
+                          }}>
+                            {reason}: {count}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Storage Breakdown */}
               <div style={{ marginBottom: '12px' }}>
                 <div style={{ 
@@ -476,7 +588,7 @@ export function DebugConsole() {
                   marginBottom: '8px',
                   color: 'var(--bsky-text-secondary)'
                 }}>
-                  Storage Breakdown:
+                  LocalStorage Breakdown:
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {getStorageBreakdown().map(item => (
