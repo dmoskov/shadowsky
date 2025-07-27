@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { HardDrive, Database, Package, AlertCircle, CheckCircle, Trash2, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react'
 import { NotificationCache } from '../utils/notificationCache'
+import { NotificationObjectCache } from '../utils/notificationObjectCache'
 import { PostCache } from '../utils/postCache'
 import { StorageManager } from '../utils/storageManager'
 
@@ -15,6 +16,7 @@ interface StorageBreakdown {
 
 export function DebugConsole() {
   const [cacheInfo, setCacheInfo] = useState(NotificationCache.getCacheInfo())
+  const [notificationObjectCacheInfo, setNotificationObjectCacheInfo] = useState(NotificationObjectCache.getCacheInfo())
   const [postCacheInfo, setPostCacheInfo] = useState(PostCache.getCacheInfo())
   const [storageMetrics, setStorageMetrics] = useState<ReturnType<typeof StorageManager.getStorageMetrics> | null>(null)
   const [storageHealth, setStorageHealth] = useState<ReturnType<typeof StorageManager.getStorageHealth> | null>(null)
@@ -27,6 +29,7 @@ export function DebugConsole() {
 
   const updateMetrics = () => {
     setCacheInfo(NotificationCache.getCacheInfo())
+    setNotificationObjectCacheInfo(NotificationObjectCache.getCacheInfo())
     setPostCacheInfo(PostCache.getCacheInfo())
     setStorageMetrics(StorageManager.getStorageMetrics())
     setStorageHealth(StorageManager.getStorageHealth())
@@ -42,7 +45,7 @@ export function DebugConsole() {
     }
   }, [showDetails])
 
-  const handleClearCache = (type: 'priority' | 'all' | 'posts' | 'everything') => {
+  const handleClearCache = (type: 'priority' | 'all' | 'posts' | 'notifications' | 'everything') => {
     switch (type) {
       case 'priority':
         NotificationCache.clear(true)
@@ -53,8 +56,12 @@ export function DebugConsole() {
       case 'posts':
         PostCache.clear()
         break
+      case 'notifications':
+        NotificationObjectCache.clear()
+        break
       case 'everything':
         NotificationCache.clearAll()
+        NotificationObjectCache.clear()
         PostCache.clear()
         break
     }
@@ -92,6 +99,12 @@ export function DebugConsole() {
         category = breakdown.find(b => b.key === 'notifications')
         if (!category) {
           category = { key: 'notifications', label: 'Notifications Cache', size: 0, count: 0, color: '#3b82f6' }
+          breakdown.push(category)
+        }
+      } else if (item.key.includes('notification_objects')) {
+        category = breakdown.find(b => b.key === 'notification_objects')
+        if (!category) {
+          category = { key: 'notification_objects', label: 'Notification Objects', size: 0, count: 0, color: '#06b6d4' }
           breakdown.push(category)
         }
       } else if (item.key.includes('posts_cache')) {
@@ -159,7 +172,7 @@ export function DebugConsole() {
   }
 
   const totalNotifications = cacheInfo.priorityCacheSize + cacheInfo.allCacheSize
-  const totalCached = totalNotifications + postCacheInfo.postCount
+  const totalCached = totalNotifications + postCacheInfo.postCount + notificationObjectCacheInfo.notificationCount
 
   return (
     <div style={{
@@ -317,6 +330,38 @@ export function DebugConsole() {
                     {cacheInfo.allCacheSize.toLocaleString()} items
                   </div>
                 </div>
+
+                {notificationObjectCacheInfo.hasCache && (
+                  <div style={{ 
+                    padding: '8px',
+                    background: 'var(--bsky-bg-primary)',
+                    borderRadius: '4px'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <span style={{ fontSize: '12px', color: 'var(--bsky-text-secondary)' }}>
+                        Notification objects
+                      </span>
+                      <span style={{ 
+                        fontSize: '11px', 
+                        color: 'var(--bsky-primary)',
+                        fontWeight: 500
+                      }}>
+                        {notificationObjectCacheInfo.cacheAge} old
+                      </span>
+                    </div>
+                    <div style={{ 
+                      fontSize: '14px', 
+                      color: 'var(--bsky-text-primary)',
+                      marginTop: '2px'
+                    }}>
+                      {notificationObjectCacheInfo.notificationCount.toLocaleString()} notifications
+                    </div>
+                  </div>
+                )}
 
                 {postCacheInfo.hasCache && (
                   <div style={{ 

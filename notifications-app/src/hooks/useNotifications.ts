@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { getNotificationService } from '../services/atproto/notifications'
 import { useErrorHandler } from './useErrorHandler'
 import { NotificationCache } from '../utils/notificationCache'
+import { NotificationObjectCache } from '../utils/notificationObjectCache'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 
 const MAX_NOTIFICATIONS = 10000
@@ -93,6 +94,10 @@ export function useNotifications(priority: boolean = false) {
         const totalNotifications = data.pages.reduce((sum, p) => sum + p.notifications.length, 0)
         console.log(`💾 [${successTimestamp}] React Query onSuccess: Saving ${totalNotifications} notifications to cache`)
         NotificationCache.save(data.pages, priority)
+        
+        // Also save individual notifications to object cache
+        const allNotifications = data.pages.flatMap(page => page.notifications)
+        NotificationObjectCache.save(allNotifications)
       }
     },
     // Add onError handler to help debug issues
