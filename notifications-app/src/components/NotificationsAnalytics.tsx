@@ -9,7 +9,11 @@ export const NotificationsAnalytics: React.FC = () => {
   const { agent } = useAuth()
   const queryClient = useQueryClient()
 
-  // Query for current stats
+  // Check if we have extended data available
+  const extendedData = queryClient.getQueryData(['notifications-extended']) as any
+  const hasExtendedData = extendedData?.pages?.length > 0
+
+  // Query for current stats - only fetch if we don't have extended data
   const { data: currentStats, isLoading: isLoadingStats } = useQuery({
     queryKey: ['notifications-summary'],
     queryFn: async () => {
@@ -17,12 +21,9 @@ export const NotificationsAnalytics: React.FC = () => {
       const response = await agent.app.bsky.notification.listNotifications({ limit: 50 })
       return response.data
     },
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: 30000, // Refresh every 30 seconds
+    enabled: !hasExtendedData // Don't fetch if we have extended data
   })
-
-  // Check if we have extended data available
-  const extendedData = queryClient.getQueryData(['notifications-extended']) as any
-  const hasExtendedData = extendedData?.pages?.length > 0
 
   // Query for analytics data - use extended data if available
   const { data: notifications } = useQuery({
@@ -151,8 +152,30 @@ export const NotificationsAnalytics: React.FC = () => {
     }
   }, [notifications])
 
-  // Calculate current stats
+  // Calculate current stats - use analytics data if we have extended data
   const stats = React.useMemo(() => {
+    // If we have extended data, calculate stats from the analytics data
+    if (hasExtendedData && notifications?.notifications) {
+      // Get notifications from the last 24 hours for "recent" stats
+      const oneDayAgo = subDays(new Date(), 1)
+      const recentNotifications = notifications.notifications.filter(
+        n => new Date(n.indexedAt) >= oneDayAgo
+      )
+      
+      const counts = {
+        total: recentNotifications.length,
+        unread: 0, // Extended data doesn't include read status
+        likes: recentNotifications.filter(n => n.reason === 'like').length,
+        reposts: recentNotifications.filter(n => n.reason === 'repost').length,
+        follows: recentNotifications.filter(n => n.reason === 'follow').length,
+        mentions: recentNotifications.filter(n => n.reason === 'mention').length,
+        replies: recentNotifications.filter(n => n.reason === 'reply').length,
+      }
+      
+      return counts
+    }
+    
+    // Otherwise use the current stats query
     if (!currentStats) return null
 
     const counts = {
@@ -166,7 +189,7 @@ export const NotificationsAnalytics: React.FC = () => {
     }
 
     return counts
-  }, [currentStats])
+  }, [currentStats, hasExtendedData, notifications])
 
   if (!analytics || isLoadingStats) {
     return (
@@ -187,8 +210,21 @@ export const NotificationsAnalytics: React.FC = () => {
         <h1 className="text-2xl font-bold mb-2 flex items-center gap-2">
           <BarChart3 className="text-blue-500" />
           Analytics Dashboard
+          {hasExtendedData && (
+            <span className="text-sm font-normal px-2 py-1 rounded" style={{ 
+              backgroundColor: 'var(--bsky-bg-tertiary)', 
+              color: 'var(--bsky-primary)' 
+            }}>
+              Extended Data
+            </span>
+          )}
         </h1>
-        <p style={{ color: 'var(--bsky-text-secondary)' }}>Monitor your Bluesky activity and engagement metrics</p>
+        <p style={{ color: 'var(--bsky-text-secondary)' }}>
+          {hasExtendedData 
+            ? `Analyzing ${analytics?.daySpan || 0} days of notification history`
+            : 'Monitor your Bluesky activity and engagement metrics'
+          }
+        </p>
       </div>
 
       {/* Extended Notifications Fetcher */}
@@ -196,30 +232,61 @@ export const NotificationsAnalytics: React.FC = () => {
 
       {/* Current Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={Bell}
-          label="Total Notifications"
-          value={stats?.total || 0}
-          color="blue"
-        />
-        <StatCard
-          icon={Clock}
-          label="Unread"
-          value={stats?.unread || 0}
-          color="yellow"
-        />
-        <StatCard
-          icon={Heart}
-          label="Likes"
-          value={stats?.likes || 0}
-          color="pink"
-        />
-        <StatCard
-          icon={UserPlus}
-          label="New Followers"
-          value={stats?.follows || 0}
-          color="green"
-        />
+        {hasExtendedData ? (
+          <>
+            <StatCard
+              icon={Clock}
+              label="Last 24 Hours"
+              value={stats?.total || 0}
+              color="blue"
+            />
+            <StatCard
+              icon={TrendingUp}
+              label="Daily Average"
+              value={Math.round(analytics?.averagePerDay || 0)}
+              color="green"
+            />
+            <StatCard
+              icon={Heart}
+              label="Today's Likes"
+              value={stats?.likes || 0}
+              color="pink"
+            />
+            <StatCard
+              icon={UserPlus}
+              label="Today's Followers"
+              value={stats?.follows || 0}
+              color="purple"
+            />
+          </>
+        ) : (
+          <>
+            <StatCard
+              icon={Bell}
+              label="Recent Activity"
+              value={stats?.total || 0}
+              color="blue"
+            />
+            <StatCard
+              icon={Clock}
+              label="Unread"
+              value={stats?.unread || 0}
+              color="yellow"
+            />
+            <StatCard
+              icon={Heart}
+              label="Likes"
+              value={stats?.likes || 0}
+              color="pink"
+            />
+            <StatCard
+              icon={UserPlus}
+              label="New Followers"
+              value={stats?.follows || 0}
+              color="green"
+            />
+          </>
+        )}
       </div>
 
       {/* Summary Stats */}
@@ -229,7 +296,14 @@ export const NotificationsAnalytics: React.FC = () => {
             <TrendingUp className="text-green-500" size={24} />
             <span className="text-2xl font-bold">{analytics.totalEngagement}</span>
           </div>
-          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Notifications Received ({analytics.daySpan} day{analytics.daySpan !== 1 ? 's' : ''})</p>
+          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+            Total in {analytics.daySpan} day{analytics.daySpan !== 1 ? 's' : ''}
+            {analytics.oldestDate && analytics.newestDate && (
+              <span className="block text-xs mt-1">
+                {format(analytics.oldestDate, 'MMM d')} - {format(analytics.newestDate, 'MMM d')}
+              </span>
+            )}
+          </p>
         </div>
         
         <div className="bsky-card p-4">
@@ -237,27 +311,56 @@ export const NotificationsAnalytics: React.FC = () => {
             <Users className="text-blue-500" size={24} />
             <span className="text-2xl font-bold">{analytics.uniqueUsers}</span>
           </div>
-          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Users Who Interacted</p>
+          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Unique Users</p>
         </div>
         
         <div className="bsky-card p-4">
           <div className="flex items-center justify-between mb-2">
-            <MessageCircle className="text-purple-500" size={24} />
+            <BarChart3 className="text-purple-500" size={24} />
             <span className="text-2xl font-bold">{analytics.averagePerDay.toFixed(1)}</span>
           </div>
-          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Avg Notifications per Day</p>
+          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Daily Average</p>
         </div>
       </div>
 
       {/* Notification Breakdown */}
       <div className="bsky-card p-6">
-        <h2 className="text-lg font-semibold mb-4">Notification Breakdown</h2>
+        <h2 className="text-lg font-semibold mb-4">
+          {hasExtendedData ? `Notification Types (${analytics.daySpan} days)` : 'Recent Notification Types'}
+        </h2>
         <div className="space-y-3">
-          <NotificationTypeBar label="Likes" count={stats?.likes || 0} total={stats?.total || 1} color="pink" />
-          <NotificationTypeBar label="Reposts" count={stats?.reposts || 0} total={stats?.total || 1} color="green" />
-          <NotificationTypeBar label="Replies" count={stats?.replies || 0} total={stats?.total || 1} color="blue" />
-          <NotificationTypeBar label="Mentions" count={stats?.mentions || 0} total={stats?.total || 1} color="purple" />
-          <NotificationTypeBar label="Follows" count={stats?.follows || 0} total={stats?.total || 1} color="indigo" />
+          {hasExtendedData && notifications?.notifications ? (
+            // Use full dataset for extended data
+            (() => {
+              const fullCounts = {
+                likes: notifications.notifications.filter(n => n.reason === 'like').length,
+                reposts: notifications.notifications.filter(n => n.reason === 'repost').length,
+                replies: notifications.notifications.filter(n => n.reason === 'reply').length,
+                mentions: notifications.notifications.filter(n => n.reason === 'mention').length,
+                follows: notifications.notifications.filter(n => n.reason === 'follow').length,
+              }
+              const total = analytics.totalEngagement
+              
+              return (
+                <>
+                  <NotificationTypeBar label="Likes" count={fullCounts.likes} total={total} color="pink" />
+                  <NotificationTypeBar label="Reposts" count={fullCounts.reposts} total={total} color="green" />
+                  <NotificationTypeBar label="Replies" count={fullCounts.replies} total={total} color="blue" />
+                  <NotificationTypeBar label="Mentions" count={fullCounts.mentions} total={total} color="purple" />
+                  <NotificationTypeBar label="Follows" count={fullCounts.follows} total={total} color="indigo" />
+                </>
+              )
+            })()
+          ) : (
+            // Use stats for recent data
+            <>
+              <NotificationTypeBar label="Likes" count={stats?.likes || 0} total={stats?.total || 1} color="pink" />
+              <NotificationTypeBar label="Reposts" count={stats?.reposts || 0} total={stats?.total || 1} color="green" />
+              <NotificationTypeBar label="Replies" count={stats?.replies || 0} total={stats?.total || 1} color="blue" />
+              <NotificationTypeBar label="Mentions" count={stats?.mentions || 0} total={stats?.total || 1} color="purple" />
+              <NotificationTypeBar label="Follows" count={stats?.follows || 0} total={stats?.total || 1} color="indigo" />
+            </>
+          )}
         </div>
       </div>
 
@@ -381,6 +484,7 @@ const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, value, color }) 
     yellow: { backgroundColor: 'rgba(250, 204, 21, 0.1)', color: '#facc15', borderColor: 'rgba(250, 204, 21, 0.3)' },
     pink: { backgroundColor: 'rgba(236, 72, 153, 0.1)', color: '#ec4899', borderColor: 'rgba(236, 72, 153, 0.3)' },
     green: { backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderColor: 'rgba(34, 197, 94, 0.3)' },
+    purple: { backgroundColor: 'rgba(147, 51, 234, 0.1)', color: '#9333ea', borderColor: 'rgba(147, 51, 234, 0.3)' },
   }
 
   const style = colorStyles[color as keyof typeof colorStyles]

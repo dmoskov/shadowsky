@@ -173,6 +173,14 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
 
   const allNotifications = data?.pages.flatMap(page => page.notifications) || []
   
+  const handleClearData = () => {
+    queryClient.removeQueries({ queryKey: ['notifications-extended'] })
+    setFetchingStatus('idle')
+    setProgress({ totalNotifications: 0, daysReached: 0, oldestDate: null })
+    // Invalidate the analytics query to refresh without extended data
+    queryClient.invalidateQueries({ queryKey: ['notifications-analytics'] })
+  }
+  
   return (
     <div className="bsky-card p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
@@ -186,28 +194,39 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           </p>
         </div>
         
-        <button
-          onClick={handleFetch4Weeks}
-          disabled={!session || fetchingStatus === 'fetching'}
-          className="bsky-button-primary flex items-center gap-2"
-        >
-          {fetchingStatus === 'fetching' ? (
-            <>
-              <Loader2 className="animate-spin" size={16} />
-              Fetching...
-            </>
-          ) : fetchingStatus === 'complete' ? (
-            <>
-              <CheckCircle size={16} />
-              Complete
-            </>
-          ) : (
-            <>
-              <Download size={16} />
-              Fetch 4 Weeks
-            </>
+        <div className="flex gap-2">
+          {fetchingStatus === 'complete' && (
+            <button
+              onClick={handleClearData}
+              className="bsky-button-secondary flex items-center gap-2"
+            >
+              Clear Data
+            </button>
           )}
-        </button>
+          
+          <button
+            onClick={handleFetch4Weeks}
+            disabled={!session || fetchingStatus === 'fetching'}
+            className="bsky-button-primary flex items-center gap-2"
+          >
+            {fetchingStatus === 'fetching' ? (
+              <>
+                <Loader2 className="animate-spin" size={16} />
+                Fetching...
+              </>
+            ) : fetchingStatus === 'complete' ? (
+              <>
+                <CheckCircle size={16} />
+                Re-fetch
+              </>
+            ) : (
+              <>
+                <Download size={16} />
+                Fetch 4 Weeks
+              </>
+            )}
+          </button>
+        </div>
       </div>
       
       {fetchingStatus !== 'idle' && (
