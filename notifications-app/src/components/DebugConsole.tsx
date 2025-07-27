@@ -22,18 +22,45 @@ export function DebugConsole() {
   const [storageHealth, setStorageHealth] = useState<ReturnType<typeof StorageManager.getStorageHealth> | null>(null)
   const [showDetails, setShowDetails] = useState(false)
   const [activeTab, setActiveTab] = useState<'cache' | 'storage'>('cache')
+  const [indexedDBStats, setIndexedDBStats] = useState<any>(null)
+  const [indexedDBReady, setIndexedDBReady] = useState(false)
   
   // Check for debug mode
   const urlParams = new URLSearchParams(window.location.search)
   const debugMode = urlParams.has('debug')
 
-  const updateMetrics = () => {
+  const updateMetrics = async () => {
     setCacheInfo(NotificationCache.getCacheInfo())
     setNotificationObjectCacheInfo(NotificationObjectCache.getCacheInfo())
     setPostCacheInfo(PostCache.getCacheInfo())
     setStorageMetrics(StorageManager.getStorageMetrics())
     setStorageHealth(StorageManager.getStorageHealth())
+    
+    // Get IndexedDB stats if available
+    if (indexedDBReady) {
+      try {
+        const cacheService = NotificationCacheService.getInstance()
+        const stats = await cacheService.getCacheStats()
+        setIndexedDBStats(stats)
+      } catch (error) {
+        console.error('Failed to get IndexedDB stats:', error)
+      }
+    }
   }
+
+  useEffect(() => {
+    // Initialize IndexedDB
+    const initIndexedDB = async () => {
+      try {
+        const cacheService = NotificationCacheService.getInstance()
+        await cacheService.init()
+        setIndexedDBReady(true)
+      } catch (error) {
+        console.error('Failed to initialize IndexedDB:', error)
+      }
+    }
+    initIndexedDB()
+  }, [])
 
   useEffect(() => {
     updateMetrics()
@@ -43,7 +70,7 @@ export function DebugConsole() {
       const interval = setInterval(updateMetrics, 5000)
       return () => clearInterval(interval)
     }
-  }, [showDetails])
+  }, [showDetails, indexedDBReady])
 
   const handleClearCache = (type: 'priority' | 'all' | 'posts' | 'notifications' | 'everything') => {
     switch (type) {
