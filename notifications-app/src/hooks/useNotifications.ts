@@ -12,15 +12,31 @@ const MAX_DAYS = 28 // 4 weeks
 export function useNotifications(priority?: boolean) {
   const { session } = useAuth()
 
+  // Try to load cached data first
+  const cachedData = session ? NotificationCache.load(priority) : null
+  const timestamp = new Date().toLocaleTimeString()
+  
+  if (cachedData) {
+    console.log(`🚀 [${timestamp}] React Query: Using cached data as initialData`)
+  } else {
+    console.log(`🚀 [${timestamp}] React Query: No cache found, will fetch from API`)
+  }
+
   return useInfiniteQuery({
     queryKey: ['notifications', priority],
     queryFn: async ({ pageParam }) => {
+      const fetchTimestamp = new Date().toLocaleTimeString()
+      console.log(`🌐 [${fetchTimestamp}] React Query: Making API call (cursor: ${pageParam || 'none'})`)
+      
       // This is the ONLY place where rate limiting applies - actual API calls
       const { atProtoClient } = await import('../services/atproto')
       const agent = atProtoClient.agent
       if (!agent) throw new Error('Not authenticated')
       const notificationService = getNotificationService(agent)
-      return notificationService.listNotifications(pageParam, priority)
+      const result = await notificationService.listNotifications(pageParam, priority)
+      
+      console.log(`✅ [${fetchTimestamp}] React Query: API call completed, got ${result.notifications.length} notifications`)
+      return result
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage, allPages) => {
@@ -28,11 +44,11 @@ export function useNotifications(priority?: boolean) {
       const totalNotifications = allPages.reduce((sum, page) => sum + page.notifications.length, 0)
       
       // Log progress
-      console.log(`Fetched ${totalNotifications} notifications so far...`)
+      console.log(`📊 Fetched ${totalNotifications} notifications so far...`)
       
       // Stop if we've reached max notifications
       if (totalNotifications >= MAX_NOTIFICATIONS) {
-        console.log(`Reached max notifications limit (${MAX_NOTIFICATIONS})`)
+        console.log(`🛑 Reached max notifications limit (${MAX_NOTIFICATIONS})`)
         return undefined
       }
 
@@ -46,7 +62,7 @@ export function useNotifications(priority?: boolean) {
           maxDaysAgo.setDate(maxDaysAgo.getDate() - MAX_DAYS)
           
           if (oldestDate < maxDaysAgo) {
-            console.log(`Reached 4-week limit. Oldest notification: ${oldestDate.toLocaleDateString()}`)
+            console.log(`⏰ Reached 4-week limit. Oldest notification: ${oldestDate.toLocaleDateString()}`)
             return undefined
           }
         }
@@ -56,29 +72,21 @@ export function useNotifications(priority?: boolean) {
       return lastPage.cursor
     },
     enabled: !!session,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes (was every minute!)
-    // Load from cache WITHOUT any rate limiting - this is just local storage access
-    placeholderData: () => {
-      const cachedData = NotificationCache.load(priority)
-      if (cachedData) {
-        console.log(`Loading ${cachedData.pages.reduce((sum, p) => sum + p.notifications.length, 0)} notifications from cache (no rate limit)`)
-        return {
-          pages: cachedData.pages,
-          pageParams: [undefined, ...cachedData.pages.slice(0, -1).map(p => p.cursor)]
-        }
-      }
-      return undefined
-    },
+    staleTime: cachedData ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000, // If we have cache, treat as fresh for 24h, otherwise 5min
+    refetchInterval: false, // Disable automatic refetching to rely on cache
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    // Use cached data as initial data if available
+    initialData: cachedData ? {
+      pages: cachedData.pages,
+      pageParams: [undefined, ...cachedData.pages.slice(0, -1).map(p => p.cursor)]
+    } : undefined,
     // Save to cache after successful API fetch
     onSuccess: (data) => {
+      const successTimestamp = new Date().toLocaleTimeString()
       if (data?.pages && data.pages.length > 0) {
-        try {
-          console.log(`Saving ${data.pages.reduce((sum, p) => sum + p.notifications.length, 0)} notifications to cache`)
-          NotificationCache.save(data.pages, priority)
-        } catch (error) {
-          console.error('Failed to save to cache:', error)
-        }
+        const totalNotifications = data.pages.reduce((sum, p) => sum + p.notifications.length, 0)
+        console.log(`💾 [${successTimestamp}] React Query onSuccess: Saving ${totalNotifications} notifications to cache`)
+        NotificationCache.save(data.pages, priority)
       }
     }
   })

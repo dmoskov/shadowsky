@@ -50,12 +50,28 @@ export const NotificationsFeed: React.FC = () => {
 
   // Check if data is from cache
   useEffect(() => {
+    const timestamp = new Date().toLocaleTimeString()
     const cacheInfo = NotificationCache.getCacheInfo()
+    
+    console.log(`🎯 [${timestamp}] Cache indicator check:`, {
+      hasAllCache: cacheInfo.hasAllCache,
+      isLoading,
+      notificationsCount: notifications.length,
+      priority: false // This component always uses priority=false
+    })
+    
     if (cacheInfo.hasAllCache && !isLoading && notifications.length > 0) {
+      console.log(`✨ [${timestamp}] Showing cache indicator for ${notifications.length} notifications`)
       setIsFromCache(true)
-      // Hide the indicator after 3 seconds
-      const timer = setTimeout(() => setIsFromCache(false), 3000)
+      // Hide the indicator after 5 seconds (increased from 3)
+      const timer = setTimeout(() => {
+        console.log(`🫥 [${timestamp}] Hiding cache indicator`)
+        setIsFromCache(false)
+      }, 5000)
       return () => clearTimeout(timer)
+    } else {
+      console.log(`❌ [${timestamp}] Not showing cache indicator - conditions not met`)
+      setIsFromCache(false)
     }
   }, [isLoading, notifications.length])
 
