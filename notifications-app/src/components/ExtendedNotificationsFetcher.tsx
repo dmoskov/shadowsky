@@ -36,6 +36,9 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     }
   }, [hasCachedData, cachedNotifications])
 
+  // Check for recent extended fetch metadata
+  const fetchInfo = ExtendedFetchCache.getFetchInfo()
+  
   const {
     data,
     fetchNextPage,
@@ -56,6 +59,17 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     enabled: false, // Manual trigger only
     staleTime: Infinity, // Don't auto-refetch
   })
+
+  // Auto-fetch missing notifications if we have recent 4-week data
+  useEffect(() => {
+    if (!session || autoFetchTriggered || hasCachedData || fetchingStatus !== 'idle') return
+    
+    if (fetchInfo.shouldAutoFetch && fetchInfo.metadata) {
+      console.log('🔄 Auto-fetching missing notifications due to recent 4-week fetch')
+      setAutoFetchTriggered(true)
+      handleFetchMissing()
+    }
+  }, [session, autoFetchTriggered, hasCachedData, fetchingStatus, fetchInfo.shouldAutoFetch])
 
   const handleFetch4Weeks = async () => {
     setFetchingStatus('fetching')
@@ -175,6 +189,92 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       const allNotifications = finalData.pages.flatMap((page: any) => page.notifications)
       if (allNotifications.length > 0) {
         const oldestNotification = allNotifications[allNotifications.length - 1]
+        const newestNotification = allNotifications[0]
+        const oldestDate = new Date(oldestNotification.indexedAt)
+        const newestDate = new Date(newestNotification.indexedAt)
+        const daysReached = Math.floor((new Date().getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24))
+        
+        setProgress({
+          totalNotifications: allNotifications.length,
+          daysReached,
+          oldestDate
+        })
+        
+        // Save metadata about this fetch
+        ExtendedFetchCache.saveMetadata(
+          allNotifications.length,
+          oldestDate,
+          newestDate,
+          daysReached
+        )
+      }
+    }
+    
+    setFetchingStatus('complete')
+    
+    // Invalidate the analytics query to use the new extended data
+    queryClient.invalidateQueries({ queryKey: ['notifications-analytics'] })
+  }
+
+  const handleFetchMissing = async () => {
+    setFetchingStatus('fetching')
+    
+    const metadata = fetchInfo.metadata
+    if (!metadata) return
+    
+    console.log('📊 Fetching notifications since last extended fetch')
+    
+    // Start fetching from the beginning
+    const initialResult = await refetch()
+    
+    if (!initialResult.isSuccess || !initialResult.data) {
+      setFetchingStatus('idle')
+      return
+    }
+    
+    // Fetch until we reach the newest notification from our last fetch
+    const targetDate = new Date(metadata.newestNotificationDate)
+    let shouldContinue = true
+    let currentPage = 1
+    
+    while (shouldContinue && hasNextPage) {
+      const latestData = queryClient.getQueryData(['notifications-extended']) as any
+      if (latestData?.pages) {
+        const allNotifs = latestData.pages.flatMap((page: any) => page.notifications)
+        
+        // Check if we've reached notifications we already have
+        const oldestInBatch = allNotifs[allNotifs.length - 1]
+        if (oldestInBatch) {
+          const oldestDate = new Date(oldestInBatch.indexedAt)
+          if (oldestDate <= targetDate) {
+            console.log('✅ Reached previously fetched notifications')
+            shouldContinue = false
+            break
+          }
+        }
+      }
+      
+      if (shouldContinue) {
+        currentPage++
+        const result = await fetchNextPage()
+        if (result.isError || !result.hasNextPage) {
+          shouldContinue = false
+        }
+      }
+      
+      // Safety limit
+      if (currentPage > 10) {
+        console.log('Reached page limit for missing notifications')
+        shouldContinue = false
+      }
+    }
+    
+    // Update progress
+    const finalData = queryClient.getQueryData(['notifications-extended']) as any
+    if (finalData?.pages) {
+      const allNotifications = finalData.pages.flatMap((page: any) => page.notifications)
+      if (allNotifications.length > 0) {
+        const oldestNotification = allNotifications[allNotifications.length - 1]
         const oldestDate = new Date(oldestNotification.indexedAt)
         const daysReached = Math.floor((new Date().getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24))
         
@@ -187,8 +287,6 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     }
     
     setFetchingStatus('complete')
-    
-    // Invalidate the analytics query to use the new extended data
     queryClient.invalidateQueries({ queryKey: ['notifications-analytics'] })
   }
 
@@ -198,6 +296,8 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     queryClient.removeQueries({ queryKey: ['notifications-extended'] })
     setFetchingStatus('idle')
     setProgress({ totalNotifications: 0, daysReached: 0, oldestDate: null })
+    // Clear the metadata so we don't auto-fetch on next load
+    ExtendedFetchCache.clearMetadata()
     // Invalidate the analytics query to refresh without extended data
     queryClient.invalidateQueries({ queryKey: ['notifications-analytics'] })
   }
@@ -224,10 +324,21 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
                 Data Loaded
               </span>
             )}
+            {!hasCachedData && fetchInfo.hasRecentFullFetch && (
+              <span className="text-xs px-2 py-1 rounded-full" style={{
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                color: 'var(--bsky-primary)',
+                border: '1px solid rgba(59, 130, 246, 0.3)'
+              }}>
+                Recent fetch {fetchInfo.hoursSinceLastFetch?.toFixed(1)}h ago
+              </span>
+            )}
           </h2>
           <p className="text-sm mt-1" style={{ color: 'var(--bsky-text-secondary)' }}>
             {hasCachedData 
               ? `Currently viewing ${cachedStats?.totalNotifications || 0} notifications from ${cachedStats?.daysReached || 0} days`
+              : fetchInfo.hasRecentFullFetch && fetchInfo.metadata
+              ? `Last fetched ${fetchInfo.metadata.totalNotificationsFetched} notifications (${fetchInfo.metadata.daysReached} days) • Auto-updating...`
               : 'Fetch up to 4 weeks of notification history for deeper analytics'
             }
           </p>
@@ -255,18 +366,25 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
             style={{
               background: hasCachedData 
                 ? 'linear-gradient(135deg, var(--bsky-success) 0%, #059669 100%)'
+                : fetchingStatus === 'fetching' && autoFetchTriggered
+                ? 'linear-gradient(135deg, var(--bsky-info) 0%, #3b82f6 100%)'
                 : 'linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)'
             }}
           >
             {fetchingStatus === 'fetching' ? (
               <>
                 <Loader2 className="animate-spin" size={16} />
-                Fetching...
+                {autoFetchTriggered ? 'Auto-updating...' : 'Fetching...'}
               </>
             ) : hasCachedData ? (
               <>
                 <CheckCircle size={16} />
                 Update Data
+              </>
+            ) : fetchInfo.hasRecentFullFetch ? (
+              <>
+                <RefreshCw size={16} />
+                Refresh Full History
               </>
             ) : (
               <>
@@ -307,6 +425,19 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       
       {fetchingStatus !== 'idle' && (
         <div className="space-y-3">
+          {autoFetchTriggered && fetchingStatus === 'fetching' && (
+            <div className="mb-3 p-3 rounded-lg flex items-center gap-2" style={{
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              border: '1px solid rgba(59, 130, 246, 0.3)'
+            }}>
+              <RefreshCw className="animate-spin text-blue-500" size={16} />
+              <p className="text-sm">
+                <span className="font-medium">Auto-updating notifications</span>
+                <span style={{ color: 'var(--bsky-text-secondary)' }}> • Fetching notifications since your last 4-week download</span>
+              </p>
+            </div>
+          )}
+          
           <div className="flex justify-between text-sm">
             <span className="font-medium">Fetching Progress</span>
             <span style={{ color: 'var(--bsky-text-secondary)' }}>
