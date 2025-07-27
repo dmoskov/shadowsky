@@ -12,6 +12,7 @@ export const NotificationsAnalytics: React.FC = () => {
   const { agent } = useAuth()
   const queryClient = useQueryClient()
   const [timeRange, setTimeRange] = React.useState<TimeRange>('7d')
+  
 
   // Check if we have extended data available
   const extendedData = queryClient.getQueryData(['notifications-extended']) as any
@@ -96,6 +97,7 @@ export const NotificationsAnalytics: React.FC = () => {
     const filteredNotifications = notifications.notifications.filter(
       n => new Date(n.indexedAt) >= cutoffDate
     )
+    
     
     if (filteredNotifications.length === 0) return null
     
@@ -458,42 +460,66 @@ export const NotificationsAnalytics: React.FC = () => {
           </h2>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setTimeRange('1d')}
-              className="px-3 py-1 text-sm rounded-lg transition-all"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setTimeRange('1d')
+              }}
+              className="px-3 py-1 text-sm rounded-lg transition-all cursor-pointer hover:opacity-80"
               style={{
                 backgroundColor: timeRange === '1d' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
-                color: timeRange === '1d' ? 'white' : 'var(--bsky-text-secondary)'
+                color: timeRange === '1d' ? 'white' : 'var(--bsky-text-secondary)',
+                border: 'none'
               }}
+              type="button"
             >
               24h
             </button>
             <button
-              onClick={() => setTimeRange('3d')}
-              className="px-3 py-1 text-sm rounded-lg transition-all"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setTimeRange('3d')
+              }}
+              className="px-3 py-1 text-sm rounded-lg transition-all cursor-pointer hover:opacity-80"
               style={{
                 backgroundColor: timeRange === '3d' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
-                color: timeRange === '3d' ? 'white' : 'var(--bsky-text-secondary)'
+                color: timeRange === '3d' ? 'white' : 'var(--bsky-text-secondary)',
+                border: 'none'
               }}
+              type="button"
             >
               3d
             </button>
             <button
-              onClick={() => setTimeRange('7d')}
-              className="px-3 py-1 text-sm rounded-lg transition-all"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setTimeRange('7d')
+              }}
+              className="px-3 py-1 text-sm rounded-lg transition-all cursor-pointer hover:opacity-80"
               style={{
                 backgroundColor: timeRange === '7d' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
-                color: timeRange === '7d' ? 'white' : 'var(--bsky-text-secondary)'
+                color: timeRange === '7d' ? 'white' : 'var(--bsky-text-secondary)',
+                border: 'none'
               }}
+              type="button"
             >
               7d
             </button>
             <button
-              onClick={() => setTimeRange('4w')}
-              className="px-3 py-1 text-sm rounded-lg transition-all"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setTimeRange('4w')
+              }}
+              className="px-3 py-1 text-sm rounded-lg transition-all cursor-pointer hover:opacity-80"
               style={{
                 backgroundColor: timeRange === '4w' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
-                color: timeRange === '4w' ? 'white' : 'var(--bsky-text-secondary)'
+                color: timeRange === '4w' ? 'white' : 'var(--bsky-text-secondary)',
+                border: 'none'
               }}
+              type="button"
             >
               4w
             </button>
