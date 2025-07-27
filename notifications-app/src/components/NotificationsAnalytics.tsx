@@ -26,8 +26,9 @@ export const NotificationsAnalytics: React.FC = () => {
       const response = await agent.app.bsky.notification.listNotifications({ limit: 50 })
       return response.data
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
-    enabled: !hasExtendedData // Don't fetch if we have extended data
+    refetchInterval: false, // Disable automatic polling to prevent flicker
+    enabled: !hasExtendedData, // Don't fetch if we have extended data
+    refetchOnWindowFocus: false
   })
 
   // Query for analytics data - use extended data if available

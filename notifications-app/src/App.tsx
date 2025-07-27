@@ -29,7 +29,9 @@ const queryClient = new QueryClient({
       // Don't refetch on window focus by default
       refetchOnWindowFocus: false,
       // Don't refetch on mount if data exists
-      refetchOnMount: false
+      refetchOnMount: false,
+      // Prevent UI flicker by using structural sharing
+      structuralSharing: true
     }
   }
 })

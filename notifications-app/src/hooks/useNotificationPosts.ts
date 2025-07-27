@@ -104,7 +104,11 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
     gcTime: 2 * 60 * 60 * 1000, // Keep in cache for 2 hours
     refetchOnWindowFocus: false, // Don't refetch posts on window focus
     refetchOnMount: false, // Don't refetch when component remounts if data exists
-    refetchOnReconnect: false // Don't refetch on reconnect
+    refetchOnReconnect: false, // Don't refetch on reconnect
+    // Prevent flicker by keeping previous data while fetching
+    keepPreviousData: true,
+    // Use structural sharing to prevent unnecessary re-renders
+    structuralSharing: true
   })
 
   // Progressive fetch for remaining posts
