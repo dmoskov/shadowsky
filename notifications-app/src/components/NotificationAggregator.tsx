@@ -147,7 +147,7 @@ interface AggregatedNotificationItemProps {
   percentageFetched?: number
 }
 
-export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProps> = ({ 
+export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProps> = React.memo(({ 
   item, 
   onExpand, 
   postMap, 
@@ -474,4 +474,4 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
       </div>
     </div>
   )
-}
+})

@@ -200,7 +200,7 @@ export const NotificationsFeed: React.FC = () => {
     return map
   }, [posts, fetchedPosts]) // Add fetchedPosts to dependencies to ensure map updates
 
-  const getNotificationIcon = (reason: string) => {
+  const getNotificationIcon = React.useCallback((reason: string) => {
     switch (reason) {
       case 'like': return <Heart size={18} style={{ color: 'var(--bsky-like)' }} fill="currentColor" />
       case 'repost': return <Repeat2 size={18} style={{ color: 'var(--bsky-repost)' }} />
@@ -210,7 +210,7 @@ export const NotificationsFeed: React.FC = () => {
       case 'quote': return <Quote size={18} style={{ color: 'var(--bsky-quote)' }} />
       default: return null
     }
-  }
+  }, [])
 
   if (isLoading) {
     return (
@@ -584,7 +584,7 @@ interface NotificationItemProps {
   percentageFetched?: number
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ 
+const NotificationItem: React.FC<NotificationItemProps> = React.memo(({ 
   notification, 
   postMap, 
   getNotificationIcon, 
@@ -890,4 +890,4 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
       </div>
     </a>
   )
-}
+})
