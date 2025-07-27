@@ -155,6 +155,28 @@ html {
   animation: slideIn 0.3s ease;
 }
 
+/* Highlight recent notification on scroll */
+@keyframes highlightFlash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 133, 255, 0.8);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px 10px rgba(0, 133, 255, 0.3);
+    transform: scale(1.01);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 133, 255, 0);
+    transform: scale(1);
+  }
+}
+
+.highlight-recent {
+  animation: highlightFlash 1s ease-out 2;
+  position: relative;
+  z-index: 5;
+}
+
 /* Improved threading visuals */
 .thread-container {
   position: relative;

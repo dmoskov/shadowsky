@@ -111,7 +111,6 @@ export const Conversations: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const previousPostMapRef = React.useRef<Map<string, Post>>(new Map())
   const threadContainerRef = useRef<HTMLDivElement>(null)
-  const mostRecentNotificationRef = useRef<HTMLDivElement>(null)
 
   // Fetch reply notifications specifically
   const { 
@@ -390,16 +389,33 @@ export const Conversations: React.FC = () => {
 
   // Auto-scroll to most recent notification when conversation is selected
   useEffect(() => {
-    if (selectedConvo && mostRecentNotificationRef.current && threadContainerRef.current) {
-      // Give a small delay for the content to render
-      setTimeout(() => {
-        mostRecentNotificationRef.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        })
-      }, 100)
+    if (selectedConvo && selectedConversation && threadContainerRef.current) {
+      // Give a small delay for the content to render and layout to stabilize
+      const scrollTimeout = setTimeout(() => {
+        // Find the most recent notification element
+        const mostRecentElement = document.querySelector(`[data-notification-uri="${selectedConversation.latestReply.uri}"]`)
+        
+        if (mostRecentElement) {
+          // First, ensure the thread container is at the top
+          threadContainerRef.current?.scrollTo(0, 0)
+          
+          // Then scroll to the most recent notification
+          mostRecentElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          })
+          
+          // Add a visual highlight effect
+          mostRecentElement.classList.add('highlight-recent')
+          setTimeout(() => {
+            mostRecentElement.classList.remove('highlight-recent')
+          }, 2000)
+        }
+      }, 500) // Increased delay to ensure content is fully loaded
+      
+      return () => clearTimeout(scrollTimeout)
     }
-  }, [selectedConvo])
+  }, [selectedConvo, selectedConversation?.latestReply.uri])
 
   // Render thread nodes recursively
   const renderThreadNodes = (nodes: ThreadNode[], postMap: Map<string, Post>) => {
@@ -508,6 +524,7 @@ export const Conversations: React.FC = () => {
                   window.open(postUrl, '_blank', 'noopener,noreferrer')
                 }
               }}
+              data-notification-uri={notification?.uri || ''}
             >
               {node.isRoot && (
                 <div className="flex items-center gap-2 mb-2">
@@ -537,7 +554,7 @@ export const Conversations: React.FC = () => {
 
               {/* Mark the most recent notification */}
               {!node.isRoot && notification?.uri === selectedConversation?.latestReply.uri && (
-                <div className="flex items-center gap-2 mb-2" ref={mostRecentNotificationRef}>
+                <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs font-medium px-2 py-1 rounded-full animate-pulse" 
                         style={{ 
                           backgroundColor: 'var(--bsky-primary)', 
@@ -901,10 +918,18 @@ export const Conversations: React.FC = () => {
               <div className="sticky top-0 z-10 flex justify-end mb-2">
                 <button
                   onClick={() => {
-                    mostRecentNotificationRef.current?.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'center'
-                    })
+                    const mostRecentElement = document.querySelector(`[data-notification-uri="${selectedConversation.latestReply.uri}"]`)
+                    if (mostRecentElement) {
+                      mostRecentElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                      })
+                      // Add highlight effect
+                      mostRecentElement.classList.add('highlight-recent')
+                      setTimeout(() => {
+                        mostRecentElement.classList.remove('highlight-recent')
+                      }, 2000)
+                    }
                   }}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium shadow-md transition-all hover:shadow-lg"
                   style={{
