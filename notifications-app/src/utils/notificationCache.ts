@@ -15,11 +15,21 @@ interface CachedData {
   priority?: boolean
 }
 
+/**
+ * Local storage cache for notifications
+ * IMPORTANT: This class only accesses localStorage and NEVER makes API calls
+ * Therefore, it is NOT subject to rate limiting
+ * 
+ * Rate limiting only applies to actual Bluesky API calls in the notification service
+ */
 export class NotificationCache {
   private static getCacheKey(priority?: boolean): string {
     return `${CACHE_KEY_PREFIX}${priority ? 'priority' : 'all'}_${CACHE_VERSION}`
   }
 
+  /**
+   * Save notifications to localStorage (NO rate limiting - local operation only)
+   */
   static save(pages: Array<{ notifications: Notification[], cursor?: string }>, priority?: boolean): void {
     try {
       const cacheKey = this.getCacheKey(priority)
@@ -74,6 +84,10 @@ export class NotificationCache {
     }
   }
 
+  /**
+   * Load notifications from localStorage (NO rate limiting - local operation only)
+   * Returns null if cache is expired, invalid, or doesn't exist
+   */
   static load(priority?: boolean): CachedData | null {
     try {
       const cacheKey = this.getCacheKey(priority)

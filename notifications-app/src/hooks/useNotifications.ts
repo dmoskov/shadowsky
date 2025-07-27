@@ -12,9 +12,10 @@ const MAX_DAYS = 28 // 4 weeks
 export function useNotifications(priority?: boolean) {
   const { session } = useAuth()
 
-  const query = useInfiniteQuery({
+  return useInfiniteQuery({
     queryKey: ['notifications', priority],
     queryFn: async ({ pageParam }) => {
+      // This is the ONLY place where rate limiting applies - actual API calls
       const { atProtoClient } = await import('../services/atproto')
       const agent = atProtoClient.agent
       if (!agent) throw new Error('Not authenticated')
@@ -57,21 +58,30 @@ export function useNotifications(priority?: boolean) {
     enabled: !!session,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes (was every minute!)
-  })
-
-  // Save to cache when data is successfully fetched
-  React.useEffect(() => {
-    if (query.isSuccess && query.data?.pages && query.data.pages.length > 0) {
-      try {
-        console.log(`Saving ${query.data.pages.reduce((sum, p) => sum + p.notifications.length, 0)} notifications to cache`)
-        NotificationCache.save(query.data.pages, priority)
-      } catch (error) {
-        console.error('Failed to save to cache:', error)
+    // Load from cache WITHOUT any rate limiting - this is just local storage access
+    placeholderData: () => {
+      const cachedData = NotificationCache.load(priority)
+      if (cachedData) {
+        console.log(`Loading ${cachedData.pages.reduce((sum, p) => sum + p.notifications.length, 0)} notifications from cache (no rate limit)`)
+        return {
+          pages: cachedData.pages,
+          pageParams: [undefined, ...cachedData.pages.slice(0, -1).map(p => p.cursor)]
+        }
+      }
+      return undefined
+    },
+    // Save to cache after successful API fetch
+    onSuccess: (data) => {
+      if (data?.pages && data.pages.length > 0) {
+        try {
+          console.log(`Saving ${data.pages.reduce((sum, p) => sum + p.notifications.length, 0)} notifications to cache`)
+          NotificationCache.save(data.pages, priority)
+        } catch (error) {
+          console.error('Failed to save to cache:', error)
+        }
       }
     }
-  }, [query.isSuccess, query.data, priority])
-
-  return query
+  })
 }
 
 export function useUnreadNotificationCount() {
