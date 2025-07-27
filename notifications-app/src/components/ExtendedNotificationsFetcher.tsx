@@ -339,7 +339,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
             {hasCachedData 
               ? `Currently viewing ${cachedStats?.totalNotifications || 0} notifications from ${cachedStats?.daysReached || 0} days`
               : fetchInfo.hasRecentFullFetch && fetchInfo.metadata
-              ? `Last fetched ${fetchInfo.metadata.totalNotificationsFetched} notifications (${fetchInfo.metadata.daysReached} days) • Auto-updating...`
+              ? `Last fetched ${fetchInfo.metadata.totalNotificationsFetched} notifications (${fetchInfo.metadata.daysReached} days) ${fetchingStatus === 'fetching' ? '• Auto-updating...' : ''}`
               : 'Fetch up to 4 weeks of notification history for deeper analytics'
             }
           </p>
@@ -398,7 +398,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       </div>
       
       {/* Show cached data stats when not fetching */}
-      {hasCachedData && fetchingStatus === 'idle' && cachedStats && (
+      {fetchingStatus === 'idle' && (hasCachedData && cachedStats ? (
         <div className="mt-4 p-4 rounded-lg" style={{ 
           backgroundColor: 'rgba(0, 133, 255, 0.05)',
           border: '1px solid rgba(0, 133, 255, 0.1)'
@@ -422,7 +422,34 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+      ) : fetchInfo.hasRecentFullFetch && fetchInfo.metadata && (
+        <div className="mt-4 p-4 rounded-lg" style={{ 
+          backgroundColor: 'rgba(251, 191, 36, 0.05)',
+          border: '1px solid rgba(251, 191, 36, 0.2)'
+        }}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <p style={{ color: 'var(--bsky-text-secondary)' }}>Previously Fetched</p>
+              <p className="text-lg font-semibold">{fetchInfo.metadata.totalNotificationsFetched}</p>
+            </div>
+            <div>
+              <p style={{ color: 'var(--bsky-text-secondary)' }}>Days Covered</p>
+              <p className="text-lg font-semibold">{fetchInfo.metadata.daysReached}</p>
+            </div>
+            <div>
+              <p style={{ color: 'var(--bsky-text-secondary)' }}>From</p>
+              <p className="text-lg font-semibold">{format(new Date(fetchInfo.metadata.oldestNotificationDate), 'MMM d')}</p>
+            </div>
+            <div>
+              <p style={{ color: 'var(--bsky-text-secondary)' }}>To</p>
+              <p className="text-lg font-semibold">{format(new Date(fetchInfo.metadata.newestNotificationDate), 'MMM d')}</p>
+            </div>
+          </div>
+          <p className="text-xs mt-2" style={{ color: 'var(--bsky-text-secondary)' }}>
+            ⚠️ Data not in memory. Click "Refresh Full History" to reload or it will auto-update with new notifications.
+          </p>
+        </div>
+      ))}
       
       {fetchingStatus !== 'idle' && (
         <div className="space-y-3">
