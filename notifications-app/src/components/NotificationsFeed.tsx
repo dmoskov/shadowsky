@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, CheckCheck, Image, Loader, ChevronUp, Crown, Settings } from 'lucide-react'
+import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, CheckCheck, Image, Loader, ChevronUp, Crown, Settings, Database } from 'lucide-react'
 import { useNotifications, useUnreadCount, useMarkNotificationsRead } from '../hooks/useNotifications'
 import { useNotificationPosts, postHasImages } from '../hooks/useNotificationPosts'
 import { formatDistanceToNow } from 'date-fns'
@@ -8,6 +8,7 @@ import { aggregateNotifications, AggregatedNotificationItem } from './Notificati
 import { TopAccountsView } from './TopAccountsView'
 import { getNotificationUrl } from '../utils/url-helpers'
 import { useLocation } from 'react-router-dom'
+import { NotificationCache } from '../utils/notificationCache'
 
 type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies' | 'quotes' | 'images' | 'top-accounts'
 
@@ -21,6 +22,7 @@ export const NotificationsFeed: React.FC = () => {
   const [expandedAggregations, setExpandedAggregations] = useState<Set<string>>(new Set())
   const [minFollowerCount, setMinFollowerCount] = useState(10000)
   const [showConfigModal, setShowConfigModal] = useState(false)
+  const [isFromCache, setIsFromCache] = useState(false)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   
   // Reset filter if top accounts is hidden but was selected
@@ -45,6 +47,17 @@ export const NotificationsFeed: React.FC = () => {
     if (!data?.pages) return []
     return data.pages.flatMap((page: any) => page.notifications)
   }, [data])
+
+  // Check if data is from cache
+  useEffect(() => {
+    const cacheInfo = NotificationCache.getCacheInfo()
+    if (cacheInfo.hasAllCache && !isLoading && notifications.length > 0) {
+      setIsFromCache(true)
+      // Hide the indicator after 3 seconds
+      const timer = setTimeout(() => setIsFromCache(false), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [isLoading, notifications.length])
 
   // Update page title with unread count
   useEffect(() => {
@@ -201,6 +214,16 @@ export const NotificationsFeed: React.FC = () => {
             {notifications.length > 0 && (
               <span className="ml-2 text-xs font-normal" style={{ color: 'var(--bsky-text-tertiary)' }}>
                 · {notifications.length} total
+              </span>
+            )}
+            {isFromCache && (
+              <span className="ml-2 text-xs font-normal flex items-center gap-1" style={{ 
+                color: 'var(--bsky-primary)',
+                opacity: 0.7,
+                animation: 'fadeIn 0.3s ease-in-out'
+              }}>
+                <Database size={12} />
+                Loaded from cache
               </span>
             )}
           </h1>

@@ -2,6 +2,7 @@ import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tansta
 import { useAuth } from '../contexts/AuthContext'
 import { getNotificationService } from '../services/atproto/notifications'
 import { useErrorHandler } from './useErrorHandler'
+import { NotificationCache } from '../utils/notificationCache'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 
 const MAX_NOTIFICATIONS = 10000
@@ -9,6 +10,7 @@ const MAX_DAYS = 28 // 4 weeks
 
 export function useNotifications(priority?: boolean) {
   const { session } = useAuth()
+  const queryClient = useQueryClient()
 
   return useInfiniteQuery({
     queryKey: ['notifications', priority],
@@ -55,6 +57,24 @@ export function useNotifications(priority?: boolean) {
     enabled: !!session,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes (was every minute!)
+    // Add React Query's persistence adapter for caching
+    onSuccess: (data) => {
+      // Save to localStorage when data is successfully fetched
+      if (data?.pages && data.pages.length > 0) {
+        NotificationCache.save(data.pages, priority)
+      }
+    },
+    // Try to load from cache on mount
+    placeholderData: () => {
+      const cachedData = NotificationCache.load(priority)
+      if (cachedData) {
+        return {
+          pages: cachedData.pages,
+          pageParams: [undefined, ...cachedData.pages.slice(0, -1).map(p => p.cursor)]
+        }
+      }
+      return undefined
+    }
   })
 }
 

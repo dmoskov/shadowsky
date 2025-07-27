@@ -12,17 +12,22 @@ import { VisualTimeline } from './components/VisualTimeline'
 import { NotificationsAnalytics } from './components/NotificationsAnalytics'
 import { RateLimitStatus } from './components/RateLimitStatus'
 import { Conversations } from './components/Conversations'
+import { CacheStatus } from './components/CacheStatus'
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
+      gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
       retry: (failureCount, error: any) => {
         if (error?.status === 429) return false // Don't retry rate limits
         if (error?.status === 401) return false // Don't retry auth errors
         return failureCount < 3
-      }
+      },
+      // Keep previous data while fetching new data
+      keepPreviousData: true,
+      // Refetch on window focus only if data is stale
+      refetchOnWindowFocus: 'always'
     }
   }
 })
@@ -62,6 +67,7 @@ function AppContent() {
         </main>
       </div>
       <RateLimitStatus />
+      <CacheStatus />
     </div>
   )
 }
