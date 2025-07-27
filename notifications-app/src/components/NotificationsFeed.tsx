@@ -156,7 +156,7 @@ export const NotificationsFeed: React.FC = () => {
         // While posts are loading, show empty
         filtered = []
       }
-    } else if (filter !== 'all' && filter !== 'top-accounts') {
+    } else if (filter !== 'all' && filter !== 'top-accounts' && filter !== 'from-following') {
       const filterMap: Record<Exclude<NotificationFilter, 'all' | 'images' | 'top-accounts' | 'from-following'>, string[]> = {
         likes: ['like'],
         reposts: ['repost'],

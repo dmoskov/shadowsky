@@ -4,6 +4,7 @@ import { NotificationCache } from '../utils/notificationCache'
 import { NotificationObjectCache } from '../utils/notificationObjectCache'
 import { PostCache } from '../utils/postCache'
 import { StorageManager } from '../utils/storageManager'
+import { NotificationCacheService } from '../services/notification-cache-service'
 
 interface StorageBreakdown {
   key: string
