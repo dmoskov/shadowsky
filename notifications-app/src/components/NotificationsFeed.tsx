@@ -130,18 +130,8 @@ export const NotificationsFeed: React.FC = () => {
     return () => observer.disconnect()
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
-  // Automatically load more notifications on first load
-  useEffect(() => {
-    if (data?.pages && data.pages.length === 1 && hasNextPage && !isFetchingNextPage) {
-      // Load at least a few pages automatically
-      const loadInitialPages = async () => {
-        for (let i = 0; i < 3 && hasNextPage; i++) {
-          await fetchNextPage()
-        }
-      }
-      loadInitialPages()
-    }
-  }, [data?.pages?.length])
+  // Removed automatic loading of 3 pages - let intersection observer handle it
+  // This was causing the UI to flicker as it loaded 3 times automatically
 
   const filteredNotifications = React.useMemo(() => {
     if (!notifications) return []
