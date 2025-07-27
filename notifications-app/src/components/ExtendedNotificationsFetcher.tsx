@@ -320,6 +320,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     
     // Invalidate the analytics query to use the new extended data
     queryClient.invalidateQueries({ queryKey: ['notifications-analytics'] })
+    queryClient.invalidateQueries({ queryKey: ['notifications-visual-timeline'] })
   }
 
   const handleFetchMissing = async () => {
@@ -337,6 +338,10 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       setFetchingStatus('idle')
       return
     }
+    
+    // Invalidate analytics after first page
+    queryClient.invalidateQueries({ queryKey: ['notifications-analytics'] })
+    queryClient.invalidateQueries({ queryKey: ['notifications-visual-timeline'] })
     
     // Fetch until we reach the newest notification from our last fetch
     const targetDate = new Date(metadata.newestNotificationDate)
@@ -394,6 +399,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     
     setFetchingStatus('complete')
     queryClient.invalidateQueries({ queryKey: ['notifications-analytics'] })
+    queryClient.invalidateQueries({ queryKey: ['notifications-visual-timeline'] })
   }
 
   const allNotifications = data?.pages.flatMap(page => page.notifications) || []
@@ -413,6 +419,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     ExtendedFetchCache.clearAll()
     // Invalidate the analytics query to refresh without extended data
     queryClient.invalidateQueries({ queryKey: ['notifications-analytics'] })
+    queryClient.invalidateQueries({ queryKey: ['notifications-visual-timeline'] })
   }
   
   return (
