@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { ATProtoError, RateLimitError, AuthenticationError } from '@bsky/shared'
 import { performanceTracker } from '@bsky/shared'
-import { Cloud, Sparkles, Users, Lock, Globe, MessageSquare } from 'lucide-react'
+import { Cloud, Sparkles, Users, Lock, Globe, MessageSquare, Shield, ArrowRight, Server, Smartphone } from 'lucide-react'
 
 export const Login: React.FC = () => {
   const [identifier, setIdentifier] = useState('')
@@ -10,6 +10,7 @@ export const Login: React.FC = () => {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [touched, setTouched] = useState({ identifier: false, password: false })
+  const [showSecurityInfo, setShowSecurityInfo] = useState(false)
   const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {

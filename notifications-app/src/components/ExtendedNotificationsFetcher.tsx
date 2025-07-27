@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { Download, Loader2, Calendar, CheckCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getNotificationService } from '../services/atproto/notifications'
@@ -7,6 +7,7 @@ import { format, subDays } from 'date-fns'
 
 export const ExtendedNotificationsFetcher: React.FC = () => {
   const { session } = useAuth()
+  const queryClient = useQueryClient()
   const [fetchingStatus, setFetchingStatus] = useState<'idle' | 'fetching' | 'complete'>('idle')
   const [progress, setProgress] = useState({ 
     totalNotifications: 0, 
@@ -100,6 +101,9 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     }
     
     setFetchingStatus('complete')
+    
+    // Invalidate the analytics query to use the new extended data
+    queryClient.invalidateQueries({ queryKey: ['notifications-analytics'] })
   }
 
   const allNotifications = data?.pages.flatMap(page => page.notifications) || []

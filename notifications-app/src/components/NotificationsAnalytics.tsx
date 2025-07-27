@@ -1,5 +1,5 @@
 import React from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { TrendingUp, Users, Heart, MessageCircle, BarChart3, Bell, Clock, Repeat2, UserPlus } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { format, subDays, startOfDay } from 'date-fns'
@@ -7,6 +7,7 @@ import { ExtendedNotificationsFetcher } from './ExtendedNotificationsFetcher'
 
 export const NotificationsAnalytics: React.FC = () => {
   const { agent } = useAuth()
+  const queryClient = useQueryClient()
 
   // Query for current stats
   const { data: currentStats, isLoading: isLoadingStats } = useQuery({
@@ -19,13 +20,23 @@ export const NotificationsAnalytics: React.FC = () => {
     refetchInterval: 30000 // Refresh every 30 seconds
   })
 
-  // Query for analytics data
+  // Check if we have extended data available
+  const extendedData = queryClient.getQueryData(['notifications-extended']) as any
+  const hasExtendedData = extendedData?.pages?.length > 0
+
+  // Query for analytics data - use extended data if available
   const { data: notifications } = useQuery({
-    queryKey: ['notifications-analytics'],
+    queryKey: ['notifications-analytics', hasExtendedData],
     queryFn: async () => {
       if (!agent) throw new Error('Not authenticated')
       
-      // Fetch notifications until we have 7 days worth of data
+      // If we have extended data from the 4-week fetch, use that
+      if (hasExtendedData) {
+        const allNotifications = extendedData.pages.flatMap((page: any) => page.notifications)
+        return { notifications: allNotifications }
+      }
+      
+      // Otherwise, fetch notifications until we have 7 days worth of data
       const allNotifications: typeof agent.app.bsky.notification.listNotifications._output.notifications = []
       let cursor: string | undefined
       const sevenDaysAgo = subDays(new Date(), 7)
@@ -58,18 +69,31 @@ export const NotificationsAnalytics: React.FC = () => {
       )
       
       return { notifications: filteredNotifications }
-    }
+    },
+    // Re-run when extended data changes
+    enabled: !!agent,
   })
 
   const analytics = React.useMemo(() => {
-    if (!notifications?.notifications) return null
+    if (!notifications?.notifications || notifications.notifications.length === 0) return null
 
     const now = new Date()
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const date = startOfDay(subDays(now, 6 - i))
+    
+    // Calculate the actual date range of the data
+    const sortedNotifications = [...notifications.notifications].sort(
+      (a, b) => new Date(a.indexedAt).getTime() - new Date(b.indexedAt).getTime()
+    )
+    const oldestDate = new Date(sortedNotifications[0].indexedAt)
+    const newestDate = new Date(sortedNotifications[sortedNotifications.length - 1].indexedAt)
+    const daySpan = Math.max(1, Math.ceil((newestDate.getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24)) + 1)
+    
+    // Create array for the actual date range (up to 28 days for 4 weeks)
+    const displayDays = Math.min(daySpan, 28)
+    const daysArray = Array.from({ length: displayDays }, (_, i) => {
+      const date = startOfDay(subDays(now, displayDays - 1 - i))
       return {
         date,
-        label: format(date, 'EEE'),
+        label: displayDays <= 7 ? format(date, 'EEE') : format(date, 'M/d'),
         likes: 0,
         reposts: 0,
         follows: 0,
@@ -81,7 +105,7 @@ export const NotificationsAnalytics: React.FC = () => {
     // Count notifications by day and type
     notifications.notifications.forEach(notification => {
       const notifDate = startOfDay(new Date(notification.indexedAt))
-      const dayData = last7Days.find(day => 
+      const dayData = daysArray.find(day => 
         day.date.getTime() === notifDate.getTime()
       )
       
@@ -116,11 +140,14 @@ export const NotificationsAnalytics: React.FC = () => {
     const uniqueUsers = new Set(notifications.notifications.map(n => n.author.did)).size
 
     return {
-      last7Days,
+      daysArray,
       topUsers,
       totalEngagement,
       uniqueUsers,
-      averagePerDay: totalEngagement / 7
+      averagePerDay: totalEngagement / Math.max(1, daySpan),
+      daySpan,
+      oldestDate,
+      newestDate
     }
   }, [notifications])
 
@@ -152,7 +179,7 @@ export const NotificationsAnalytics: React.FC = () => {
     )
   }
 
-  const maxValue = Math.max(...analytics.last7Days.map(d => d.total))
+  const maxValue = Math.max(...analytics.daysArray.map(d => d.total))
 
   return (
     <div className="p-6 space-y-6">
@@ -202,7 +229,7 @@ export const NotificationsAnalytics: React.FC = () => {
             <TrendingUp className="text-green-500" size={24} />
             <span className="text-2xl font-bold">{analytics.totalEngagement}</span>
           </div>
-          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Notifications Received (7 days)</p>
+          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Notifications Received ({analytics.daySpan} day{analytics.daySpan !== 1 ? 's' : ''})</p>
         </div>
         
         <div className="bsky-card p-4">
@@ -236,9 +263,9 @@ export const NotificationsAnalytics: React.FC = () => {
 
       {/* Activity Chart */}
       <div className="bsky-card p-6">
-        <h2 className="text-lg font-semibold mb-4">Activity Trend (7 Days)</h2>
+        <h2 className="text-lg font-semibold mb-4">Activity Trend ({analytics.daySpan} day{analytics.daySpan !== 1 ? 's' : ''})</h2>
         <div className="space-y-4">
-          {analytics.last7Days.map((day) => (
+          {analytics.daysArray.map((day) => (
             <div key={day.label} className="flex items-center gap-4">
               <span className="text-sm w-12" style={{ color: 'var(--bsky-text-secondary)' }}>{day.label}</span>
               <div className="flex-1 flex gap-1">
