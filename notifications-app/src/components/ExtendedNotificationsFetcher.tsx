@@ -17,6 +17,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     oldestDate: null as Date | null 
   })
   const [autoFetchTriggered, setAutoFetchTriggered] = useState(false)
+  const [loadedFromStorage, setLoadedFromStorage] = useState(false)
   
   // Check if we already have cached data
   const cachedData = queryClient.getQueryData(['notifications-extended']) as any
@@ -61,6 +62,37 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     staleTime: Infinity, // Don't auto-refetch
   })
 
+  // Load persisted data from localStorage on mount
+  useEffect(() => {
+    if (!session || hasCachedData) return
+    
+    const persistedData = ExtendedFetchCache.loadData()
+    if (persistedData) {
+      console.log('📊 Loading extended notifications from localStorage')
+      // Set the data in React Query cache
+      queryClient.setQueryData(['notifications-extended'], {
+        pages: persistedData.pages,
+        pageParams: [undefined, ...persistedData.pages.slice(0, -1).map(p => p.cursor)]
+      })
+      
+      // Update progress state
+      const allNotifications = persistedData.pages.flatMap(page => page.notifications)
+      if (allNotifications.length > 0) {
+        const oldestNotification = allNotifications[allNotifications.length - 1]
+        const oldestDate = new Date(oldestNotification.indexedAt)
+        const daysReached = Math.floor((new Date().getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24))
+        
+        setProgress({
+          totalNotifications: allNotifications.length,
+          daysReached,
+          oldestDate
+        })
+        
+        setLoadedFromStorage(true)
+      }
+    }
+  }, [session])
+
   // Auto-fetch missing notifications if we have recent 4-week data
   useEffect(() => {
     if (!session || autoFetchTriggered || hasCachedData || fetchingStatus !== 'idle') return
@@ -75,6 +107,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
   const handleFetch4Weeks = async () => {
     setFetchingStatus('fetching')
     setProgress({ totalNotifications: 0, daysReached: 0, oldestDate: null })
+    setLoadedFromStorage(false)
     
     console.log('Starting 4-week fetch...')
     
@@ -201,8 +234,9 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           oldestDate
         })
         
-        // Save metadata about this fetch
-        ExtendedFetchCache.saveMetadata(
+        // Save data and metadata about this fetch
+        ExtendedFetchCache.saveData(
+          finalData.pages,
           allNotifications.length,
           oldestDate,
           newestDate,
@@ -297,8 +331,9 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     queryClient.removeQueries({ queryKey: ['notifications-extended'] })
     setFetchingStatus('idle')
     setProgress({ totalNotifications: 0, daysReached: 0, oldestDate: null })
-    // Clear the metadata so we don't auto-fetch on next load
-    ExtendedFetchCache.clearMetadata()
+    setLoadedFromStorage(false)
+    // Clear the metadata and data so we don't auto-fetch on next load
+    ExtendedFetchCache.clearAll()
     // Invalidate the analytics query to refresh without extended data
     queryClient.invalidateQueries({ queryKey: ['notifications-analytics'] })
   }
@@ -322,7 +357,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
                 color: 'var(--bsky-success)',
                 border: '1px solid rgba(16, 185, 129, 0.3)'
               }}>
-                Data Loaded
+                {loadedFromStorage ? 'Loaded from Cache' : 'Data Loaded'}
               </span>
             )}
             {!hasCachedData && fetchInfo.hasRecentFullFetch && (
@@ -421,6 +456,11 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
               <p className="text-lg font-semibold">{format(cachedStats.newestDate, 'MMM d')}</p>
             </div>
           </div>
+          {loadedFromStorage && (
+            <p className="text-xs mt-2" style={{ color: 'var(--bsky-text-secondary)' }}>
+              ✅ Data loaded from browser cache • No API calls required
+            </p>
+          )}
         </div>
       ) : fetchInfo.hasRecentFullFetch && fetchInfo.metadata && (
         <div className="mt-4 p-4 rounded-lg" style={{ 

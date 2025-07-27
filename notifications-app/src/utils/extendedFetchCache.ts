@@ -1,6 +1,7 @@
 /**
- * Manages metadata about extended notification fetches (4-week downloads)
+ * Manages metadata and data for extended notification fetches (4-week downloads)
  * Tracks when the user last performed a full fetch to avoid unnecessary re-prompts
+ * Persists notification data to localStorage (up to 1MB) for faster loads
  */
 
 interface ExtendedFetchMetadata {
@@ -12,8 +13,19 @@ interface ExtendedFetchMetadata {
   version: string
 }
 
+interface ExtendedFetchData {
+  metadata: ExtendedFetchMetadata
+  pages: Array<{
+    notifications: any[]
+    cursor?: string
+  }>
+  version: string
+}
+
 const METADATA_KEY = 'bsky_extended_fetch_metadata_v1'
+const DATA_KEY = 'bsky_extended_fetch_data_v1'
 const REFRESH_THRESHOLD_HOURS = 4 // Consider data stale after 4 hours
+const MAX_STORAGE_SIZE = 1024 * 1024 // 1MB limit for localStorage
 
 export class ExtendedFetchCache {
   /**
@@ -117,7 +129,137 @@ export class ExtendedFetchCache {
   }
 
   /**
-   * Clear stored metadata
+   * Save notification data along with metadata
+   * Will only save if data size is under 1MB
+   */
+  static saveData(
+    pages: Array<{ notifications: any[], cursor?: string }>,
+    totalNotifications: number,
+    oldestDate: Date,
+    newestDate: Date,
+    daysReached: number
+  ): boolean {
+    try {
+      // First save metadata
+      this.saveMetadata(totalNotifications, oldestDate, newestDate, daysReached)
+      
+      // Prepare data for storage
+      const data: ExtendedFetchData = {
+        metadata: {
+          lastFetchTimestamp: Date.now(),
+          totalNotificationsFetched: totalNotifications,
+          oldestNotificationDate: oldestDate.getTime(),
+          newestNotificationDate: newestDate.getTime(),
+          daysReached,
+          version: 'v1'
+        },
+        pages,
+        version: 'v1'
+      }
+      
+      // Check size before saving
+      const dataStr = JSON.stringify(data)
+      const sizeInBytes = new Blob([dataStr]).size
+      
+      if (sizeInBytes > MAX_STORAGE_SIZE) {
+        console.log(`📊 Extended fetch data too large for localStorage (${(sizeInBytes / 1024 / 1024).toFixed(2)}MB > 1MB limit)`)
+        // Try to save a truncated version
+        const truncatedPages = this.truncateToFitSize(pages, MAX_STORAGE_SIZE)
+        if (truncatedPages.length > 0) {
+          data.pages = truncatedPages
+          const truncatedStr = JSON.stringify(data)
+          localStorage.setItem(DATA_KEY, truncatedStr)
+          console.log(`📊 Saved truncated extended fetch data (${truncatedPages.length} pages, ${(new Blob([truncatedStr]).size / 1024).toFixed(1)}KB)`)
+          return true
+        }
+        return false
+      }
+      
+      localStorage.setItem(DATA_KEY, dataStr)
+      console.log(`📊 Extended fetch data saved to localStorage (${(sizeInBytes / 1024).toFixed(1)}KB)`)
+      return true
+      
+    } catch (error) {
+      console.error('Failed to save extended fetch data:', error)
+      // If it's a quota error, try to clear old data and retry
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        this.clearData()
+        return false
+      }
+      return false
+    }
+  }
+
+  /**
+   * Load saved notification data from localStorage
+   * Returns null if data is stale, missing, or invalid
+   */
+  static loadData(): ExtendedFetchData | null {
+    try {
+      // First check if we have recent metadata
+      const metadata = this.getRecentMetadata()
+      if (!metadata) {
+        // Data is stale or missing
+        this.clearData()
+        return null
+      }
+      
+      const stored = localStorage.getItem(DATA_KEY)
+      if (!stored) return null
+      
+      const data = JSON.parse(stored) as ExtendedFetchData
+      
+      // Validate version
+      if (data.version !== 'v1') {
+        this.clearData()
+        return null
+      }
+      
+      // Validate that metadata matches
+      if (data.metadata.lastFetchTimestamp !== metadata.lastFetchTimestamp) {
+        console.log('📊 Extended fetch data metadata mismatch, clearing')
+        this.clearData()
+        return null
+      }
+      
+      console.log(`📊 Loaded extended fetch data from localStorage (${data.pages.length} pages, ${data.metadata.totalNotificationsFetched} notifications)`)
+      return data
+      
+    } catch (error) {
+      console.error('Failed to load extended fetch data:', error)
+      this.clearData()
+      return null
+    }
+  }
+
+  /**
+   * Truncate pages array to fit within size limit
+   * Keeps most recent notifications
+   */
+  private static truncateToFitSize(
+    pages: Array<{ notifications: any[], cursor?: string }>,
+    maxSize: number
+  ): Array<{ notifications: any[], cursor?: string }> {
+    const truncated: Array<{ notifications: any[], cursor?: string }> = []
+    let currentSize = 100 // Start with some overhead for metadata
+    
+    for (const page of pages) {
+      const pageStr = JSON.stringify(page)
+      const pageSize = new Blob([pageStr]).size
+      
+      if (currentSize + pageSize > maxSize) {
+        break
+      }
+      
+      truncated.push(page)
+      currentSize += pageSize
+    }
+    
+    return truncated
+  }
+
+  /**
+   * Clear stored metadata and data
    */
   static clearMetadata(): void {
     try {
@@ -126,5 +268,25 @@ export class ExtendedFetchCache {
     } catch (error) {
       console.error('Failed to clear extended fetch metadata:', error)
     }
+  }
+
+  /**
+   * Clear stored data
+   */
+  static clearData(): void {
+    try {
+      localStorage.removeItem(DATA_KEY)
+      console.log('📊 Extended fetch data cleared')
+    } catch (error) {
+      console.error('Failed to clear extended fetch data:', error)
+    }
+  }
+
+  /**
+   * Clear all stored data and metadata
+   */
+  static clearAll(): void {
+    this.clearMetadata()
+    this.clearData()
   }
 }
