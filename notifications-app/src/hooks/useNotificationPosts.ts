@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import type { AppBskyFeedDefs } from '@atproto/api'
+import { PostCache } from '../utils/postCache'
 
 type Post = AppBskyFeedDefs.PostView
 import { rateLimitedPostFetch } from '../services/rate-limiter'
@@ -50,28 +51,40 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
     queryFn: async () => {
       if (postUris.length === 0) return []
       
-      const { atProtoClient } = await import('../services/atproto')
-      const agent = atProtoClient.agent
-      if (!agent) throw new Error('Not authenticated')
-      
       // Initial fetch: Get first 150 posts quickly
       const INITIAL_POSTS_TO_FETCH = 150
       const urisToFetch = postUris.slice(0, INITIAL_POSTS_TO_FETCH)
       
+      // Check cache first
+      const { cached, missing } = PostCache.getCachedPosts(urisToFetch)
       
-      // Batch fetch posts (Bluesky API supports up to 25 posts per request)
-      const posts: Post[] = []
+      // If we have all posts cached, return them immediately
+      if (missing.length === 0) {
+        setFetchedCount(cached.length)
+        return cached
+      }
+      
+      const { atProtoClient } = await import('../services/atproto')
+      const agent = atProtoClient.agent
+      if (!agent) throw new Error('Not authenticated')
+      
+      // Batch fetch only missing posts (Bluesky API supports up to 25 posts per request)
+      const posts: Post[] = [...cached] // Start with cached posts
       let apiCallCount = 0
       
-      for (let i = 0; i < urisToFetch.length; i += 25) {
-        const batch = urisToFetch.slice(i, i + 25)
+      for (let i = 0; i < missing.length; i += 25) {
+        const batch = missing.slice(i, i + 25)
         try {
           apiCallCount++
           // Rate limit the API call
           const response = await rateLimitedPostFetch(async () => 
             agent.app.bsky.feed.getPosts({ uris: batch })
           )
-          posts.push(...(response.data.posts as Post[]))
+          const newPosts = response.data.posts as Post[]
+          posts.push(...newPosts)
+          
+          // Cache the newly fetched posts
+          PostCache.save(newPosts)
         } catch (error) {
           console.error('Failed to fetch posts batch:', error)
         }
@@ -114,23 +127,32 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
       
       // Take the next batch of unfetched URIs in order (which naturally prioritizes top posts)
       const urisToFetch = unfetchedUris.slice(0, BATCH_SIZE)
-
-      const newPosts: Post[] = []
       
-      for (let i = 0; i < urisToFetch.length; i += 25) {
-        const batch = urisToFetch.slice(i, i + 25)
-        try {
-          const response = await rateLimitedPostFetch(async () => 
-            agent.app.bsky.feed.getPosts({ uris: batch })
-          )
-          newPosts.push(...(response.data.posts as Post[]))
-          
-          // Small delay between API calls within a batch
-          if (i + 25 < urisToFetch.length) {
-            await new Promise(resolve => setTimeout(resolve, 500))
+      // Check cache first for this batch
+      const { cached: cachedBatch, missing: missingBatch } = PostCache.getCachedPosts(urisToFetch)
+      const newPosts: Post[] = [...cachedBatch]
+      
+      // Only fetch missing posts from API
+      if (missingBatch.length > 0) {
+        for (let i = 0; i < missingBatch.length; i += 25) {
+          const batch = missingBatch.slice(i, i + 25)
+          try {
+            const response = await rateLimitedPostFetch(async () => 
+              agent.app.bsky.feed.getPosts({ uris: batch })
+            )
+            const fetchedPosts = response.data.posts as Post[]
+            newPosts.push(...fetchedPosts)
+            
+            // Cache the newly fetched posts
+            PostCache.save(fetchedPosts)
+            
+            // Small delay between API calls within a batch
+            if (i + 25 < missingBatch.length) {
+              await new Promise(resolve => setTimeout(resolve, 500))
+            }
+          } catch (error) {
+            console.error('Failed to fetch additional posts batch:', error)
           }
-        } catch (error) {
-          console.error('Failed to fetch additional posts batch:', error)
         }
       }
 

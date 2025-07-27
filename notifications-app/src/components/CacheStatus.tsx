@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { NotificationCache } from '../utils/notificationCache'
+import { PostCache } from '../utils/postCache'
 
 export function CacheStatus() {
   const [cacheInfo, setCacheInfo] = useState(NotificationCache.getCacheInfo())
+  const [postCacheInfo, setPostCacheInfo] = useState(PostCache.getCacheInfo())
   const [showDetails, setShowDetails] = useState(false)
 
   useEffect(() => {
@@ -10,18 +12,30 @@ export function CacheStatus() {
     if (showDetails) {
       const interval = setInterval(() => {
         setCacheInfo(NotificationCache.getCacheInfo())
+        setPostCacheInfo(PostCache.getCacheInfo())
       }, 5000)
       return () => clearInterval(interval)
     }
   }, [showDetails])
 
-  const handleClearCache = (priority?: boolean) => {
-    if (priority === undefined) {
-      NotificationCache.clearAll()
-    } else {
-      NotificationCache.clear(priority)
+  const handleClearCache = (type: 'priority' | 'all' | 'posts' | 'everything') => {
+    switch (type) {
+      case 'priority':
+        NotificationCache.clear(true)
+        break
+      case 'all':
+        NotificationCache.clear(false)
+        break
+      case 'posts':
+        PostCache.clear()
+        break
+      case 'everything':
+        NotificationCache.clearAll()
+        PostCache.clear()
+        break
     }
     setCacheInfo(NotificationCache.getCacheInfo())
+    setPostCacheInfo(PostCache.getCacheInfo())
     // Reload the page to refetch data
     window.location.reload()
   }
@@ -41,7 +55,8 @@ export function CacheStatus() {
     return `${minutes}m`
   }
 
-  const totalCached = cacheInfo.priorityCacheSize + cacheInfo.allCacheSize
+  const totalNotifications = cacheInfo.priorityCacheSize + cacheInfo.allCacheSize
+  const totalCached = totalNotifications + postCacheInfo.postCount
 
   if (totalCached === 0 && !showDetails) {
     return null
@@ -94,7 +109,7 @@ export function CacheStatus() {
             color: 'var(--bsky-text-secondary)',
             marginBottom: '8px'
           }}>
-            Cache persists for 24 hours to reduce API calls
+            Notifications: 24hr cache | Posts: 7-day cache
           </div>
 
           <div style={{ 
@@ -162,12 +177,44 @@ export function CacheStatus() {
                 {cacheInfo.allCacheSize.toLocaleString()} items
               </div>
             </div>
+
+            {postCacheInfo.hasCache && (
+              <div style={{ 
+                padding: '8px',
+                background: 'var(--bsky-bg-primary)',
+                borderRadius: '4px'
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <span style={{ fontSize: '12px', color: 'var(--bsky-text-secondary)' }}>
+                    Post content
+                  </span>
+                  <span style={{ 
+                    fontSize: '11px', 
+                    color: 'var(--bsky-primary)',
+                    fontWeight: 500
+                  }}>
+                    {postCacheInfo.cacheAge} old
+                  </span>
+                </div>
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: 'var(--bsky-text-primary)',
+                  marginTop: '2px'
+                }}>
+                  {postCacheInfo.postCount.toLocaleString()} posts
+                </div>
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {cacheInfo.hasPriorityCache && (
               <button
-                onClick={() => handleClearCache(true)}
+                onClick={() => handleClearCache('priority')}
                 style={{
                   padding: '4px 8px',
                   fontSize: '11px',
@@ -192,7 +239,7 @@ export function CacheStatus() {
             )}
             {cacheInfo.hasAllCache && (
               <button
-                onClick={() => handleClearCache(false)}
+                onClick={() => handleClearCache('all')}
                 style={{
                   padding: '4px 8px',
                   fontSize: '11px',
@@ -212,12 +259,37 @@ export function CacheStatus() {
                   e.currentTarget.style.color = 'var(--bsky-text-secondary)'
                 }}
               >
-                Clear All
+                Clear All Notifs
               </button>
             )}
-            {(cacheInfo.hasPriorityCache || cacheInfo.hasAllCache) && (
+            {postCacheInfo.hasCache && (
               <button
-                onClick={() => handleClearCache()}
+                onClick={() => handleClearCache('posts')}
+                style={{
+                  padding: '4px 8px',
+                  fontSize: '11px',
+                  border: '1px solid var(--bsky-border)',
+                  borderRadius: '4px',
+                  background: 'transparent',
+                  color: 'var(--bsky-text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'var(--bsky-bg-secondary)'
+                  e.currentTarget.style.color = 'var(--bsky-text-primary)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'transparent'
+                  e.currentTarget.style.color = 'var(--bsky-text-secondary)'
+                }}
+              >
+                Clear Posts
+              </button>
+            )}
+            {(cacheInfo.hasPriorityCache || cacheInfo.hasAllCache || postCacheInfo.hasCache) && (
+              <button
+                onClick={() => handleClearCache('everything')}
                 style={{
                   padding: '4px 8px',
                   fontSize: '11px',

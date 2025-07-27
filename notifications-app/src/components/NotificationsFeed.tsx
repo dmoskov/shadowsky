@@ -324,8 +324,8 @@ export const NotificationsFeed: React.FC = () => {
         </div>
       </div>
 
-      {/* Post loading progress indicator */}
-      {isFetchingMore && percentageFetched < 100 && (
+      {/* Post loading progress indicator - only show if we're actually fetching from API */}
+      {isFetchingMore && percentageFetched < 100 && fetchedPosts < totalPosts && (
         <div className="px-4 py-2 border-b" style={{ 
           borderColor: 'var(--bsky-border-secondary)',
           backgroundColor: 'var(--bsky-bg-secondary)',
