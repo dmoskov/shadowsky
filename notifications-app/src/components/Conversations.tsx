@@ -12,6 +12,81 @@ import type { AppBskyFeedDefs } from '@atproto/api'
 type Post = AppBskyFeedDefs.PostView
 import '../styles/conversations.css'
 
+// Component to render quote post embeds
+const QuoteEmbed: React.FC<{ embed: any }> = ({ embed }) => {
+  if (!embed || embed.$type !== 'app.bsky.embed.record#view') return null
+  
+  const record = embed.record
+  if (record.$type !== 'app.bsky.embed.record#viewRecord') {
+    // Handle deleted or blocked posts
+    return (
+      <div className="mt-2 p-3 rounded-lg" 
+           style={{ 
+             backgroundColor: 'var(--bsky-bg-tertiary)',
+             border: '1px solid var(--bsky-border-primary)'
+           }}>
+        <p className="text-sm italic" style={{ color: 'var(--bsky-text-tertiary)' }}>
+          {record.$type === 'app.bsky.embed.record#viewBlocked' 
+            ? 'Blocked post' 
+            : 'Post not found'}
+        </p>
+      </div>
+    )
+  }
+  
+  const quotedPost = record as any
+  const author = quotedPost.author
+  const postRecord = quotedPost.value
+  
+  return (
+    <div className="mt-2 rounded-lg overflow-hidden cursor-pointer transition-all hover:bg-opacity-5 hover:bg-blue-500"
+         style={{ 
+           backgroundColor: 'var(--bsky-bg-tertiary)',
+           border: '1px solid var(--bsky-border-primary)'
+         }}
+         onClick={(e) => {
+           e.stopPropagation()
+           if (quotedPost.uri && author?.handle) {
+             window.open(atUriToBskyUrl(quotedPost.uri, author.handle), '_blank', 'noopener,noreferrer')
+           }
+         }}>
+      <div className="p-3">
+        {/* Mini header */}
+        <div className="flex items-center gap-2 mb-2">
+          {author?.avatar ? (
+            <img 
+              src={author.avatar} 
+              alt={author.handle}
+              className="w-4 h-4 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-4 h-4 rounded-full flex items-center justify-center" 
+                 style={{ backgroundColor: 'var(--bsky-bg-secondary)' }}>
+              <span className="text-xs">{author?.handle?.charAt(0) || 'U'}</span>
+            </div>
+          )}
+          <div className="flex items-baseline gap-1 text-xs min-w-0">
+            <span className="font-medium truncate" style={{ color: 'var(--bsky-text-primary)' }}>
+              {author?.displayName || author?.handle}
+            </span>
+            <span className="truncate" style={{ color: 'var(--bsky-text-secondary)' }}>
+              @{author?.handle}
+            </span>
+          </div>
+        </div>
+        
+        {/* Quote content */}
+        {postRecord?.text && (
+          <p className="text-sm whitespace-pre-wrap break-words" 
+             style={{ color: 'var(--bsky-text-secondary)', lineHeight: '1.4' }}>
+            {postRecord.text}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 interface ConversationThread {
   rootUri: string
   rootPost?: Post
@@ -19,6 +94,7 @@ interface ConversationThread {
   participants: Set<string>
   latestReply: Notification
   totalReplies: number
+  originalPostTime?: string
 }
 
 interface ThreadNode {
@@ -150,13 +226,15 @@ export const Conversations: React.FC = () => {
       }
       
       if (!threadMap.has(rootUri)) {
+        const rootPost = postMap.get(rootUri)
         threadMap.set(rootUri, {
           rootUri,
-          rootPost: postMap.get(rootUri),
+          rootPost,
           replies: [],
           participants: new Set(),
           latestReply: notification,
-          totalReplies: 0
+          totalReplies: 0,
+          originalPostTime: rootPost?.indexedAt || (rootPost?.record as any)?.createdAt
         })
       }
       
@@ -420,6 +498,35 @@ export const Conversations: React.FC = () => {
                         }}>
                     Original Post
                   </span>
+                  {(post || selectedConversation?.originalPostTime) && (
+                    <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                      {formatDistanceToNow(
+                        new Date(
+                          (post?.record as any)?.createdAt || 
+                          post?.indexedAt || 
+                          selectedConversation?.originalPostTime || 
+                          Date.now()
+                        ), 
+                        { addSuffix: true }
+                      )}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Mark the most recent notification */}
+              {!node.isRoot && notification?.uri === selectedConversation?.latestReply.uri && (
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-medium px-2 py-1 rounded-full animate-pulse" 
+                        style={{ 
+                          backgroundColor: 'var(--bsky-primary)', 
+                          color: 'white'
+                        }}>
+                    Most Recent Notification
+                  </span>
+                  <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
+                    triggered {formatDistanceToNow(new Date(notification.indexedAt), { addSuffix: true })}
+                  </span>
                 </div>
               )}
 
@@ -451,20 +558,30 @@ export const Conversations: React.FC = () => {
                         @{author?.handle || 'unknown'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <time className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                        {formatDistanceToNow(
-                          new Date(notification?.indexedAt || post?.indexedAt || Date.now()), 
-                          { addSuffix: true }
-                        )}
-                      </time>
-                      <ExternalLink size={14} style={{ color: 'var(--bsky-text-tertiary)' }} />
+                    <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                      <div className="flex items-center gap-2">
+                        <time className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                          {formatDistanceToNow(
+                            new Date((post?.record as any)?.createdAt || post?.indexedAt || Date.now()), 
+                            { addSuffix: true }
+                          )}
+                        </time>
+                        <ExternalLink size={14} style={{ color: 'var(--bsky-text-tertiary)' }} />
+                      </div>
+                      {notification && !node.isRoot && (
+                        <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                          notified {formatDistanceToNow(new Date(notification.indexedAt), { addSuffix: true })}
+                        </span>
+                      )}
                     </div>
                   </div>
                   
                   <p className="text-sm break-words" style={{ color: 'var(--bsky-text-primary)', lineHeight: '1.5' }}>
                     {(post?.record as any)?.text || '[No text]'}
                   </p>
+
+                  {/* Render quote post if present */}
+                  {post?.embed && <QuoteEmbed embed={post.embed} />}
 
                   {/* Engagement metrics */}
                   {post && ((post.replyCount ?? 0) > 0 || (post.repostCount ?? 0) > 0 || (post.likeCount ?? 0) > 0) && (
@@ -585,6 +702,12 @@ export const Conversations: React.FC = () => {
             Showing {filteredConversations.length} conversation{filteredConversations.length !== 1 ? 's' : ''} from {replyNotifications.length} reply notifications
             {isFetchingNextPage && !isLoading && ' (loading more...)'}
           </p>
+          <p className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 3v18h18M21 9l-7 7-4-4-5 5" />
+            </svg>
+            Sorted by most recent notification activity
+          </p>
         </div>
 
         {/* Conversations List */}
@@ -597,6 +720,11 @@ export const Conversations: React.FC = () => {
             const previewText = rootRecord?.text || '[Loading original post...]'
             const isGroup = convo.participants.size > 2
             const unreadCount = convo.replies.filter(r => !r.isRead).length
+
+            // Get the latest reply post for preview
+            const latestReplyPost = postMap.get(convo.latestReply.uri)
+            const latestReplyRecord = latestReplyPost?.record as any
+            const latestReplyText = latestReplyRecord?.text || '[Loading reply...]'
 
             return (
               <button
@@ -649,28 +777,49 @@ export const Conversations: React.FC = () => {
                           : '[Loading author...]')
                         }
                       </h3>
-                      <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                        {formatDistanceToNow(new Date(convo.latestReply.indexedAt), { addSuffix: true })}
-                      </span>
+                      <div className="flex flex-col items-end gap-0.5">
+                        <span className="text-xs font-medium" style={{ color: 'var(--bsky-primary)' }}>
+                          {formatDistanceToNow(new Date(convo.latestReply.indexedAt), { addSuffix: true })}
+                        </span>
+                        {convo.originalPostTime && (
+                          <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                            posted {formatDistanceToNow(new Date(convo.originalPostTime), { addSuffix: true })}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-sm truncate" style={{ color: 'var(--bsky-text-secondary)' }}>
+                    
+                    {/* Original post preview */}
+                    <p className="text-sm truncate mb-1" style={{ color: 'var(--bsky-text-secondary)' }}>
                       {convo.rootPost ? (
                         <>
-                          <span className="font-medium">Original: </span>
-                          {previewText.length > 50 ? previewText.substring(0, 50) + '...' : previewText}
+                          <span className="font-medium">Post: </span>
+                          {previewText.length > 60 ? previewText.substring(0, 60) + '...' : previewText}
                         </>
                       ) : (
                         <span className="italic">{previewText}</span>
                       )}
                     </p>
+                    
+                    {/* Latest reply preview */}
+                    <p className="text-xs truncate" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                      <span className="font-medium">Latest: </span>
+                      <span className="font-normal">@{convo.latestReply.author.handle}: </span>
+                      {latestReplyText.length > 50 ? latestReplyText.substring(0, 50) + '...' : latestReplyText}
+                    </p>
+                    
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                      <span className="text-xs font-medium px-1.5 py-0.5 rounded" 
+                            style={{ 
+                              backgroundColor: 'var(--bsky-bg-secondary)',
+                              color: 'var(--bsky-text-secondary)'
+                            }}>
                         {convo.totalReplies} repl{convo.totalReplies === 1 ? 'y' : 'ies'}
                       </span>
                       {isGroup && (
                         <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                          · {Array.from(convo.participants).slice(0, 3).join(', ')}
-                          {convo.participants.size > 3 && ` +${convo.participants.size - 3}`}
+                          {Array.from(convo.participants).slice(0, 2).join(', ')}
+                          {convo.participants.size > 2 && ` +${convo.participants.size - 2}`}
                         </span>
                       )}
                     </div>
