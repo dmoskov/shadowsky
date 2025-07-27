@@ -26,8 +26,8 @@ const queryClient = new QueryClient({
       },
       // Keep previous data while fetching new data
       keepPreviousData: true,
-      // Refetch on window focus only if data is stale
-      refetchOnWindowFocus: 'always'
+      // Don't refetch on window focus by default
+      refetchOnWindowFocus: false
     }
   }
 })

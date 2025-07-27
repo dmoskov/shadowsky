@@ -170,7 +170,16 @@ export class NotificationCache {
       }
       
       console.log(`📦 [${timestamp}] Parsing ${(dataStr.length / 1024).toFixed(1)}KB of cached data`)
-      const cachedData: CachedData = JSON.parse(dataStr)
+      
+      let cachedData: CachedData
+      try {
+        cachedData = JSON.parse(dataStr)
+      } catch (parseError) {
+        console.error(`❌ [${timestamp}] Failed to parse cached data:`, parseError)
+        console.log(`🔍 [${timestamp}] First 100 chars of invalid data:`, dataStr.substring(0, 100))
+        this.clear(priority)
+        return null
+      }
       
       // Validate version
       if (cachedData.version !== CACHE_VERSION) {

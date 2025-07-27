@@ -9,7 +9,7 @@ import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notif
 const MAX_NOTIFICATIONS = 10000
 const MAX_DAYS = 28 // 4 weeks
 
-export function useNotifications(priority?: boolean) {
+export function useNotifications(priority: boolean = false) {
   const { session } = useAuth()
 
   // Try to load cached data first
@@ -26,7 +26,7 @@ export function useNotifications(priority?: boolean) {
     queryKey: ['notifications', priority],
     queryFn: async ({ pageParam }) => {
       const fetchTimestamp = new Date().toLocaleTimeString()
-      console.log(`🌐 [${fetchTimestamp}] React Query: Making API call (cursor: ${pageParam || 'none'})`)
+      console.log(`🌐 [${fetchTimestamp}] React Query: Making API call (priority: ${priority}, cursor: ${pageParam || 'none'})`)
       
       // This is the ONLY place where rate limiting applies - actual API calls
       const { atProtoClient } = await import('../services/atproto')
@@ -80,7 +80,13 @@ export function useNotifications(priority?: boolean) {
       pages: cachedData.pages,
       pageParams: [undefined, ...cachedData.pages.slice(0, -1).map(p => p.cursor)]
     } : undefined,
+    // Add placeholderData to prevent flickering
+    placeholderData: cachedData ? {
+      pages: cachedData.pages,
+      pageParams: [undefined, ...cachedData.pages.slice(0, -1).map(p => p.cursor)]
+    } : undefined,
     // Save to cache after successful API fetch
+    // Note: Using onSuccess for compatibility, but consider migrating to mutation side effects
     onSuccess: (data) => {
       const successTimestamp = new Date().toLocaleTimeString()
       if (data?.pages && data.pages.length > 0) {
@@ -88,6 +94,11 @@ export function useNotifications(priority?: boolean) {
         console.log(`💾 [${successTimestamp}] React Query onSuccess: Saving ${totalNotifications} notifications to cache`)
         NotificationCache.save(data.pages, priority)
       }
+    },
+    // Add onError handler to help debug issues
+    onError: (error) => {
+      const errorTimestamp = new Date().toLocaleTimeString()
+      console.error(`❌ [${errorTimestamp}] React Query error in useNotifications:`, error)
     }
   })
 }

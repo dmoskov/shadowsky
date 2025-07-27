@@ -44,9 +44,27 @@ export const NotificationsFeed: React.FC = () => {
   const { mutate: markAllAsRead, isPending: isMarkingAsRead } = useMarkNotificationsRead()
   
   const notifications = React.useMemo(() => {
-    if (!data?.pages) return []
-    return data.pages.flatMap((page: any) => page.notifications)
+    const timestamp = new Date().toLocaleTimeString()
+    if (!data?.pages) {
+      console.log(`📊 [${timestamp}] NotificationsFeed: No data pages available`)
+      return []
+    }
+    const allNotifications = data.pages.flatMap((page: any) => page.notifications)
+    console.log(`📊 [${timestamp}] NotificationsFeed: Computed ${allNotifications.length} notifications from ${data.pages.length} pages`)
+    return allNotifications
   }, [data])
+
+  // Debug effect to track data changes
+  useEffect(() => {
+    const timestamp = new Date().toLocaleTimeString()
+    console.log(`🔍 [${timestamp}] NotificationsFeed render state:`, {
+      isLoading,
+      hasData: !!data,
+      pagesCount: data?.pages?.length || 0,
+      notificationsCount: notifications.length,
+      error: error ? error.message : null
+    })
+  }, [isLoading, data, notifications.length, error])
 
   // Check if data is from cache
   useEffect(() => {
