@@ -12,7 +12,7 @@ import { VisualTimeline } from './components/VisualTimeline'
 import { NotificationsAnalytics } from './components/NotificationsAnalytics'
 import { RateLimitStatus } from './components/RateLimitStatus'
 import { Conversations } from './components/Conversations'
-import { CacheStatus } from './components/CacheStatus'
+import { DebugConsole } from './components/DebugConsole'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,7 +71,7 @@ function AppContent() {
         </main>
       </div>
       <RateLimitStatus />
-      <CacheStatus />
+      <DebugConsole />
     </div>
   )
 }

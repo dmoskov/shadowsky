@@ -4,7 +4,6 @@ import { TrendingUp, Users, Heart, MessageCircle, BarChart3, Bell, Clock, Repeat
 import { useAuth } from '../contexts/AuthContext'
 import { format, subDays, startOfDay, subHours } from 'date-fns'
 import { ExtendedNotificationsFetcher } from './ExtendedNotificationsFetcher'
-import { StorageAnalytics } from './StorageAnalytics'
 
 type TimeRange = '1d' | '3d' | '7d' | '4w'
 
@@ -314,9 +313,6 @@ export const NotificationsAnalytics: React.FC = () => {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Storage Analytics */}
-      <StorageAnalytics />
-      
       {/* Extended Notifications Fetcher */}
       <ExtendedNotificationsFetcher />
 
