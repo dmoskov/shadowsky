@@ -206,32 +206,54 @@ export const NotificationsAnalytics: React.FC = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold mb-2 flex items-center gap-2">
-          <BarChart3 className="text-blue-500" />
-          Analytics Dashboard
-          {hasExtendedData && (
-            <span className="text-sm font-normal px-2 py-1 rounded" style={{ 
-              backgroundColor: 'var(--bsky-bg-tertiary)', 
-              color: 'var(--bsky-primary)' 
-            }}>
-              Extended Data
-            </span>
-          )}
-        </h1>
-        <p style={{ color: 'var(--bsky-text-secondary)' }}>
-          {hasExtendedData 
-            ? `Analyzing ${analytics?.daySpan || 0} days of notification history`
-            : 'Monitor your Bluesky activity and engagement metrics'
-          }
-        </p>
+      <div className="relative overflow-hidden rounded-2xl p-6 mb-6" style={{
+        background: 'linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)',
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)'
+      }}>
+        <div className="absolute inset-0 opacity-10">
+          <div style={{
+            position: 'absolute',
+            top: '-50%',
+            right: '-10%',
+            width: '300px',
+            height: '300px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%)'
+          }} />
+        </div>
+        <div className="relative">
+          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3 text-white">
+            <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+              <BarChart3 size={28} />
+            </div>
+            Analytics Dashboard
+            {hasExtendedData && (
+              <span className="text-sm font-normal px-3 py-1.5 rounded-full" style={{ 
+                backgroundColor: 'rgba(255,255,255,0.2)', 
+                backdropFilter: 'blur(10px)'
+              }}>
+                🔎 Extended View
+              </span>
+            )}
+          </h1>
+          <p className="text-white/80 text-lg">
+            {hasExtendedData 
+              ? `📅 Analyzing ${analytics?.daySpan || 0} days of notification history`
+              : '📊 Monitor your Bluesky activity and engagement metrics in real-time'
+            }
+          </p>
+        </div>
       </div>
 
       {/* Extended Notifications Fetcher */}
       <ExtendedNotificationsFetcher />
 
       {/* Current Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" style={{
+        marginTop: '-3rem',
+        position: 'relative',
+        zIndex: 10
+      }}>
         {hasExtendedData ? (
           <>
             <StatCard
@@ -365,47 +387,91 @@ export const NotificationsAnalytics: React.FC = () => {
       </div>
 
       {/* Activity Chart */}
-      <div className="bsky-card p-6">
-        <h2 className="text-lg font-semibold mb-4">Activity Trend ({analytics.daySpan} day{analytics.daySpan !== 1 ? 's' : ''})</h2>
-        <div className="space-y-4">
+      <div className="bsky-card p-6" style={{
+        background: 'var(--bsky-bg-secondary)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div className="absolute top-0 right-0 w-64 h-64 opacity-5" style={{
+          background: 'radial-gradient(circle, var(--bsky-primary) 0%, transparent 70%)',
+          transform: 'translate(30%, -30%)'
+        }} />
+        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <TrendingUp className="text-green-500" size={20} />
+          Activity Trend
+          <span className="text-sm font-normal px-2 py-1 rounded-full" style={{
+            backgroundColor: 'var(--bsky-bg-tertiary)',
+            color: 'var(--bsky-text-secondary)'
+          }}>
+            {analytics.daySpan} day{analytics.daySpan !== 1 ? 's' : ''}
+          </span>
+        </h2>
+        <div className="space-y-3">
           {analytics.daysArray.map((day) => (
-            <div key={day.label} className="flex items-center gap-4">
-              <span className="text-sm w-12" style={{ color: 'var(--bsky-text-secondary)' }}>{day.label}</span>
-              <div className="flex-1 flex gap-1">
-                <div 
-                  className="h-6 rounded transition-all duration-500"
-                  style={{ 
-                    width: `${(day.likes / maxValue) * 100}%`,
-                    backgroundColor: 'var(--bsky-like)'
-                  }}
-                  title={`${day.likes} likes received`}
-                />
-                <div 
-                  className="h-6 rounded transition-all duration-500"
-                  style={{ 
-                    width: `${(day.reposts / maxValue) * 100}%`,
-                    backgroundColor: 'var(--bsky-repost)'
-                  }}
-                  title={`${day.reposts} reposts received`}
-                />
-                <div 
-                  className="h-6 rounded transition-all duration-500"
-                  style={{ 
-                    width: `${(day.follows / maxValue) * 100}%`,
-                    backgroundColor: 'var(--bsky-follow)'
-                  }}
-                  title={`${day.follows} new followers`}
-                />
-                <div 
-                  className="h-6 rounded transition-all duration-500"
-                  style={{ 
-                    width: `${(day.replies / maxValue) * 100}%`,
-                    backgroundColor: 'var(--bsky-reply)'
-                  }}
-                  title={`${day.replies} replies received`}
-                />
+            <div key={day.label} className="group flex items-center gap-4 p-2 rounded-lg transition-all hover:bg-opacity-50" style={{
+              backgroundColor: 'transparent'
+            }}>
+              <span className="text-sm w-14 font-medium" style={{ color: 'var(--bsky-text-secondary)' }}>{day.label}</span>
+              <div className="flex-1 relative h-8 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
+                <div className="absolute inset-0 flex">
+                  <div 
+                    className="h-full transition-all duration-500 relative overflow-hidden"
+                    style={{ 
+                      width: `${(day.likes / maxValue) * 100}%`,
+                      background: 'linear-gradient(90deg, var(--bsky-like) 0%, #e11d48 100%)'
+                    }}
+                    title={`${day.likes} likes received`}
+                  >
+                    <div className="absolute inset-0 opacity-30" style={{
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+                      animation: 'slide 2s infinite'
+                    }} />
+                  </div>
+                  <div 
+                    className="h-full transition-all duration-500 relative overflow-hidden"
+                    style={{ 
+                      width: `${(day.reposts / maxValue) * 100}%`,
+                      background: 'linear-gradient(90deg, var(--bsky-repost) 0%, #059669 100%)'
+                    }}
+                    title={`${day.reposts} reposts received`}
+                  >
+                    <div className="absolute inset-0 opacity-30" style={{
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+                      animation: 'slide 2s infinite',
+                      animationDelay: '0.5s'
+                    }} />
+                  </div>
+                  <div 
+                    className="h-full transition-all duration-500 relative overflow-hidden"
+                    style={{ 
+                      width: `${(day.follows / maxValue) * 100}%`,
+                      background: 'linear-gradient(90deg, var(--bsky-follow) 0%, #0066cc 100%)'
+                    }}
+                    title={`${day.follows} new followers`}
+                  >
+                    <div className="absolute inset-0 opacity-30" style={{
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+                      animation: 'slide 2s infinite',
+                      animationDelay: '1s'
+                    }} />
+                  </div>
+                  <div 
+                    className="h-full transition-all duration-500 relative overflow-hidden"
+                    style={{ 
+                      width: `${(day.replies / maxValue) * 100}%`,
+                      background: 'linear-gradient(90deg, var(--bsky-reply) 0%, #0891b2 100%)'
+                    }}
+                    title={`${day.replies} replies received`}
+                  >
+                    <div className="absolute inset-0 opacity-30" style={{
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+                      animation: 'slide 2s infinite',
+                      animationDelay: '1.5s'
+                    }} />
+                  </div>
+                </div>
               </div>
-              <span className="text-sm w-12 text-right" style={{ color: 'var(--bsky-text-primary)' }}>{day.total}</span>
+              <span className="text-sm w-14 text-right font-bold group-hover:scale-110 transition-transform" style={{ color: 'var(--bsky-text-primary)' }}>{day.total}</span>
             </div>
           ))}
         </div>
@@ -480,22 +546,36 @@ interface StatCardProps {
 
 const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, value, color }) => {
   const colorStyles = {
-    blue: { backgroundColor: 'rgba(0, 133, 255, 0.1)', color: 'var(--bsky-primary)', borderColor: 'rgba(0, 133, 255, 0.3)' },
-    yellow: { backgroundColor: 'rgba(250, 204, 21, 0.1)', color: '#facc15', borderColor: 'rgba(250, 204, 21, 0.3)' },
-    pink: { backgroundColor: 'rgba(236, 72, 153, 0.1)', color: '#ec4899', borderColor: 'rgba(236, 72, 153, 0.3)' },
-    green: { backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderColor: 'rgba(34, 197, 94, 0.3)' },
-    purple: { backgroundColor: 'rgba(147, 51, 234, 0.1)', color: '#9333ea', borderColor: 'rgba(147, 51, 234, 0.3)' },
+    blue: { backgroundColor: 'rgba(0, 133, 255, 0.1)', color: 'var(--bsky-primary)', borderColor: 'rgba(0, 133, 255, 0.3)', gradient: 'linear-gradient(135deg, #0085ff 0%, #0066cc 100%)' },
+    yellow: { backgroundColor: 'rgba(250, 204, 21, 0.1)', color: '#facc15', borderColor: 'rgba(250, 204, 21, 0.3)', gradient: 'linear-gradient(135deg, #facc15 0%, #f59e0b 100%)' },
+    pink: { backgroundColor: 'rgba(236, 72, 153, 0.1)', color: '#ec4899', borderColor: 'rgba(236, 72, 153, 0.3)', gradient: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' },
+    green: { backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderColor: 'rgba(34, 197, 94, 0.3)', gradient: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' },
+    purple: { backgroundColor: 'rgba(147, 51, 234, 0.1)', color: '#9333ea', borderColor: 'rgba(147, 51, 234, 0.3)', gradient: 'linear-gradient(135deg, #9333ea 0%, #7c3aed 100%)' },
   }
 
   const style = colorStyles[color as keyof typeof colorStyles]
 
   return (
-    <div className="bsky-card p-4" style={{ borderColor: style.borderColor }}>
-      <div className="flex items-center justify-between mb-2">
-        <Icon size={24} style={{ color: style.color }} />
-        <span className="text-2xl font-bold">{value}</span>
+    <div className="bsky-card p-6 transition-all duration-300 hover:scale-105 hover:shadow-lg" style={{ 
+      borderColor: style.borderColor,
+      backgroundColor: 'var(--bsky-bg-secondary)',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      <div className="absolute top-0 right-0 w-32 h-32 opacity-10" style={{
+        background: style.gradient,
+        borderRadius: '50%',
+        transform: 'translate(50%, -50%)'
+      }} />
+      <div className="relative">
+        <div className="flex items-center justify-between mb-3">
+          <div className="p-3 rounded-xl" style={{ background: style.gradient }}>
+            <Icon size={24} className="text-white" />
+          </div>
+          <span className="text-3xl font-bold">{value}</span>
+        </div>
+        <p className="text-sm font-medium" style={{ color: 'var(--bsky-text-secondary)' }}>{label}</p>
       </div>
-      <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>{label}</p>
     </div>
   )
 }

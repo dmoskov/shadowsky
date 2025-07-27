@@ -26,6 +26,7 @@ import {
 import { Settings } from './components/settings/Settings'
 import { Analytics } from './components/analytics/Analytics'
 import { Conversations } from './components/conversations/Conversations'
+import { AdminDashboard } from './components/admin/AdminDashboard'
 // These components are not in the index export
 import { MobileMenu } from './components/core/MobileMenu'
 import { MobileTabBar } from './components/core/MobileTabBar'
@@ -125,6 +126,7 @@ function AppContent() {
               <Route path="/settings" element={<Settings />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/analytics/:handle" element={<Analytics />} />
+              <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/tailwind-test" element={<TailwindTest />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

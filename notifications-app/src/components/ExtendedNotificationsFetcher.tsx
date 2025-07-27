@@ -14,6 +14,25 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     daysReached: 0,
     oldestDate: null as Date | null 
   })
+  
+  // Check if we already have cached data
+  const cachedData = queryClient.getQueryData(['notifications-extended']) as any
+  const hasCachedData = cachedData?.pages?.length > 0
+  const cachedNotifications = cachedData?.pages?.flatMap((page: any) => page.notifications) || []
+  const cachedStats = React.useMemo(() => {
+    if (!hasCachedData || cachedNotifications.length === 0) return null
+    
+    const oldestNotification = cachedNotifications[cachedNotifications.length - 1]
+    const oldestDate = new Date(oldestNotification.indexedAt)
+    const daysReached = Math.floor((new Date().getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24))
+    
+    return {
+      totalNotifications: cachedNotifications.length,
+      daysReached,
+      oldestDate,
+      newestDate: new Date(cachedNotifications[0].indexedAt)
+    }
+  }, [hasCachedData, cachedNotifications])
 
   const {
     data,
@@ -182,23 +201,46 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
   }
   
   return (
-    <div className="bsky-card p-6 mb-6">
+    <div className="bsky-card p-6 mb-6" style={{
+      background: hasCachedData 
+        ? 'linear-gradient(135deg, var(--bsky-bg-secondary) 0%, rgba(0, 133, 255, 0.05) 100%)'
+        : 'var(--bsky-bg-secondary)',
+      borderColor: hasCachedData ? 'var(--bsky-primary)' : 'var(--bsky-border-primary)',
+      borderWidth: hasCachedData ? '2px' : '1px'
+    }}>
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Calendar className="text-blue-500" />
+            <Calendar className={hasCachedData ? "text-green-500" : "text-blue-500"} />
             Extended Notification History
+            {hasCachedData && (
+              <span className="text-xs px-2 py-1 rounded-full" style={{
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                color: 'var(--bsky-success)',
+                border: '1px solid rgba(16, 185, 129, 0.3)'
+              }}>
+                Data Loaded
+              </span>
+            )}
           </h2>
           <p className="text-sm mt-1" style={{ color: 'var(--bsky-text-secondary)' }}>
-            Fetch up to 4 weeks of notification history for deeper analytics
+            {hasCachedData 
+              ? `Currently viewing ${cachedStats?.totalNotifications || 0} notifications from ${cachedStats?.daysReached || 0} days`
+              : 'Fetch up to 4 weeks of notification history for deeper analytics'
+            }
           </p>
         </div>
         
         <div className="flex gap-2">
-          {fetchingStatus === 'complete' && (
+          {(fetchingStatus === 'complete' || hasCachedData) && (
             <button
               onClick={handleClearData}
               className="bsky-button-secondary flex items-center gap-2"
+              style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                borderColor: 'rgba(239, 68, 68, 0.3)',
+                color: 'var(--bsky-error)'
+              }}
             >
               Clear Data
             </button>
@@ -208,16 +250,21 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
             onClick={handleFetch4Weeks}
             disabled={!session || fetchingStatus === 'fetching'}
             className="bsky-button-primary flex items-center gap-2"
+            style={{
+              background: hasCachedData 
+                ? 'linear-gradient(135deg, var(--bsky-success) 0%, #059669 100%)'
+                : 'linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)'
+            }}
           >
             {fetchingStatus === 'fetching' ? (
               <>
                 <Loader2 className="animate-spin" size={16} />
                 Fetching...
               </>
-            ) : fetchingStatus === 'complete' ? (
+            ) : hasCachedData ? (
               <>
                 <CheckCircle size={16} />
-                Re-fetch
+                Update Data
               </>
             ) : (
               <>
@@ -229,23 +276,58 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
         </div>
       </div>
       
+      {/* Show cached data stats when not fetching */}
+      {hasCachedData && fetchingStatus === 'idle' && cachedStats && (
+        <div className="mt-4 p-4 rounded-lg" style={{ 
+          backgroundColor: 'rgba(0, 133, 255, 0.05)',
+          border: '1px solid rgba(0, 133, 255, 0.1)'
+        }}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <p style={{ color: 'var(--bsky-text-secondary)' }}>Total Notifications</p>
+              <p className="text-lg font-semibold">{cachedStats.totalNotifications}</p>
+            </div>
+            <div>
+              <p style={{ color: 'var(--bsky-text-secondary)' }}>Days Covered</p>
+              <p className="text-lg font-semibold">{cachedStats.daysReached}</p>
+            </div>
+            <div>
+              <p style={{ color: 'var(--bsky-text-secondary)' }}>From</p>
+              <p className="text-lg font-semibold">{format(cachedStats.oldestDate, 'MMM d')}</p>
+            </div>
+            <div>
+              <p style={{ color: 'var(--bsky-text-secondary)' }}>To</p>
+              <p className="text-lg font-semibold">{format(cachedStats.newestDate, 'MMM d')}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {fetchingStatus !== 'idle' && (
         <div className="space-y-3">
           <div className="flex justify-between text-sm">
-            <span>Progress</span>
+            <span className="font-medium">Fetching Progress</span>
             <span style={{ color: 'var(--bsky-text-secondary)' }}>
               {progress.totalNotifications} notifications • {progress.daysReached} days
             </span>
           </div>
           
-          <div className="w-full rounded-full h-2" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
+          <div className="w-full rounded-full h-3" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
             <div 
-              className="h-2 rounded-full transition-all duration-300"
+              className="h-3 rounded-full transition-all duration-300 relative overflow-hidden"
               style={{ 
                 width: `${Math.min((progress.daysReached / 28) * 100, 100)}%`,
-                backgroundColor: 'var(--bsky-primary)'
+                background: 'linear-gradient(90deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)'
               }}
-            />
+            >
+              <div 
+                className="absolute inset-0 opacity-30"
+                style={{
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%)',
+                  animation: 'slide 1.5s infinite'
+                }}
+              />
+            </div>
           </div>
           
           {progress.oldestDate && (
