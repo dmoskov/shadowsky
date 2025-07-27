@@ -40,19 +40,69 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     setFetchingStatus('fetching')
     setProgress({ totalNotifications: 0, daysReached: 0, oldestDate: null })
     
+    console.log('Starting 4-week fetch...')
+    
+    // Reset the query first to clear any existing data
+    queryClient.removeQueries({ queryKey: ['notifications-extended'] })
+    
     // Start fetching
-    await refetch()
+    const initialResult = await refetch()
+    console.log('Initial fetch result:', { 
+      isSuccess: initialResult.isSuccess,
+      hasData: !!initialResult.data,
+      pagesCount: initialResult.data?.pages?.length 
+    })
     
     const fourWeeksAgo = subDays(new Date(), 28)
-    let currentPage = 0
+    let currentPage = 1 // Start at 1 since we already fetched the first page
+    let shouldContinue = initialResult.isSuccess && !!initialResult.data
+    
+    // Check if we need to continue after the first fetch
+    if (shouldContinue && initialResult.data?.pages) {
+      const firstPageNotifications = initialResult.data.pages[0]?.notifications || []
+      if (firstPageNotifications.length > 0) {
+        const oldestDate = new Date(firstPageNotifications[firstPageNotifications.length - 1].indexedAt)
+        const daysReached = Math.floor((new Date().getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24))
+        
+        // Update initial progress
+        setProgress({
+          totalNotifications: firstPageNotifications.length,
+          daysReached,
+          oldestDate
+        })
+        
+        if (oldestDate < fourWeeksAgo) {
+          console.log('First page already spans 4 weeks')
+          shouldContinue = false
+        }
+      }
+    }
     
     // Continue fetching until we reach 4 weeks or no more data
-    while (hasNextPage) {
+    while (shouldContinue) {
       currentPage++
+      console.log(`Fetching page ${currentPage}...`)
       
-      // Update progress
-      if (data?.pages) {
-        const allNotifications = data.pages.flatMap(page => page.notifications)
+      // Fetch next page and wait for result
+      const result = await fetchNextPage()
+      
+      console.log('Fetch result:', { 
+        hasNextPage: result.hasNextPage, 
+        isError: result.isError,
+        pagesCount: result.data?.pages?.length 
+      })
+      
+      // Check if we got data and should continue
+      if (!result.hasNextPage || result.isError) {
+        console.log('No more pages or error occurred')
+        shouldContinue = false
+        break
+      }
+      
+      // Update progress with the latest data
+      const latestData = result.data
+      if (latestData?.pages) {
+        const allNotifications = latestData.pages.flatMap(page => page.notifications)
         const totalCount = allNotifications.length
         
         if (allNotifications.length > 0) {
@@ -69,24 +119,24 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           // Check if we've reached 4 weeks
           if (oldestDate < fourWeeksAgo) {
             console.log('Reached 4-week limit')
+            shouldContinue = false
             break
           }
         }
       }
       
-      // Fetch next page
-      await fetchNextPage()
-      
       // Safety limit
       if (currentPage > 100) {
         console.log('Reached page limit')
+        shouldContinue = false
         break
       }
     }
     
-    // Final progress update
-    if (data?.pages) {
-      const allNotifications = data.pages.flatMap(page => page.notifications)
+    // Get the final data state after all fetches
+    const finalData = queryClient.getQueryData(['notifications-extended']) as any
+    if (finalData?.pages) {
+      const allNotifications = finalData.pages.flatMap((page: any) => page.notifications)
       if (allNotifications.length > 0) {
         const oldestNotification = allNotifications[allNotifications.length - 1]
         const oldestDate = new Date(oldestNotification.indexedAt)
