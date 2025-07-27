@@ -45,7 +45,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
   ]
 
   // Add admin dashboard for admin user only
+  console.log('Sidebar - Current session handle:', session?.handle)
   if (session?.handle === 'moskov.goodventures.org') {
+    console.log('Adding admin nav item')
     navItems.push({ path: '/admin', label: 'Admin', icon: Shield })
   }
 

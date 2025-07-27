@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
-import { Download, Loader2, Calendar, CheckCircle } from 'lucide-react'
+import { Download, Loader2, Calendar, CheckCircle, RefreshCw } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getNotificationService } from '../services/atproto/notifications'
 import { format, subDays } from 'date-fns'
+import { ExtendedFetchCache } from '../utils/extendedFetchCache'
 
 export const ExtendedNotificationsFetcher: React.FC = () => {
   const { session } = useAuth()
@@ -14,6 +15,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     daysReached: 0,
     oldestDate: null as Date | null 
   })
+  const [autoFetchTriggered, setAutoFetchTriggered] = useState(false)
   
   // Check if we already have cached data
   const cachedData = queryClient.getQueryData(['notifications-extended']) as any

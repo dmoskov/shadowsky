@@ -23,7 +23,9 @@ export const AdminDashboard: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<'overview' | 'users' | 'content' | 'settings'>('overview')
 
   // Check if user is admin
+  console.log('Current session handle:', session?.handle)
   const isAdmin = session?.handle === 'moskov.goodventures.org'
+  console.log('Is admin check:', isAdmin)
 
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ['admin', 'stats'],
