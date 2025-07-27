@@ -11,27 +11,6 @@ const MAX_DAYS = 28 // 4 weeks
 
 export function useNotifications(priority?: boolean) {
   const { session } = useAuth()
-  const queryClient = useQueryClient()
-
-  // Load cached data on mount
-  React.useEffect(() => {
-    if (session) {
-      try {
-        const cachedData = NotificationCache.load(priority)
-        if (cachedData && cachedData.pages && cachedData.pages.length > 0) {
-          console.log(`Loading ${cachedData.pages.reduce((sum, p) => sum + p.notifications.length, 0)} notifications from cache`)
-          queryClient.setQueryData(['notifications', priority], {
-            pages: cachedData.pages,
-            pageParams: [undefined, ...cachedData.pages.slice(0, -1).map(p => p.cursor)]
-          })
-        }
-      } catch (error) {
-        console.error('Failed to load from cache:', error)
-        // Clear corrupted cache
-        NotificationCache.clear(priority)
-      }
-    }
-  }, [session, priority, queryClient])
 
   const query = useInfiniteQuery({
     queryKey: ['notifications', priority],
@@ -80,16 +59,17 @@ export function useNotifications(priority?: boolean) {
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes (was every minute!)
   })
 
-  // Save to cache when data changes
+  // Save to cache when data is successfully fetched
   React.useEffect(() => {
-    if (query.data?.pages && query.data.pages.length > 0 && !query.isLoading) {
+    if (query.isSuccess && query.data?.pages && query.data.pages.length > 0) {
       try {
+        console.log(`Saving ${query.data.pages.reduce((sum, p) => sum + p.notifications.length, 0)} notifications to cache`)
         NotificationCache.save(query.data.pages, priority)
       } catch (error) {
         console.error('Failed to save to cache:', error)
       }
     }
-  }, [query.data, priority, query.isLoading])
+  }, [query.isSuccess, query.data, priority])
 
   return query
 }
