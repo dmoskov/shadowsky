@@ -81,7 +81,8 @@ export const NotificationsAnalytics: React.FC = () => {
   })
 
   const analytics = React.useMemo(() => {
-    if (!notifications?.notifications || notifications.notifications.length === 0) return null
+    // Always generate analytics structure, even with no data
+    if (!notifications?.notifications) return null
 
     const now = new Date()
     
@@ -98,15 +99,22 @@ export const NotificationsAnalytics: React.FC = () => {
       n => new Date(n.indexedAt) >= cutoffDate
     )
     
-    
-    if (filteredNotifications.length === 0) return null
+    // Don't return null if no data - still show the chart structure
+    // if (filteredNotifications.length === 0) return null
     
     // Calculate the actual date range of the filtered data
-    const sortedNotifications = [...filteredNotifications].sort(
-      (a, b) => new Date(a.indexedAt).getTime() - new Date(b.indexedAt).getTime()
-    )
-    const oldestDate = new Date(sortedNotifications[0].indexedAt)
-    const newestDate = new Date(sortedNotifications[sortedNotifications.length - 1].indexedAt)
+    const sortedNotifications = filteredNotifications.length > 0 
+      ? [...filteredNotifications].sort(
+          (a, b) => new Date(a.indexedAt).getTime() - new Date(b.indexedAt).getTime()
+        )
+      : []
+    
+    const oldestDate = sortedNotifications.length > 0 
+      ? new Date(sortedNotifications[0].indexedAt)
+      : cutoffDate
+    const newestDate = sortedNotifications.length > 0 
+      ? new Date(sortedNotifications[sortedNotifications.length - 1].indexedAt)
+      : now
     
     // Create time buckets based on the selected range
     let buckets: Array<{
@@ -227,7 +235,9 @@ export const NotificationsAnalytics: React.FC = () => {
 
     // Calculate engagement rate
     const totalEngagement = filteredNotifications.length
-    const uniqueUsers = new Set(filteredNotifications.map(n => n.author.did)).size
+    const uniqueUsers = filteredNotifications.length > 0 
+      ? new Set(filteredNotifications.map(n => n.author.did)).size
+      : 0
     const hourSpan = Math.max(1, (newestDate.getTime() - oldestDate.getTime()) / (1000 * 60 * 60))
     const daySpan = Math.max(1, hourSpan / 24)
 
@@ -295,7 +305,7 @@ export const NotificationsAnalytics: React.FC = () => {
     )
   }
 
-  const maxValue = Math.max(...analytics.buckets.map(b => b.total))
+  const maxValue = Math.max(1, ...analytics.buckets.map(b => b.total))
 
   return (
     <div className="p-6 space-y-6">
