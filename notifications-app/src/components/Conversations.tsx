@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react'
-import { MessageCircle, Search, ArrowLeft, Users, Loader2, ExternalLink, CornerDownRight } from 'lucide-react'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
+import { MessageCircle, Search, ArrowLeft, Users, Loader2, ExternalLink, CornerDownRight, ChevronDown } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
 import { useReplyNotifications } from '../hooks/useNotificationsByType'
@@ -110,6 +110,8 @@ export const Conversations: React.FC = () => {
   const [selectedConvo, setSelectedConvo] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const previousPostMapRef = React.useRef<Map<string, Post>>(new Map())
+  const threadContainerRef = useRef<HTMLDivElement>(null)
+  const mostRecentNotificationRef = useRef<HTMLDivElement>(null)
 
   // Fetch reply notifications specifically
   const { 
@@ -386,6 +388,19 @@ export const Conversations: React.FC = () => {
     }
   }, [data?.pages, hasNextPage, isFetchingNextPage, fetchNextPage])
 
+  // Auto-scroll to most recent notification when conversation is selected
+  useEffect(() => {
+    if (selectedConvo && mostRecentNotificationRef.current && threadContainerRef.current) {
+      // Give a small delay for the content to render
+      setTimeout(() => {
+        mostRecentNotificationRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        })
+      }, 100)
+    }
+  }, [selectedConvo])
+
   // Render thread nodes recursively
   const renderThreadNodes = (nodes: ThreadNode[], postMap: Map<string, Post>) => {
     return nodes.map((node) => {
@@ -475,12 +490,18 @@ export const Conversations: React.FC = () => {
             <div 
               className={`flex-1 p-4 rounded-lg cursor-pointer transition-all hover:bg-opacity-5 hover:bg-blue-500 ${
                 isUnread ? 'ring-2 ring-blue-500 ring-opacity-30' : ''
+              } ${
+                notification?.uri === selectedConversation?.latestReply.uri ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
               }`}
               style={{ 
                 backgroundColor: node.isRoot 
                   ? 'var(--bsky-bg-secondary)'
-                  : (isUnread ? 'var(--bsky-bg-primary)' : 'var(--bsky-bg-secondary)'),
-                border: '1px solid var(--bsky-border-primary)'
+                  : (notification?.uri === selectedConversation?.latestReply.uri 
+                    ? 'var(--bsky-bg-tertiary)' 
+                    : (isUnread ? 'var(--bsky-bg-primary)' : 'var(--bsky-bg-secondary)')),
+                border: notification?.uri === selectedConversation?.latestReply.uri 
+                  ? '2px solid var(--bsky-primary)' 
+                  : '1px solid var(--bsky-border-primary)'
               }}
               onClick={() => {
                 if (postUrl) {
@@ -516,7 +537,7 @@ export const Conversations: React.FC = () => {
 
               {/* Mark the most recent notification */}
               {!node.isRoot && notification?.uri === selectedConversation?.latestReply.uri && (
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2" ref={mostRecentNotificationRef}>
                   <span className="text-xs font-medium px-2 py-1 rounded-full animate-pulse" 
                         style={{ 
                           backgroundColor: 'var(--bsky-primary)', 
@@ -852,7 +873,10 @@ export const Conversations: React.FC = () => {
                     Thread with {selectedConversation.participants.size} participant{selectedConversation.participants.size !== 1 ? 's' : ''}
                   </h2>
                   <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
-                    {selectedConversation.totalReplies} repl{selectedConversation.totalReplies === 1 ? 'y' : 'ies'}
+                    {selectedConversation.totalReplies} repl{selectedConversation.totalReplies === 1 ? 'y' : 'ies'} • 
+                    <span style={{ color: 'var(--bsky-primary)' }}>
+                      Most recent: {formatDistanceToNow(new Date(selectedConversation.latestReply.indexedAt), { addSuffix: true })}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -871,7 +895,28 @@ export const Conversations: React.FC = () => {
           </div>
 
           {/* Thread View */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4" ref={threadContainerRef}>
+            {/* Jump to recent button */}
+            {selectedConversation && selectedConversation.totalReplies > 3 && (
+              <div className="sticky top-0 z-10 flex justify-end mb-2">
+                <button
+                  onClick={() => {
+                    mostRecentNotificationRef.current?.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'center'
+                    })
+                  }}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium shadow-md transition-all hover:shadow-lg"
+                  style={{
+                    backgroundColor: 'var(--bsky-primary)',
+                    color: 'white'
+                  }}
+                >
+                  <ChevronDown size={16} />
+                  Jump to most recent
+                </button>
+              </div>
+            )}
             {threadTree && renderThreadNodes(threadTree, postMap)}
           </div>
 

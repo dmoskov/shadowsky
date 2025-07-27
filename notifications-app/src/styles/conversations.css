@@ -91,6 +91,54 @@
   background-color: var(--bsky-primary);
 }
 
+/* Most recent notification highlight */
+.most-recent-notification {
+  position: relative;
+  box-shadow: 0 0 0 2px var(--bsky-primary);
+  background-color: var(--bsky-bg-tertiary);
+}
+
+.most-recent-notification::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 2px solid var(--bsky-primary);
+  border-radius: 12px;
+  opacity: 0.3;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.1;
+    transform: scale(1.02);
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Jump to recent button */
+.jump-to-recent {
+  position: sticky;
+  top: 8px;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+@media (prefers-color-scheme: dark) {
+  .jump-to-recent {
+    background-color: rgba(0, 0, 0, 0.9);
+  }
+}
+
 /* Thread animations */
 @keyframes slideIn {
   from {
