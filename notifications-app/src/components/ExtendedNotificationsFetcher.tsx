@@ -92,9 +92,16 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
         pagesCount: result.data?.pages?.length 
       })
       
-      // Check if we got data and should continue
-      if (!result.hasNextPage || result.isError) {
-        console.log('No more pages or error occurred')
+      // Check if we got an error
+      if (result.isError) {
+        console.log('Error occurred during fetch:', result.error)
+        shouldContinue = false
+        break
+      }
+      
+      // Check if the fetch was successful but returned no next page
+      if (!result.data) {
+        console.log('No data returned from fetch')
         shouldContinue = false
         break
       }
@@ -122,6 +129,14 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
             shouldContinue = false
             break
           }
+        }
+        
+        // Check if we have more pages to fetch
+        const lastPage = latestData.pages[latestData.pages.length - 1]
+        if (!lastPage.cursor) {
+          console.log('No more cursor - reached end of notifications')
+          shouldContinue = false
+          break
         }
       }
       
