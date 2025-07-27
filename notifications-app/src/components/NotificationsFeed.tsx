@@ -239,29 +239,6 @@ export const NotificationsFeed: React.FC = () => {
       {/* Header with filters */}
       <div className="sticky top-0 bsky-glass p-4 z-10" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold bsky-gradient-text">
-            Notifications
-            {unreadCount !== undefined && unreadCount !== null && unreadCount > 0 && (
-              <span className="ml-2 text-sm font-normal" style={{ color: 'var(--bsky-text-secondary)' }}>
-                {unreadCount} new
-              </span>
-            )}
-            {notifications.length > 0 && (
-              <span className="ml-2 text-xs font-normal" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                · {notifications.length} total
-              </span>
-            )}
-            {isFromCache && debugMode && (
-              <span className="ml-2 text-xs font-normal flex items-center gap-1" style={{ 
-                color: 'var(--bsky-primary)',
-                opacity: 0.7,
-                animation: 'fadeIn 0.3s ease-in-out'
-              }}>
-                <Database size={12} />
-                Loaded from cache
-              </span>
-            )}
-          </h1>
           <div className="flex items-center gap-2">
             {unreadCount !== undefined && unreadCount !== null && unreadCount > 0 && (
               <button
@@ -283,7 +260,7 @@ export const NotificationsFeed: React.FC = () => {
         </div>
 
         {/* Filter tabs */}
-        <div className="flex gap-1 mt-4 border-b bsky-tabs-container" style={{ borderColor: 'var(--bsky-border-primary)' }}>
+        <div className="flex gap-1 border-b bsky-tabs-container" style={{ borderColor: 'var(--bsky-border-primary)' }}>
           <FilterTab
             active={filter === 'all'}
             onClick={() => setFilter('all')}

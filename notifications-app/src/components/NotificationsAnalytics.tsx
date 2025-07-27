@@ -206,54 +206,11 @@ export const NotificationsAnalytics: React.FC = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="relative overflow-hidden rounded-2xl p-6 mb-6" style={{
-        background: 'linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)',
-        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)'
-      }}>
-        <div className="absolute inset-0 opacity-10">
-          <div style={{
-            position: 'absolute',
-            top: '-50%',
-            right: '-10%',
-            width: '300px',
-            height: '300px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%)'
-          }} />
-        </div>
-        <div className="relative">
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3 text-white">
-            <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
-              <BarChart3 size={28} />
-            </div>
-            Analytics Dashboard
-            {hasExtendedData && (
-              <span className="text-sm font-normal px-3 py-1.5 rounded-full" style={{ 
-                backgroundColor: 'rgba(255,255,255,0.2)', 
-                backdropFilter: 'blur(10px)'
-              }}>
-                🔎 Extended View
-              </span>
-            )}
-          </h1>
-          <p className="text-white/80 text-lg">
-            {hasExtendedData 
-              ? `📅 Analyzing ${analytics?.daySpan || 0} days of notification history`
-              : '📊 Monitor your Bluesky activity and engagement metrics in real-time'
-            }
-          </p>
-        </div>
-      </div>
-
       {/* Extended Notifications Fetcher */}
       <ExtendedNotificationsFetcher />
 
       {/* Current Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" style={{
-        marginTop: '-3rem',
-        position: 'relative',
-        zIndex: 10
-      }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {hasExtendedData ? (
           <>
             <StatCard

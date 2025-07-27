@@ -274,16 +274,6 @@ export const VisualTimeline: React.FC = () => {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-2 flex items-center gap-2">
-          <Calendar className="text-blue-500" />
-          Visual Timeline
-        </h1>
-        <p style={{ color: 'var(--bsky-text-secondary)' }}>
-          Your activity over time with visual spacing
-        </p>
-      </div>
-
       <div className="relative">
         {/* Timeline line */}
         <div 

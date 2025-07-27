@@ -687,10 +687,6 @@ export const Conversations: React.FC = () => {
            style={{ borderRight: '1px solid var(--bsky-border-primary)' }}>
         {/* Search Header */}
         <div className="p-4" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
-          <h1 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--bsky-text-primary)' }}>
-            <MessageCircle size={24} />
-            Conversations
-          </h1>
           <div className="relative">
             <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2" 
                    style={{ color: 'var(--bsky-text-tertiary)' }} />
