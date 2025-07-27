@@ -14,9 +14,6 @@ interface RateLimitBucket {
 }
 
 export const RateLimitStatus: React.FC = () => {
-  const [stats, setStats] = useState<RateLimitBucket[]>([])
-  const [isExpanded, setIsExpanded] = useState(false)
-  
   // Check for debug mode
   const urlParams = new URLSearchParams(window.location.search)
   const debugMode = urlParams.has('debug')
@@ -25,6 +22,9 @@ export const RateLimitStatus: React.FC = () => {
   if (!debugMode) {
     return null
   }
+  
+  const [stats, setStats] = useState<RateLimitBucket[]>([])
+  const [isExpanded, setIsExpanded] = useState(false)
 
   useEffect(() => {
     const updateStats = () => {
