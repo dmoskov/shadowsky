@@ -14,6 +14,7 @@ import { ConversationsSimple as Conversations } from './components/Conversations
 import { DebugConsole } from './components/DebugConsole'
 import { NotificationStorageDB } from './services/notification-storage-db'
 import { cleanupLocalStorage } from './utils/cleanupLocalStorage'
+import { BackgroundNotificationLoader } from './components/BackgroundNotificationLoader'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +79,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bsky-font" style={{ background: 'var(--bsky-bg-primary)' }}>
+      <BackgroundNotificationLoader />
       <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div className="flex">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />

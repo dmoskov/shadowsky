@@ -582,11 +582,18 @@ export const ConversationsSimple: React.FC = () => {
                       {previewText.length > 80 ? previewText.substring(0, 80) + '...' : previewText}
                     </p>
                     
-                    <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                      <span>{convo.totalReplies} repl{convo.totalReplies === 1 ? 'y' : 'ies'}</span>
-                      {isGroup && (
-                        <span>{convo.participants.size} participants</span>
-                      )}
+                    {/* Show latest reply author and snippet */}
+                    <div className="flex items-center gap-2 text-xs">
+                      <span style={{ color: 'var(--bsky-text-tertiary)' }}>
+                        {convo.latestReply.author.displayName || `@${convo.latestReply.author.handle}`}:
+                      </span>
+                      <span className="truncate" style={{ color: 'var(--bsky-text-secondary)' }}>
+                        {(() => {
+                          const latestPost = postMap.get(convo.latestReply.uri)
+                          const latestText = (latestPost?.record as any)?.text || 'replied'
+                          return latestText.length > 50 ? latestText.substring(0, 50) + '...' : latestText
+                        })()}
+                      </span>
                     </div>
                   </div>
                 </div>
