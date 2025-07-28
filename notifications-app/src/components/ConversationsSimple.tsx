@@ -843,10 +843,11 @@ export const ConversationsSimple: React.FC = () => {
   // Always render the UI immediately, even if data is still loading
   // This provides a non-blocking experience
   return (
-    <div className="flex h-[calc(100vh-4rem)] relative" style={{ background: 'var(--bsky-bg-primary)' }}>
-      {/* Left Panel - Conversations List */}
-      <div className={`${selectedConvo ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-96`} 
-           style={{ borderRight: '1px solid var(--bsky-border-primary)' }}>
+    <div className="max-w-7xl mx-auto">
+      <div className="flex h-[calc(100vh-4rem)] relative" style={{ background: 'var(--bsky-bg-primary)' }}>
+        {/* Left Panel - Conversations List */}
+        <div className={`${selectedConvo ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-96`} 
+             style={{ borderRight: '1px solid var(--bsky-border-primary)' }}>
         {/* Search Header */}
         <div className="p-4" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
           <div className="relative">
@@ -997,6 +998,7 @@ export const ConversationsSimple: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }

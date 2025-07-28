@@ -273,7 +273,7 @@ export const VisualTimeline: React.FC = () => {
   let lastDayLabel: string | null = null
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-4xl mx-auto">
       <div className="relative">
         {/* Timeline line */}
         <div 

@@ -202,3 +202,38 @@ html {
   border-bottom: 2px solid var(--bsky-border-primary);
   border-bottom-left-radius: 8px;
 }
+
+/* Mobile responsive adjustments */
+@media (max-width: 640px) {
+  /* Reduce thread indentation on mobile */
+  .thread-depth-1 {
+    margin-left: 24px;
+  }
+  
+  .thread-depth-2 {
+    margin-left: 48px;
+  }
+  
+  .thread-depth-3 {
+    margin-left: 72px;
+  }
+  
+  .thread-depth-4 {
+    margin-left: 96px;
+  }
+  
+  .thread-depth-indicator {
+    padding-left: 24px;
+  }
+  
+  /* Adjust thread lines on mobile */
+  .thread-line,
+  .thread-branch,
+  .thread-corner {
+    left: 10px;
+  }
+  
+  .thread-branch {
+    width: 14px;
+  }
+}

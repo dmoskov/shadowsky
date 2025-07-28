@@ -302,3 +302,28 @@ a[href*="bsky.app/profile"] {
   border-radius: 10px;
   white-space: nowrap;
 }
+
+/* Mobile responsive adjustments */
+@media (max-width: 640px) {
+  /* Reduce left spacing on mobile */
+  .timeline-event-card {
+    margin-left: -0.5rem;
+  }
+  
+  /* Adjust timeline line position on mobile */
+  .timeline-line-mobile {
+    left: 2.5rem;
+  }
+  
+  /* Smaller avatars on mobile */
+  .timeline-avatar-mobile {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  /* Adjust post preview spacing */
+  .timeline-post-preview {
+    margin-left: 2.5rem;
+    padding: 0.75rem;
+  }
+}
