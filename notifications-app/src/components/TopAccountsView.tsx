@@ -150,7 +150,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
       return await cacheService.getCacheStats()
     },
     enabled: !!agent,
-    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+    refetchInterval: 10 * 1000, // Refresh every 10 seconds
   })
 
   // Enrich account stats with follower counts and filter

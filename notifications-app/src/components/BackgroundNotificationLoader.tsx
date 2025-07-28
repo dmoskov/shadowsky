@@ -42,6 +42,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
     getNextPageParam: (lastPage) => lastPage.cursor,
     enabled: false, // Manual trigger only
     staleTime: Infinity,
+    refetchInterval: 10 * 1000, // Refetch every 10 seconds when enabled
   })
 
   // Initialize IndexedDB

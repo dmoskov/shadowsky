@@ -66,6 +66,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     getNextPageParam: (lastPage) => lastPage.cursor,
     enabled: false, // Manual trigger only
     staleTime: Infinity, // Don't auto-refetch
+    refetchInterval: 10 * 1000, // Refetch every 10 seconds when enabled
   })
 
   // Initialize IndexedDB

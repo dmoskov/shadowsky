@@ -225,7 +225,8 @@ export const NotificationsFeed: React.FC = () => {
   return (
     <div className="bsky-font">
       {/* Header with filters */}
-      <div className="sticky top-0 bsky-glass p-4 z-10" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
+      <div className="sticky top-0 bsky-glass z-10" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
+        <div className="max-w-4xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             {unreadCount !== undefined && unreadCount !== null && unreadCount > 0 && (
@@ -248,7 +249,7 @@ export const NotificationsFeed: React.FC = () => {
         </div>
 
         {/* Filter tabs */}
-        <div className="flex gap-1 border-b bsky-tabs-container" style={{ borderColor: 'var(--bsky-border-primary)' }}>
+        <div className="flex gap-1 bsky-tabs-container">
           <FilterTab
             active={filter === 'all'}
             onClick={() => setFilter('all')}
@@ -313,34 +314,37 @@ export const NotificationsFeed: React.FC = () => {
             />
           )}
         </div>
+        </div>
       </div>
 
       {/* Post loading progress indicator - only show if we're actually fetching from API */}
       {isFetchingMore && percentageFetched < 100 && fetchedPosts < totalPosts && (
-        <div className="px-4 py-2 border-b" style={{ 
+        <div className="border-b" style={{ 
           borderColor: 'var(--bsky-border-secondary)',
           backgroundColor: 'var(--bsky-bg-secondary)',
           fontSize: '0.875rem',
           color: 'var(--bsky-text-secondary)'
         }}>
-          <div className="flex items-center justify-between">
-            <span>Loading post content...</span>
-            <span>{percentageFetched}% ({fetchedPosts}/{totalPosts} posts)</span>
-          </div>
-          <div className="mt-1 h-1 bg-gray-200 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bsky-border-primary)' }}>
-            <div 
-              className="h-full transition-all duration-300 ease-out"
-              style={{ 
-                width: `${percentageFetched}%`,
-                backgroundColor: 'var(--bsky-primary)'
-              }}
-            />
+          <div className="max-w-4xl mx-auto px-4 py-2">
+            <div className="flex items-center justify-between">
+              <span>Loading post content...</span>
+              <span>{percentageFetched}% ({fetchedPosts}/{totalPosts} posts)</span>
+            </div>
+            <div className="mt-1 h-1 bg-gray-200 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bsky-border-primary)' }}>
+              <div 
+                className="h-full transition-all duration-300 ease-out"
+                style={{ 
+                  width: `${percentageFetched}%`,
+                  backgroundColor: 'var(--bsky-primary)'
+                }}
+              />
+            </div>
           </div>
         </div>
       )}
 
       {/* Notifications list */}
-      <div>
+      <div className="max-w-4xl mx-auto px-4">
         {filter === 'top-accounts' ? (
           <TopAccountsView 
             notifications={notifications} 
@@ -830,7 +834,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(({
       href={notificationUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className={`bsky-notification flex gap-3 p-4 cursor-pointer block no-underline ${
+      className={`bsky-notification flex gap-3 py-4 cursor-pointer block no-underline ${
         !notification.isRead ? 'bsky-notification-unread' : ''
       }`}
       style={{ textDecoration: 'none', color: 'inherit' }}

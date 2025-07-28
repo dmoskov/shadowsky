@@ -25,27 +25,28 @@ export const NotificationsAnalytics: React.FC = () => {
       const response = await agent.app.bsky.notification.listNotifications({ limit: 50 })
       return response.data
     },
-    refetchInterval: false, // Disable automatic polling to prevent flicker
+    refetchInterval: 10 * 1000, // Refetch every 10 seconds
     enabled: !hasExtendedData, // Don't fetch if we have extended data
     refetchOnWindowFocus: false
   })
 
-  // Query for analytics data - use extended data if available
+  // Query for analytics data - always fetch fresh data for accuracy
   const { data: notifications } = useQuery({
-    queryKey: ['notifications-analytics', hasExtendedData],
+    queryKey: ['notifications-analytics', timeRange],
     queryFn: async () => {
       if (!agent) throw new Error('Not authenticated')
       
-      // If we have extended data from the 4-week fetch, use that
-      if (hasExtendedData) {
-        const allNotifications = extendedData.pages.flatMap((page: any) => page.notifications)
-        return { notifications: allNotifications }
-      }
-      
-      // Otherwise, fetch notifications until we have 7 days worth of data
+      // Always fetch fresh data based on the selected time range
+      // This ensures we get the most recent notifications
       const allNotifications: any[] = []
       let cursor: string | undefined
-      const sevenDaysAgo = subDays(new Date(), 7)
+      
+      // Determine how far back to fetch based on time range
+      const cutoffDate = timeRange === '1d' ? subDays(new Date(), 1) :
+                        timeRange === '3d' ? subDays(new Date(), 3) :
+                        timeRange === '7d' ? subDays(new Date(), 7) :
+                        subDays(new Date(), 28)
+      
       let hasMoreToFetch = true
       
       while (hasMoreToFetch) {
@@ -57,9 +58,9 @@ export const NotificationsAnalytics: React.FC = () => {
         allNotifications.push(...response.data.notifications)
         cursor = response.data.cursor
         
-        // Check if we've fetched notifications older than 7 days or no more cursor
+        // Check if we've fetched notifications older than cutoff date or no more cursor
         const oldestNotification = response.data.notifications[response.data.notifications.length - 1]
-        if (!cursor || (oldestNotification && new Date(oldestNotification.indexedAt) < sevenDaysAgo)) {
+        if (!cursor || (oldestNotification && new Date(oldestNotification.indexedAt) < cutoffDate)) {
           hasMoreToFetch = false
         }
         
@@ -69,19 +70,14 @@ export const NotificationsAnalytics: React.FC = () => {
         }
       }
       
-      // Filter to only include notifications from the last 7 days
-      const filteredNotifications = allNotifications.filter(
-        (notif: any) => new Date(notif.indexedAt) >= sevenDaysAgo
-      )
-      
-      return { notifications: filteredNotifications }
+      return { notifications: allNotifications }
     },
-    // Re-run when extended data changes
     enabled: !!agent,
-    staleTime: hasExtendedData ? 60 * 60 * 1000 : 30 * 60 * 1000, // 1 hour for extended data, 30 min for regular
-    gcTime: 2 * 60 * 60 * 1000, // Keep in cache for 2 hours
-    refetchOnMount: false, // Don't refetch on mount if data exists
-    refetchOnWindowFocus: false // Don't refetch on window focus
+    staleTime: 2 * 60 * 1000, // Consider data stale after 2 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchInterval: 30 * 1000, // Refetch every 30 seconds
+    refetchOnMount: true, // Always refetch on mount to get fresh data
+    refetchOnWindowFocus: true // Refetch when window regains focus
   })
 
   const analytics = React.useMemo(() => {
@@ -91,6 +87,7 @@ export const NotificationsAnalytics: React.FC = () => {
     const now = new Date()
     
     // Filter notifications based on selected time range
+    // Note: notification.indexedAt is in UTC but new Date() automatically converts to local timezone
     const timeRangeHours = {
       '1d': 24,
       '3d': 72,
@@ -102,6 +99,7 @@ export const NotificationsAnalytics: React.FC = () => {
     const filteredNotifications = notifications.notifications.filter(
       (n: any) => new Date(n.indexedAt) >= cutoffDate
     )
+    
     
     // Don't return null if no data - still show the chart structure
     // if (filteredNotifications.length === 0) return null
@@ -138,10 +136,26 @@ export const NotificationsAnalytics: React.FC = () => {
       for (let i = 11; i >= 0; i--) {
         const endDate = subHours(now, i * 2)
         const startDate = subHours(now, (i + 1) * 2)
+        
+        // Check if this bucket is today or yesterday
+        const isToday = endDate.toDateString() === now.toDateString()
+        const yesterday = new Date(now)
+        yesterday.setDate(yesterday.getDate() - 1)
+        const isYesterday = endDate.toDateString() === yesterday.toDateString()
+        
+        let label = format(endDate, 'h a')
+        if (!isToday && isYesterday) {
+          // Add "Yesterday" prefix for clarity only when it's actually yesterday
+          label = `Yesterday ${format(endDate, 'h a')}`
+        } else if (i === 0) {
+          // Most recent bucket
+          label = 'Now'
+        }
+        
         buckets.push({
           startDate,
           endDate,
-          label: format(endDate, 'ha'),
+          label,
           likes: 0,
           reposts: 0,
           follows: 0,
@@ -158,7 +172,7 @@ export const NotificationsAnalytics: React.FC = () => {
         buckets.push({
           startDate,
           endDate,
-          label: i === 0 ? 'Now' : format(endDate, 'EEE ha'),
+          label: i === 0 ? 'Now' : format(endDate, 'EEE h a'),
           likes: 0,
           reposts: 0,
           follows: 0,
@@ -204,7 +218,9 @@ export const NotificationsAnalytics: React.FC = () => {
     }
 
     // Count notifications by bucket and type
+    
     filteredNotifications.forEach((notification: any) => {
+      // Parse the UTC timestamp and it will automatically convert to local timezone
       const notifDate = new Date(notification.indexedAt)
       const bucket = buckets.find(b => 
         notifDate >= b.startDate && notifDate < b.endDate
@@ -268,6 +284,7 @@ export const NotificationsAnalytics: React.FC = () => {
       const recentNotifications = notifications.notifications.filter(
         (n: any) => new Date(n.indexedAt) >= oneDayAgo
       )
+      
       
       const counts = {
         total: recentNotifications.length,
@@ -384,11 +401,21 @@ export const NotificationsAnalytics: React.FC = () => {
           </div>
           <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
             Total in {timeRange === '1d' ? '24 hours' : timeRange === '3d' ? '3 days' : timeRange === '7d' ? '7 days' : '4 weeks'}
-            {analytics.oldestDate && analytics.newestDate && (
-              <span className="block text-xs mt-1">
-                {format(analytics.oldestDate, 'MMM d, h:mma')} - {format(analytics.newestDate, 'MMM d, h:mma')}
-              </span>
-            )}
+            {(() => {
+              const now = new Date()
+              const startDate = timeRange === '1d' ? subHours(now, 24) :
+                               timeRange === '3d' ? subDays(now, 3) :
+                               timeRange === '7d' ? subDays(now, 7) :
+                               subDays(now, 28)
+              return (
+                <span className="block text-xs mt-1">
+                  {format(startDate, 'MMM d, h:mm a')} - {format(now, 'MMM d, h:mm a')}
+                  <span className="ml-1" style={{ opacity: 0.7 }}>
+                    ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+                  </span>
+                </span>
+              )
+            })()}
           </p>
         </div>
         
@@ -413,46 +440,6 @@ export const NotificationsAnalytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Notification Breakdown */}
-      <div className="bsky-card p-6">
-        <h2 className="text-lg font-semibold mb-4">
-          {hasExtendedData ? `Notification Types (${Math.round(analytics.daySpan)} days)` : 'Recent Notification Types'}
-        </h2>
-        <div className="space-y-3">
-          {hasExtendedData && notifications?.notifications ? (
-            // Use full dataset for extended data
-            (() => {
-              const fullCounts = {
-                likes: notifications.notifications.filter((n: any) => n.reason === 'like').length,
-                reposts: notifications.notifications.filter((n: any) => n.reason === 'repost').length,
-                replies: notifications.notifications.filter((n: any) => n.reason === 'reply').length,
-                mentions: notifications.notifications.filter((n: any) => n.reason === 'mention').length,
-                follows: notifications.notifications.filter((n: any) => n.reason === 'follow').length,
-              }
-              const total = analytics.totalEngagement
-              
-              return (
-                <>
-                  <NotificationTypeBar label="Likes" count={fullCounts.likes} total={total} color="pink" />
-                  <NotificationTypeBar label="Reposts" count={fullCounts.reposts} total={total} color="green" />
-                  <NotificationTypeBar label="Replies" count={fullCounts.replies} total={total} color="blue" />
-                  <NotificationTypeBar label="Mentions" count={fullCounts.mentions} total={total} color="purple" />
-                  <NotificationTypeBar label="Follows" count={fullCounts.follows} total={total} color="indigo" />
-                </>
-              )
-            })()
-          ) : (
-            // Use stats for recent data
-            <>
-              <NotificationTypeBar label="Likes" count={stats?.likes || 0} total={stats?.total || 1} color="pink" />
-              <NotificationTypeBar label="Reposts" count={stats?.reposts || 0} total={stats?.total || 1} color="green" />
-              <NotificationTypeBar label="Replies" count={stats?.replies || 0} total={stats?.total || 1} color="blue" />
-              <NotificationTypeBar label="Mentions" count={stats?.mentions || 0} total={stats?.total || 1} color="purple" />
-              <NotificationTypeBar label="Follows" count={stats?.follows || 0} total={stats?.total || 1} color="indigo" />
-            </>
-          )}
-        </div>
-      </div>
 
       {/* Activity Chart */}
       <div className="bsky-card p-6" style={{
@@ -782,42 +769,6 @@ const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, value, color }) 
   )
 }
 
-interface NotificationTypeBarProps {
-  label: string
-  count: number
-  total: number
-  color: string
-}
-
-const NotificationTypeBar: React.FC<NotificationTypeBarProps> = ({ label, count, total, color }) => {
-  const percentage = total > 0 ? (count / total) * 100 : 0
-  
-  const colorStyles = {
-    pink: 'var(--bsky-like)',
-    green: 'var(--bsky-repost)',
-    blue: 'var(--bsky-primary)',
-    purple: 'var(--bsky-accent)',
-    indigo: '#6366f1',
-  }
-
-  return (
-    <div>
-      <div className="flex justify-between text-sm mb-1">
-        <span>{label}</span>
-        <span style={{ color: 'var(--bsky-text-secondary)' }}>{count}</span>
-      </div>
-      <div className="w-full rounded-full h-2" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
-        <div 
-          className="h-2 rounded-full transition-all duration-500"
-          style={{ 
-            width: `${percentage}%`,
-            backgroundColor: colorStyles[color as keyof typeof colorStyles]
-          }}
-        />
-      </div>
-    </div>
-  )
-}
 
 function getNotificationAction(reason: string): string {
   switch (reason) {

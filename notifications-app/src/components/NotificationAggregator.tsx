@@ -217,7 +217,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
   
   return (
     <div
-      className={`bsky-notification flex gap-3 p-4 cursor-pointer ${
+      className={`bsky-notification flex gap-3 py-4 cursor-pointer ${
         hasUnread ? 'bsky-notification-unread' : ''
       }`}
       onClick={handleClick}
