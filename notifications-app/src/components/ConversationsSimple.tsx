@@ -37,7 +37,8 @@ const ConversationItem = React.memo(({
   onClick,
   allPostsMap,
   session,
-  filteredConversationsIndex
+  filteredConversationsIndex,
+  isLoadingRootPost
 }: {
   convo: ConversationThread
   isSelected: boolean
@@ -45,6 +46,7 @@ const ConversationItem = React.memo(({
   allPostsMap: Map<string, Post>
   session: any
   filteredConversationsIndex: number
+  isLoadingRootPost: boolean
 }) => {
   const rootRecord = convo.rootPost?.record as any
   const previewText = rootRecord?.text || '[Post unavailable]'
@@ -64,12 +66,6 @@ const ConversationItem = React.memo(({
       mainParticipantDisplayName = convo.rootPost.author.displayName
       mainParticipantHandle = convo.rootPost.author.handle
       avatarSource = 'rootPost'
-    } else {
-      // Fallback to latest reply author if root post not loaded yet
-      mainParticipantAvatar = convo.latestReply.author.avatar
-      mainParticipantDisplayName = convo.latestReply.author.displayName
-      mainParticipantHandle = convo.latestReply.author.handle
-      avatarSource = 'latestReply-fallback'
     }
     
     // Log avatar usage
@@ -82,8 +78,75 @@ const ConversationItem = React.memo(({
       mainParticipantHandle,
       mainParticipantAvatar: !!mainParticipantAvatar,
       rootPostAuthor: convo.rootPost?.author?.handle,
-      latestReplyAuthor: convo.latestReply.author.handle
+      latestReplyAuthor: convo.latestReply.author.handle,
+      isLoadingRootPost
     })
+  }
+
+  // If we're loading the root post and it's not a group conversation, show loading state
+  if (!isGroup && isLoadingRootPost && !convo.rootPost?.author) {
+    return (
+      <div className={`w-full text-left p-4 transition-all ${
+        isSelected ? 'bg-opacity-10 bg-blue-500' : ''
+      }`}
+      style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
+        <div className="flex items-center gap-3">
+          {/* Avatar placeholder */}
+          <div className="relative flex-shrink-0">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center animate-pulse"
+                 style={{ background: 'var(--bsky-bg-secondary)' }}>
+              <Loader2 size={20} className="animate-spin" style={{ color: 'var(--bsky-text-tertiary)' }} />
+            </div>
+            {unreadCount > 0 && (
+              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-medium"
+                   style={{ background: 'var(--bsky-primary)' }}>
+                {unreadCount}
+              </div>
+            )}
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-32 rounded animate-pulse" style={{ background: 'var(--bsky-bg-secondary)' }} />
+                <Loader2 size={12} className="animate-spin" style={{ color: 'var(--bsky-text-tertiary)' }} />
+              </div>
+              <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
+                {formatDistanceToNow(new Date(convo.latestReply.indexedAt), { addSuffix: true })}
+              </span>
+            </div>
+            
+            <div className="h-3 w-full rounded mb-2 animate-pulse" style={{ background: 'var(--bsky-bg-secondary)' }} />
+            
+            {/* Still show latest reply info */}
+            <div className="flex items-center gap-2 text-xs">
+              {convo.latestReply.author.avatar ? (
+                <img 
+                  src={convo.latestReply.author.avatar} 
+                  alt={convo.latestReply.author.handle}
+                  className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" 
+                     style={{ background: 'var(--bsky-bg-tertiary)' }}>
+                  <span className="text-xs">
+                    {convo.latestReply.author.displayName?.[0] || convo.latestReply.author.handle?.[0] || 'U'}
+                  </span>
+                </div>
+              )}
+              <span className="truncate" style={{ color: 'var(--bsky-text-secondary)' }}>
+                {(() => {
+                  const latestPost = allPostsMap.get(convo.latestReply.uri)
+                  const latestText = (latestPost?.record as any)?.text || 'replied'
+                  return latestText.length > 50 ? latestText.substring(0, 50) + '...' : latestText
+                })()}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -181,6 +244,7 @@ const ConversationItem = React.memo(({
   // - Root post becomes available or changes
   // - Latest reply changes
   // - Unread count changes
+  // - Loading state changes
   return (
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.convo.rootPost?.uri === nextProps.convo.rootPost?.uri &&
@@ -188,7 +252,8 @@ const ConversationItem = React.memo(({
     prevProps.convo.rootPost?.author?.avatar === nextProps.convo.rootPost?.author?.avatar &&
     prevProps.convo.latestReply.uri === nextProps.convo.latestReply.uri &&
     prevProps.convo.replies.filter(r => !r.isRead).length === nextProps.convo.replies.filter(r => !r.isRead).length &&
-    prevProps.allPostsMap.get(prevProps.convo.latestReply.uri) === nextProps.allPostsMap.get(nextProps.convo.latestReply.uri)
+    prevProps.allPostsMap.get(prevProps.convo.latestReply.uri) === nextProps.allPostsMap.get(nextProps.convo.latestReply.uri) &&
+    prevProps.isLoadingRootPost === nextProps.isLoadingRootPost
   )
 })
 
@@ -858,17 +923,31 @@ export const ConversationsSimple: React.FC = () => {
                 </>
               )}
             </div>
-          ) : filteredConversations.slice(0, 5).map((convo, index) => (
-            <ConversationItem
-              key={convo.rootUri}
-              convo={convo}
-              isSelected={selectedConvo === convo.rootUri}
-              onClick={() => setSelectedConvo(convo.rootUri)}
-              allPostsMap={allPostsMap}
-              session={session}
-              filteredConversationsIndex={index}
-            />
-          ))}
+          ) : filteredConversations.slice(0, 5).map((convo, index) => {
+            // Determine if we're still loading this conversation's root post
+            const isLoadingRootPost = (
+              // We've discovered this root URI needs to be fetched
+              additionalRootUris.has(convo.rootUri) &&
+              // But we haven't loaded it yet
+              (!convo.rootPost || !convo.rootPost.author)
+            ) || (
+              // Or we're still in the initial post loading phase
+              percentageFetched < 100 && !convo.rootPost
+            )
+            
+            return (
+              <ConversationItem
+                key={convo.rootUri}
+                convo={convo}
+                isSelected={selectedConvo === convo.rootUri}
+                onClick={() => setSelectedConvo(convo.rootUri)}
+                allPostsMap={allPostsMap}
+                session={session}
+                filteredConversationsIndex={index}
+                isLoadingRootPost={isLoadingRootPost}
+              />
+            )
+          })}
         </div>
       </div>
 
