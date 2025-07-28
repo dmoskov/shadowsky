@@ -4,7 +4,7 @@
  */
 
 import { AppBskyFeedDefs, AppBskyNotificationListNotifications } from '@atproto/api'
-import { debug } from '@bsky/shared'
+import { debug } from '../../utils/debug'
 
 export type Post = AppBskyFeedDefs.PostView
 export type FeedItem = AppBskyFeedDefs.FeedViewPost

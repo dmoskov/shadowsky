@@ -8,7 +8,7 @@ import { mapATProtoError } from '../../lib/errors'
 import type { Session } from '../../types/atproto'
 import { sessionCookies } from '../../lib/cookies'
 import { createRateLimitedAgent } from '../../lib/rate-limited-agent'
-import { debug } from '@bsky/shared'
+import { debug } from '../../utils/debug'
 
 export interface ATProtoConfig {
   service?: string

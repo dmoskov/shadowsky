@@ -866,7 +866,7 @@ export const ConversationsSimple: React.FC = () => {
             />
           </div>
           <p className="text-xs mt-2" style={{ color: 'var(--bsky-text-secondary)' }}>
-            Showing {Math.min(5, filteredConversations.length)} of {filteredConversations.length} conversation{filteredConversations.length !== 1 ? 's' : ''} from {replyNotifications.length} reply notifications (DEBUG MODE: Limited to 5)
+            Showing {filteredConversations.length} conversation{filteredConversations.length !== 1 ? 's' : ''} from {replyNotifications.length} reply notifications
           </p>
         </div>
 
@@ -913,7 +913,7 @@ export const ConversationsSimple: React.FC = () => {
                 </>
               )}
             </div>
-          ) : filteredConversations.slice(0, 10).map((convo, index) => {
+          ) : filteredConversations.map((convo, index) => {
             // Determine if we're still loading this conversation's root post
             const isLoadingRootPost = (
               // We've discovered this root URI needs to be fetched

@@ -2,7 +2,7 @@ import { AtpAgent } from '@atproto/api'
 import type { Post } from '../../types/atproto'
 import { mapATProtoError } from '../../lib/errors'
 import { rateLimiters, withRateLimit } from '../../lib/rate-limiter'
-import { debug } from '@bsky/shared'
+import { debug } from '../../utils/debug'
 
 // Helper to ensure agent is authenticated
 function ensureAuthenticated(agent: AtpAgent): void {

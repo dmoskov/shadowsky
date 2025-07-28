@@ -1,4 +1,4 @@
-import { debug } from '@bsky/shared'
+import { debug } from '../utils/debug'
 
 /**
  * Enhanced error tracking for local development

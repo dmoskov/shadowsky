@@ -42,7 +42,6 @@ export const ConversationsEnhanced: React.FC = () => {
         const threadsWithReplies = timeline.data.feed
           .filter(item => item.post.replyCount && item.post.replyCount > 0)
           .sort((a, b) => (b.post.replyCount || 0) - (a.post.replyCount || 0))
-          .slice(0, 10)
           .map(item => ({
             uri: item.post.uri,
             post: item.post,

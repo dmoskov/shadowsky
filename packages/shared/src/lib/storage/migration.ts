@@ -4,7 +4,7 @@
 
 import { feedStorage } from './feed-storage'
 import { notificationStorage } from './notification-storage'
-import { debug } from '@bsky/shared'
+import { debug } from '../../utils/debug'
 
 export interface MigrationResult {
   success: boolean

@@ -6,7 +6,7 @@
 import React from 'react';
 import { onCLS, onFCP, onLCP, onTTFB, onINP } from 'web-vitals';
 import type { Metric } from 'web-vitals'
-import { debug } from '@bsky/shared';
+import { debug } from '../utils/debug';
 
 interface PerformanceContext {
   route?: string;

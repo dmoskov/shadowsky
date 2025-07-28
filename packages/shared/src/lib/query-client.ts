@@ -4,7 +4,7 @@
 
 import { QueryClient } from '@tanstack/react-query'
 import { feedStorage, notificationStorage } from './storage'
-import { debug } from '@bsky/shared'
+import { debug } from '../utils/debug'
 
 // Custom query client with persistence hooks
 class PersistedQueryClient extends QueryClient {
