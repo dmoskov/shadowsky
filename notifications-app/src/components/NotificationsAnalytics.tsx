@@ -416,7 +416,7 @@ export const NotificationsAnalytics: React.FC = () => {
       {/* Notification Breakdown */}
       <div className="bsky-card p-6">
         <h2 className="text-lg font-semibold mb-4">
-          {hasExtendedData ? `Notification Types (${analytics.daySpan} days)` : 'Recent Notification Types'}
+          {hasExtendedData ? `Notification Types (${Math.round(analytics.daySpan)} days)` : 'Recent Notification Types'}
         </h2>
         <div className="space-y-3">
           {hasExtendedData && notifications?.notifications ? (
