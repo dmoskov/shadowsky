@@ -238,11 +238,14 @@ export const NotificationsAnalytics: React.FC = () => {
       }
     })
 
-    // Find most active users (use filtered notifications)
+    // Find most active users (use filtered notifications, excluding subscription notifications)
     const userActivity = new Map<string, number>()
     filteredNotifications.forEach((notification: any) => {
-      const key = notification.author.handle
-      userActivity.set(key, (userActivity.get(key) || 0) + 1)
+      // Exclude starterpack-joined notifications from "Top Users Engaging"
+      if (notification.reason !== 'starterpack-joined') {
+        const key = notification.author.handle
+        userActivity.set(key, (userActivity.get(key) || 0) + 1)
+      }
     })
 
     const topUsers = Array.from(userActivity.entries())

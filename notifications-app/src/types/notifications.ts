@@ -1,4 +1,15 @@
-export type NotificationReason = 'like' | 'repost' | 'follow' | 'mention' | 'reply' | 'quote'
+export type NotificationReason = 
+  | 'like' 
+  | 'repost' 
+  | 'follow' 
+  | 'mention' 
+  | 'reply' 
+  | 'quote'
+  | 'starterpack-joined'
+  | 'verified'
+  | 'unverified'
+  | 'like-via-repost'
+  | 'repost-via-repost'
 
 export interface NotificationMetrics {
   totalNotifications: number

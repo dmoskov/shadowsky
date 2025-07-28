@@ -251,6 +251,11 @@ export const VisualTimeline: React.FC = () => {
       case 'follow': return <UserPlus size={16} className="text-blue-500" />
       case 'reply': return <MessageCircle size={16} className="text-purple-500" />
       case 'quote': return <Quote size={16} className="text-orange-500" />
+      case 'starterpack-joined': return <UserPlus size={16} className="text-blue-500" />
+      case 'verified': return <MessageCircle size={16} className="text-green-500" />
+      case 'unverified': return <MessageCircle size={16} className="text-red-500" />
+      case 'like-via-repost': return <Heart size={16} className="text-red-500" />
+      case 'repost-via-repost': return <Repeat2 size={16} className="text-green-500" />
       default: return <MessageCircle size={16} className="text-gray-500" />
     }
   }
@@ -748,6 +753,11 @@ function getActionText(reason: string): string {
     case 'mention': return 'mentioned you'
     case 'reply': return 'replied to your post'
     case 'quote': return 'quoted your post'
+    case 'starterpack-joined': return 'joined via your starterpack'
+    case 'verified': return 'verified your account'
+    case 'unverified': return 'unverified your account'
+    case 'like-via-repost': return 'liked a repost of your post'
+    case 'repost-via-repost': return 'reposted a repost of your post'
     default: return 'interacted with your post'
   }
 }

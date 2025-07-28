@@ -34,10 +34,10 @@ export function aggregateNotifications(notifications: Notification[]): Processed
   
   notifications.forEach(notification => {
     // Only aggregate certain types
-    if (['like', 'repost', 'follow', 'quote'].includes(notification.reason)) {
-      // For follows, group all together. For likes/reposts/quotes, group by post URI
-      const key = notification.reason === 'follow' 
-        ? 'follow-all'
+    if (['like', 'repost', 'follow', 'quote', 'starterpack-joined', 'like-via-repost', 'repost-via-repost'].includes(notification.reason)) {
+      // For follows and starterpack-joined, group all together. For likes/reposts/quotes, group by post URI
+      const key = ['follow', 'starterpack-joined'].includes(notification.reason)
+        ? `${notification.reason}-all`
         : `${notification.reason}-${notification.uri || 'no-uri'}`
       
       if (!groups.has(key)) {
@@ -45,7 +45,7 @@ export function aggregateNotifications(notifications: Notification[]): Processed
       }
       groups.get(key)!.push(notification)
     } else {
-      // Don't aggregate replies, mentions - they're more important individually
+      // Don't aggregate replies, mentions, verified, unverified - they're more important individually
       processed.push({ type: 'single', notification })
     }
   })
@@ -163,6 +163,9 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
       case 'repost': return <Repeat2 size={18} style={{ color: 'var(--bsky-repost)' }} />
       case 'follow': return <UserPlus size={18} style={{ color: 'var(--bsky-follow)' }} />
       case 'quote': return <Quote size={18} style={{ color: 'var(--bsky-quote)' }} />
+      case 'starterpack-joined': return <UserPlus size={18} style={{ color: 'var(--bsky-follow)' }} />
+      case 'like-via-repost': return <Heart size={18} style={{ color: 'var(--bsky-like)' }} fill="currentColor" />
+      case 'repost-via-repost': return <Repeat2 size={18} style={{ color: 'var(--bsky-repost)' }} />
       default: return null
     }
   }
@@ -173,6 +176,9 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
       case 'repost': return 'Reposts'
       case 'follow': return 'Follows'
       case 'quote': return 'Quotes'
+      case 'starterpack-joined': return 'Starterpack Joins'
+      case 'like-via-repost': return 'Likes via Repost'
+      case 'repost-via-repost': return 'Reposts via Repost'
       default: return reason.charAt(0).toUpperCase() + reason.slice(1) + 's'
     }
   }
@@ -187,6 +193,12 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
         return item.count === 1 ? 'followed you' : 'new followers'
       case 'quote':
         return item.count === 1 ? 'quoted your post' : `quotes of your post`
+      case 'starterpack-joined':
+        return item.count === 1 ? 'joined via your starterpack' : 'joined via your starterpack'
+      case 'like-via-repost':
+        return item.count === 1 ? 'liked a repost of your post' : `likes on reposts of your post`
+      case 'repost-via-repost':
+        return item.count === 1 ? 'reposted a repost of your post' : `reposts of reposts of your post`
       default: 
         return 'interacted with your post'
     }
