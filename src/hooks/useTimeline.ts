@@ -1,11 +1,12 @@
 /**
- * React Query hook for timeline data
+ * React Query hook for timeline data with IndexedDB persistence
  */
 
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { feedService } from '../services/atproto'
 import { useErrorHandler } from './useErrorHandler'
 import { useAuth } from '../contexts/AuthContext'
+import { feedStorage } from '@bsky/shared'
 import type { TimelineResponse } from '@bsky/shared'
 
 export const useTimeline = () => {
@@ -25,7 +26,23 @@ export const useTimeline = () => {
     queryKey: ['timeline'],
     queryFn: async ({ pageParam }) => {
       try {
-        return await feedService.getTimeline(pageParam)
+        const response = await feedService.getTimeline(pageParam)
+        
+        // Save to IndexedDB in the background
+        if (response.feed && response.feed.length > 0) {
+          feedStorage.saveFeedPage('timeline', response.feed, response.cursor)
+            .then(() => {
+              // Update metadata
+              return feedStorage.saveMetadata('timeline', {
+                lastUpdate: Date.now(),
+                totalCount: response.feed.length,
+                version: '1.0'
+              })
+            })
+            .catch(err => console.error('Failed to cache timeline:', err))
+        }
+        
+        return response
       } catch (error) {
         handleError(error)
         throw error

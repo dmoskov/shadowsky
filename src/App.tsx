@@ -35,6 +35,7 @@ import { TailwindTest } from './components/TailwindTest'
 import { LoadingScreen } from './components/ui/LoadingScreen'
 import { RateLimitStatus } from './components/RateLimitStatus'
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
+import { useDataMigration } from './hooks/useDataMigration'
 import { GlobalLoadingIndicator } from './components/ui/GlobalLoadingIndicator'
 import { SkipLinks } from './components/ui/SkipLinks'
 import { queryClient } from '@bsky/shared'
@@ -70,6 +71,9 @@ function AppContent() {
   
   // Enable keyboard navigation
   useKeyboardNavigation()
+  
+  // Run data migration on startup
+  const migrationStatus = useDataMigration()
   
   // Track route changes for performance monitoring
   // useEffect(() => {

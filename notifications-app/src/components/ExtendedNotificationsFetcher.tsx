@@ -148,8 +148,8 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     
     console.log('Starting 4-week fetch...')
     
-    // Reset the query first to clear any existing data
-    queryClient.removeQueries({ queryKey: ['notifications-extended'] })
+    // Don't remove existing data - let React Query handle the refresh
+    // This will replace the data instead of clearing it first
     
     // Start fetching
     const initialResult = await refetch()
@@ -315,9 +315,8 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       return
     }
     
-    // Invalidate analytics after first page
-    queryClient.invalidateQueries({ queryKey: ['notifications-analytics'] })
-    queryClient.invalidateQueries({ queryKey: ['notifications-visual-timeline'] })
+    // Don't invalidate immediately - wait until we have new data
+    // This prevents the analytics from losing data during the fetch
     
     // Fetch until we reach the newest notification from our last fetch
     const targetDate = new Date(metadata.newestNotificationDate)
@@ -362,7 +361,9 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       const allNotifications = finalData.pages.flatMap((page: any) => page.notifications)
       if (allNotifications.length > 0) {
         const oldestNotification = allNotifications[allNotifications.length - 1]
+        const newestNotification = allNotifications[0]
         const oldestDate = new Date(oldestNotification.indexedAt)
+        const newestDate = new Date(newestNotification.indexedAt)
         const daysReached = Math.floor((new Date().getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24))
         
         setProgress({
@@ -370,12 +371,37 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           daysReached,
           oldestDate
         })
+        
+        // Save the updated data to IndexedDB
+        if (isIndexedDBReady) {
+          console.log('💾 Saving updated notifications to IndexedDB...')
+          // Clear and re-save all pages to ensure consistency
+          await cacheService.clearCache()
+          for (let i = 0; i < finalData.pages.length; i++) {
+            const page = finalData.pages[i]
+            await cacheService.cacheNotifications(page.notifications, i + 1)
+          }
+          console.log('✅ Updated IndexedDB with new notifications')
+        }
+        
+        // Update metadata
+        ExtendedFetchCache.saveMetadata(
+          allNotifications.length,
+          oldestDate,
+          newestDate,
+          daysReached
+        )
       }
     }
     
     setFetchingStatus('complete')
-    queryClient.invalidateQueries({ queryKey: ['notifications-analytics'] })
-    queryClient.invalidateQueries({ queryKey: ['notifications-visual-timeline'] })
+    
+    // Only invalidate after we've successfully fetched new data
+    // This ensures analytics always has data to display
+    if (finalData?.pages?.length > 0) {
+      queryClient.invalidateQueries({ queryKey: ['notifications-analytics'] })
+      queryClient.invalidateQueries({ queryKey: ['notifications-visual-timeline'] })
+    }
   }
 
   const allNotifications = data?.pages.flatMap(page => page.notifications) || []
