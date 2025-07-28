@@ -121,7 +121,7 @@ export const Login: React.FC = () => {
             <div>
               <h3 className="font-semibold mb-1" style={{ color: 'var(--bsky-text-primary)' }}>Your credentials are safe</h3>
               <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
-                Your login goes directly to Bluesky's official servers. We never store your password - we only save the session token Bluesky provides.
+                Your login goes directly to Bluesky's official servers. We never store your password - the session token is saved only on your computer.
               </p>
             </div>
           </div>

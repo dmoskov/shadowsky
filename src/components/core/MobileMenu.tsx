@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Settings, Bookmark, HelpCircle, Info, LogOut, Shield } from 'lucide-react';
+import { X, Settings, Bookmark, HelpCircle, Info, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -19,11 +19,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
     { icon: HelpCircle, label: 'Help', path: '/help' },
     { icon: Info, label: 'About', path: '/about' },
   ];
-
-  // Add admin menu item for admin user
-  if (session?.handle === 'moskov.goodventures.org') {
-    menuItems.push({ icon: Shield, label: 'Admin', path: '/admin' });
-  }
   
   const handleNavigate = (path: string) => {
     navigate(path);

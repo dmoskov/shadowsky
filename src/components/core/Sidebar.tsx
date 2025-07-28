@@ -12,12 +12,10 @@ import {
   Users,
   TrendingUp,
   PenSquare,
-  BarChart3,
-  Shield
+  BarChart3
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUnreadNotificationCount } from '../../hooks/useNotifications'
-import { debug } from '@bsky/shared'
 
 interface NavItem {
   path: string
@@ -44,13 +42,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
     { path: '/analytics', label: 'Analytics', icon: BarChart3 },
     { path: '/settings', label: 'Settings', icon: Settings },
   ]
-
-  // Add admin dashboard for admin user only
-  debug.log('Sidebar - Current session handle:', session?.handle)
-  if (session?.handle === 'moskov.goodventures.org') {
-    debug.log('Adding admin nav item')
-    navItems.push({ path: '/admin', label: 'Admin', icon: Shield })
-  }
 
   const trendingItems = [
     { path: '/explore', label: 'Explore', icon: Hash },

@@ -10,6 +10,7 @@ import type { FeedItem, Post } from '@bsky/shared'
 import { usePostInteractions } from '../../hooks/usePostInteractions'
 import { atUriToWebUrl, copyToClipboard, shareUrl } from '../../utils/url-helpers'
 import { getPostText } from '../../utils/post-helpers'
+import { analytics } from '../../services/analytics'
 
 interface PostCardProps {
   item: FeedItem
@@ -39,6 +40,7 @@ export const PostCard: React.FC<PostCardProps> = ({
     try {
       debug.log('Like button clicked for post:', post.uri)
       await likePost(post)
+      analytics.trackPostEngagement('like', post.uri)
     } catch (error) {
       debug.error('Like failed:', error)
     }
@@ -46,6 +48,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 
   const handleRepost = async () => {
     await repostPost(post)
+    analytics.trackPostEngagement('repost', post.uri)
   }
 
   const handleShare = async () => {
@@ -77,11 +80,13 @@ export const PostCard: React.FC<PostCardProps> = ({
   const handlePostClick = () => {
     if (onViewThread) {
       onViewThread(post.uri)
+      analytics.trackPostView(post.uri, post.author.did)
     }
   }
 
   const handleReply = () => {
     onReply?.(post)
+    analytics.trackPostEngagement('reply', post.uri)
   }
 
   return (

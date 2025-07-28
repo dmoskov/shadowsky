@@ -18,6 +18,7 @@ import { useUnreadNotificationCount } from '../../hooks/useNotifications'
 import { useToast } from '../../components/ui/Toast'
 import { getBskyProfileUrl } from '../../utils/url-helpers'
 import { LoadingSpinner } from '../ui/LoadingSpinner'
+import { BlueskyLogoStyled } from '../icons/BlueskyIcon'
 
 interface HeaderProps {
   onMenuToggle?: () => void;
@@ -109,14 +110,17 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
 
           {/* Logo */}
           <div className="flex-shrink-0">
-            <motion.h1 
-              className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent cursor-pointer"
+            <motion.div 
+              className="flex items-center space-x-2 cursor-pointer"
               onClick={() => navigate('/')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Bluesky
-            </motion.h1>
+              <BlueskyLogoStyled size={32} className="text-blue-400" />
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                Bluesky
+              </h1>
+            </motion.div>
           </div>
 
           {/* Search Bar */}

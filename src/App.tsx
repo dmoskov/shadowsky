@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { analytics } from './services/analytics'
 import { LoadingProvider } from './contexts/LoadingContext'
 import { AccessibilityProvider } from './contexts/AccessibilityContext'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -26,7 +27,6 @@ import {
 import { Settings } from './components/settings/Settings'
 import { Analytics } from './components/analytics/Analytics'
 import { ConversationsEnhanced as Conversations } from './components/conversations/ConversationsEnhanced'
-import { AdminDashboard } from './components/admin/AdminDashboard'
 // These components are not in the index export
 import { MobileMenu } from './components/core/MobileMenu'
 import { MobileTabBar } from './components/core/MobileTabBar'
@@ -69,9 +69,15 @@ function AppContent() {
   const [composeTemplate, setComposeTemplate] = useState<string | undefined>()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
   
   // Enable keyboard navigation
   useKeyboardNavigation()
+  
+  // Track page views
+  useEffect(() => {
+    analytics.trackPageView(location.pathname)
+  }, [location])
   
   // Run data migration on startup
   const migrationStatus = useDataMigration()
@@ -131,7 +137,6 @@ function AppContent() {
               <Route path="/settings" element={<Settings />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/analytics/:handle" element={<Analytics />} />
-              <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/tailwind-test" element={<TailwindTest />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

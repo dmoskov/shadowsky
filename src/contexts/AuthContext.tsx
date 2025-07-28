@@ -5,6 +5,7 @@ import { ATProtoClient } from '@bsky/shared'
 import type { Session } from '@bsky/shared'
 import { SessionExpiredError, AuthenticationError, NetworkError } from '@bsky/shared'
 import { queryClient } from '@bsky/shared'
+import { analytics } from '../services/analytics'
 
 interface AuthContextType {
   isAuthenticated: boolean
@@ -40,6 +41,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const maxRetries = 3
 
   const logout = useCallback(() => {
+    // Track logout event
+    analytics.trackLogout()
+    
     // Clear all auth state
     atProtoClient.logout()
     setIsAuthenticated(false)
@@ -128,6 +132,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const newSession = await atProtoClient.login(identifier, password)
       setIsAuthenticated(true)
       setSession(newSession)
+      
+      // Track successful login
+      analytics.trackLogin('password')
+      
+      // Set user ID for analytics
+      if (newSession.did) {
+        analytics.setUserId(newSession.did)
+      }
+      
       return true
     } catch (error) {
       debug.error('Login error:', error)

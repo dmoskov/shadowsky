@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import type { AppBskyFeedDefs } from '@atproto/api'
-import { ThreadService, ThreadViewPost } from '../../../packages/shared/src/index.ts'
-import { debug } from '@bsky/shared'
+import { ThreadService, debug } from '@bsky/shared'
+import type { ThreadViewPost } from '@bsky/shared'
 
 export interface ThreadNode {
   post: ThreadViewPost
@@ -300,3 +300,6 @@ export function getEnhancedThreadService(agent: AtpAgent): EnhancedThreadService
   }
   return enhancedThreadServiceInstance
 }
+
+// Re-export types explicitly
+export type { ThreadNode, ThreadNavigationState }
