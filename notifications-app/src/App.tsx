@@ -5,7 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { Sidebar } from './components/Sidebar'
 import { Header } from './components/Header'
-import { Login } from './components/Login'
+import { LandingPage } from './components/LandingPage'
 import { NotificationsFeed } from './components/NotificationsFeed'
 import { VisualTimeline } from './components/VisualTimeline'
 import { NotificationsAnalytics } from './components/NotificationsAnalytics'
@@ -76,7 +76,7 @@ function AppContent() {
   }
 
   if (!isAuthenticated) {
-    return <Login />
+    return <LandingPage />
   }
 
   return (
