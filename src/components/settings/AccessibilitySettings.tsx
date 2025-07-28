@@ -10,7 +10,7 @@ import {
   RefreshCw
 } from 'lucide-react'
 import { useAccessibility } from '../../contexts/AccessibilityContext'
-import { useToast } from '../ui/Toast'
+import { useToast } from '../../components/ui/Toast'
 
 export const AccessibilitySettings: React.FC = () => {
   const { settings, updateSetting, resetSettings } = useAccessibility()
