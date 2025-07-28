@@ -185,14 +185,14 @@ export const NotificationsAnalytics: React.FC = () => {
         })
       }
     } else {
-      // Weekly buckets for 4 weeks
-      for (let i = 3; i >= 0; i--) {
-        const endDate = subDays(now, i * 7)
-        const startDate = subDays(now, (i + 1) * 7)
+      // Daily buckets for 4 weeks (28 days)
+      for (let i = 27; i >= 0; i--) {
+        const date = startOfDay(subDays(now, i))
+        const nextDate = i === 0 ? now : startOfDay(subDays(now, i - 1))
         buckets.push({
-          startDate,
-          endDate,
-          label: i === 0 ? 'This week' : `${i + 1}w ago`,
+          startDate: date,
+          endDate: nextDate,
+          label: i === 0 ? 'Today' : i === 1 ? 'Yesterday' : format(date, 'MMM d'),
           likes: 0,
           reposts: 0,
           follows: 0,
@@ -565,14 +565,20 @@ export const NotificationsAnalytics: React.FC = () => {
             </div>
             
             {/* Bars */}
-            <div className="relative h-full flex items-end justify-between" style={{ gap: '4px', paddingBottom: '30px' }}>
+            <div className="relative h-full flex items-end justify-between" style={{ gap: timeRange === '4w' ? '2px' : '4px', paddingBottom: '30px' }}>
               {analytics.buckets.map((bucket, index) => {
-                const barWidth = `${100 / analytics.buckets.length - 1}%`
+                const barWidth = timeRange === '4w' 
+                  ? `${100 / analytics.buckets.length}%` 
+                  : `${100 / analytics.buckets.length - 1}%`
                 return (
                   <div
                     key={`${bucket.label}-${index}`}
                     className="relative group"
-                    style={{ width: barWidth, minWidth: '20px', maxWidth: '60px' }}
+                    style={{ 
+                      width: barWidth, 
+                      minWidth: timeRange === '4w' ? '8px' : '20px', 
+                      maxWidth: timeRange === '4w' ? '30px' : '60px' 
+                    }}
                   >
                     {/* Stacked bar */}
                     <div className="absolute bottom-0 left-0 right-0 flex flex-col-reverse rounded-t-lg overflow-hidden transition-all duration-300 hover:opacity-90">
@@ -651,11 +657,16 @@ export const NotificationsAnalytics: React.FC = () => {
                     </div>
                     
                     {/* X-axis label */}
-                    <div className="absolute top-full mt-1 left-0 right-0 text-center">
-                      <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)', fontSize: '10px' }}>
-                        {bucket.label}
-                      </span>
-                    </div>
+                    {(timeRange !== '4w' || index % 4 === 0 || index === analytics.buckets.length - 1) && (
+                      <div className="absolute top-full mt-1 left-0 right-0 text-center">
+                        <span className="text-xs" style={{ 
+                          color: 'var(--bsky-text-secondary)', 
+                          fontSize: timeRange === '4w' ? '9px' : '10px' 
+                        }}>
+                          {bucket.label}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )
               })}
