@@ -359,3 +359,6 @@ export class FeedStorageService extends IndexedDBStore {
     return this.clearStores(['posts', 'feed_items', 'feed_pages', 'metadata'])
   }
 }
+
+// Export singleton instance
+export const feedStorage = FeedStorageService.getInstance()

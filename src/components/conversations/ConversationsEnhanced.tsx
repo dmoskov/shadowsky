@@ -5,7 +5,7 @@ import { ConversationsCached as Conversations } from './ConversationsCached'
 import { ThreadReader } from './ThreadReader'
 import { useAuth } from '../../contexts/AuthContext'
 import { useQuery } from '@tanstack/react-query'
-import { atClient } from '../../services/atproto'
+import { atProtoClient } from '../../services/atproto'
 
 type TabType = 'messages' | 'threads' | 'trending'
 

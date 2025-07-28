@@ -3,9 +3,7 @@ import { useTimeline } from '../../hooks/useTimeline'
 import { ErrorBoundary } from '../core/ErrorBoundary'
 import { PostCard } from '../feed/PostCard'
 import { ComposeModal } from '../modals/ComposeModal'
-import { FeedLoading, InlineLoader } from '../ui/SkeletonLoaders'
-import { FeedError } from '../ui/ErrorStates'
-import { FeedEmpty } from '../ui/EmptyStates'
+import { LoadingSpinner } from '../ui/LoadingSpinner'
 import { performanceTracker, useRenderTracking } from '@bsky/shared'
 import type { Post } from '@bsky/shared'
 
@@ -78,7 +76,9 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
         <div className="feed-header">
           <h2 className="feed-title">Your Timeline</h2>
         </div>
-        <FeedLoading />
+        <div className="flex justify-center items-center py-8">
+          <LoadingSpinner size="lg" />
+        </div>
       </div>
     )
   }
@@ -89,7 +89,16 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
         <div className="feed-header">
           <h2 className="feed-title">Your Timeline</h2>
         </div>
-        <FeedError onRetry={() => refresh()} />
+        <div className="bg-red-900/20 border border-red-500/20 rounded-lg p-8 text-center">
+          <h2 className="text-xl font-semibold text-red-400 mb-2">Failed to load feed</h2>
+          <p className="text-gray-400 mb-4">Something went wrong. Please try again.</p>
+          <button
+            onClick={() => refresh()}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     )
   }
@@ -100,7 +109,10 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
         <div className="feed-header">
           <h2 className="feed-title">Your Timeline</h2>
         </div>
-        <FeedEmpty />
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium text-gray-300 mb-2">No posts yet</h3>
+          <p className="text-gray-500">Your feed is empty. Follow some people to see their posts!</p>
+        </div>
       </div>
     )
   }
@@ -114,7 +126,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
           disabled={isFetching}
           className="btn btn-primary"
         >
-          {isFetching ? <InlineLoader size="sm" /> : null}
+          {isFetching ? <LoadingSpinner size="sm" /> : null}
           {isFetching ? 'Refreshing...' : 'Refresh Feed'}
         </button>
       </div>
@@ -157,7 +169,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
       >
         {isFetchingNextPage && (
           <div className="loading-more">
-            <InlineLoader />
+            <LoadingSpinner size="md" />
             <span>Loading more posts...</span>
           </div>
         )}

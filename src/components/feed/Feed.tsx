@@ -3,12 +3,7 @@ import { useTimeline } from '../../hooks/useTimeline'
 import { ErrorBoundary } from '../core/ErrorBoundary'
 import { PostCardBluesky } from '../feed/PostCardBluesky'
 import { ComposeModal } from '../modals/ComposeModal'
-import { FeedLoading, InlineLoader } from '../ui/SkeletonLoaders'
-import { FeedError } from '../ui/ErrorStates'
-import { FeedEmpty } from '../ui/EmptyStates'
-import { ResponsiveContainer } from '../ui/ResponsiveContainer'
-import { FeedLoadingProgress } from '../ui/FeedLoadingProgress'
-import { ContentEndIndicator } from '../ui/ContentEndIndicator'
+import { LoadingSpinner } from '../ui/LoadingSpinner'
 import { useLoading } from '../../contexts/LoadingContext'
 import { performanceTracker, useRenderTracking } from '@bsky/shared'
 import { useAnnouncement, useLoadingAnnouncement } from '../../hooks/useAnnouncement'
@@ -95,37 +90,45 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
 
   if (isLoading) {
     return (
-      <ResponsiveContainer>
-        <FeedLoading />
-      </ResponsiveContainer>
+      <div className="container mx-auto px-4">
+        <div className="flex justify-center items-center py-8">
+          <LoadingSpinner />
+        </div>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <ResponsiveContainer className="pt-8">
-        <FeedError onRetry={() => refresh()} />
-      </ResponsiveContainer>
+      <div className="container mx-auto px-4 pt-8">
+        <div className="text-center">
+          <p className="text-red-400 mb-4">Failed to load feed</p>
+          <button
+            onClick={() => refresh()}
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
     )
   }
 
   if (!posts || posts.length === 0) {
     return (
-      <ResponsiveContainer className="pt-8">
-        <FeedEmpty />
-      </ResponsiveContainer>
+      <div className="container mx-auto px-4 pt-8">
+        <div className="text-center text-gray-400">
+          <p>No posts to display</p>
+        </div>
+      </div>
     )
   }
 
   return (
-    <ResponsiveContainer>
+    <div className="container mx-auto px-4">
       {/* Loading Progress Indicator */}
       {(isFetching || isFetchingNextPage) && (
-        <FeedLoadingProgress 
-          postsLoaded={posts.length}
-          isInitialLoad={posts.length === 0}
-          isFetchingMore={isFetchingNextPage}
-        />
+        <div className="fixed top-0 left-0 right-0 h-1 bg-blue-500 z-50" style={{ width: '100%' }} />
       )}
       
       <div className="border-t border-gray-800" role="feed" aria-busy={isFetching} aria-label="Timeline">
@@ -170,7 +173,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
         {isFetchingNextPage && (
           <div className="flex flex-col items-center justify-center space-y-2">
             <div className="flex items-center space-x-3 text-gray-400">
-              <InlineLoader />
+              <LoadingSpinner />
               <span aria-label="Loading more posts">Loading more posts...</span>
             </div>
             <div className="text-sm text-gray-500">
@@ -179,11 +182,11 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
           </div>
         )}
         {/* End of content indicator */}
-        <ContentEndIndicator 
-          hasMore={hasNextPage}
-          totalLoaded={posts.length}
-          isLoading={isFetchingNextPage}
-        />
+        {!hasNextPage && posts.length > 0 && (
+          <div className="text-center text-gray-500 py-4">
+            <p>You've reached the end • {posts.length} posts loaded</p>
+          </div>
+        )}
       </div>
       
       {/* Manual load more button as fallback */}
@@ -205,6 +208,6 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
         onClose={() => setReplyTo(undefined)}
         replyTo={replyTo}
       />
-    </ResponsiveContainer>
+    </div>
   )
 }

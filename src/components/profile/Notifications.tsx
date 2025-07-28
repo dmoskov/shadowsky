@@ -15,8 +15,7 @@ import {
   ChevronUp
 } from 'lucide-react'
 import { useNotifications, useMarkNotificationsRead, getNotificationText } from '../../hooks/useNotifications'
-import { NotificationsEmpty } from '../ui/EmptyStates'
-import { PageLoader } from '../ui/SkeletonLoaders'
+import { LoadingSpinner } from '../ui/LoadingSpinner'
 import { aggregateNotifications, getAggregatedText } from '../../utils/notification-helpers'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import type { ProcessedNotification } from '../../utils/notification-helpers'
@@ -199,7 +198,10 @@ export const Notifications: React.FC = () => {
       {/* Notifications List */}
       <div className="divide-y divide-gray-800">
         {isLoading ? (
-          <PageLoader message="Loading notifications..." />
+          <div className="flex flex-col items-center justify-center py-12">
+            <LoadingSpinner size="lg" />
+            <p className="text-gray-400 mt-4">Loading notifications...</p>
+          </div>
         ) : processedNotifications.length > 0 ? (
           <AnimatePresence mode="popLayout">
             {processedNotifications.map((item, index) => {
@@ -368,7 +370,10 @@ export const Notifications: React.FC = () => {
             })}
           </AnimatePresence>
         ) : (
-          <NotificationsEmpty />
+          <div className="text-center py-12">
+            <h3 className="text-lg font-medium text-gray-300 mb-2">No notifications</h3>
+            <p className="text-gray-500">You don't have any notifications yet.</p>
+          </div>
         )}
       </div>
     </div>

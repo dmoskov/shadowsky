@@ -1,5 +1,4 @@
 import React from 'react';
-import { ReplyContext } from '../ui/ReplyContext';
 import { PostEmbeds } from './PostEmbeds';
 import type { FeedItem, Post } from '@bsky/shared';
 import { getPostText } from '../../utils/post-helpers';
@@ -21,9 +20,11 @@ export const PostContent: React.FC<PostContentProps> = ({
   
   return (
     <div className="post-content">
-      {/* Reply context */}
+      {/* Reply context - TODO: implement ReplyContext component */}
       {item.reply && !showParentPost && (
-        <ReplyContext reply={item.reply} post={post} />
+        <div className="reply-context">
+          <span>↳ Reply</span>
+        </div>
       )}
       
       {/* Text content */}

@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, Send, Search, ArrowLeft, Users, User, Clock, MoreVertical } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { atClient } from '../../services/atproto'
+import { atProtoClient } from '../../services/atproto'
 import { formatDistanceToNow } from 'date-fns'
 import { ChatBskyConvoDefs } from '@atproto/api'
 import { Loader2 } from 'lucide-react'
-import { useToast } from '../ui/Toast'
+import { useToast } from '../../components/ui/Toast'
 
 type Conversation = ChatBskyConvoDefs.ConvoView
 

@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { Sidebar } from './components/Sidebar'
 import { Header } from './components/Header'
 import { Login } from './components/Login'
 import { NotificationsFeed } from './components/NotificationsFeed'
-import { NotificationsTimeline } from './components/NotificationsTimeline'
 import { VisualTimeline } from './components/VisualTimeline'
 import { NotificationsAnalytics } from './components/NotificationsAnalytics'
 import { RateLimitStatus } from './components/RateLimitStatus'
@@ -27,7 +26,7 @@ const queryClient = new QueryClient({
         return failureCount < 3
       },
       // Keep previous data while fetching new data
-      keepPreviousData: true,
+      placeholderData: (previousData) => previousData,
       // Don't refetch on window focus by default
       refetchOnWindowFocus: false,
       // Don't refetch on mount if data exists
@@ -46,7 +45,7 @@ function AppContent() {
   useEffect(() => {
     const runMigration = async () => {
       try {
-        const db = new NotificationStorageDB()
+        const db = NotificationStorageDB.getInstance()
         await db.init()
         const migrated = await db.migrateFromLocalStorage()
         if (migrated) {

@@ -106,7 +106,7 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
     refetchOnMount: false, // Don't refetch when component remounts if data exists
     refetchOnReconnect: false, // Don't refetch on reconnect
     // Prevent flicker by keeping previous data while fetching
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
     // Use structural sharing to prevent unnecessary re-renders
     structuralSharing: true
   })

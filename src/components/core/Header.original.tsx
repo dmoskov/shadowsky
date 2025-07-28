@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUnreadNotificationCount } from '../../hooks/useNotifications'
-import { useToast } from '../ui/Toast'
+import { useToast } from '../../components/ui/Toast'
 import clsx from 'clsx'
 
 interface HeaderProps {

@@ -272,3 +272,6 @@ export class NotificationStorageService extends IndexedDBStore {
     return this.clearStores(['notifications', 'metadata'])
   }
 }
+
+// Export singleton instance
+export const notificationStorage = NotificationStorageService.getInstance()

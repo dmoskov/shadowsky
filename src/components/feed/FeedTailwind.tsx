@@ -3,9 +3,7 @@ import { useTimeline } from '../../hooks/useTimeline'
 import { ErrorBoundary } from '../core/ErrorBoundary'
 import { PostCard } from '../feed/PostCard'
 import { ComposeModal } from '../modals/ComposeModal'
-import { FeedLoading, InlineLoader } from '../ui/SkeletonLoaders'
-import { FeedError } from '../ui/ErrorStates'
-import { FeedEmpty } from '../ui/EmptyStates'
+import { LoadingSpinner } from '../ui/LoadingSpinner'
 import { performanceTracker, useRenderTracking } from '@bsky/shared'
 import type { Post } from '@bsky/shared'
 
@@ -78,7 +76,9 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
           <h2 className="text-2xl font-bold text-gray-100">Your Timeline</h2>
         </div>
-        <FeedLoading />
+        <div className="flex justify-center items-center py-8">
+          <LoadingSpinner />
+        </div>
       </div>
     )
   }
@@ -89,7 +89,15 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
           <h2 className="text-2xl font-bold text-gray-100">Your Timeline</h2>
         </div>
-        <FeedError onRetry={() => refresh()} />
+        <div className="text-center py-8">
+          <p className="text-red-400 mb-4">Failed to load feed</p>
+          <button
+            onClick={() => refresh()}
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     )
   }
@@ -100,7 +108,9 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-800">
           <h2 className="text-2xl font-bold text-gray-100">Your Timeline</h2>
         </div>
-        <FeedEmpty />
+        <div className="text-center text-gray-400 py-8">
+          <p>No posts to display</p>
+        </div>
       </div>
     )
   }
@@ -120,7 +130,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
             flex items-center space-x-2
           `}
         >
-          {isFetching ? <InlineLoader size="sm" /> : null}
+          {isFetching ? <LoadingSpinner /> : null}
           <span>{isFetching ? 'Refreshing...' : 'Refresh Feed'}</span>
         </button>
       </div>
@@ -164,7 +174,7 @@ export const Feed: React.FC<FeedProps> = ({ onViewThread }) => {
       >
         {isFetchingNextPage && (
           <div className="flex items-center justify-center space-x-3 text-gray-400">
-            <InlineLoader />
+            <LoadingSpinner />
             <span>Loading more posts...</span>
           </div>
         )}

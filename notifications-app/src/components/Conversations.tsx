@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 import { MessageCircle, Search, ArrowLeft, Users, Loader2, ExternalLink, CornerDownRight, ChevronDown } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
@@ -47,7 +47,10 @@ const QuoteEmbed: React.FC<{ embed: any }> = ({ embed }) => {
          onClick={(e) => {
            e.stopPropagation()
            if (quotedPost.uri && author?.handle) {
-             window.open(atUriToBskyUrl(quotedPost.uri, author.handle), '_blank', 'noopener,noreferrer')
+             const url = atUriToBskyUrl(quotedPost.uri, author.handle)
+             if (url) {
+               window.open(url, '_blank', 'noopener,noreferrer')
+             }
            }
          }}>
       <div className="p-3">
@@ -133,8 +136,8 @@ export const Conversations: React.FC = () => {
 
   // Create initial map for reply posts
   const replyPostMap = React.useMemo(() => {
-    if (!posts || posts.length === 0) return new Map()
-    return new Map(posts.map(post => [post.uri, post]))
+    if (!posts || !Array.isArray(posts) || posts.length === 0) return new Map()
+    return new Map(posts.map((post: Post) => [post.uri, post]))
   }, [posts])
 
   // Collect unique root post URIs that need to be fetched
@@ -174,8 +177,8 @@ export const Conversations: React.FC = () => {
     })
     
     // Add reply posts
-    if (posts && posts.length > 0) {
-      posts.forEach(post => {
+    if (posts && Array.isArray(posts) && posts.length > 0) {
+      posts.forEach((post: Post) => {
         if (post && post.uri) {
           map.set(post.uri, post)
         }
@@ -206,10 +209,10 @@ export const Conversations: React.FC = () => {
       hasData: !!data, 
       pageCount: data?.pages?.length,
       notificationCount: replyNotifications.length,
-      postCount: posts?.length || 0,
-      rootPostCount: rootPosts?.length || 0
+      postCount: (Array.isArray(posts) ? posts.length : 0),
+      rootPostCount: (Array.isArray(rootPosts) ? rootPosts.length : 0)
     })
-  }, [isLoading, isLoadingPosts, isLoadingRootPosts, data, replyNotifications.length, posts?.length, rootPosts?.length])
+  }, [isLoading, isLoadingPosts, isLoadingRootPosts, data, replyNotifications.length, posts, rootPosts])
 
   // Group notifications into conversation threads
   const conversations = useMemo(() => {
@@ -548,7 +551,7 @@ export const Conversations: React.FC = () => {
                     Most Recent Notification
                   </span>
                   <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
-                    triggered {formatDistanceToNow(new Date(notification.indexedAt), { addSuffix: true })}
+                    triggered {formatDistanceToNow(new Date(notification?.indexedAt || Date.now()), { addSuffix: true })}
                   </span>
                 </div>
               )}
@@ -907,7 +910,7 @@ export const Conversations: React.FC = () => {
               const latestReplyText = latestReplyRecord?.text || '[Loading reply...]'
               const latestReplyUrl = latestReplyPost?.uri && latestReplyAuthor?.handle 
                 ? atUriToBskyUrl(latestReplyPost.uri, latestReplyAuthor.handle) 
-                : getNotificationUrl(selectedConversation.latestReply)
+                : (getNotificationUrl(selectedConversation.latestReply) || undefined)
               
               return (
                 <div className="mb-4 p-4 rounded-lg shadow-sm" 
