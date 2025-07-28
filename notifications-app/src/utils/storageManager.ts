@@ -113,11 +113,13 @@ export class StorageManager {
       reasonSubject: notification.reasonSubject,
       record: notification.record ? {
         text: (notification.record as any).text,
-        $type: notification.record.$type
+        $type: notification.record.$type as string
       } : undefined,
       isRead: notification.isRead,
       indexedAt: notification.indexedAt,
-      labels: notification.labels
+      labels: notification.labels?.map(label => 
+        typeof label === 'string' ? label : label.val
+      )
     }
   }
 

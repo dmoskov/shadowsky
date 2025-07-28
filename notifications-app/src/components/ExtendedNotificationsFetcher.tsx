@@ -323,7 +323,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           console.log('🔄 Prefetching posts for conversations...')
           
           // Get reply notifications
-          const replyNotifications = allNotifications.filter(n => n.reason === 'reply')
+          const replyNotifications = allNotifications.filter((n: any) => n.reason === 'reply')
           
           if (replyNotifications.length > 0) {
             // Prefetch the reply posts and root posts
@@ -443,7 +443,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           console.log('🔄 Prefetching posts for conversations...')
           
           // Get reply notifications
-          const replyNotifications = allNotifications.filter(n => n.reason === 'reply')
+          const replyNotifications = allNotifications.filter((n: any) => n.reason === 'reply')
           
           if (replyNotifications.length > 0) {
             // Prefetch the reply posts and root posts

@@ -43,7 +43,7 @@ export const NotificationsAnalytics: React.FC = () => {
       }
       
       // Otherwise, fetch notifications until we have 7 days worth of data
-      const allNotifications: typeof agent.app.bsky.notification.listNotifications._output.notifications = []
+      const allNotifications: any[] = []
       let cursor: string | undefined
       const sevenDaysAgo = subDays(new Date(), 7)
       let hasMoreToFetch = true
@@ -71,7 +71,7 @@ export const NotificationsAnalytics: React.FC = () => {
       
       // Filter to only include notifications from the last 7 days
       const filteredNotifications = allNotifications.filter(
-        notif => new Date(notif.indexedAt) >= sevenDaysAgo
+        (notif: any) => new Date(notif.indexedAt) >= sevenDaysAgo
       )
       
       return { notifications: filteredNotifications }
@@ -100,7 +100,7 @@ export const NotificationsAnalytics: React.FC = () => {
     
     const cutoffDate = subHours(now, timeRangeHours[timeRange])
     const filteredNotifications = notifications.notifications.filter(
-      n => new Date(n.indexedAt) >= cutoffDate
+      (n: any) => new Date(n.indexedAt) >= cutoffDate
     )
     
     // Don't return null if no data - still show the chart structure
@@ -204,7 +204,7 @@ export const NotificationsAnalytics: React.FC = () => {
     }
 
     // Count notifications by bucket and type
-    filteredNotifications.forEach(notification => {
+    filteredNotifications.forEach((notification: any) => {
       const notifDate = new Date(notification.indexedAt)
       const bucket = buckets.find(b => 
         notifDate >= b.startDate && notifDate < b.endDate
@@ -224,7 +224,7 @@ export const NotificationsAnalytics: React.FC = () => {
 
     // Find most active users (use filtered notifications)
     const userActivity = new Map<string, number>()
-    filteredNotifications.forEach(notification => {
+    filteredNotifications.forEach((notification: any) => {
       const key = notification.author.handle
       userActivity.set(key, (userActivity.get(key) || 0) + 1)
     })
@@ -233,14 +233,14 @@ export const NotificationsAnalytics: React.FC = () => {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([handle, count]) => {
-        const user = filteredNotifications.find(n => n.author.handle === handle)?.author
+        const user = filteredNotifications.find((n: any) => n.author.handle === handle)?.author
         return { handle, count, user }
       })
 
     // Calculate engagement rate
     const totalEngagement = filteredNotifications.length
     const uniqueUsers = filteredNotifications.length > 0 
-      ? new Set(filteredNotifications.map(n => n.author.did)).size
+      ? new Set(filteredNotifications.map((n: any) => n.author.did)).size
       : 0
     const hourSpan = Math.max(1, (newestDate.getTime() - oldestDate.getTime()) / (1000 * 60 * 60))
     const daySpan = Math.max(1, hourSpan / 24)
@@ -266,17 +266,17 @@ export const NotificationsAnalytics: React.FC = () => {
       // Get notifications from the last 24 hours for "recent" stats
       const oneDayAgo = subDays(new Date(), 1)
       const recentNotifications = notifications.notifications.filter(
-        n => new Date(n.indexedAt) >= oneDayAgo
+        (n: any) => new Date(n.indexedAt) >= oneDayAgo
       )
       
       const counts = {
         total: recentNotifications.length,
         unread: 0, // Extended data doesn't include read status
-        likes: recentNotifications.filter(n => n.reason === 'like').length,
-        reposts: recentNotifications.filter(n => n.reason === 'repost').length,
-        follows: recentNotifications.filter(n => n.reason === 'follow').length,
-        mentions: recentNotifications.filter(n => n.reason === 'mention').length,
-        replies: recentNotifications.filter(n => n.reason === 'reply').length,
+        likes: recentNotifications.filter((n: any) => n.reason === 'like').length,
+        reposts: recentNotifications.filter((n: any) => n.reason === 'repost').length,
+        follows: recentNotifications.filter((n: any) => n.reason === 'follow').length,
+        mentions: recentNotifications.filter((n: any) => n.reason === 'mention').length,
+        replies: recentNotifications.filter((n: any) => n.reason === 'reply').length,
       }
       
       return counts
@@ -287,12 +287,12 @@ export const NotificationsAnalytics: React.FC = () => {
 
     const counts = {
       total: currentStats.notifications.length,
-      unread: currentStats.notifications.filter(n => !n.isRead).length,
-      likes: currentStats.notifications.filter(n => n.reason === 'like').length,
-      reposts: currentStats.notifications.filter(n => n.reason === 'repost').length,
-      follows: currentStats.notifications.filter(n => n.reason === 'follow').length,
-      mentions: currentStats.notifications.filter(n => n.reason === 'mention').length,
-      replies: currentStats.notifications.filter(n => n.reason === 'reply').length,
+      unread: currentStats.notifications.filter((n: any) => !n.isRead).length,
+      likes: currentStats.notifications.filter((n: any) => n.reason === 'like').length,
+      reposts: currentStats.notifications.filter((n: any) => n.reason === 'repost').length,
+      follows: currentStats.notifications.filter((n: any) => n.reason === 'follow').length,
+      mentions: currentStats.notifications.filter((n: any) => n.reason === 'mention').length,
+      replies: currentStats.notifications.filter((n: any) => n.reason === 'reply').length,
     }
 
     return counts
@@ -423,11 +423,11 @@ export const NotificationsAnalytics: React.FC = () => {
             // Use full dataset for extended data
             (() => {
               const fullCounts = {
-                likes: notifications.notifications.filter(n => n.reason === 'like').length,
-                reposts: notifications.notifications.filter(n => n.reason === 'repost').length,
-                replies: notifications.notifications.filter(n => n.reason === 'reply').length,
-                mentions: notifications.notifications.filter(n => n.reason === 'mention').length,
-                follows: notifications.notifications.filter(n => n.reason === 'follow').length,
+                likes: notifications.notifications.filter((n: any) => n.reason === 'like').length,
+                reposts: notifications.notifications.filter((n: any) => n.reason === 'repost').length,
+                replies: notifications.notifications.filter((n: any) => n.reason === 'reply').length,
+                mentions: notifications.notifications.filter((n: any) => n.reason === 'mention').length,
+                follows: notifications.notifications.filter((n: any) => n.reason === 'follow').length,
               }
               const total = analytics.totalEngagement
               

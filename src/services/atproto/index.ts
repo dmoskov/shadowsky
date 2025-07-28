@@ -6,11 +6,11 @@ import {
   ATProtoClient, 
   FeedService,
   AnalyticsService,
-  type ATProtoConfig
-} from '@bsky/shared'
-import { getInteractionsService } from '@bsky/shared'
-import { getThreadService } from '@bsky/shared'
-import { getSearchService } from '@bsky/shared'
+  type ATProtoConfig,
+  getInteractionsService,
+  getThreadService,
+  getSearchService
+} from '@bsky/shared/services/atproto'
 import { getNotificationService } from './notifications'
 import { getProfileService } from './profile'
 import { RateLimitedFeedService } from './feed-wrapper'

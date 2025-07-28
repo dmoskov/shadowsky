@@ -26,7 +26,7 @@ const queryClient = new QueryClient({
         return failureCount < 3
       },
       // Keep previous data while fetching new data
-      placeholderData: (previousData) => previousData,
+      placeholderData: (previousData: any) => previousData,
       // Don't refetch on window focus by default
       refetchOnWindowFocus: false,
       // Don't refetch on mount if data exists

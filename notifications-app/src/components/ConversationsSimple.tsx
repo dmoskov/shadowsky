@@ -55,7 +55,7 @@ export const ConversationsSimple: React.FC = () => {
   }, [extendedData])
 
   // Fetch posts for all notifications (just like NotificationsFeed does)
-  const { data: posts } = useNotificationPosts(replyNotifications)
+  const { data: posts, fetchedPosts, totalPosts, percentageFetched } = useNotificationPosts(replyNotifications)
   
   // Create post map
   const postMap = React.useMemo(() => {
@@ -78,9 +78,10 @@ export const ConversationsSimple: React.FC = () => {
     
     replyNotifications.forEach((notification: Notification) => {
       // Get the root post URI from the notification
+      // Use reasonSubject as the initial root URI (this is typically the post being replied to)
       let rootUri = notification.reasonSubject || notification.uri
       
-      // If this is a reply, try to find the actual root of the thread
+      // If we have the post data loaded, try to find the actual root of the thread
       const post = postMap.get(notification.uri)
       const record = post?.record as any
       if (record?.reply?.root?.uri) {
@@ -88,6 +89,7 @@ export const ConversationsSimple: React.FC = () => {
       }
       
       if (!threadMap.has(rootUri)) {
+        // Try to get the root post if it's loaded
         const rootPost = postMap.get(rootUri)
         threadMap.set(rootUri, {
           rootUri,
@@ -104,6 +106,12 @@ export const ConversationsSimple: React.FC = () => {
       thread.replies.push(notification)
       thread.participants.add(notification.author.handle)
       thread.totalReplies++
+      
+      // Update root post if we just loaded it
+      if (!thread.rootPost && postMap.get(rootUri)) {
+        thread.rootPost = postMap.get(rootUri)
+        thread.originalPostTime = thread.rootPost?.indexedAt || (thread.rootPost?.record as any)?.createdAt
+      }
       
       // Update latest reply if this one is newer
       if (new Date(notification.indexedAt) > new Date(thread.latestReply.indexedAt)) {
@@ -277,10 +285,10 @@ export const ConversationsSimple: React.FC = () => {
               <div className="flex items-center justify-center py-8">
                 <div className="text-center">
                   <p className="text-sm mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>
-                    Original post unavailable
+                    {percentageFetched < 100 ? 'Loading original post...' : 'Original post unavailable'}
                   </p>
                   <p className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                    The post may have been deleted or is not accessible
+                    {percentageFetched < 100 ? `Loading posts: ${fetchedPosts}/${totalPosts}` : 'The post may have been deleted or is not accessible'}
                   </p>
                 </div>
               </div>
@@ -401,7 +409,12 @@ export const ConversationsSimple: React.FC = () => {
                   </div>
                   
                   <p className="text-sm break-words" style={{ color: 'var(--bsky-text-primary)', lineHeight: '1.5' }}>
-                    {(post?.record as any)?.text || '[No text]'}
+                    {post ? ((post.record as any)?.text || '[No text]') : (
+                      <span style={{ color: 'var(--bsky-text-secondary)' }}>
+                        <Loader2 size={14} className="inline animate-spin mr-1" />
+                        Loading post content...
+                      </span>
+                    )}
                   </p>
                   
                   {isUnread && (
@@ -471,9 +484,30 @@ export const ConversationsSimple: React.FC = () => {
           </p>
         </div>
 
+        {/* Loading indicator for posts */}
+        {percentageFetched < 100 && totalPosts > 0 && (
+          <div className="px-4 py-2" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
+            <div className="flex items-center gap-2">
+              <Loader2 size={16} className="animate-spin" style={{ color: 'var(--bsky-primary)' }} />
+              <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
+                Loading posts... {fetchedPosts}/{totalPosts} ({percentageFetched}%)
+              </span>
+            </div>
+            <div className="mt-1 h-1 rounded-full overflow-hidden" style={{ background: 'var(--bsky-bg-secondary)' }}>
+              <div 
+                className="h-full transition-all duration-300" 
+                style={{ 
+                  width: `${percentageFetched}%`,
+                  background: 'var(--bsky-primary)' 
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto">
-          {filteredConversations.length === 0 ? (
+          {filteredConversations.length === 0 && percentageFetched === 100 ? (
             <div className="p-8 text-center">
               <MessageCircle size={48} className="mx-auto mb-4" style={{ color: 'var(--bsky-text-tertiary)' }} />
               <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
@@ -483,7 +517,7 @@ export const ConversationsSimple: React.FC = () => {
           ) : filteredConversations.map((convo) => {
             const isSelected = selectedConvo === convo.rootUri
             const rootRecord = convo.rootPost?.record as any
-            const previewText = rootRecord?.text || '[Original post unavailable]'
+            const previewText = rootRecord?.text || (percentageFetched < 100 ? 'Loading...' : '[Post unavailable]')
             const isGroup = convo.participants.size > 2
             const unreadCount = convo.replies.filter(r => !r.isRead).length
 
@@ -533,6 +567,7 @@ export const ConversationsSimple: React.FC = () => {
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="font-medium truncate" style={{ color: 'var(--bsky-text-primary)' }}>
                         {convo.rootPost?.author?.displayName || 
+                         convo.latestReply.author.displayName ||
                          (isGroup 
                           ? `${convo.participants.size} people`
                           : 'Thread')

@@ -111,7 +111,9 @@ export class FollowerCacheDB {
       return undefined
     }
     const tx = this.db.transaction(['profiles'], 'readonly')
-    return await tx.objectStore('profiles').get(did)
+    const request = tx.objectStore('profiles').get(did)
+    const result = await request
+    return result as CachedProfile | undefined
   }
   
   async getProfileByHandle(handle: string): Promise<CachedProfile | undefined> {
@@ -121,7 +123,9 @@ export class FollowerCacheDB {
     }
     const tx = this.db.transaction(['profiles'], 'readonly')
     const index = tx.objectStore('profiles').index('handle')
-    return await index.get(handle)
+    const request = index.get(handle)
+    const result = await request
+    return result as CachedProfile | undefined
   }
   
   async getProfiles(dids: string[]): Promise<Map<string, CachedProfile>> {
@@ -134,9 +138,10 @@ export class FollowerCacheDB {
     const profileMap = new Map<string, CachedProfile>()
     
     for (const did of dids) {
-      const profile = await store.get(did)
+      const request = store.get(did)
+      const profile = await request
       if (profile) {
-        profileMap.set(did, profile)
+        profileMap.set(did, profile as CachedProfile)
       }
     }
     
@@ -154,9 +159,10 @@ export class FollowerCacheDB {
     const profileMap = new Map<string, CachedProfile>()
     
     for (const handle of handles) {
-      const profile = await index.get(handle)
+      const request = index.get(handle)
+      const profile = await request
       if (profile) {
-        profileMap.set(handle, profile)
+        profileMap.set(handle, profile as CachedProfile)
       }
     }
     
@@ -252,7 +258,9 @@ export class FollowerCacheDB {
       return undefined
     }
     const tx = this.db.transaction(['interactions'], 'readonly')
-    return await tx.objectStore('interactions').get(did)
+    const request = tx.objectStore('interactions').get(did)
+    const result = await request
+    return result as InteractionStats | undefined
   }
   
   async getInteractionStatsForMultiple(dids: string[]): Promise<Map<string, InteractionStats>> {
@@ -265,9 +273,10 @@ export class FollowerCacheDB {
     const statsMap = new Map<string, InteractionStats>()
     
     for (const did of dids) {
-      const stats = await store.get(did)
+      const request = store.get(did)
+      const stats = await request
       if (stats) {
-        statsMap.set(did, stats)
+        statsMap.set(did, stats as InteractionStats)
       }
     }
     
@@ -425,14 +434,18 @@ export class FollowerCacheDB {
     
     const tx = this.db.transaction(['profiles', 'interactions'], 'readonly')
     
-    const profileCount = await tx.objectStore('profiles').count()
-    const interactionCount = await tx.objectStore('interactions').count()
+    const profileCountRequest = tx.objectStore('profiles').count()
+    const interactionCountRequest = tx.objectStore('interactions').count()
+    
+    const profileCount = await profileCountRequest
+    const interactionCount = await interactionCountRequest
     
     // Count stale profiles
     const profileStore = tx.objectStore('profiles')
     const cutoffDate = new Date(Date.now() - CACHE_DURATION_MS)
     const staleRange = IDBKeyRange.upperBound(cutoffDate)
-    const staleCount = await profileStore.index('lastFetched').count(staleRange)
+    const staleCountRequest = profileStore.index('lastFetched').count(staleRange)
+    const staleCount = await staleCountRequest
     
     // Estimate cache size (rough approximation)
     const avgProfileSize = 500 // bytes
@@ -482,7 +495,7 @@ export function profileToCached(
     displayName: profile.displayName,
     avatar: profile.avatar,
     followersCount: profile.followersCount || 0,
-    followingCount: profile.followingCount || 0,
+    followingCount: profile.followsCount || 0,
     postsCount: profile.postsCount || 0,
     description: profile.description,
     lastFetched: new Date(),
