@@ -6,6 +6,8 @@ export const Login: React.FC = () => {
   const { login } = useAuth()
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
+  const [pdsUrl, setPdsUrl] = useState('https://bsky.social')
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -15,7 +17,7 @@ export const Login: React.FC = () => {
     setIsLoading(true)
 
     try {
-      await login(identifier, password)
+      await login(identifier, password, pdsUrl)
     } catch (err: any) {
       setError(err.message || 'Failed to login')
     } finally {
@@ -92,6 +94,45 @@ export const Login: React.FC = () => {
               placeholder="Enter your password"
               required
             />
+          </div>
+
+          <div className="mb-6">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="text-sm flex items-center gap-1 hover:opacity-80 transition-opacity"
+              style={{ color: 'var(--bsky-text-secondary)' }}
+            >
+              <span className={`transition-transform ${showAdvanced ? 'rotate-90' : ''}`}>▶</span>
+              Advanced: Use a different PDS
+            </button>
+            
+            {showAdvanced && (
+              <div className="mt-3">
+                <label htmlFor="pdsUrl" className="block text-sm font-medium mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>
+                  PDS Server URL
+                </label>
+                <input
+                  type="url"
+                  id="pdsUrl"
+                  value={pdsUrl}
+                  onChange={(e) => setPdsUrl(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl text-white transition-all
+                           focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                  style={{ 
+                    backgroundColor: 'var(--bsky-bg-tertiary)',
+                    border: '1px solid var(--bsky-border-primary)',
+                    color: 'var(--bsky-text-primary)'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--bsky-primary)'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--bsky-border-primary)'}
+                  placeholder="https://bsky.social"
+                />
+                <p className="text-xs mt-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                  Default is https://bsky.social. Only change if you use a different PDS.
+                </p>
+              </div>
+            )}
           </div>
 
           <button

@@ -4,12 +4,13 @@ import { atProtoClient, ATProtoClient } from '../services/atproto'
 import type { Session } from '@bsky/shared'
 import { SessionExpiredError, AuthenticationError, NetworkError } from '@bsky/shared'
 import { queryClient } from '@bsky/shared'
+import { debug } from '@bsky/shared'
 import type { BskyAgent } from '@atproto/api'
 
 interface AuthContextType {
   isAuthenticated: boolean
   isLoading: boolean
-  login: (identifier: string, password: string) => Promise<boolean>
+  login: (identifier: string, password: string, pdsUrl?: string) => Promise<boolean>
   logout: () => void
   session: Session | null
   client: ATProtoClient
@@ -122,8 +123,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth()
   }, [])
 
-  const login = useCallback(async (identifier: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (identifier: string, password: string, pdsUrl?: string): Promise<boolean> => {
     try {
+      // If a custom PDS URL is provided, we need to create a new client
+      if (pdsUrl && pdsUrl !== 'https://bsky.social') {
+        // Update the client's service URL
+        atProtoClient.updateService(pdsUrl)
+      }
+      
       const newSession = await atProtoClient.login(identifier, password)
       setIsAuthenticated(true)
       setSession(newSession)

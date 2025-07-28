@@ -151,6 +151,34 @@ export class ATProtoClient {
   getSessionPrefix(): string {
     return this.config.sessionPrefix
   }
+  
+  updateService(serviceUrl: string): void {
+    debug.log('Updating service URL to:', serviceUrl)
+    this.config.service = serviceUrl
+    
+    // Create a new agent with the updated service URL
+    const baseAgent = new BskyAgent({
+      service: serviceUrl,
+      persistSession: (evt: any, session: any) => {
+        debug.log('BskyAgent persistSession event:', evt, {
+          hasSession: !!session,
+          sessionKeys: session ? Object.keys(session) : []
+        })
+        
+        // Only save if we have a complete session
+        if (this.config.persistSession && session && session.accessJwt && session.refreshJwt) {
+          this.saveSession(session)
+        } else if (session && (!session.accessJwt || !session.refreshJwt)) {
+          debug.warn('Skipping save - incomplete session data')
+        }
+      }
+    })
+    
+    // Apply rate limiting wrapper if enabled
+    this._agent = this.config.enableRateLimiting 
+      ? createRateLimitedAgent(baseAgent)
+      : baseAgent
+  }
 
   private saveSession(session: any): void {
     try {
