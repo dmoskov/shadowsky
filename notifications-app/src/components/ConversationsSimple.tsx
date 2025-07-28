@@ -29,6 +29,179 @@ interface ThreadNode {
   isRoot?: boolean
 }
 
+// Memoized conversation item component to prevent unnecessary re-renders
+// while still updating when root post data changes
+const ConversationItem = React.memo(({
+  convo,
+  isSelected,
+  onClick,
+  allPostsMap,
+  session,
+  filteredConversationsIndex
+}: {
+  convo: ConversationThread
+  isSelected: boolean
+  onClick: () => void
+  allPostsMap: Map<string, Post>
+  session: any
+  filteredConversationsIndex: number
+}) => {
+  const rootRecord = convo.rootPost?.record as any
+  const previewText = rootRecord?.text || '[Post unavailable]'
+  const isGroup = convo.participants.size > 2
+  const unreadCount = convo.replies.filter(r => !r.isRead).length
+
+  // For non-group conversations, determine the main conversation partner
+  const currentUserHandle = session?.handle
+  const isUserTheOriginalPoster = convo.rootPost?.author?.handle === currentUserHandle
+  
+  let mainParticipantAvatar: string | undefined
+  let mainParticipantDisplayName: string | undefined
+  let mainParticipantHandle: string | undefined
+  let avatarSource: string = 'unknown'
+  
+  if (!isGroup) {
+    if (isUserTheOriginalPoster) {
+      // User posted, so show the person who replied
+      mainParticipantAvatar = convo.latestReply.author.avatar
+      mainParticipantDisplayName = convo.latestReply.author.displayName
+      mainParticipantHandle = convo.latestReply.author.handle
+      avatarSource = 'latestReply'
+    } else if (convo.rootPost?.author) {
+      // Someone else posted, show them
+      mainParticipantAvatar = convo.rootPost.author.avatar
+      mainParticipantDisplayName = convo.rootPost.author.displayName
+      mainParticipantHandle = convo.rootPost.author.handle
+      avatarSource = 'rootPost'
+    } else {
+      // No root post loaded yet, show the replier as fallback
+      mainParticipantAvatar = convo.latestReply.author.avatar
+      mainParticipantDisplayName = convo.latestReply.author.displayName
+      mainParticipantHandle = convo.latestReply.author.handle
+      avatarSource = 'latestReply-fallback'
+    }
+    
+    // Log avatar usage
+    console.log('[ConversationsSimple] Avatar source:', {
+      conversationIndex: filteredConversationsIndex,
+      rootUri: convo.rootUri,
+      avatarSource,
+      isUserTheOriginalPoster,
+      hasRootPost: !!convo.rootPost,
+      mainParticipantHandle,
+      mainParticipantAvatar: !!mainParticipantAvatar,
+      rootPostAuthor: convo.rootPost?.author?.handle,
+      latestReplyAuthor: convo.latestReply.author.handle,
+      currentUserHandle
+    })
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full text-left p-4 transition-all hover:bg-opacity-10 hover:bg-blue-500 ${
+        isSelected ? 'bg-opacity-10 bg-blue-500' : ''
+      }`}
+      style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}
+    >
+      <div className="flex items-center gap-3">
+        {/* Avatar */}
+        <div className="relative flex-shrink-0">
+          {isGroup ? (
+            <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                 style={{ background: 'var(--bsky-bg-secondary)' }}>
+              <Users size={24} style={{ color: 'var(--bsky-text-tertiary)' }} />
+            </div>
+          ) : (
+            <>
+              {mainParticipantAvatar ? (
+                <img 
+                  src={mainParticipantAvatar} 
+                  alt=""
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bsky-gradient flex items-center justify-center text-white font-medium">
+                  {mainParticipantDisplayName?.[0] || mainParticipantHandle?.[0] || 'U'}
+                </div>
+              )}
+            </>
+          )}
+          {unreadCount > 0 && (
+            <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-medium"
+                 style={{ background: 'var(--bsky-primary)' }}>
+              {unreadCount}
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="font-medium truncate" style={{ color: 'var(--bsky-text-primary)' }}>
+              {isGroup 
+                ? `${convo.participants.size} people`
+                : (mainParticipantDisplayName || 
+                   mainParticipantHandle ||
+                   'Thread')
+              }
+            </h3>
+            <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
+              {formatDistanceToNow(new Date(convo.latestReply.indexedAt), { addSuffix: true })}
+            </span>
+          </div>
+          
+          <p className="text-sm truncate mb-1" style={{ color: 'var(--bsky-text-secondary)' }}>
+            {previewText.length > 80 ? previewText.substring(0, 80) + '...' : previewText}
+          </p>
+          
+          {/* Show latest reply author and snippet */}
+          <div className="flex items-center gap-2 text-xs">
+            {/* Profile picture of commenter */}
+            {convo.latestReply.author.avatar ? (
+              <img 
+                src={convo.latestReply.author.avatar} 
+                alt={convo.latestReply.author.handle}
+                className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+              />
+            ) : (
+              <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" 
+                   style={{ background: 'var(--bsky-bg-tertiary)' }}>
+                <span className="text-xs">
+                  {convo.latestReply.author.displayName?.[0] || convo.latestReply.author.handle?.[0] || 'U'}
+                </span>
+              </div>
+            )}
+            <span className="truncate" style={{ color: 'var(--bsky-text-secondary)' }}>
+              {(() => {
+                const latestPost = allPostsMap.get(convo.latestReply.uri)
+                const latestText = (latestPost?.record as any)?.text || 'replied'
+                return latestText.length > 50 ? latestText.substring(0, 50) + '...' : latestText
+              })()}
+            </span>
+          </div>
+        </div>
+      </div>
+    </button>
+  )
+}, (prevProps, nextProps) => {
+  // Custom comparison function for React.memo
+  // Re-render if:
+  // - Selection state changes
+  // - Root post becomes available or changes
+  // - Latest reply changes
+  // - Unread count changes
+  return (
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.convo.rootPost?.uri === nextProps.convo.rootPost?.uri &&
+    prevProps.convo.rootPost?.author?.handle === nextProps.convo.rootPost?.author?.handle &&
+    prevProps.convo.rootPost?.author?.avatar === nextProps.convo.rootPost?.author?.avatar &&
+    prevProps.convo.latestReply.uri === nextProps.convo.latestReply.uri &&
+    prevProps.convo.replies.filter(r => !r.isRead).length === nextProps.convo.replies.filter(r => !r.isRead).length &&
+    prevProps.allPostsMap.get(prevProps.convo.latestReply.uri) === nextProps.allPostsMap.get(nextProps.convo.latestReply.uri)
+  )
+})
+
 export const ConversationsSimple: React.FC = () => {
   console.log('[ConversationsSimple] Component rendering')
   
@@ -198,9 +371,11 @@ export const ConversationsSimple: React.FC = () => {
     return combined
   }, [posts, additionalRootPosts, postMap])
   
-  // Update version when additional root posts are loaded
+  // Force re-render when root posts are loaded by updating a version counter
+  // This ensures conversation items update their avatars when root post authors become available
   React.useEffect(() => {
     if (additionalRootPosts && additionalRootPosts.length > 0) {
+      console.log('[ConversationsSimple] Root posts loaded, forcing re-render:', additionalRootPosts.length)
       setRootPostsVersion(v => v + 1)
     }
   }, [additionalRootPosts])
@@ -219,6 +394,7 @@ export const ConversationsSimple: React.FC = () => {
   }, [allPosts])
 
   // Group notifications into conversation threads
+  // Include rootPostsVersion to force re-computation when root posts are loaded
   const conversations = useMemo(() => {
     const threadMap = new Map<string, ConversationThread>()
     
@@ -292,7 +468,7 @@ export const ConversationsSimple: React.FC = () => {
     return Array.from(threadMap.values()).sort((a, b) => 
       new Date(b.latestReply.indexedAt).getTime() - new Date(a.latestReply.indexedAt).getTime()
     )
-  }, [replyNotifications, allPostsMap, additionalRootPosts])
+  }, [replyNotifications, allPostsMap, rootPostsVersion]) // Include rootPostsVersion to trigger updates
 
   // Filter conversations based on search
   const filteredConversations = useMemo(() => {
@@ -671,7 +847,7 @@ export const ConversationsSimple: React.FC = () => {
         )}
 
         {/* Conversations List */}
-        <div className="flex-1 overflow-y-auto" key={`conversations-${filteredConversations.length}-${extendedData?.pages?.length || 0}-${additionalRootPosts?.length || 0}-${allPostsMap.size}-${rootPostsVersion}`}>
+        <div className="flex-1 overflow-y-auto">
           {filteredConversations.length === 0 ? (
             <div className="p-8 text-center">
               {!extendedData || percentageFetched < 100 ? (
@@ -692,150 +868,17 @@ export const ConversationsSimple: React.FC = () => {
                 </>
               )}
             </div>
-          ) : filteredConversations.slice(0, 5).map((convo) => {
-            const isSelected = selectedConvo === convo.rootUri
-            const rootRecord = convo.rootPost?.record as any
-            const previewText = rootRecord?.text || (percentageFetched < 100 ? 'Loading...' : '[Post unavailable]')
-            const isGroup = convo.participants.size > 2
-            const unreadCount = convo.replies.filter(r => !r.isRead).length
-
-            // For non-group conversations, determine the main conversation partner
-            // If the root post exists and it's by the current user, show the replier
-            // Otherwise, show the root post author (or fallback to the replier)
-            const currentUserHandle = session?.handle
-            const isUserTheOriginalPoster = convo.rootPost?.author?.handle === currentUserHandle
-            
-            let mainParticipantAvatar: string | undefined
-            let mainParticipantDisplayName: string | undefined
-            let mainParticipantHandle: string | undefined
-            let avatarSource: string = 'unknown'
-            
-            if (!isGroup) {
-              if (isUserTheOriginalPoster) {
-                // User posted, so show the person who replied
-                mainParticipantAvatar = convo.latestReply.author.avatar
-                mainParticipantDisplayName = convo.latestReply.author.displayName
-                mainParticipantHandle = convo.latestReply.author.handle
-                avatarSource = 'latestReply'
-              } else if (convo.rootPost?.author) {
-                // Someone else posted, show them
-                mainParticipantAvatar = convo.rootPost.author.avatar
-                mainParticipantDisplayName = convo.rootPost.author.displayName
-                mainParticipantHandle = convo.rootPost.author.handle
-                avatarSource = 'rootPost'
-              } else {
-                // No root post loaded yet, show the replier as fallback
-                mainParticipantAvatar = convo.latestReply.author.avatar
-                mainParticipantDisplayName = convo.latestReply.author.displayName
-                mainParticipantHandle = convo.latestReply.author.handle
-                avatarSource = 'latestReply-fallback'
-              }
-              
-              // Log avatar usage
-              console.log('[ConversationsSimple] Avatar source:', {
-                conversationIndex: filteredConversations.indexOf(convo),
-                rootUri: convo.rootUri,
-                avatarSource,
-                isUserTheOriginalPoster,
-                hasRootPost: !!convo.rootPost,
-                mainParticipantHandle,
-                mainParticipantAvatar: !!mainParticipantAvatar,
-                rootPostAuthor: convo.rootPost?.author?.handle,
-                latestReplyAuthor: convo.latestReply.author.handle,
-                currentUserHandle
-              })
-            }
-
-            return (
-              <button
-                key={convo.rootUri}
-                onClick={() => setSelectedConvo(convo.rootUri)}
-                className={`w-full text-left p-4 transition-all hover:bg-opacity-10 hover:bg-blue-500 ${
-                  isSelected ? 'bg-opacity-10 bg-blue-500' : ''
-                }`}
-                style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}
-              >
-                <div className="flex items-center gap-3">
-                  {/* Avatar */}
-                  <div className="relative flex-shrink-0">
-                    {isGroup ? (
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                           style={{ background: 'var(--bsky-bg-secondary)' }}>
-                        <Users size={24} style={{ color: 'var(--bsky-text-tertiary)' }} />
-                      </div>
-                    ) : (
-                      <>
-                        {mainParticipantAvatar ? (
-                          <img 
-                            src={mainParticipantAvatar} 
-                            alt=""
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bsky-gradient flex items-center justify-center text-white font-medium">
-                            {mainParticipantDisplayName?.[0] || mainParticipantHandle?.[0] || 'U'}
-                          </div>
-                        )}
-                      </>
-                    )}
-                    {unreadCount > 0 && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-medium"
-                           style={{ background: 'var(--bsky-primary)' }}>
-                        {unreadCount}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-medium truncate" style={{ color: 'var(--bsky-text-primary)' }}>
-                        {isGroup 
-                          ? `${convo.participants.size} people`
-                          : (mainParticipantDisplayName || 
-                             mainParticipantHandle ||
-                             'Thread')
-                        }
-                      </h3>
-                      <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
-                        {formatDistanceToNow(new Date(convo.latestReply.indexedAt), { addSuffix: true })}
-                      </span>
-                    </div>
-                    
-                    <p className="text-sm truncate mb-1" style={{ color: 'var(--bsky-text-secondary)' }}>
-                      {previewText.length > 80 ? previewText.substring(0, 80) + '...' : previewText}
-                    </p>
-                    
-                    {/* Show latest reply author and snippet */}
-                    <div className="flex items-center gap-2 text-xs">
-                      {/* Profile picture of commenter */}
-                      {convo.latestReply.author.avatar ? (
-                        <img 
-                          src={convo.latestReply.author.avatar} 
-                          alt={convo.latestReply.author.handle}
-                          className="w-5 h-5 rounded-full object-cover flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" 
-                             style={{ background: 'var(--bsky-bg-tertiary)' }}>
-                          <span className="text-xs">
-                            {convo.latestReply.author.displayName?.[0] || convo.latestReply.author.handle?.[0] || 'U'}
-                          </span>
-                        </div>
-                      )}
-                      <span className="truncate" style={{ color: 'var(--bsky-text-secondary)' }}>
-                        {(() => {
-                          const latestPost = allPostsMap.get(convo.latestReply.uri)
-                          const latestText = (latestPost?.record as any)?.text || 'replied'
-                          return latestText.length > 50 ? latestText.substring(0, 50) + '...' : latestText
-                        })()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </button>
-            )
-          })}
+          ) : filteredConversations.slice(0, 5).map((convo, index) => (
+            <ConversationItem
+              key={convo.rootUri}
+              convo={convo}
+              isSelected={selectedConvo === convo.rootUri}
+              onClick={() => setSelectedConvo(convo.rootUri)}
+              allPostsMap={allPostsMap}
+              session={session}
+              filteredConversationsIndex={index}
+            />
+          ))}
         </div>
       </div>
 
