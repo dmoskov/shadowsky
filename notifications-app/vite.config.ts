@@ -13,5 +13,7 @@ export default defineConfig({
     alias: {
       '@bsky/shared': path.resolve(__dirname, '../packages/shared/src')
     }
-  }
+  },
+  // Handle SPA routing - return index.html for all routes
+  appType: 'spa'
 })
