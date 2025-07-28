@@ -53,38 +53,38 @@ const ConversationItem = React.memo(({
   const isGroup = convo.participants.size > 2
   const unreadCount = convo.replies.filter(r => !r.isRead).length
 
-  // For non-group conversations, always show the root post author (original poster)
+  // Always show the root post author (original poster) regardless of group status
   let mainParticipantAvatar: string | undefined
   let mainParticipantDisplayName: string | undefined
   let mainParticipantHandle: string | undefined
   let avatarSource: string = 'unknown'
   
-  if (!isGroup) {
-    // Always prefer root post author if available
-    if (convo.rootPost?.author) {
-      mainParticipantAvatar = convo.rootPost.author.avatar
-      mainParticipantDisplayName = convo.rootPost.author.displayName
-      mainParticipantHandle = convo.rootPost.author.handle
-      avatarSource = 'rootPost'
-    }
-    
-    // Log avatar usage
-    console.log('[ConversationsSimple] Avatar source:', {
-      conversationIndex: filteredConversationsIndex,
-      rootUri: convo.rootUri,
-      avatarSource,
-      hasRootPost: !!convo.rootPost,
-      hasRootPostAuthor: !!convo.rootPost?.author,
-      mainParticipantHandle,
-      mainParticipantAvatar: !!mainParticipantAvatar,
-      rootPostAuthor: convo.rootPost?.author?.handle,
-      latestReplyAuthor: convo.latestReply.author.handle,
-      isLoadingRootPost
-    })
+  // Always prefer root post author if available
+  if (convo.rootPost?.author) {
+    mainParticipantAvatar = convo.rootPost.author.avatar
+    mainParticipantDisplayName = convo.rootPost.author.displayName
+    mainParticipantHandle = convo.rootPost.author.handle
+    avatarSource = 'rootPost'
   }
+  
+  // Log avatar usage
+  console.log('[ConversationsSimple] Avatar source:', {
+    conversationIndex: filteredConversationsIndex,
+    rootUri: convo.rootUri,
+    avatarSource,
+    hasRootPost: !!convo.rootPost,
+    hasRootPostAuthor: !!convo.rootPost?.author,
+    mainParticipantHandle,
+    mainParticipantAvatar: !!mainParticipantAvatar,
+    rootPostAuthor: convo.rootPost?.author?.handle,
+    latestReplyAuthor: convo.latestReply.author.handle,
+    isLoadingRootPost
+  })
 
-  // If we're loading the root post and it's not a group conversation, show loading state
-  if (!isGroup && isLoadingRootPost && !convo.rootPost?.author) {
+  console.log('show loading state?', isGroup,isLoadingRootPost, convo.rootPost?.author)
+  // If we're loading the root post, show loading state
+  if (isLoadingRootPost && !convo.rootPost?.author) {
+    console.log('--- show loading state', isGroup,isLoadingRootPost, convo.rootPost?.author)
     return (
       <div className={`w-full text-left p-4 transition-all ${
         isSelected ? 'bg-opacity-10 bg-blue-500' : ''
@@ -160,25 +160,16 @@ const ConversationItem = React.memo(({
       <div className="flex items-center gap-3">
         {/* Avatar */}
         <div className="relative flex-shrink-0">
-          {isGroup ? (
-            <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                 style={{ background: 'var(--bsky-bg-secondary)' }}>
-              <Users size={24} style={{ color: 'var(--bsky-text-tertiary)' }} />
-            </div>
+          {mainParticipantAvatar ? (
+            <img 
+              src={mainParticipantAvatar} 
+              alt=""
+              className="w-12 h-12 rounded-full object-cover"
+            />
           ) : (
-            <>
-              {mainParticipantAvatar ? (
-                <img 
-                  src={mainParticipantAvatar} 
-                  alt=""
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-full bsky-gradient flex items-center justify-center text-white font-medium">
-                  {mainParticipantDisplayName?.[0] || mainParticipantHandle?.[0] || 'U'}
-                </div>
-              )}
-            </>
+            <div className="w-12 h-12 rounded-full bsky-gradient flex items-center justify-center text-white font-medium">
+              {mainParticipantDisplayName?.[0] || mainParticipantHandle?.[0] || 'U'}
+            </div>
           )}
           {unreadCount > 0 && (
             <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-medium"
@@ -192,11 +183,9 @@ const ConversationItem = React.memo(({
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
             <h3 className="font-medium truncate" style={{ color: 'var(--bsky-text-primary)' }}>
-              {isGroup 
-                ? `${convo.participants.size} people`
-                : (mainParticipantDisplayName || 
-                   mainParticipantHandle ||
-                   'Thread')
+              {mainParticipantDisplayName || 
+               mainParticipantHandle ||
+               (isGroup ? `${convo.participants.size} people` : 'Thread')
               }
             </h3>
             <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
@@ -923,7 +912,7 @@ export const ConversationsSimple: React.FC = () => {
                 </>
               )}
             </div>
-          ) : filteredConversations.slice(0, 5).map((convo, index) => {
+          ) : filteredConversations.slice(0, 10).map((convo, index) => {
             // Determine if we're still loading this conversation's root post
             const isLoadingRootPost = (
               // We've discovered this root URI needs to be fetched
