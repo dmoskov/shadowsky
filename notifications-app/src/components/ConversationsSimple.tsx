@@ -36,6 +36,7 @@ export const ConversationsSimple: React.FC = () => {
   const [selectedConvo, setSelectedConvo] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [additionalRootUris, setAdditionalRootUris] = useState<Set<string>>(new Set())
+  const [rootPostsVersion, setRootPostsVersion] = useState(0) // Track root posts updates
   const threadContainerRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
 
@@ -197,6 +198,13 @@ export const ConversationsSimple: React.FC = () => {
     return combined
   }, [posts, additionalRootPosts, postMap])
   
+  // Update version when additional root posts are loaded
+  React.useEffect(() => {
+    if (additionalRootPosts && additionalRootPosts.length > 0) {
+      setRootPostsVersion(v => v + 1)
+    }
+  }, [additionalRootPosts])
+  
   // Update post map to include all posts
   const allPostsMap = React.useMemo(() => {
     const map = new Map<string, Post>()
@@ -284,7 +292,7 @@ export const ConversationsSimple: React.FC = () => {
     return Array.from(threadMap.values()).sort((a, b) => 
       new Date(b.latestReply.indexedAt).getTime() - new Date(a.latestReply.indexedAt).getTime()
     )
-  }, [replyNotifications, allPostsMap])
+  }, [replyNotifications, allPostsMap, additionalRootPosts])
 
   // Filter conversations based on search
   const filteredConversations = useMemo(() => {
@@ -663,7 +671,7 @@ export const ConversationsSimple: React.FC = () => {
         )}
 
         {/* Conversations List */}
-        <div className="flex-1 overflow-y-auto" key={`conversations-${filteredConversations.length}-${extendedData?.pages?.length || 0}`}>
+        <div className="flex-1 overflow-y-auto" key={`conversations-${filteredConversations.length}-${extendedData?.pages?.length || 0}-${additionalRootPosts?.length || 0}-${allPostsMap.size}-${rootPostsVersion}`}>
           {filteredConversations.length === 0 ? (
             <div className="p-8 text-center">
               {!extendedData || percentageFetched < 100 ? (
