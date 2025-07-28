@@ -637,7 +637,7 @@ export const ConversationsSimple: React.FC = () => {
             />
           </div>
           <p className="text-xs mt-2" style={{ color: 'var(--bsky-text-secondary)' }}>
-            Showing {filteredConversations.length} conversation{filteredConversations.length !== 1 ? 's' : ''} from {replyNotifications.length} reply notifications
+            Showing {Math.min(5, filteredConversations.length)} of {filteredConversations.length} conversation{filteredConversations.length !== 1 ? 's' : ''} from {replyNotifications.length} reply notifications (DEBUG MODE: Limited to 5)
           </p>
         </div>
 
@@ -684,7 +684,7 @@ export const ConversationsSimple: React.FC = () => {
                 </>
               )}
             </div>
-          ) : filteredConversations.map((convo) => {
+          ) : filteredConversations.slice(0, 5).map((convo) => {
             const isSelected = selectedConvo === convo.rootUri
             const rootRecord = convo.rootPost?.record as any
             const previewText = rootRecord?.text || (percentageFetched < 100 ? 'Loading...' : '[Post unavailable]')
@@ -700,6 +700,7 @@ export const ConversationsSimple: React.FC = () => {
             let mainParticipantAvatar: string | undefined
             let mainParticipantDisplayName: string | undefined
             let mainParticipantHandle: string | undefined
+            let avatarSource: string = 'unknown'
             
             if (!isGroup) {
               if (isUserTheOriginalPoster) {
@@ -707,17 +708,34 @@ export const ConversationsSimple: React.FC = () => {
                 mainParticipantAvatar = convo.latestReply.author.avatar
                 mainParticipantDisplayName = convo.latestReply.author.displayName
                 mainParticipantHandle = convo.latestReply.author.handle
+                avatarSource = 'latestReply'
               } else if (convo.rootPost?.author) {
                 // Someone else posted, show them
                 mainParticipantAvatar = convo.rootPost.author.avatar
                 mainParticipantDisplayName = convo.rootPost.author.displayName
                 mainParticipantHandle = convo.rootPost.author.handle
+                avatarSource = 'rootPost'
               } else {
                 // No root post loaded yet, show the replier as fallback
                 mainParticipantAvatar = convo.latestReply.author.avatar
                 mainParticipantDisplayName = convo.latestReply.author.displayName
                 mainParticipantHandle = convo.latestReply.author.handle
+                avatarSource = 'latestReply-fallback'
               }
+              
+              // Log avatar usage
+              console.log('[ConversationsSimple] Avatar source:', {
+                conversationIndex: filteredConversations.indexOf(convo),
+                rootUri: convo.rootUri,
+                avatarSource,
+                isUserTheOriginalPoster,
+                hasRootPost: !!convo.rootPost,
+                mainParticipantHandle,
+                mainParticipantAvatar: !!mainParticipantAvatar,
+                rootPostAuthor: convo.rootPost?.author?.handle,
+                latestReplyAuthor: convo.latestReply.author.handle,
+                currentUserHandle
+              })
             }
 
             return (
