@@ -19,6 +19,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
   const [cacheService] = useState(() => NotificationCacheService.getInstance())
   const [isIndexedDBReady, setIsIndexedDBReady] = useState(false)
   const [hasFetched, setHasFetched] = useState(false)
+  const [enablePolling, setEnablePolling] = useState(false)
   
   // Check if we already have cached data
   const cachedData = queryClient.getQueryData(['notifications-extended']) as any
@@ -40,9 +41,14 @@ export const BackgroundNotificationLoader: React.FC = () => {
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.cursor,
-    enabled: false, // Manual trigger only
-    staleTime: Infinity,
-    refetchInterval: 10 * 1000, // Refetch every 10 seconds when enabled
+    enabled: enablePolling, // Enable polling after initial load
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    refetchInterval: enablePolling ? 10 * 1000 : false, // Poll every 10 seconds when enabled
+    // Custom behavior for refetches to preserve existing pages
+    refetchPage: (lastPage, index) => {
+      // Only refetch the first page (newest notifications) during polling
+      return index === 0
+    },
   })
 
   // Initialize IndexedDB
@@ -93,6 +99,10 @@ export const BackgroundNotificationLoader: React.FC = () => {
           
           setHasFetched(true)
           
+          // Enable polling after loading from cache
+          setEnablePolling(true)
+          debug.log('🔄 Enabled polling after loading from cache')
+          
           // Prefetch posts for cached reply notifications in the background
           const { atProtoClient } = await import('../services/atproto')
           const agent = atProtoClient.agent
@@ -118,11 +128,14 @@ export const BackgroundNotificationLoader: React.FC = () => {
 
   // Auto-fetch 4 weeks if no data exists
   useEffect(() => {
-    if (!session || !isIndexedDBReady || hasFetched || hasCachedData) return
+    if (!session || !isIndexedDBReady || hasFetched || hasCachedData || enablePolling) return
     
     const fetchData = async () => {
       debug.log('🚀 Auto-fetching 4 weeks of notifications')
       setHasFetched(true)
+      
+      // Enable the query first to allow manual fetching
+      setEnablePolling(true)
       
       // Start fetching
       const initialResult = await refetch()
@@ -205,7 +218,64 @@ export const BackgroundNotificationLoader: React.FC = () => {
     // Small delay to let component settle
     const timer = setTimeout(fetchData, 1000)
     return () => clearTimeout(timer)
-  }, [session, isIndexedDBReady, hasFetched, hasCachedData, refetch, fetchNextPage, queryClient, cacheService])
+  }, [session, isIndexedDBReady, hasFetched, hasCachedData, enablePolling, refetch, fetchNextPage, queryClient, cacheService])
+  
+  // Save new notifications to IndexedDB when data changes (from polling)
+  useEffect(() => {
+    if (!data?.pages || !isIndexedDBReady || !enablePolling) return
+    
+    const saveNewNotifications = async () => {
+      debug.log('💾 Checking for new notifications to save to IndexedDB...')
+      debug.log(`📊 Current data has ${data.pages.length} pages`)
+      
+      // Get all notifications from the query data
+      const allNotifications = data.pages.flatMap((page: any) => page.notifications)
+      debug.log(`📊 Total notifications in query data: ${allNotifications.length}`)
+      
+      if (allNotifications.length > 0) {
+        // Save to IndexedDB (it will handle deduplication)
+        for (let i = 0; i < data.pages.length; i++) {
+          const page = data.pages[i]
+          await cacheService.cacheNotifications(page.notifications, i + 1)
+        }
+        
+        // Update metadata
+        const oldestDate = new Date(allNotifications[allNotifications.length - 1].indexedAt)
+        const newestDate = new Date(allNotifications[0].indexedAt)
+        const daysReached = Math.floor((new Date().getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24))
+        
+        ExtendedFetchCache.saveMetadata(
+          allNotifications.length,
+          oldestDate,
+          newestDate,
+          daysReached
+        )
+        
+        debug.log(`✅ Saved ${allNotifications.length} notifications to IndexedDB`)
+        
+        // Prefetch posts for new reply notifications
+        const { atProtoClient } = await import('../services/atproto')
+        const agent = atProtoClient.agent
+        if (agent) {
+          const replyNotifications = allNotifications.filter((n: Notification) => n.reason === 'reply')
+          if (replyNotifications.length > 0) {
+            debug.log('🔄 Prefetching posts for new conversations...')
+            await prefetchNotificationPosts(replyNotifications, agent)
+            await prefetchRootPosts(replyNotifications, agent)
+            debug.log('✅ Posts prefetched for new conversations')
+          }
+        }
+        
+        // Trigger re-render in components watching this data
+        queryClient.invalidateQueries({ 
+          queryKey: ['notifications-extended'],
+          refetchType: 'none' // Don't refetch, just notify subscribers
+        })
+      }
+    }
+    
+    saveNewNotifications()
+  }, [data, isIndexedDBReady, enablePolling, cacheService, queryClient])
 
   // No UI - just background loading
   return null

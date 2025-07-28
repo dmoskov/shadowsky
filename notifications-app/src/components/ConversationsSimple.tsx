@@ -262,10 +262,16 @@ export const ConversationsSimple: React.FC = () => {
   const { data: extendedData } = useQuery({
     queryKey: ['notifications-extended'],
     // Don't fetch - just subscribe to existing data from BackgroundNotificationLoader
-    queryFn: () => queryClient.getQueryData(['notifications-extended']) || { pages: [] },
-    staleTime: Infinity,
+    queryFn: () => {
+      const data = queryClient.getQueryData(['notifications-extended']) || { pages: [] }
+      debug.log('[ConversationsSimple] Query function called, data pages:', data.pages?.length || 0)
+      return data
+    },
+    staleTime: 0, // Always consider stale to pick up changes
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    // Force React Query to always use the latest data
+    structuralSharing: false,
   })
   debug.log('[ConversationsSimple] Extended data:', !!extendedData, extendedData?.pages?.length)
   
@@ -275,9 +281,20 @@ export const ConversationsSimple: React.FC = () => {
       debug.log('[ConversationsSimple] No extended data pages')
       return []
     }
+    debug.log(`[ConversationsSimple] Processing ${extendedData.pages.length} pages of notifications`)
     const allNotifications = extendedData.pages.flatMap((page: any) => page.notifications)
+    debug.log(`[ConversationsSimple] Total notifications: ${allNotifications.length}`)
     const replies = allNotifications.filter((n: Notification) => n.reason === 'reply')
     debug.log('[ConversationsSimple] Found reply notifications:', replies.length)
+    
+    // Log the newest and oldest reply dates for debugging
+    if (replies.length > 0) {
+      const newestReply = replies[0]
+      const oldestReply = replies[replies.length - 1]
+      debug.log('[ConversationsSimple] Newest reply:', new Date(newestReply.indexedAt).toLocaleString())
+      debug.log('[ConversationsSimple] Oldest reply:', new Date(oldestReply.indexedAt).toLocaleString())
+    }
+    
     return replies
   }, [extendedData])
 
