@@ -57,15 +57,25 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
     queryFn: async () => {
       if (postUris.length === 0) return []
       
-      // Initial fetch: Get first 200 posts quickly for better UX
+      // First, check if ALL posts are cached (not just first 200)
+      const { cached: allCached, missing: allMissing } = await PostCache.getCachedPostsAsync(postUris)
+      
+      // If we have ALL posts cached, return them immediately - no progressive loading needed!
+      if (allMissing.length === 0) {
+        setFetchedCount(allCached.length)
+        console.log(`🚀 All ${allCached.length} posts found in cache - instant load!`)
+        return allCached
+      }
+      
+      // Otherwise, do progressive loading starting with first 200
       const INITIAL_POSTS_TO_FETCH = 200
       const urisToFetch = postUris.slice(0, INITIAL_POSTS_TO_FETCH)
       
-      // Check cache first (using async method for IndexedDB)
+      // Check cache for initial batch
       const { cached, missing } = await PostCache.getCachedPostsAsync(urisToFetch)
       
-      // If we have all posts cached, return them immediately
-      if (missing.length === 0) {
+      // If we have the initial batch cached, use it
+      if (missing.length === 0 && cached.length === urisToFetch.length) {
         setFetchedCount(cached.length)
         return cached
       }
@@ -119,7 +129,11 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
     const fetchedUris = new Set((queryResult.data || []).map(post => post.uri))
     const unfetchedCount = postUris.filter(uri => !fetchedUris.has(uri)).length
     
-    if (unfetchedCount === 0) return // All posts fetched
+    if (unfetchedCount === 0) {
+      // All posts fetched - make sure fetchedCount is accurate
+      setFetchedCount(queryResult.data?.length || 0)
+      return
+    }
 
     const fetchMorePosts = async () => {
       setIsFetchingMore(true)

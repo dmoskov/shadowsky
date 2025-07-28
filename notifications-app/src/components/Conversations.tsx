@@ -650,12 +650,17 @@ export const Conversations: React.FC = () => {
   }
 
   // Show loading state only on initial load when we have no data at all
-  // Also wait for posts to be fully loaded (100% fetched)
+  // Also wait for posts to be fully loaded (100% fetched) - but only if we have posts to load
   const actualIsLoading = isFromCache ? false : isLoading
-  const postsStillLoading = replyNotifications.length > 0 && postsPercentageFetched < 100
+  const needsPosts = replyNotifications.length > 0
+  const postsStillLoading = needsPosts && postsPercentageFetched < 100
   const rootPostsStillLoading = rootPostUris.length > 0 && isLoadingRootPosts
   
-  if ((actualIsLoading && !data) || postsStillLoading || rootPostsStillLoading) {
+  // Don't show loading if we're from cache and posts are ready or not needed
+  const showLoading = (actualIsLoading && !data) || 
+                     (needsPosts && (postsStillLoading || rootPostsStillLoading))
+  
+  if (showLoading) {
     return (
       <div className="flex items-center justify-center h-screen" style={{ background: 'var(--bsky-bg-primary)' }}>
         <div className="text-center">
