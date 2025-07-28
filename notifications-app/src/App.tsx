@@ -16,6 +16,8 @@ import { NotificationStorageDB } from './services/notification-storage-db'
 import { cleanupLocalStorage } from './utils/cleanupLocalStorage'
 import { BackgroundNotificationLoader } from './components/BackgroundNotificationLoader'
 import { debug } from '@bsky/shared'
+import { analytics } from './services/analytics'
+import { usePageTracking, useErrorTracking } from './hooks/useAnalytics'
 import './utils/debug-control' // Initialize debug controls
 
 const queryClient = new QueryClient({
@@ -43,6 +45,10 @@ const queryClient = new QueryClient({
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  
+  // Initialize analytics tracking
+  usePageTracking()
+  useErrorTracking()
   
   // Run one-time migration on app load
   useEffect(() => {
@@ -102,6 +108,17 @@ function AppContent() {
 }
 
 function App() {
+  // Initialize Google Analytics
+  useEffect(() => {
+    const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID
+    if (measurementId) {
+      analytics.initialize(measurementId)
+      debug.log('Google Analytics initialized')
+    } else {
+      debug.log('Google Analytics not configured (no measurement ID)')
+    }
+  }, [])
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>

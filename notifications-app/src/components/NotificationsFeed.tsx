@@ -11,6 +11,7 @@ import { getNotificationUrl } from '../utils/url-helpers'
 import { useLocation } from 'react-router-dom'
 import { NotificationCache } from '../utils/notificationCache'
 import { debug } from '@bsky/shared'
+import { useNotificationTracking, useFeatureTracking, useInteractionTracking } from '../hooks/useAnalytics'
 
 type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies' | 'quotes' | 'images' | 'top-accounts' | 'from-following'
 
@@ -27,6 +28,17 @@ export const NotificationsFeed: React.FC = () => {
   const [showConfigModal, setShowConfigModal] = useState(false)
   const [isFromCache, setIsFromCache] = useState(false)
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  
+  // Analytics hooks
+  const { trackNotificationView, trackNotificationInteraction } = useNotificationTracking()
+  const { trackFeatureAction } = useFeatureTracking('notifications_feed')
+  const { trackClick } = useInteractionTracking()
+  
+  // Wrap setFilter to track analytics
+  const handleFilterChange = (newFilter: NotificationFilter) => {
+    setFilter(newFilter)
+    trackFeatureAction('filter_changed', { filter: newFilter })
+  }
   
   // Reset filter if top accounts is hidden but was selected
   useEffect(() => {
@@ -68,7 +80,12 @@ export const NotificationsFeed: React.FC = () => {
       notificationsCount: notifications.length,
       error: error ? error.message : null
     })
-  }, [isLoading, data, notifications.length, error])
+    
+    // Track notification view when data loads
+    if (!isLoading && notifications.length > 0) {
+      trackNotificationView(filter === 'all' ? 'all' : filter, notifications.length)
+    }
+  }, [isLoading, data, notifications.length, error, filter, trackNotificationView])
 
   // Check if data is from cache
   useEffect(() => {
@@ -252,55 +269,55 @@ export const NotificationsFeed: React.FC = () => {
         <div className="flex gap-1 bsky-tabs-container">
           <FilterTab
             active={filter === 'all'}
-            onClick={() => setFilter('all')}
+            onClick={() => handleFilterChange('all')}
             icon={<Filter size={16} />}
             label="All"
           />
           <FilterTab
             active={filter === 'likes'}
-            onClick={() => setFilter('likes')}
+            onClick={() => handleFilterChange('likes')}
             icon={<Heart size={16} />}
             label="Likes"
           />
           <FilterTab
             active={filter === 'reposts'}
-            onClick={() => setFilter('reposts')}
+            onClick={() => handleFilterChange('reposts')}
             icon={<Repeat2 size={16} />}
             label="Reposts"
           />
           <FilterTab
             active={filter === 'follows'}
-            onClick={() => setFilter('follows')}
+            onClick={() => handleFilterChange('follows')}
             icon={<UserPlus size={16} />}
             label="Follows"
           />
           <FilterTab
             active={filter === 'mentions'}
-            onClick={() => setFilter('mentions')}
+            onClick={() => handleFilterChange('mentions')}
             icon={<AtSign size={16} />}
             label="Mentions"
           />
           <FilterTab
             active={filter === 'replies'}
-            onClick={() => setFilter('replies')}
+            onClick={() => handleFilterChange('replies')}
             icon={<MessageCircle size={16} />}
             label="Replies"
           />
           <FilterTab
             active={filter === 'quotes'}
-            onClick={() => setFilter('quotes')}
+            onClick={() => handleFilterChange('quotes')}
             icon={<Quote size={16} />}
             label="Quotes"
           />
           <FilterTab
             active={filter === 'images'}
-            onClick={() => setFilter('images')}
+            onClick={() => handleFilterChange('images')}
             icon={<Image size={16} />}
             label="Images"
           />
           <FilterTab
             active={filter === 'from-following'}
-            onClick={() => setFilter('from-following')}
+            onClick={() => handleFilterChange('from-following')}
             icon={<Users size={16} />}
             label="Following"
             disabled={isLoadingFollowing}
@@ -308,7 +325,7 @@ export const NotificationsFeed: React.FC = () => {
           {showTopAccounts && (
             <FilterTab
               active={filter === 'top-accounts'}
-              onClick={() => setFilter('top-accounts')}
+              onClick={() => handleFilterChange('top-accounts')}
               icon={<Crown size={16} />}
               label="Top Accounts"
             />

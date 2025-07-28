@@ -5,13 +5,52 @@ import { useAuth } from '../contexts/AuthContext'
 import { format, subDays, startOfDay, subHours } from 'date-fns'
 import { useExtendedNotifications } from '../hooks/useExtendedNotifications'
 import { BackgroundNotificationLoader } from './BackgroundNotificationLoader'
+import { useFeatureTracking, useInteractionTracking } from '../hooks/useAnalytics'
+import { analytics } from '../services/analytics'
 
 type TimeRange = '1d' | '3d' | '7d' | '4w'
+
+// Component to track when charts come into view
+const TrackedChart: React.FC<{ chartName: string; children: React.ReactNode }> = ({ chartName, children }) => {
+  const ref = React.useRef<HTMLDivElement>(null)
+  const [hasTracked, setHasTracked] = React.useState(false)
+  
+  React.useEffect(() => {
+    if (hasTracked || !ref.current) return
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasTracked) {
+          analytics.trackAnalyticsView(chartName)
+          setHasTracked(true)
+        }
+      },
+      { threshold: 0.5 }
+    )
+    
+    observer.observe(ref.current)
+    
+    return () => observer.disconnect()
+  }, [chartName, hasTracked])
+  
+  return <div ref={ref}>{children}</div>
+}
 
 export const NotificationsAnalytics: React.FC = () => {
   const { agent } = useAuth()
   const queryClient = useQueryClient()
   const [timeRange, setTimeRange] = React.useState<TimeRange>('7d')
+  
+  // Analytics hooks
+  const { trackFeatureAction } = useFeatureTracking('analytics')
+  const { trackClick } = useInteractionTracking()
+  
+  // Wrap setTimeRange to track analytics
+  const handleTimeRangeChange = (newRange: TimeRange) => {
+    setTimeRange(newRange)
+    trackFeatureAction('time_range_changed', { range: newRange })
+    analytics.trackAnalyticsInteraction('time_range_changed', newRange)
+  }
   
 
   // Check if we have extended data available (from memory or IndexedDB)
@@ -415,7 +454,7 @@ export const NotificationsAnalytics: React.FC = () => {
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                setTimeRange('1d')
+                handleTimeRangeChange('1d')
               }}
               className="px-3 py-1 text-sm rounded-lg transition-all cursor-pointer hover:opacity-80"
               style={{
@@ -431,7 +470,7 @@ export const NotificationsAnalytics: React.FC = () => {
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                setTimeRange('3d')
+                handleTimeRangeChange('3d')
               }}
               className="px-3 py-1 text-sm rounded-lg transition-all cursor-pointer hover:opacity-80"
               style={{
@@ -447,7 +486,7 @@ export const NotificationsAnalytics: React.FC = () => {
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                setTimeRange('7d')
+                handleTimeRangeChange('7d')
               }}
               className="px-3 py-1 text-sm rounded-lg transition-all cursor-pointer hover:opacity-80"
               style={{
@@ -463,7 +502,7 @@ export const NotificationsAnalytics: React.FC = () => {
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                setTimeRange('4w')
+                handleTimeRangeChange('4w')
               }}
               className="px-3 py-1 text-sm rounded-lg transition-all cursor-pointer hover:opacity-80"
               style={{

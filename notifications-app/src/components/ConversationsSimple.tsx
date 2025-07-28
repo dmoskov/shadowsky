@@ -8,6 +8,7 @@ import { getNotificationUrl, atUriToBskyUrl } from '../utils/url-helpers'
 import type { AppBskyFeedDefs } from '@atproto/api'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
 import { debug } from '@bsky/shared'
+import { useConversationTracking, useFeatureTracking, useInteractionTracking } from '../hooks/useAnalytics'
 
 type Post = AppBskyFeedDefs.PostView
 import '../styles/conversations.css'
@@ -257,6 +258,20 @@ export const ConversationsSimple: React.FC = () => {
   const [rootPostsVersion, setRootPostsVersion] = useState(0) // Track root posts updates
   const threadContainerRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
+  
+  // Analytics hooks
+  const { trackConversationView, trackConversationAction } = useConversationTracking()
+  const { trackFeatureAction } = useFeatureTracking('conversations')
+  const { trackClick } = useInteractionTracking()
+  
+  // Wrap setSelectedConvo to track analytics
+  const handleSelectConversation = (rootUri: string | null, messageCount?: number) => {
+    setSelectedConvo(rootUri)
+    if (rootUri) {
+      trackConversationView(rootUri, messageCount || 0)
+      trackConversationAction('select')
+    }
+  }
 
   // Subscribe to extended notifications data properly
   const { data: extendedData } = useQuery({
@@ -874,7 +889,12 @@ export const ConversationsSimple: React.FC = () => {
               type="text"
               placeholder="Search conversations..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                if (e.target.value) {
+                  trackFeatureAction('search', { query_length: e.target.value.length })
+                }
+              }}
               className="w-full pl-10 pr-4 py-2 rounded-lg bsky-input"
               style={{ 
                 background: 'var(--bsky-bg-secondary)',
@@ -948,7 +968,7 @@ export const ConversationsSimple: React.FC = () => {
                 key={convo.rootUri}
                 convo={convo}
                 isSelected={selectedConvo === convo.rootUri}
-                onClick={() => setSelectedConvo(convo.rootUri)}
+                onClick={() => handleSelectConversation(convo.rootUri, convo.totalReplies)}
                 allPostsMap={allPostsMap}
                 session={session}
                 filteredConversationsIndex={index}
@@ -967,7 +987,7 @@ export const ConversationsSimple: React.FC = () => {
                style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setSelectedConvo(null)}
+                onClick={() => handleSelectConversation(null)}
                 className="md:hidden p-2 rounded-lg hover:bg-opacity-10 hover:bg-blue-500 transition-all"
               >
                 <ArrowLeft size={20} style={{ color: 'var(--bsky-text-secondary)' }} />

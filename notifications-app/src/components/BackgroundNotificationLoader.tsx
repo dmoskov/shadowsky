@@ -8,6 +8,8 @@ import { NotificationCacheService } from '../services/notification-cache-service
 import { prefetchNotificationPosts, prefetchRootPosts } from '../utils/prefetchNotificationPosts'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { debug } from '@bsky/shared'
+import { useNotificationTracking } from '../hooks/useAnalytics'
+import { analytics } from '../services/analytics'
 
 /**
  * Silently loads 4 weeks of notifications in the background
@@ -20,6 +22,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
   const [isIndexedDBReady, setIsIndexedDBReady] = useState(false)
   const [hasFetched, setHasFetched] = useState(false)
   const [enablePolling, setEnablePolling] = useState(false)
+  const { trackNotificationLoad } = useNotificationTracking()
   
   // Check if we already have cached data
   const cachedData = queryClient.getQueryData(['notifications-extended']) as any
@@ -70,6 +73,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
     if (!session || hasCachedData || !isIndexedDBReady) return
     
     const loadCachedData = async () => {
+      const startTime = Date.now()
       const hasCached = await cacheService.hasCachedData()
       if (hasCached) {
         debug.log('📊 Loading notifications from IndexedDB')
@@ -103,6 +107,14 @@ export const BackgroundNotificationLoader: React.FC = () => {
           setEnablePolling(true)
           debug.log('🔄 Enabled polling after loading from cache')
           
+          // Track cache load performance
+          const loadDuration = Date.now() - startTime
+          trackNotificationLoad(loadDuration, cachedResult.notifications.length, 'cache')
+          analytics.trackPerformance('cache_load_duration', loadDuration, {
+            notification_count: cachedResult.notifications.length,
+            source: 'indexeddb'
+          })
+          
           // Prefetch posts for cached reply notifications in the background
           const { atProtoClient } = await import('../services/atproto')
           const agent = atProtoClient.agent
@@ -131,6 +143,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
     if (!session || !isIndexedDBReady || hasFetched || hasCachedData || enablePolling) return
     
     const fetchData = async () => {
+      const startTime = Date.now()
       debug.log('🚀 Auto-fetching 4 weeks of notifications')
       setHasFetched(true)
       
@@ -144,6 +157,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
       const fourWeeksAgo = subDays(new Date(), 28)
       let shouldContinue = true
       let currentPage = 1
+      let totalNotifications = 0
       
       // Continue fetching until we reach 4 weeks
       while (shouldContinue && currentPage < 100) {
@@ -183,6 +197,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
         }
         
         const allNotifications = finalData.pages.flatMap((page: any) => page.notifications)
+        totalNotifications = allNotifications.length
         if (allNotifications.length > 0) {
           const oldestDate = new Date(allNotifications[allNotifications.length - 1].indexedAt)
           const newestDate = new Date(allNotifications[0].indexedAt)
@@ -212,6 +227,14 @@ export const BackgroundNotificationLoader: React.FC = () => {
       
       // Invalidate analytics queries
       queryClient.invalidateQueries({ queryKey: ['notifications-analytics'] })
+      
+      // Track performance metrics
+      const loadDuration = Date.now() - startTime
+      trackNotificationLoad(loadDuration, totalNotifications, 'api')
+      analytics.trackPerformance('background_load_duration', loadDuration, {
+        notification_count: totalNotifications,
+        pages_loaded: currentPage
+      })
       queryClient.invalidateQueries({ queryKey: ['notifications-visual-timeline'] })
     }
     

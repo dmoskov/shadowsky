@@ -1,6 +1,6 @@
 # Bluesky Notifications App
 
-A dedicated notifications management app for Bluesky, providing advanced analytics, timeline views, and customizable notification settings.
+A dedicated notifications management app for Bluesky, providing advanced analytics, timeline views, and customizable notification settings with comprehensive Google Analytics integration.
 
 ## Features
 
@@ -27,6 +27,16 @@ npm run dev
 ```
 
 The app will run on http://localhost:5174 (different port from the main Bluesky client)
+
+### Google Analytics Setup
+
+1. Create a Google Analytics 4 property at https://analytics.google.com
+2. Get your Measurement ID (format: G-XXXXXXXXXX)
+3. Create a `.env` file in the notifications-app directory:
+   ```
+   VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+   ```
+4. Analytics will automatically initialize when the app loads
 
 ### Build
 
@@ -64,6 +74,47 @@ npm run build
 - Auto-refresh with customizable intervals
 - Filter preferences (hide certain notification types)
 - Priority mode (only from people you follow)
+
+## Analytics Tracking
+
+The app includes comprehensive Google Analytics tracking to help understand user behavior and improve the experience:
+
+### User Actions Tracked
+- **Authentication**: Login/logout events with PDS type (custom/default)
+- **Page Views**: Automatic tracking of all route changes
+- **Notification Interactions**:
+  - Filter changes (all, likes, reposts, follows, etc.)
+  - Notification views with type and count
+  - Load performance (API vs cache)
+- **Conversation Tracking**:
+  - Conversation selections and views
+  - Message counts per conversation
+  - Search queries (anonymized)
+- **Analytics Dashboard**:
+  - Time range changes
+  - Chart views and interactions
+- **Performance Metrics**:
+  - Notification load times
+  - Cache performance
+  - Background sync duration
+  - Component render times
+
+### Privacy Considerations
+- User IDs are hashed/anonymized
+- No personal content is tracked
+- Only aggregate metrics are collected
+- Users can opt out via browser settings
+
+### Custom Events
+The app tracks custom events with the following structure:
+```javascript
+{
+  category: 'feature_name',
+  action: 'user_action',
+  label: 'optional_context',
+  value: numeric_value
+}
+```
 
 ## Tech Stack
 
