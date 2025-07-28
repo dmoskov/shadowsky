@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import { useReplyNotifications } from './useNotificationsByType'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
+import { debug } from '@bsky/shared'
 
 /**
  * Hook that first checks the extended notifications cache for reply notifications
@@ -29,7 +30,7 @@ export function useReplyNotificationsFromCache() {
         (n: Notification) => n.reason === 'reply'
       )
       
-      console.log(`📨 Found ${replyNotifications.length} reply notifications in extended cache`)
+      debug.log(`📨 Found ${replyNotifications.length} reply notifications in extended cache`)
       
       // Format as paginated data to match the expected structure
       return {

@@ -7,6 +7,7 @@ import { getBskyProfileUrl } from '../utils/url-helpers'
 import { getProfileCacheService } from '../services/profile-cache-service'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import type { CachedProfile } from '../services/follower-cache-db'
+import { debug } from '@bsky/shared'
 
 interface TopAccountsViewProps {
   notifications: Notification[]
@@ -131,7 +132,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
         setLoadingProfiles(false)
         return profileMap
       } catch (error) {
-        console.error('Error fetching profiles:', error)
+        debug.error('Error fetching profiles:', error)
         setLoadingProfiles(false)
         return new Map<string, CachedProfile>()
       }

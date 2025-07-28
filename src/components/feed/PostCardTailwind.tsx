@@ -37,10 +37,10 @@ export const PostCardTailwind: React.FC<PostCardProps> = ({
 
   const handleLike = async () => {
     try {
-      console.log('Like button clicked for post:', post.uri)
+      debug.log('Like button clicked for post:', post.uri)
       await likePost(post)
     } catch (error) {
-      console.error('Like failed:', error)
+      debug.error('Like failed:', error)
     }
   }
 

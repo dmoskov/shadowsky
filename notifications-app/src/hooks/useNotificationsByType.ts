@@ -2,6 +2,7 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import { getNotificationService } from '../services/atproto/notifications'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
+import { debug } from '@bsky/shared'
 
 const MAX_NOTIFICATIONS_PER_TYPE = 5000
 const MAX_DAYS = 28 // 4 weeks
@@ -53,11 +54,11 @@ export function useNotificationsByType(options: UseNotificationsByTypeOptions = 
       
       // Log progress
       const typeStr = reasons ? reasons.join(', ') : 'all'
-      console.log(`Fetched ${totalNotifications} ${typeStr} notifications so far...`)
+      debug.log(`Fetched ${totalNotifications} ${typeStr} notifications so far...`)
       
       // Stop if we've reached max notifications for this type
       if (totalNotifications >= MAX_NOTIFICATIONS_PER_TYPE) {
-        console.log(`Reached max notifications limit for ${typeStr} (${MAX_NOTIFICATIONS_PER_TYPE})`)
+        debug.log(`Reached max notifications limit for ${typeStr} (${MAX_NOTIFICATIONS_PER_TYPE})`)
         return undefined
       }
 
@@ -71,7 +72,7 @@ export function useNotificationsByType(options: UseNotificationsByTypeOptions = 
           maxDaysAgo.setDate(maxDaysAgo.getDate() - MAX_DAYS)
           
           if (oldestDate < maxDaysAgo) {
-            console.log(`Reached 4-week limit for ${typeStr}. Oldest notification: ${oldestDate.toLocaleDateString()}`)
+            debug.log(`Reached 4-week limit for ${typeStr}. Oldest notification: ${oldestDate.toLocaleDateString()}`)
             return undefined
           }
         }

@@ -1,3 +1,5 @@
+import { debug } from '@bsky/shared'
+
 /**
  * URL helper functions for generating shareable Bluesky links
  */
@@ -25,7 +27,7 @@ export function atUriToWebUrl(uri: string, handle: string): string {
     // For other types, return a generic profile URL
     return `https://bsky.app/profile/${handle}`
   } catch (error) {
-    console.error('Error parsing AT URI:', error)
+    debug.error('Error parsing AT URI:', error)
     // Fallback to profile URL
     return `https://bsky.app/profile/${handle}`
   }
@@ -60,7 +62,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
       }
     }
   } catch (error) {
-    console.error('Failed to copy to clipboard:', error)
+    debug.error('Failed to copy to clipboard:', error)
     return false
   }
 }
@@ -84,7 +86,7 @@ export async function shareUrl(url: string, title?: string, text?: string): Prom
   } catch (error) {
     // User cancelled or error occurred
     if ((error as Error).name !== 'AbortError') {
-      console.error('Error sharing:', error)
+      debug.error('Error sharing:', error)
     }
     return false
   }

@@ -4,6 +4,7 @@
  */
 
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
+import { debug } from '@bsky/shared'
 
 // localStorage limits vary by browser but are typically 5-10MB
 // We'll target 1MB for notification data to leave room for other app data
@@ -169,7 +170,7 @@ export class StorageManager {
         currentSize += notifSize
       } else {
         // Stop when we reach the size limit
-        console.log(`📊 Storage optimization: Kept ${compressed.length} of ${notifications.length} notifications`)
+        debug.log(`📊 Storage optimization: Kept ${compressed.length} of ${notifications.length} notifications`)
         break
       }
     }
@@ -216,7 +217,7 @@ export class StorageManager {
     keysToRemove.forEach(key => localStorage.removeItem(key))
     
     if (keysToRemove.length > 0) {
-      console.log(`🧹 Cleaned up ${keysToRemove.length} old items, freed ${(removedSize / 1024).toFixed(1)}KB`)
+      debug.log(`🧹 Cleaned up ${keysToRemove.length} old items, freed ${(removedSize / 1024).toFixed(1)}KB`)
     }
   }
 

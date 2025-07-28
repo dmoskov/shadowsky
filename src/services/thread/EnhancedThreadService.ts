@@ -1,6 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import type { AppBskyFeedDefs } from '@atproto/api'
 import { ThreadService, ThreadViewPost } from '../../../packages/shared/src/index.ts'
+import { debug } from '@bsky/shared'
 
 export interface ThreadNode {
   post: ThreadViewPost
@@ -49,7 +50,7 @@ export class EnhancedThreadService extends ThreadService {
     
     // Check for circular reference
     if (visited.has(uri)) {
-      console.warn(`Circular reference detected for URI: ${uri}`)
+      debug.warn(`Circular reference detected for URI: ${uri}`)
       return {
         post: {
           post: {
@@ -86,7 +87,7 @@ export class EnhancedThreadService extends ThreadService {
       
       return node
     } catch (error) {
-      console.error(`Failed to fetch thread for URI: ${uri}`, error)
+      debug.error(`Failed to fetch thread for URI: ${uri}`, error)
       return null
     }
   }
@@ -103,7 +104,7 @@ export class EnhancedThreadService extends ThreadService {
   ): ThreadNode {
     // Safety check for max depth
     if (depth > this.maxDepth) {
-      console.warn(`Max depth ${this.maxDepth} reached`)
+      debug.warn(`Max depth ${this.maxDepth} reached`)
       return {
         post: thread,
         parent,
@@ -135,7 +136,7 @@ export class EnhancedThreadService extends ThreadService {
           
           // Check for circular reference
           if (visitedUris.has(replyPost.post.uri)) {
-            console.warn(`Circular reference in replies: ${replyPost.post.uri}`)
+            debug.warn(`Circular reference in replies: ${replyPost.post.uri}`)
             node.replies.push({
               post: replyPost,
               parent: node,

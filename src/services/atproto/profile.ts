@@ -5,6 +5,7 @@
 import { BskyAgent } from '@atproto/api'
 import type { AppBskyActorDefs } from '@atproto/api'
 import { rateLimiters } from './rate-limiter'
+import { debug } from '@bsky/shared'
 
 interface ProfileCache {
   profile: AppBskyActorDefs.ProfileView
@@ -48,7 +49,7 @@ export class ProfileService {
         
         return profile
       } catch (error) {
-        console.error(`Failed to fetch profile for ${handle}:`, error)
+        debug.error(`Failed to fetch profile for ${handle}:`, error)
         return null
       }
     })
@@ -135,7 +136,7 @@ export class ProfileService {
         
         return profile
       } catch (error) {
-        console.error(`Failed to fetch profile for ${handle}:`, error)
+        debug.error(`Failed to fetch profile for ${handle}:`, error)
         return null
       }
     }, priority)

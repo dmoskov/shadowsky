@@ -17,7 +17,7 @@ interface ThreadViewProps {
 }
 
 export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
-  console.log('ThreadView rendered with postUri:', postUri);
+  debug.log('ThreadView rendered with postUri:', postUri);
   const navigate = useNavigate()
   const [replyTo, setReplyTo] = useState<{ post: Post; root?: Post } | undefined>()
   const [isReaderMode, setIsReaderMode] = useState(false)
@@ -81,10 +81,10 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ postUri, onBack }) => {
   }
   
   const handleViewThread = (uri: string) => {
-    console.log('ThreadView handleViewThread called with:', uri);
+    debug.log('ThreadView handleViewThread called with:', uri);
     const newPath = `/thread/${encodeURIComponent(uri)}`;
-    console.log('Navigating from:', window.location.pathname);
-    console.log('Navigating to:', newPath);
+    debug.log('Navigating from:', window.location.pathname);
+    debug.log('Navigating to:', newPath);
     // Navigate to the new thread using React Router
     navigate(newPath);
   }

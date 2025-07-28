@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       return false
     } catch (error) {
-      console.error('Failed to refresh session:', error)
+      debug.error('Failed to refresh session:', error)
       if (error instanceof SessionExpiredError || 
           error instanceof AuthenticationError) {
         logout()
@@ -82,19 +82,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setSession(resumedSession)
             initAttempts.current = 0 // Reset on success
           } catch (error) {
-            console.error('Failed to resume session:', error)
+            debug.error('Failed to resume session:', error)
             
             // Only clear session for authentication errors
             if (error instanceof SessionExpiredError || 
                 error instanceof AuthenticationError ||
                 (error as Error & { status?: number })?.status === 401) {
-              console.log('Session invalid, clearing...')
+              debug.log('Session invalid, clearing...')
               atProtoClient.logout()
             } else if (error instanceof NetworkError || 
                       ((error as Error & { status?: number })?.status ?? 0) >= 500 ||
                       !navigator.onLine) {
               // For network errors, keep the session and retry
-              console.log('Network error during session resume, will retry...')
+              debug.log('Network error during session resume, will retry...')
               
               if (initAttempts.current < maxRetries && navigator.onLine) {
                 setTimeout(() => {
@@ -102,18 +102,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 }, 2000 * initAttempts.current) // Exponential backoff
                 return // Don't set loading to false yet
               } else {
-                console.error('Max retries reached or offline, continuing without session')
+                debug.error('Max retries reached or offline, continuing without session')
                 // Don't clear the session, user might come back online
               }
             } else {
               // Unknown error, log but don't clear session
-              console.error('Unknown error during session resume:', error)
+              debug.error('Unknown error during session resume:', error)
             }
           }
         }
       } catch (error) {
         // Error loading from localStorage
-        console.error('Failed to load saved session:', error)
+        debug.error('Failed to load saved session:', error)
       } finally {
         setIsLoading(false)
       }
@@ -129,7 +129,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(newSession)
       return true
     } catch (error) {
-      console.error('Login error:', error)
+      debug.error('Login error:', error)
       // Re-throw the error so the Login component can handle it
       throw error
     }

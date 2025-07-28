@@ -10,6 +10,7 @@ import { TopAccountsView } from './TopAccountsView'
 import { getNotificationUrl } from '../utils/url-helpers'
 import { useLocation } from 'react-router-dom'
 import { NotificationCache } from '../utils/notificationCache'
+import { debug } from '@bsky/shared'
 
 type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies' | 'quotes' | 'images' | 'top-accounts' | 'from-following'
 
@@ -49,18 +50,18 @@ export const NotificationsFeed: React.FC = () => {
   const notifications = React.useMemo(() => {
     const timestamp = new Date().toLocaleTimeString()
     if (!data?.pages) {
-      console.log(`📊 [${timestamp}] NotificationsFeed: No data pages available`)
+      debug.log(`📊 [${timestamp}] NotificationsFeed: No data pages available`)
       return []
     }
     const allNotifications = data.pages.flatMap((page: any) => page.notifications)
-    console.log(`📊 [${timestamp}] NotificationsFeed: Computed ${allNotifications.length} notifications from ${data.pages.length} pages`)
+    debug.log(`📊 [${timestamp}] NotificationsFeed: Computed ${allNotifications.length} notifications from ${data.pages.length} pages`)
     return allNotifications
   }, [data])
 
   // Debug effect to track data changes
   useEffect(() => {
     const timestamp = new Date().toLocaleTimeString()
-    console.log(`🔍 [${timestamp}] NotificationsFeed render state:`, {
+    debug.log(`🔍 [${timestamp}] NotificationsFeed render state:`, {
       isLoading,
       hasData: !!data,
       pagesCount: data?.pages?.length || 0,
@@ -74,7 +75,7 @@ export const NotificationsFeed: React.FC = () => {
     const timestamp = new Date().toLocaleTimeString()
     const cacheInfo = NotificationCache.getCacheInfo()
     
-    console.log(`🎯 [${timestamp}] Cache indicator check:`, {
+    debug.log(`🎯 [${timestamp}] Cache indicator check:`, {
       hasAllCache: cacheInfo.hasAllCache,
       isLoading,
       notificationsCount: notifications.length,
@@ -82,16 +83,16 @@ export const NotificationsFeed: React.FC = () => {
     })
     
     if (cacheInfo.hasAllCache && !isLoading && notifications.length > 0) {
-      console.log(`✨ [${timestamp}] Showing cache indicator for ${notifications.length} notifications`)
+      debug.log(`✨ [${timestamp}] Showing cache indicator for ${notifications.length} notifications`)
       setIsFromCache(true)
       // Hide the indicator after 5 seconds (increased from 3)
       const timer = setTimeout(() => {
-        console.log(`🫥 [${timestamp}] Hiding cache indicator`)
+        debug.log(`🫥 [${timestamp}] Hiding cache indicator`)
         setIsFromCache(false)
       }, 5000)
       return () => clearTimeout(timer)
     } else {
-      console.log(`❌ [${timestamp}] Not showing cache indicator - conditions not met`)
+      debug.log(`❌ [${timestamp}] Not showing cache indicator - conditions not met`)
       setIsFromCache(false)
     }
   }, [isLoading, notifications.length])

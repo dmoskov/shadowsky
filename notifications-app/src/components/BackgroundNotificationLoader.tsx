@@ -7,6 +7,7 @@ import { ExtendedFetchCache } from '../utils/extendedFetchCache'
 import { NotificationCacheService } from '../services/notification-cache-service'
 import { prefetchNotificationPosts, prefetchRootPosts } from '../utils/prefetchNotificationPosts'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
+import { debug } from '@bsky/shared'
 
 /**
  * Silently loads 4 weeks of notifications in the background
@@ -50,7 +51,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
         await cacheService.init()
         setIsIndexedDBReady(true)
       } catch (error) {
-        console.error('Failed to initialize IndexedDB:', error)
+        debug.error('Failed to initialize IndexedDB:', error)
         setIsIndexedDBReady(false)
       }
     }
@@ -64,7 +65,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
     const loadCachedData = async () => {
       const hasCached = await cacheService.hasCachedData()
       if (hasCached) {
-        console.log('📊 Loading notifications from IndexedDB')
+        debug.log('📊 Loading notifications from IndexedDB')
         const cachedResult = await cacheService.getCachedNotifications(10000)
         
         if (cachedResult.notifications.length > 0) {
@@ -97,13 +98,13 @@ export const BackgroundNotificationLoader: React.FC = () => {
           if (agent) {
             const replyNotifications = cachedResult.notifications.filter(n => n.reason === 'reply')
             if (replyNotifications.length > 0) {
-              console.log('🔄 Background prefetching posts for cached conversations...')
+              debug.log('🔄 Background prefetching posts for cached conversations...')
               prefetchNotificationPosts(replyNotifications, agent).then(() => {
                 return prefetchRootPosts(replyNotifications, agent)
               }).then(() => {
-                console.log('✅ Background post prefetch complete')
+                debug.log('✅ Background post prefetch complete')
               }).catch(error => {
-                console.error('Error prefetching posts:', error)
+                debug.error('Error prefetching posts:', error)
               })
             }
           }
@@ -119,7 +120,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
     if (!session || !isIndexedDBReady || hasFetched || hasCachedData) return
     
     const fetchData = async () => {
-      console.log('🚀 Auto-fetching 4 weeks of notifications')
+      debug.log('🚀 Auto-fetching 4 weeks of notifications')
       setHasFetched(true)
       
       // Start fetching
@@ -161,7 +162,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
       // Save to IndexedDB
       const finalData = queryClient.getQueryData(['notifications-extended']) as any
       if (finalData?.pages && isIndexedDBReady) {
-        console.log('💾 Saving to IndexedDB...')
+        debug.log('💾 Saving to IndexedDB...')
         for (let i = 0; i < finalData.pages.length; i++) {
           const page = finalData.pages[i]
           await cacheService.cacheNotifications(page.notifications, i + 1)
@@ -186,10 +187,10 @@ export const BackgroundNotificationLoader: React.FC = () => {
           if (agent) {
             const replyNotifications = allNotifications.filter((n: Notification) => n.reason === 'reply')
             if (replyNotifications.length > 0) {
-              console.log('🔄 Prefetching posts for conversations...')
+              debug.log('🔄 Prefetching posts for conversations...')
               await prefetchNotificationPosts(replyNotifications, agent)
               await prefetchRootPosts(replyNotifications, agent)
-              console.log('✅ Posts prefetched for conversations')
+              debug.log('✅ Posts prefetched for conversations')
             }
           }
         }

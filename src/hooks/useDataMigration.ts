@@ -46,7 +46,7 @@ export function useDataMigration() {
             errors: []
           })
           
-          console.log('Data migration completed successfully')
+          debug.log('Data migration completed successfully')
         } else {
           setMigrationStatus({
             isComplete: false,
@@ -54,7 +54,7 @@ export function useDataMigration() {
             errors: allErrors
           })
           
-          console.error('Data migration completed with errors:', allErrors)
+          debug.error('Data migration completed with errors:', allErrors)
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -64,7 +64,7 @@ export function useDataMigration() {
           errors: [errorMessage]
         })
         
-        console.error('Data migration failed:', error)
+        debug.error('Data migration failed:', error)
       }
     }
     

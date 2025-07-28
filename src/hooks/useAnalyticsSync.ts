@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { AnalyticsSyncService } from '../services/analytics-sync'
 import { getAnalyticsDB } from '../services/analytics-db'
+import { debug } from '@bsky/shared'
 
 export interface SyncStatus {
   isSyncing: boolean
@@ -47,7 +48,7 @@ export function useAnalyticsSync() {
           }
         }))
       } catch (error) {
-        console.error('Failed to load analytics stats:', error)
+        debug.error('Failed to load analytics stats:', error)
       }
     }
 
@@ -106,7 +107,7 @@ export function useAnalyticsSync() {
         }
       })
     } catch (error) {
-      console.error('Sync failed:', error)
+      debug.error('Sync failed:', error)
       setSyncStatus(prev => ({
         ...prev,
         isSyncing: false,

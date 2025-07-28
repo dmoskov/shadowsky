@@ -1,5 +1,6 @@
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { StorageManager } from './storageManager'
+import { debug } from '@bsky/shared'
 
 const CACHE_KEY_PREFIX = 'bsky_notifications_'
 const CACHE_EXPIRY_KEY = 'bsky_notifications_expiry'
@@ -36,12 +37,12 @@ export class NotificationCache {
     const timestamp = new Date().toLocaleTimeString()
     const notificationCount = pages.reduce((sum, p) => sum + p.notifications.length, 0)
     
-    console.log(`🟡 [${timestamp}] CACHE SAVE ATTEMPT: ${notificationCount} notifications (priority: ${priority})`)
+    debug.log(`🟡 [${timestamp}] CACHE SAVE ATTEMPT: ${notificationCount} notifications (priority: ${priority})`)
     
     // Check storage health before saving
     const storageHealth = StorageManager.getStorageHealth()
     if (storageHealth.status === 'critical') {
-      console.log(`⚠️ [${timestamp}] Storage critical - cleaning up before save`)
+      debug.log(`⚠️ [${timestamp}] Storage critical - cleaning up before save`)
       StorageManager.cleanupStorage(14) // Keep only 2 weeks when critical
     }
     
@@ -55,7 +56,7 @@ export class NotificationCache {
       let dataToStore: CachedData
       
       if (shouldCompress) {
-        console.log(`📦 [${timestamp}] Compressing notifications for efficient storage`)
+        debug.log(`📦 [${timestamp}] Compressing notifications for efficient storage`)
         const compressedPages = StorageManager.pruneNotifications(pages)
         dataToStore = {
           version: CACHE_VERSION,
@@ -79,7 +80,7 @@ export class NotificationCache {
       const chunkSize = 1024 * 1024 // 1MB chunks
       const chunks = Math.ceil(dataStr.length / chunkSize)
       
-      console.log(`📦 [${timestamp}] Data size: ${(dataStr.length / 1024).toFixed(1)}KB, chunks: ${chunks}`)
+      debug.log(`📦 [${timestamp}] Data size: ${(dataStr.length / 1024).toFixed(1)}KB, chunks: ${chunks}`)
       
       if (chunks > 1) {
         // Store data in chunks
@@ -88,11 +89,11 @@ export class NotificationCache {
           localStorage.setItem(`${cacheKey}_chunk_${i}`, chunk)
         }
         localStorage.setItem(`${cacheKey}_chunks`, chunks.toString())
-        console.log(`📦 [${timestamp}] Stored in ${chunks} chunks to localStorage`)
+        debug.log(`📦 [${timestamp}] Stored in ${chunks} chunks to localStorage`)
       } else {
         // Store as single item
         localStorage.setItem(cacheKey, dataStr)
-        console.log(`📦 [${timestamp}] Stored as single item to localStorage`)
+        debug.log(`📦 [${timestamp}] Stored as single item to localStorage`)
       }
       
       // Store expiry time
@@ -100,27 +101,27 @@ export class NotificationCache {
       localStorage.setItem(`${CACHE_EXPIRY_KEY}_${priority ? 'priority' : 'all'}`, expiryTime.toString())
       
       const expiryDate = new Date(expiryTime)
-      console.log(`✅ [${timestamp}] CACHE SAVED: ${notificationCount} notifications (priority: ${priority})`)
-      console.log(`⏰ [${timestamp}] Cache expires: ${expiryDate.toLocaleString()}`)
+      debug.log(`✅ [${timestamp}] CACHE SAVED: ${notificationCount} notifications (priority: ${priority})`)
+      debug.log(`⏰ [${timestamp}] Cache expires: ${expiryDate.toLocaleString()}`)
       
       // Log storage metrics after save
       const postSaveMetrics = StorageManager.getStorageMetrics()
-      console.log(`📊 [${timestamp}] Storage usage: ${postSaveMetrics.usagePercentage.toFixed(1)}% (${StorageManager.formatBytes(postSaveMetrics.totalSize)} / ~5MB)`)
-      console.log(`📊 [${timestamp}] Notification data: ${StorageManager.formatBytes(postSaveMetrics.notificationDataSize)}`)
+      debug.log(`📊 [${timestamp}] Storage usage: ${postSaveMetrics.usagePercentage.toFixed(1)}% (${StorageManager.formatBytes(postSaveMetrics.totalSize)} / ~5MB)`)
+      debug.log(`📊 [${timestamp}] Notification data: ${StorageManager.formatBytes(postSaveMetrics.notificationDataSize)}`)
       
       // Verify the save worked
       const verification = localStorage.getItem(cacheKey) || localStorage.getItem(`${cacheKey}_chunk_0`)
       if (verification) {
-        console.log(`✅ [${timestamp}] Cache save verified - data exists in localStorage`)
+        debug.log(`✅ [${timestamp}] Cache save verified - data exists in localStorage`)
       } else {
-        console.log(`❌ [${timestamp}] Cache save verification FAILED - no data found in localStorage`)
+        debug.log(`❌ [${timestamp}] Cache save verification FAILED - no data found in localStorage`)
       }
       
     } catch (error) {
-      console.error(`❌ [${timestamp}] Failed to cache notifications:`, error)
+      debug.error(`❌ [${timestamp}] Failed to cache notifications:`, error)
       // If storage is full, clear old caches
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        console.log(`🧹 [${timestamp}] Storage full, clearing old caches`)
+        debug.log(`🧹 [${timestamp}] Storage full, clearing old caches`)
         this.clearOldCaches()
         // Try again with cleared cache
         try {
@@ -132,9 +133,9 @@ export class NotificationCache {
             priority
           }
           localStorage.setItem(cacheKey, JSON.stringify(data))
-          console.log(`✅ [${timestamp}] Cache saved after clearing old data`)
+          debug.log(`✅ [${timestamp}] Cache saved after clearing old data`)
         } catch (retryError) {
-          console.error(`❌ [${timestamp}] Failed to cache after clearing:`, retryError)
+          debug.error(`❌ [${timestamp}] Failed to cache after clearing:`, retryError)
         }
       }
     }
@@ -147,7 +148,7 @@ export class NotificationCache {
   static load(priority?: boolean): CachedData | null {
     const timestamp = new Date().toLocaleTimeString()
     
-    console.log(`🔍 [${timestamp}] CACHE LOAD ATTEMPT (priority: ${priority})`)
+    debug.log(`🔍 [${timestamp}] CACHE LOAD ATTEMPT (priority: ${priority})`)
     
     try {
       const cacheKey = this.getCacheKey(priority)
@@ -156,7 +157,7 @@ export class NotificationCache {
       // Check if cache has expired
       const expiryTime = localStorage.getItem(expiryKey)
       if (!expiryTime) {
-        console.log(`❌ [${timestamp}] CACHE MISS: No expiry time found (priority: ${priority})`)
+        debug.log(`❌ [${timestamp}] CACHE MISS: No expiry time found (priority: ${priority})`)
         return null
       }
       
@@ -165,59 +166,59 @@ export class NotificationCache {
       
       if (now > expiryMs) {
         const expiredDate = new Date(expiryMs)
-        console.log(`⏰ [${timestamp}] CACHE EXPIRED: expired at ${expiredDate.toLocaleString()} (priority: ${priority})`)
+        debug.log(`⏰ [${timestamp}] CACHE EXPIRED: expired at ${expiredDate.toLocaleString()} (priority: ${priority})`)
         this.clear(priority)
         return null
       }
       
       const remainingTime = Math.floor((expiryMs - now) / (1000 * 60)) // minutes
-      console.log(`⏰ [${timestamp}] Cache valid for ${remainingTime} more minutes`)
+      debug.log(`⏰ [${timestamp}] Cache valid for ${remainingTime} more minutes`)
       
       // Check if data is chunked
       const chunksCount = localStorage.getItem(`${cacheKey}_chunks`)
       let dataStr: string
       
       if (chunksCount) {
-        console.log(`📦 [${timestamp}] Loading chunked data (${chunksCount} chunks)`)
+        debug.log(`📦 [${timestamp}] Loading chunked data (${chunksCount} chunks)`)
         // Reassemble chunks
         const chunks: string[] = []
         for (let i = 0; i < parseInt(chunksCount); i++) {
           const chunk = localStorage.getItem(`${cacheKey}_chunk_${i}`)
           if (!chunk) {
-            console.log(`❌ [${timestamp}] CHUNK MISSING: chunk ${i} not found, clearing cache`)
+            debug.log(`❌ [${timestamp}] CHUNK MISSING: chunk ${i} not found, clearing cache`)
             this.clear(priority)
             return null
           }
           chunks.push(chunk)
         }
         dataStr = chunks.join('')
-        console.log(`📦 [${timestamp}] Successfully reassembled ${chunks.length} chunks`)
+        debug.log(`📦 [${timestamp}] Successfully reassembled ${chunks.length} chunks`)
       } else {
         // Load as single item
         const data = localStorage.getItem(cacheKey)
         if (!data) {
-          console.log(`❌ [${timestamp}] CACHE MISS: No data found in localStorage (priority: ${priority})`)
+          debug.log(`❌ [${timestamp}] CACHE MISS: No data found in localStorage (priority: ${priority})`)
           return null
         }
         dataStr = data
-        console.log(`📦 [${timestamp}] Loading single data item`)
+        debug.log(`📦 [${timestamp}] Loading single data item`)
       }
       
-      console.log(`📦 [${timestamp}] Parsing ${(dataStr.length / 1024).toFixed(1)}KB of cached data`)
+      debug.log(`📦 [${timestamp}] Parsing ${(dataStr.length / 1024).toFixed(1)}KB of cached data`)
       
       let cachedData: CachedData
       try {
         cachedData = JSON.parse(dataStr)
       } catch (parseError) {
-        console.error(`❌ [${timestamp}] Failed to parse cached data:`, parseError)
-        console.log(`🔍 [${timestamp}] First 100 chars of invalid data:`, dataStr.substring(0, 100))
+        debug.error(`❌ [${timestamp}] Failed to parse cached data:`, parseError)
+        debug.log(`🔍 [${timestamp}] First 100 chars of invalid data:`, dataStr.substring(0, 100))
         this.clear(priority)
         return null
       }
       
       // Validate version
       if (cachedData.version !== CACHE_VERSION) {
-        console.log(`❌ [${timestamp}] VERSION MISMATCH: expected ${CACHE_VERSION}, got ${cachedData.version}`)
+        debug.log(`❌ [${timestamp}] VERSION MISMATCH: expected ${CACHE_VERSION}, got ${cachedData.version}`)
         this.clear(priority)
         return null
       }
@@ -225,12 +226,12 @@ export class NotificationCache {
       const notificationCount = cachedData.pages.reduce((sum, p) => sum + p.notifications.length, 0)
       const cacheAge = Math.floor((now - cachedData.timestamp) / (1000 * 60)) // minutes
       
-      console.log(`✅ [${timestamp}] CACHE HIT: ${notificationCount} notifications loaded (priority: ${priority})`)
-      console.log(`📊 [${timestamp}] Cache age: ${cacheAge} minutes, ${cachedData.pages.length} pages`)
+      debug.log(`✅ [${timestamp}] CACHE HIT: ${notificationCount} notifications loaded (priority: ${priority})`)
+      debug.log(`📊 [${timestamp}] Cache age: ${cacheAge} minutes, ${cachedData.pages.length} pages`)
       
       // If data is compressed, decompress it
       if (cachedData.compressed) {
-        console.log(`📦 [${timestamp}] Decompressing notification data`)
+        debug.log(`📦 [${timestamp}] Decompressing notification data`)
         cachedData.pages = cachedData.pages.map(page => ({
           ...page,
           notifications: page.notifications.map(n => 
@@ -241,7 +242,7 @@ export class NotificationCache {
       
       return cachedData
     } catch (error) {
-      console.error(`❌ [${timestamp}] Failed to load cached notifications:`, error)
+      debug.error(`❌ [${timestamp}] Failed to load cached notifications:`, error)
       this.clear(priority)
       return null
     }
@@ -274,15 +275,15 @@ export class NotificationCache {
       }
       
       if (hadData || hadExpiry || chunksCleared > 0) {
-        console.log(`🗑️ [${timestamp}] CACHE CLEARED (priority: ${priority})`)
+        debug.log(`🗑️ [${timestamp}] CACHE CLEARED (priority: ${priority})`)
         if (chunksCleared > 0) {
-          console.log(`🗑️ [${timestamp}] Cleared ${chunksCleared} chunks`)
+          debug.log(`🗑️ [${timestamp}] Cleared ${chunksCleared} chunks`)
         }
       } else {
-        console.log(`🗑️ [${timestamp}] Cache was already empty (priority: ${priority})`)
+        debug.log(`🗑️ [${timestamp}] Cache was already empty (priority: ${priority})`)
       }
     } catch (error) {
-      console.error(`❌ [${timestamp}] Failed to clear cache:`, error)
+      debug.error(`❌ [${timestamp}] Failed to clear cache:`, error)
     }
   }
 
@@ -302,7 +303,7 @@ export class NotificationCache {
     }
     
     keysToRemove.forEach(key => localStorage.removeItem(key))
-    console.log(`Cleared ${keysToRemove.length} old cache entries`)
+    debug.log(`Cleared ${keysToRemove.length} old cache entries`)
   }
 
   static getCacheInfo(): { 

@@ -1,5 +1,6 @@
 import type { AppBskyFeedDefs } from '@atproto/api'
 import { PostCacheService } from '../services/post-cache-service'
+import { debug } from '@bsky/shared'
 
 type Post = AppBskyFeedDefs.PostView
 
@@ -29,7 +30,7 @@ export class PostCache {
   private static ensureInit(): Promise<void> {
     if (!this.initPromise) {
       this.initPromise = this.cacheService.init().catch(error => {
-        console.error('Failed to initialize PostCacheService:', error)
+        debug.error('Failed to initialize PostCacheService:', error)
       })
     }
     return this.initPromise
@@ -40,9 +41,9 @@ export class PostCache {
     this.ensureInit().then(() => {
       return this.cacheService.cachePosts(posts)
     }).then(() => {
-      console.log(`📮 Cached ${posts.length} posts to IndexedDB`)
+      debug.log(`📮 Cached ${posts.length} posts to IndexedDB`)
     }).catch(error => {
-      console.error('Failed to cache posts to IndexedDB:', error)
+      debug.error('Failed to cache posts to IndexedDB:', error)
       // Fall back to localStorage on error
       this.saveToLocalStorage(posts)
     })
@@ -70,9 +71,9 @@ export class PostCache {
       // Store the cache
       localStorage.setItem(cacheKey, JSON.stringify(data))
       
-      console.log(`📮 Cached ${posts.length} new posts to localStorage (fallback)`)
+      debug.log(`📮 Cached ${posts.length} new posts to localStorage (fallback)`)
     } catch (error) {
-      console.error('Failed to cache posts to localStorage:', error)
+      debug.error('Failed to cache posts to localStorage:', error)
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
         // Clear old post cache if storage is full
         this.clear()
@@ -97,21 +98,21 @@ export class PostCache {
       
       // Validate version
       if (cachedData.version !== POST_CACHE_VERSION) {
-        console.log('Post cache version mismatch, clearing')
+        debug.log('Post cache version mismatch, clearing')
         this.clear()
         return null
       }
       
       // Check if cache is expired
       if (Date.now() - cachedData.timestamp > POST_CACHE_DURATION) {
-        console.log('Post cache expired, clearing')
+        debug.log('Post cache expired, clearing')
         this.clear()
         return null
       }
       
       return cachedData
     } catch (error) {
-      console.error('Failed to load cached posts:', error)
+      debug.error('Failed to load cached posts:', error)
       this.clear()
       return null
     }
@@ -137,13 +138,13 @@ export class PostCache {
     })
     
     if (cached.length > 0) {
-      console.log(`📮 Found ${cached.length} cached posts out of ${uris.length} requested from localStorage`)
+      debug.log(`📮 Found ${cached.length} cached posts out of ${uris.length} requested from localStorage`)
     }
     
     // Asynchronously check IndexedDB for missing posts in the background
     if (missing.length > 0) {
       this.checkIndexedDBForMissingPosts(missing).catch(error => {
-        console.error('Failed to check IndexedDB for missing posts:', error)
+        debug.error('Failed to check IndexedDB for missing posts:', error)
       })
     }
     
@@ -155,12 +156,12 @@ export class PostCache {
       await this.ensureInit()
       const indexedDBPosts = await this.cacheService.getPosts(uris)
       if (indexedDBPosts.length > 0) {
-        console.log(`📮 Found ${indexedDBPosts.length} posts in IndexedDB that were missing from localStorage`)
+        debug.log(`📮 Found ${indexedDBPosts.length} posts in IndexedDB that were missing from localStorage`)
         // Save them to localStorage for next time
         this.saveToLocalStorage(indexedDBPosts)
       }
     } catch (error) {
-      console.error('Failed to check IndexedDB for posts:', error)
+      debug.error('Failed to check IndexedDB for posts:', error)
     }
   }
 
@@ -173,12 +174,12 @@ export class PostCache {
       this.ensureInit().then(() => {
         return this.cacheService.clearCache()
       }).catch(error => {
-        console.error('Failed to clear IndexedDB post cache:', error)
+        debug.error('Failed to clear IndexedDB post cache:', error)
       })
       
-      console.log('🗑️ Cleared post cache')
+      debug.log('🗑️ Cleared post cache')
     } catch (error) {
-      console.error('Failed to clear post cache:', error)
+      debug.error('Failed to clear post cache:', error)
     }
   }
 
@@ -238,7 +239,7 @@ export class PostCache {
         lastUpdate: stats.lastUpdate
       }
     } catch (error) {
-      console.error('Failed to get IndexedDB cache info:', error)
+      debug.error('Failed to get IndexedDB cache info:', error)
       return {
         hasCache: false,
         postCount: 0,
@@ -263,7 +264,7 @@ export class PostCache {
       const missing = uris.filter(uri => !foundUris.has(uri))
       
       if (indexedDBPosts.length > 0) {
-        console.log(`📮 Found ${indexedDBPosts.length} cached posts out of ${uris.length} requested from IndexedDB`)
+        debug.log(`📮 Found ${indexedDBPosts.length} cached posts out of ${uris.length} requested from IndexedDB`)
       }
       
       // If we found all posts in IndexedDB, return them
@@ -289,7 +290,7 @@ export class PostCache {
         })
         
         if (additionalPosts.length > 0) {
-          console.log(`📮 Found ${additionalPosts.length} additional posts from localStorage`)
+          debug.log(`📮 Found ${additionalPosts.length} additional posts from localStorage`)
         }
         
         return {
@@ -300,7 +301,7 @@ export class PostCache {
       
       return { cached: indexedDBPosts, missing }
     } catch (error) {
-      console.error('Failed to get cached posts from IndexedDB:', error)
+      debug.error('Failed to get cached posts from IndexedDB:', error)
       // Fall back to synchronous localStorage check
       return this.getCachedPosts(uris)
     }

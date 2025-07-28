@@ -2,6 +2,7 @@ import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notif
 import type { AppBskyFeedDefs } from '@atproto/api'
 import { PostCache } from './postCache'
 import { rateLimitedPostFetch } from '../services/rate-limiter'
+import { debug } from '@bsky/shared'
 
 type Post = AppBskyFeedDefs.PostView
 
@@ -42,17 +43,17 @@ export async function prefetchNotificationPosts(
   const postUris = Array.from(postUrisSet)
   if (postUris.length === 0) return
   
-  console.log(`🔄 Prefetching ${postUris.length} posts for notifications`)
+  debug.log(`🔄 Prefetching ${postUris.length} posts for notifications`)
   
   // Check what's already cached
   const { cached, missing } = await PostCache.getCachedPostsAsync(postUris)
   
   if (missing.length === 0) {
-    console.log(`✅ All ${cached.length} posts already cached`)
+    debug.log(`✅ All ${cached.length} posts already cached`)
     return
   }
   
-  console.log(`📥 Need to fetch ${missing.length} posts (${cached.length} already cached)`)
+  debug.log(`📥 Need to fetch ${missing.length} posts (${cached.length} already cached)`)
   
   // Batch fetch missing posts
   let fetchedCount = 0
@@ -82,11 +83,11 @@ export async function prefetchNotificationPosts(
         await new Promise(resolve => setTimeout(resolve, 100))
       }
     } catch (error) {
-      console.error('Failed to prefetch posts batch:', error)
+      debug.error('Failed to prefetch posts batch:', error)
     }
   }
   
-  console.log(`✅ Prefetched ${fetchedCount} posts for notifications`)
+  debug.log(`✅ Prefetched ${fetchedCount} posts for notifications`)
 }
 
 /**
@@ -116,7 +117,7 @@ export async function extractRootPostUris(
   
   // Fetch missing reply posts to get their root URIs
   if (missing.length > 0) {
-    console.log(`🔍 Fetching ${missing.length} reply posts to find root URIs`)
+    debug.log(`🔍 Fetching ${missing.length} reply posts to find root URIs`)
     
     for (let i = 0; i < missing.length; i += 25) {
       const batch = missing.slice(i, i + 25)
@@ -140,7 +141,7 @@ export async function extractRootPostUris(
           })
         }
       } catch (error) {
-        console.error('Failed to fetch reply posts batch:', error)
+        debug.error('Failed to fetch reply posts batch:', error)
       }
     }
   }
@@ -159,17 +160,17 @@ export async function prefetchRootPosts(
   
   if (rootUris.length === 0) return
   
-  console.log(`🌳 Prefetching ${rootUris.length} root posts for conversations`)
+  debug.log(`🌳 Prefetching ${rootUris.length} root posts for conversations`)
   
   // Check what's already cached
   const { cached, missing } = await PostCache.getCachedPostsAsync(rootUris)
   
   if (missing.length === 0) {
-    console.log(`✅ All ${cached.length} root posts already cached`)
+    debug.log(`✅ All ${cached.length} root posts already cached`)
     return
   }
   
-  console.log(`📥 Need to fetch ${missing.length} root posts`)
+  debug.log(`📥 Need to fetch ${missing.length} root posts`)
   
   // Fetch missing root posts
   let fetchedCount = 0
@@ -189,9 +190,9 @@ export async function prefetchRootPosts(
         fetchedCount += posts.length
       }
     } catch (error) {
-      console.error('Failed to fetch root posts batch:', error)
+      debug.error('Failed to fetch root posts batch:', error)
     }
   }
   
-  console.log(`✅ Prefetched ${fetchedCount} root posts`)
+  debug.log(`✅ Prefetched ${fetchedCount} root posts`)
 }

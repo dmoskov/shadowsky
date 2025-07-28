@@ -6,6 +6,7 @@ import { ThreadReader } from './ThreadReader'
 import { useAuth } from '../../contexts/AuthContext'
 import { useQuery } from '@tanstack/react-query'
 import { atProtoClient } from '../../services/atproto'
+import { debug } from '@bsky/shared'
 
 type TabType = 'messages' | 'threads' | 'trending'
 
@@ -52,7 +53,7 @@ export const ConversationsEnhanced: React.FC = () => {
         
         return threadsWithReplies
       } catch (error) {
-        console.error('Failed to fetch trending threads:', error)
+        debug.error('Failed to fetch trending threads:', error)
         return []
       }
     },

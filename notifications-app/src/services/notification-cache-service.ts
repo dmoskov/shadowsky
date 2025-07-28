@@ -1,5 +1,6 @@
 import { AppBskyNotificationListNotifications } from '@atproto/api'
 import { NotificationStorageDB } from './notification-storage-db'
+import { debug } from '@bsky/shared'
 
 type Notification = AppBskyNotificationListNotifications.Notification
 
@@ -35,7 +36,7 @@ export class NotificationCacheService {
     // Attempt migration from localStorage
     const migrated = await this.db.migrateFromLocalStorage()
     if (migrated) {
-      console.log('Successfully migrated notifications from localStorage to IndexedDB')
+      debug.log('Successfully migrated notifications from localStorage to IndexedDB')
     }
     
     this.initialized = true

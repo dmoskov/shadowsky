@@ -1,3 +1,5 @@
+import { debug } from '@bsky/shared'
+
 /**
  * Cookie utilities for secure session management
  */
@@ -114,27 +116,27 @@ export const sessionCookies = {
       // Verify cookie was set
       const savedCookie = cookies.get(cookieName)
       if (!savedCookie) {
-        console.error('Cookie was not set successfully for', cookieName)
+        debug.error('Cookie was not set successfully for', cookieName)
       } else {
-        console.log(`Session cookie saved successfully: ${cookieName} (${sessionStr.length} chars)`)
+        debug.log(`Session cookie saved successfully: ${cookieName} (${sessionStr.length} chars)`)
       }
     } catch (error) {
-      console.error('Failed to save session to cookie:', error)
+      debug.error('Failed to save session to cookie:', error)
     }
   },
   
   load(prefix: string = ''): any | null {
     try {
       const cookieName = this.getCookieName(prefix)
-      console.log('Loading cookie:', cookieName)
+      debug.log('Loading cookie:', cookieName)
       
       const sessionStr = cookies.get(cookieName)
-      console.log('Cookie value length:', sessionStr ? sessionStr.length : 0)
+      debug.log('Cookie value length:', sessionStr ? sessionStr.length : 0)
       
       if (!sessionStr) return null
       
       const session = JSON.parse(sessionStr)
-      console.log('Parsed session from cookie:', {
+      debug.log('Parsed session from cookie:', {
         handle: session.handle,
         hasDid: !!session.did,
         hasAccessJwt: !!session.accessJwt,
@@ -143,14 +145,14 @@ export const sessionCookies = {
       })
       return session
     } catch (error) {
-      console.error('Failed to load session from cookie:', error)
+      debug.error('Failed to load session from cookie:', error)
       return null
     }
   },
   
   clear(prefix: string = ''): void {
     const cookieName = this.getCookieName(prefix)
-    console.log('Clearing cookie:', cookieName)
+    debug.log('Clearing cookie:', cookieName)
     cookies.remove(cookieName, {
       domain: cookies.getSharedDomain()
     })

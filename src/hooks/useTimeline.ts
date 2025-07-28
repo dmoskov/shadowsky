@@ -39,7 +39,7 @@ export const useTimeline = () => {
                 version: '1.0'
               })
             })
-            .catch(err => console.error('Failed to cache timeline:', err))
+            .catch(err => debug.error('Failed to cache timeline:', err))
         }
         
         return response

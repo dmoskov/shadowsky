@@ -1,4 +1,5 @@
 import { AppBskyNotificationListNotifications } from '@atproto/api'
+import { debug } from '@bsky/shared'
 
 type Notification = AppBskyNotificationListNotifications.Notification
 
@@ -39,7 +40,7 @@ export class NotificationStorageDB {
       const request = indexedDB.open(this.DB_NAME, this.DB_VERSION)
       
       request.onerror = () => {
-        console.error('Failed to open IndexedDB:', request.error)
+        debug.error('Failed to open IndexedDB:', request.error)
         reject(request.error)
       }
       
@@ -385,7 +386,7 @@ export class NotificationStorageDB {
           // Remove old data
           localStorage.removeItem('bsky_extended_fetch_data_v1')
           
-          console.log(`Migrated ${allNotifications.length} notifications from localStorage to IndexedDB`)
+          debug.log(`Migrated ${allNotifications.length} notifications from localStorage to IndexedDB`)
           return true
         }
       }
@@ -405,11 +406,11 @@ export class NotificationStorageDB {
         // Remove old data
         localStorage.removeItem('bsky_extended_fetch_data_v1')
         
-        console.log(`Migrated ${parsed.notifications.length} notifications to IndexedDB (old format)`)
+        debug.log(`Migrated ${parsed.notifications.length} notifications to IndexedDB (old format)`)
         return true
       }
     } catch (error) {
-      console.error('Failed to migrate from localStorage:', error)
+      debug.error('Failed to migrate from localStorage:', error)
     }
     
     return false

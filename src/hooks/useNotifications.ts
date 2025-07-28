@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { getNotificationService } from '../services/atproto/notifications'
 import { useErrorHandler } from './useErrorHandler'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
+import { debug } from '@bsky/shared'
 
 export function useNotifications(priority?: boolean) {
   const { session } = useAuth()
@@ -21,7 +22,7 @@ export function useNotifications(priority?: boolean) {
     staleTime: 30 * 1000, // 30 seconds
     refetchInterval: 60 * 1000, // Refetch every minute
     onError: (error) => {
-      console.error('Notifications error:', error)
+      debug.error('Notifications error:', error)
       handleError(error)
     }
   })

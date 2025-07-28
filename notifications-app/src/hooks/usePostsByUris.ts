@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import type { AppBskyFeedDefs } from '@atproto/api'
 import { rateLimitedPostFetch } from '../services/rate-limiter'
 import { PostCache } from '../utils/postCache'
+import { debug } from '@bsky/shared'
 
 type Post = AppBskyFeedDefs.PostView
 
@@ -25,11 +26,11 @@ export function usePostsByUris(uris: string[]) {
       
       // If we have all posts cached, return them immediately
       if (missing.length === 0) {
-        console.log(`🎯 All ${cached.length} root posts found in cache`)
+        debug.log(`🎯 All ${cached.length} root posts found in cache`)
         return cached
       }
       
-      console.log(`🎯 Found ${cached.length} cached root posts, fetching ${missing.length} from API`)
+      debug.log(`🎯 Found ${cached.length} cached root posts, fetching ${missing.length} from API`)
       
       const { atProtoClient } = await import('../services/atproto')
       const agent = atProtoClient.agent
@@ -51,7 +52,7 @@ export function usePostsByUris(uris: string[]) {
           // Cache the newly fetched posts
           PostCache.save(newPosts)
         } catch (error) {
-          console.error('Failed to fetch posts batch:', error)
+          debug.error('Failed to fetch posts batch:', error)
         }
       }
       

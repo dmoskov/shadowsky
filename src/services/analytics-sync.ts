@@ -2,6 +2,7 @@ import { AtpAgent } from '@atproto/api'
 import type { AppBskyFeedDefs, AppBskyActorDefs } from '@atproto/api'
 import { getAnalyticsDB, type StoredPost, type StoredUser, type DailySnapshot, type EngagementHistory, type ActiveEngager } from './analytics-db'
 import { rateLimiters } from './atproto/rate-limiter'
+import { debug } from '@bsky/shared'
 
 export class AnalyticsSyncService {
   constructor(private agent: AtpAgent) {}
@@ -70,7 +71,7 @@ export class AnalyticsSyncService {
       
       progress('Sync complete!', 100)
     } catch (error) {
-      console.error('Sync error:', error)
+      debug.error('Sync error:', error)
       throw error
     }
   }
@@ -278,7 +279,7 @@ export class AnalyticsSyncService {
           updatedPosts.push(post)
         }
       } catch (error) {
-        console.warn(`Failed to update metrics for post ${post.uri}:`, error)
+        debug.warn(`Failed to update metrics for post ${post.uri}:`, error)
       }
       
       // Update progress (70-85% range)
@@ -363,7 +364,7 @@ export class AnalyticsSyncService {
           engagerMap.set(like.actor.did, existing)
         }
       } catch (error) {
-        console.warn(`Failed to fetch likes for post ${post.uri}:`, error)
+        debug.warn(`Failed to fetch likes for post ${post.uri}:`, error)
       }
       
       // Update progress

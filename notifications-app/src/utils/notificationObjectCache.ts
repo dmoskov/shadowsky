@@ -1,4 +1,5 @@
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
+import { debug } from '@bsky/shared'
 
 const NOTIFICATION_OBJECT_CACHE_KEY = 'bsky_notification_objects_'
 const NOTIFICATION_OBJECT_CACHE_VERSION = 'v1'
@@ -41,9 +42,9 @@ export class NotificationObjectCache {
       // Store the cache
       localStorage.setItem(cacheKey, JSON.stringify(data))
       
-      console.log(`🔔 Cached ${notifications.length} new notifications (total: ${Object.keys(notificationMap).length})`)
+      debug.log(`🔔 Cached ${notifications.length} new notifications (total: ${Object.keys(notificationMap).length})`)
     } catch (error) {
-      console.error('Failed to cache notifications:', error)
+      debug.error('Failed to cache notifications:', error)
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
         // Clear old notification cache if storage is full
         this.clear()
@@ -61,21 +62,21 @@ export class NotificationObjectCache {
       
       // Validate version
       if (cachedData.version !== NOTIFICATION_OBJECT_CACHE_VERSION) {
-        console.log('Notification object cache version mismatch, clearing')
+        debug.log('Notification object cache version mismatch, clearing')
         this.clear()
         return null
       }
       
       // Check if cache is expired
       if (Date.now() - cachedData.timestamp > NOTIFICATION_OBJECT_CACHE_DURATION) {
-        console.log('Notification object cache expired, clearing')
+        debug.log('Notification object cache expired, clearing')
         this.clear()
         return null
       }
       
       return cachedData
     } catch (error) {
-      console.error('Failed to load cached notifications:', error)
+      debug.error('Failed to load cached notifications:', error)
       this.clear()
       return null
     }
@@ -100,7 +101,7 @@ export class NotificationObjectCache {
     })
     
     if (cached.length > 0) {
-      console.log(`🔔 Found ${cached.length} cached notifications out of ${uris.length} requested`)
+      debug.log(`🔔 Found ${cached.length} cached notifications out of ${uris.length} requested`)
     }
     
     return { cached, missing }
@@ -117,9 +118,9 @@ export class NotificationObjectCache {
     try {
       const cacheKey = this.getCacheKey()
       localStorage.removeItem(cacheKey)
-      console.log('Cleared notification object cache')
+      debug.log('Cleared notification object cache')
     } catch (error) {
-      console.error('Failed to clear notification object cache:', error)
+      debug.error('Failed to clear notification object cache:', error)
     }
   }
 
@@ -190,7 +191,7 @@ export class NotificationObjectCache {
       const cacheKey = this.getCacheKey()
       localStorage.setItem(cacheKey, JSON.stringify(newData))
       
-      console.log(`🧹 Cleaned up ${removedCount} old notifications from cache`)
+      debug.log(`🧹 Cleaned up ${removedCount} old notifications from cache`)
     }
   }
 }

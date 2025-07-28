@@ -6,6 +6,7 @@ import { PostCache } from '../utils/postCache'
 import { StorageManager } from '../utils/storageManager'
 import { NotificationCacheService } from '../services/notification-cache-service'
 import { PostCacheService } from '../services/post-cache-service'
+import { debug } from '@bsky/shared'
 
 interface StorageBreakdown {
   key: string
@@ -47,7 +48,7 @@ export function DebugConsole() {
         const stats = await cacheService.getCacheStats()
         setIndexedDBStats(stats)
       } catch (error) {
-        console.error('Failed to get IndexedDB stats:', error)
+        debug.error('Failed to get IndexedDB stats:', error)
       }
     }
     
@@ -57,7 +58,7 @@ export function DebugConsole() {
         const postStats = await PostCache.getIndexedDBCacheInfo()
         setPostIndexedDBStats(postStats)
       } catch (error) {
-        console.error('Failed to get Post IndexedDB stats:', error)
+        debug.error('Failed to get Post IndexedDB stats:', error)
       }
     }
   }
@@ -75,7 +76,7 @@ export function DebugConsole() {
         await postCacheService.init()
         setPostIndexedDBReady(true)
       } catch (error) {
-        console.error('Failed to initialize IndexedDB:', error)
+        debug.error('Failed to initialize IndexedDB:', error)
       }
     }
     initIndexedDB()

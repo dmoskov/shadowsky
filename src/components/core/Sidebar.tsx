@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUnreadNotificationCount } from '../../hooks/useNotifications'
+import { debug } from '@bsky/shared'
 
 interface NavItem {
   path: string
@@ -45,9 +46,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCompose }) => {
   ]
 
   // Add admin dashboard for admin user only
-  console.log('Sidebar - Current session handle:', session?.handle)
+  debug.log('Sidebar - Current session handle:', session?.handle)
   if (session?.handle === 'moskov.goodventures.org') {
-    console.log('Adding admin nav item')
+    debug.log('Adding admin nav item')
     navItems.push({ path: '/admin', label: 'Admin', icon: Shield })
   }
 

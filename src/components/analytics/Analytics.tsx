@@ -24,6 +24,7 @@ import { AnalyticsSyncStatus } from './AnalyticsSyncStatus'
 import { formatNumber } from '../../utils/format-helpers'
 import { generateInsights } from '../../utils/analytics-insights'
 import { useAnalyticsSync } from '../../hooks/useAnalyticsSync'
+import { debug } from '@bsky/shared'
 
 export const Analytics: React.FC = () => {
   const navigate = useNavigate()
@@ -36,16 +37,16 @@ export const Analytics: React.FC = () => {
   const { data: analytics, isLoading, error, refetch } = useQuery({
     queryKey: ['analytics-stored', targetDid, selectedTimeRange, syncStatus.lastSync],
     queryFn: async () => {
-      console.log('Analytics query - targetDid:', targetDid)
+      debug.log('Analytics query - targetDid:', targetDid)
       if (!targetDid) throw new Error('Not authenticated')
       
       const service = new StoredAnalyticsService()
       try {
         const result = await service.getStoredAnalytics(targetDid, selectedTimeRange)
-        console.log('Analytics query success:', result)
+        debug.log('Analytics query success:', result)
         return result
       } catch (err) {
-        console.error('Analytics query error:', err)
+        debug.error('Analytics query error:', err)
         throw err
       }
     },
@@ -85,7 +86,7 @@ export const Analytics: React.FC = () => {
   }
 
   if (error || !analytics) {
-    console.error('Analytics error state:', error)
+    debug.error('Analytics error state:', error)
     return (
       <div className="analytics-container">
         <div className="analytics-error">
@@ -108,7 +109,7 @@ export const Analytics: React.FC = () => {
 
   // Show first sync UI if needed
   if (isFirstSync && !syncStatus.isSyncing && !syncStatus.lastSync) {
-    console.log('Showing first sync UI - isFirstSync:', isFirstSync, 'lastSync:', syncStatus.lastSync, 'stats:', syncStatus.stats)
+    debug.log('Showing first sync UI - isFirstSync:', isFirstSync, 'lastSync:', syncStatus.lastSync, 'stats:', syncStatus.stats)
     return (
       <div className="analytics-container">
         <AnalyticsSyncStatus 

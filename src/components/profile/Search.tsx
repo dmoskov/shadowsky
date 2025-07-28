@@ -35,8 +35,8 @@ export const Search: React.FC = () => {
 
   // Log errors for debugging
   useEffect(() => {
-    if (postsError) console.error('Posts search error:', postsError)
-    if (usersError) console.error('Users search error:', usersError)
+    if (postsError) debug.error('Posts search error:', postsError)
+    if (usersError) debug.error('Users search error:', usersError)
   }, [postsError, usersError])
 
   useEffect(() => {

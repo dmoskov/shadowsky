@@ -4,6 +4,7 @@
 
 import { feedStorage } from './feed-storage'
 import { notificationStorage } from './notification-storage'
+import { debug } from '@bsky/shared'
 
 export interface MigrationResult {
   success: boolean
@@ -46,7 +47,7 @@ export async function migrateConversationCache(): Promise<MigrationResult> {
         if (parsed.messages && Array.isArray(parsed.messages)) {
           // This is a conversation with messages
           // For now, we'll skip these as they need a different storage strategy
-          console.log(`Skipping conversation cache: ${key}`)
+          debug.log(`Skipping conversation cache: ${key}`)
         } else if (parsed.posts && Array.isArray(parsed.posts)) {
           // This looks like posts data
           await feedStorage.savePosts(parsed.posts)
@@ -141,10 +142,10 @@ export async function runAllMigrations(): Promise<{
   const totalMigrated = results.conversations.migratedItems + results.notificationPosts.migratedItems
   const totalErrors = results.conversations.errors.length + results.notificationPosts.errors.length
   
-  console.log(`Migration complete: ${totalMigrated} items migrated, ${totalErrors} errors`)
+  debug.log(`Migration complete: ${totalMigrated} items migrated, ${totalErrors} errors`)
   
   if (totalErrors > 0) {
-    console.error('Migration errors:', {
+    debug.error('Migration errors:', {
       conversations: results.conversations.errors,
       notificationPosts: results.notificationPosts.errors
     })
@@ -168,5 +169,5 @@ export function cleanupLocalStorage(): void {
     localStorage.removeItem(key)
   })
   
-  console.log(`Cleaned up ${keysToRemove.length} localStorage keys`)
+  debug.log(`Cleaned up ${keysToRemove.length} localStorage keys`)
 }

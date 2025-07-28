@@ -1,3 +1,5 @@
+import { debug } from '@bsky/shared'
+
 /**
  * CommonJS version of test credentials helper
  * This module provides a type-safe way to access test credentials
@@ -20,7 +22,7 @@ function getTestCredentials() {
 
   // Basic validation
   if (!identifier.includes('@') && !identifier.includes('.')) {
-    console.warn('Test identifier appears to be invalid. Expected email or handle format.');
+    debug.warn('Test identifier appears to be invalid. Expected email or handle format.');
   }
 
   return {

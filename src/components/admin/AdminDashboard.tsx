@@ -6,6 +6,7 @@ import { LoadingSpinner } from '../ui/LoadingSpinner'
 import { ErrorMessage } from '../ui/ErrorMessage'
 import { Button } from '../ui/Button'
 import { Shield, Users, Activity, Settings, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
+import { debug } from '@bsky/shared'
 
 interface SystemStats {
   totalUsers: number
@@ -23,9 +24,9 @@ export const AdminDashboard: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<'overview' | 'users' | 'content' | 'settings'>('overview')
 
   // Check if user is admin
-  console.log('Current session handle:', session?.handle)
+  debug.log('Current session handle:', session?.handle)
   const isAdmin = session?.handle === 'moskov.goodventures.org'
-  console.log('Is admin check:', isAdmin)
+  debug.log('Is admin check:', isAdmin)
 
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ['admin', 'stats'],

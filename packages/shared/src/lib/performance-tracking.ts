@@ -5,7 +5,8 @@
 
 import React from 'react';
 import { onCLS, onFCP, onLCP, onTTFB, onINP } from 'web-vitals';
-import type { Metric } from 'web-vitals';
+import type { Metric } from 'web-vitals'
+import { debug } from '@bsky/shared';
 
 interface PerformanceContext {
   route?: string;
@@ -64,17 +65,17 @@ class PerformanceTracker {
       window.addEventListener('load', () => {
         const navEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
         if (navEntry) {
-          console.group(
+          debug.group(
             '%c⚡ Navigation Performance',
             'color: #00aaff; font-weight: bold; font-size: 12px'
           );
-          console.log('DNS Lookup:', Math.round(navEntry.domainLookupEnd - navEntry.domainLookupStart), 'ms');
-          console.log('TCP Connection:', Math.round(navEntry.connectEnd - navEntry.connectStart), 'ms');
-          console.log('Response Time:', Math.round(navEntry.responseEnd - navEntry.responseStart), 'ms');
-          console.log('DOM Interactive:', Math.round(navEntry.domInteractive - navEntry.fetchStart), 'ms');
-          console.log('DOM Complete:', Math.round(navEntry.domComplete - navEntry.fetchStart), 'ms');
-          console.log('Total Load Time:', Math.round(navEntry.loadEventEnd - navEntry.fetchStart), 'ms');
-          console.groupEnd();
+          debug.log('DNS Lookup:', Math.round(navEntry.domainLookupEnd - navEntry.domainLookupStart), 'ms');
+          debug.log('TCP Connection:', Math.round(navEntry.connectEnd - navEntry.connectStart), 'ms');
+          debug.log('Response Time:', Math.round(navEntry.responseEnd - navEntry.responseStart), 'ms');
+          debug.log('DOM Interactive:', Math.round(navEntry.domInteractive - navEntry.fetchStart), 'ms');
+          debug.log('DOM Complete:', Math.round(navEntry.domComplete - navEntry.fetchStart), 'ms');
+          debug.log('Total Load Time:', Math.round(navEntry.loadEventEnd - navEntry.fetchStart), 'ms');
+          debug.groupEnd();
         }
       });
     }
@@ -88,16 +89,16 @@ class PerformanceTracker {
     const color = this.colors[rating];
     const icon = rating === 'good' ? '✅' : rating === 'needsImprovement' ? '⚠️' : '❌';
 
-    console.group(
+    debug.group(
       `%c${icon} ${metric.name}: ${this.formatValue(metric.name, metric.value)}`,
       `color: ${color}; font-weight: bold; font-size: 12px`
     );
     
-    console.log('%cRating:', 'font-weight: bold', rating);
-    console.log('%cValue:', 'font-weight: bold', metric.value);
+    debug.log('%cRating:', 'font-weight: bold', rating);
+    debug.log('%cValue:', 'font-weight: bold', metric.value);
     
     if (this.context.route) {
-      console.log('%cRoute:', 'font-weight: bold', this.context.route);
+      debug.log('%cRoute:', 'font-weight: bold', this.context.route);
     }
     
     // Add helpful context for poor performance
@@ -105,7 +106,7 @@ class PerformanceTracker {
       this.logPerformanceHint(metric.name, metric.value);
     }
     
-    console.groupEnd();
+    debug.groupEnd();
   }
 
   /**
@@ -146,7 +147,7 @@ class PerformanceTracker {
     };
 
     if (hints[metricName]) {
-      console.warn(
+      debug.warn(
         hints[metricName],
         'color: #00aaff; font-style: italic'
       );
@@ -166,13 +167,13 @@ class PerformanceTracker {
   trackCustomMetric(name: string, value: number, context?: PerformanceContext): void {
     this.customMetrics.set(name, value);
     
-    console.log(
+    debug.log(
       `%c📊 Custom Metric: ${name} = ${Math.round(value)}ms`,
       'color: #00aaff; font-weight: bold'
     );
     
     if (context) {
-      console.log('Context:', context);
+      debug.log('Context:', context);
     }
   }
 
@@ -221,7 +222,7 @@ class PerformanceTracker {
         this.trackCustomMetric(name, lastEntry.duration);
       }
     } catch (error) {
-      console.error('Performance measurement error:', error);
+      debug.error('Performance measurement error:', error);
     }
   }
 
@@ -229,7 +230,7 @@ class PerformanceTracker {
    * Get performance summary
    */
   getSummary(): void {
-    console.group(
+    debug.group(
       '%c📈 Performance Summary',
       'color: #00aaff; font-weight: bold; font-size: 14px'
     );
@@ -243,18 +244,18 @@ class PerformanceTracker {
       return acc;
     }, {} as Record<string, number>);
     
-    console.log('Resources loaded:', resources.length);
-    console.log('By type:', resourcesByType);
+    debug.log('Resources loaded:', resources.length);
+    debug.log('By type:', resourcesByType);
     
     // Custom metrics
     if (this.customMetrics.size > 0) {
-      console.log('\nCustom Metrics:');
+      debug.log('\nCustom Metrics:');
       this.customMetrics.forEach((value, name) => {
-        console.log(`  ${name}: ${Math.round(value)}ms`);
+        debug.log(`  ${name}: ${Math.round(value)}ms`);
       });
     }
     
-    console.groupEnd();
+    debug.groupEnd();
   }
 }
 

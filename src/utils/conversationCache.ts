@@ -1,4 +1,5 @@
 import { ChatBskyConvoDefs } from '@atproto/api'
+import { debug } from '@bsky/shared'
 
 type Conversation = ChatBskyConvoDefs.ConvoView
 type Message = ChatBskyConvoDefs.MessageView
@@ -29,7 +30,7 @@ export class ConversationCacheManager {
       }
       localStorage.setItem(CONVERSATION_CACHE_KEY, JSON.stringify(cache))
     } catch (error) {
-      console.error('Failed to cache conversations:', error)
+      debug.error('Failed to cache conversations:', error)
     }
   }
   
@@ -51,7 +52,7 @@ export class ConversationCacheManager {
       
       return cache.conversations
     } catch (error) {
-      console.error('Failed to load cached conversations:', error)
+      debug.error('Failed to load cached conversations:', error)
       return null
     }
   }
@@ -67,7 +68,7 @@ export class ConversationCacheManager {
       }
       localStorage.setItem(MESSAGE_CACHE_PREFIX + convoId, JSON.stringify(cache))
     } catch (error) {
-      console.error('Failed to cache messages:', error)
+      debug.error('Failed to cache messages:', error)
     }
   }
   
@@ -89,7 +90,7 @@ export class ConversationCacheManager {
       
       return cache.messages
     } catch (error) {
-      console.error('Failed to load cached messages:', error)
+      debug.error('Failed to load cached messages:', error)
       return null
     }
   }
@@ -110,7 +111,7 @@ export class ConversationCacheManager {
         }
       })
     } catch (error) {
-      console.error('Failed to clear conversation cache:', error)
+      debug.error('Failed to clear conversation cache:', error)
     }
   }
   

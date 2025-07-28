@@ -7,6 +7,7 @@ import { PostCache } from '../utils/postCache'
 
 type Post = AppBskyFeedDefs.PostView
 import { rateLimitedPostFetch } from '../services/rate-limiter'
+import { debug } from '@bsky/shared'
 
 /**
  * Hook to fetch posts referenced in notifications
@@ -63,7 +64,7 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
       // If we have ALL posts cached, return them immediately - no progressive loading needed!
       if (allMissing.length === 0) {
         setFetchedCount(allCached.length)
-        console.log(`🚀 All ${allCached.length} posts found in cache - instant load!`)
+        debug.log(`🚀 All ${allCached.length} posts found in cache - instant load!`)
         return allCached
       }
       
@@ -102,7 +103,7 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
           // Cache the newly fetched posts
           PostCache.save(newPosts)
         } catch (error) {
-          console.error('Failed to fetch posts batch:', error)
+          debug.error('Failed to fetch posts batch:', error)
         }
       }
       
@@ -179,7 +180,7 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
               await new Promise(resolve => setTimeout(resolve, delay))
             }
           } catch (error) {
-            console.error('Failed to fetch additional posts batch:', error)
+            debug.error('Failed to fetch additional posts batch:', error)
           }
         }
       }

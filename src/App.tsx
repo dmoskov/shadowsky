@@ -38,20 +38,21 @@ import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
 import { useDataMigration } from './hooks/useDataMigration'
 import { GlobalLoadingIndicator } from './components/ui/GlobalLoadingIndicator'
 import { SkipLinks } from './components/ui/SkipLinks'
-import { queryClient } from '@bsky/shared'
+import { queryClient, debug } from '@bsky/shared'
 import { PenSquare } from 'lucide-react'
+import './utils/debug-control' // Initialize debug controls
 import './App.css'
 
 function ThreadViewWrapper() {
   const { uri } = useParams<{ uri: string }>()
   const navigate = useNavigate()
   
-  console.log('ThreadViewWrapper - raw URI from params:', uri);
+  debug.log('ThreadViewWrapper - raw URI from params:', uri);
   
   if (!uri) return null
   
   const decodedUri = decodeURIComponent(uri);
-  console.log('ThreadViewWrapper - decoded URI:', decodedUri);
+  debug.log('ThreadViewWrapper - decoded URI:', decodedUri);
   
   return (
     <ThreadView 
@@ -84,7 +85,7 @@ function AppContent() {
   // useEffect(() => {
   //   // @ts-ignore - Adding to window for dev access
   //   window.showPerformance = () => performanceTracker.getSummary()
-  //   console.log('💡 Tip: Type showPerformance() in console to see performance metrics')
+  //   debug.log('💡 Tip: Type showPerformance() in console to see performance metrics')
   // }, [])
   
   // Listen for compose modal events

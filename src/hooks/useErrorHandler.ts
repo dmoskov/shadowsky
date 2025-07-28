@@ -60,7 +60,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
           : `Rate limited. Please try again in ${secondsUntilReset} seconds.`
         
         if (options.silent) {
-          console.warn(message)
+          debug.warn(message)
         } else {
           // Use toast for rate limit errors
           showToast({
@@ -80,10 +80,10 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
       } else if (options.logout) {
         options.logout()
         if (!options.silent) alert('Authentication failed. Please log in again.')
-        else console.warn('Authentication failed. Session cleared.')
+        else debug.warn('Authentication failed. Session cleared.')
       } else {
         const message = 'Authentication failed. Please refresh and log in again.'
-        if (options.silent) console.warn(message)
+        if (options.silent) debug.warn(message)
         else alert(message)
       }
       return
@@ -96,10 +96,10 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
       } else if (options.logout) {
         options.logout()
         if (!options.silent) alert('Your session has expired. Please log in again.')
-        else console.warn('Session expired. Session cleared.')
+        else debug.warn('Session expired. Session cleared.')
       } else {
         const message = 'Your session has expired. Please refresh and log in again.'
-        if (options.silent) console.warn(message)
+        if (options.silent) debug.warn(message)
         else alert(message)
       }
       return
@@ -108,7 +108,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
     // Handle AT Protocol errors
     if (error instanceof ATProtoError) {
       if (options.silent) {
-        console.error(`AT Protocol Error: ${error.message}`)
+        debug.error(`AT Protocol Error: ${error.message}`)
       } else {
         alert(`Error: ${error.message}`)
       }
@@ -120,7 +120,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
       options.fallback(error as Error)
     } else {
       if (options.silent) {
-        console.error('Unexpected error:', error)
+        debug.error('Unexpected error:', error)
       } else {
         alert('An unexpected error occurred. Please try again.')
       }

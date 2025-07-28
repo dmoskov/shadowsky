@@ -15,6 +15,8 @@ import { DebugConsole } from './components/DebugConsole'
 import { NotificationStorageDB } from './services/notification-storage-db'
 import { cleanupLocalStorage } from './utils/cleanupLocalStorage'
 import { BackgroundNotificationLoader } from './components/BackgroundNotificationLoader'
+import { debug } from '@bsky/shared'
+import './utils/debug-control' // Initialize debug controls
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,12 +52,12 @@ function AppContent() {
         await db.init()
         const migrated = await db.migrateFromLocalStorage()
         if (migrated) {
-          console.log('✅ Successfully migrated notifications from localStorage to IndexedDB')
+          debug.log('✅ Successfully migrated notifications from localStorage to IndexedDB')
           // Clean up remaining localStorage keys
           cleanupLocalStorage()
         }
       } catch (error) {
-        console.error('Failed to run migration:', error)
+        debug.error('Failed to run migration:', error)
       }
     }
     

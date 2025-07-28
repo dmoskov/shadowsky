@@ -1,4 +1,5 @@
 import { AppBskyFeedDefs } from '@atproto/api'
+import { debug } from '@bsky/shared'
 
 type Post = AppBskyFeedDefs.PostView
 
@@ -37,13 +38,13 @@ export class PostStorageDB {
       const request = indexedDB.open(DB_NAME, DB_VERSION)
       
       request.onerror = () => {
-        console.error('Failed to open PostStorageDB:', request.error)
+        debug.error('Failed to open PostStorageDB:', request.error)
         reject(request.error)
       }
       
       request.onsuccess = () => {
         this.db = request.result
-        console.log('PostStorageDB initialized successfully')
+        debug.log('PostStorageDB initialized successfully')
         resolve()
       }
       
@@ -337,7 +338,7 @@ export class PostStorageDB {
         return false
       }
       
-      console.log(`Migrating ${posts.length} posts from localStorage to IndexedDB...`)
+      debug.log(`Migrating ${posts.length} posts from localStorage to IndexedDB...`)
       
       // Save posts to IndexedDB
       await this.savePosts(posts)
@@ -352,11 +353,11 @@ export class PostStorageDB {
       // Clear localStorage after successful migration
       localStorage.removeItem(cacheKey)
       
-      console.log('Post migration completed successfully')
+      debug.log('Post migration completed successfully')
       return true
       
     } catch (error) {
-      console.error('Failed to migrate posts from localStorage:', error)
+      debug.error('Failed to migrate posts from localStorage:', error)
       return false
     }
   }

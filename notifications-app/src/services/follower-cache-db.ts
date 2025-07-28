@@ -1,4 +1,5 @@
 import type { AppBskyActorDefs } from '@atproto/api'
+import { debug } from '@bsky/shared'
 
 // Database schema types
 export interface CachedProfile {
@@ -85,7 +86,7 @@ export class FollowerCacheDB {
   // Profile management
   async saveProfile(profile: CachedProfile): Promise<void> {
     if (!this.db) {
-      console.error('Database not initialized, cannot save profile')
+      debug.error('Database not initialized, cannot save profile')
       return
     }
     const tx = this.db.transaction(['profiles'], 'readwrite')
@@ -94,7 +95,7 @@ export class FollowerCacheDB {
   
   async saveProfiles(profiles: CachedProfile[]): Promise<void> {
     if (!this.db) {
-      console.error('Database not initialized, cannot save profiles')
+      debug.error('Database not initialized, cannot save profiles')
       return
     }
     const tx = this.db.transaction(['profiles'], 'readwrite')
@@ -107,7 +108,7 @@ export class FollowerCacheDB {
   
   async getProfile(did: string): Promise<CachedProfile | undefined> {
     if (!this.db) {
-      console.warn('Database not initialized, returning undefined')
+      debug.warn('Database not initialized, returning undefined')
       return undefined
     }
     const tx = this.db.transaction(['profiles'], 'readonly')
@@ -118,7 +119,7 @@ export class FollowerCacheDB {
   
   async getProfileByHandle(handle: string): Promise<CachedProfile | undefined> {
     if (!this.db) {
-      console.warn('Database not initialized, returning undefined')
+      debug.warn('Database not initialized, returning undefined')
       return undefined
     }
     const tx = this.db.transaction(['profiles'], 'readonly')
@@ -130,7 +131,7 @@ export class FollowerCacheDB {
   
   async getProfiles(dids: string[]): Promise<Map<string, CachedProfile>> {
     if (!this.db) {
-      console.warn('Database not initialized, returning empty map')
+      debug.warn('Database not initialized, returning empty map')
       return new Map<string, CachedProfile>()
     }
     const tx = this.db.transaction(['profiles'], 'readonly')
@@ -150,7 +151,7 @@ export class FollowerCacheDB {
   
   async getProfilesByHandles(handles: string[]): Promise<Map<string, CachedProfile>> {
     if (!this.db) {
-      console.warn('Database not initialized, returning empty map')
+      debug.warn('Database not initialized, returning empty map')
       return new Map<string, CachedProfile>()
     }
     
@@ -192,7 +193,7 @@ export class FollowerCacheDB {
   
   async getTopProfiles(minFollowers: number, limit: number = 100): Promise<CachedProfile[]> {
     if (!this.db) {
-      console.warn('Database not initialized, returning empty array')
+      debug.warn('Database not initialized, returning empty array')
       return []
     }
     const tx = this.db.transaction(['profiles'], 'readonly')
@@ -224,7 +225,7 @@ export class FollowerCacheDB {
   // Interaction stats management
   async saveInteractionStats(stats: InteractionStats): Promise<void> {
     if (!this.db) {
-      console.error('Database not initialized, cannot save interaction stats')
+      debug.error('Database not initialized, cannot save interaction stats')
       return
     }
     const tx = this.db.transaction(['interactions'], 'readwrite')
@@ -233,7 +234,7 @@ export class FollowerCacheDB {
   
   async saveMultipleInteractionStats(statsList: InteractionStats[]): Promise<void> {
     if (!this.db) {
-      console.error('Database not initialized, cannot save interaction stats')
+      debug.error('Database not initialized, cannot save interaction stats')
       return
     }
     const tx = this.db.transaction(['interactions'], 'readwrite')
@@ -254,7 +255,7 @@ export class FollowerCacheDB {
   
   async getInteractionStats(did: string): Promise<InteractionStats | undefined> {
     if (!this.db) {
-      console.warn('Database not initialized, returning undefined')
+      debug.warn('Database not initialized, returning undefined')
       return undefined
     }
     const tx = this.db.transaction(['interactions'], 'readonly')
@@ -265,7 +266,7 @@ export class FollowerCacheDB {
   
   async getInteractionStatsForMultiple(dids: string[]): Promise<Map<string, InteractionStats>> {
     if (!this.db) {
-      console.warn('Database not initialized, returning empty map')
+      debug.warn('Database not initialized, returning empty map')
       return new Map<string, InteractionStats>()
     }
     const tx = this.db.transaction(['interactions'], 'readonly')
@@ -285,7 +286,7 @@ export class FollowerCacheDB {
   
   async getTopInteractors(limit: number = 100): Promise<InteractionStats[]> {
     if (!this.db) {
-      console.warn('Database not initialized, returning empty array')
+      debug.warn('Database not initialized, returning empty array')
       return []
     }
     const tx = this.db.transaction(['interactions'], 'readonly')
@@ -316,7 +317,7 @@ export class FollowerCacheDB {
     updates: Partial<InteractionStats>
   ): Promise<void> {
     if (!this.db) {
-      console.error('Database not initialized, cannot update interaction stats')
+      debug.error('Database not initialized, cannot update interaction stats')
       return
     }
     const tx = this.db.transaction(['interactions'], 'readwrite')
@@ -376,7 +377,7 @@ export class FollowerCacheDB {
   // Utility methods
   async clearCache(): Promise<void> {
     if (!this.db) {
-      console.error('Database not initialized, cannot clear cache')
+      debug.error('Database not initialized, cannot clear cache')
       return
     }
     const tx = this.db.transaction(['profiles', 'interactions'], 'readwrite')
@@ -386,7 +387,7 @@ export class FollowerCacheDB {
   
   async clearStaleProfiles(): Promise<number> {
     if (!this.db) {
-      console.warn('Database not initialized, cannot clear stale profiles')
+      debug.warn('Database not initialized, cannot clear stale profiles')
       return 0
     }
     const tx = this.db.transaction(['profiles'], 'readwrite')
@@ -423,7 +424,7 @@ export class FollowerCacheDB {
     cacheSize: number
   }> {
     if (!this.db) {
-      console.warn('Database not initialized, returning empty stats')
+      debug.warn('Database not initialized, returning empty stats')
       return {
         totalProfiles: 0,
         totalInteractions: 0,

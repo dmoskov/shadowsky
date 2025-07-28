@@ -7,6 +7,7 @@ import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notif
 import { getNotificationUrl, atUriToBskyUrl } from '../utils/url-helpers'
 import type { AppBskyFeedDefs } from '@atproto/api'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
+import { debug } from '@bsky/shared'
 
 type Post = AppBskyFeedDefs.PostView
 import '../styles/conversations.css'
@@ -68,7 +69,7 @@ const ConversationItem = React.memo(({
   }
   
   // Log avatar usage
-  console.log('[ConversationsSimple] Avatar source:', {
+  debug.log('[ConversationsSimple] Avatar source:', {
     conversationIndex: filteredConversationsIndex,
     rootUri: convo.rootUri,
     avatarSource,
@@ -81,10 +82,10 @@ const ConversationItem = React.memo(({
     isLoadingRootPost
   })
 
-  console.log('show loading state?', isGroup,isLoadingRootPost, convo.rootPost?.author)
+  debug.log('show loading state?', isGroup,isLoadingRootPost, convo.rootPost?.author)
   // If we're loading the root post, show loading state
   if (isLoadingRootPost && !convo.rootPost?.author) {
-    console.log('--- show loading state', isGroup,isLoadingRootPost, convo.rootPost?.author)
+    debug.log('--- show loading state', isGroup,isLoadingRootPost, convo.rootPost?.author)
     return (
       <div className={`w-full text-left p-4 transition-all ${
         isSelected ? 'bg-opacity-10 bg-blue-500' : ''
@@ -247,7 +248,7 @@ const ConversationItem = React.memo(({
 })
 
 export const ConversationsSimple: React.FC = () => {
-  console.log('[ConversationsSimple] Component rendering')
+  debug.log('[ConversationsSimple] Component rendering')
   
   const { session } = useAuth()
   const [selectedConvo, setSelectedConvo] = useState<string | null>(null)
@@ -266,17 +267,17 @@ export const ConversationsSimple: React.FC = () => {
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   })
-  console.log('[ConversationsSimple] Extended data:', !!extendedData, extendedData?.pages?.length)
+  debug.log('[ConversationsSimple] Extended data:', !!extendedData, extendedData?.pages?.length)
   
   // Extract reply notifications
   const replyNotifications = React.useMemo(() => {
     if (!extendedData?.pages) {
-      console.log('[ConversationsSimple] No extended data pages')
+      debug.log('[ConversationsSimple] No extended data pages')
       return []
     }
     const allNotifications = extendedData.pages.flatMap((page: any) => page.notifications)
     const replies = allNotifications.filter((n: Notification) => n.reason === 'reply')
-    console.log('[ConversationsSimple] Found reply notifications:', replies.length)
+    debug.log('[ConversationsSimple] Found reply notifications:', replies.length)
     return replies
   }, [extendedData])
 
@@ -391,7 +392,7 @@ export const ConversationsSimple: React.FC = () => {
           // Cache the newly fetched posts
           PostCache.save(newPosts)
         } catch (error) {
-          console.error('Failed to fetch root posts batch:', error)
+          debug.error('Failed to fetch root posts batch:', error)
         }
       }
       
@@ -419,7 +420,7 @@ export const ConversationsSimple: React.FC = () => {
   // This ensures conversation items update their avatars when root post authors become available
   React.useEffect(() => {
     if (additionalRootPosts && additionalRootPosts.length > 0) {
-      console.log('[ConversationsSimple] Root posts loaded, forcing re-render:', additionalRootPosts.length)
+      debug.log('[ConversationsSimple] Root posts loaded, forcing re-render:', additionalRootPosts.length)
       setRootPostsVersion(v => v + 1)
     }
   }, [additionalRootPosts])
@@ -546,7 +547,7 @@ export const ConversationsSimple: React.FC = () => {
 
   // Debug: Log rendering state
   React.useEffect(() => {
-    console.log('[ConversationsSimple] State:', {
+    debug.log('[ConversationsSimple] State:', {
       hasExtendedData: !!extendedData,
       extendedDataPages: extendedData?.pages?.length || 0,
       notificationCount: replyNotifications.length,

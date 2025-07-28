@@ -6,6 +6,7 @@ import { useErrorHandler } from './useErrorHandler'
 import { NotificationCache } from '../utils/notificationCache'
 import { NotificationObjectCache } from '../utils/notificationObjectCache'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
+import { debug } from '@bsky/shared'
 
 const MAX_NOTIFICATIONS = 10000
 const MAX_DAYS = 28 // 4 weeks
@@ -18,16 +19,16 @@ export function useNotifications(priority: boolean = false) {
   const timestamp = new Date().toLocaleTimeString()
   
   if (cachedData) {
-    console.log(`🚀 [${timestamp}] React Query: Using cached data as initialData`)
+    debug.log(`🚀 [${timestamp}] React Query: Using cached data as initialData`)
   } else {
-    console.log(`🚀 [${timestamp}] React Query: No cache found, will fetch from API`)
+    debug.log(`🚀 [${timestamp}] React Query: No cache found, will fetch from API`)
   }
 
   return useInfiniteQuery({
     queryKey: ['notifications', priority],
     queryFn: async ({ pageParam }) => {
       const fetchTimestamp = new Date().toLocaleTimeString()
-      console.log(`🌐 [${fetchTimestamp}] React Query: Making API call (priority: ${priority}, cursor: ${pageParam || 'none'})`)
+      debug.log(`🌐 [${fetchTimestamp}] React Query: Making API call (priority: ${priority}, cursor: ${pageParam || 'none'})`)
       
       // This is the ONLY place where rate limiting applies - actual API calls
       const { atProtoClient } = await import('../services/atproto')
@@ -36,7 +37,7 @@ export function useNotifications(priority: boolean = false) {
       const notificationService = getNotificationService(agent)
       const result = await notificationService.listNotifications(pageParam, priority)
       
-      console.log(`✅ [${fetchTimestamp}] React Query: API call completed, got ${result.notifications.length} notifications`)
+      debug.log(`✅ [${fetchTimestamp}] React Query: API call completed, got ${result.notifications.length} notifications`)
       return result
     },
     initialPageParam: undefined as string | undefined,
@@ -45,11 +46,11 @@ export function useNotifications(priority: boolean = false) {
       const totalNotifications = allPages.reduce((sum, page) => sum + page.notifications.length, 0)
       
       // Log progress
-      console.log(`📊 Fetched ${totalNotifications} notifications so far...`)
+      debug.log(`📊 Fetched ${totalNotifications} notifications so far...`)
       
       // Stop if we've reached max notifications
       if (totalNotifications >= MAX_NOTIFICATIONS) {
-        console.log(`🛑 Reached max notifications limit (${MAX_NOTIFICATIONS})`)
+        debug.log(`🛑 Reached max notifications limit (${MAX_NOTIFICATIONS})`)
         return undefined
       }
 
@@ -63,7 +64,7 @@ export function useNotifications(priority: boolean = false) {
           maxDaysAgo.setDate(maxDaysAgo.getDate() - MAX_DAYS)
           
           if (oldestDate < maxDaysAgo) {
-            console.log(`⏰ Reached 4-week limit. Oldest notification: ${oldestDate.toLocaleDateString()}`)
+            debug.log(`⏰ Reached 4-week limit. Oldest notification: ${oldestDate.toLocaleDateString()}`)
             return undefined
           }
         }
@@ -92,7 +93,7 @@ export function useNotifications(priority: boolean = false) {
       const successTimestamp = new Date().toLocaleTimeString()
       if (data?.pages && data.pages.length > 0) {
         const totalNotifications = data.pages.reduce((sum, p) => sum + p.notifications.length, 0)
-        console.log(`💾 [${successTimestamp}] React Query onSuccess: Saving ${totalNotifications} notifications to cache`)
+        debug.log(`💾 [${successTimestamp}] React Query onSuccess: Saving ${totalNotifications} notifications to cache`)
         NotificationCache.save(data.pages, priority)
         
         // Also save individual notifications to object cache
@@ -103,7 +104,7 @@ export function useNotifications(priority: boolean = false) {
     // Add onError handler to help debug issues
     onError: (error) => {
       const errorTimestamp = new Date().toLocaleTimeString()
-      console.error(`❌ [${errorTimestamp}] React Query error in useNotifications:`, error)
+      debug.error(`❌ [${errorTimestamp}] React Query error in useNotifications:`, error)
     }
   })
 }

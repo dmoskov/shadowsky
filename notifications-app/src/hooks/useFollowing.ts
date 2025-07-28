@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
+import { debug } from '@bsky/shared'
 
 export function useFollowing() {
   const { session } = useAuth()
@@ -32,10 +33,10 @@ export function useFollowing() {
           cursor = response.data.cursor
         } while (cursor)
         
-        console.log(`Loaded ${follows.size} following accounts`)
+        debug.log(`Loaded ${follows.size} following accounts`)
         return follows
       } catch (error) {
-        console.error('Failed to fetch following list:', error)
+        debug.error('Failed to fetch following list:', error)
         throw error
       }
     },

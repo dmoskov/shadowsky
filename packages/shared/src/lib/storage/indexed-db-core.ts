@@ -4,6 +4,7 @@
  */
 
 import { AppBskyFeedDefs, AppBskyNotificationListNotifications } from '@atproto/api'
+import { debug } from '@bsky/shared'
 
 export type Post = AppBskyFeedDefs.PostView
 export type FeedItem = AppBskyFeedDefs.FeedViewPost
@@ -62,13 +63,13 @@ export abstract class IndexedDBStore {
       const request = indexedDB.open(this.config.dbName, this.config.version)
       
       request.onerror = () => {
-        console.error(`Failed to open ${this.config.dbName}:`, request.error)
+        debug.error(`Failed to open ${this.config.dbName}:`, request.error)
         reject(request.error)
       }
       
       request.onsuccess = () => {
         this.db = request.result
-        console.log(`${this.config.dbName} initialized successfully`)
+        debug.log(`${this.config.dbName} initialized successfully`)
         resolve()
       }
       

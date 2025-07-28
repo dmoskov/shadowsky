@@ -4,6 +4,7 @@
 
 import { QueryClient } from '@tanstack/react-query'
 import { feedStorage, notificationStorage } from './storage'
+import { debug } from '@bsky/shared'
 
 // Custom query client with persistence hooks
 class PersistedQueryClient extends QueryClient {
@@ -27,7 +28,7 @@ class PersistedQueryClient extends QueryClient {
       // Restore cached data on startup
       await this.restoreCachedData()
     } catch (error) {
-      console.error('Failed to initialize storage:', error)
+      debug.error('Failed to initialize storage:', error)
     }
   }
   
@@ -55,12 +56,12 @@ class PersistedQueryClient extends QueryClient {
           if (timelineData.pages.length > 0) {
             // Set the data in React Query cache
             this.setQueryData(['timeline'], timelineData)
-            console.log(`Restored ${timelineData.pages.length} timeline pages from cache`)
+            debug.log(`Restored ${timelineData.pages.length} timeline pages from cache`)
           }
         }
       }
     } catch (error) {
-      console.error('Failed to restore cached data:', error)
+      debug.error('Failed to restore cached data:', error)
     }
   }
   

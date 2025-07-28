@@ -333,11 +333,11 @@ export class EnhancedAnalyticsService {
             }
           }
         } catch (err) {
-          console.warn('Failed to fetch likes for post:', post.uri, err)
+          debug.warn('Failed to fetch likes for post:', post.uri, err)
         }
       }
     } catch (err) {
-      console.error('Failed to fetch engagement data:', err)
+      debug.error('Failed to fetch engagement data:', err)
     }
     
     // Get top engagers

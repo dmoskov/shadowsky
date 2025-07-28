@@ -8,6 +8,7 @@ import { mapATProtoError } from '../../lib/errors'
 import type { Session } from '../../types/atproto'
 import { sessionCookies } from '../../lib/cookies'
 import { createRateLimitedAgent } from '../../lib/rate-limited-agent'
+import { debug } from '@bsky/shared'
 
 export interface ATProtoConfig {
   service?: string
@@ -31,7 +32,7 @@ export class ATProtoClient {
     const baseAgent = new BskyAgent({
       service: this.config.service,
       persistSession: (evt: any, session: any) => {
-        console.log('BskyAgent persistSession event:', evt, {
+        debug.log('BskyAgent persistSession event:', evt, {
           hasSession: !!session,
           sessionKeys: session ? Object.keys(session) : []
         })
@@ -40,7 +41,7 @@ export class ATProtoClient {
         if (this.config.persistSession && session && session.accessJwt && session.refreshJwt) {
           this.saveSession(session)
         } else if (session && (!session.accessJwt || !session.refreshJwt)) {
-          console.warn('Skipping save - incomplete session data')
+          debug.warn('Skipping save - incomplete session data')
         }
       }
     })
@@ -69,7 +70,7 @@ export class ATProtoClient {
 
   async resumeSession(session: Session): Promise<Session> {
     try {
-      console.log('Attempting to resume session for:', session.handle)
+      debug.log('Attempting to resume session for:', session.handle)
       
       // Convert our Session type to AtpSessionData
       const atpSession = {
@@ -78,7 +79,7 @@ export class ATProtoClient {
       }
       await this._agent.resumeSession(atpSession)
       
-      console.log('Session resumed successfully')
+      debug.log('Session resumed successfully')
       
       // After resumeSession, the agent's session property is updated
       const sessionData = this._agent.session
@@ -89,7 +90,7 @@ export class ATProtoClient {
       return sessionData as Session
     } catch (error) {
       // Log the raw error for debugging
-      console.error('Failed to resume session:', error)
+      debug.error('Failed to resume session:', error)
       throw mapATProtoError(error)
     }
   }
@@ -118,7 +119,7 @@ export class ATProtoClient {
   }
 
   logout(): void {
-    console.log('ATProtoClient.logout() called')
+    debug.log('ATProtoClient.logout() called')
     console.trace('Logout call stack')
     
     // Clear persisted session first
@@ -153,7 +154,7 @@ export class ATProtoClient {
 
   private saveSession(session: any): void {
     try {
-      console.log('Saving session:', {
+      debug.log('Saving session:', {
         hasDid: !!session.did,
         hasHandle: !!session.handle,
         hasAccessJwt: !!session.accessJwt,
@@ -177,33 +178,33 @@ export class ATProtoClient {
       localStorage.setItem(storageKey, JSON.stringify(sessionData))
       sessionCookies.save(sessionData, this.config.sessionPrefix)
     } catch (error) {
-      console.error('Failed to save session:', error)
+      debug.error('Failed to save session:', error)
     }
   }
 
   private clearSession(): void {
     try {
-      console.log('Clearing session with prefix:', this.config.sessionPrefix)
+      debug.log('Clearing session with prefix:', this.config.sessionPrefix)
       const storageKey = `${this.config.sessionPrefix}bsky_session`
       localStorage.removeItem(storageKey)
       sessionCookies.clear(this.config.sessionPrefix)
     } catch (error) {
-      console.error('Failed to clear session:', error)
+      debug.error('Failed to clear session:', error)
     }
   }
 
   static loadSavedSession(sessionPrefix: string = ''): Session | null {
     try {
       const storageKey = `${sessionPrefix}bsky_session`
-      console.log('Loading saved session with prefix:', sessionPrefix)
+      debug.log('Loading saved session with prefix:', sessionPrefix)
       
       // Try to load from cookie first (preferred for cross-port sharing)
       let session = sessionCookies.load(sessionPrefix)
       
       if (session) {
-        console.log('Session loaded from cookie:', session.handle)
+        debug.log('Session loaded from cookie:', session.handle)
       } else {
-        console.log('No session found in cookie, checking localStorage')
+        debug.log('No session found in cookie, checking localStorage')
       }
       
       // Fall back to localStorage if no cookie found
@@ -211,7 +212,7 @@ export class ATProtoClient {
         const saved = localStorage.getItem(storageKey)
         if (saved) {
           session = JSON.parse(saved)
-          console.log('Session loaded from localStorage:', session?.handle)
+          debug.log('Session loaded from localStorage:', session?.handle)
           // Migrate to cookie storage
           if (session) {
             sessionCookies.save(session, sessionPrefix)
@@ -223,7 +224,7 @@ export class ATProtoClient {
       
       // Validate session has required fields
       if (!session.accessJwt || !session.refreshJwt || !session.did) {
-        console.warn('Invalid session format, clearing...', {
+        debug.warn('Invalid session format, clearing...', {
           hasAccessJwt: !!session.accessJwt,
           hasRefreshJwt: !!session.refreshJwt,
           hasDid: !!session.did,
@@ -236,7 +237,7 @@ export class ATProtoClient {
       
       return session
     } catch (error) {
-      console.error('Failed to load saved session:', error)
+      debug.error('Failed to load saved session:', error)
       // Clear corrupted session data
       try {
         const storageKey = `${sessionPrefix}bsky_session`

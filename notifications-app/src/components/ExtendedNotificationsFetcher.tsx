@@ -8,6 +8,7 @@ import { ExtendedFetchCache } from '../utils/extendedFetchCache'
 import { StorageManager } from '../utils/storageManager'
 import { NotificationCacheService } from '../services/notification-cache-service'
 import { prefetchNotificationPosts, prefetchRootPosts } from '../utils/prefetchNotificationPosts'
+import { debug } from '@bsky/shared'
 
 export const ExtendedNotificationsFetcher: React.FC = () => {
   const { session } = useAuth()
@@ -74,7 +75,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
         await cacheService.init()
         setIsIndexedDBReady(true)
       } catch (error) {
-        console.error('Failed to initialize IndexedDB:', error)
+        debug.error('Failed to initialize IndexedDB:', error)
         // Fall back to localStorage behavior
         setIsIndexedDBReady(false)
       }
@@ -90,7 +91,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       // First try IndexedDB
       const hasCached = await cacheService.hasCachedData()
       if (hasCached) {
-        console.log('📊 Loading extended notifications from IndexedDB')
+        debug.log('📊 Loading extended notifications from IndexedDB')
         const cachedResult = await cacheService.getCachedNotifications(10000) // Load up to 10k notifications
         
         if (cachedResult.notifications.length > 0) {
@@ -129,13 +130,13 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
             // Don't await - let it run in the background
             const replyNotifications = cachedResult.notifications.filter(n => n.reason === 'reply')
             if (replyNotifications.length > 0) {
-              console.log('🔄 Background prefetching posts for cached conversations...')
+              debug.log('🔄 Background prefetching posts for cached conversations...')
               prefetchNotificationPosts(replyNotifications, agent).then(() => {
                 return prefetchRootPosts(replyNotifications, agent)
               }).then(() => {
-                console.log('✅ Background post prefetch complete')
+                debug.log('✅ Background post prefetch complete')
               }).catch(error => {
-                console.error('Error prefetching posts:', error)
+                debug.error('Error prefetching posts:', error)
               })
             }
           }
@@ -145,7 +146,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       }
       
       // No longer fall back to localStorage - IndexedDB is our only source
-      console.log('📊 No extended notifications found in IndexedDB')
+      debug.log('📊 No extended notifications found in IndexedDB')
     }
     
     loadCachedData()
@@ -156,7 +157,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     if (!session || autoFetchTriggered || hasCachedData || fetchingStatus !== 'idle') return
     
     if (fetchInfo.shouldAutoFetch && fetchInfo.metadata) {
-      console.log('🔄 Auto-fetching missing notifications due to recent 4-week fetch')
+      debug.log('🔄 Auto-fetching missing notifications due to recent 4-week fetch')
       setAutoFetchTriggered(true)
       handleFetchMissing()
     }
@@ -168,7 +169,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     
     // Small delay to ensure component is fully mounted
     const timer = setTimeout(() => {
-      console.log('🚀 Starting automatic 4-week fetch on mount')
+      debug.log('🚀 Starting automatic 4-week fetch on mount')
       setInitialFetchStarted(true)
       handleFetch4Weeks()
     }, 500)
@@ -181,14 +182,14 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     setProgress({ totalNotifications: 0, daysReached: 0, oldestDate: null })
     setLoadedFromStorage(false)
     
-    console.log('Starting 4-week fetch...')
+    debug.log('Starting 4-week fetch...')
     
     // Don't remove existing data - let React Query handle the refresh
     // This will replace the data instead of clearing it first
     
     // Start fetching
     const initialResult = await refetch()
-    console.log('Initial fetch result:', { 
+    debug.log('Initial fetch result:', { 
       isSuccess: initialResult.isSuccess,
       hasData: !!initialResult.data,
       pagesCount: initialResult.data?.pages?.length 
@@ -213,7 +214,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
         })
         
         if (oldestDate < fourWeeksAgo) {
-          console.log('First page already spans 4 weeks')
+          debug.log('First page already spans 4 weeks')
           shouldContinue = false
         }
       }
@@ -222,12 +223,12 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     // Continue fetching until we reach 4 weeks or no more data
     while (shouldContinue) {
       currentPage++
-      console.log(`Fetching page ${currentPage}...`)
+      debug.log(`Fetching page ${currentPage}...`)
       
       // Fetch next page and wait for result
       const result = await fetchNextPage()
       
-      console.log('Fetch result:', { 
+      debug.log('Fetch result:', { 
         hasNextPage: result.hasNextPage, 
         isError: result.isError,
         pagesCount: result.data?.pages?.length 
@@ -235,14 +236,14 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       
       // Check if we got an error
       if (result.isError) {
-        console.log('Error occurred during fetch:', result.error)
+        debug.log('Error occurred during fetch:', result.error)
         shouldContinue = false
         break
       }
       
       // Check if the fetch was successful but returned no next page
       if (!result.data) {
-        console.log('No data returned from fetch')
+        debug.log('No data returned from fetch')
         shouldContinue = false
         break
       }
@@ -266,7 +267,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           
           // Check if we've reached 4 weeks
           if (oldestDate < fourWeeksAgo) {
-            console.log('Reached 4-week limit')
+            debug.log('Reached 4-week limit')
             shouldContinue = false
             break
           }
@@ -275,7 +276,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
         // Check if we have more pages to fetch
         const lastPage = latestData.pages[latestData.pages.length - 1]
         if (!lastPage.cursor) {
-          console.log('No more cursor - reached end of notifications')
+          debug.log('No more cursor - reached end of notifications')
           shouldContinue = false
           break
         }
@@ -283,7 +284,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       
       // Safety limit
       if (currentPage > 100) {
-        console.log('Reached page limit')
+        debug.log('Reached page limit')
         shouldContinue = false
         break
       }
@@ -308,19 +309,19 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
         
         // Save to IndexedDB
         if (isIndexedDBReady) {
-          console.log('💾 Saving notifications to IndexedDB...')
+          debug.log('💾 Saving notifications to IndexedDB...')
           for (let i = 0; i < finalData.pages.length; i++) {
             const page = finalData.pages[i]
             await cacheService.cacheNotifications(page.notifications, i + 1)
           }
-          console.log('✅ Saved to IndexedDB')
+          debug.log('✅ Saved to IndexedDB')
         }
         
         // Prefetch posts for reply notifications
         const { atProtoClient } = await import('../services/atproto')
         const agent = atProtoClient.agent
         if (agent) {
-          console.log('🔄 Prefetching posts for conversations...')
+          debug.log('🔄 Prefetching posts for conversations...')
           
           // Get reply notifications
           const replyNotifications = allNotifications.filter((n: any) => n.reason === 'reply')
@@ -329,7 +330,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
             // Prefetch the reply posts and root posts
             await prefetchNotificationPosts(replyNotifications, agent)
             await prefetchRootPosts(replyNotifications, agent)
-            console.log('✅ Posts prefetched for conversations')
+            debug.log('✅ Posts prefetched for conversations')
           }
         }
         
@@ -357,7 +358,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     const metadata = fetchInfo.metadata
     if (!metadata) return
     
-    console.log('📊 Fetching notifications since last extended fetch')
+    debug.log('📊 Fetching notifications since last extended fetch')
     
     // Start fetching from the beginning
     const initialResult = await refetch()
@@ -385,7 +386,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
         if (oldestInBatch) {
           const oldestDate = new Date(oldestInBatch.indexedAt)
           if (oldestDate <= targetDate) {
-            console.log('✅ Reached previously fetched notifications')
+            debug.log('✅ Reached previously fetched notifications')
             shouldContinue = false
             break
           }
@@ -402,7 +403,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       
       // Safety limit
       if (currentPage > 10) {
-        console.log('Reached page limit for missing notifications')
+        debug.log('Reached page limit for missing notifications')
         shouldContinue = false
       }
     }
@@ -426,21 +427,21 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
         
         // Save the updated data to IndexedDB
         if (isIndexedDBReady) {
-          console.log('💾 Saving updated notifications to IndexedDB...')
+          debug.log('💾 Saving updated notifications to IndexedDB...')
           // Clear and re-save all pages to ensure consistency
           await cacheService.clearCache()
           for (let i = 0; i < finalData.pages.length; i++) {
             const page = finalData.pages[i]
             await cacheService.cacheNotifications(page.notifications, i + 1)
           }
-          console.log('✅ Updated IndexedDB with new notifications')
+          debug.log('✅ Updated IndexedDB with new notifications')
         }
         
         // Prefetch posts for reply notifications
         const { atProtoClient } = await import('../services/atproto')
         const agent = atProtoClient.agent
         if (agent) {
-          console.log('🔄 Prefetching posts for conversations...')
+          debug.log('🔄 Prefetching posts for conversations...')
           
           // Get reply notifications
           const replyNotifications = allNotifications.filter((n: any) => n.reason === 'reply')
@@ -449,7 +450,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
             // Prefetch the reply posts and root posts
             await prefetchNotificationPosts(replyNotifications, agent)
             await prefetchRootPosts(replyNotifications, agent)
-            console.log('✅ Posts prefetched for conversations')
+            debug.log('✅ Posts prefetched for conversations')
           }
         }
         

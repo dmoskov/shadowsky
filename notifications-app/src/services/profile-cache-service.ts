@@ -49,7 +49,7 @@ export class ProfileCacheService {
     
     // Fetch stale/missing profiles from API
     if (handlesToFetch.length > 0) {
-      console.log(`[PROFILE FETCH] Fetching ${handlesToFetch.length} profiles from API (${handles.length - handlesToFetch.length} from cache)`)
+      debug.log(`[PROFILE FETCH] Fetching ${handlesToFetch.length} profiles from API (${handles.length - handlesToFetch.length} from cache)`)
       
       try {
         // Rate limit the profile fetching
@@ -73,7 +73,7 @@ export class ProfileCacheService {
           await db.saveProfiles(profilesToCache)
         }
       } catch (error) {
-        console.error('Error fetching profiles from API:', error)
+        debug.error('Error fetching profiles from API:', error)
         // Fall back to stale cache if API fails
         for (const handle of handlesToFetch) {
           const stale = cachedProfiles.get(handle)
@@ -115,7 +115,7 @@ export class ProfileCacheService {
     
     // Fetch stale/missing profiles
     if (didsToFetch.length > 0) {
-      console.log(`[PROFILE FETCH] Fetching ${didsToFetch.length} profiles by DID from API`)
+      debug.log(`[PROFILE FETCH] Fetching ${didsToFetch.length} profiles by DID from API`)
       
       try {
         // Note: This requires fetching profiles one by one since the API doesn't support batch by DID
@@ -133,7 +133,7 @@ export class ProfileCacheService {
               profilesToCache.push(cachedProfile)
             }
           } catch (error) {
-            console.error(`Error fetching profile for ${did}:`, error)
+            debug.error(`Error fetching profile for ${did}:`, error)
           }
         }
         
@@ -142,7 +142,7 @@ export class ProfileCacheService {
           await db.saveProfiles(profilesToCache)
         }
       } catch (error) {
-        console.error('Error fetching profiles by DID:', error)
+        debug.error('Error fetching profiles by DID:', error)
         // Fall back to stale cache
         for (const did of didsToFetch) {
           const stale = cachedProfiles.get(did)

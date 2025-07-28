@@ -9,6 +9,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { getNotificationUrl, atUriToBskyUrl } from '../utils/url-helpers'
 import type { AppBskyFeedDefs } from '@atproto/api'
+import { debug } from '@bsky/shared'
 
 type Post = AppBskyFeedDefs.PostView
 import '../styles/conversations.css'
@@ -201,7 +202,7 @@ export const Conversations: React.FC = () => {
   
   // Add debug logging
   React.useEffect(() => {
-    console.log('[Conversations] Loading state:', { 
+    debug.log('[Conversations] Loading state:', { 
       isLoading, 
       isLoadingPosts,
       isLoadingRootPosts,

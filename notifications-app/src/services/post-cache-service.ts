@@ -1,5 +1,6 @@
 import { AppBskyFeedDefs } from '@atproto/api'
 import { PostStorageDB } from './post-storage-db'
+import { debug } from '@bsky/shared'
 
 type Post = AppBskyFeedDefs.PostView
 
@@ -33,7 +34,7 @@ export class PostCacheService {
     // Attempt migration from localStorage
     const migrated = await this.db.migrateFromLocalStorage()
     if (migrated) {
-      console.log('Successfully migrated posts from localStorage to IndexedDB')
+      debug.log('Successfully migrated posts from localStorage to IndexedDB')
     }
     
     this.initialized = true

@@ -2,14 +2,15 @@ import { AtpAgent } from '@atproto/api'
 import type { Post } from '../../types/atproto'
 import { mapATProtoError } from '../../lib/errors'
 import { rateLimiters, withRateLimit } from '../../lib/rate-limiter'
+import { debug } from '@bsky/shared'
 
 // Helper to ensure agent is authenticated
 function ensureAuthenticated(agent: AtpAgent): void {
   if (!agent.session) {
-    console.error('Agent has no session:', agent)
+    debug.error('Agent has no session:', agent)
     throw new Error('Not authenticated - no session on agent')
   }
-  console.log('Agent session confirmed:', agent.session.handle)
+  debug.log('Agent session confirmed:', agent.session.handle)
 }
 
 export interface LikeResult {
@@ -34,10 +35,10 @@ class InteractionsService {
         // Ensure agent is authenticated
         ensureAuthenticated(this.agent)
         
-        console.log('Post details:', { uri: post.uri, cid: post.cid })
+        debug.log('Post details:', { uri: post.uri, cid: post.cid })
         
         const { data: session } = await this.agent.com.atproto.server.getSession()
-        console.log('Session check passed:', session.handle, session.did)
+        debug.log('Session check passed:', session.handle, session.did)
         
         const result = await this.agent.app.bsky.feed.like.create(
           { repo: session.did },
@@ -47,10 +48,10 @@ class InteractionsService {
           }
         )
         
-        console.log('Like created successfully:', result)
+        debug.log('Like created successfully:', result)
         return result
       } catch (error) {
-        console.error('Like error details:', error)
+        debug.error('Like error details:', error)
         throw mapATProtoError(error)
       }
     })

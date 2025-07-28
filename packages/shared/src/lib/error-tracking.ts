@@ -1,3 +1,5 @@
+import { debug } from '@bsky/shared'
+
 /**
  * Enhanced error tracking for local development
  * Features:
@@ -97,33 +99,33 @@ class ErrorTracker {
       ? `${icon} [${context.category.toUpperCase()}] ${errorObj.message} (×${existingError!.count})`
       : `${icon} [${context.category.toUpperCase()}] ${timestamp}`;
     
-    console.group(
+    debug.group(
       `%c${headerText}`,
       `color: ${color}; font-weight: bold; font-size: 12px`
     );
     
     if (!isRepeat) {
-      console.error('%cError:', 'font-weight: bold', errorObj.message);
+      debug.error('%cError:', 'font-weight: bold', errorObj.message);
       
       if (context.action) {
-        console.log('%cAction:', 'font-weight: bold', context.action);
+        debug.log('%cAction:', 'font-weight: bold', context.action);
       }
       
       if (context.metadata) {
-        console.log('%cMetadata:', 'font-weight: bold', context.metadata);
+        debug.log('%cMetadata:', 'font-weight: bold', context.metadata);
       }
       
       if (errorObj.stack) {
         // Format stack trace for better readability
         const formattedStack = this.formatStackTrace(errorObj.stack);
-        console.log('%cStack:', 'font-weight: bold');
-        console.log(formattedStack);
+        debug.log('%cStack:', 'font-weight: bold');
+        debug.log(formattedStack);
       }
     } else {
-      console.log(`%cRepeated ${existingError!.count} times. Last seen: ${existingError!.lastSeen}`, 'color: #666; font-style: italic');
+      debug.log(`%cRepeated ${existingError!.count} times. Last seen: ${existingError!.lastSeen}`, 'color: #666; font-style: italic');
     }
     
-    console.groupEnd();
+    debug.groupEnd();
 
     // In development, also check for common issues
     if (!isRepeat) {
@@ -195,7 +197,7 @@ class ErrorTracker {
   private checkCommonIssues(error: Error, context: ErrorContext): void {
     // Auth token expiry hint
     if (context.category === 'auth' && error.message.includes('expired')) {
-      console.warn(
+      debug.warn(
         '%c💡 Hint: Try logging out and back in to refresh your session',
         'color: #00aaff; font-style: italic'
       );
@@ -203,7 +205,7 @@ class ErrorTracker {
 
     // Rate limit hint
     if (context.category === 'network' && error.message.includes('429')) {
-      console.warn(
+      debug.warn(
         '%c💡 Hint: You hit a rate limit. Wait a few seconds before retrying',
         'color: #00aaff; font-style: italic'
       );
@@ -211,7 +213,7 @@ class ErrorTracker {
 
     // CORS hint for local development
     if (context.category === 'network' && error.message.includes('CORS')) {
-      console.warn(
+      debug.warn(
         '%c💡 Hint: CORS error - ensure you\'re using the correct API endpoint',
         'color: #00aaff; font-style: italic'
       );
@@ -225,13 +227,13 @@ class ErrorTracker {
     const sessionTime = Date.now() - this.sessionStartTime;
     const sessionMinutes = Math.floor(sessionTime / 60000);
     
-    console.group(
+    debug.group(
       '%c🐛 Error Summary',
       'color: #00aaff; font-weight: bold; font-size: 16px; padding: 4px 0'
     );
     
-    console.log(`%cSession Duration: ${sessionMinutes} minutes`, 'color: #666');
-    console.log(`%cTotal Unique Errors: ${this.errors.size}`, 'color: #666');
+    debug.log(`%cSession Duration: ${sessionMinutes} minutes`, 'color: #666');
+    debug.log(`%cTotal Unique Errors: ${this.errors.size}`, 'color: #666');
     
     // Group errors by category
     const errorsByCategory = new Map<ErrorCategory, ErrorRecord[]>();
@@ -247,7 +249,7 @@ class ErrorTracker {
       const color = this.colors[category];
       const totalCount = errors.reduce((sum, e) => sum + e.count, 0);
       
-      console.group(
+      debug.group(
         `%c${icon} ${category.toUpperCase()} (${errors.length} unique, ${totalCount} total)`,
         `color: ${color}; font-weight: bold; margin-top: 8px`
       );
@@ -257,7 +259,7 @@ class ErrorTracker {
         .sort((a, b) => b.count - a.count)
         .slice(0, 5) // Show top 5
         .forEach((error) => {
-          console.log(
+          debug.log(
             `%c  ${error.count}× ${error.message}`,
             'color: #333',
             error.action ? `[${error.action}]` : ''
@@ -265,13 +267,13 @@ class ErrorTracker {
         });
       
       if (errors.length > 5) {
-        console.log(`%c  ... and ${errors.length - 5} more`, 'color: #999; font-style: italic');
+        debug.log(`%c  ... and ${errors.length - 5} more`, 'color: #999; font-style: italic');
       }
       
-      console.groupEnd();
+      debug.groupEnd();
     });
     
-    console.groupEnd();
+    debug.groupEnd();
   }
   
   /**
@@ -279,7 +281,7 @@ class ErrorTracker {
    */
   clearErrors(): void {
     this.errors.clear();
-    console.log('%c🧹 Error history cleared', 'color: #00aaff; font-style: italic');
+    debug.log('%c🧹 Error history cleared', 'color: #00aaff; font-style: italic');
   }
   
   /**
@@ -339,7 +341,7 @@ if (typeof window !== 'undefined' && import.meta.env?.DEV) {
     c: clearErrors
   };
   
-  console.log(
+  debug.log(
     '%c🐛 Error Tracker Available',
     'color: #00aaff; font-weight: bold',
     '\n  errorTracker.summary() or errorTracker.s() - Show error summary\n' +

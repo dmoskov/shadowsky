@@ -1,3 +1,5 @@
+import { debug } from '@bsky/shared'
+
 /**
  * Utility to clean up old localStorage data after migration to IndexedDB
  * This should be run after successful migration
@@ -29,15 +31,15 @@ export function cleanupLocalStorage() {
   keysToRemove.forEach(key => {
     if (localStorage.getItem(key) !== null) {
       localStorage.removeItem(key)
-      console.log(`🧹 Removed ${key} from localStorage`)
+      debug.log(`🧹 Removed ${key} from localStorage`)
       removedCount++
     }
   })
   
   if (removedCount > 0) {
-    console.log(`✅ Cleaned up ${removedCount} localStorage keys`)
+    debug.log(`✅ Cleaned up ${removedCount} localStorage keys`)
   } else {
-    console.log('ℹ️ No localStorage keys to clean up')
+    debug.log('ℹ️ No localStorage keys to clean up')
   }
   
   return removedCount

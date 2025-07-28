@@ -2,6 +2,7 @@ import { AtpAgent } from '@atproto/api'
 import type { ProfileView, ProfileViewDetailed } from '@atproto/api/dist/client/types/app/bsky/actor/defs'
 import type { PostView } from '@atproto/api/dist/client/types/app/bsky/feed/defs'
 import { mapATProtoError } from '../../lib/errors'
+import { debug } from '@bsky/shared'
 
 export class ProfileService {
   constructor(private agent: AtpAgent) {}
@@ -123,7 +124,7 @@ export class ProfileService {
           profileMap.set(handle, profile)
         }
       } catch (error) {
-        console.error(`Failed to fetch profile for ${handle}:`, error)
+        debug.error(`Failed to fetch profile for ${handle}:`, error)
       }
     }
     
