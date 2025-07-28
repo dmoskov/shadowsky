@@ -161,7 +161,6 @@
 /* Notification item styles */
 .bsky-notification {
   @apply relative overflow-hidden;
-  background: var(--bsky-bg-secondary);
   border-bottom: 1px solid var(--bsky-border-light);
   @apply transition-all duration-200;
 }

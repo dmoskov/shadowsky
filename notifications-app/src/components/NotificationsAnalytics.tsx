@@ -392,55 +392,6 @@ export const NotificationsAnalytics: React.FC = () => {
         )}
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bsky-card p-4">
-          <div className="flex items-center justify-between mb-2">
-            <TrendingUp className="text-green-500" size={24} />
-            <span className="text-2xl font-bold">{analytics.totalEngagement}</span>
-          </div>
-          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
-            Total in {timeRange === '1d' ? '24 hours' : timeRange === '3d' ? '3 days' : timeRange === '7d' ? '7 days' : '4 weeks'}
-            {(() => {
-              const now = new Date()
-              const startDate = timeRange === '1d' ? subHours(now, 24) :
-                               timeRange === '3d' ? subDays(now, 3) :
-                               timeRange === '7d' ? subDays(now, 7) :
-                               subDays(now, 28)
-              return (
-                <span className="block text-xs mt-1">
-                  {format(startDate, 'MMM d, h:mm a')} - {format(now, 'MMM d, h:mm a')}
-                  <span className="ml-1" style={{ opacity: 0.7 }}>
-                    ({Intl.DateTimeFormat().resolvedOptions().timeZone})
-                  </span>
-                </span>
-              )
-            })()}
-          </p>
-        </div>
-        
-        <div className="bsky-card p-4">
-          <div className="flex items-center justify-between mb-2">
-            <Users className="text-blue-500" size={24} />
-            <span className="text-2xl font-bold">{analytics.uniqueUsers}</span>
-          </div>
-          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Unique Users</p>
-        </div>
-        
-        <div className="bsky-card p-4">
-          <div className="flex items-center justify-between mb-2">
-            <BarChart3 className="text-purple-500" size={24} />
-            <span className="text-2xl font-bold">
-              {timeRange === '1d' ? analytics.averagePerHour.toFixed(1) : analytics.averagePerDay.toFixed(1)}
-            </span>
-          </div>
-          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
-            {timeRange === '1d' ? 'Hourly Average' : 'Daily Average'}
-          </p>
-        </div>
-      </div>
-
-
       {/* Activity Chart */}
       <div className="bsky-card p-6" style={{
         background: 'var(--bsky-bg-secondary)',
@@ -719,6 +670,54 @@ export const NotificationsAnalytics: React.FC = () => {
               <span className="text-sm" style={{ color: 'var(--bsky-text-primary)' }}>{count} notifications from them</span>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bsky-card p-4">
+          <div className="flex items-center justify-between mb-2">
+            <TrendingUp className="text-green-500" size={24} />
+            <span className="text-2xl font-bold">{analytics.totalEngagement}</span>
+          </div>
+          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+            Total in {timeRange === '1d' ? '24 hours' : timeRange === '3d' ? '3 days' : timeRange === '7d' ? '7 days' : '4 weeks'}
+            {(() => {
+              const now = new Date()
+              const startDate = timeRange === '1d' ? subHours(now, 24) :
+                               timeRange === '3d' ? subDays(now, 3) :
+                               timeRange === '7d' ? subDays(now, 7) :
+                               subDays(now, 28)
+              return (
+                <span className="block text-xs mt-1">
+                  {format(startDate, 'MMM d, h:mm a')} - {format(now, 'MMM d, h:mm a')}
+                  <span className="ml-1" style={{ opacity: 0.7 }}>
+                    ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+                  </span>
+                </span>
+              )
+            })()}
+          </p>
+        </div>
+        
+        <div className="bsky-card p-4">
+          <div className="flex items-center justify-between mb-2">
+            <Users className="text-blue-500" size={24} />
+            <span className="text-2xl font-bold">{analytics.uniqueUsers}</span>
+          </div>
+          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Unique Users</p>
+        </div>
+        
+        <div className="bsky-card p-4">
+          <div className="flex items-center justify-between mb-2">
+            <BarChart3 className="text-purple-500" size={24} />
+            <span className="text-2xl font-bold">
+              {timeRange === '1d' ? analytics.averagePerHour.toFixed(1) : analytics.averagePerDay.toFixed(1)}
+            </span>
+          </div>
+          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+            {timeRange === '1d' ? 'Hourly Average' : 'Daily Average'}
+          </p>
         </div>
       </div>
 
