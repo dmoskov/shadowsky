@@ -51,42 +51,25 @@ const ConversationItem = React.memo(({
   const isGroup = convo.participants.size > 2
   const unreadCount = convo.replies.filter(r => !r.isRead).length
 
-  // For non-group conversations, determine the main conversation partner
-  const currentUserHandle = session?.handle
-  
+  // For non-group conversations, always show the root post author (original poster)
   let mainParticipantAvatar: string | undefined
   let mainParticipantDisplayName: string | undefined
   let mainParticipantHandle: string | undefined
   let avatarSource: string = 'unknown'
-  let isUserTheOriginalPoster: boolean | null = null
   
   if (!isGroup) {
-    // If we don't have root post author data yet, always show the replier
-    if (!convo.rootPost?.author) {
-      // No root post loaded yet, show the replier as fallback
+    // Always prefer root post author if available
+    if (convo.rootPost?.author) {
+      mainParticipantAvatar = convo.rootPost.author.avatar
+      mainParticipantDisplayName = convo.rootPost.author.displayName
+      mainParticipantHandle = convo.rootPost.author.handle
+      avatarSource = 'rootPost'
+    } else {
+      // Fallback to latest reply author if root post not loaded yet
       mainParticipantAvatar = convo.latestReply.author.avatar
       mainParticipantDisplayName = convo.latestReply.author.displayName
       mainParticipantHandle = convo.latestReply.author.handle
       avatarSource = 'latestReply-fallback'
-      // Don't determine conversation role yet - wait for data
-      isUserTheOriginalPoster = null
-    } else {
-      // We have root post author data, now we can determine the conversation role
-      isUserTheOriginalPoster = convo.rootPost.author.handle === currentUserHandle
-      
-      if (isUserTheOriginalPoster) {
-        // User posted, so show the person who replied
-        mainParticipantAvatar = convo.latestReply.author.avatar
-        mainParticipantDisplayName = convo.latestReply.author.displayName
-        mainParticipantHandle = convo.latestReply.author.handle
-        avatarSource = 'latestReply'
-      } else {
-        // Someone else posted, show them
-        mainParticipantAvatar = convo.rootPost.author.avatar
-        mainParticipantDisplayName = convo.rootPost.author.displayName
-        mainParticipantHandle = convo.rootPost.author.handle
-        avatarSource = 'rootPost'
-      }
     }
     
     // Log avatar usage
@@ -94,14 +77,12 @@ const ConversationItem = React.memo(({
       conversationIndex: filteredConversationsIndex,
       rootUri: convo.rootUri,
       avatarSource,
-      isUserTheOriginalPoster,
       hasRootPost: !!convo.rootPost,
       hasRootPostAuthor: !!convo.rootPost?.author,
       mainParticipantHandle,
       mainParticipantAvatar: !!mainParticipantAvatar,
       rootPostAuthor: convo.rootPost?.author?.handle,
-      latestReplyAuthor: convo.latestReply.author.handle,
-      currentUserHandle
+      latestReplyAuthor: convo.latestReply.author.handle
     })
   }
 
