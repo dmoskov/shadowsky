@@ -226,6 +226,126 @@ git checkout main
 - Singleton pattern for service instances
 - Proper error propagation through layers
 
+## Data Fetching Architecture
+
+### Notifications and Posts Fetching Pattern
+
+The project implements a sophisticated **local-first, rate-limited data fetching strategy** that prioritizes user experience while respecting API limits:
+
+#### 1. **Multi-Tier Storage System**
+
+**IndexedDB (Primary Storage)**
+- **NotificationCacheService**: Stores notification data in IndexedDB for high-performance access
+- **PostCacheService**: Stores post data with automatic migration from localStorage
+- **PostStorageDB**: Low-level IndexedDB wrapper with efficient querying
+
+**LocalStorage (Fallback)**
+- **PostCache**: Backward-compatible wrapper that tries IndexedDB first, falls back to localStorage
+- **ExtendedFetchCache**: Stores metadata about fetch operations (timestamps, counts)
+
+**React Query Cache (Memory)**
+- In-memory cache for active session
+- Provides instant access to loaded data
+- Handles pagination and infinite scrolling
+
+#### 2. **Data Fetching Flow**
+
+```
+1. Check React Query Cache (instant)
+   ↓ (miss)
+2. Check IndexedDB (async, ~10ms)
+   ↓ (miss)
+3. Check LocalStorage (sync, ~1ms)
+   ↓ (miss)
+4. Fetch from API (rate-limited)
+   ↓
+5. Store in all caches
+```
+
+#### 3. **Rate Limiting Strategy**
+
+**Adaptive Rate Limiting**
+- **Initial Burst**: 50 tokens for fast initial load
+- **Gradual Slowdown**: After 25 requests, delays increase
+- **Token Bucket Algorithm**: Ensures sustainable API usage
+
+**Different Limiters for Different Operations**:
+- **Post Fetching**: 20 tokens, 0.5/sec refill, 50ms initial delay
+- **Notifications**: 60 tokens, 2/sec refill, 200ms initial delay
+- **Profile Fetching**: 20 tokens, 0.33/sec refill, 200ms delay
+- **General API**: 30 tokens, 0.5/sec refill, 100ms delay
+
+#### 4. **Prefetching and Optimization**
+
+**Notification Loading**
+1. On app start, automatically fetches 4 weeks of notifications
+2. Stores in IndexedDB for instant future loads
+3. Shows progress bar during initial fetch
+
+**Post Prefetching for Conversations**
+1. When notifications load, identifies all reply notifications
+2. Extracts post URIs (both replies and root posts)
+3. Batch fetches missing posts in background
+4. Caches for instant conversation rendering
+
+**Smart Caching**
+- Posts cached for 7 days (rarely change)
+- Cache checks happen before any API call
+- Async IndexedDB operations don't block UI
+
+#### 5. **Implementation Examples**
+
+**ConversationsSimple Component**:
+```typescript
+// 1. Gets notifications from React Query cache (instant)
+const extendedData = queryClient.getQueryData(['notifications-extended'])
+
+// 2. Fetches posts using smart hook
+const { data: posts } = useNotificationPosts(replyNotifications)
+// This hook:
+// - Checks all cache layers
+// - Only fetches missing posts
+// - Uses rate limiting
+// - Progressively loads more
+```
+
+**Enhanced Thread Service**:
+```typescript
+// Thread cache with 5-minute timeout
+private threadCache = new Map<string, { data: ThreadNode; timestamp: number }>()
+
+// Check cache first
+const cached = this.threadCache.get(uri)
+if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+  return cached.data
+}
+```
+
+#### 6. **Best Practices for Future Development**
+
+1. **Always Check Cache First**
+   - Use `PostCache.getCachedPostsAsync()` for best performance
+   - Check IndexedDB before making API calls
+
+2. **Batch Operations**
+   - Fetch posts in batches of 25 (API limit)
+   - Group related operations to minimize calls
+
+3. **Progressive Enhancement**
+   - Load initial data from cache instantly
+   - Fetch updates in background
+   - Show UI immediately with cached data
+
+4. **Rate Limit Awareness**
+   - Use the appropriate rate limiter for each operation
+   - Never bypass rate limiting
+   - Monitor rate limiter stats
+
+5. **Error Handling**
+   - Gracefully degrade from IndexedDB to localStorage
+   - Continue operation even if caching fails
+   - Log errors but don't block user experience
+
 ## Known Issues & Fixes
 1. **Safari localhost connection**: Use `http://127.0.0.1:5173/` instead of `localhost`
 2. **Post text location**: Posts use `record.value.text` not `record.text`

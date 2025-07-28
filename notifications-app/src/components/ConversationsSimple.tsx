@@ -30,6 +30,8 @@ interface ThreadNode {
 }
 
 export const ConversationsSimple: React.FC = () => {
+  console.log('[ConversationsSimple] Component rendering')
+  
   const { } = useAuth()
   const [selectedConvo, setSelectedConvo] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -38,6 +40,7 @@ export const ConversationsSimple: React.FC = () => {
 
   // Get extended notifications from cache
   const extendedData = queryClient.getQueryData(['notifications-extended']) as any
+  console.log('[ConversationsSimple] Extended data:', !!extendedData, extendedData?.pages?.length)
   
   // Extract reply notifications
   const replyNotifications = React.useMemo(() => {

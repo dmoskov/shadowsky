@@ -1,6 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import type { AppBskyFeedDefs } from '@atproto/api'
-import { ThreadService, ThreadViewPost } from '@bsky/shared'
+import { ThreadService, ThreadViewPost } from '../../../packages/shared/src/index.ts'
 
 export interface ThreadNode {
   post: ThreadViewPost
