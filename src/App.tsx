@@ -25,7 +25,7 @@ import {
 // Import directly since they're not in the index
 import { Settings } from './components/settings/Settings'
 import { Analytics } from './components/analytics/Analytics'
-import { Conversations } from './components/conversations/Conversations'
+import { ConversationsEnhanced as Conversations } from './components/conversations/ConversationsEnhanced'
 import { AdminDashboard } from './components/admin/AdminDashboard'
 // These components are not in the index export
 import { MobileMenu } from './components/core/MobileMenu'

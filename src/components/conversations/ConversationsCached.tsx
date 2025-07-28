@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageSquare, Send, Search, ArrowLeft, Users, User, Clock, MoreVertical } from 'lucide-react'
+import { MessageSquare, Send, Search, ArrowLeft, Users, User, Clock, MoreVertical, RefreshCw } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { atClient } from '../../services/atproto'
@@ -8,10 +8,11 @@ import { formatDistanceToNow } from 'date-fns'
 import { ChatBskyConvoDefs } from '@atproto/api'
 import { Loader2 } from 'lucide-react'
 import { useToast } from '../ui/Toast'
+import { ConversationCacheManager } from '../../utils/conversationCache'
 
 type Conversation = ChatBskyConvoDefs.ConvoView
 
-export const Conversations: React.FC = () => {
+export const ConversationsCached: React.FC = () => {
   const { agent } = useAuth()
   const toast = useToast()
   const queryClient = useQueryClient()
@@ -21,7 +22,7 @@ export const Conversations: React.FC = () => {
   const messageEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // Fetch conversations list
+  // Fetch conversations list with caching
   const { data: conversations, isLoading: loadingConvos, error: convosError } = useQuery({
     queryKey: ['conversations'],
     queryFn: async () => {
@@ -29,7 +30,12 @@ export const Conversations: React.FC = () => {
       
       try {
         const response = await agent.api.chat.bsky.convo.listConvos({})
-        return response.data.convos
+        const convos = response.data.convos
+        
+        // Save to cache
+        ConversationCacheManager.saveConversations(convos)
+        
+        return convos
       } catch (error: any) {
         // If chat API is not available, return empty array
         if (error?.status === 400 || error?.status === 501) {
@@ -40,9 +46,15 @@ export const Conversations: React.FC = () => {
     },
     enabled: !!agent,
     refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 5 * 60 * 1000, // Consider data stale after 5 minutes
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    // Use cached data as initial data
+    initialData: () => ConversationCacheManager.loadConversations() || undefined,
+    // Show cached data while fetching
+    placeholderData: (previousData) => previousData,
   })
 
-  // Fetch messages for selected conversation
+  // Fetch messages for selected conversation with caching
   const { data: messages, isLoading: loadingMessages } = useQuery({
     queryKey: ['conversation-messages', selectedConvo],
     queryFn: async () => {
@@ -53,7 +65,12 @@ export const Conversations: React.FC = () => {
           convoId: selectedConvo,
           limit: 50,
         })
-        return response.data.messages
+        const msgs = response.data.messages
+        
+        // Save to cache
+        ConversationCacheManager.saveMessages(selectedConvo, msgs)
+        
+        return msgs
       } catch (error: any) {
         if (error?.status === 400 || error?.status === 501) {
           return []
@@ -63,6 +80,12 @@ export const Conversations: React.FC = () => {
     },
     enabled: !!agent && !!selectedConvo,
     refetchInterval: 5000, // Refresh every 5 seconds when in a conversation
+    staleTime: 30 * 1000, // Consider data stale after 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    // Use cached data as initial data
+    initialData: () => selectedConvo ? ConversationCacheManager.loadMessages(selectedConvo) || undefined : undefined,
+    // Show cached data while fetching
+    placeholderData: (previousData) => previousData,
   })
 
   // Send message mutation
@@ -134,8 +157,8 @@ export const Conversations: React.FC = () => {
     }
   }, [messages])
 
-  // Show loading state
-  if (loadingConvos) {
+  // Show loading state only if no cached data
+  if (loadingConvos && !conversations) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-900">
         <div className="text-center">
@@ -164,13 +187,32 @@ export const Conversations: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-900">
       {/* Left Panel - Conversations List */}
-      <div className={`${selectedConvo ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-80 border-r border-gray-800`}>
+      <div className={`${selectedConvo ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-96 border-r border-gray-800`}>
         {/* Search Header */}
         <div className="p-4 border-b border-gray-800">
-          <h1 className="text-lg font-bold text-gray-100 mb-3 flex items-center gap-2">
-            <MessageSquare size={20} />
-            Messages
-          </h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-xl font-bold text-gray-100 flex items-center gap-2">
+              <MessageSquare size={24} />
+              Conversations
+            </h1>
+            <div className="flex items-center gap-2">
+              {loadingConvos && conversations && (
+                <Loader2 size={16} className="animate-spin text-gray-400" />
+              )}
+              <button
+                onClick={() => {
+                  ConversationCacheManager.clearCache()
+                  queryClient.invalidateQueries({ queryKey: ['conversations'] })
+                  queryClient.invalidateQueries({ queryKey: ['conversation-messages'] })
+                  toast.success('Cache cleared')
+                }}
+                className="p-1.5 hover:bg-gray-800 rounded transition-colors"
+                title="Clear cache and refresh"
+              >
+                <RefreshCw size={16} className="text-gray-400" />
+              </button>
+            </div>
+          </div>
           <div className="relative">
             <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
@@ -200,92 +242,47 @@ export const Conversations: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   onClick={() => setSelectedConvo(convo.id)}
-                  className={`w-full text-left p-3 hover:bg-gray-800 transition-all duration-200 border-b border-gray-800
-                            ${isSelected ? 'bg-gray-800 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent'}
-                            hover:border-l-blue-400`}
+                  className={`w-full text-left p-4 hover:bg-gray-800 transition-colors border-b border-gray-800
+                            ${isSelected ? 'bg-gray-800' : ''}`}
                 >
                   <div className="flex items-center gap-3">
                     {/* Avatar */}
                     <div className="relative">
                       {isGroup ? (
-                        <div className="relative w-16 h-16">
-                          {/* Overlapping avatars for group */}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            {otherMembers.slice(0, 2).map((member, idx) => (
-                              <div 
-                                key={member.did}
-                                className={`absolute w-10 h-10 rounded-full border-2 border-gray-900 overflow-hidden
-                                          ${idx === 0 ? '-left-1' : 'left-3'} ${idx === 0 ? 'z-10' : 'z-20'}`}
-                              >
-                                {member.avatar ? (
-                                  <img 
-                                    src={member.avatar} 
-                                    alt={member.displayName || member.handle}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full bg-gray-600 flex items-center justify-center text-gray-200 font-medium">
-                                    {member.displayName?.[0] || member.handle?.[0] || 'U'}
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                          {otherMembers.length > 2 && (
-                            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gray-700 rounded-full 
-                                          flex items-center justify-center text-xs text-gray-300 font-medium 
-                                          border-2 border-gray-900">
-                              +{otherMembers.length - 2}
-                            </div>
-                          )}
+                        <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center">
+                          <Users size={24} className="text-gray-400" />
                         </div>
                       ) : (
-                        <div className="relative">
-                          <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-600">
-                            {otherMembers[0]?.avatar ? (
-                              <img 
-                                src={otherMembers[0].avatar} 
-                                alt={otherMembers[0].displayName || otherMembers[0].handle}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-200 font-medium text-xl">
-                                {otherMembers[0]?.displayName?.[0] || otherMembers[0]?.handle?.[0] || 'U'}
-                              </div>
-                            )}
-                          </div>
-                          {/* Online status indicator */}
-                          <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full 
-                                        border-2 border-gray-900" />
+                        <div className="w-12 h-12 rounded-full bg-gray-600 
+                                      flex items-center justify-center text-gray-200 font-medium">
+                          {otherMembers[0]?.displayName?.[0] || otherMembers[0]?.handle?.[0] || 'U'}
                         </div>
                       )}
                       {convo.unreadCount > 0 && (
-                        <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full 
-                                      flex items-center justify-center text-xs text-white font-bold
-                                      shadow-lg">
-                          {convo.unreadCount > 9 ? '9+' : convo.unreadCount}
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full 
+                                      flex items-center justify-center text-xs text-white font-medium">
+                          {convo.unreadCount}
                         </div>
                       )}
                     </div>
 
-                    {/* Content - Minimal text */}
+                    {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-semibold text-gray-100 truncate text-sm">
+                        <h3 className="font-medium text-gray-100 truncate">
                           {isGroup 
-                            ? `Group (${otherMembers.length})`
-                            : (otherMembers[0]?.displayName || `@${otherMembers[0]?.handle}` || 'Unknown')
+                            ? `${otherMembers.map(m => m.displayName || m.handle).join(', ')}`
+                            : (otherMembers[0]?.displayName || otherMembers[0]?.handle || 'Unknown')
                           }
                         </h3>
-                        {convo.lastMessage?.sentAt && (
-                          <span className="text-xs text-gray-500">
-                            {formatDistanceToNow(new Date(convo.lastMessage.sentAt), { addSuffix: true }).replace('about ', '')}
-                          </span>
-                        )}
+                        <span className="text-xs text-gray-400">
+                          {convo.lastMessage?.sentAt 
+                            ? formatDistanceToNow(new Date(convo.lastMessage.sentAt), { addSuffix: true })
+                            : ''
+                          }
+                        </span>
                       </div>
-                      <p className="text-xs text-gray-500 truncate leading-relaxed">
-                        {lastMessage}
-                      </p>
+                      <p className="text-sm text-gray-400 truncate">{lastMessage}</p>
                     </div>
                   </div>
                 </motion.button>
@@ -315,44 +312,14 @@ export const Conversations: React.FC = () => {
 
                 return (
                   <>
-                    {isGroup ? (
-                      <div className="relative w-10 h-10">
-                        {/* Stack first two avatars */}
-                        {otherMembers.slice(0, 2).map((member, idx) => (
-                          <div 
-                            key={member.did}
-                            className={`absolute w-8 h-8 rounded-full border-2 border-gray-800 overflow-hidden
-                                      ${idx === 0 ? '-left-1' : 'left-2'} ${idx === 0 ? 'z-10' : 'z-20'}`}
-                          >
-                            {member.avatar ? (
-                              <img 
-                                src={member.avatar} 
-                                alt={member.displayName || member.handle}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gray-600 flex items-center justify-center text-gray-200 text-sm font-medium">
-                                {member.displayName?.[0] || member.handle?.[0] || 'U'}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-600">
-                        {otherMembers[0]?.avatar ? (
-                          <img 
-                            src={otherMembers[0].avatar} 
-                            alt={otherMembers[0].displayName || otherMembers[0].handle}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-200 font-medium">
-                            {otherMembers[0]?.displayName?.[0] || otherMembers[0]?.handle?.[0] || 'U'}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <div className="w-10 h-10 rounded-full bg-gray-600 
+                                  flex items-center justify-center text-gray-200 font-medium">
+                      {isGroup ? (
+                        <Users size={20} />
+                      ) : (
+                        otherMembers[0]?.displayName?.[0] || otherMembers[0]?.handle?.[0] || 'U'
+                      )}
+                    </div>
                     <div>
                       <h2 className="font-semibold text-gray-100">
                         {isGroup 
@@ -376,46 +343,22 @@ export const Conversations: React.FC = () => {
 
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {loadingMessages ? (
+            {loadingMessages && !messages ? (
               <div className="flex items-center justify-center h-full">
                 <Loader2 size={24} className="animate-spin text-gray-400" />
               </div>
             ) : (
               <>
-                {messages?.map((message, index) => {
+                {messages?.map((message) => {
                   const isMe = message.sender?.did === agent?.did
-                  const showAvatar = !isMe && (index === 0 || messages[index - 1]?.sender?.did !== message.sender?.did)
-                  const member = conversations?.find(c => c.id === selectedConvo)
-                    ?.members.find(m => m.did === message.sender?.did)
 
                   return (
                     <motion.div
                       key={message.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`flex gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}
+                      className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
                     >
-                      {/* Avatar for other users */}
-                      {!isMe && (
-                        <div className="w-8 h-8">
-                          {showAvatar && member && (
-                            <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-700">
-                              {member.avatar ? (
-                                <img 
-                                  src={member.avatar} 
-                                  alt={member.displayName || member.handle}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-300 text-sm font-medium">
-                                  {member.displayName?.[0] || member.handle?.[0] || 'U'}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
                       <div className={`max-w-[70%] ${isMe ? 'order-2' : 'order-1'}`}>
                         <div className={`rounded-2xl px-4 py-2 ${
                           isMe 
@@ -424,8 +367,8 @@ export const Conversations: React.FC = () => {
                         }`}>
                           <p className="break-words">{message.text}</p>
                         </div>
-                        <div className={`text-xs text-gray-500 mt-1 ${isMe ? 'text-right mr-1' : 'text-left ml-1'}`}>
-                          {formatDistanceToNow(new Date(message.sentAt), { addSuffix: true }).replace('about ', '')}
+                        <div className={`text-xs text-gray-400 mt-1 ${isMe ? 'text-right' : 'text-left'}`}>
+                          {formatDistanceToNow(new Date(message.sentAt), { addSuffix: true })}
                         </div>
                       </div>
                     </motion.div>

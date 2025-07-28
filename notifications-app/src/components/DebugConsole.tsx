@@ -5,6 +5,7 @@ import { NotificationObjectCache } from '../utils/notificationObjectCache'
 import { PostCache } from '../utils/postCache'
 import { StorageManager } from '../utils/storageManager'
 import { NotificationCacheService } from '../services/notification-cache-service'
+import { PostCacheService } from '../services/post-cache-service'
 
 interface StorageBreakdown {
   key: string
@@ -25,6 +26,8 @@ export function DebugConsole() {
   const [activeTab, setActiveTab] = useState<'cache' | 'storage'>('cache')
   const [indexedDBStats, setIndexedDBStats] = useState<any>(null)
   const [indexedDBReady, setIndexedDBReady] = useState(false)
+  const [postIndexedDBStats, setPostIndexedDBStats] = useState<any>(null)
+  const [postIndexedDBReady, setPostIndexedDBReady] = useState(false)
   
   // Check for debug mode
   const urlParams = new URLSearchParams(window.location.search)
@@ -47,6 +50,16 @@ export function DebugConsole() {
         console.error('Failed to get IndexedDB stats:', error)
       }
     }
+    
+    // Get Post IndexedDB stats if available
+    if (postIndexedDBReady) {
+      try {
+        const postStats = await PostCache.getIndexedDBCacheInfo()
+        setPostIndexedDBStats(postStats)
+      } catch (error) {
+        console.error('Failed to get Post IndexedDB stats:', error)
+      }
+    }
   }
 
   useEffect(() => {
@@ -56,6 +69,11 @@ export function DebugConsole() {
         const cacheService = NotificationCacheService.getInstance()
         await cacheService.init()
         setIndexedDBReady(true)
+        
+        // Also initialize Post IndexedDB
+        const postCacheService = PostCacheService.getInstance()
+        await postCacheService.init()
+        setPostIndexedDBReady(true)
       } catch (error) {
         console.error('Failed to initialize IndexedDB:', error)
       }
@@ -71,7 +89,7 @@ export function DebugConsole() {
       const interval = setInterval(updateMetrics, 5000)
       return () => clearInterval(interval)
     }
-  }, [showDetails, indexedDBReady])
+  }, [showDetails, indexedDBReady, postIndexedDBReady])
 
   const handleClearCache = (type: 'priority' | 'all' | 'posts' | 'notifications' | 'everything') => {
     switch (type) {
@@ -403,7 +421,7 @@ export function DebugConsole() {
                       alignItems: 'center'
                     }}>
                       <span style={{ fontSize: '12px', color: 'var(--bsky-text-secondary)' }}>
-                        Post content
+                        Post content (localStorage)
                       </span>
                       <span style={{ 
                         fontSize: '11px', 
@@ -456,6 +474,43 @@ export function DebugConsole() {
                         indexedDBStats.oldestNotification && indexedDBStats.newestNotification
                           ? `${Math.floor((indexedDBStats.newestNotification.getTime() - indexedDBStats.oldestNotification.getTime()) / (1000 * 60 * 60 * 24))} days`
                           : 'No data'
+                      }
+                    </div>
+                  </div>
+                )}
+                
+                {postIndexedDBStats && postIndexedDBStats.hasCache && (
+                  <div style={{ 
+                    padding: '8px',
+                    background: 'var(--bsky-bg-primary)',
+                    borderRadius: '4px',
+                    border: '1px solid var(--bsky-success)'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <span style={{ fontSize: '12px', color: 'var(--bsky-text-secondary)' }}>
+                        Post IndexedDB Storage
+                      </span>
+                      <Package size={14} style={{ color: 'var(--bsky-success)' }} />
+                    </div>
+                    <div style={{ 
+                      fontSize: '14px', 
+                      color: 'var(--bsky-text-primary)',
+                      marginTop: '2px'
+                    }}>
+                      {postIndexedDBStats.postCount.toLocaleString()} posts
+                    </div>
+                    <div style={{ 
+                      fontSize: '11px', 
+                      color: 'var(--bsky-text-secondary)',
+                      marginTop: '2px'
+                    }}>
+                      {postIndexedDBStats.lastUpdate
+                        ? `Updated ${Math.floor((Date.now() - postIndexedDBStats.lastUpdate.getTime()) / (1000 * 60 * 60))}h ago`
+                        : 'No data'
                       }
                     </div>
                   </div>

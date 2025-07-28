@@ -13,6 +13,8 @@ import { NotificationsAnalytics } from './components/NotificationsAnalytics'
 import { RateLimitStatus } from './components/RateLimitStatus'
 import { Conversations } from './components/Conversations'
 import { DebugConsole } from './components/DebugConsole'
+import { NotificationStorageDB } from './services/notification-storage-db'
+import { cleanupLocalStorage } from './utils/cleanupLocalStorage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +41,26 @@ const queryClient = new QueryClient({
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  
+  // Run one-time migration on app load
+  useEffect(() => {
+    const runMigration = async () => {
+      try {
+        const db = new NotificationStorageDB()
+        await db.init()
+        const migrated = await db.migrateFromLocalStorage()
+        if (migrated) {
+          console.log('✅ Successfully migrated notifications from localStorage to IndexedDB')
+          // Clean up remaining localStorage keys
+          cleanupLocalStorage()
+        }
+      } catch (error) {
+        console.error('Failed to run migration:', error)
+      }
+    }
+    
+    runMigration()
+  }, [])
 
   if (isLoading) {
     return (

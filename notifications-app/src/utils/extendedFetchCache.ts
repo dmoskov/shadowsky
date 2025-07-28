@@ -1,7 +1,7 @@
 /**
- * Manages metadata and data for extended notification fetches (4-week downloads)
+ * Manages metadata for extended notification fetches (4-week downloads)
  * Tracks when the user last performed a full fetch to avoid unnecessary re-prompts
- * Persists notification data to localStorage (up to 1MB) for faster loads
+ * Note: Actual notification data is stored in IndexedDB, not localStorage
  */
 
 interface ExtendedFetchMetadata {
@@ -129,8 +129,8 @@ export class ExtendedFetchCache {
   }
 
   /**
-   * Save notification data along with metadata
-   * Will only save if data size is under 1MB
+   * @deprecated No longer saves data to localStorage - use IndexedDB instead
+   * This method is kept only for backward compatibility during migration
    */
   static saveData(
     pages: Array<{ notifications: any[], cursor?: string }>,
@@ -191,8 +191,8 @@ export class ExtendedFetchCache {
   }
 
   /**
-   * Load saved notification data from localStorage
-   * Returns null if data is stale, missing, or invalid
+   * @deprecated No longer loads data from localStorage - use IndexedDB instead
+   * This method is kept only for backward compatibility during migration
    */
   static loadData(): ExtendedFetchData | null {
     try {

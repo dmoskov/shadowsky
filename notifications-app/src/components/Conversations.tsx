@@ -399,9 +399,10 @@ export const Conversations: React.FC = () => {
         ? atUriToBskyUrl(post.uri, author.handle) 
         : notification ? getNotificationUrl(notification) : null
 
-      // Handle root node without post (loading state)
-      // Only show loading if we're actually loading root posts and this is the first render
-      if (node.isRoot && !post && isLoadingRootPosts && rootPostUris.includes(selectedConversation?.rootUri || '')) {
+      // Handle root node without post
+      if (node.isRoot && !post) {
+        const isLoadingThisPost = isLoadingRootPosts && rootPostUris.includes(selectedConversation?.rootUri || '')
+        
         return (
           <div key={selectedConversation?.rootUri || Math.random()} className="mb-4">
             <div className="flex-1 p-4 rounded-lg" 
@@ -420,10 +421,23 @@ export const Conversations: React.FC = () => {
                 </span>
               </div>
               <div className="flex items-center justify-center py-8">
-                <Loader2 size={24} className="animate-spin" style={{ color: 'var(--bsky-text-tertiary)' }} />
-                <span className="ml-2 text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
-                  Loading original post...
-                </span>
+                {isLoadingThisPost ? (
+                  <>
+                    <Loader2 size={24} className="animate-spin" style={{ color: 'var(--bsky-text-tertiary)' }} />
+                    <span className="ml-2 text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                      Loading original post...
+                    </span>
+                  </>
+                ) : (
+                  <div className="text-center">
+                    <p className="text-sm mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>
+                      Original post unavailable
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                      The post may have been deleted or is not accessible
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
             {/* Render children even if root is loading */}
@@ -705,6 +719,11 @@ export const Conversations: React.FC = () => {
           </div>
           <p className="text-xs mt-2" style={{ color: 'var(--bsky-text-secondary)' }}>
             Showing {filteredConversations.length} conversation{filteredConversations.length !== 1 ? 's' : ''} from {replyNotifications.length} reply notifications
+            {isLoadingRootPosts && rootPostUris.length > 0 && (
+              <span className="ml-2 text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                (Loading {rootPostUris.length} original posts...)
+              </span>
+            )}
             {isFetchingNextPage && !isLoading && ' (loading more...)'}
           </p>
           <p className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--bsky-text-tertiary)' }}>

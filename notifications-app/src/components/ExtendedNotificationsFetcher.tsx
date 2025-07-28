@@ -123,32 +123,8 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
         }
       }
       
-      // Fall back to localStorage if no IndexedDB data
-      const persistedData = ExtendedFetchCache.loadData()
-      if (persistedData) {
-        console.log('📊 Loading extended notifications from localStorage')
-        // Set the data in React Query cache
-        queryClient.setQueryData(['notifications-extended'], {
-          pages: persistedData.pages,
-          pageParams: [undefined, ...persistedData.pages.slice(0, -1).map(p => p.cursor)]
-        })
-        
-        // Update progress state
-        const allNotifications = persistedData.pages.flatMap(page => page.notifications)
-        if (allNotifications.length > 0) {
-          const oldestNotification = allNotifications[allNotifications.length - 1]
-          const oldestDate = new Date(oldestNotification.indexedAt)
-          const daysReached = Math.floor((new Date().getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24))
-          
-          setProgress({
-            totalNotifications: allNotifications.length,
-            daysReached,
-            oldestDate
-          })
-          
-          setLoadedFromStorage(true)
-        }
-      }
+      // No longer fall back to localStorage - IndexedDB is our only source
+      console.log('📊 No extended notifications found in IndexedDB')
     }
     
     loadCachedData()
@@ -305,9 +281,9 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           console.log('✅ Saved to IndexedDB')
         }
         
-        // Also save to localStorage for backward compatibility
-        ExtendedFetchCache.saveData(
-          finalData.pages,
+        // No longer save to localStorage - IndexedDB is our primary storage
+        // ExtendedFetchCache metadata is still useful for tracking fetch times
+        ExtendedFetchCache.saveMetadata(
           allNotifications.length,
           oldestDate,
           newestDate,

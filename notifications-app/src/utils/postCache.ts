@@ -1,4 +1,5 @@
 import type { AppBskyFeedDefs } from '@atproto/api'
+import { PostCacheService } from '../services/post-cache-service'
 
 type Post = AppBskyFeedDefs.PostView
 
@@ -12,17 +13,47 @@ interface CachedPostData {
   posts: Record<string, Post> // URI -> Post mapping
 }
 
+/**
+ * PostCache - Backward compatible wrapper around PostCacheService
+ * This class now delegates to IndexedDB but maintains the same synchronous API
+ * for backward compatibility. New code should use PostCacheService directly.
+ */
 export class PostCache {
+  private static cacheService = PostCacheService.getInstance()
+  private static initPromise: Promise<void> | null = null
+  
   private static getCacheKey(): string {
     return `${POST_CACHE_KEY}${POST_CACHE_VERSION}`
   }
+  
+  private static ensureInit(): Promise<void> {
+    if (!this.initPromise) {
+      this.initPromise = this.cacheService.init().catch(error => {
+        console.error('Failed to initialize PostCacheService:', error)
+      })
+    }
+    return this.initPromise
+  }
 
   static save(posts: Post[]): void {
+    // Fire and forget - save to IndexedDB asynchronously
+    this.ensureInit().then(() => {
+      return this.cacheService.cachePosts(posts)
+    }).then(() => {
+      console.log(`📮 Cached ${posts.length} posts to IndexedDB`)
+    }).catch(error => {
+      console.error('Failed to cache posts to IndexedDB:', error)
+      // Fall back to localStorage on error
+      this.saveToLocalStorage(posts)
+    })
+  }
+  
+  private static saveToLocalStorage(posts: Post[]): void {
     try {
       const cacheKey = this.getCacheKey()
       
       // Load existing cache to merge with new posts
-      const existingData = this.load()
+      const existingData = this.loadFromLocalStorage()
       const postMap = existingData?.posts || {}
       
       // Add new posts to the map
@@ -39,9 +70,9 @@ export class PostCache {
       // Store the cache
       localStorage.setItem(cacheKey, JSON.stringify(data))
       
-      console.log(`📮 Cached ${posts.length} new posts (total: ${Object.keys(postMap).length})`)
+      console.log(`📮 Cached ${posts.length} new posts to localStorage (fallback)`)
     } catch (error) {
-      console.error('Failed to cache posts:', error)
+      console.error('Failed to cache posts to localStorage:', error)
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
         // Clear old post cache if storage is full
         this.clear()
@@ -50,6 +81,13 @@ export class PostCache {
   }
 
   static load(): CachedPostData | null {
+    // This method is synchronous for backward compatibility
+    // It returns localStorage data if available, otherwise null
+    // The migration to IndexedDB happens asynchronously in the background
+    return this.loadFromLocalStorage()
+  }
+  
+  private static loadFromLocalStorage(): CachedPostData | null {
     try {
       const cacheKey = this.getCacheKey()
       const data = localStorage.getItem(cacheKey)
@@ -108,7 +146,15 @@ export class PostCache {
     try {
       const cacheKey = this.getCacheKey()
       localStorage.removeItem(cacheKey)
-      console.log('Cleared post cache')
+      
+      // Also clear IndexedDB asynchronously
+      this.ensureInit().then(() => {
+        return this.cacheService.clearCache()
+      }).catch(error => {
+        console.error('Failed to clear IndexedDB post cache:', error)
+      })
+      
+      console.log('🗑️ Cleared post cache')
     } catch (error) {
       console.error('Failed to clear post cache:', error)
     }
@@ -144,6 +190,40 @@ export class PostCache {
       hasCache: true,
       postCount: Object.keys(data.posts).length,
       cacheAge: ageStr
+    }
+  }
+  
+  /**
+   * Get IndexedDB cache info asynchronously
+   * This is a new method for components that can handle async operations
+   */
+  static async getIndexedDBCacheInfo(): Promise<{
+    hasCache: boolean
+    postCount: number
+    oldestPost: Date | null
+    newestPost: Date | null
+    lastUpdate: Date | null
+  }> {
+    try {
+      await this.ensureInit()
+      const stats = await this.cacheService.getCacheStats()
+      
+      return {
+        hasCache: stats.totalPosts > 0,
+        postCount: stats.totalPosts,
+        oldestPost: stats.oldestPost,
+        newestPost: stats.newestPost,
+        lastUpdate: stats.lastUpdate
+      }
+    } catch (error) {
+      console.error('Failed to get IndexedDB cache info:', error)
+      return {
+        hasCache: false,
+        postCount: 0,
+        oldestPost: null,
+        newestPost: null,
+        lastUpdate: null
+      }
     }
   }
 }

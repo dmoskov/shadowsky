@@ -357,6 +357,40 @@ export class NotificationStorageDB {
       }
       
       const parsed = JSON.parse(oldData)
+      
+      // Handle the actual data structure: { metadata: {...}, pages: [...], version: "v1" }
+      if (parsed.pages && Array.isArray(parsed.pages)) {
+        // Extract all notifications from all pages
+        const allNotifications: Notification[] = []
+        for (const page of parsed.pages) {
+          if (page.notifications && Array.isArray(page.notifications)) {
+            allNotifications.push(...page.notifications)
+          }
+        }
+        
+        if (allNotifications.length > 0) {
+          await this.saveNotifications(allNotifications)
+          
+          // Save metadata
+          await this.saveMetadata({
+            id: 'main',
+            lastFetch: parsed.metadata?.lastFetch || Date.now(),
+            pages: parsed.pages.map((p: any) => ({
+              cursor: p.cursor,
+              count: p.notifications?.length || 0
+            })),
+            totalCount: allNotifications.length
+          })
+          
+          // Remove old data
+          localStorage.removeItem('bsky_extended_fetch_data_v1')
+          
+          console.log(`Migrated ${allNotifications.length} notifications from localStorage to IndexedDB`)
+          return true
+        }
+      }
+      
+      // Also check for the old format just in case
       if (parsed.notifications && Array.isArray(parsed.notifications)) {
         await this.saveNotifications(parsed.notifications)
         
@@ -371,7 +405,7 @@ export class NotificationStorageDB {
         // Remove old data
         localStorage.removeItem('bsky_extended_fetch_data_v1')
         
-        console.log(`Migrated ${parsed.notifications.length} notifications to IndexedDB`)
+        console.log(`Migrated ${parsed.notifications.length} notifications to IndexedDB (old format)`)
         return true
       }
     } catch (error) {

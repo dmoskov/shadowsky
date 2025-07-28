@@ -4,6 +4,7 @@ import { TrendingUp, Users, Heart, MessageCircle, BarChart3, Bell, Clock, Repeat
 import { useAuth } from '../contexts/AuthContext'
 import { format, subDays, startOfDay, subHours } from 'date-fns'
 import { ExtendedNotificationsFetcher } from './ExtendedNotificationsFetcher'
+import { useExtendedNotifications } from '../hooks/useExtendedNotifications'
 
 type TimeRange = '1d' | '3d' | '7d' | '4w'
 
@@ -13,9 +14,8 @@ export const NotificationsAnalytics: React.FC = () => {
   const [timeRange, setTimeRange] = React.useState<TimeRange>('7d')
   
 
-  // Check if we have extended data available
-  const extendedData = queryClient.getQueryData(['notifications-extended']) as any
-  const hasExtendedData = extendedData?.pages?.length > 0
+  // Check if we have extended data available (from memory or IndexedDB)
+  const { extendedData, hasExtendedData } = useExtendedNotifications()
 
   // Query for current stats - only fetch if we don't have extended data
   const { data: currentStats, isLoading: isLoadingStats } = useQuery({
@@ -64,7 +64,7 @@ export const NotificationsAnalytics: React.FC = () => {
         }
         
         // Safety limit to prevent infinite loops
-        if (allNotifications.length > 1000) {
+        if (allNotifications.length > 5000) {
           hasMoreToFetch = false
         }
       }
