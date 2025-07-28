@@ -602,22 +602,8 @@ export const ConversationsSimple: React.FC = () => {
     })
   }
 
-  // Don't show loading if we have data - render immediately
-  // Only show loading on very first load when there's no extended data at all
-  if (!extendedData) {
-    return (
-      <div className="flex items-center justify-center h-screen" style={{ background: 'var(--bsky-bg-primary)' }}>
-        <div className="text-center">
-          <Loader2 size={32} className="animate-spin mb-4 mx-auto" style={{ color: 'var(--bsky-primary)' }} />
-          <p style={{ color: 'var(--bsky-text-secondary)' }}>Loading conversations...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Don't show empty state immediately - render the UI even if no conversations yet
-  // This prevents flashing when data is loading
-
+  // Always render the UI immediately, even if data is still loading
+  // This provides a non-blocking experience
   return (
     <div className="flex h-[calc(100vh-4rem)] relative" style={{ background: 'var(--bsky-bg-primary)' }}>
       {/* Left Panel - Conversations List */}
@@ -669,12 +655,25 @@ export const ConversationsSimple: React.FC = () => {
 
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto">
-          {filteredConversations.length === 0 && percentageFetched === 100 ? (
+          {filteredConversations.length === 0 ? (
             <div className="p-8 text-center">
-              <MessageCircle size={48} className="mx-auto mb-4" style={{ color: 'var(--bsky-text-tertiary)' }} />
-              <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
-                {searchQuery ? 'No conversations match your search' : 'No reply notifications yet'}
-              </p>
+              {!extendedData || percentageFetched < 100 ? (
+                // Still loading - show a subtle loading state
+                <>
+                  <Loader2 size={48} className="mx-auto mb-4 animate-spin" style={{ color: 'var(--bsky-text-tertiary)' }} />
+                  <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                    Loading conversations...
+                  </p>
+                </>
+              ) : (
+                // Fully loaded but no conversations
+                <>
+                  <MessageCircle size={48} className="mx-auto mb-4" style={{ color: 'var(--bsky-text-tertiary)' }} />
+                  <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                    {searchQuery ? 'No conversations match your search' : 'No reply notifications yet'}
+                  </p>
+                </>
+              )}
             </div>
           ) : filteredConversations.map((convo) => {
             const isSelected = selectedConvo === convo.rootUri
@@ -682,6 +681,35 @@ export const ConversationsSimple: React.FC = () => {
             const previewText = rootRecord?.text || (percentageFetched < 100 ? 'Loading...' : '[Post unavailable]')
             const isGroup = convo.participants.size > 2
             const unreadCount = convo.replies.filter(r => !r.isRead).length
+
+            // For non-group conversations, determine the main conversation partner
+            // If the root post exists and it's by the current user, show the replier
+            // Otherwise, show the root post author (or fallback to the replier)
+            const currentUserHandle = session?.handle
+            const isUserTheOriginalPoster = convo.rootPost?.author?.handle === currentUserHandle
+            
+            let mainParticipantAvatar: string | undefined
+            let mainParticipantDisplayName: string | undefined
+            let mainParticipantHandle: string | undefined
+            
+            if (!isGroup) {
+              if (isUserTheOriginalPoster) {
+                // User posted, so show the person who replied
+                mainParticipantAvatar = convo.latestReply.author.avatar
+                mainParticipantDisplayName = convo.latestReply.author.displayName
+                mainParticipantHandle = convo.latestReply.author.handle
+              } else if (convo.rootPost?.author) {
+                // Someone else posted, show them
+                mainParticipantAvatar = convo.rootPost.author.avatar
+                mainParticipantDisplayName = convo.rootPost.author.displayName
+                mainParticipantHandle = convo.rootPost.author.handle
+              } else {
+                // No root post loaded yet, show the replier as fallback
+                mainParticipantAvatar = convo.latestReply.author.avatar
+                mainParticipantDisplayName = convo.latestReply.author.displayName
+                mainParticipantHandle = convo.latestReply.author.handle
+              }
+            }
 
             return (
               <button
@@ -702,16 +730,15 @@ export const ConversationsSimple: React.FC = () => {
                       </div>
                     ) : (
                       <>
-                        {(convo.rootPost?.author?.avatar || convo.latestReply.author.avatar) ? (
+                        {mainParticipantAvatar ? (
                           <img 
-                            src={convo.rootPost?.author?.avatar || convo.latestReply.author.avatar} 
+                            src={mainParticipantAvatar} 
                             alt=""
                             className="w-12 h-12 rounded-full object-cover"
                           />
                         ) : (
                           <div className="w-12 h-12 rounded-full bsky-gradient flex items-center justify-center text-white font-medium">
-                            {convo.rootPost?.author?.displayName?.[0] || convo.rootPost?.author?.handle?.[0] || 
-                             convo.latestReply.author.displayName?.[0] || convo.latestReply.author.handle?.[0] || 'U'}
+                            {mainParticipantDisplayName?.[0] || mainParticipantHandle?.[0] || 'U'}
                           </div>
                         )}
                       </>
@@ -728,11 +755,11 @@ export const ConversationsSimple: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="font-medium truncate" style={{ color: 'var(--bsky-text-primary)' }}>
-                        {convo.rootPost?.author?.displayName || 
-                         convo.latestReply.author.displayName ||
-                         (isGroup 
+                        {isGroup 
                           ? `${convo.participants.size} people`
-                          : 'Thread')
+                          : (mainParticipantDisplayName || 
+                             mainParticipantHandle ||
+                             'Thread')
                         }
                       </h3>
                       <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
@@ -746,9 +773,21 @@ export const ConversationsSimple: React.FC = () => {
                     
                     {/* Show latest reply author and snippet */}
                     <div className="flex items-center gap-2 text-xs">
-                      <span style={{ color: 'var(--bsky-text-tertiary)' }}>
-                        {convo.latestReply.author.displayName || `@${convo.latestReply.author.handle}`}:
-                      </span>
+                      {/* Profile picture of commenter */}
+                      {convo.latestReply.author.avatar ? (
+                        <img 
+                          src={convo.latestReply.author.avatar} 
+                          alt={convo.latestReply.author.handle}
+                          className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" 
+                             style={{ background: 'var(--bsky-bg-tertiary)' }}>
+                          <span className="text-xs">
+                            {convo.latestReply.author.displayName?.[0] || convo.latestReply.author.handle?.[0] || 'U'}
+                          </span>
+                        </div>
+                      )}
                       <span className="truncate" style={{ color: 'var(--bsky-text-secondary)' }}>
                         {(() => {
                           const latestPost = allPostsMap.get(convo.latestReply.uri)
