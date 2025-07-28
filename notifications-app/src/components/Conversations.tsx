@@ -113,7 +113,6 @@ export const Conversations: React.FC = () => {
   const { } = useAuth()
   const [selectedConvo, setSelectedConvo] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const previousPostMapRef = React.useRef<Map<string, Post>>(new Map())
   const threadContainerRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
 
@@ -135,7 +134,12 @@ export const Conversations: React.FC = () => {
   }, [data])
 
   // Fetch posts for the reply notifications
-  const { data: posts, isLoading: isLoadingPosts } = useNotificationPosts(replyNotifications)
+  const { 
+    data: posts, 
+    isLoading: isLoadingPosts,
+    isFetchingMore: isFetchingMorePosts,
+    percentageFetched: postsPercentageFetched
+  } = useNotificationPosts(replyNotifications)
 
   // Create initial map for reply posts
   const replyPostMap = React.useMemo(() => {
@@ -174,11 +178,6 @@ export const Conversations: React.FC = () => {
   const postMap = React.useMemo(() => {
     const map = new Map<string, Post>()
     
-    // Start with posts from previous render to prevent flashing
-    previousPostMapRef.current.forEach((post, uri) => {
-      map.set(uri, post)
-    })
-    
     // Add reply posts
     if (posts && Array.isArray(posts) && posts.length > 0) {
       posts.forEach((post: Post) => {
@@ -196,9 +195,6 @@ export const Conversations: React.FC = () => {
         }
       })
     }
-    
-    // Update ref for next render
-    previousPostMapRef.current = map
     
     return map
   }, [posts, rootPosts])
@@ -406,10 +402,8 @@ export const Conversations: React.FC = () => {
         ? atUriToBskyUrl(post.uri, author.handle) 
         : notification ? getNotificationUrl(notification) : null
 
-      // Handle root node without post
+      // Handle root node without post - since we wait for all posts to load, this is truly unavailable
       if (node.isRoot && !post) {
-        const isLoadingThisPost = isLoadingRootPosts && rootPostUris.includes(selectedConversation?.rootUri || '')
-        
         return (
           <div key={selectedConversation?.rootUri || Math.random()} className="mb-4">
             <div className="flex-1 p-4 rounded-lg" 
@@ -428,26 +422,17 @@ export const Conversations: React.FC = () => {
                 </span>
               </div>
               <div className="flex items-center justify-center py-8">
-                {isLoadingThisPost ? (
-                  <>
-                    <Loader2 size={24} className="animate-spin" style={{ color: 'var(--bsky-text-tertiary)' }} />
-                    <span className="ml-2 text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
-                      Loading original post...
-                    </span>
-                  </>
-                ) : (
-                  <div className="text-center">
-                    <p className="text-sm mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>
-                      Original post unavailable
-                    </p>
-                    <p className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                      The post may have been deleted or is not accessible
-                    </p>
-                  </div>
-                )}
+                <div className="text-center">
+                  <p className="text-sm mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>
+                    Original post unavailable
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                    The post may have been deleted or is not accessible
+                  </p>
+                </div>
               </div>
             </div>
-            {/* Render children even if root is loading */}
+            {/* Render children even if root is unavailable */}
             {node.children.length > 0 && (
               <div>{renderThreadNodes(node.children, postMap)}</div>
             )}
@@ -665,14 +650,24 @@ export const Conversations: React.FC = () => {
   }
 
   // Show loading state only on initial load when we have no data at all
+  // Also wait for posts to be fully loaded (100% fetched)
   const actualIsLoading = isFromCache ? false : isLoading
+  const postsStillLoading = replyNotifications.length > 0 && postsPercentageFetched < 100
+  const rootPostsStillLoading = rootPostUris.length > 0 && isLoadingRootPosts
   
-  if (actualIsLoading && !data) {
+  if ((actualIsLoading && !data) || postsStillLoading || rootPostsStillLoading) {
     return (
       <div className="flex items-center justify-center h-screen" style={{ background: 'var(--bsky-bg-primary)' }}>
         <div className="text-center">
           <Loader2 size={32} className="animate-spin mb-4 mx-auto" style={{ color: 'var(--bsky-primary)' }} />
-          <p style={{ color: 'var(--bsky-text-secondary)' }}>Loading conversations...</p>
+          <p style={{ color: 'var(--bsky-text-secondary)' }}>
+            {postsStillLoading 
+              ? `Loading conversation posts... ${postsPercentageFetched}%`
+              : rootPostsStillLoading
+              ? 'Loading original posts...'
+              : 'Loading conversations...'
+            }
+          </p>
         </div>
       </div>
     )
@@ -695,16 +690,6 @@ export const Conversations: React.FC = () => {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] relative" style={{ background: 'var(--bsky-bg-primary)' }}>
-      {/* Loading overlay for background fetches */}
-      {actualIsLoading && data && (
-        <div className="absolute inset-0 bg-black bg-opacity-10 flex items-center justify-center z-50" 
-             style={{ backdropFilter: 'blur(2px)' }}>
-          <div className="bg-white rounded-lg p-4 shadow-lg" style={{ background: 'var(--bsky-bg-secondary)' }}>
-            <Loader2 size={24} className="animate-spin mb-2 mx-auto" style={{ color: 'var(--bsky-primary)' }} />
-            <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Updating conversations...</p>
-          </div>
-        </div>
-      )}
       {/* Left Panel - Conversations List */}
       <div className={`${selectedConvo ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-96`} 
            style={{ borderRight: '1px solid var(--bsky-border-primary)' }}>
@@ -728,11 +713,6 @@ export const Conversations: React.FC = () => {
           </div>
           <p className="text-xs mt-2" style={{ color: 'var(--bsky-text-secondary)' }}>
             Showing {filteredConversations.length} conversation{filteredConversations.length !== 1 ? 's' : ''} from {replyNotifications.length} reply notifications
-            {isLoadingRootPosts && rootPostUris.length > 0 && (
-              <span className="ml-2 text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                (Loading {rootPostUris.length} original posts...)
-              </span>
-            )}
             {isFetchingNextPage && !isLoading && ' (loading more...)'}
           </p>
           <p className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--bsky-text-tertiary)' }}>
