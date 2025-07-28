@@ -41,22 +41,18 @@ export const ConversationsSimple: React.FC = () => {
   
   // Extract reply notifications
   const replyNotifications = React.useMemo(() => {
-    if (!extendedData?.pages) return []
+    if (!extendedData?.pages) {
+      console.log('[ConversationsSimple] No extended data pages')
+      return []
+    }
     const allNotifications = extendedData.pages.flatMap((page: any) => page.notifications)
-    return allNotifications.filter((n: Notification) => n.reason === 'reply')
+    const replies = allNotifications.filter((n: Notification) => n.reason === 'reply')
+    console.log('[ConversationsSimple] Found reply notifications:', replies.length)
+    return replies
   }, [extendedData])
 
   // Fetch posts for all notifications (just like NotificationsFeed does)
   const { data: posts } = useNotificationPosts(replyNotifications)
-  
-  // Debug: Log when posts are loaded
-  React.useEffect(() => {
-    console.log('[ConversationsSimple] Posts loaded:', {
-      notificationCount: replyNotifications.length,
-      postsLoaded: posts?.length || 0,
-      hasExtendedData: !!extendedData
-    })
-  }, [posts, replyNotifications.length, extendedData])
   
   // Create post map
   const postMap = React.useMemo(() => {
@@ -147,6 +143,17 @@ export const ConversationsSimple: React.FC = () => {
   const selectedConversation = useMemo(() => {
     return conversations.find(c => c.rootUri === selectedConvo)
   }, [conversations, selectedConvo])
+
+  // Debug: Log rendering state
+  React.useEffect(() => {
+    console.log('[ConversationsSimple] State:', {
+      hasExtendedData: !!extendedData,
+      notificationCount: replyNotifications.length,
+      postsLoaded: posts?.length || 0,
+      postMapSize: postMap.size,
+      conversationsCount: conversations.length
+    })
+  }, [extendedData, replyNotifications.length, posts, postMap.size, conversations.length])
 
   // Build thread tree structure for the selected conversation
   const threadTree = useMemo(() => {
@@ -417,7 +424,8 @@ export const ConversationsSimple: React.FC = () => {
     })
   }
 
-  // Simple loading state
+  // Don't show loading if we have data - render immediately
+  // Only show loading on very first load when there's no extended data at all
   if (!extendedData) {
     return (
       <div className="flex items-center justify-center h-screen" style={{ background: 'var(--bsky-bg-primary)' }}>
@@ -429,20 +437,8 @@ export const ConversationsSimple: React.FC = () => {
     )
   }
 
-  // Empty state
-  if (conversations.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-screen" style={{ background: 'var(--bsky-bg-primary)' }}>
-        <div className="text-center max-w-md">
-          <MessageCircle size={64} className="mx-auto mb-4" style={{ color: 'var(--bsky-text-tertiary)' }} />
-          <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--bsky-text-primary)' }}>No Conversations Yet</h2>
-          <p style={{ color: 'var(--bsky-text-secondary)' }}>
-            Reply notifications will appear here as conversations.
-          </p>
-        </div>
-      </div>
-    )
-  }
+  // Don't show empty state immediately - render the UI even if no conversations yet
+  // This prevents flashing when data is loading
 
   return (
     <div className="flex h-[calc(100vh-4rem)] relative" style={{ background: 'var(--bsky-bg-primary)' }}>
@@ -474,7 +470,14 @@ export const ConversationsSimple: React.FC = () => {
 
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto">
-          {filteredConversations.map((convo) => {
+          {filteredConversations.length === 0 ? (
+            <div className="p-8 text-center">
+              <MessageCircle size={48} className="mx-auto mb-4" style={{ color: 'var(--bsky-text-tertiary)' }} />
+              <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                {searchQuery ? 'No conversations match your search' : 'No reply notifications yet'}
+              </p>
+            </div>
+          ) : filteredConversations.map((convo) => {
             const isSelected = selectedConvo === convo.rootUri
             const rootRecord = convo.rootPost?.record as any
             const previewText = rootRecord?.text || '[Original post unavailable]'
