@@ -763,28 +763,32 @@ export const Conversations: React.FC = () => {
                 style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}
               >
                 <div className="flex items-center gap-3">
-                  {/* Avatar */}
-                  <div className="relative">
+                  {/* Clean avatar display */}
+                  <div className="relative flex-shrink-0">
                     {isGroup ? (
+                      // Group avatar - simple stacked view
                       <div className="w-12 h-12 rounded-full flex items-center justify-center"
                            style={{ background: 'var(--bsky-bg-secondary)' }}>
                         <Users size={24} style={{ color: 'var(--bsky-text-tertiary)' }} />
                       </div>
                     ) : (
-                      // Use root post author's avatar if available
-                      (convo.rootPost?.author?.avatar || convo.latestReply.author.avatar) ? (
-                        <img 
-                          src={convo.rootPost?.author?.avatar || convo.latestReply.author.avatar} 
-                          alt={convo.rootPost?.author?.handle || convo.latestReply.author.handle}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bsky-gradient flex items-center justify-center text-white font-medium">
-                          {convo.rootPost?.author?.displayName?.[0] || convo.rootPost?.author?.handle?.[0] || 
-                           convo.latestReply.author.displayName?.[0] || convo.latestReply.author.handle?.[0] || 'U'}
-                        </div>
-                      )
+                      // Single avatar - use root post author
+                      <>
+                        {(convo.rootPost?.author?.avatar || convo.latestReply.author.avatar) ? (
+                          <img 
+                            src={convo.rootPost?.author?.avatar || convo.latestReply.author.avatar} 
+                            alt=""
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bsky-gradient flex items-center justify-center text-white font-medium">
+                            {convo.rootPost?.author?.displayName?.[0] || convo.rootPost?.author?.handle?.[0] || 
+                             convo.latestReply.author.displayName?.[0] || convo.latestReply.author.handle?.[0] || 'U'}
+                          </div>
+                        )}
+                      </>
                     )}
+                    {/* Unread indicator dot */}
                     {unreadCount > 0 && (
                       <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-medium"
                            style={{ background: 'var(--bsky-primary)' }}>
@@ -793,61 +797,31 @@ export const Conversations: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Content */}
+                  {/* Simplified content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="font-medium truncate" style={{ color: 'var(--bsky-text-primary)' }}>
-                        {/* Always show root post author, never reply author */}
-                        {convo.rootPost?.author?.displayName || convo.rootPost?.author?.handle || 
+                        {convo.rootPost?.author?.displayName || 
                          (isGroup 
-                          ? `${convo.participants.size} participants`
-                          : '[Loading author...]')
+                          ? `${convo.participants.size} people`
+                          : 'Thread')
                         }
                       </h3>
-                      <div className="flex flex-col items-end gap-0.5">
-                        <span className="text-xs font-medium" style={{ color: 'var(--bsky-primary)' }}>
-                          {formatDistanceToNow(new Date(convo.latestReply.indexedAt), { addSuffix: true })}
-                        </span>
-                        {convo.originalPostTime && (
-                          <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                            posted {formatDistanceToNow(new Date(convo.originalPostTime), { addSuffix: true })}
-                          </span>
-                        )}
-                      </div>
+                      <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
+                        {formatDistanceToNow(new Date(convo.latestReply.indexedAt), { addSuffix: true })}
+                      </span>
                     </div>
                     
-                    {/* Original post preview */}
+                    {/* Single line preview of original post */}
                     <p className="text-sm truncate mb-1" style={{ color: 'var(--bsky-text-secondary)' }}>
-                      {convo.rootPost ? (
-                        <>
-                          <span className="font-medium">Post: </span>
-                          {previewText.length > 60 ? previewText.substring(0, 60) + '...' : previewText}
-                        </>
-                      ) : (
-                        <span className="italic">{previewText}</span>
-                      )}
+                      {previewText.length > 80 ? previewText.substring(0, 80) + '...' : previewText}
                     </p>
                     
-                    {/* Latest reply preview */}
-                    <p className="text-xs truncate" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                      <span className="font-medium">Latest: </span>
-                      <span className="font-normal">@{convo.latestReply.author.handle}: </span>
-                      {latestReplyText.length > 50 ? latestReplyText.substring(0, 50) + '...' : latestReplyText}
-                    </p>
-                    
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs font-medium px-1.5 py-0.5 rounded" 
-                            style={{ 
-                              backgroundColor: 'var(--bsky-bg-secondary)',
-                              color: 'var(--bsky-text-secondary)'
-                            }}>
-                        {convo.totalReplies} repl{convo.totalReplies === 1 ? 'y' : 'ies'}
-                      </span>
+                    {/* Simple metadata */}
+                    <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                      <span>{convo.totalReplies} repl{convo.totalReplies === 1 ? 'y' : 'ies'}</span>
                       {isGroup && (
-                        <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                          {Array.from(convo.participants).slice(0, 2).join(', ')}
-                          {convo.participants.size > 2 && ` +${convo.participants.size - 2}`}
-                        </span>
+                        <span>{convo.participants.size} participants</span>
                       )}
                     </div>
                   </div>
