@@ -25,7 +25,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
             <div className="p-2 rounded-lg" style={{ background: 'linear-gradient(135deg, var(--bsky-primary), var(--bsky-accent))' }}>
               <Bell size={20} className="text-white" />
             </div>
-            <h1 className="text-xl font-bold hidden sm:block bsky-gradient-text">Notifications+</h1>
+            <h1 className="text-xl font-bold hidden sm:block bsky-gradient-text">ShadowSky</h1>
           </div>
         </div>
 

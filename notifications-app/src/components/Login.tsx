@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Bell } from 'lucide-react'
+import { Shield, Smartphone } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 export const Login: React.FC = () => {
@@ -27,12 +27,13 @@ export const Login: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center px-4 bsky-font" style={{ background: 'var(--bsky-bg-primary)' }}>
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" 
-               style={{ background: 'linear-gradient(135deg, var(--bsky-primary), var(--bsky-accent))' }}>
-            <Bell size={32} className="text-white" />
-          </div>
-          <h1 className="text-3xl font-bold bsky-gradient-text mb-2">Notifications+</h1>
-          <p style={{ color: 'var(--bsky-text-secondary)' }}>Sign in to your Bluesky account</p>
+          <img 
+            src="/shadowsky-icon.svg" 
+            alt="ShadowSky Logo" 
+            className="w-20 h-20 mb-4 rounded-2xl shadow-lg mx-auto"
+          />
+          <h1 className="text-3xl font-bold bsky-gradient-text mb-2">ShadowSky</h1>
+          <p className="text-lg mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>Your Bluesky Companion App</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bsky-card p-8 shadow-lg">
@@ -102,10 +103,29 @@ export const Login: React.FC = () => {
             {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
           
-          <p className="text-center text-xs mt-6" style={{ color: 'var(--bsky-text-tertiary)' }}>
-            Use your Bluesky credentials to sign in
-          </p>
         </form>
+        
+        <div className="mt-8 space-y-4">
+          <div className="flex items-start gap-3 p-4 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-secondary)' }}>
+            <Smartphone size={20} style={{ color: 'var(--bsky-primary)' }} className="mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="font-semibold mb-1" style={{ color: 'var(--bsky-text-primary)' }}>Works alongside Bluesky</h3>
+              <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                ShadowSky complements your official Bluesky app. Keep using Bluesky as normal - we just add extra insights!
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-3 p-4 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-secondary)' }}>
+            <Shield size={20} style={{ color: 'var(--bsky-success)' }} className="mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="font-semibold mb-1" style={{ color: 'var(--bsky-text-primary)' }}>Your credentials are safe</h3>
+              <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                Your login goes directly to Bluesky's official servers. We never store your password - we only save the session token Bluesky provides.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
