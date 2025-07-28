@@ -83,6 +83,12 @@ export const BackgroundNotificationLoader: React.FC = () => {
             pageParams: [undefined, ...pages.slice(0, -1).map((_, i) => `page-${(i + 1) * pageSize}`)]
           })
           
+          // Trigger re-render in components watching this data
+          queryClient.invalidateQueries({ 
+            queryKey: ['notifications-extended'],
+            refetchType: 'none' // Don't refetch, just notify subscribers
+          })
+          
           setHasFetched(true)
           
           // Prefetch posts for cached reply notifications in the background

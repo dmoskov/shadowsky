@@ -200,6 +200,7 @@ git checkout main
 - Work is committed at natural breakpoints for easy rollback
 - Experimental features are developed in branches
 - No user approval needed for routine commits
+- **NEVER change directories (cd) before committing** - always commit from the current working directory
 
 ## Architecture Principles
 

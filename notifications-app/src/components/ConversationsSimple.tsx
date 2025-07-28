@@ -39,8 +39,15 @@ export const ConversationsSimple: React.FC = () => {
   const threadContainerRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
 
-  // Get extended notifications from cache
-  const extendedData = queryClient.getQueryData(['notifications-extended']) as any
+  // Subscribe to extended notifications data properly
+  const { data: extendedData } = useQuery({
+    queryKey: ['notifications-extended'],
+    // Don't fetch - just subscribe to existing data from BackgroundNotificationLoader
+    queryFn: () => queryClient.getQueryData(['notifications-extended']) || { pages: [] },
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  })
   console.log('[ConversationsSimple] Extended data:', !!extendedData, extendedData?.pages?.length)
   
   // Extract reply notifications
@@ -313,14 +320,16 @@ export const ConversationsSimple: React.FC = () => {
   React.useEffect(() => {
     console.log('[ConversationsSimple] State:', {
       hasExtendedData: !!extendedData,
+      extendedDataPages: extendedData?.pages?.length || 0,
       notificationCount: replyNotifications.length,
       postsLoaded: posts?.length || 0,
       additionalRootPosts: additionalRootPosts?.length || 0,
       allPostsMapSize: allPostsMap.size,
       conversationsCount: conversations.length,
-      rootUrisDiscovered: additionalRootUris.size
+      rootUrisDiscovered: additionalRootUris.size,
+      filteredConversationsCount: filteredConversations.length
     })
-  }, [extendedData, replyNotifications.length, posts, additionalRootPosts, allPostsMap.size, conversations.length, additionalRootUris.size])
+  }, [extendedData, replyNotifications.length, posts, additionalRootPosts, allPostsMap.size, conversations.length, additionalRootUris.size, filteredConversations.length])
 
   // Build thread tree structure for the selected conversation
   const threadTree = useMemo(() => {
@@ -654,7 +663,7 @@ export const ConversationsSimple: React.FC = () => {
         )}
 
         {/* Conversations List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" key={`conversations-${filteredConversations.length}-${extendedData?.pages?.length || 0}`}>
           {filteredConversations.length === 0 ? (
             <div className="p-8 text-center">
               {!extendedData || percentageFetched < 100 ? (
