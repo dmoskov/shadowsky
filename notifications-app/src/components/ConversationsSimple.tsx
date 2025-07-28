@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef } from 'react'
 import { MessageCircle, Search, ArrowLeft, Users, Loader2, ExternalLink, CornerDownRight, ChevronDown } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, useQuery } from '@tanstack/react-query'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { getNotificationUrl, atUriToBskyUrl } from '../utils/url-helpers'
 import type { AppBskyFeedDefs } from '@atproto/api'
@@ -32,9 +32,10 @@ interface ThreadNode {
 export const ConversationsSimple: React.FC = () => {
   console.log('[ConversationsSimple] Component rendering')
   
-  const { } = useAuth()
+  const { session } = useAuth()
   const [selectedConvo, setSelectedConvo] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [additionalRootUris, setAdditionalRootUris] = useState<Set<string>>(new Set())
   const threadContainerRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
 
@@ -54,8 +55,38 @@ export const ConversationsSimple: React.FC = () => {
     return replies
   }, [extendedData])
 
-  // Fetch posts for all notifications (just like NotificationsFeed does)
-  const { data: posts, fetchedPosts, totalPosts, percentageFetched } = useNotificationPosts(replyNotifications)
+  // Create a list of notifications that includes both replies AND their root posts
+  const notificationsWithRoots = React.useMemo(() => {
+    const urisToFetch = new Set<string>()
+    const fakeNotifications: Notification[] = []
+    
+    // First pass: collect all reply URIs and their reasonSubjects
+    replyNotifications.forEach((notification) => {
+      // Add the original notification
+      fakeNotifications.push(notification)
+      urisToFetch.add(notification.uri)
+      
+      // If we have a reasonSubject (the post being replied to), we need to fetch it too
+      if (notification.reasonSubject && !urisToFetch.has(notification.reasonSubject)) {
+        urisToFetch.add(notification.reasonSubject)
+        // Create a minimal fake notification just to trigger fetching
+        fakeNotifications.push({
+          ...notification,
+          uri: notification.reasonSubject,
+          reason: 'reply' // Keep it as reply so it gets fetched
+        })
+      }
+    })
+    
+    // Second pass: after initial posts are loaded, find all root posts
+    // This is tricky because we need the post data to find roots, but we're creating the list to fetch posts
+    // So we'll add a mechanism to fetch additional root posts discovered during loading
+    
+    return fakeNotifications
+  }, [replyNotifications])
+
+  // Fetch posts for all notifications including root posts
+  const { data: posts, fetchedPosts, totalPosts, percentageFetched } = useNotificationPosts(notificationsWithRoots)
   
   // Create post map
   const postMap = React.useMemo(() => {
@@ -71,26 +102,149 @@ export const ConversationsSimple: React.FC = () => {
     
     return map
   }, [posts])
+  
+  // Discover and fetch additional root posts as we load the reply chain
+  React.useEffect(() => {
+    if (!session || !posts) return
+    
+    const discoveredRootUris = new Set<string>()
+    
+    // Look through all loaded posts to find root URIs we haven't fetched yet
+    posts.forEach(post => {
+      const record = post.record as any
+      if (record?.reply?.root?.uri) {
+        const rootUri = record.reply.root.uri
+        // Check if we already have this root post or are already fetching it
+        if (!postMap.has(rootUri) && !additionalRootUris.has(rootUri)) {
+          discoveredRootUris.add(rootUri)
+        }
+      }
+    })
+    
+    // If we found new root URIs, update state to trigger fetching
+    if (discoveredRootUris.size > 0) {
+      setAdditionalRootUris(prev => {
+        const newSet = new Set(prev)
+        discoveredRootUris.forEach(uri => newSet.add(uri))
+        return newSet
+      })
+    }
+  }, [posts, postMap, session, additionalRootUris])
+  
+  // Fetch additional root posts
+  const { data: additionalRootPosts } = useQuery({
+    queryKey: ['additional-root-posts', Array.from(additionalRootUris).sort()],
+    queryFn: async () => {
+      if (additionalRootUris.size === 0) return []
+      
+      const { atProtoClient } = await import('../services/atproto')
+      const agent = atProtoClient.agent
+      if (!agent) throw new Error('Not authenticated')
+      
+      const { PostCache } = await import('../utils/postCache')
+      const { rateLimitedPostFetch } = await import('../services/rate-limiter')
+      
+      const urisToFetch = Array.from(additionalRootUris)
+      const { cached, missing } = await PostCache.getCachedPostsAsync(urisToFetch)
+      
+      if (missing.length === 0) {
+        return cached
+      }
+      
+      const posts: Post[] = [...cached]
+      
+      // Batch fetch missing posts (25 at a time)
+      for (let i = 0; i < missing.length; i += 25) {
+        const batch = missing.slice(i, i + 25)
+        try {
+          const response = await rateLimitedPostFetch(async () => 
+            agent.app.bsky.feed.getPosts({ uris: batch })
+          )
+          const newPosts = response.data.posts as Post[]
+          posts.push(...newPosts)
+          
+          // Cache the newly fetched posts
+          PostCache.save(newPosts)
+        } catch (error) {
+          console.error('Failed to fetch root posts batch:', error)
+        }
+      }
+      
+      return posts
+    },
+    enabled: !!session && additionalRootUris.size > 0,
+    staleTime: 60 * 60 * 1000, // 1 hour
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours
+  })
+  
+  // Combine all posts (replies + roots)
+  const allPosts = React.useMemo(() => {
+    const combined = [...(posts || [])]
+    if (additionalRootPosts) {
+      additionalRootPosts.forEach(post => {
+        if (!postMap.has(post.uri)) {
+          combined.push(post)
+        }
+      })
+    }
+    return combined
+  }, [posts, additionalRootPosts, postMap])
+  
+  // Update post map to include all posts
+  const allPostsMap = React.useMemo(() => {
+    const map = new Map<string, Post>()
+    
+    allPosts.forEach(post => {
+      if (post && post.uri) {
+        map.set(post.uri, post)
+      }
+    })
+    
+    return map
+  }, [allPosts])
 
   // Group notifications into conversation threads
   const conversations = useMemo(() => {
     const threadMap = new Map<string, ConversationThread>()
     
+    // Helper function to find the true root of a thread by following the reply chain
+    const findRootUri = (uri: string): string => {
+      const post = allPostsMap.get(uri)
+      const record = post?.record as any
+      
+      // If this post has a reply.root, that's the true root
+      if (record?.reply?.root?.uri) {
+        return record.reply.root.uri
+      }
+      
+      // If this post has a reply.parent, follow it up the chain
+      if (record?.reply?.parent?.uri && record.reply.parent.uri !== uri) {
+        const parentPost = allPostsMap.get(record.reply.parent.uri)
+        if (parentPost) {
+          return findRootUri(record.reply.parent.uri)
+        }
+      }
+      
+      // Otherwise, this is the root (or we can't find higher)
+      return uri
+    }
+    
     replyNotifications.forEach((notification: Notification) => {
-      // Get the root post URI from the notification
-      // Use reasonSubject as the initial root URI (this is typically the post being replied to)
+      // Start with reasonSubject as initial guess for root
       let rootUri = notification.reasonSubject || notification.uri
       
-      // If we have the post data loaded, try to find the actual root of the thread
-      const post = postMap.get(notification.uri)
-      const record = post?.record as any
-      if (record?.reply?.root?.uri) {
-        rootUri = record.reply.root.uri
+      // If we have the post data, find the true root
+      const post = allPostsMap.get(notification.uri)
+      if (post) {
+        rootUri = findRootUri(notification.uri)
+      } else if (notification.reasonSubject && allPostsMap.get(notification.reasonSubject)) {
+        // If we don't have the reply post but have the parent, start from there
+        rootUri = findRootUri(notification.reasonSubject)
       }
       
       if (!threadMap.has(rootUri)) {
         // Try to get the root post if it's loaded
-        const rootPost = postMap.get(rootUri)
+        const rootPost = allPostsMap.get(rootUri)
         threadMap.set(rootUri, {
           rootUri,
           rootPost,
@@ -108,8 +262,8 @@ export const ConversationsSimple: React.FC = () => {
       thread.totalReplies++
       
       // Update root post if we just loaded it
-      if (!thread.rootPost && postMap.get(rootUri)) {
-        thread.rootPost = postMap.get(rootUri)
+      if (!thread.rootPost && allPostsMap.get(rootUri)) {
+        thread.rootPost = allPostsMap.get(rootUri)
         thread.originalPostTime = thread.rootPost?.indexedAt || (thread.rootPost?.record as any)?.createdAt
       }
       
@@ -123,7 +277,7 @@ export const ConversationsSimple: React.FC = () => {
     return Array.from(threadMap.values()).sort((a, b) => 
       new Date(b.latestReply.indexedAt).getTime() - new Date(a.latestReply.indexedAt).getTime()
     )
-  }, [replyNotifications, postMap])
+  }, [replyNotifications, allPostsMap])
 
   // Filter conversations based on search
   const filteredConversations = useMemo(() => {
@@ -141,14 +295,14 @@ export const ConversationsSimple: React.FC = () => {
       
       // Search in reply text
       const replyMatch = convo.replies.some(reply => {
-        const replyPost = postMap.get(reply.uri)
+        const replyPost = allPostsMap.get(reply.uri)
         const replyRecord = replyPost?.record as any
         return replyRecord?.text?.toLowerCase().includes(searchQuery.toLowerCase())
       })
       
       return participantMatch || rootPostMatch || replyMatch
     })
-  }, [conversations, searchQuery, postMap])
+  }, [conversations, searchQuery, allPostsMap])
 
   // Get the selected conversation
   const selectedConversation = useMemo(() => {
@@ -161,10 +315,12 @@ export const ConversationsSimple: React.FC = () => {
       hasExtendedData: !!extendedData,
       notificationCount: replyNotifications.length,
       postsLoaded: posts?.length || 0,
-      postMapSize: postMap.size,
-      conversationsCount: conversations.length
+      additionalRootPosts: additionalRootPosts?.length || 0,
+      allPostsMapSize: allPostsMap.size,
+      conversationsCount: conversations.length,
+      rootUrisDiscovered: additionalRootUris.size
     })
-  }, [extendedData, replyNotifications.length, posts, postMap.size, conversations.length])
+  }, [extendedData, replyNotifications.length, posts, additionalRootPosts, allPostsMap.size, conversations.length, additionalRootUris.size])
 
   // Build thread tree structure for the selected conversation
   const threadTree = useMemo(() => {
@@ -197,7 +353,7 @@ export const ConversationsSimple: React.FC = () => {
     
     // Create nodes for all replies
     selectedConversation.replies.forEach(notification => {
-      const post = postMap.get(notification.uri)
+      const post = allPostsMap.get(notification.uri)
       if (post) {
         const node: ThreadNode = {
           notification,
@@ -211,7 +367,7 @@ export const ConversationsSimple: React.FC = () => {
     
     // Build parent-child relationships
     selectedConversation.replies.forEach(notification => {
-      const post = postMap.get(notification.uri)
+      const post = allPostsMap.get(notification.uri)
       const childNode = nodeMap.get(notification.uri)
       if (!childNode) return
       
@@ -250,7 +406,7 @@ export const ConversationsSimple: React.FC = () => {
     rootNodes.forEach(sortChildren)
     
     return rootNodes
-  }, [selectedConversation, postMap])
+  }, [selectedConversation, allPostsMap])
 
   // Render thread nodes recursively
   const renderThreadNodes = (nodes: ThreadNode[]) => {
@@ -285,10 +441,16 @@ export const ConversationsSimple: React.FC = () => {
               <div className="flex items-center justify-center py-8">
                 <div className="text-center">
                   <p className="text-sm mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>
-                    {percentageFetched < 100 ? 'Loading original post...' : 'Original post unavailable'}
+                    {percentageFetched < 100 || additionalRootUris.size > (additionalRootPosts?.length || 0) 
+                      ? 'Loading original post...' 
+                      : 'Original post unavailable'}
                   </p>
                   <p className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                    {percentageFetched < 100 ? `Loading posts: ${fetchedPosts}/${totalPosts}` : 'The post may have been deleted or is not accessible'}
+                    {percentageFetched < 100 
+                      ? `Loading posts: ${fetchedPosts}/${totalPosts}` 
+                      : additionalRootUris.size > (additionalRootPosts?.length || 0)
+                        ? `Loading root posts: ${additionalRootPosts?.length || 0}/${additionalRootUris.size}`
+                        : 'The post may have been deleted or is not accessible'}
                   </p>
                 </div>
               </div>
@@ -589,7 +751,7 @@ export const ConversationsSimple: React.FC = () => {
                       </span>
                       <span className="truncate" style={{ color: 'var(--bsky-text-secondary)' }}>
                         {(() => {
-                          const latestPost = postMap.get(convo.latestReply.uri)
+                          const latestPost = allPostsMap.get(convo.latestReply.uri)
                           const latestText = (latestPost?.record as any)?.text || 'replied'
                           return latestText.length > 50 ? latestText.substring(0, 50) + '...' : latestText
                         })()}
