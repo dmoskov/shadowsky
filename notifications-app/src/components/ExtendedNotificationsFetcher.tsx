@@ -7,6 +7,7 @@ import { format, subDays } from 'date-fns'
 import { ExtendedFetchCache } from '../utils/extendedFetchCache'
 import { StorageManager } from '../utils/storageManager'
 import { NotificationCacheService } from '../services/notification-cache-service'
+import { prefetchNotificationPosts, prefetchRootPosts } from '../utils/prefetchNotificationPosts'
 
 export const ExtendedNotificationsFetcher: React.FC = () => {
   const { session } = useAuth()
@@ -21,6 +22,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
   const [loadedFromStorage, setLoadedFromStorage] = useState(false)
   const [cacheService] = useState(() => NotificationCacheService.getInstance())
   const [isIndexedDBReady, setIsIndexedDBReady] = useState(false)
+  const [initialFetchStarted, setInitialFetchStarted] = useState(false)
   
   // Check if we already have cached data
   const cachedData = queryClient.getQueryData(['notifications-extended']) as any
@@ -119,6 +121,25 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           })
           
           setLoadedFromStorage(true)
+          
+          // Prefetch posts for cached reply notifications in the background
+          const { atProtoClient } = await import('../services/atproto')
+          const agent = atProtoClient.agent
+          if (agent) {
+            // Don't await - let it run in the background
+            const replyNotifications = cachedResult.notifications.filter(n => n.reason === 'reply')
+            if (replyNotifications.length > 0) {
+              console.log('🔄 Background prefetching posts for cached conversations...')
+              prefetchNotificationPosts(replyNotifications, agent).then(() => {
+                return prefetchRootPosts(replyNotifications, agent)
+              }).then(() => {
+                console.log('✅ Background post prefetch complete')
+              }).catch(error => {
+                console.error('Error prefetching posts:', error)
+              })
+            }
+          }
+          
           return
         }
       }
@@ -140,6 +161,20 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       handleFetchMissing()
     }
   }, [session, autoFetchTriggered, hasCachedData, fetchingStatus, fetchInfo.shouldAutoFetch])
+
+  // Auto-fetch 4 weeks of data on mount if no cached data exists
+  useEffect(() => {
+    if (!session || !isIndexedDBReady || initialFetchStarted || hasCachedData || loadedFromStorage || fetchingStatus !== 'idle') return
+    
+    // Small delay to ensure component is fully mounted
+    const timer = setTimeout(() => {
+      console.log('🚀 Starting automatic 4-week fetch on mount')
+      setInitialFetchStarted(true)
+      handleFetch4Weeks()
+    }, 500)
+    
+    return () => clearTimeout(timer)
+  }, [session, isIndexedDBReady, initialFetchStarted, hasCachedData, loadedFromStorage, fetchingStatus])
 
   const handleFetch4Weeks = async () => {
     setFetchingStatus('fetching')
@@ -281,6 +316,23 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           console.log('✅ Saved to IndexedDB')
         }
         
+        // Prefetch posts for reply notifications
+        const { atProtoClient } = await import('../services/atproto')
+        const agent = atProtoClient.agent
+        if (agent) {
+          console.log('🔄 Prefetching posts for conversations...')
+          
+          // Get reply notifications
+          const replyNotifications = allNotifications.filter(n => n.reason === 'reply')
+          
+          if (replyNotifications.length > 0) {
+            // Prefetch the reply posts and root posts
+            await prefetchNotificationPosts(replyNotifications, agent)
+            await prefetchRootPosts(replyNotifications, agent)
+            console.log('✅ Posts prefetched for conversations')
+          }
+        }
+        
         // No longer save to localStorage - IndexedDB is our primary storage
         // ExtendedFetchCache metadata is still useful for tracking fetch times
         ExtendedFetchCache.saveMetadata(
@@ -384,6 +436,23 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           console.log('✅ Updated IndexedDB with new notifications')
         }
         
+        // Prefetch posts for reply notifications
+        const { atProtoClient } = await import('../services/atproto')
+        const agent = atProtoClient.agent
+        if (agent) {
+          console.log('🔄 Prefetching posts for conversations...')
+          
+          // Get reply notifications
+          const replyNotifications = allNotifications.filter(n => n.reason === 'reply')
+          
+          if (replyNotifications.length > 0) {
+            // Prefetch the reply posts and root posts
+            await prefetchNotificationPosts(replyNotifications, agent)
+            await prefetchRootPosts(replyNotifications, agent)
+            console.log('✅ Posts prefetched for conversations')
+          }
+        }
+        
         // Update metadata
         ExtendedFetchCache.saveMetadata(
           allNotifications.length,
@@ -424,6 +493,62 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     queryClient.invalidateQueries({ queryKey: ['notifications-visual-timeline'] })
   }
   
+  // Show minimal UI during initial automatic fetch
+  if (fetchingStatus === 'fetching' && !hasCachedData && initialFetchStarted && !autoFetchTriggered) {
+    return (
+      <div className="bsky-card p-6 mb-6" style={{
+        background: 'linear-gradient(135deg, var(--bsky-bg-secondary) 0%, rgba(59, 130, 246, 0.05) 100%)',
+        borderColor: 'var(--bsky-primary)',
+        borderWidth: '2px'
+      }}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Loader2 className="animate-spin text-blue-500" size={24} />
+            <div>
+              <h2 className="text-lg font-semibold">Loading Extended Analytics</h2>
+              <p className="text-sm mt-1" style={{ color: 'var(--bsky-text-secondary)' }}>
+                Fetching 4 weeks of notification history...
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          <div className="flex justify-between text-sm">
+            <span className="font-medium">Progress</span>
+            <span style={{ color: 'var(--bsky-text-secondary)' }}>
+              {progress.totalNotifications} notifications • {progress.daysReached} days
+            </span>
+          </div>
+          
+          <div className="w-full rounded-full h-3" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
+            <div 
+              className="h-3 rounded-full transition-all duration-300 relative overflow-hidden"
+              style={{ 
+                width: `${Math.min((progress.daysReached / 28) * 100, 100)}%`,
+                background: 'linear-gradient(90deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)'
+              }}
+            >
+              <div 
+                className="absolute inset-0 opacity-30"
+                style={{
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%)',
+                  animation: 'slide 1.5s infinite'
+                }}
+              />
+            </div>
+          </div>
+          
+          {progress.oldestDate && (
+            <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+              Reached: {format(progress.oldestDate, 'MMM d, yyyy')}
+            </p>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="bsky-card p-6 mb-6" style={{
       background: hasCachedData 
@@ -461,7 +586,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
               ? `Currently viewing ${cachedStats?.totalNotifications || 0} notifications from ${cachedStats?.daysReached || 0} days`
               : fetchInfo.hasRecentFullFetch && fetchInfo.metadata
               ? `Last fetched ${fetchInfo.metadata.totalNotificationsFetched} notifications (${fetchInfo.metadata.daysReached} days) ${fetchingStatus === 'fetching' ? '• Auto-updating...' : ''}`
-              : 'Fetch up to 4 weeks of notification history for deeper analytics'
+              : 'Extended analytics will load automatically...'
             }
           </p>
         </div>
@@ -481,40 +606,28 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
             </button>
           )}
           
-          <button
-            onClick={handleFetch4Weeks}
-            disabled={!session || fetchingStatus === 'fetching'}
-            className="bsky-button-primary flex items-center gap-2"
-            style={{
-              background: hasCachedData 
-                ? 'linear-gradient(135deg, var(--bsky-success) 0%, #059669 100%)'
-                : fetchingStatus === 'fetching' && autoFetchTriggered
-                ? 'linear-gradient(135deg, var(--bsky-info) 0%, #3b82f6 100%)'
-                : 'linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)'
-            }}
-          >
-            {fetchingStatus === 'fetching' ? (
-              <>
-                <Loader2 className="animate-spin" size={16} />
-                {autoFetchTriggered ? 'Auto-updating...' : 'Fetching...'}
-              </>
-            ) : hasCachedData ? (
-              <>
-                <CheckCircle size={16} />
-                Update Data
-              </>
-            ) : fetchInfo.hasRecentFullFetch ? (
-              <>
-                <RefreshCw size={16} />
-                Refresh Full History
-              </>
-            ) : (
-              <>
-                <Download size={16} />
-                Fetch 4 Weeks
-              </>
-            )}
-          </button>
+          {hasCachedData && (
+            <button
+              onClick={handleFetch4Weeks}
+              disabled={!session || fetchingStatus === 'fetching'}
+              className="bsky-button-primary flex items-center gap-2"
+              style={{
+                background: 'linear-gradient(135deg, var(--bsky-success) 0%, #059669 100%)'
+              }}
+            >
+              {fetchingStatus === 'fetching' ? (
+                <>
+                  <Loader2 className="animate-spin" size={16} />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <RefreshCw size={16} />
+                  Refresh Data
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
       

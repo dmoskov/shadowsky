@@ -11,11 +11,12 @@ type NotificationReason = 'like' | 'repost' | 'follow' | 'mention' | 'reply' | '
 interface UseNotificationsByTypeOptions {
   reasons?: NotificationReason[]
   priority?: boolean
+  enabled?: boolean
 }
 
 export function useNotificationsByType(options: UseNotificationsByTypeOptions = {}) {
   const { session } = useAuth()
-  const { reasons, priority } = options
+  const { reasons, priority, enabled = true } = options
 
   return useInfiniteQuery({
     queryKey: ['notifications', 'byType', reasons, priority],
@@ -79,7 +80,7 @@ export function useNotificationsByType(options: UseNotificationsByTypeOptions = 
       // Continue pagination if we have a cursor
       return lastPage.cursor
     },
-    enabled: !!session,
+    enabled: !!session && enabled,
     staleTime: 30 * 60 * 1000, // 30 minutes - conversations don't change that often
     refetchInterval: false, // Disable automatic refetching - causes UI glitches
     refetchOnWindowFocus: false, // Already disabled globally, but be explicit
@@ -89,6 +90,6 @@ export function useNotificationsByType(options: UseNotificationsByTypeOptions = 
 }
 
 // Convenience hook for reply notifications specifically
-export function useReplyNotifications(priority?: boolean) {
-  return useNotificationsByType({ reasons: ['reply'], priority })
+export function useReplyNotifications(priority?: boolean, enabled = true) {
+  return useNotificationsByType({ reasons: ['reply'], priority, enabled })
 }

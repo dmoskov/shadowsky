@@ -3,8 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { TrendingUp, Users, Heart, MessageCircle, BarChart3, Bell, Clock, Repeat2, UserPlus, Calendar, Activity } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { format, subDays, startOfDay, subHours } from 'date-fns'
-import { ExtendedNotificationsFetcher } from './ExtendedNotificationsFetcher'
 import { useExtendedNotifications } from '../hooks/useExtendedNotifications'
+import { BackgroundNotificationLoader } from './BackgroundNotificationLoader'
 
 type TimeRange = '1d' | '3d' | '7d' | '4w'
 
@@ -313,9 +313,9 @@ export const NotificationsAnalytics: React.FC = () => {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Extended Notifications Fetcher */}
-      <ExtendedNotificationsFetcher />
-
+      {/* Background loader - no UI */}
+      <BackgroundNotificationLoader />
+      
       {/* Current Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {hasExtendedData ? (

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import type { AppBskyFeedDefs } from '@atproto/api'
 import { rateLimitedPostFetch } from '../services/rate-limiter'
+import { PostCache } from '../utils/postCache'
 
 type Post = AppBskyFeedDefs.PostView
 
@@ -19,21 +20,36 @@ export function usePostsByUris(uris: string[]) {
     queryFn: async () => {
       if (uris.length === 0) return []
       
+      // Check cache first (using async method for IndexedDB)
+      const { cached, missing } = await PostCache.getCachedPostsAsync(uris)
+      
+      // If we have all posts cached, return them immediately
+      if (missing.length === 0) {
+        console.log(`🎯 All ${cached.length} root posts found in cache`)
+        return cached
+      }
+      
+      console.log(`🎯 Found ${cached.length} cached root posts, fetching ${missing.length} from API`)
+      
       const { atProtoClient } = await import('../services/atproto')
       const agent = atProtoClient.agent
       if (!agent) throw new Error('Not authenticated')
       
-      // Batch fetch posts (Bluesky API supports up to 25 posts per request)
-      const posts: Post[] = []
+      // Batch fetch missing posts (Bluesky API supports up to 25 posts per request)
+      const posts: Post[] = [...cached] // Start with cached posts
       
-      for (let i = 0; i < uris.length; i += 25) {
-        const batch = uris.slice(i, i + 25)
+      for (let i = 0; i < missing.length; i += 25) {
+        const batch = missing.slice(i, i + 25)
         try {
           // Rate limit the API call
           const response = await rateLimitedPostFetch(async () => 
             agent.app.bsky.feed.getPosts({ uris: batch })
           )
-          posts.push(...(response.data.posts as Post[]))
+          const newPosts = response.data.posts as Post[]
+          posts.push(...newPosts)
+          
+          // Cache the newly fetched posts
+          PostCache.save(newPosts)
         } catch (error) {
           console.error('Failed to fetch posts batch:', error)
         }

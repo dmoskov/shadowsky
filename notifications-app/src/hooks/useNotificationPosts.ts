@@ -61,8 +61,8 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
       const INITIAL_POSTS_TO_FETCH = 200
       const urisToFetch = postUris.slice(0, INITIAL_POSTS_TO_FETCH)
       
-      // Check cache first
-      const { cached, missing } = PostCache.getCachedPosts(urisToFetch)
+      // Check cache first (using async method for IndexedDB)
+      const { cached, missing } = await PostCache.getCachedPostsAsync(urisToFetch)
       
       // If we have all posts cached, return them immediately
       if (missing.length === 0) {
@@ -141,8 +141,8 @@ export function useNotificationPosts(notifications: Notification[] | undefined) 
       // Take the next batch of unfetched URIs in order (which naturally prioritizes top posts)
       const urisToFetch = unfetchedUris.slice(0, BATCH_SIZE)
       
-      // Check cache first for this batch
-      const { cached: cachedBatch, missing: missingBatch } = PostCache.getCachedPosts(urisToFetch)
+      // Check cache first for this batch (using async method for IndexedDB)
+      const { cached: cachedBatch, missing: missingBatch } = await PostCache.getCachedPostsAsync(urisToFetch)
       const newPosts: Post[] = [...cachedBatch]
       
       // Only fetch missing posts from API

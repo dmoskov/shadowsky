@@ -118,6 +118,7 @@ export class PostCache {
   }
 
   static getCachedPosts(uris: string[]): { cached: Post[], missing: string[] } {
+    // Try to get from memory cache first (synchronous check)
     const cachedData = this.load()
     if (!cachedData) {
       return { cached: [], missing: uris }
@@ -136,10 +137,31 @@ export class PostCache {
     })
     
     if (cached.length > 0) {
-      console.log(`📮 Found ${cached.length} cached posts out of ${uris.length} requested`)
+      console.log(`📮 Found ${cached.length} cached posts out of ${uris.length} requested from localStorage`)
+    }
+    
+    // Asynchronously check IndexedDB for missing posts in the background
+    if (missing.length > 0) {
+      this.checkIndexedDBForMissingPosts(missing).catch(error => {
+        console.error('Failed to check IndexedDB for missing posts:', error)
+      })
     }
     
     return { cached, missing }
+  }
+  
+  private static async checkIndexedDBForMissingPosts(uris: string[]): Promise<void> {
+    try {
+      await this.ensureInit()
+      const indexedDBPosts = await this.cacheService.getPosts(uris)
+      if (indexedDBPosts.length > 0) {
+        console.log(`📮 Found ${indexedDBPosts.length} posts in IndexedDB that were missing from localStorage`)
+        // Save them to localStorage for next time
+        this.saveToLocalStorage(indexedDBPosts)
+      }
+    } catch (error) {
+      console.error('Failed to check IndexedDB for posts:', error)
+    }
   }
 
   static clear(): void {
@@ -224,6 +246,63 @@ export class PostCache {
         newestPost: null,
         lastUpdate: null
       }
+    }
+  }
+  
+  /**
+   * Get cached posts asynchronously from IndexedDB
+   * This should be used by new code that can handle async operations
+   */
+  static async getCachedPostsAsync(uris: string[]): Promise<{ cached: Post[], missing: string[] }> {
+    try {
+      await this.ensureInit()
+      
+      // First check IndexedDB
+      const indexedDBPosts = await this.cacheService.getPosts(uris)
+      const foundUris = new Set(indexedDBPosts.map(p => p.uri))
+      const missing = uris.filter(uri => !foundUris.has(uri))
+      
+      if (indexedDBPosts.length > 0) {
+        console.log(`📮 Found ${indexedDBPosts.length} cached posts out of ${uris.length} requested from IndexedDB`)
+      }
+      
+      // If we found all posts in IndexedDB, return them
+      if (missing.length === 0) {
+        return { cached: indexedDBPosts, missing: [] }
+      }
+      
+      // Otherwise, check localStorage for any missing posts
+      const localData = this.loadFromLocalStorage()
+      if (localData) {
+        const additionalPosts: Post[] = []
+        const stillMissing: string[] = []
+        
+        missing.forEach(uri => {
+          const post = localData.posts[uri]
+          if (post) {
+            additionalPosts.push(post)
+            // Also save to IndexedDB for next time
+            this.cacheService.cachePosts([post]).catch(console.error)
+          } else {
+            stillMissing.push(uri)
+          }
+        })
+        
+        if (additionalPosts.length > 0) {
+          console.log(`📮 Found ${additionalPosts.length} additional posts from localStorage`)
+        }
+        
+        return {
+          cached: [...indexedDBPosts, ...additionalPosts],
+          missing: stillMissing
+        }
+      }
+      
+      return { cached: indexedDBPosts, missing }
+    } catch (error) {
+      console.error('Failed to get cached posts from IndexedDB:', error)
+      // Fall back to synchronous localStorage check
+      return this.getCachedPosts(uris)
     }
   }
 }

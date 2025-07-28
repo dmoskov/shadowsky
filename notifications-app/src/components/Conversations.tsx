@@ -2,9 +2,10 @@ import React, { useState, useMemo, useRef } from 'react'
 import { MessageCircle, Search, ArrowLeft, Users, Loader2, ExternalLink, CornerDownRight, ChevronDown } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
-import { useReplyNotifications } from '../hooks/useNotificationsByType'
+import { useReplyNotificationsFromCache } from '../hooks/useReplyNotificationsFromCache'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
 import { usePostsByUris } from '../hooks/usePostsByUris'
+import { useQueryClient } from '@tanstack/react-query'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { getNotificationUrl, atUriToBskyUrl } from '../utils/url-helpers'
 import type { AppBskyFeedDefs } from '@atproto/api'
@@ -114,18 +115,20 @@ export const Conversations: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const previousPostMapRef = React.useRef<Map<string, Post>>(new Map())
   const threadContainerRef = useRef<HTMLDivElement>(null)
+  const queryClient = useQueryClient()
 
-  // Fetch reply notifications specifically
+  // Use the cache-aware hook which automatically checks extended notifications cache
   const { 
     data, 
     isLoading, 
     error,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage
-  } = useReplyNotifications()
+    isFetchingNextPage,
+    isFromCache
+  } = useReplyNotificationsFromCache()
 
-  // Extract reply notifications from paginated data
+  // Extract reply notifications from the data
   const replyNotifications = React.useMemo(() => {
     if (!data?.pages) return []
     return data.pages.flatMap((page: any) => page.notifications)
@@ -206,13 +209,14 @@ export const Conversations: React.FC = () => {
       isLoading, 
       isLoadingPosts,
       isLoadingRootPosts,
+      isFromCache,
       hasData: !!data, 
       pageCount: data?.pages?.length,
       notificationCount: replyNotifications.length,
       postCount: (Array.isArray(posts) ? posts.length : 0),
       rootPostCount: (Array.isArray(rootPosts) ? rootPosts.length : 0)
     })
-  }, [isLoading, isLoadingPosts, isLoadingRootPosts, data, replyNotifications.length, posts, rootPosts])
+  }, [isLoading, isLoadingPosts, isLoadingRootPosts, isFromCache, data, replyNotifications.length, posts, rootPosts])
 
   // Group notifications into conversation threads
   const conversations = useMemo(() => {
@@ -376,9 +380,9 @@ export const Conversations: React.FC = () => {
     return rootNodes
   }, [selectedConversation, postMap])
 
-  // Load more reply notifications automatically and aggressively
+  // Load more reply notifications automatically and aggressively (only if not from cache)
   React.useEffect(() => {
-    if (data?.pages && hasNextPage && !isFetchingNextPage) {
+    if (!isFromCache && data?.pages && hasNextPage && !isFetchingNextPage) {
       // For conversations, we want to fetch more aggressively to get a good thread view
       const currentNotificationCount = data.pages.reduce((sum, page) => sum + page.notifications.length, 0)
       
@@ -388,7 +392,7 @@ export const Conversations: React.FC = () => {
         fetchNextPage()
       }
     }
-  }, [data?.pages, hasNextPage, isFetchingNextPage, fetchNextPage])
+  }, [isFromCache, data?.pages, hasNextPage, isFetchingNextPage, fetchNextPage])
 
 
   // Render thread nodes recursively
@@ -661,7 +665,9 @@ export const Conversations: React.FC = () => {
   }
 
   // Show loading state only on initial load when we have no data at all
-  if (isLoading && !data) {
+  const actualIsLoading = isFromCache ? false : isLoading
+  
+  if (actualIsLoading && !data) {
     return (
       <div className="flex items-center justify-center h-screen" style={{ background: 'var(--bsky-bg-primary)' }}>
         <div className="text-center">
@@ -690,7 +696,7 @@ export const Conversations: React.FC = () => {
   return (
     <div className="flex h-[calc(100vh-4rem)] relative" style={{ background: 'var(--bsky-bg-primary)' }}>
       {/* Loading overlay for background fetches */}
-      {isLoading && data && (
+      {actualIsLoading && data && (
         <div className="absolute inset-0 bg-black bg-opacity-10 flex items-center justify-center z-50" 
              style={{ backdropFilter: 'blur(2px)' }}>
           <div className="bg-white rounded-lg p-4 shadow-lg" style={{ background: 'var(--bsky-bg-secondary)' }}>
