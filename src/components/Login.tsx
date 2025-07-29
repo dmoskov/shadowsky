@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { Shield, Smartphone } from 'lucide-react'
+import { Shield, Smartphone, Mail } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import butterflyIcon from '/butterfly-icon.svg'
 
 export const Login: React.FC = () => {
   const { login } = useAuth()
@@ -10,6 +11,8 @@ export const Login: React.FC = () => {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [showEmailCode, setShowEmailCode] = useState(false)
+  const [emailCode, setEmailCode] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -17,9 +20,22 @@ export const Login: React.FC = () => {
     setIsLoading(true)
 
     try {
-      await login(identifier, password, pdsUrl)
+      await login(identifier, password, pdsUrl, showEmailCode ? emailCode : undefined)
     } catch (err: any) {
-      setError(err.message || 'Failed to login')
+      // Check if this is an email auth factor error
+      console.log('Login error:', err)
+      console.log('Error message:', err.message)
+      console.log('Error status:', err.status)
+      
+      if (err.message?.includes('sign in code has been sent') || 
+          err.message?.includes('AuthFactorTokenRequired') ||
+          err.status === 'AuthFactorTokenRequired') {
+        console.log('Setting showEmailCode to true')
+        setShowEmailCode(true)
+        setError('A sign in code has been sent to your email address. Please check your email and enter the code below.')
+      } else {
+        setError(err.message || 'Failed to login')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -30,7 +46,7 @@ export const Login: React.FC = () => {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <img 
-            src="/shadowsky-icon.svg" 
+            src={butterflyIcon} 
             alt="ShadowSky Logo" 
             className="w-20 h-20 mb-4 rounded-2xl shadow-lg mx-auto"
           />
@@ -40,13 +56,14 @@ export const Login: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="bsky-card p-8 shadow-lg">
           {error && (
-            <div className="mb-4 p-3 rounded-lg text-sm" 
+            <div className="mb-4 p-3 rounded-lg text-sm flex items-start gap-2" 
                  style={{ 
-                   backgroundColor: 'rgba(239, 68, 68, 0.1)', 
-                   border: '1px solid var(--bsky-error)',
-                   color: 'var(--bsky-error)'
+                   backgroundColor: showEmailCode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                   border: showEmailCode ? '1px solid var(--bsky-primary)' : '1px solid var(--bsky-error)',
+                   color: showEmailCode ? 'var(--bsky-primary)' : 'var(--bsky-error)'
                  }}>
-              {error}
+              {showEmailCode && <Mail size={16} className="mt-0.5 flex-shrink-0" />}
+              <span>{error}</span>
             </div>
           )}
 
@@ -96,6 +113,50 @@ export const Login: React.FC = () => {
             />
           </div>
 
+          {console.log('showEmailCode state:', showEmailCode)}
+          {showEmailCode && (
+            <div className="mb-6">
+              <label htmlFor="emailCode" className="block text-sm font-medium mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>
+                Email Verification Code
+              </label>
+              <input
+                type="text"
+                id="emailCode"
+                value={emailCode}
+                onChange={(e) => setEmailCode(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl text-white transition-all
+                         focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                style={{ 
+                  backgroundColor: 'var(--bsky-bg-tertiary)',
+                  border: '1px solid var(--bsky-border-primary)',
+                  color: 'var(--bsky-text-primary)'
+                }}
+                onFocus={(e) => e.target.style.borderColor = 'var(--bsky-primary)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--bsky-border-primary)'}
+                placeholder="Enter the code from your email"
+                required
+                autoFocus
+              />
+              <div className="flex items-center justify-between mt-1">
+                <p className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                  Check your email for the verification code
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmailCode('')
+                    setShowEmailCode(false)
+                    setError('')
+                  }}
+                  className="text-xs hover:underline"
+                  style={{ color: 'var(--bsky-primary)' }}
+                >
+                  Try different credentials
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="mb-6">
             <button
               type="button"
@@ -141,7 +202,7 @@ export const Login: React.FC = () => {
             className="w-full py-3 px-4 bsky-button-primary text-white font-semibold
                      disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? 'Signing in...' : showEmailCode ? 'Verify Code' : 'Sign In'}
           </button>
           
         </form>

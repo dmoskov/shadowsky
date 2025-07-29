@@ -243,7 +243,7 @@ export const NotificationsFeed: React.FC = () => {
     <div className="bsky-font">
       {/* Header with filters */}
       <div className="sticky top-0 bsky-glass z-10" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
-        <div className="max-w-4xl mx-auto px-2 md:px-4 py-4">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 py-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             {unreadCount !== undefined && unreadCount !== null && unreadCount > 0 && (
@@ -342,7 +342,7 @@ export const NotificationsFeed: React.FC = () => {
           fontSize: '0.875rem',
           color: 'var(--bsky-text-secondary)'
         }}>
-          <div className="max-w-4xl mx-auto px-2 md:px-4 py-2">
+          <div className="max-w-4xl mx-auto px-4 md:px-6 py-2">
             <div className="flex items-center justify-between">
               <span>Loading post content...</span>
               <span>{percentageFetched}% ({fetchedPosts}/{totalPosts} posts)</span>
@@ -361,7 +361,7 @@ export const NotificationsFeed: React.FC = () => {
       )}
 
       {/* Notifications list */}
-      <div className="max-w-4xl mx-auto px-2 md:px-4">
+      <div className="max-w-4xl mx-auto pt-4 md:pt-8">
         {filter === 'top-accounts' ? (
           <TopAccountsView 
             notifications={notifications} 
@@ -851,7 +851,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(({
       href={notificationUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className={`bsky-notification flex gap-3 py-4 cursor-pointer block no-underline ${
+      className={`bsky-notification flex gap-3 py-4 px-4 md:px-6 cursor-pointer block no-underline ${
         !notification.isRead ? 'bsky-notification-unread' : ''
       }`}
       style={{ textDecoration: 'none', color: 'inherit' }}

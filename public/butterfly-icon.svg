@@ -1,0 +1,117 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  
+  <!-- Butterfly body -->
+  <rect x="96" y="50" width="8" height="90" rx="3" fill="#1a1a1a"/>
+  
+  <!-- Upper left wing -->
+  <path d="M 95 90
+           L 75 20
+           L 45 12
+           L 20 25
+           L 15 55
+           L 20 95
+           L 35 105
+           L 60 100
+           L 95 95
+           Z"
+        fill="url(#blueGradient)" 
+        stroke="#0a0a0a" 
+        stroke-width="2.5"/>
+  
+  <!-- Upper right wing -->
+  <path d="M 105 90
+           L 125 20
+           L 155 12
+           L 180 25
+           L 185 55
+           L 180 95
+           L 165 105
+           L 140 100
+           L 105 95
+           Z"
+        fill="url(#blueGradient)" 
+        stroke="#0a0a0a" 
+        stroke-width="2.5"/>
+  
+  <!-- Lower left wing -->
+  <path d="M 95 105
+           L 85 140
+           L 65 165
+           L 45 175
+           L 35 168
+           L 30 140
+           L 35 105
+           L 55 100
+           L 95 100
+           Z"
+        fill="url(#blueGradient2)" 
+        stroke="#0a0a0a" 
+        stroke-width="2.5"/>
+  
+  <!-- Lower right wing -->
+  <path d="M 105 105
+           L 115 140
+           L 135 165
+           L 155 175
+           L 165 168
+           L 170 140
+           L 165 105
+           L 145 100
+           L 105 100
+           Z"
+        fill="url(#blueGradient2)" 
+        stroke="#0a0a0a" 
+        stroke-width="2.5"/>
+  
+  <!-- Wing edge pattern (black borders with spots) -->
+  <path d="M 20 25 L 15 55 L 20 95 L 35 105 L 45 95 L 40 55 L 35 30 Z" 
+        fill="#0a0a0a" opacity="0.8"/>
+  <path d="M 180 25 L 185 55 L 180 95 L 165 105 L 155 95 L 160 55 L 165 30 Z" 
+        fill="#0a0a0a" opacity="0.8"/>
+  
+  <!-- White spots on wing edges -->
+  <circle cx="28" cy="40" r="4" fill="white"/>
+  <circle cx="30" cy="60" r="3.5" fill="white"/>
+  <circle cx="33" cy="80" r="3" fill="white"/>
+  
+  <circle cx="172" cy="40" r="4" fill="white"/>
+  <circle cx="170" cy="60" r="3.5" fill="white"/>
+  <circle cx="167" cy="80" r="3" fill="white"/>
+  
+  <circle cx="45" cy="155" r="2.5" fill="white"/>
+  <circle cx="52" cy="145" r="2" fill="white"/>
+  
+  <circle cx="155" cy="155" r="2.5" fill="white"/>
+  <circle cx="148" cy="145" r="2" fill="white"/>
+  
+  <!-- Wing texture lines -->
+  <line x1="95" y1="95" x2="70" y2="35" stroke="#003f5c" stroke-width="1" opacity="0.5"/>
+  <line x1="95" y1="95" x2="60" y2="55" stroke="#003f5c" stroke-width="1" opacity="0.5"/>
+  <line x1="95" y1="95" x2="55" y2="75" stroke="#003f5c" stroke-width="1" opacity="0.5"/>
+  
+  <line x1="105" y1="95" x2="130" y2="35" stroke="#003f5c" stroke-width="1" opacity="0.5"/>
+  <line x1="105" y1="95" x2="140" y2="55" stroke="#003f5c" stroke-width="1" opacity="0.5"/>
+  <line x1="105" y1="95" x2="145" y2="75" stroke="#003f5c" stroke-width="1" opacity="0.5"/>
+  
+  <!-- Antennae -->
+  <line x1="98" y1="53" x2="92" y2="35" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+  <line x1="102" y1="53" x2="108" y2="35" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="92" cy="35" r="3" fill="#1a1a1a"/>
+  <circle cx="108" cy="35" r="3" fill="#1a1a1a"/>
+  
+  <!-- Gradients for bright blue effect -->
+  <defs>
+    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff"/>
+      <stop offset="30%" stop-color="#00c8ff"/>
+      <stop offset="60%" stop-color="#0099ff"/>
+      <stop offset="90%" stop-color="#0066cc"/>
+    </linearGradient>
+    
+    <linearGradient id="blueGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="40%" stop-color="#00a8ff"/>
+      <stop offset="80%" stop-color="#0077cc"/>
+    </linearGradient>
+  </defs>
+</svg>

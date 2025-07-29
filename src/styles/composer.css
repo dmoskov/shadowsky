@@ -154,6 +154,7 @@
   color: var(--blue-500);
 }
 
+.media-upload-button,
 .image-upload-button {
   display: flex;
   align-items: center;
@@ -168,17 +169,20 @@
   position: relative;
 }
 
+.media-upload-button:hover:not(:disabled),
 .image-upload-button:hover:not(:disabled) {
   background: var(--surface-elevated);
   color: var(--text-primary);
   border-color: var(--blue-500);
 }
 
+.media-upload-button:disabled,
 .image-upload-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
+.media-count,
 .image-count {
   background: var(--blue-500);
   color: white;
@@ -190,10 +194,12 @@
   text-align: center;
 }
 
+.media-preview-section,
 .image-preview-section {
   margin-bottom: 2rem;
 }
 
+.media-preview-section h3,
 .image-preview-section h3 {
   font-size: 1rem;
   font-weight: 600;
@@ -201,12 +207,14 @@
   margin-bottom: 1rem;
 }
 
+.media-previews,
 .image-previews {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 1rem;
 }
 
+.media-preview,
 .image-preview {
   position: relative;
   background: var(--surface-secondary);
@@ -215,6 +223,7 @@
   overflow: hidden;
 }
 
+.media-preview img,
 .image-preview img {
   width: 100%;
   height: 150px;
@@ -222,6 +231,14 @@
   display: block;
 }
 
+.video-preview {
+  width: 100%;
+  height: auto;
+  max-height: 200px;
+  display: block;
+}
+
+.remove-media,
 .remove-image {
   position: absolute;
   top: 0.5rem;
@@ -238,6 +255,7 @@
   justify-content: center;
 }
 
+.remove-media:hover,
 .remove-image:hover {
   background: rgba(0, 0, 0, 0.9);
   transform: scale(1.1);
@@ -303,6 +321,7 @@
   gap: 0.5rem;
 }
 
+.preview-post-media,
 .preview-post-images {
   display: flex;
   align-items: center;
@@ -423,4 +442,121 @@
     margin-top: 0.5rem;
     text-align: center;
   }
+}
+
+/* Drag and drop styles */
+.dragging {
+  opacity: 0.5;
+  cursor: grabbing !important;
+}
+
+.drag-over {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgb(59, 130, 246) !important;
+}
+
+.draggable-attachment {
+  cursor: grab;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.draggable-attachment:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.draggable-attachment:active {
+  cursor: grabbing;
+}
+
+.drop-zone {
+  transition: all 0.3s ease;
+}
+
+.drop-zone.active {
+  background-color: rgba(59, 130, 246, 0.05);
+  border-style: dashed;
+  border-color: rgb(59, 130, 246);
+}
+
+.drag-handle {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.25rem;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.attachment-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--border-color);
+  margin-top: 0.75rem;
+}
+
+.attachment-thumbnail {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: var(--surface-secondary);
+  cursor: grab;
+  transition: all 0.2s ease;
+}
+
+.attachment-thumbnail:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.attachment-thumbnail img,
+.attachment-thumbnail video {
+  width: 100%;
+  height: 3rem;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* Reordering feedback */
+.media-reorder-target {
+  position: relative;
+}
+
+.media-reorder-target::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -4px;
+  bottom: 0;
+  width: 3px;
+  background-color: rgb(59, 130, 246);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.media-reorder-target.drag-left::before {
+  opacity: 1;
+}
+
+.media-reorder-target::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -4px;
+  bottom: 0;
+  width: 3px;
+  background-color: rgb(59, 130, 246);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.media-reorder-target.drag-right::after {
+  opacity: 1;
 }

@@ -5,6 +5,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   base: process.env.GITHUB_PAGES ? '/shadowsky/' : '/',
   plugins: [react()],
+  optimizeDeps: {
+    exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util']
+  },
   server: {
     port: 5174,
     // Configure the dev server to handle SPA routing
@@ -13,7 +16,13 @@ export default defineConfig({
     // that don't match static files
     fs: {
       strict: false
-    }
+    },
+    // Required headers for FFmpeg.wasm to work properly
+    // Using 'credentialless' instead of 'require-corp' to allow loading external images
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'credentialless',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+    },
   },
   preview: {
     port: 5174

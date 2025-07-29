@@ -24,7 +24,7 @@ export function useNotifications(priority: boolean = false) {
     debug.log(`🚀 [${timestamp}] React Query: No cache found, will fetch from API`)
   }
 
-  return useInfiniteQuery({
+  const query = useInfiniteQuery({
     queryKey: ['notifications', priority],
     queryFn: async ({ pageParam }) => {
       const fetchTimestamp = new Date().toLocaleTimeString()
@@ -86,27 +86,32 @@ export function useNotifications(priority: boolean = false) {
     placeholderData: cachedData ? {
       pages: cachedData.pages,
       pageParams: [undefined, ...cachedData.pages.slice(0, -1).map(p => p.cursor)]
-    } : undefined,
-    // Save to cache after successful API fetch
-    // Note: Using onSuccess for compatibility, but consider migrating to mutation side effects
-    onSuccess: (data) => {
-      const successTimestamp = new Date().toLocaleTimeString()
-      if (data?.pages && data.pages.length > 0) {
-        const totalNotifications = data.pages.reduce((sum, p) => sum + p.notifications.length, 0)
-        debug.log(`💾 [${successTimestamp}] React Query onSuccess: Saving ${totalNotifications} notifications to cache`)
-        NotificationCache.save(data.pages, priority)
-        
-        // Also save individual notifications to object cache
-        const allNotifications = data.pages.flatMap(page => page.notifications)
-        NotificationObjectCache.save(allNotifications)
-      }
-    },
-    // Add onError handler to help debug issues
-    onError: (error) => {
-      const errorTimestamp = new Date().toLocaleTimeString()
-      debug.error(`❌ [${errorTimestamp}] React Query error in useNotifications:`, error)
-    }
+    } : undefined
   })
+
+  // Save to cache after successful data fetch
+  React.useEffect(() => {
+    if (query.data?.pages && query.data.pages.length > 0 && !query.isLoading) {
+      const successTimestamp = new Date().toLocaleTimeString()
+      const totalNotifications = query.data.pages.reduce((sum, p) => sum + p.notifications.length, 0)
+      debug.log(`💾 [${successTimestamp}] React Query: Saving ${totalNotifications} notifications to cache`)
+      NotificationCache.save(query.data.pages, priority)
+      
+      // Also save individual notifications to object cache
+      const allNotifications = query.data.pages.flatMap(page => page.notifications)
+      NotificationObjectCache.save(allNotifications)
+    }
+  }, [query.data, query.isLoading, priority])
+
+  // Log errors for debugging
+  React.useEffect(() => {
+    if (query.error) {
+      const errorTimestamp = new Date().toLocaleTimeString()
+      debug.error(`❌ [${errorTimestamp}] React Query error in useNotifications:`, query.error)
+    }
+  }, [query.error])
+
+  return query
 }
 
 export function useUnreadNotificationCount() {

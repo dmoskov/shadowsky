@@ -2,7 +2,7 @@ import React from 'react'
 import { Menu, LogOut } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { ThemeToggle } from './ThemeToggle'
-import { ButterflyIcon } from './icons/ButterflyIcon'
+import butterflyIcon from '/butterfly-icon.svg'
 
 interface HeaderProps {
   onMenuToggle: () => void
@@ -22,10 +22,13 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
             <Menu size={24} style={{ color: 'var(--bsky-text-primary)' }} />
           </button>
           
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg" style={{ background: 'linear-gradient(135deg, var(--bsky-primary), var(--bsky-accent))' }}>
-              <ButterflyIcon size={20} className="text-white" />
-            </div>
+          <div className="flex items-center gap-2">
+            <img 
+              src={butterflyIcon} 
+              alt="ShadowSky Logo" 
+              className="w-7 h-7"
+              style={{ marginTop: '2px' }}
+            />
             <h1 className="text-xl font-bold hidden sm:block bsky-gradient-text">ShadowSky</h1>
           </div>
         </div>

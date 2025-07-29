@@ -6,7 +6,7 @@ import { format, subDays, startOfDay, subHours } from 'date-fns'
 import { useExtendedNotifications } from '../hooks/useExtendedNotifications'
 import { BackgroundNotificationLoader } from './BackgroundNotificationLoader'
 import { useFeatureTracking, useInteractionTracking } from '../hooks/useAnalytics'
-import { analytics } from '../services/analytics'
+import { analytics as analyticsService } from '../services/analytics'
 
 type TimeRange = '1d' | '3d' | '7d' | '4w'
 
@@ -21,7 +21,7 @@ const TrackedChart: React.FC<{ chartName: string; children: React.ReactNode }> =
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasTracked) {
-          analytics.trackAnalyticsView(chartName)
+          analyticsService.trackAnalyticsView(chartName)
           setHasTracked(true)
         }
       },
@@ -49,7 +49,7 @@ export const NotificationsAnalytics: React.FC = () => {
   const handleTimeRangeChange = (newRange: TimeRange) => {
     setTimeRange(newRange)
     trackFeatureAction('time_range_changed', { range: newRange })
-    analytics.trackAnalyticsInteraction('time_range_changed', newRange)
+    analyticsService.trackAnalyticsInteraction('time_range_changed', newRange)
   }
   
 

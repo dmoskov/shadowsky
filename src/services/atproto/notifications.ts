@@ -1,10 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { mapATProtoError } from '@bsky/shared'
-import { rateLimiters, withRateLimit } from '@bsky/shared'
-
-// Add delay utility for pacing requests
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+import { rateLimitedNotificationFetch } from '../rate-limiter'
 
 export class NotificationService {
   constructor(private agent: AtpAgent) {}
@@ -19,15 +16,8 @@ export class NotificationService {
     notifications: Notification[]
     cursor?: string
   }> {
-    return withRateLimit(rateLimiters.general, 'listNotifications', async () => {
+    return rateLimitedNotificationFetch(async () => {
       try {
-        // Add a delay between requests to avoid hitting rate limits
-        // This is especially important when fetching 4 weeks of data
-        if (cursor) {
-          // Wait 500ms between pagination requests
-          await delay(500)
-        }
-        
         const response = await this.agent.app.bsky.notification.listNotifications({
           limit: Math.min(limit, 100), // API max is 100
           cursor,
@@ -48,7 +38,7 @@ export class NotificationService {
    * Get unread notification count
    */
   async getUnreadCount(): Promise<number> {
-    return withRateLimit(rateLimiters.general, 'getUnreadCount', async () => {
+    return rateLimitedNotificationFetch(async () => {
       try {
         const response = await this.agent.app.bsky.notification.getUnreadCount()
         return response.data.count
@@ -62,7 +52,7 @@ export class NotificationService {
    * Update last seen time for notifications
    */
   async updateSeen(seenAt: string): Promise<void> {
-    return withRateLimit(rateLimiters.general, 'updateSeen', async () => {
+    return rateLimitedNotificationFetch(async () => {
       try {
         await this.agent.app.bsky.notification.updateSeen({ seenAt })
       } catch (error) {

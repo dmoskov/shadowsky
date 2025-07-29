@@ -178,8 +178,28 @@
 }
 
 .bsky-notification-unread {
-  border-left: 3px solid var(--bsky-primary);
-  background: linear-gradient(90deg, rgba(0, 133, 255, 0.1) 0%, transparent 100%);
+  border-left: 4px solid var(--bsky-primary);
+  background: linear-gradient(90deg, rgba(0, 133, 255, 0.08) 0%, transparent 50%);
+  margin-left: -4px;
+  padding-left: calc(1rem + 4px) !important;
+}
+@media (min-width: 768px) {
+  .bsky-notification-unread {
+    padding-left: calc(1.5rem + 4px) !important;
+  }
+}
+
+/* Conversation item unread style */
+.conversation-unread {
+  border-left: 4px solid var(--bsky-primary);
+  background: linear-gradient(90deg, rgba(0, 133, 255, 0.08) 0%, transparent 50%);
+  margin-left: -4px;
+  padding-left: calc(1rem + 4px) !important;
+}
+@media (min-width: 768px) {
+  .conversation-unread {
+    padding-left: calc(1.5rem + 4px) !important;
+  }
 }
 
 /* Tab styles */

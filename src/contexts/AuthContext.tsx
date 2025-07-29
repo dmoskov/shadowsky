@@ -11,7 +11,7 @@ import { analytics } from '../services/analytics'
 interface AuthContextType {
   isAuthenticated: boolean
   isLoading: boolean
-  login: (identifier: string, password: string, pdsUrl?: string) => Promise<boolean>
+  login: (identifier: string, password: string, pdsUrl?: string, authFactorToken?: string) => Promise<boolean>
   logout: () => void
   session: Session | null
   client: ATProtoClient
@@ -127,7 +127,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth()
   }, [])
 
-  const login = useCallback(async (identifier: string, password: string, pdsUrl?: string): Promise<boolean> => {
+  const login = useCallback(async (identifier: string, password: string, pdsUrl?: string, authFactorToken?: string): Promise<boolean> => {
     try {
       // If a custom PDS URL is provided, we need to create a new client
       if (pdsUrl && pdsUrl !== 'https://bsky.social') {
@@ -135,7 +135,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         atProtoClient.updateService(pdsUrl)
       }
       
-      const newSession = await atProtoClient.login(identifier, password)
+      const newSession = await atProtoClient.login(identifier, password, authFactorToken)
       setIsAuthenticated(true)
       setSession(newSession)
       

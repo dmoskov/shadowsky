@@ -88,9 +88,9 @@ const ConversationItem = React.memo(({
   if (isLoadingRootPost && !convo.rootPost?.author) {
     debug.log('--- show loading state', isGroup,isLoadingRootPost, convo.rootPost?.author)
     return (
-      <div className={`w-full text-left p-4 transition-all ${
+      <div className={`w-full text-left py-4 px-4 md:px-6 transition-all ${
         isSelected ? 'bg-opacity-10 bg-blue-500' : ''
-      }`}
+      } ${unreadCount > 0 ? 'conversation-unread' : ''}`}
       style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
         <div className="flex items-center gap-3">
           {/* Avatar placeholder */}
@@ -154,9 +154,9 @@ const ConversationItem = React.memo(({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left p-4 transition-all hover:bg-opacity-10 hover:bg-blue-500 ${
+      className={`w-full text-left py-4 px-4 md:px-6 transition-all hover:bg-opacity-10 hover:bg-blue-500 ${
         isSelected ? 'bg-opacity-10 bg-blue-500' : ''
-      }`}
+      } ${unreadCount > 0 ? 'conversation-unread' : ''}`}
       style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}
     >
       <div className="flex items-center gap-3">
@@ -791,7 +791,10 @@ export const ConversationsSimple: React.FC = () => {
                     Original Post
                   </span>
                   {post && (
-                    <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                    <span className="text-xs px-2 py-1 rounded" style={{ 
+                      color: 'var(--bsky-text-tertiary)',
+                      backgroundColor: 'var(--bsky-bg-primary)'
+                    }}>
                       {formatDistanceToNow(
                         new Date((post.record as any)?.createdAt || post.indexedAt), 
                         { addSuffix: true }
@@ -830,7 +833,10 @@ export const ConversationsSimple: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <time className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                      <time className="text-xs px-2 py-1 rounded" style={{ 
+                        color: 'var(--bsky-text-tertiary)',
+                        backgroundColor: 'var(--bsky-bg-primary)'
+                      }}>
                         {formatDistanceToNow(
                           new Date((post?.record as any)?.createdAt || post?.indexedAt || Date.now()), 
                           { addSuffix: true }
@@ -875,13 +881,13 @@ export const ConversationsSimple: React.FC = () => {
   // Always render the UI immediately, even if data is still loading
   // This provides a non-blocking experience
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="flex h-[calc(100vh-4rem)] relative" style={{ background: 'var(--bsky-bg-primary)' }}>
+    <div className="h-[calc(100vh-4rem)]">
+      <div className="flex h-full relative max-w-7xl" style={{ background: 'var(--bsky-bg-primary)' }}>
         {/* Left Panel - Conversations List */}
         <div className={`${selectedConvo ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-96`} 
              style={{ borderRight: '1px solid var(--bsky-border-primary)' }}>
         {/* Search Header */}
-        <div className="p-4" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
+        <div className="py-4 px-4 md:px-6" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
           <div className="relative">
             <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2" 
                    style={{ color: 'var(--bsky-text-tertiary)' }} />
@@ -910,7 +916,7 @@ export const ConversationsSimple: React.FC = () => {
 
         {/* Loading indicator for posts */}
         {percentageFetched < 100 && totalPosts > 0 && (
-          <div className="px-4 py-2" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
+          <div className="px-4 md:px-6 py-2" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
             <div className="flex items-center gap-2">
               <Loader2 size={16} className="animate-spin" style={{ color: 'var(--bsky-primary)' }} />
               <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
