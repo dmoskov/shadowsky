@@ -7,7 +7,8 @@ import {
   BarChart3,
   MessageSquare,
   ExternalLink,
-  X
+  X,
+  PenSquare
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -21,6 +22,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { path: '/conversations', label: 'Conversations', icon: MessageSquare },
     { path: '/timeline', label: 'Visual Timeline', icon: Clock },
     { path: '/analytics', label: 'Analytics', icon: BarChart3 },
+    { path: '/compose', label: 'Compose', icon: PenSquare },
   ]
 
   return (

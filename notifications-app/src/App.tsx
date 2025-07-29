@@ -11,6 +11,7 @@ import { VisualTimeline } from './components/VisualTimeline'
 import { NotificationsAnalytics } from './components/NotificationsAnalytics'
 import { RateLimitStatus } from './components/RateLimitStatus'
 import { ConversationsSimple as Conversations } from './components/ConversationsSimple'
+import { Composer } from './components/Composer'
 import { DebugConsole } from './components/DebugConsole'
 import { NotificationStorageDB } from './services/notification-storage-db'
 import { cleanupLocalStorage } from './utils/cleanupLocalStorage'
@@ -97,6 +98,7 @@ function AppContent() {
             <Route path="/timeline" element={<VisualTimeline />} />
             <Route path="/analytics" element={<NotificationsAnalytics />} />
             <Route path="/conversations" element={<Conversations />} />
+            <Route path="/compose" element={<Composer />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

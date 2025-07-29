@@ -1,5 +1,6 @@
 /* Import our Bluesky-inspired theme */
 @import './styles/bluesky-theme.css';
+@import './styles/composer.css';
 
 @tailwind base;
 @tailwind components;
