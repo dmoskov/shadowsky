@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react'
-import { Send, Split, Settings, AlertCircle, CheckCircle, Loader } from 'lucide-react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
+import { Send, Split, Settings, AlertCircle, CheckCircle, Loader, Image, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getInteractionsService } from '@bsky/shared'
 
@@ -8,6 +8,13 @@ interface NumberingFormat {
   name: string
   format: (index: number, total: number) => string
   example: string
+}
+
+interface UploadedImage {
+  id: string
+  file: File
+  preview: string
+  alt: string
 }
 
 const NUMBERING_FORMATS: NumberingFormat[] = [
@@ -44,6 +51,8 @@ const NUMBERING_FORMATS: NumberingFormat[] = [
 ]
 
 const MAX_POST_LENGTH = 300
+const MAX_IMAGE_SIZE = 1024 * 1024 // 1MB
+const MAX_IMAGES_PER_POST = 4
 
 export function Composer() {
   const { agent } = useAuth()
@@ -53,6 +62,8 @@ export function Composer() {
   const [showSettings, setShowSettings] = useState(false)
   const [isPosting, setIsPosting] = useState(false)
   const [postStatus, setPostStatus] = useState<{ type: 'idle' | 'posting' | 'success' | 'error', message?: string }>({ type: 'idle' })
+  const [images, setImages] = useState<UploadedImage[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Auto-split text into posts when it changes
   useEffect(() => {
@@ -102,6 +113,51 @@ export function Composer() {
     })
   }, [numberingFormat])
 
+  const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const validFiles = files.filter(file => {
+      if (!file.type.startsWith('image/')) {
+        setPostStatus({ type: 'error', message: `${file.name} is not an image file` })
+        return false
+      }
+      if (file.size > MAX_IMAGE_SIZE) {
+        setPostStatus({ type: 'error', message: `${file.name} is too large (max 1MB)` })
+        return false
+      }
+      return true
+    })
+
+    const newImages = validFiles.slice(0, MAX_IMAGES_PER_POST - images.length).map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      file,
+      preview: URL.createObjectURL(file),
+      alt: ''
+    }))
+
+    setImages(prev => [...prev, ...newImages])
+    
+    // Clear the input so the same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }, [images])
+
+  const removeImage = useCallback((id: string) => {
+    setImages(prev => {
+      const removed = prev.find(img => img.id === id)
+      if (removed) {
+        URL.revokeObjectURL(removed.preview)
+      }
+      return prev.filter(img => img.id !== id)
+    })
+  }, [])
+
+  const updateImageAlt = useCallback((id: string, alt: string) => {
+    setImages(prev => prev.map(img => 
+      img.id === id ? { ...img, alt } : img
+    ))
+  }, [])
+
   const handleSend = async () => {
     if (!agent || posts.length === 0) return
 
@@ -111,6 +167,18 @@ export function Composer() {
     try {
       const interactionsService = getInteractionsService(agent)
       const numberedPosts = applyNumbering(posts)
+      
+      // Prepare images for upload
+      let imageData: Array<{ data: Uint8Array; mimeType: string; alt?: string }> | undefined
+      if (images.length > 0) {
+        imageData = await Promise.all(
+          images.map(async img => ({
+            data: new Uint8Array(await img.file.arrayBuffer()),
+            mimeType: img.file.type,
+            alt: img.alt
+          }))
+        )
+      }
       
       let lastPost: { uri: string; cid: string } | undefined
 
@@ -123,27 +191,52 @@ export function Composer() {
         let result: { uri: string; cid: string }
 
         if (i === 0) {
-          // First post - use createPost
-          result = await interactionsService.createPost(numberedPosts[i])
+          // First post - use createPost or createPostWithImages
+          if (imageData) {
+            result = await interactionsService.createPostWithImages(numberedPosts[i], imageData)
+            // Only include images in the first post
+            imageData = undefined
+          } else {
+            result = await interactionsService.createPost(numberedPosts[i])
+          }
           lastPost = {
             uri: result.uri,
             cid: result.cid
           }
         } else {
-          // Subsequent posts - use createReply
-          result = await interactionsService.createReply(
-            numberedPosts[i],
-            {
-              root: {
-                uri: lastPost!.uri,
-                cid: lastPost!.cid
+          // Subsequent posts - use createReply or createReplyWithImages
+          if (imageData) {
+            result = await interactionsService.createReplyWithImages(
+              numberedPosts[i],
+              {
+                root: {
+                  uri: lastPost!.uri,
+                  cid: lastPost!.cid
+                },
+                parent: {
+                  uri: lastPost!.uri,
+                  cid: lastPost!.cid
+                }
               },
-              parent: {
-                uri: lastPost!.uri,
-                cid: lastPost!.cid
+              imageData
+            )
+            // Only include images in the first post
+            imageData = undefined
+          } else {
+            result = await interactionsService.createReply(
+              numberedPosts[i],
+              {
+                root: {
+                  uri: lastPost!.uri,
+                  cid: lastPost!.cid
+                },
+                parent: {
+                  uri: lastPost!.uri,
+                  cid: lastPost!.cid
+                }
               }
-            }
-          )
+            )
+          }
           lastPost = {
             uri: result.uri,
             cid: result.cid
@@ -159,6 +252,7 @@ export function Composer() {
       setPostStatus({ type: 'success', message: 'Thread posted successfully!' })
       setText('')
       setPosts([])
+      setImages([])
       
       // Reset status after 3 seconds
       setTimeout(() => {
@@ -177,6 +271,13 @@ export function Composer() {
   }
 
   const displayPosts = applyNumbering(posts)
+
+  // Cleanup previews on unmount
+  useEffect(() => {
+    return () => {
+      images.forEach(img => URL.revokeObjectURL(img.preview))
+    }
+  }, [])
 
   return (
     <div className="composer-container">
@@ -223,21 +324,71 @@ export function Composer() {
           disabled={isPosting}
         />
         
-        <div className="composer-stats">
-          <span className="char-count">
-            {text.length} characters
-          </span>
-          {posts.length > 0 && (
-            <>
-              <span className="separator">•</span>
-              <span className="post-count">
-                <Split size={14} />
-                {posts.length} post{posts.length !== 1 ? 's' : ''}
-              </span>
-            </>
-          )}
+        <div className="composer-toolbar">
+          <div className="composer-stats">
+            <span className="char-count">
+              {text.length} characters
+            </span>
+            {posts.length > 0 && (
+              <>
+                <span className="separator">•</span>
+                <span className="post-count">
+                  <Split size={14} />
+                  {posts.length} post{posts.length !== 1 ? 's' : ''}
+                </span>
+              </>
+            )}
+          </div>
+          
+          <button
+            className="image-upload-button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isPosting || images.length >= MAX_IMAGES_PER_POST}
+            aria-label="Add image"
+          >
+            <Image size={20} />
+            {images.length > 0 && (
+              <span className="image-count">{images.length}</span>
+            )}
+          </button>
+          
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageSelect}
+            style={{ display: 'none' }}
+          />
         </div>
       </div>
+
+      {images.length > 0 && (
+        <div className="image-preview-section">
+          <h3>Images (will be added to first post)</h3>
+          <div className="image-previews">
+            {images.map(img => (
+              <div key={img.id} className="image-preview">
+                <img src={img.preview} alt={img.alt || 'Upload preview'} />
+                <button
+                  className="remove-image"
+                  onClick={() => removeImage(img.id)}
+                  aria-label="Remove image"
+                >
+                  <X size={16} />
+                </button>
+                <input
+                  type="text"
+                  placeholder="Alt text (optional)"
+                  value={img.alt}
+                  onChange={(e) => updateImageAlt(img.id, e.target.value)}
+                  className="alt-text-input"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {posts.length > 0 && (
         <div className="preview-section">
@@ -246,7 +397,15 @@ export function Composer() {
             {displayPosts.map((post, index) => (
               <div key={index} className="preview-post">
                 <div className="preview-post-header">
-                  <span className="preview-post-number">Post {index + 1}</span>
+                  <span className="preview-post-number">
+                    Post {index + 1}
+                    {index === 0 && images.length > 0 && (
+                      <span className="preview-post-images">
+                        <Image size={14} />
+                        {images.length}
+                      </span>
+                    )}
+                  </span>
                   <span className="preview-post-length">{post.length}/{MAX_POST_LENGTH}</span>
                 </div>
                 <div className="preview-post-content">{post}</div>

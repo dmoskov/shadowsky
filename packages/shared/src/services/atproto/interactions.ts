@@ -1,4 +1,4 @@
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent, AppBskyEmbedImages } from '@atproto/api'
 import type { Post } from '../../types/atproto'
 import { mapATProtoError } from '../../lib/errors'
 import { rateLimiters, withRateLimit } from '../../lib/rate-limiter'
@@ -164,6 +164,103 @@ class InteractionsService {
           record: {
             $type: 'app.bsky.feed.post',
             text,
+            createdAt: new Date().toISOString()
+          }
+        })
+        return { uri: result.data.uri, cid: result.data.cid }
+      } catch (error) {
+        throw mapATProtoError(error)
+      }
+    })
+  }
+
+  /**
+   * Create a new post with images
+   */
+  async createPostWithImages(
+    text: string,
+    images: Array<{ data: Uint8Array; mimeType: string; alt?: string }>
+  ): Promise<{ uri: string; cid: string }> {
+    return withRateLimit(rateLimiters.interactions, 'createPost', async () => {
+      try {
+        ensureAuthenticated(this.agent)
+        
+        // Upload images first
+        const uploadPromises = images.slice(0, 4).map(img =>
+          this.agent.uploadBlob(img.data, { encoding: img.mimeType })
+        )
+        const uploadResponses = await Promise.all(uploadPromises)
+        
+        // Create embed
+        const embed: AppBskyEmbedImages.Main = {
+          $type: 'app.bsky.embed.images',
+          images: uploadResponses.map((response, index) => ({
+            alt: images[index].alt || '',
+            image: response.data.blob
+          }))
+        }
+        
+        const { data: session } = await this.agent.com.atproto.server.getSession()
+        const result = await this.agent.com.atproto.repo.createRecord({
+          repo: session.did,
+          collection: 'app.bsky.feed.post',
+          record: {
+            $type: 'app.bsky.feed.post',
+            text,
+            embed,
+            createdAt: new Date().toISOString()
+          }
+        })
+        return { uri: result.data.uri, cid: result.data.cid }
+      } catch (error) {
+        throw mapATProtoError(error)
+      }
+    })
+  }
+
+  /**
+   * Create a reply with images
+   */
+  async createReplyWithImages(
+    text: string,
+    replyTo: {
+      root: { uri: string; cid: string }
+      parent: { uri: string; cid: string }
+    },
+    images?: Array<{ data: Uint8Array; mimeType: string; alt?: string }>
+  ): Promise<{ uri: string; cid: string }> {
+    return withRateLimit(rateLimiters.interactions, 'createReply', async () => {
+      try {
+        ensureAuthenticated(this.agent)
+        
+        let embed: AppBskyEmbedImages.Main | undefined
+        
+        if (images && images.length > 0) {
+          // Upload images first
+          const uploadPromises = images.slice(0, 4).map(img =>
+            this.agent.uploadBlob(img.data, { encoding: img.mimeType })
+          )
+          const uploadResponses = await Promise.all(uploadPromises)
+          
+          // Create embed
+          embed = {
+            $type: 'app.bsky.embed.images',
+            images: uploadResponses.map((response, index) => ({
+              alt: images[index].alt || '',
+              image: response.data.blob
+            }))
+          }
+        }
+        
+        const { data: session } = await this.agent.com.atproto.server.getSession()
+        const result = await this.agent.com.atproto.repo.createRecord({
+          repo: session.did,
+          collection: 'app.bsky.feed.post',
+          record: {
+            $type: 'app.bsky.feed.post',
+            text,
+            reply: replyTo,
+            embed,
             createdAt: new Date().toISOString()
           }
         })
