@@ -6,25 +6,20 @@ import {
   ATProtoClient, 
   FeedService,
   AnalyticsService,
-  type ATProtoConfig,
-  getInteractionsService,
-  getThreadService,
-  getSearchService
-} from '@bsky/shared/services/atproto'
-import { getNotificationService } from './notifications'
-import { getProfileService } from './profile'
-import { RateLimitedFeedService } from './feed-wrapper'
+  type ATProtoConfig
+} from '@bsky/shared'
+import { getInteractionsService } from '@bsky/shared'
+import { getThreadService } from '@bsky/shared'
 
-// Create singleton instances
+// Create singleton instances with app-specific session storage
 export const atProtoClient = new ATProtoClient({
   service: 'https://bsky.social',
   persistSession: true,
-  sessionPrefix: 'main_' // Use 'main_bsky_session' as the storage key for main app
+  sessionPrefix: 'notifications_', // This will use 'notifications_bsky_session' as the storage key
+  enableRateLimiting: false // Temporarily disable to fix cookie persistence
 })
 
-// Create base feed service and wrap with rate limiting
-const baseFeedService = new FeedService(atProtoClient)
-export const feedService = new RateLimitedFeedService(baseFeedService)
+export const feedService = new FeedService(atProtoClient)
 // Initialize deduplication after service creation
 feedService.initializeDeduplication()
 
@@ -35,8 +30,5 @@ export {
   AnalyticsService,
   type ATProtoConfig,
   getInteractionsService,
-  getThreadService,
-  getSearchService,
-  getNotificationService,
-  getProfileService
+  getThreadService
 }

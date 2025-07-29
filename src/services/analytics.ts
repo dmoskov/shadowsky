@@ -1,143 +1,252 @@
+// Google Analytics service for tracking user behavior and app usage
+
 declare global {
   interface Window {
-    gtag: (
-      command: 'config' | 'event' | 'js' | 'set',
-      targetId: string,
-      config?: Record<string, any>
-    ) => void
+    gtag: (...args: any[]) => void
     dataLayer: any[]
   }
 }
 
-export class AnalyticsService {
-  private static instance: AnalyticsService
-  private measurementId: string = 'G-M2YCCZRDMN'
-  private isInitialized: boolean = false
+export interface AnalyticsEvent {
+  category: string
+  action: string
+  label?: string
+  value?: number
+  custom_parameters?: Record<string, any>
+}
 
-  private constructor() {}
+class AnalyticsService {
+  private initialized = false
+  private userId: string | null = null
+  private measurementId: string | null = null
 
-  static getInstance(): AnalyticsService {
-    if (!AnalyticsService.instance) {
-      AnalyticsService.instance = new AnalyticsService()
+  initialize(measurementId: string) {
+    if (this.initialized || !measurementId) return
+
+    this.measurementId = measurementId
+    
+    // Initialize dataLayer
+    window.dataLayer = window.dataLayer || []
+    window.gtag = function() {
+      window.dataLayer.push(arguments)
     }
-    return AnalyticsService.instance
+    window.gtag('js', new Date())
+    window.gtag('config', measurementId, {
+      send_page_view: false, // We'll manually track page views
+      debug_mode: import.meta.env.DEV // Enable debug in development
+    })
+
+    this.initialized = true
   }
 
-  initialize(measurementId?: string) {
-    if (measurementId) {
-      this.measurementId = measurementId
-    }
-    this.isInitialized = true
-  }
-
-  private gtag(...args: any[]) {
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag(...args)
+  // Set user ID for tracking across sessions
+  setUserId(userId: string | null) {
+    this.userId = userId
+    if (userId) {
+      window.gtag('set', { user_id: userId })
     }
   }
 
-  // Page view tracking
-  trackPageView(pagePath: string, pageTitle?: string) {
-    if (!this.isInitialized) return
+  // Track page views
+  trackPageView(path: string, title?: string) {
+    if (!this.initialized) return
 
-    this.gtag('event', 'page_view', {
-      page_path: pagePath,
-      page_title: pageTitle || document.title,
+    window.gtag('event', 'page_view', {
+      page_path: path,
+      page_title: title || document.title,
+      user_id: this.userId
     })
   }
 
-  // Custom event tracking
-  trackEvent(eventName: string, parameters?: Record<string, any>) {
-    if (!this.isInitialized) return
+  // Track custom events
+  trackEvent(event: AnalyticsEvent) {
+    if (!this.initialized) return
 
-    this.gtag('event', eventName, {
-      ...parameters,
-      event_category: parameters?.category || 'engagement',
-      event_label: parameters?.label,
-      value: parameters?.value,
-    })
+    const parameters: Record<string, any> = {
+      event_category: event.category,
+      event_label: event.label,
+      value: event.value,
+      user_id: this.userId,
+      ...event.custom_parameters
+    }
+
+    window.gtag('event', event.action, parameters)
   }
 
-  // User authentication events
-  trackLogin(method: string) {
-    this.trackEvent('login', {
-      method,
+  // Authentication events
+  trackLogin(method: string = 'bluesky') {
+    this.trackEvent({
       category: 'authentication',
+      action: 'login',
+      label: method
     })
   }
 
   trackLogout() {
-    this.trackEvent('logout', {
+    this.trackEvent({
       category: 'authentication',
+      action: 'logout'
     })
   }
 
-  // Content interaction events
-  trackPostView(postId: string, authorDid?: string) {
-    this.trackEvent('view_item', {
-      item_id: postId,
-      item_category: 'post',
-      author_id: authorDid,
-      category: 'content',
+  // Notification events
+  trackNotificationView(type: string, count: number) {
+    this.trackEvent({
+      category: 'notifications',
+      action: 'view',
+      label: type,
+      value: count
     })
   }
 
-  trackPostEngagement(action: 'like' | 'repost' | 'reply', postId: string) {
-    this.trackEvent('post_engagement', {
-      action,
-      item_id: postId,
-      category: 'engagement',
+  trackNotificationInteraction(action: string, notificationType: string) {
+    this.trackEvent({
+      category: 'notifications',
+      action: `notification_${action}`,
+      label: notificationType
     })
   }
 
-  // Feed interactions
-  trackFeedScroll(depth: number) {
-    this.trackEvent('feed_scroll', {
-      scroll_depth: depth,
-      category: 'navigation',
+  trackNotificationLoad(duration: number, count: number, source: 'cache' | 'api') {
+    this.trackEvent({
+      category: 'performance',
+      action: 'notification_load',
+      label: source,
+      value: duration,
+      custom_parameters: {
+        notification_count: count
+      }
     })
   }
 
-  trackFeedRefresh() {
-    this.trackEvent('feed_refresh', {
-      category: 'navigation',
+  // Conversation events
+  trackConversationView(conversationId: string, messageCount: number) {
+    this.trackEvent({
+      category: 'conversations',
+      action: 'view',
+      label: conversationId,
+      value: messageCount
     })
   }
 
-  // Search events
-  trackSearch(searchTerm: string, resultCount?: number) {
-    this.trackEvent('search', {
-      search_term: searchTerm,
-      results_count: resultCount,
-      category: 'search',
+  trackConversationInteraction(action: string) {
+    this.trackEvent({
+      category: 'conversations',
+      action: `conversation_${action}`
+    })
+  }
+
+  // Analytics page events
+  trackAnalyticsView(chartType: string) {
+    this.trackEvent({
+      category: 'analytics',
+      action: 'view_chart',
+      label: chartType
+    })
+  }
+
+  trackAnalyticsInteraction(action: string, metric?: string) {
+    this.trackEvent({
+      category: 'analytics',
+      action: `analytics_${action}`,
+      label: metric
+    })
+  }
+
+  // Performance metrics
+  trackPerformance(metric: string, value: number, metadata?: Record<string, any>) {
+    this.trackEvent({
+      category: 'performance',
+      action: metric,
+      value: Math.round(value),
+      custom_parameters: metadata
     })
   }
 
   // Error tracking
-  trackError(errorMessage: string, errorStack?: string) {
-    this.trackEvent('exception', {
-      description: errorMessage,
-      fatal: false,
-      error_stack: errorStack,
-      category: 'error',
+  trackError(error: Error, context?: string) {
+    this.trackEvent({
+      category: 'errors',
+      action: 'error_occurred',
+      label: context || error.name,
+      custom_parameters: {
+        error_message: error.message,
+        error_stack: error.stack?.substring(0, 500) // Limit stack trace length
+      }
     })
   }
 
-  // User properties
-  setUserProperties(properties: Record<string, any>) {
-    if (!this.isInitialized) return
-
-    this.gtag('set', 'user_properties', properties)
+  // Feature usage
+  trackFeatureUsage(feature: string, action: string = 'used') {
+    this.trackEvent({
+      category: 'features',
+      action: `feature_${action}`,
+      label: feature
+    })
   }
 
-  // Set user ID for cross-device tracking
-  setUserId(userId: string) {
-    if (!this.isInitialized) return
+  // Search events
+  trackSearch(query: string, resultCount: number) {
+    this.trackEvent({
+      category: 'search',
+      action: 'search_performed',
+      label: query.substring(0, 100), // Limit query length
+      value: resultCount
+    })
+  }
 
-    this.gtag('config', this.measurementId, {
-      user_id: userId,
+  // UI interactions
+  trackUIInteraction(element: string, action: string) {
+    this.trackEvent({
+      category: 'ui_interaction',
+      action: action,
+      label: element
+    })
+  }
+
+  // Session timing
+  trackTiming(category: string, variable: string, value: number, label?: string) {
+    if (!this.initialized) return
+
+    window.gtag('event', 'timing_complete', {
+      event_category: category,
+      name: variable,
+      value: Math.round(value),
+      event_label: label
+    })
+  }
+
+  // Custom dimensions
+  setCustomDimension(index: number, value: string) {
+    if (!this.initialized) return
+
+    window.gtag('set', {
+      [`custom_dimension_${index}`]: value
     })
   }
 }
 
-export const analytics = AnalyticsService.getInstance()
+// Export singleton instance
+export const analytics = new AnalyticsService()
+
+// Export tracking hooks for React components
+export const usePageTracking = (pageName: string) => {
+  // This will be implemented as a React hook
+}
+
+// Helper to track component mount/unmount
+export const trackComponentLifecycle = (componentName: string) => {
+  analytics.trackEvent({
+    category: 'components',
+    action: 'component_mounted',
+    label: componentName
+  })
+
+  return () => {
+    analytics.trackEvent({
+      category: 'components',
+      action: 'component_unmounted',
+      label: componentName
+    })
+  }
+}

@@ -7,7 +7,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
-const THEME_KEY = 'bsky_theme_preference'
+const THEME_KEY = 'bsky_notifications_theme_preference'
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -18,12 +18,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
     
     // Check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-      return 'light'
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark'
     }
     
-    // Default to dark
-    return 'dark'
+    // Default to light
+    return 'light'
   })
 
   useEffect(() => {

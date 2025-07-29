@@ -1,29 +1,110 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import React from 'react'
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import { getNotificationService } from '../services/atproto/notifications'
 import { useErrorHandler } from './useErrorHandler'
+import { NotificationCache } from '../utils/notificationCache'
+import { NotificationObjectCache } from '../utils/notificationObjectCache'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { debug } from '@bsky/shared'
 
-export function useNotifications(priority?: boolean) {
-  const { session } = useAuth()
-  const { handleError } = useErrorHandler()
+const MAX_NOTIFICATIONS = 10000
+const MAX_DAYS = 28 // 4 weeks
 
-  return useQuery({
+export function useNotifications(priority: boolean = false) {
+  const { session } = useAuth()
+
+  // Try to load cached data first
+  const cachedData = session ? NotificationCache.load(priority) : null
+  const timestamp = new Date().toLocaleTimeString()
+  
+  if (cachedData) {
+    debug.log(`🚀 [${timestamp}] React Query: Using cached data as initialData`)
+  } else {
+    debug.log(`🚀 [${timestamp}] React Query: No cache found, will fetch from API`)
+  }
+
+  return useInfiniteQuery({
     queryKey: ['notifications', priority],
-    queryFn: async () => {
+    queryFn: async ({ pageParam }) => {
+      const fetchTimestamp = new Date().toLocaleTimeString()
+      debug.log(`🌐 [${fetchTimestamp}] React Query: Making API call (priority: ${priority}, cursor: ${pageParam || 'none'})`)
+      
+      // This is the ONLY place where rate limiting applies - actual API calls
       const { atProtoClient } = await import('../services/atproto')
       const agent = atProtoClient.agent
       if (!agent) throw new Error('Not authenticated')
       const notificationService = getNotificationService(agent)
-      return notificationService.listNotifications(undefined, priority)
+      const result = await notificationService.listNotifications(pageParam, priority)
+      
+      debug.log(`✅ [${fetchTimestamp}] React Query: API call completed, got ${result.notifications.length} notifications`)
+      return result
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage, allPages) => {
+      // Calculate total notifications loaded
+      const totalNotifications = allPages.reduce((sum, page) => sum + page.notifications.length, 0)
+      
+      // Log progress
+      debug.log(`📊 Fetched ${totalNotifications} notifications so far...`)
+      
+      // Stop if we've reached max notifications
+      if (totalNotifications >= MAX_NOTIFICATIONS) {
+        debug.log(`🛑 Reached max notifications limit (${MAX_NOTIFICATIONS})`)
+        return undefined
+      }
+
+      // Check if oldest notification is beyond MAX_DAYS (4 weeks)
+      if (allPages.length > 0) {
+        const allNotifications = allPages.flatMap(page => page.notifications)
+        if (allNotifications.length > 0) {
+          const oldestNotification = allNotifications[allNotifications.length - 1]
+          const oldestDate = new Date(oldestNotification.indexedAt)
+          const maxDaysAgo = new Date()
+          maxDaysAgo.setDate(maxDaysAgo.getDate() - MAX_DAYS)
+          
+          if (oldestDate < maxDaysAgo) {
+            debug.log(`⏰ Reached 4-week limit. Oldest notification: ${oldestDate.toLocaleDateString()}`)
+            return undefined
+          }
+        }
+      }
+
+      // Continue pagination if we have a cursor
+      return lastPage.cursor
     },
     enabled: !!session,
-    staleTime: 30 * 1000, // 30 seconds
-    refetchInterval: 60 * 1000, // Refetch every minute
+    staleTime: cachedData ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000, // If we have cache, treat as fresh for 24h, otherwise 5min
+    refetchInterval: 10 * 1000, // Refetch every 10 seconds
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    // Use cached data as initial data if available
+    initialData: cachedData ? {
+      pages: cachedData.pages,
+      pageParams: [undefined, ...cachedData.pages.slice(0, -1).map(p => p.cursor)]
+    } : undefined,
+    // Add placeholderData to prevent flickering
+    placeholderData: cachedData ? {
+      pages: cachedData.pages,
+      pageParams: [undefined, ...cachedData.pages.slice(0, -1).map(p => p.cursor)]
+    } : undefined,
+    // Save to cache after successful API fetch
+    // Note: Using onSuccess for compatibility, but consider migrating to mutation side effects
+    onSuccess: (data) => {
+      const successTimestamp = new Date().toLocaleTimeString()
+      if (data?.pages && data.pages.length > 0) {
+        const totalNotifications = data.pages.reduce((sum, p) => sum + p.notifications.length, 0)
+        debug.log(`💾 [${successTimestamp}] React Query onSuccess: Saving ${totalNotifications} notifications to cache`)
+        NotificationCache.save(data.pages, priority)
+        
+        // Also save individual notifications to object cache
+        const allNotifications = data.pages.flatMap(page => page.notifications)
+        NotificationObjectCache.save(allNotifications)
+      }
+    },
+    // Add onError handler to help debug issues
     onError: (error) => {
-      debug.error('Notifications error:', error)
-      handleError(error)
+      const errorTimestamp = new Date().toLocaleTimeString()
+      debug.error(`❌ [${errorTimestamp}] React Query error in useNotifications:`, error)
     }
   })
 }
@@ -41,10 +122,13 @@ export function useUnreadNotificationCount() {
       return notificationService.getUnreadCount()
     },
     enabled: !!session,
-    staleTime: 30 * 1000, // 30 seconds
-    refetchInterval: 60 * 1000, // Refetch every minute
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 10 * 1000, // Refetch every 10 seconds
   })
 }
+
+// Alias for compatibility
+export const useUnreadCount = useUnreadNotificationCount
 
 export function useMarkNotificationsRead() {
   const { handleError } = useErrorHandler()
@@ -63,8 +147,25 @@ export function useMarkNotificationsRead() {
     onSuccess: () => {
       // Reset notification count
       queryClient.setQueryData(['notificationCount'], 0)
-      // Invalidate notifications to update their seen status
-      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      
+      // Update notifications in place to mark them as read
+      queryClient.setQueriesData(
+        { queryKey: ['notifications'] },
+        (oldData: any) => {
+          if (!oldData?.pages) return oldData
+          
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => ({
+              ...page,
+              notifications: page.notifications.map((notification: Notification) => ({
+                ...notification,
+                isRead: true
+              }))
+            }))
+          }
+        }
+      )
     },
     onError: (error) => {
       handleError(error)

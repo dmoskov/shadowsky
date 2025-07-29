@@ -1,19 +1,21 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import type { ReactNode } from 'react'
-import { atProtoClient } from '../services/atproto'
-import { ATProtoClient } from '@bsky/shared'
+import { atProtoClient, ATProtoClient } from '../services/atproto'
 import type { Session } from '@bsky/shared'
 import { SessionExpiredError, AuthenticationError, NetworkError } from '@bsky/shared'
 import { queryClient } from '@bsky/shared'
+import { debug } from '@bsky/shared'
+import type { BskyAgent } from '@atproto/api'
 import { analytics } from '../services/analytics'
 
 interface AuthContextType {
   isAuthenticated: boolean
   isLoading: boolean
-  login: (identifier: string, password: string) => Promise<boolean>
+  login: (identifier: string, password: string, pdsUrl?: string) => Promise<boolean>
   logout: () => void
   session: Session | null
   client: ATProtoClient
+  agent: BskyAgent | null
   refreshSession: () => Promise<boolean>
 }
 
@@ -30,8 +32,6 @@ export const useAuth = () => {
 interface AuthProviderProps {
   children: ReactNode
 }
-
-// Use the configured client instance from services
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -77,7 +77,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const savedSession = ATProtoClient.loadSavedSession('main_')
+        const savedSession = ATProtoClient.loadSavedSession(atProtoClient.getSessionPrefix())
         if (savedSession) {
           initAttempts.current++
           
@@ -127,19 +127,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth()
   }, [])
 
-  const login = useCallback(async (identifier: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (identifier: string, password: string, pdsUrl?: string): Promise<boolean> => {
     try {
+      // If a custom PDS URL is provided, we need to create a new client
+      if (pdsUrl && pdsUrl !== 'https://bsky.social') {
+        // Update the client's service URL
+        atProtoClient.updateService(pdsUrl)
+      }
+      
       const newSession = await atProtoClient.login(identifier, password)
       setIsAuthenticated(true)
       setSession(newSession)
       
       // Track successful login
-      analytics.trackLogin('password')
-      
-      // Set user ID for analytics
-      if (newSession.did) {
-        analytics.setUserId(newSession.did)
-      }
+      analytics.trackLogin(pdsUrl ? 'custom_pds' : 'bluesky')
+      analytics.setUserId(newSession.did)
       
       return true
     } catch (error) {
@@ -157,6 +159,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       logout, 
       session,
       client: atProtoClient,
+      agent: isAuthenticated ? atProtoClient.agent : null,
       refreshSession
     }}>
       {children}

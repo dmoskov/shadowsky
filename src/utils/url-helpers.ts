@@ -1,96 +1,6 @@
-import { debug } from '@bsky/shared'
-
 /**
- * URL helper functions for generating shareable Bluesky links
+ * URL helper functions for the notifications app
  */
-
-/**
- * Convert an AT Protocol URI to a Bluesky web URL
- * AT URI format: at://did:plc:xxxxx/app.bsky.feed.post/3jxxxxx
- * Web URL format: https://bsky.app/profile/handle/post/3jxxxxx
- */
-export function atUriToWebUrl(uri: string, handle: string): string {
-  try {
-    // Parse the AT URI
-    const match = uri.match(/^at:\/\/([^\/]+)\/([^\/]+)\/(.+)$/)
-    if (!match) {
-      throw new Error('Invalid AT URI format')
-    }
-    
-    const [, , collection, rkey] = match
-    
-    // For posts, generate the proper Bluesky URL
-    if (collection === 'app.bsky.feed.post') {
-      return `https://bsky.app/profile/${handle}/post/${rkey}`
-    }
-    
-    // For other types, return a generic profile URL
-    return `https://bsky.app/profile/${handle}`
-  } catch (error) {
-    debug.error('Error parsing AT URI:', error)
-    // Fallback to profile URL
-    return `https://bsky.app/profile/${handle}`
-  }
-}
-
-/**
- * Copy text to clipboard with fallback for older browsers
- */
-export async function copyToClipboard(text: string): Promise<boolean> {
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(text)
-      return true
-    } else {
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea')
-      textArea.value = text
-      textArea.style.position = 'fixed'
-      textArea.style.left = '-999999px'
-      textArea.style.top = '-999999px'
-      document.body.appendChild(textArea)
-      textArea.focus()
-      textArea.select()
-      
-      try {
-        const successful = document.execCommand('copy')
-        document.body.removeChild(textArea)
-        return successful
-      } catch (_err) {
-        document.body.removeChild(textArea)
-        return false
-      }
-    }
-  } catch (error) {
-    debug.error('Failed to copy to clipboard:', error)
-    return false
-  }
-}
-
-/**
- * Share a URL using the Web Share API if available
- */
-export async function shareUrl(url: string, title?: string, text?: string): Promise<boolean> {
-  try {
-    if (navigator.share) {
-      await navigator.share({
-        title: title || 'Check out this post on Bluesky',
-        text: text || '',
-        url: url
-      })
-      return true
-    } else {
-      // Fallback to copying to clipboard
-      return copyToClipboard(url)
-    }
-  } catch (error) {
-    // User cancelled or error occurred
-    if ((error as Error).name !== 'AbortError') {
-      debug.error('Error sharing:', error)
-    }
-    return false
-  }
-}
 
 /**
  * Generate a Bluesky profile URL from a handle
@@ -99,4 +9,78 @@ export function getBskyProfileUrl(handle: string): string {
   // Remove @ if present
   const cleanHandle = handle.startsWith('@') ? handle.slice(1) : handle
   return `https://bsky.app/profile/${cleanHandle}`
+}
+
+/**
+ * Convert an AT URI to a Bluesky app URL
+ * AT URI format: at://did:plc:xxx/app.bsky.feed.post/3kfzxr5s2wt2x
+ * Bluesky URL format: https://bsky.app/profile/handle/post/3kfzxr5s2wt2x
+ */
+export function atUriToBskyUrl(uri: string, handle: string): string | null {
+  if (!uri || !handle) return null
+  
+  // Parse the AT URI
+  const match = uri.match(/^at:\/\/([^\/]+)\/([^\/]+)\/([^\/]+)$/)
+  if (!match) return null
+  
+  const [, did, collection, rkey] = match
+  const cleanHandle = handle.startsWith('@') ? handle.slice(1) : handle
+  
+  // Handle different collection types
+  if (collection === 'app.bsky.feed.post') {
+    return `https://bsky.app/profile/${cleanHandle}/post/${rkey}`
+  } else if (collection === 'app.bsky.feed.repost') {
+    // Reposts don't have their own page, link to the profile
+    return `https://bsky.app/profile/${cleanHandle}`
+  } else if (collection === 'app.bsky.feed.like') {
+    // Likes don't have their own page, link to the profile
+    return `https://bsky.app/profile/${cleanHandle}`
+  }
+  
+  // Default to profile for unknown collection types
+  return `https://bsky.app/profile/${cleanHandle}`
+}
+
+/**
+ * Get the appropriate URL for a notification based on its type
+ * 
+ * Note: For likes/reposts, the notification URI is the post being liked/reposted.
+ * For replies/quotes/mentions, the URI is the new post created by the author.
+ */
+export function getNotificationUrl(
+  notification: {
+    reason: string
+    uri: string
+    author: { handle: string }
+    reasonSubject?: string // Optional URI of the original post for replies/quotes
+  },
+  postAuthorHandle?: string // Optional handle of the post author for likes/reposts
+): string {
+  const { reason, uri, author, reasonSubject } = notification
+  
+  switch (reason) {
+    case 'follow':
+      // For follows, link to the follower's profile
+      return getBskyProfileUrl(author.handle)
+      
+    case 'like':
+    case 'repost':
+      // For likes/reposts, the URI is the post being liked/reposted
+      // If we have the post author's handle, we can construct the proper URL
+      if (uri && postAuthorHandle) {
+        return atUriToBskyUrl(uri, postAuthorHandle) || getBskyProfileUrl(author.handle)
+      }
+      // Otherwise, fall back to the liker/reposter's profile
+      return getBskyProfileUrl(author.handle)
+      
+    case 'reply':
+    case 'mention':
+    case 'quote':
+      // For replies/mentions/quotes, the URI is the new post by the author
+      return atUriToBskyUrl(uri, author.handle) || getBskyProfileUrl(author.handle)
+      
+    default:
+      // Default to author's profile
+      return getBskyProfileUrl(author.handle)
+  }
 }

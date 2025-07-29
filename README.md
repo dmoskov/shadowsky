@@ -1,72 +1,106 @@
-# Bluesky Client
+# ShadowSky - Bluesky Notifications Analytics
 
-A feature-rich desktop client for Bluesky (AT Protocol) built with React, TypeScript, and Vite.
+A powerful Bluesky notifications dashboard and analytics app built with React, TypeScript, and Vite.
 
-## ✨ Features
+## Features
 
-- 🔐 Secure authentication with session persistence
-- 📱 Responsive design with dark theme
-- 📊 Advanced analytics dashboard
-- 🧵 Enhanced thread navigation
-- 🚀 Performance optimized
-- 🎨 Clean, modern UI matching Bluesky's design
+- **Advanced Notifications Management**
+  - Real-time notifications feed
+  - Conversation threading and analysis
+  - Notification aggregation by type
+  - Visual timeline of activity
 
-## 🚀 Quick Start
+- **Analytics Dashboard**
+  - Engagement metrics and trends
+  - Top accounts interaction analysis
+  - Post performance tracking
+  - Custom time range filtering
+
+- **Performance Optimized**
+  - IndexedDB caching for instant loads
+  - Smart prefetching of related posts
+  - Rate-limited API calls
+  - Background data synchronization
+
+- **Modern UI**
+  - Dark/light theme support
+  - Responsive design with Tailwind CSS
+  - Real-time updates
+  - Keyboard shortcuts
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- Bluesky account
+
+### Installation
 
 ```bash
-# One-click setup (macOS)
-./setup-local-mac.sh
-
-# Or manual setup
+# Install dependencies
 npm install
+
+# Start development server
 npm run dev
 ```
 
-Visit http://127.0.0.1:5173
+The app will be available at `http://localhost:5174`
 
-**New to the project?** Check out [`QUICK_START.md`](QUICK_START.md) for a 2-minute orientation.
+### Configuration
 
-## 📁 Project Structure
+The app works out of the box with no configuration needed. Simply log in with your Bluesky credentials.
 
-```
-BSKY/
-├── src/          → Source code
-├── docs/         → All documentation (organized)
-├── scripts/      → Development scripts  
-├── tests/        → Test files
-│
-├── README.md     → You are here
-├── CLAUDE.md     → AI development guide
-└── SESSION_NOTES.md → Current work status
-```
+## Key Features
 
-## 📚 Documentation
+### Notifications Analytics
+- Track engagement patterns
+- Identify top interacting accounts
+- Analyze conversation threads
+- Monitor notification trends over time
 
-All documentation is organized in the `docs/` directory:
+### Composer Integration
+- Thread-aware posting
+- Auto-numbering for threads
+- Image upload support
+- Draft management
 
-- **Architecture** → `docs/architecture/`
-- **Guides** → `docs/guides/`
-- **Decisions** → `docs/decisions/`
-- **Full Index** → [`docs/DIRECTORY_INDEX.md`](docs/DIRECTORY_INDEX.md)
+### Performance
+- 4 weeks of notifications cached locally
+- Instant conversation loading
+- Minimal API calls through smart caching
+- Progressive data loading
 
-## 🔧 Development
+## Development
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run deploy` - Deploy to GitHub Pages
+
+### Architecture
+
+- **Frontend**: React 18 + TypeScript
+- **Styling**: Tailwind CSS
+- **State**: React Query + Context API
+- **Storage**: IndexedDB + LocalStorage fallback
+- **API**: AT Protocol via @atproto/api
+
+## Deployment
+
+The app can be deployed to any static hosting service:
 
 ```bash
-npm test          # Run tests
-npm run build     # Build for production
-npm run type-check # Check types
+# Build for production
+npm run build
+
+# Deploy to GitHub Pages
+npm run deploy
 ```
 
-## 🤝 Contributing
+## License
 
-1. Check `docs/handoff/` for comprehensive guides
-2. Follow patterns in `docs/decisions/PATTERNS.md`
-3. Test credentials go in `.env.local` (never commit!)
-
-## 📄 License
-
-MIT License - see LICENSE file for details
-
----
-
-Built with ❤️ for the decentralized social web. For detailed documentation, see [`docs/handoff/README-HANDOFF.md`](docs/handoff/README-HANDOFF.md).
+MIT

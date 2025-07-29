@@ -1,9 +1,0 @@
-/* Tailwind CSS v4 - Alpha */
-@import "tailwindcss";
-
-/* Custom theme configuration */
-@theme {
-  /* Extend with our design tokens */
-  --color-brand-primary: oklch(var(--color-brand-primary-raw));
-  --color-brand-secondary: oklch(var(--color-brand-secondary-raw));
-}

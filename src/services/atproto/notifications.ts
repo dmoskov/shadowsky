@@ -3,6 +3,9 @@ import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notif
 import { mapATProtoError } from '@bsky/shared'
 import { rateLimiters, withRateLimit } from '@bsky/shared'
 
+// Add delay utility for pacing requests
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
 export class NotificationService {
   constructor(private agent: AtpAgent) {}
 
@@ -10,30 +13,29 @@ export class NotificationService {
    * List notifications for the current user
    * @param cursor - Pagination cursor
    * @param priority - If true, only show notifications from followed accounts
+   * @param limit - Number of notifications to fetch (max 100)
    */
-  async listNotifications(cursor?: string, priority?: boolean): Promise<{
+  async listNotifications(cursor?: string, priority?: boolean, limit: number = 50): Promise<{
     notifications: Notification[]
     cursor?: string
   }> {
     return withRateLimit(rateLimiters.general, 'listNotifications', async () => {
       try {
-        const response = await this.agent.app.bsky.notification.listNotifications({
-          limit: 50,
-          cursor
-        })
-        
-        // If priority is true, filter to only show notifications from people the user follows
-        let notifications = response.data.notifications
-        if (priority) {
-          // Filter notifications to only those where the author is followed
-          notifications = notifications.filter(notification => {
-            // Check if the viewer (current user) follows this author
-            return notification.author.viewer?.following
-          })
+        // Add a delay between requests to avoid hitting rate limits
+        // This is especially important when fetching 4 weeks of data
+        if (cursor) {
+          // Wait 500ms between pagination requests
+          await delay(500)
         }
         
+        const response = await this.agent.app.bsky.notification.listNotifications({
+          limit: Math.min(limit, 100), // API max is 100
+          cursor,
+          priority
+        })
+        
         return {
-          notifications,
+          notifications: response.data.notifications,
           cursor: response.data.cursor
         }
       } catch (error) {

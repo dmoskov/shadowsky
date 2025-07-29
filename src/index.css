@@ -1,104 +1,53 @@
-@import './styles/color-system.css';
-@import './styles/design-system.css';
-@import './styles/accessibility.css';
-@import './styles/font-size.css';
-@import './styles/layout.css';
-@import './styles/typography.css';
-@import './styles/interactive.css';
-@import './styles/skeletons.css';
-@import './styles/empty-states.css';
-@import './styles/keyboard-nav.css';
-@import './styles/components.css';
-@import './styles/header.css';
-@import './styles/sidebar.css';
-@import './styles/mobile-nav.css';
-@import './styles/post-card.css';
-@import './styles/feed.css';
-@import './styles/compose.css';
-@import './styles/thread-clean.css';
-@import './styles/profile.css';
-@import './styles/notifications.css';
-@import './styles/search.css';
-@import './styles/followers-modal.css';
-@import './styles/toast.css';
-@import './styles/micro-interactions.css';
-@import './styles/mobile-improvements.css';
-@import './styles/mobile-tab-bar.css';
-@import './styles/settings.css';
-@import './styles/analytics.css';
-@import './styles/theme-toggle.css';
-@import './styles/login.css';
+/* Import our Bluesky-inspired theme */
+@import './styles/bluesky-theme.css';
+@import './styles/composer.css';
 
-/* Tailwind CSS is imported in main.tsx to avoid conflicts */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Reset body styles from Vite defaults */
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: var(--bsky-text-primary);
+  background-color: var(--bsky-bg-primary);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  display: block;
   min-width: 320px;
   min-height: 100vh;
 }
 
-/* Link styles */
-a {
-  color: var(--color-text-link);
-  text-decoration: none;
-  transition: color var(--transition-base);
+/* Apply scrollbar styling directly to body */
+body::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
 }
 
-a:hover {
-  color: var(--color-brand-secondary);
-  text-decoration: underline;
+body::-webkit-scrollbar-track {
+  background: var(--bsky-bg-primary);
+  border-radius: 5px;
 }
 
-/* Remove default button styles */
-button {
-  font-family: inherit;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
+body::-webkit-scrollbar-thumb {
+  background: var(--bsky-bg-tertiary);
+  border-radius: 5px;
+  border: 2px solid var(--bsky-bg-primary);
 }
 
-/* Headings */
-h1, h2, h3, h4, h5, h6 {
-  margin: 0;
-  font-weight: var(--font-weight-semibold);
-}
-
-/* Lists */
-ul, ol {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* Images */
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-/* Form elements */
-input, textarea, select {
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
-}
-
-/* Container */
-.container {
-  width: 100%;
-  max-width: var(--content-max-width);
-  margin: 0 auto;
-  padding: 0 var(--spacing-lg);
-}
-
-.container-narrow {
-  max-width: var(--content-narrow);
-}
-
-.container-wide {
-  max-width: var(--content-wide);
+body::-webkit-scrollbar-thumb:hover {
+  background: var(--bsky-bg-hover);
 }

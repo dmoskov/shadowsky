@@ -1,215 +1,136 @@
 import { useState, useEffect } from 'react'
-import { QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { analytics } from './services/analytics'
-import { LoadingProvider } from './contexts/LoadingContext'
-import { AccessibilityProvider } from './contexts/AccessibilityContext'
 import { ThemeProvider } from './contexts/ThemeContext'
-// import { performanceTracker, setPerformanceContext } from './lib/performance-tracking'
-import { 
-  Login,
-  Feed,
-  Header,
-  Sidebar,
-  ErrorBoundary,
-  ComposeModal,
-  ThreadView,
-  Notifications,
-  Search,
-  KeyboardShortcutsModal,
-  ToastProvider,
-  ToastContainer,
-  ScrollProgress,
-  MobileNav
-} from './components'
-// Import directly since they're not in the index
-import { Settings } from './components/settings/Settings'
-import { Analytics } from './components/analytics/Analytics'
-import { ConversationsEnhanced as Conversations } from './components/conversations/ConversationsEnhanced'
-// These components are not in the index export
-import { MobileMenu } from './components/core/MobileMenu'
-import { MobileTabBar } from './components/core/MobileTabBar'
-import { ErrorBadge } from './components/common/ErrorBadge'
-import { TailwindTest } from './components/TailwindTest'
-import { LoadingScreen } from './components/ui/LoadingScreen'
+import { Sidebar } from './components/Sidebar'
+import { Header } from './components/Header'
+import { LandingPage } from './components/LandingPage'
+import { NotificationsFeed } from './components/NotificationsFeed'
+import { VisualTimeline } from './components/VisualTimeline'
+import { NotificationsAnalytics } from './components/NotificationsAnalytics'
 import { RateLimitStatus } from './components/RateLimitStatus'
-import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
-import { useDataMigration } from './hooks/useDataMigration'
-import { GlobalLoadingIndicator } from './components/ui/GlobalLoadingIndicator'
-import { SkipLinks } from './components/ui/SkipLinks'
-import { queryClient, debug } from '@bsky/shared'
-import { PenSquare } from 'lucide-react'
+import { ConversationsSimple as Conversations } from './components/ConversationsSimple'
+import { Composer } from './components/Composer'
+import { DebugConsole } from './components/DebugConsole'
+import { NotificationStorageDB } from './services/notification-storage-db'
+import { cleanupLocalStorage } from './utils/cleanupLocalStorage'
+import { BackgroundNotificationLoader } from './components/BackgroundNotificationLoader'
+import { debug } from '@bsky/shared'
+import { analytics } from './services/analytics'
+import { usePageTracking, useErrorTracking } from './hooks/useAnalytics'
 import './utils/debug-control' // Initialize debug controls
-import './App.css'
 
-function ThreadViewWrapper() {
-  const { uri } = useParams<{ uri: string }>()
-  const navigate = useNavigate()
-  
-  debug.log('ThreadViewWrapper - raw URI from params:', uri);
-  
-  if (!uri) return null
-  
-  const decodedUri = decodeURIComponent(uri);
-  debug.log('ThreadViewWrapper - decoded URI:', decodedUri);
-  
-  return (
-    <ThreadView 
-      key={decodedUri}
-      postUri={decodedUri}
-      onBack={() => navigate('/')}
-    />
-  )
-}
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30 * 60 * 1000, // 30 minutes - increased to prevent frequent refetches
+      gcTime: 2 * 60 * 60 * 1000, // 2 hours - keep data in cache much longer
+      retry: (failureCount, error: any) => {
+        if (error?.status === 429) return false // Don't retry rate limits
+        if (error?.status === 401) return false // Don't retry auth errors
+        return failureCount < 3
+      },
+      // Keep previous data while fetching new data
+      placeholderData: (previousData: any) => previousData,
+      // Don't refetch on window focus by default
+      refetchOnWindowFocus: false,
+      // Don't refetch on mount if data exists
+      refetchOnMount: false,
+      // Prevent UI flicker by using structural sharing
+      structuralSharing: true
+    }
+  }
+})
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth()
-  const [isComposeOpen, setIsComposeOpen] = useState(false)
-  const [composeTemplate, setComposeTemplate] = useState<string | undefined>()
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const navigate = useNavigate()
-  const location = useLocation()
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   
-  // Enable keyboard navigation
-  useKeyboardNavigation()
+  // Initialize analytics tracking
+  usePageTracking()
+  useErrorTracking()
   
-  // Track page views
+  // Run one-time migration on app load
   useEffect(() => {
-    analytics.trackPageView(location.pathname)
-  }, [location])
-  
-  // Run data migration on startup
-  const migrationStatus = useDataMigration()
-  
-  // Track route changes for performance monitoring
-  // useEffect(() => {
-  //   setPerformanceContext({ route: location.pathname })
-  // }, [location.pathname])
-  
-  // Add global performance command for developers
-  // useEffect(() => {
-  //   // @ts-ignore - Adding to window for dev access
-  //   window.showPerformance = () => performanceTracker.getSummary()
-  //   debug.log('💡 Tip: Type showPerformance() in console to see performance metrics')
-  // }, [])
-  
-  // Listen for compose modal events
-  useEffect(() => {
-    const handleOpenCompose = (event: CustomEvent) => {
-      setComposeTemplate(event.detail?.template)
-      setIsComposeOpen(true)
+    const runMigration = async () => {
+      try {
+        const db = NotificationStorageDB.getInstance()
+        await db.init()
+        const migrated = await db.migrateFromLocalStorage()
+        if (migrated) {
+          debug.log('✅ Successfully migrated notifications from localStorage to IndexedDB')
+          // Clean up remaining localStorage keys
+          cleanupLocalStorage()
+        }
+      } catch (error) {
+        debug.error('Failed to run migration:', error)
+      }
     }
     
-    window.addEventListener('openComposeModal', handleOpenCompose as EventListener)
-    return () => {
-      window.removeEventListener('openComposeModal', handleOpenCompose as EventListener)
-    }
+    runMigration()
   }, [])
 
   if (isLoading) {
-    return <LoadingScreen />
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bsky-bg-primary)' }}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto" style={{ borderColor: 'var(--bsky-primary)' }}></div>
+          <p className="mt-4" style={{ color: 'var(--bsky-text-secondary)' }}>Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!isAuthenticated) {
-    return <Login />
+    return <LandingPage />
   }
 
   return (
-    <>
-      <SkipLinks />
-      <ScrollProgress />
-      <GlobalLoadingIndicator />
-      <div className="min-h-screen bg-primary">
-        <Header onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
-        <div className="flex relative">
-          <Sidebar onCompose={() => setIsComposeOpen(true)} />
-          <main id="main-content" className="flex-1 lg:pl-64 pt-16 min-h-screen w-full" role="main">
-            <div className="max-w-7xl mx-auto">
-              <Routes>
-              <Route path="/" element={
-                <Feed onViewThread={(uri) => navigate(`/thread/${encodeURIComponent(uri)}`)} />
-              } />
-              <Route path="/thread/:uri" element={<ThreadViewWrapper />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="/conversations" element={<Conversations />} />
-              <Route path="/search" element={<Search />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/analytics/:handle" element={<Analytics />} />
-              <Route path="/tailwind-test" element={<TailwindTest />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-            </div>
-          </main>
-        </div>
+    <div className="min-h-screen bsky-font" style={{ background: 'var(--bsky-bg-primary)' }}>
+      <BackgroundNotificationLoader />
+      <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+      <div className="flex">
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        <main className="flex-1 lg:ml-64 mt-16">
+          <Routes>
+            <Route path="/" element={<NotificationsFeed />} />
+            <Route path="/timeline" element={<VisualTimeline />} />
+            <Route path="/analytics" element={<NotificationsAnalytics />} />
+            <Route path="/conversations" element={<Conversations />} />
+            <Route path="/compose" element={<Composer />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
       </div>
-      
-      {/* Floating Action Button */}
-      <button 
-        className="fixed bottom-6 right-6 lg:hidden w-14 h-14 bg-blue-600 hover:bg-blue-700 
-                   text-white rounded-full shadow-lg flex items-center justify-center 
-                   transition-all duration-200 hover:scale-110 z-50"
-        onClick={() => setIsComposeOpen(true)}
-        aria-label="Compose new post"
-      >
-        <PenSquare size={24} />
-      </button>
-      
-      {/* Compose Modal */}
-      <ComposeModal 
-        isOpen={isComposeOpen}
-        onClose={() => {
-          setIsComposeOpen(false)
-          setComposeTemplate(undefined)
-        }}
-        template={composeTemplate}
-      />
-      
-      {/* Keyboard Shortcuts Modal */}
-      <KeyboardShortcutsModal />
-      
-      {/* Mobile Navigation */}
-      <MobileTabBar />
-      <MobileNav />
-      
-      {/* Mobile Menu */}
-      <MobileMenu 
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-      />
-      
-      {/* Toast Notifications */}
-      <ToastContainer />
-      {import.meta.env.DEV && <ErrorBadge />}
-      
-      {/* Rate Limit Status */}
       <RateLimitStatus />
-    </>
+      <DebugConsole />
+    </div>
   )
 }
 
 function App() {
+  // Initialize Google Analytics
+  useEffect(() => {
+    const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID
+    if (measurementId) {
+      analytics.initialize(measurementId)
+      debug.log('Google Analytics initialized')
+    } else {
+      debug.log('Google Analytics not configured (no measurement ID)')
+    }
+  }, [])
+
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <ThemeProvider>
-            <AuthProvider>
-              <LoadingProvider>
-                <AccessibilityProvider>
-                  <ToastProvider>
-                    <ErrorBoundary>
-                      <AppContent />
-                    </ErrorBoundary>
-                  </ToastProvider>
-                </AccessibilityProvider>
-              </LoadingProvider>
-            </AuthProvider>
-          </ThemeProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ThemeProvider>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   )
 }
 

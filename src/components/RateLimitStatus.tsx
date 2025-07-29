@@ -1,146 +1,128 @@
-/**
- * Rate limit status indicator component
- * Shows current rate limit status and warnings
- */
-
 import React, { useEffect, useState } from 'react'
-import { rateLimiters, getGlobalRateLimiterStats } from '../services/atproto/rate-limiter'
+import { Shield, AlertTriangle } from 'lucide-react'
+import { getRateLimiterStats } from '../services/rate-limiter'
 
-interface RateLimitInfo {
+interface RateLimitBucket {
   name: string
-  queueSize: number
-  isQueuing: boolean
+  stats: {
+    availableTokens: number
+    maxTokens: number
+    throttledRequests: number
+    queueLength: number
+  }
+  color: string
 }
 
-interface GlobalStats {
-  queueSize: number
-  maxRequestsPerSecond: number
-}
-
-export function RateLimitStatus() {
-  const [limitInfo, setLimitInfo] = useState<RateLimitInfo[]>([])
-  const [globalStats, setGlobalStats] = useState<GlobalStats | null>(null)
-  const [showDetails, setShowDetails] = useState(false)
+export const RateLimitStatus: React.FC = () => {
+  // Check for debug mode
+  const urlParams = new URLSearchParams(window.location.search)
+  const debugMode = urlParams.has('debug')
+  
+  // Don't render if not in debug mode
+  if (!debugMode) {
+    return null
+  }
+  
+  const [stats, setStats] = useState<RateLimitBucket[]>([])
+  const [isExpanded, setIsExpanded] = useState(false)
 
   useEffect(() => {
-    // Update status every second
-    const interval = setInterval(() => {
-      const stats: RateLimitInfo[] = [
-        {
-          name: 'Profile',
-          queueSize: rateLimiters.profile.getQueueSize(),
-          isQueuing: rateLimiters.profile.getQueueSize() > 0
-        },
-        {
-          name: 'Feed',
-          queueSize: rateLimiters.feed.getQueueSize(),
-          isQueuing: rateLimiters.feed.getQueueSize() > 0
-        },
-        {
-          name: 'General',
-          queueSize: rateLimiters.general.getQueueSize(),
-          isQueuing: rateLimiters.general.getQueueSize() > 0
-        }
-      ]
-      setLimitInfo(stats)
-      setGlobalStats(getGlobalRateLimiterStats())
-    }, 1000)
+    const updateStats = () => {
+      const limiterStats = getRateLimiterStats()
+      setStats([
+        { name: 'API', stats: limiterStats.api, color: 'var(--bsky-primary)' },
+        { name: 'Profiles', stats: limiterStats.profile, color: 'var(--bsky-green)' },
+        { name: 'Posts', stats: limiterStats.post, color: 'var(--bsky-blue)' },
+        { name: 'Notifications', stats: limiterStats.notification, color: 'var(--bsky-purple)' }
+      ])
+    }
+
+    updateStats()
+    const interval = setInterval(updateStats, 1000) // Update every second
 
     return () => clearInterval(interval)
   }, [])
 
-  // Check if any limits are being approached
-  const hasWarnings = limitInfo.some(limit => limit.isQueuing) || (globalStats?.queueSize ?? 0) > 0
-  
-  if (!hasWarnings && !showDetails) {
-    return null // Don't show anything if all is well
-  }
+  const hasThrottling = stats.some(s => s.stats.throttledRequests > 0 || s.stats.queueLength > 0)
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        bottom: 20,
-        right: 20,
-        backgroundColor: 'var(--surface-secondary)',
-        border: '1px solid var(--border-color)',
-        borderRadius: '8px',
-        padding: '12px',
-        fontSize: '13px',
-        maxWidth: '300px',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-        zIndex: 1000
-      }}
+    <div 
+      className="fixed bottom-4 right-4 z-50"
+      style={{ maxWidth: '300px' }}
     >
-      <div 
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="bsky-card p-3 flex items-center gap-2 hover:opacity-90 transition-opacity"
         style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          marginBottom: showDetails ? '8px' : 0
+          background: hasThrottling ? 'var(--bsky-red-subtle)' : 'var(--bsky-bg-secondary)',
+          border: hasThrottling ? '1px solid var(--bsky-red)' : '1px solid var(--bsky-border)'
         }}
       >
-        <span style={{ fontWeight: 500 }}>
-          {hasWarnings ? '⚠️ Rate Limit Warning' : '✅ Rate Limits OK'}
+        {hasThrottling ? (
+          <AlertTriangle size={16} style={{ color: 'var(--bsky-red)' }} />
+        ) : (
+          <Shield size={16} style={{ color: 'var(--bsky-green)' }} />
+        )}
+        <span className="text-sm font-medium" style={{ 
+          color: hasThrottling ? 'var(--bsky-red)' : 'var(--bsky-text-primary)' 
+        }}>
+          {hasThrottling ? 'Rate Limiting Active' : 'Rate Limits OK'}
         </span>
-        <button
-          onClick={() => setShowDetails(!showDetails)}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-secondary)',
-            cursor: 'pointer',
-            padding: '4px',
-            fontSize: '12px'
-          }}
+      </button>
+
+      {isExpanded && (
+        <div 
+          className="bsky-card mt-2 p-4 shadow-lg"
+          style={{ background: 'var(--bsky-bg-primary)' }}
         >
-          {showDetails ? 'Hide' : 'Show'} Details
-        </button>
-      </div>
-      
-      {showDetails && (
-        <div style={{ marginTop: '8px' }}>
-          <div style={{ 
-            marginBottom: '8px', 
-            paddingBottom: '8px', 
-            borderBottom: '1px solid var(--border-color)'
-          }}>
-            <div style={{ fontWeight: 500, marginBottom: '4px' }}>
-              Global Rate Limit: {globalStats?.maxRequestsPerSecond || 20} req/s
-            </div>
-            {globalStats && globalStats.queueSize > 0 && (
-              <div style={{ color: 'var(--warning-color)', fontSize: '12px' }}>
-                Global queue: {globalStats.queueSize} requests waiting
+          <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--bsky-text-primary)' }}>
+            API Rate Limits
+          </h3>
+          
+          <div className="space-y-3">
+            {stats.map((bucket) => (
+              <div key={bucket.name}>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-medium" style={{ color: 'var(--bsky-text-secondary)' }}>
+                    {bucket.name}
+                  </span>
+                  <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                    {bucket.stats.availableTokens}/{bucket.stats.maxTokens} tokens
+                  </span>
+                </div>
+                
+                <div className="w-full h-2 rounded-full overflow-hidden" 
+                     style={{ background: 'var(--bsky-bg-tertiary)' }}>
+                  <div 
+                    className="h-full transition-all duration-300"
+                    style={{ 
+                      width: `${(bucket.stats.availableTokens / bucket.stats.maxTokens) * 100}%`,
+                      background: bucket.color
+                    }}
+                  />
+                </div>
+                
+                {(bucket.stats.throttledRequests > 0 || bucket.stats.queueLength > 0) && (
+                  <div className="flex gap-3 mt-1">
+                    {bucket.stats.throttledRequests > 0 && (
+                      <span className="text-xs" style={{ color: 'var(--bsky-red)' }}>
+                        {bucket.stats.throttledRequests} throttled
+                      </span>
+                    )}
+                    {bucket.stats.queueLength > 0 && (
+                      <span className="text-xs" style={{ color: 'var(--bsky-orange)' }}>
+                        {bucket.stats.queueLength} queued
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
           
-          {limitInfo.map((limit) => (
-            <div 
-              key={limit.name}
-              style={{ 
-                marginBottom: '4px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}
-            >
-              <span>{limit.name}:</span>
-              {limit.queueSize === 0 ? (
-                <span style={{ color: 'var(--success-color)' }}>Ready</span>
-              ) : (
-                <span style={{ color: 'var(--warning-color)' }}>
-                  {limit.queueSize} queued
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-      
-      {hasWarnings && !showDetails && (
-        <div style={{ marginTop: '4px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-          Some API limits reached. Requests are being queued.
+          <p className="text-xs mt-3" style={{ color: 'var(--bsky-text-tertiary)' }}>
+            Rate limiting ensures respectful API usage. The app will slow down rather than spam the API.
+          </p>
         </div>
       )}
     </div>
