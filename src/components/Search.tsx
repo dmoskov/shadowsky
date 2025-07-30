@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Search as SearchIcon, X, Calendar, Globe, User, Hash, Link, Filter, ExternalLink, ArrowLeft } from 'lucide-react'
+import { Search as SearchIcon, X, Calendar, Globe, User, Hash, Link, Filter, ExternalLink, ArrowLeft, Image } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { atProtoClient } from '../services/atproto'
 import { useAuth } from '../contexts/AuthContext'
@@ -24,6 +24,7 @@ interface SearchFilters {
   language: string
   sinceDate: string
   untilDate: string
+  hasMedia: boolean
 }
 
 interface UserSuggestion {
@@ -32,6 +33,52 @@ interface UserSuggestion {
   displayName?: string
   avatar?: string
   interactionScore?: number
+}
+
+// Check if a post has media attachments
+const postHasMedia = (post: AppBskyFeedDefs.PostView): boolean => {
+  if (!post.embed) return false
+  
+  const embed = post.embed as any
+  
+  // Direct image embed
+  if (embed.$type === 'app.bsky.embed.images#view') {
+    return true
+  }
+  
+  // Record with media (quote post with images)
+  if (embed.$type === 'app.bsky.embed.recordWithMedia#view' && 
+      embed.media?.$type === 'app.bsky.embed.images#view') {
+    return true
+  }
+  
+  // Video embed
+  if (embed.$type === 'app.bsky.embed.video#view') {
+    return true
+  }
+  
+  return false
+}
+
+// Extract images from a post
+const getPostImages = (post: AppBskyFeedDefs.PostView): Array<{ thumb: string; fullsize: string; alt?: string }> => {
+  if (!post.embed) return []
+  
+  const embed = post.embed as any
+  let images: Array<{ thumb: string; fullsize: string; alt?: string }> = []
+  
+  // Extract images from different embed types
+  if (embed.$type === 'app.bsky.embed.images#view' && embed.images) {
+    images = embed.images
+  } else if (
+    embed.$type === 'app.bsky.embed.recordWithMedia#view' && 
+    embed.media?.$type === 'app.bsky.embed.images#view' &&
+    embed.media.images
+  ) {
+    images = embed.media.images
+  }
+  
+  return images
 }
 
 // Build search query from filters
@@ -113,7 +160,8 @@ export const Search: React.FC = () => {
     domains: [],
     language: '',
     sinceDate: '',
-    untilDate: ''
+    untilDate: '',
+    hasMedia: false
   })
   
   // Thread viewer state
@@ -302,7 +350,7 @@ export const Search: React.FC = () => {
   
   // Search posts query
   const { data: searchResults, isLoading, error } = useQuery({
-    queryKey: ['search', activeSearchQuery],
+    queryKey: ['search', activeSearchQuery, filters.hasMedia],
     queryFn: async () => {
       if (!activeSearchQuery.trim()) return null
       
@@ -310,6 +358,15 @@ export const Search: React.FC = () => {
         q: activeSearchQuery,
         limit: 50
       })
+      
+      // Filter by media if needed
+      if (filters.hasMedia) {
+        const filteredPosts = response.data.posts.filter(post => postHasMedia(post))
+        return {
+          ...response.data,
+          posts: filteredPosts
+        }
+      }
       
       return response.data
     },
@@ -671,8 +728,24 @@ export const Search: React.FC = () => {
         {/* Filter Action Buttons - Compact when no filters */}
         {filters.from.length === 0 && !filters.sinceDate && !filters.untilDate && 
          filters.phrases.length === 0 && filters.hashtags.length === 0 && 
-         filters.mentions.length === 0 && filters.domains.length === 0 && !filters.language ? (
+         filters.mentions.length === 0 && filters.domains.length === 0 && !filters.language && !filters.hasMedia ? (
           <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t" style={{ borderColor: 'var(--bsky-border-primary)' }}>
+            <button
+              onClick={() => setFilters(prev => ({ ...prev, hasMedia: !prev.hasMedia }))}
+              className={`text-xs px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 hover:bg-opacity-80 ${
+                filters.hasMedia ? 'ring-2' : ''
+              }`}
+              style={{ 
+                color: filters.hasMedia ? 'white' : 'var(--bsky-text-secondary)',
+                backgroundColor: filters.hasMedia ? 'var(--bsky-primary)' : 'var(--bsky-bg-secondary)',
+                borderWidth: '1px',
+                borderColor: filters.hasMedia ? 'var(--bsky-primary)' : 'var(--bsky-border-primary)',
+                '--tw-ring-color': 'var(--bsky-primary)'
+              }}
+            >
+              <Image size={12} />
+              Media attached
+            </button>
             <button
               onClick={() => addToArrayFilter('from', '')}
               className="text-xs px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 hover:bg-opacity-80"
@@ -785,6 +858,30 @@ export const Search: React.FC = () => {
         ) : (
           /* Expanded Filters */
           <div className="space-y-3 mt-3 pt-3 border-t" style={{ borderColor: 'var(--bsky-border-primary)' }}>
+            {/* Media Filter */}
+            <div>
+              <label className="flex items-center gap-2 mb-2 text-sm font-medium" style={{ color: 'var(--bsky-text-secondary)' }}>
+                <Image size={16} />
+                Media Filter
+              </label>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setFilters(prev => ({ ...prev, hasMedia: !prev.hasMedia }))}
+                  className={`px-3 py-2 rounded-lg border text-sm transition-all ${
+                    filters.hasMedia ? 'ring-2' : ''
+                  }`}
+                  style={{ 
+                    backgroundColor: filters.hasMedia ? 'var(--bsky-primary)' : 'var(--bsky-bg-secondary)',
+                    borderColor: filters.hasMedia ? 'var(--bsky-primary)' : 'var(--bsky-border-primary)',
+                    color: filters.hasMedia ? 'white' : 'var(--bsky-text-primary)',
+                    '--tw-ring-color': 'var(--bsky-primary)'
+                  }}
+                >
+                  {filters.hasMedia ? '✓ ' : ''}Show only posts with media
+                </button>
+              </div>
+            </div>
+
             {/* From Users */}
             <div>
               <label className="flex items-center gap-2 mb-2 text-sm font-medium" style={{ color: 'var(--bsky-text-secondary)' }}>
@@ -1472,6 +1569,38 @@ export const Search: React.FC = () => {
                     <div className="text-sm break-words" style={{ color: 'var(--bsky-text-primary)' }}>
                       {(post.record as any).text}
                     </div>
+                    
+                    {/* Display images if present */}
+                    {(() => {
+                      const images = getPostImages(post)
+                      if (images.length === 0) return null
+                      
+                      return (
+                        <div className="mt-3">
+                          <div className={`grid gap-2 ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                            {images.slice(0, 4).map((img, idx) => (
+                              <img 
+                                key={idx}
+                                src={proxifyBskyImage(img.thumb)}
+                                alt={img.alt || ''}
+                                className="rounded-lg object-cover w-full border cursor-pointer hover:opacity-90 transition-opacity" 
+                                style={{ 
+                                  borderColor: 'var(--bsky-border-primary)',
+                                  height: images.length === 1 ? '200px' : '120px',
+                                  maxHeight: '300px'
+                                }}
+                                loading="lazy"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  window.open(img.fullsize, '_blank', 'noopener,noreferrer')
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })()}
+                    
                     <div className="flex items-center gap-3 mt-2">
                       <button
                         onClick={(e) => {
