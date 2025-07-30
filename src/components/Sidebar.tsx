@@ -53,7 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        <nav className="px-4 space-y-1">
+        <nav className="px-4 pt-4 space-y-1">
           {navItems.map((item) => (
             <NavLink
               key={item.path}

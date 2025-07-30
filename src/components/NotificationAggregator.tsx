@@ -230,13 +230,13 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
   
   return (
     <div
-      className={`bsky-notification flex gap-3 py-4 px-4 md:px-6 cursor-pointer ${
+      className={`bsky-notification flex gap-3 py-4 px-4 sm:px-6 cursor-pointer ${
         hasUnread ? 'bsky-notification-unread' : ''
       }`}
       onClick={handleClick}
       title="Cmd/Ctrl+Click to open in Bluesky"
     >
-      <div className="flex-shrink-0 pt-1">
+      <div className="flex-shrink-0 pt-1 w-6">
         {getIcon()}
       </div>
       

@@ -1,4 +1,10 @@
 /* Bluesky-inspired theme with distinct variations */
+
+/* Global box-sizing */
+* {
+  box-sizing: border-box;
+}
+
 :root {
   /* Primary colors - shifted towards a unique blue-purple gradient */
   --bsky-primary: #0085ff;
@@ -171,6 +177,7 @@
   @apply relative overflow-hidden;
   border-bottom: 1px solid var(--bsky-border-light);
   @apply transition-all duration-200;
+  box-sizing: border-box;
 }
 
 .bsky-notification:hover {
@@ -180,26 +187,12 @@
 .bsky-notification-unread {
   border-left: 4px solid var(--bsky-primary);
   background: linear-gradient(90deg, rgba(0, 133, 255, 0.08) 0%, transparent 50%);
-  margin-left: -4px;
-  padding-left: calc(1rem + 4px) !important;
-}
-@media (min-width: 768px) {
-  .bsky-notification-unread {
-    padding-left: calc(1.5rem + 4px) !important;
-  }
 }
 
 /* Conversation item unread style */
 .conversation-unread {
   border-left: 4px solid var(--bsky-primary);
   background: linear-gradient(90deg, rgba(0, 133, 255, 0.08) 0%, transparent 50%);
-  margin-left: -4px;
-  padding-left: calc(1rem + 4px) !important;
-}
-@media (min-width: 768px) {
-  .conversation-unread {
-    padding-left: calc(1.5rem + 4px) !important;
-  }
 }
 
 /* Tab styles */
@@ -282,6 +275,8 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  max-width: 100%;
+  flex-shrink: 1;
   -ms-overflow-style: none;
 }
 
@@ -293,6 +288,7 @@
 @media (max-width: 768px) {
   .bsky-tab {
     @apply px-3 py-2;
+    flex-shrink: 0;
   }
   
   .bsky-tab-label {
