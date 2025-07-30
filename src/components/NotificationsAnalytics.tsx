@@ -694,7 +694,6 @@ export const NotificationsAnalytics: React.FC = () => {
                   alt={handle}
                   className="w-10 h-10 rounded-full border-2"
                   style={{ borderColor: 'var(--bsky-border-primary)' }}
-                  crossOrigin="anonymous"
                 />
               ) : (
                 <div 
