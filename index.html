@@ -16,7 +16,20 @@
     
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Loading state while React initializes -->
+      <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #0a0e1a;">
+        <div style="text-align: center;">
+          <div style="width: 50px; height: 50px; border: 3px solid #1e293b; border-top-color: #0085ff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+          <p style="color: #94a3b8; margin-top: 16px; font-family: system-ui, -apple-system, sans-serif;">Loading ShadowSky...</p>
+        </div>
+      </div>
+      <style>
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
