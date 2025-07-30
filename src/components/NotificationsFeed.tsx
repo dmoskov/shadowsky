@@ -199,6 +199,73 @@ export const NotificationsFeed: React.FC = () => {
     return filtered
   }, [notifications, filter, showUnreadOnly, posts, followingSet])
 
+  // Calculate counts for each filter type
+  const filterCounts = React.useMemo(() => {
+    if (!notifications) return {}
+    
+    const counts: Record<NotificationFilter, number> = {
+      'all': notifications.length,
+      'likes': 0,
+      'reposts': 0,
+      'follows': 0,
+      'mentions': 0,
+      'replies': 0,
+      'quotes': 0,
+      'images': 0,
+      'top-accounts': 0,
+      'from-following': 0
+    }
+    
+    // Count notifications by type
+    notifications.forEach((n: Notification) => {
+      switch (n.reason) {
+        case 'like':
+          counts.likes++
+          break
+        case 'repost':
+          counts.reposts++
+          break
+        case 'follow':
+          counts.follows++
+          break
+        case 'mention':
+          counts.mentions++
+          break
+        case 'reply':
+          counts.replies++
+          break
+        case 'quote':
+          counts.quotes++
+          break
+      }
+      
+      // Count notifications from people you follow
+      if (followingSet && followingSet.has(n.author.did)) {
+        counts['from-following']++
+      }
+    })
+    
+    // Count notifications with images
+    if (posts && posts.length > 0) {
+      const postsWithImages = new Set(
+        posts.filter(postHasImages).map(post => post.uri)
+      )
+      notifications.forEach((n: Notification) => {
+        if (['like', 'repost', 'reply', 'quote'].includes(n.reason)) {
+          const postUri = (n.reason === 'repost' || n.reason === 'like') && n.reasonSubject ? n.reasonSubject : n.uri
+          if (postsWithImages.has(postUri)) {
+            counts.images++
+          }
+        }
+      })
+    }
+    
+    // For top-accounts, we'd need to implement the logic to count notifications from high-follower accounts
+    // This is handled separately in TopAccountsView component
+    
+    return counts
+  }, [notifications, posts, followingSet])
+
   // Create a map for quick post lookup
   const postMap = React.useMemo(() => {
     if (!posts) return new Map()
@@ -273,54 +340,63 @@ export const NotificationsFeed: React.FC = () => {
             onClick={() => handleFilterChange('all')}
             icon={<Filter size={16} />}
             label="All"
+            count={filterCounts['all']}
           />
           <FilterTab
             active={filter === 'likes'}
             onClick={() => handleFilterChange('likes')}
             icon={<Heart size={16} />}
             label="Likes"
+            count={filterCounts['likes']}
           />
           <FilterTab
             active={filter === 'reposts'}
             onClick={() => handleFilterChange('reposts')}
             icon={<Repeat2 size={16} />}
             label="Reposts"
+            count={filterCounts['reposts']}
           />
           <FilterTab
             active={filter === 'follows'}
             onClick={() => handleFilterChange('follows')}
             icon={<UserPlus size={16} />}
             label="Follows"
+            count={filterCounts['follows']}
           />
           <FilterTab
             active={filter === 'mentions'}
             onClick={() => handleFilterChange('mentions')}
             icon={<AtSign size={16} />}
             label="Mentions"
+            count={filterCounts['mentions']}
           />
           <FilterTab
             active={filter === 'replies'}
             onClick={() => handleFilterChange('replies')}
             icon={<MessageCircle size={16} />}
             label="Replies"
+            count={filterCounts['replies']}
           />
           <FilterTab
             active={filter === 'quotes'}
             onClick={() => handleFilterChange('quotes')}
             icon={<Quote size={16} />}
             label="Quotes"
+            count={filterCounts['quotes']}
           />
           <FilterTab
             active={filter === 'images'}
             onClick={() => handleFilterChange('images')}
             icon={<Image size={16} />}
             label="Images"
+            count={filterCounts['images']}
           />
           <FilterTab
             active={filter === 'from-following'}
             onClick={() => handleFilterChange('from-following')}
             icon={<Users size={16} />}
             label="Following"
+            count={filterCounts['from-following']}
             disabled={isLoadingFollowing}
           />
           {showTopAccounts && (
@@ -329,6 +405,7 @@ export const NotificationsFeed: React.FC = () => {
               onClick={() => handleFilterChange('top-accounts')}
               icon={<Crown size={16} />}
               label="Top Accounts"
+              count={filterCounts['top-accounts']}
             />
           )}
         </div>
@@ -564,9 +641,10 @@ interface FilterTabProps {
   icon: React.ReactNode
   label: string
   disabled?: boolean
+  count?: number
 }
 
-const FilterTab: React.FC<FilterTabProps> = ({ active, onClick, icon, label, disabled }) => {
+const FilterTab: React.FC<FilterTabProps> = ({ active, onClick, icon, label, disabled, count }) => {
   return (
     <button
       onClick={onClick}
@@ -576,6 +654,14 @@ const FilterTab: React.FC<FilterTabProps> = ({ active, onClick, icon, label, dis
     >
       <span style={{ opacity: active ? 1 : 0.7 }}>{icon}</span>
       <span className="bsky-tab-label">{label}</span>
+      {count !== undefined && count > 0 && (
+        <span className="text-xs font-medium ml-1" style={{ 
+          opacity: active ? 1 : 0.7,
+          color: active ? 'inherit' : 'var(--bsky-text-secondary)'
+        }}>
+          ({count})
+        </span>
+      )}
     </button>
   )
 }

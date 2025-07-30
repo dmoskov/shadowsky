@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
-import { Send, Split, Settings, AlertCircle, CheckCircle, Loader, Image, X, Video, Save, Clock, FileText, Trash2, Undo, Smile } from 'lucide-react'
+import { Send, Split, Settings, AlertCircle, CheckCircle, Loader, Image, X, Video, Save, Clock, FileText, Trash2, Undo, Smile, Plus, GripVertical } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { VideoUploadService } from '../services/atproto/video-upload'
 import { GiphySearch } from './GiphySearch'
@@ -101,6 +101,12 @@ export function Composer() {
   const [dragOverPostIndex, setDragOverPostIndex] = useState<number | null>(null)
   const [dragOverMediaId, setDragOverMediaId] = useState<string | null>(null)
   
+  // Post reordering state
+  const [postOrder, setPostOrder] = useState<number[]>([])
+  const [draggedPostIndex, setDraggedPostIndex] = useState<number | null>(null)
+  const [dragOverPostOrderIndex, setDragOverPostOrderIndex] = useState<number | null>(null)
+  const [isReorderingPosts, setIsReorderingPosts] = useState(false)
+  
   // Giphy and emoji state
   const [showGiphySearch, setShowGiphySearch] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -147,51 +153,169 @@ export function Composer() {
 
   // Auto-split text into posts when it changes
   useEffect(() => {
+    // Skip processing if we're in the middle of reordering
+    if (isReorderingPosts) return
+    
     if (!text.trim()) {
       setPosts([])
+      setPostOrder([])
       return
     }
 
-    const words = text.split(' ')
-    const splitPosts: string[] = []
-    let currentPost = ''
-
-    for (const word of words) {
-      const testPost = currentPost ? `${currentPost} ${word}` : word
+    // First check for manual splits (using --- as the delimiter)
+    const manualSplitMarker = '\n---\n'
+    if (text.includes(manualSplitMarker)) {
+      // Split by manual markers first
+      const manualSplits = text.split(manualSplitMarker).map(s => s.trim()).filter(s => s.length > 0)
+      const finalPosts: string[] = []
       
-      // Account for numbering in length calculation
-      const format = NUMBERING_FORMATS.find(f => f.id === numberingFormat)
-      const numberingLength = format && numberingFormat !== 'none' ? 
-        format.format(splitPosts.length + 1, 999).length + 2 : 0 // +2 for space and safety margin
-      
-      if (testPost.length + numberingLength <= MAX_POST_LENGTH) {
-        currentPost = testPost
-      } else {
-        if (currentPost) {
-          splitPosts.push(currentPost)
+      // Then check each manually split section for length
+      for (const section of manualSplits) {
+        if (section.length <= MAX_POST_LENGTH) {
+          finalPosts.push(section)
+        } else {
+          // If a manual section is too long, auto-split it
+          const words = section.split(' ')
+          let currentPost = ''
+          
+          for (const word of words) {
+            const testPost = currentPost ? `${currentPost} ${word}` : word
+            
+            // Account for numbering in length calculation
+            const format = NUMBERING_FORMATS.find(f => f.id === numberingFormat)
+            const numberingLength = format && numberingFormat !== 'none' ? 
+              format.format(finalPosts.length + 1, 999).length + 2 : 0 // +2 for space and safety margin
+            
+            if (testPost.length + numberingLength <= MAX_POST_LENGTH) {
+              currentPost = testPost
+            } else {
+              if (currentPost) {
+                finalPosts.push(currentPost)
+              }
+              currentPost = word
+            }
+          }
+          
+          if (currentPost) {
+            finalPosts.push(currentPost)
+          }
         }
-        currentPost = word
+      }
+      
+      setPosts(finalPosts)
+      // Initialize post order if it doesn't match
+      if (postOrder.length !== finalPosts.length) {
+        setPostOrder(finalPosts.map((_, index) => index))
+      }
+    } else {
+      // No manual splits, use auto-split logic
+      const words = text.split(' ')
+      const splitPosts: string[] = []
+      let currentPost = ''
+
+      for (const word of words) {
+        const testPost = currentPost ? `${currentPost} ${word}` : word
+        
+        // Account for numbering in length calculation
+        const format = NUMBERING_FORMATS.find(f => f.id === numberingFormat)
+        const numberingLength = format && numberingFormat !== 'none' ? 
+          format.format(splitPosts.length + 1, 999).length + 2 : 0 // +2 for space and safety margin
+        
+        if (testPost.length + numberingLength <= MAX_POST_LENGTH) {
+          currentPost = testPost
+        } else {
+          if (currentPost) {
+            splitPosts.push(currentPost)
+          }
+          currentPost = word
+        }
+      }
+
+      if (currentPost) {
+        splitPosts.push(currentPost)
+      }
+
+      setPosts(splitPosts)
+      // Initialize post order if it doesn't match
+      if (postOrder.length !== splitPosts.length) {
+        setPostOrder(splitPosts.map((_, index) => index))
       }
     }
+  }, [text, numberingFormat, isReorderingPosts])
 
-    if (currentPost) {
-      splitPosts.push(currentPost)
-    }
-
-    setPosts(splitPosts)
-  }, [text, numberingFormat])
-
-  const applyNumbering = useCallback((posts: string[]): string[] => {
+  const applyNumbering = useCallback((posts: string[], order?: number[]): string[] => {
     if (numberingFormat === 'none' || posts.length === 1) return posts
     
     const format = NUMBERING_FORMATS.find(f => f.id === numberingFormat)
     if (!format) return posts
 
-    return posts.map((post, index) => {
-      const numbering = format.format(index + 1, posts.length)
+    // If we have a custom order, apply it
+    const orderedPosts = order && order.length === posts.length 
+      ? order.map(i => posts[i])
+      : posts
+
+    return orderedPosts.map((post, index) => {
+      const numbering = format.format(index + 1, orderedPosts.length)
       return numberingPosition === 'beginning' ? `${numbering} ${post}` : `${post} ${numbering}`
     })
   }, [numberingFormat, numberingPosition])
+
+  const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
+    const items = Array.from(e.clipboardData.items)
+    const imageItems = items.filter(item => item.type.indexOf('image') !== -1)
+    
+    if (imageItems.length === 0) return
+    
+    // Prevent default paste behavior for images
+    e.preventDefault()
+    
+    // Check if we already have a video
+    const hasVideo = media.some(m => m.type === 'video')
+    if (hasVideo) {
+      setPostStatus({ type: 'error', message: 'Cannot add images when a video is present' })
+      return
+    }
+    
+    // Check if we've reached the image limit
+    const currentImageCount = media.filter(m => m.type === 'image').length
+    if (currentImageCount >= MAX_IMAGES_PER_POST) {
+      setPostStatus({ type: 'error', message: `Maximum ${MAX_IMAGES_PER_POST} images per post` })
+      return
+    }
+    
+    // Process each image
+    for (const item of imageItems) {
+      const blob = item.getAsFile()
+      if (!blob) continue
+      
+      // Check file size
+      if (blob.size > MAX_IMAGE_SIZE && !isGifFile(blob)) {
+        setPostStatus({ type: 'error', message: `Pasted image is too large (max 1MB)` })
+        continue
+      }
+      
+      // Convert blob to File object
+      const file = new File([blob], `pasted-image-${Date.now()}.${blob.type.split('/')[1]}`, { type: blob.type })
+      
+      // Add to media
+      const newMedia: UploadedMedia = {
+        id: Math.random().toString(36).substr(2, 9),
+        file,
+        preview: URL.createObjectURL(blob),
+        alt: '',
+        type: 'image'
+      }
+      
+      setMedia(prev => [...prev, newMedia])
+      setPostStatus({ type: 'success', message: 'Image pasted!' })
+      setTimeout(() => setPostStatus({ type: 'idle' }), 2000)
+      
+      // Stop if we've reached the limit
+      if (media.filter(m => m.type === 'image').length + 1 >= MAX_IMAGES_PER_POST) {
+        break
+      }
+    }
+  }, [media])
 
   const handleMediaSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -373,6 +497,7 @@ export function Composer() {
 
   const handleDrop = useCallback((e: React.DragEvent, targetPostIndex: number) => {
     e.preventDefault()
+    e.stopPropagation() // Prevent post reordering when dropping media
     
     if (!draggedMedia) return
     
@@ -432,6 +557,68 @@ export function Composer() {
     setDraggedMedia(null)
     setDragOverMediaId(null)
   }, [draggedMedia])
+
+
+  // Post reordering handlers
+  const handlePostDragStart = useCallback((e: React.DragEvent, index: number) => {
+    setDraggedPostIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+    // Add visual feedback
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5'
+    }
+  }, [])
+
+  const handlePostDragEnd = useCallback((e: React.DragEvent) => {
+    setDraggedPostIndex(null)
+    setDragOverPostOrderIndex(null)
+    // Remove visual feedback
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1'
+    }
+  }, [])
+
+  const handlePostDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverPostOrderIndex(index)
+  }, [])
+
+  const handlePostDrop = useCallback((e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault()
+    
+    if (draggedPostIndex === null || draggedPostIndex === targetIndex) return
+    
+    // Set flag FIRST to prevent post order reset
+    setIsReorderingPosts(true)
+    
+    // Create new order array
+    const currentOrder = postOrder.length > 0 ? postOrder : posts.map((_, i) => i)
+    const newOrder = [...currentOrder]
+    const [removed] = newOrder.splice(draggedPostIndex, 1)
+    newOrder.splice(targetIndex, 0, removed)
+    
+    // Create reordered posts array
+    const reorderedPosts = newOrder.map(i => posts[i])
+    
+    // Update all state values together
+    setPosts(reorderedPosts)
+    setPostOrder(reorderedPosts.map((_, i) => i)) // Reset to sequential order since posts are already reordered
+    
+    // Reconstruct text with the new order
+    const newText = reorderedPosts.join('\n---\n')
+    setText(newText)
+    
+    setDraggedPostIndex(null)
+    setDragOverPostOrderIndex(null)
+    
+    // Reset flag after React has processed the updates
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        setIsReorderingPosts(false)
+      }, 100)
+    })
+  }, [draggedPostIndex, postOrder, posts])
 
   const saveDraftHandler = useCallback(() => {
     if (!text.trim()) {
@@ -518,18 +705,21 @@ export function Composer() {
     // Clear countdown state
     setCountdown(null)
     
-    const numberedPosts = applyNumbering(originalPosts)
+    const numberedPosts = applyNumbering(originalPosts, postOrder)
     
     try {
       setPostStatus({ type: 'posting', message: 'Creating thread...' })
       
-      // Prepare media for each post
+      // Prepare media for each post - need to map original indices to reordered indices
       const postMediaMap = new Map<number, Array<{ data: Uint8Array; mimeType: string; alt?: string; type: 'image' | 'video' }>>()
       
       for (const m of originalMedia) {
-        const postIndex = m.postIndex ?? 0 // Default to first post if not specified
-        if (!postMediaMap.has(postIndex)) {
-          postMediaMap.set(postIndex, [])
+        const originalPostIndex = m.postIndex ?? 0 // Default to first post if not specified
+        // Find the new position of this post after reordering
+        const reorderedIndex = postOrder.length > 0 ? postOrder.indexOf(originalPostIndex) : originalPostIndex
+        
+        if (!postMediaMap.has(reorderedIndex)) {
+          postMediaMap.set(reorderedIndex, [])
         }
         
         const mediaData = {
@@ -539,7 +729,7 @@ export function Composer() {
           type: m.type
         }
         
-        postMediaMap.get(postIndex)!.push(mediaData)
+        postMediaMap.get(reorderedIndex)!.push(mediaData)
       }
       
       let lastPost: { uri: string; cid: string } | undefined
@@ -640,6 +830,7 @@ export function Composer() {
       
       setText('')
       setPosts([])
+      setPostOrder([])
       setMedia([])
       setCurrentDraftId(null)
       setDraftTitle('')
@@ -716,7 +907,7 @@ export function Composer() {
     }
   }
 
-  const displayPosts = applyNumbering(posts)
+  const displayPosts = applyNumbering(posts, postOrder)
 
   // Handle GIF selection
   const handleSelectGif = useCallback(async (gifUrl: string) => {
@@ -798,6 +989,25 @@ export function Composer() {
       }, 0)
     }
     setShowEmojiPicker(false)
+  }, [text])
+
+  // Handle manual thread split
+  const insertThreadSplit = useCallback(() => {
+    if (textareaRef.current) {
+      const start = textareaRef.current.selectionStart
+      const end = textareaRef.current.selectionEnd
+      const splitMarker = '\n---\n'
+      const newText = text.substring(0, start) + splitMarker + text.substring(end)
+      setText(newText)
+      
+      // Set cursor position after split marker
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus()
+          textareaRef.current.setSelectionRange(start + splitMarker.length, start + splitMarker.length)
+        }
+      }, 0)
+    }
   }, [text])
 
   // Cleanup previews on unmount
@@ -907,6 +1117,7 @@ export function Composer() {
           ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onPaste={handlePaste}
           placeholder="What's on your mind?"
           className="w-full min-h-[200px] p-4 rounded-lg resize-vertical font-inherit transition-all"
           style={{ 
@@ -965,6 +1176,25 @@ export function Composer() {
           <div className="flex gap-2">
             <div className="relative group">
               <button
+                className="bsky-button-secondary flex items-center gap-2"
+                onClick={insertThreadSplit}
+                disabled={isPosting}
+                aria-label="Insert thread split"
+              >
+                <Plus size={20} />
+              </button>
+              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block z-10">
+                <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap">
+                  <div className="font-semibold mb-1">Split Thread Here</div>
+                  <div>Insert manual break (---)</div>
+                  <div className="mt-1 text-gray-300">Forces a new post at cursor</div>
+                  <div className="absolute bottom-0 right-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="relative group">
+              <button
                 className="bsky-button-secondary flex items-center gap-2 relative"
                 onClick={() => {
                   if (fileInputRef.current) {
@@ -987,6 +1217,7 @@ export function Composer() {
                 <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap">
                   <div className="font-semibold mb-1">Add Images</div>
                   <div>Up to 4 images, max 1MB each</div>
+                  <div className="mt-1 text-gray-300">Tip: You can paste images from clipboard!</div>
                   <div className="absolute bottom-0 right-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900"></div>
                 </div>
               </div>
@@ -1147,34 +1378,52 @@ export function Composer() {
             <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--bsky-text-primary)' }}>Thread Preview</h3>
           )}
           <div className="space-y-3">
-            {displayPosts.map((post, index) => {
-              const postMedia = media.filter(m => m.postIndex === index)
-              const hasMedia = postMedia.length > 0 || (index === 0 && media.filter(m => m.postIndex === undefined).length > 0)
+            {displayPosts.map((post, displayIndex) => {
+              // Find the original index before reordering
+              const originalIndex = postOrder.length > 0 ? postOrder[displayIndex] : displayIndex
+              const postMedia = media.filter(m => m.postIndex === originalIndex)
+              const hasMedia = postMedia.length > 0 || (originalIndex === 0 && media.filter(m => m.postIndex === undefined).length > 0)
               
               return (
                 <div 
-                  key={index} 
-                  className={`bsky-card p-4 hover:shadow-sm transition-all relative ${dragOverPostIndex === index ? 'ring-2 ring-blue-400' : ''}`}
-                  onDragOver={(e) => handleDragOver(e, index)}
+                  key={originalIndex} 
+                  className={`bsky-card p-4 hover:shadow-sm transition-all relative cursor-move ${
+                    dragOverPostIndex === originalIndex ? 'ring-2 ring-blue-400' : ''
+                  } ${dragOverPostOrderIndex === displayIndex ? 'border-t-4 border-blue-500' : ''}`}
+                  draggable
+                  onDragStart={(e) => handlePostDragStart(e, displayIndex)}
+                  onDragEnd={handlePostDragEnd}
+                  onDragOver={(e) => {
+                    handleDragOver(e, originalIndex)
+                    handlePostDragOver(e, displayIndex)
+                  }}
                   onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, index)}
+                  onDrop={(e) => {
+                    // Check if we're dragging media or a post
+                    if (draggedMedia) {
+                      handleDrop(e, originalIndex)
+                    } else if (draggedPostIndex !== null) {
+                      handlePostDrop(e, displayIndex)
+                    }
+                  }}
                 >
-                  {dragOverPostIndex === index && (
+                  {dragOverPostIndex === originalIndex && (
                     <div className="absolute inset-0 bg-blue-50 bg-opacity-50 rounded-lg pointer-events-none flex items-center justify-center">
                       <div className="text-blue-600 font-medium">Drop attachment here</div>
                     </div>
                   )}
                   <div className="flex justify-between items-center mb-3">
                     <span className="flex items-center gap-2">
+                      <GripVertical size={16} className="text-gray-400" />
                       {posts.length > 1 && (
                         <span className="font-semibold" style={{ color: 'var(--bsky-primary)' }}>
-                          Post {index + 1}
+                          Post {displayIndex + 1}
                         </span>
                       )}
                       {hasMedia && (
                         <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full" style={{ background: 'var(--bsky-bg-secondary)', color: 'var(--bsky-text-secondary)' }}>
-                          {media.some(m => m.type === 'video' && (m.postIndex === index || (index === 0 && m.postIndex === undefined))) ? <Video size={12} /> : <Image size={12} />}
-                          {index === 0 ? media.filter(m => m.postIndex === undefined || m.postIndex === 0).length : postMedia.length}
+                          {media.some(m => m.type === 'video' && (m.postIndex === originalIndex || (originalIndex === 0 && m.postIndex === undefined))) ? <Video size={12} /> : <Image size={12} />}
+                          {originalIndex === 0 ? media.filter(m => m.postIndex === undefined || m.postIndex === 0).length : postMedia.length}
                         </span>
                       )}
                     </span>
@@ -1182,10 +1431,18 @@ export function Composer() {
                   </div>
                   <div className="whitespace-pre-wrap break-words mb-3" style={{ color: 'var(--bsky-text-primary)', lineHeight: '1.5' }}>{post}</div>
                   
+                  {/* Show if this post was created by manual split */}
+                  {text.includes('\n---\n') && originalIndex > 0 && (
+                    <div className="flex items-center gap-2 mb-2 text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
+                      <Split size={14} />
+                      <span>Manual split</span>
+                    </div>
+                  )}
+                  
                   {/* Show attachments for this post */}
-                  {(index === 0 ? media.filter(m => m.postIndex === undefined || m.postIndex === 0) : postMedia).length > 0 && (
+                  {(originalIndex === 0 ? media.filter(m => m.postIndex === undefined || m.postIndex === 0) : postMedia).length > 0 && (
                     <div className="grid grid-cols-4 gap-2 mt-3 pt-3 border-t" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-                      {(index === 0 ? media.filter(m => m.postIndex === undefined || m.postIndex === 0) : postMedia).map(m => (
+                      {(originalIndex === 0 ? media.filter(m => m.postIndex === undefined || m.postIndex === 0) : postMedia).map(m => (
                         <div 
                           key={m.id}
                           className={`relative rounded overflow-hidden border cursor-move ${dragOverMediaId === m.id ? 'ring-2 ring-blue-400' : ''}`}
@@ -1314,6 +1571,7 @@ export function Composer() {
                 // Clear everything to start a new draft
                 setText('')
                 setPosts([])
+                setPostOrder([])
                 // Clean up media previews
                 media.forEach(m => URL.revokeObjectURL(m.preview))
                 setMedia([])
