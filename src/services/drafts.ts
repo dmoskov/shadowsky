@@ -5,9 +5,19 @@ export interface ThreadDraft {
   createdAt: string;
   updatedAt: string;
   scheduledFor?: string; // ISO date string for delayed send
+  // Legacy field for backward compatibility
   images?: Array<{
     file: string; // base64 or blob URL
     alt: string;
+  }>;
+  // New structure for multi-post threads
+  posts?: string[]; // Individual post texts
+  postOrder?: number[]; // Order of posts if reordered
+  media?: Array<{
+    file: string; // base64 or blob URL
+    alt: string;
+    type: 'image' | 'video';
+    postIndex?: number; // Which post this media belongs to
   }>;
 }
 

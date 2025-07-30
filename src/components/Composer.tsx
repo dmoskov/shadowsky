@@ -620,11 +620,38 @@ export function Composer() {
     })
   }, [draggedPostIndex, postOrder, posts])
 
-  const saveDraftHandler = useCallback(() => {
+  const saveDraftHandler = useCallback(async () => {
     if (!text.trim()) {
       setPostStatus({ type: 'error', message: 'Cannot save empty draft' })
       return
     }
+    
+    // Convert media files to base64 for storage
+    const mediaData = await Promise.all(media.map(async (m) => {
+      // If it's already a data URL, use it directly
+      if (m.preview.startsWith('data:')) {
+        return {
+          file: m.preview,
+          alt: m.alt,
+          type: m.type,
+          postIndex: m.postIndex
+        }
+      }
+      
+      // Otherwise, convert file to base64
+      return new Promise<{ file: string; alt: string; type: 'image' | 'video'; postIndex?: number }>((resolve) => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          resolve({
+            file: reader.result as string,
+            alt: m.alt,
+            type: m.type,
+            postIndex: m.postIndex
+          })
+        }
+        reader.readAsDataURL(m.file)
+      })
+    }))
     
     const draft: ThreadDraft = {
       id: currentDraftId || generateDraftId(),
@@ -632,10 +659,14 @@ export function Composer() {
       content: text,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      images: media.map(m => ({
-        file: m.preview,
-        alt: m.alt
-      }))
+      // Save new structure
+      posts: posts,
+      postOrder: postOrder.length > 0 ? postOrder : undefined,
+      media: mediaData,
+      // Keep legacy field for first post's images only (backward compatibility)
+      images: mediaData
+        .filter(m => m.type === 'image' && (!m.postIndex || m.postIndex === 0))
+        .map(m => ({ file: m.file, alt: m.alt }))
     }
     
     saveDraft(draft)
@@ -646,18 +677,70 @@ export function Composer() {
     setTimeout(() => {
       setPostStatus({ type: 'idle' })
     }, 2000)
-  }, [text, draftTitle, currentDraftId, media])
+  }, [text, draftTitle, currentDraftId, media, posts, postOrder])
   
-  const loadDraft = useCallback((draft: ThreadDraft) => {
+  const loadDraft = useCallback(async (draft: ThreadDraft) => {
     setText(draft.content)
     setDraftTitle(draft.title)
     setCurrentDraftId(draft.id)
     setShowDrafts(false)
     
-    // TODO: Load images from draft
-    // This would require converting the stored URLs back to File objects
-    // or storing the images differently
-  }, [])
+    // Load posts and post order if available
+    if (draft.posts && draft.posts.length > 0) {
+      setPosts(draft.posts)
+      if (draft.postOrder) {
+        setPostOrder(draft.postOrder)
+      }
+    }
+    
+    // Load media from new structure or legacy structure
+    const mediaToLoad = draft.media || (draft.images?.map(img => ({
+      file: img.file,
+      alt: img.alt,
+      type: 'image' as const,
+      postIndex: 0
+    }))) || []
+    
+    // Convert stored base64 back to File objects and create preview URLs
+    const loadedMedia = await Promise.all(mediaToLoad.map(async (m) => {
+      let file: File
+      let preview: string
+      
+      if (m.file.startsWith('data:')) {
+        // Convert base64 to blob
+        const response = await fetch(m.file)
+        const blob = await response.blob()
+        const filename = `draft-media-${Date.now()}.${m.type === 'video' ? 'mp4' : 'jpg'}`
+        file = new File([blob], filename, { type: blob.type })
+        preview = m.file // Use the data URL directly as preview
+      } else {
+        // If it's already a blob URL (shouldn't happen in saved drafts)
+        preview = m.file
+        // Create a dummy file - this shouldn't happen in practice
+        file = new File([], 'unknown', { type: m.type === 'video' ? 'video/mp4' : 'image/jpeg' })
+      }
+      
+      const newMedia: UploadedMedia = {
+        id: Math.random().toString(36).substr(2, 9),
+        file,
+        preview,
+        alt: m.alt,
+        type: m.type,
+        postIndex: m.postIndex
+      }
+      
+      return newMedia
+    }))
+    
+    // Clear existing media previews before setting new ones
+    media.forEach(m => {
+      if (m.preview && !m.preview.startsWith('data:')) {
+        URL.revokeObjectURL(m.preview)
+      }
+    })
+    
+    setMedia(loadedMedia)
+  }, [media])
   
   const deleteDraftHandler = useCallback((id: string) => {
     deleteDraft(id)
@@ -1147,13 +1230,44 @@ export function Composer() {
             onFocus={(e) => e.target.style.borderColor = 'var(--bsky-primary)'}
             onBlur={(e) => e.target.style.borderColor = 'var(--bsky-border-primary)'}
           />
+          
+          <button
+            className="bsky-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
+            onClick={saveDraftHandler}
+            disabled={!text.trim()}
+          >
+            <Save size={14} />
+            {currentDraftId ? 'Update' : 'Save Draft'}
+          </button>
+          
+          <button
+            className="bsky-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
+            onClick={() => setShowDrafts(!showDrafts)}
+          >
+            <FileText size={14} />
+            Drafts ({drafts.length})
+          </button>
+          
           {currentDraftId && (
-            <span className="text-xs px-2 py-1 rounded-full" style={{ 
-              background: 'var(--bsky-bg-tertiary)', 
-              color: 'var(--bsky-text-secondary)' 
-            }}>
-              Editing draft
-            </span>
+            <button
+              className="bsky-button-secondary p-2 text-sm"
+              onClick={() => {
+                // Clear everything to start a new draft
+                setText('')
+                setPosts([])
+                setPostOrder([])
+                // Clean up media previews
+                media.forEach(m => URL.revokeObjectURL(m.preview))
+                setMedia([])
+                setCurrentDraftId(null)
+                setDraftTitle('')
+                setPostStatus({ type: 'success', message: 'Ready for new draft' })
+                setTimeout(() => setPostStatus({ type: 'idle' }), 2000)
+              }}
+              title="New Draft"
+            >
+              <Plus size={14} />
+            </button>
           )}
         </div>
         
@@ -1500,36 +1614,55 @@ export function Composer() {
               {drafts.length === 0 ? (
                 <p className="text-center py-8" style={{ color: 'var(--bsky-text-secondary)' }}>No saved drafts</p>
               ) : (
-                drafts.map(draft => (
-                  <div key={draft.id} className="p-4 rounded-lg border hover:shadow-sm transition-all cursor-pointer" style={{ borderColor: 'var(--bsky-border-primary)', background: 'var(--bsky-bg-secondary)' }}>
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium" style={{ color: 'var(--bsky-text-primary)' }}>{draft.title}</h4>
-                      <button
-                        className="p-1 rounded hover:bg-red-100 text-red-600"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          deleteDraftHandler(draft.id)
-                        }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                drafts.map(draft => {
+                  const postCount = draft.posts?.length || 1
+                  const mediaCount = draft.media?.length || draft.images?.length || 0
+                  
+                  return (
+                    <div key={draft.id} className="p-4 rounded-lg border hover:shadow-sm transition-all cursor-pointer" style={{ borderColor: 'var(--bsky-border-primary)', background: 'var(--bsky-bg-secondary)' }}>
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-medium" style={{ color: 'var(--bsky-text-primary)' }}>{draft.title}</h4>
+                        <button
+                          className="p-1 rounded hover:bg-red-100 text-red-600"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            deleteDraftHandler(draft.id)
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                      <p className="text-sm mb-2 line-clamp-2" style={{ color: 'var(--bsky-text-secondary)' }}>
+                        {draft.content}
+                      </p>
+                      <div className="flex items-center gap-3 mb-2">
+                        {postCount > 1 && (
+                          <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full" style={{ background: 'var(--bsky-bg-tertiary)', color: 'var(--bsky-primary)' }}>
+                            <Split size={12} />
+                            {postCount} posts
+                          </span>
+                        )}
+                        {mediaCount > 0 && (
+                          <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full" style={{ background: 'var(--bsky-bg-tertiary)', color: 'var(--bsky-text-secondary)' }}>
+                            <Image size={12} />
+                            {mediaCount} media
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                          Updated {new Date(draft.updatedAt).toLocaleString()}
+                        </span>
+                        <button
+                          className="bsky-button-secondary text-sm px-3 py-1"
+                          onClick={() => loadDraft(draft)}
+                        >
+                          Load
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-sm mb-2 line-clamp-2" style={{ color: 'var(--bsky-text-secondary)' }}>
-                      {draft.content}
-                    </p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                        Updated {new Date(draft.updatedAt).toLocaleString()}
-                      </span>
-                      <button
-                        className="bsky-button-secondary text-sm px-3 py-1"
-                        onClick={() => loadDraft(draft)}
-                      >
-                        Load
-                      </button>
-                    </div>
-                  </div>
-                ))
+                  )
+                })
               )}
             </div>
           )}
@@ -1563,46 +1696,6 @@ export function Composer() {
           </div>
         )}
         
-        <div className="flex gap-3 flex-wrap justify-end">
-          {currentDraftId && (
-            <button
-              className="bsky-button-secondary flex items-center gap-2"
-              onClick={() => {
-                // Clear everything to start a new draft
-                setText('')
-                setPosts([])
-                setPostOrder([])
-                // Clean up media previews
-                media.forEach(m => URL.revokeObjectURL(m.preview))
-                setMedia([])
-                setCurrentDraftId(null)
-                setDraftTitle('')
-                setPostStatus({ type: 'success', message: 'Ready for new draft' })
-                setTimeout(() => setPostStatus({ type: 'idle' }), 2000)
-              }}
-            >
-              <FileText size={16} />
-              New Draft
-            </button>
-          )}
-          
-          <button
-            className="bsky-button-secondary flex items-center gap-2"
-            onClick={saveDraftHandler}
-            disabled={!text.trim()}
-          >
-            <Save size={16} />
-            {currentDraftId ? 'Update Draft' : 'Save Draft'}
-          </button>
-          
-          <button
-            className="bsky-button-secondary flex items-center gap-2"
-            onClick={() => setShowDrafts(!showDrafts)}
-          >
-            <FileText size={16} />
-            Drafts ({drafts.length})
-          </button>
-        </div>
       </div>
       
       {showGiphySearch && (
