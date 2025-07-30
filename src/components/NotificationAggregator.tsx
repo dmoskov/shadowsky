@@ -250,7 +250,6 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                   <img 
                     src={proxifyBskyImage(user.avatar)} 
                     alt={user.handle}
-                    crossOrigin="anonymous"
                     className="w-8 h-8 bsky-avatar border-2"
                     style={{ borderColor: 'var(--bsky-bg-primary)' }}
                   />
@@ -382,7 +381,6 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                     <img 
                       src={proxifyBskyImage(postAuthor.avatar)} 
                       alt={postAuthor.handle}
-                      crossOrigin="anonymous"
                       className="w-5 h-5 bsky-avatar"
                     />
                   ) : (
@@ -419,7 +417,6 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                           key={idx}
                           src={proxifyBskyImage(img.thumb)}
                           alt={img.alt || ''}
-                          crossOrigin="anonymous"
                           className="rounded-lg object-cover w-full border" 
                           style={{ 
                             borderColor: 'var(--bsky-border-primary)',

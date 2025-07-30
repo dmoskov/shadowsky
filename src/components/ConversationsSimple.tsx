@@ -129,7 +129,6 @@ const ConversationItem = React.memo(({
                   src={proxifyBskyImage(convo.latestReply.author.avatar)} 
                   alt={convo.latestReply.author.handle}
                   className="w-5 h-5 rounded-full object-cover flex-shrink-0"
-                  crossOrigin="anonymous"
                 />
               ) : (
                 <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" 
@@ -169,7 +168,6 @@ const ConversationItem = React.memo(({
               src={proxifyBskyImage(mainParticipantAvatar)} 
               alt=""
               className="w-12 h-12 rounded-full object-cover"
-              crossOrigin="anonymous"
             />
           ) : (
             <div className="w-12 h-12 rounded-full bsky-gradient flex items-center justify-center text-white font-medium">
@@ -210,7 +208,6 @@ const ConversationItem = React.memo(({
                 src={proxifyBskyImage(convo.latestReply.author.avatar)} 
                 alt={convo.latestReply.author.handle}
                 className="w-5 h-5 rounded-full object-cover flex-shrink-0"
-                crossOrigin="anonymous"
               />
             ) : (
               <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" 
@@ -815,7 +812,6 @@ export const ConversationsSimple: React.FC = () => {
                       src={proxifyBskyImage(author.avatar)} 
                       alt={author.handle}
                       className="w-10 h-10 rounded-full object-cover"
-                      crossOrigin="anonymous"
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full flex items-center justify-center" 

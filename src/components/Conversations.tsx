@@ -64,7 +64,6 @@ const QuoteEmbed: React.FC<{ embed: any }> = ({ embed }) => {
               src={proxifyBskyImage(author.avatar)} 
               alt={author.handle}
               className="w-4 h-4 rounded-full object-cover"
-              crossOrigin="anonymous"
             />
           ) : (
             <div className="w-4 h-4 rounded-full flex items-center justify-center" 
@@ -555,7 +554,6 @@ export const Conversations: React.FC = () => {
                       src={proxifyBskyImage(author.avatar)} 
                       alt={author.handle}
                       className="w-10 h-10 rounded-full object-cover"
-                      crossOrigin="anonymous"
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full flex items-center justify-center" 
@@ -774,7 +772,6 @@ export const Conversations: React.FC = () => {
                             src={proxifyBskyImage(convo.rootPost?.author?.avatar || convo.latestReply.author.avatar)} 
                             alt=""
                             className="w-12 h-12 rounded-full object-cover"
-                            crossOrigin="anonymous"
                           />
                         ) : (
                           <div className="w-12 h-12 rounded-full bsky-gradient flex items-center justify-center text-white font-medium">
@@ -932,7 +929,6 @@ export const Conversations: React.FC = () => {
                           src={proxifyBskyImage(latestReplyAuthor.avatar)} 
                           alt={latestReplyAuthor.handle}
                           className="w-10 h-10 rounded-full object-cover"
-                          crossOrigin="anonymous"
                         />
                       ) : (
                         <div className="w-10 h-10 rounded-full flex items-center justify-center" 

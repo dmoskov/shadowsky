@@ -1,15 +1,17 @@
 /**
  * Transform Bluesky CDN URLs to use local proxy to avoid CORS issues
+ * Only transforms URLs in development mode where the proxy is available
  */
 export function proxifyBskyImage(url: string | undefined): string | undefined {
   if (!url) return url;
   
-  // Check if it's a Bluesky CDN URL
-  if (url.startsWith('https://cdn.bsky.app/')) {
+  // Only use proxy in development mode
+  if (import.meta.env.DEV && url.startsWith('https://cdn.bsky.app/')) {
     // Replace with our proxy URL
     return url.replace('https://cdn.bsky.app/', '/bsky-cdn/');
   }
   
+  // In production, return the URL as-is
   return url;
 }
 
