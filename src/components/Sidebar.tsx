@@ -97,7 +97,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t" style={{ borderColor: 'var(--bsky-border-primary)' }}>
           <div className="text-xs text-center" style={{ color: 'var(--bsky-text-tertiary)' }}>
             <div className="bsky-gradient-text font-bold mb-1">ShadowSky</div>
-            <div>Version 0.1.0</div>
+            <div>Version 0.2.0</div>
           </div>
         </div>
       </aside>
