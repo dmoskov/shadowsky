@@ -93,10 +93,14 @@ function AppContent() {
       <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div className="flex">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-        <main className="flex-1 lg:ml-64 mt-16 overflow-hidden">
+        <main className="flex-1 lg:ml-64 mt-16">
           <Routes>
             <Route path="/" element={<NotificationsFeed />} />
-            <Route path="/timeline" element={<VisualTimeline />} />
+            <Route path="/timeline" element={
+              <div className="h-[calc(100vh-4rem)] overflow-y-auto">
+                <VisualTimeline />
+              </div>
+            } />
             <Route path="/analytics" element={<NotificationsAnalytics />} />
             <Route path="/conversations" element={<Conversations />} />
             <Route path="/compose" element={<Composer />} />

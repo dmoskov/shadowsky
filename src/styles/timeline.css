@@ -4,6 +4,15 @@
   animation: fadeIn 0.3s ease-out;
 }
 
+/* Sticky day headers */
+.timeline-day-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

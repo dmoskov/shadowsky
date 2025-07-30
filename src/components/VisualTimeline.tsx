@@ -360,6 +360,23 @@ export const VisualTimeline: React.FC = () => {
     return format(date, 'EEEE, MMMM d')
   }
 
+  const getTimeOfDay = (date: Date) => {
+    const hour = date.getHours()
+    
+    if (hour >= 5 && hour < 9) return 'Early morning'
+    if (hour >= 9 && hour < 12) return 'Morning'
+    if (hour >= 12 && hour < 14) return 'Noon'
+    if (hour >= 14 && hour < 17) return 'Afternoon'
+    if (hour >= 17 && hour < 20) return 'Evening'
+    if (hour >= 20 && hour < 24) return 'Night'
+    return 'Late night'
+  }
+
+  const isDayTime = (date: Date) => {
+    const hour = date.getHours()
+    return hour >= 6 && hour < 18
+  }
+
   const getReasonIcon = (reason: string) => {
     switch (reason) {
       case 'like': return <Heart size={14} style={{ color: 'var(--bsky-text-secondary)' }} />
@@ -376,6 +393,21 @@ export const VisualTimeline: React.FC = () => {
     }
   }
 
+  // Group events by day - must be before conditional returns
+  const eventsByDay = React.useMemo(() => {
+    const groups: { [key: string]: { label: string; events: typeof aggregatedEvents } } = {}
+    
+    aggregatedEvents.forEach(event => {
+      const dayLabel = getTimeLabel(event.time)
+      if (!groups[dayLabel]) {
+        groups[dayLabel] = { label: dayLabel, events: [] }
+      }
+      groups[dayLabel].events.push(event)
+    })
+    
+    return Object.values(groups)
+  }, [aggregatedEvents])
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -391,74 +423,69 @@ export const VisualTimeline: React.FC = () => {
     )
   }
 
-  let lastDayLabel: string | null = null
-
   return (
-    <div className="p-4 sm:p-6 max-w-4xl mx-auto">
-      <div className="relative">
+    <div className="max-w-4xl mx-auto">
+      <div className="relative p-4 sm:p-6">
         {/* Timeline line */}
         <div 
-          className="absolute left-12 top-0 bottom-0 w-0.5"
+          className="absolute left-[7.5rem] top-0 bottom-0 w-0.5"
           style={{ 
             background: 'linear-gradient(to bottom, var(--bsky-border-color) 0%, var(--bsky-border-color) 100%)',
             position: 'relative' 
           }}
         />
 
-        {aggregatedEvents.map((event, index) => {
-          const dayLabel = getTimeLabel(event.time)
-          const showDayLabel = dayLabel !== lastDayLabel
-          lastDayLabel = dayLabel
+        {eventsByDay.map((dayGroup, dayIndex) => (
+          <div key={dayGroup.label}>
+            {/* Sticky day label */}
+            <div className="timeline-day-header sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-3" style={{ 
+              backgroundColor: 'var(--bsky-bg-primary)',
+              borderBottom: '1px solid var(--bsky-border-color)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: 'var(--bsky-primary)' }}
+                />
+                <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--bsky-text-secondary)' }}>
+                  {dayGroup.label}
+                </h2>
+              </div>
+            </div>
 
-          const previousEvent = aggregatedEvents[index - 1]
-          const spacingClass = getSpacingClass(event.time, previousEvent?.time)
+            {/* Events for this day */}
+            {dayGroup.events.map((event, eventIndex) => {
+              const previousEvent = eventIndex > 0 ? dayGroup.events[eventIndex - 1] : 
+                                   dayIndex > 0 ? eventsByDay[dayIndex - 1].events[eventsByDay[dayIndex - 1].events.length - 1] : null
+              const spacingClass = getSpacingClass(event.time, previousEvent?.time)
 
-          return (
-            <div 
-              key={`${event.time.toISOString()}-${index}`} 
-              className={`relative ${spacingClass}`}
-            >
-              {/* Day label */}
-              {showDayLabel && (
-                <div className="mb-3">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: 'var(--bsky-primary)' }}
-                    />
-                    <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--bsky-text-secondary)' }}>
-                      {dayLabel}
-                    </h2>
-                  </div>
-                </div>
-              )}
-
-              {/* Time and event */}
-              <div className="flex gap-4 items-start timeline-event">
+              return (
+                <div 
+                  key={`${event.time.toISOString()}-${eventIndex}`} 
+                  className={`relative ${spacingClass}`}
+                >
+                  {/* Time and event */}
+                  <div className="flex gap-4 items-start timeline-event">
                 {/* Time */}
-                <div className="w-16 text-right text-sm pt-2 timeline-time-label" style={{ color: 'var(--bsky-text-secondary)' }}>
-                  <span className="inline-flex items-center gap-1">
-                    {format(event.time, 'h:mm a')}
-                    {/* Day/night indicator */}
-                    <span 
-                      className="w-1.5 h-1.5 rounded-full inline-block"
-                      style={{ 
-                        backgroundColor: event.time.getHours() >= 6 && event.time.getHours() < 18 
-                          ? '#fbbf24' // Day - amber
-                          : '#6366f1', // Night - indigo
-                        opacity: 0.6
-                      }}
-                    />
+                <div className="w-24 text-right text-sm pt-2 timeline-time-label">
+                  <span className="font-medium" style={{ 
+                    color: isDayTime(event.time) ? '#d97706' : '#6366f1',
+                    opacity: 0.8
+                  }}>
+                    {getTimeOfDay(event.time)}
                   </span>
                 </div>
 
                 {/* Timeline dot */}
                 <div className="relative flex-shrink-0" style={{ paddingTop: '14px' }}>
                   <div 
-                    className={`${event.aggregationType === 'post-burst' ? 'w-3 h-3' : 'w-2 h-2'} rounded-full ${differenceInHours(new Date(), event.time) < 1 ? 'timeline-dot-recent' : ''}`}
+                    className={`${event.aggregationType === 'post-burst' ? 'w-3 h-3' : 'w-2 h-2'} rounded-full`}
                     style={{ 
-                      backgroundColor: 'var(--bsky-text-tertiary)',
-                      opacity: event.aggregationType === 'post-burst' ? '0.8' : '0.6'
+                      backgroundColor: isDayTime(event.time) ? '#fbbf24' : '#6366f1',
+                      opacity: event.aggregationType === 'post-burst' ? '0.9' : '0.7'
                     }}
                   />
                 </div>
@@ -474,12 +501,14 @@ export const VisualTimeline: React.FC = () => {
                     event.aggregationType === 'user-activity' ? 'timeline-user-activity' : ''
                   }`}
                   style={{ 
-                    backgroundColor: event.notifications.length === 1 && event.aggregationType !== 'post-burst' && event.aggregationType !== 'user-activity' ? 'var(--bsky-bg-secondary)' : undefined,
-                    border: '1px solid var(--bsky-border-color)',
+                    backgroundColor: isDayTime(event.time) 
+                      ? 'rgba(254, 243, 199, 0.1)' // Warm yellow tint for day
+                      : 'rgba(199, 210, 254, 0.1)', // Cool blue tint for night
+                    border: `1px solid ${isDayTime(event.time) ? 'rgba(251, 191, 36, 0.2)' : 'rgba(99, 102, 241, 0.2)'}`,
                     borderRadius: '8px',
-                    boxShadow: event.time.getHours() >= 6 && event.time.getHours() < 18 
-                      ? 'inset 0 0 0 1px rgba(251, 191, 36, 0.05)' // Subtle day glow
-                      : 'inset 0 0 0 1px rgba(99, 102, 241, 0.05)' // Subtle night glow
+                    boxShadow: isDayTime(event.time)
+                      ? '0 1px 3px rgba(251, 191, 36, 0.1)' // Warm shadow for day
+                      : '0 1px 3px rgba(99, 102, 241, 0.1)' // Cool shadow for night
                   }}
                 >
                   {/* Single notification */}
@@ -931,27 +960,29 @@ export const VisualTimeline: React.FC = () => {
                   )}
                 </div>
               </div>
-
-              {/* Visual gap indicator for large time gaps */}
-              {previousEvent && differenceInHours(previousEvent.time, event.time) >= 12 && (
-                <div 
-                  className="absolute left-12 -top-3 text-xs timeline-gap-indicator"
-                  style={{ 
-                    color: 'var(--bsky-text-tertiary)',
-                    transform: 'translateX(-50%)',
-                    fontSize: '10px'
-                  }}
-                >
-                  {Math.floor(differenceInHours(previousEvent.time, event.time))}h
+                  
+                  {/* Visual gap indicator for large time gaps */}
+                  {previousEvent && differenceInHours(previousEvent.time, event.time) >= 12 && (
+                    <div 
+                      className="absolute left-[7.5rem] -top-3 text-xs timeline-gap-indicator"
+                      style={{ 
+                        color: 'var(--bsky-text-tertiary)',
+                        transform: 'translateX(-50%)',
+                        fontSize: '10px'
+                      }}
+                    >
+                      {Math.floor(differenceInHours(previousEvent.time, event.time))}h
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          )
-        })}
+              )
+            })}
+          </div>
+        ))}
 
         {/* End of timeline */}
         <div className="relative mt-8 flex items-center gap-3">
-          <div className="w-16" />
+          <div className="w-24" />
           <div 
             className="w-3 h-3 rounded-full"
             style={{ backgroundColor: 'var(--bsky-border-color)' }}
