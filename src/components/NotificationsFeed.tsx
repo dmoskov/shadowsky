@@ -12,6 +12,7 @@ import { useLocation } from 'react-router-dom'
 import { NotificationCache } from '../utils/notificationCache'
 import { debug } from '@bsky/shared'
 import { useNotificationTracking, useFeatureTracking, useInteractionTracking } from '../hooks/useAnalytics'
+import { proxifyBskyImage } from '../utils/image-proxy'
 
 type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies' | 'quotes' | 'images' | 'top-accounts' | 'from-following'
 
@@ -715,9 +716,10 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(({
             </span>
             {post.author?.avatar ? (
               <img 
-                src={post.author.avatar} 
+                src={proxifyBskyImage(post.author.avatar)} 
                 alt={post.author.handle}
                 className="w-5 h-5 bsky-avatar"
+                crossOrigin="anonymous"
               />
             ) : (
               <div className="w-5 h-5 bsky-avatar flex items-center justify-center text-xs" 
@@ -770,7 +772,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(({
                   {images.slice(0, 4).map((img, idx) => (
                     <img 
                       key={idx}
-                      src={img.thumb}
+                      src={proxifyBskyImage(img.thumb)}
                       alt={img.alt || ''}
                       className="rounded-lg object-cover w-full border" 
                       style={{ 
@@ -778,6 +780,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(({
                         height: images.length === 1 ? '200px' : '120px'
                       }}
                       loading="lazy"
+                      crossOrigin="anonymous"
                     />
                   ))}
                 </div>
@@ -802,9 +805,10 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(({
             </span>
             {notification.author.avatar ? (
               <img 
-                src={notification.author.avatar} 
+                src={proxifyBskyImage(notification.author.avatar)} 
                 alt={notification.author.handle}
                 className="w-5 h-5 bsky-avatar"
+                crossOrigin="anonymous"
               />
             ) : (
               <div className="w-5 h-5 bsky-avatar flex items-center justify-center text-xs" 
@@ -864,9 +868,10 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(({
         <div className="flex-shrink-0">
           {notification.author.avatar ? (
             <img 
-              src={notification.author.avatar} 
+              src={proxifyBskyImage(notification.author.avatar)} 
               alt={notification.author.handle}
               className="w-10 h-10 bsky-avatar"
+              crossOrigin="anonymous"
             />
           ) : (
             <div className="w-10 h-10 bsky-avatar flex items-center justify-center" style={{ background: 'var(--bsky-bg-tertiary)' }}>

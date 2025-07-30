@@ -5,6 +5,7 @@ import { Users, TrendingUp, Settings, Loader, Database } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { getBskyProfileUrl } from '../utils/url-helpers'
 import { getProfileCacheService } from '../services/profile-cache-service'
+import { proxifyBskyImage } from '../utils/image-proxy'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import type { CachedProfile } from '../services/follower-cache-db'
 import { debug } from '@bsky/shared'
@@ -283,9 +284,10 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
               <div className="flex-shrink-0">
                 {account.avatar ? (
                   <img 
-                    src={account.avatar} 
+                    src={proxifyBskyImage(account.avatar)} 
                     alt={account.handle}
                     className="w-12 h-12 bsky-avatar"
+                    crossOrigin="anonymous"
                   />
                 ) : (
                   <div className="w-12 h-12 bsky-avatar flex items-center justify-center" 

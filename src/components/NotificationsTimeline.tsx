@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Calendar, Clock } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { format, startOfDay, isSameDay } from 'date-fns'
+import { proxifyBskyImage } from '../utils/image-proxy'
 
 export const NotificationsTimeline: React.FC = () => {
   const { agent } = useAuth()
@@ -90,9 +91,10 @@ export const NotificationsTimeline: React.FC = () => {
                   <div className="flex-1 flex items-start gap-3">
                     {notification.author.avatar ? (
                       <img 
-                        src={notification.author.avatar} 
+                        src={proxifyBskyImage(notification.author.avatar)} 
                         alt={notification.author.handle}
                         className="w-8 h-8 rounded-full"
+                        crossOrigin="anonymous"
                       />
                     ) : (
                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--bsky-bg-hover)' }}>

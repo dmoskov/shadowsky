@@ -7,6 +7,7 @@ import { useExtendedNotifications } from '../hooks/useExtendedNotifications'
 import { BackgroundNotificationLoader } from './BackgroundNotificationLoader'
 import { useFeatureTracking, useInteractionTracking } from '../hooks/useAnalytics'
 import { analytics as analyticsService } from '../services/analytics'
+import { proxifyBskyImage } from '../utils/image-proxy'
 
 type TimeRange = '1d' | '3d' | '7d' | '4w'
 
@@ -689,10 +690,11 @@ export const NotificationsAnalytics: React.FC = () => {
             <div key={handle} className="flex items-center gap-3">
               {user?.avatar ? (
                 <img 
-                  src={user.avatar} 
+                  src={proxifyBskyImage(user.avatar)} 
                   alt={handle}
                   className="w-10 h-10 rounded-full border-2"
                   style={{ borderColor: 'var(--bsky-border-primary)' }}
+                  crossOrigin="anonymous"
                 />
               ) : (
                 <div 

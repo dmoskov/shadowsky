@@ -4,6 +4,7 @@ import { Calendar, Clock, Users, Heart, Repeat2, MessageCircle, Quote, UserPlus,
 import { useAuth } from '../contexts/AuthContext'
 import { format, differenceInMinutes, differenceInHours, startOfDay, isSameDay, isToday, isYesterday, formatDistanceToNow } from 'date-fns'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
+import { proxifyBskyImage } from '../utils/image-proxy'
 import '../styles/timeline.css'
 
 interface AggregatedEvent {
@@ -369,9 +370,10 @@ export const VisualTimeline: React.FC = () => {
                           className="flex-shrink-0 hover:opacity-80 transition-opacity"
                         >
                           <img 
-                            src={event.notifications[0].author.avatar} 
+                            src={proxifyBskyImage(event.notifications[0].author.avatar)} 
                             alt={event.notifications[0].author.handle}
                             className="w-8 h-8 rounded-full"
+                            crossOrigin="anonymous"
                           />
                         </a>
                         <div className="flex-1 flex items-center gap-2">
@@ -536,10 +538,11 @@ export const VisualTimeline: React.FC = () => {
                                   className="hover:opacity-80 transition-opacity"
                                 >
                                   <img 
-                                    src={notif.author.avatar} 
+                                    src={proxifyBskyImage(notif.author.avatar)} 
                                     alt={notif.author.handle}
                                     className="w-8 h-8 rounded-full"
                                     title={notif.author.displayName || notif.author.handle}
+                                    crossOrigin="anonymous"
                                   />
                                 </a>
                               ))}
@@ -571,11 +574,12 @@ export const VisualTimeline: React.FC = () => {
                                 className="hover:z-10 hover:scale-110 transition-transform"
                               >
                                 <img 
-                                  src={notif.author.avatar} 
+                                  src={proxifyBskyImage(notif.author.avatar)} 
                                   alt={notif.author.handle}
                                   className="w-6 h-6 rounded-full border-2"
                                   style={{ borderColor: 'var(--bsky-bg-secondary)' }}
                                   title={notif.author.displayName || notif.author.handle}
+                                  crossOrigin="anonymous"
                                 />
                               </a>
                             ))}

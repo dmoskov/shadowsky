@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { VideoUploadService } from '../services/atproto/video-upload'
 import { GiphySearch } from './GiphySearch'
 import { EmojiPicker } from './EmojiPicker'
-import { convertGifToMp4, isGifFile } from '../utils/gif-to-video'
+import { isGifFile } from '../utils/gif-to-video'
 import { 
   saveDraft, 
   getDrafts, 
@@ -105,6 +105,9 @@ export function Composer() {
   const [showGiphySearch, setShowGiphySearch] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  
+  // Check if we're in development mode
+  const isDev = import.meta.env.DEV
   
   // Load settings on mount
   useEffect(() => {
@@ -234,18 +237,34 @@ export function Composer() {
       return true
     })
 
-    // Process each file, converting GIFs to videos if needed
+    // Process each file, converting GIFs to videos if needed (dev only)
     for (const file of validFiles) {
-      if (isGifFile(file)) {
+      if (isDev && isGifFile(file)) {
         try {
           setPostStatus({ type: 'posting', message: 'Converting GIF to video...' })
           
-          const videoBlob = await convertGifToMp4(file, (progress) => {
-            setPostStatus({ 
-              type: 'posting', 
-              message: `Converting GIF to video... ${progress}%` 
-            })
+          // Convert file to data URL for server
+          const reader = new FileReader()
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            reader.onload = () => resolve(reader.result as string)
+            reader.onerror = reject
+            reader.readAsDataURL(file)
           })
+          
+          // Use server endpoint to convert GIF
+          const response = await fetch('http://localhost:3002/api/convert-gif', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ gifUrl: dataUrl })
+          })
+          
+          if (!response.ok) {
+            throw new Error('Failed to convert GIF')
+          }
+          
+          const videoBlob = await response.blob()
           
           // Check converted size
           if (videoBlob.size > MAX_VIDEO_SIZE) {
@@ -258,6 +277,8 @@ export function Composer() {
           }
           
           const videoFile = new File([videoBlob], file.name.replace('.gif', '.mp4'), { type: 'video/mp4' })
+          console.log('Created video file from GIF:', videoFile.name, 'size:', videoFile.size, 'type:', videoFile.type)
+          
           const newMedia: UploadedMedia = {
             id: Math.random().toString(36).substr(2, 9),
             file: videoFile,
@@ -265,6 +286,7 @@ export function Composer() {
             alt: '',
             type: 'video'
           }
+          console.log('Created media object with type:', newMedia.type)
           
           setMedia(prev => [...prev, newMedia])
           setPostStatus({ type: 'success', message: 'GIF converted to video!' })
@@ -552,9 +574,11 @@ export function Composer() {
         
         // Add media if available for this post
         if (postMedia.length > 0) {
+          console.log('Post media:', postMedia.map(m => ({ type: m.type, mimeType: m.mimeType })))
           const videoMedia = postMedia.find(m => m.type === 'video')
           
           if (videoMedia) {
+            console.log('Found video media, uploading as video')
             // Upload video
             setPostStatus({ type: 'posting', message: `Uploading video for post ${i + 1}...` })
             setUploadingVideo(true)
@@ -579,6 +603,7 @@ export function Composer() {
               aspectRatio: videoBlob.aspectRatio
             }
           } else {
+            console.log('No video found, uploading as images')
             // Upload images
             const images = await Promise.all(
               postMedia.map(async img => {
@@ -696,71 +721,37 @@ export function Composer() {
   // Handle GIF selection
   const handleSelectGif = useCallback(async (gifUrl: string) => {
     try {
-      setPostStatus({ type: 'posting', message: 'Downloading GIF...' })
-      
-      // Download the GIF with no-cors mode to handle CORS issues
-      let response: Response
-      let blob: Blob
-      
-      try {
-        // First try with CORS
-        response = await fetch(gifUrl)
-        blob = await response.blob()
-      } catch (corsError) {
-        console.log('CORS error, trying with proxy...', corsError)
-        
-        // If CORS fails, try using a proxy
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(gifUrl)}`
-        response = await fetch(proxyUrl)
-        blob = await response.blob()
-      }
-      
-      console.log('GIF downloaded, size:', blob.size, 'type:', blob.type)
-      
-      // Convert GIF to MP4 for animation support
       setPostStatus({ type: 'posting', message: 'Converting GIF to video...' })
       
-      let videoBlob: Blob
-      let fileName: string
-      let mediaType: 'image' | 'video' = 'video'
+      // Use server endpoint to fetch and convert GIF
+      const response = await fetch('http://localhost:3002/api/convert-gif', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ gifUrl })
+      })
       
-      try {
-        // Convert GIF to MP4
-        videoBlob = await convertGifToMp4(blob, (progress) => {
-          setPostStatus({ 
-            type: 'posting', 
-            message: `Converting GIF to video... ${progress}%` 
-          })
-        })
-        fileName = 'giphy.mp4'
-        
-        // Check if converted video is within size limit
-        if (videoBlob.size > MAX_VIDEO_SIZE) {
-          setPostStatus({ 
-            type: 'error', 
-            message: `Converted video is too large (${(videoBlob.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 50MB.` 
-          })
-          setTimeout(() => setPostStatus({ type: 'idle' }), 3000)
-          return
-        }
-      } catch (conversionError) {
-        console.error('GIF to video conversion failed:', conversionError)
-        // Fall back to static image if conversion fails
-        setPostStatus({ type: 'posting', message: 'Using static image fallback...' })
-        videoBlob = blob
-        fileName = 'giphy.gif'
-        mediaType = 'image'
-        
-        // Check original GIF size
-        if (blob.size > MAX_IMAGE_SIZE) {
-          setPostStatus({ 
-            type: 'error', 
-            message: `GIF is too large (${(blob.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 1MB.` 
-          })
-          setTimeout(() => setPostStatus({ type: 'idle' }), 3000)
-          return
-        }
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.details || 'Failed to convert GIF')
       }
+      
+      const videoBlob = await response.blob()
+      console.log('Received converted video, size:', videoBlob.size, 'type:', videoBlob.type)
+      
+      // Check if converted video is within size limit
+      if (videoBlob.size > MAX_VIDEO_SIZE) {
+        setPostStatus({ 
+          type: 'error', 
+          message: `Converted video is too large (${(videoBlob.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 50MB.` 
+        })
+        setTimeout(() => setPostStatus({ type: 'idle' }), 3000)
+        return
+      }
+      
+      const fileName = 'giphy.mp4'
+      const mediaType: 'image' | 'video' = 'video'
       
       // Create a File object from the blob
       const file = new File([videoBlob], fileName, { 
@@ -1031,23 +1022,26 @@ export function Composer() {
               </div>
             </div>
             
-            <div className="relative group">
-              <button
-                className="bsky-button-secondary flex items-center gap-2"
-                onClick={() => setShowGiphySearch(true)}
-                disabled={isPosting || media.length >= MAX_IMAGES_PER_POST || media.some(m => m.type === 'video')}
-                aria-label="Search GIFs"
-              >
-                <span className="font-bold text-sm">GIF</span>
-              </button>
-              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block z-10">
-                <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap">
-                  <div className="font-semibold mb-1">Search GIFs</div>
-                  <div>Powered by GIPHY</div>
-                  <div className="absolute bottom-0 right-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900"></div>
+            {isDev && (
+              <div className="relative group">
+                <button
+                  className="bsky-button-secondary flex items-center gap-2"
+                  onClick={() => setShowGiphySearch(true)}
+                  disabled={isPosting || media.length >= MAX_IMAGES_PER_POST || media.some(m => m.type === 'video')}
+                  aria-label="Search GIFs"
+                >
+                  <span className="font-bold text-sm">GIF</span>
+                </button>
+                <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block z-10">
+                  <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap">
+                    <div className="font-semibold mb-1">Search GIFs (Dev Only)</div>
+                    <div>Powered by GIPHY</div>
+                    <div className="mt-1 text-gray-300">Requires local server</div>
+                    <div className="absolute bottom-0 right-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900"></div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
             
             <div className="relative group">
               <button

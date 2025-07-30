@@ -1,0 +1,19 @@
+{
+  "name": "gif-converter-server",
+  "version": "1.0.0",
+  "description": "Server for converting GIFs to MP4",
+  "main": "gif-converter.js",
+  "scripts": {
+    "start": "node gif-converter.js",
+    "dev": "nodemon gif-converter.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "node-fetch": "^2.7.0",
+    "fluent-ffmpeg": "^2.1.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

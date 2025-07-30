@@ -3,6 +3,7 @@ import { Heart, Repeat2, UserPlus, Quote } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { getNotificationUrl } from '../utils/url-helpers'
+import { proxifyBskyImage } from '../utils/image-proxy'
 
 interface AggregatedNotification {
   type: 'aggregated'
@@ -247,8 +248,9 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
               <div key={user.did} style={{ zIndex: displayUsers.length - idx }}>
                 {user.avatar ? (
                   <img 
-                    src={user.avatar} 
+                    src={proxifyBskyImage(user.avatar)} 
                     alt={user.handle}
+                    crossOrigin="anonymous"
                     className="w-8 h-8 bsky-avatar border-2"
                     style={{ borderColor: 'var(--bsky-bg-primary)' }}
                   />
@@ -378,8 +380,9 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                   </span>
                   {postAuthor?.avatar ? (
                     <img 
-                      src={postAuthor.avatar} 
+                      src={proxifyBskyImage(postAuthor.avatar)} 
                       alt={postAuthor.handle}
+                      crossOrigin="anonymous"
                       className="w-5 h-5 bsky-avatar"
                     />
                   ) : (
@@ -414,8 +417,9 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                       {images.slice(0, 4).map((img, idx) => (
                         <img 
                           key={idx}
-                          src={img.thumb}
+                          src={proxifyBskyImage(img.thumb)}
                           alt={img.alt || ''}
+                          crossOrigin="anonymous"
                           className="rounded-lg object-cover w-full border" 
                           style={{ 
                             borderColor: 'var(--bsky-border-primary)',

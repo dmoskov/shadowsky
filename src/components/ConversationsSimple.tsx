@@ -9,6 +9,7 @@ import type { AppBskyFeedDefs } from '@atproto/api'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
 import { debug } from '@bsky/shared'
 import { useConversationTracking, useFeatureTracking, useInteractionTracking } from '../hooks/useAnalytics'
+import { proxifyBskyImage } from '../utils/image-proxy'
 
 type Post = AppBskyFeedDefs.PostView
 import '../styles/conversations.css'
@@ -125,9 +126,10 @@ const ConversationItem = React.memo(({
             <div className="flex items-center gap-2 text-xs">
               {convo.latestReply.author.avatar ? (
                 <img 
-                  src={convo.latestReply.author.avatar} 
+                  src={proxifyBskyImage(convo.latestReply.author.avatar)} 
                   alt={convo.latestReply.author.handle}
                   className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                  crossOrigin="anonymous"
                 />
               ) : (
                 <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" 
@@ -164,9 +166,10 @@ const ConversationItem = React.memo(({
         <div className="relative flex-shrink-0">
           {mainParticipantAvatar ? (
             <img 
-              src={mainParticipantAvatar} 
+              src={proxifyBskyImage(mainParticipantAvatar)} 
               alt=""
               className="w-12 h-12 rounded-full object-cover"
+              crossOrigin="anonymous"
             />
           ) : (
             <div className="w-12 h-12 rounded-full bsky-gradient flex items-center justify-center text-white font-medium">
@@ -204,9 +207,10 @@ const ConversationItem = React.memo(({
             {/* Profile picture of commenter */}
             {convo.latestReply.author.avatar ? (
               <img 
-                src={convo.latestReply.author.avatar} 
+                src={proxifyBskyImage(convo.latestReply.author.avatar)} 
                 alt={convo.latestReply.author.handle}
                 className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                crossOrigin="anonymous"
               />
             ) : (
               <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" 
@@ -808,9 +812,10 @@ export const ConversationsSimple: React.FC = () => {
                 <div className="flex-shrink-0">
                   {author?.avatar ? (
                     <img 
-                      src={author.avatar} 
+                      src={proxifyBskyImage(author.avatar)} 
                       alt={author.handle}
                       className="w-10 h-10 rounded-full object-cover"
+                      crossOrigin="anonymous"
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full flex items-center justify-center" 

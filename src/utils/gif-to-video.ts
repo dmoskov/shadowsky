@@ -1,5 +1,5 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg'
-import { fetchFile } from '@ffmpeg/util'
+import { fetchFile, toBlobURL } from '@ffmpeg/util'
 
 let ffmpeg: FFmpeg | null = null
 let ffmpegLoaded = false
@@ -15,12 +15,13 @@ export async function loadFFmpeg() {
     console.log('FFmpeg:', message)
   })
   
-  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd'
-  
   try {
+    // Use the base path directly without toBlobURL
+    const baseURL = window.location.origin
+    
     await ffmpeg.load({
-      coreURL: `${baseURL}/ffmpeg-core.js`,
-      wasmURL: `${baseURL}/ffmpeg-core.wasm`,
+      coreURL: `${baseURL}/ffmpeg/ffmpeg-core.js`,
+      wasmURL: `${baseURL}/ffmpeg/ffmpeg-core.wasm`,
     })
     
     console.log('FFmpeg loaded successfully')
@@ -36,10 +37,12 @@ export async function convertGifToMp4(
   gifBlob: Blob, 
   onProgress?: (progress: number) => void
 ): Promise<Blob> {
+  console.log('Starting GIF to MP4 conversion, blob size:', gifBlob.size, 'type:', gifBlob.type)
   const ffmpeg = await loadFFmpeg()
   
   if (onProgress) {
     ffmpeg.on('progress', ({ progress }) => {
+      console.log('FFmpeg progress:', progress)
       onProgress(Math.round(progress * 100))
     })
   }
@@ -47,6 +50,7 @@ export async function convertGifToMp4(
   try {
     // Write the GIF to ffmpeg's file system
     const gifData = await fetchFile(gifBlob)
+    console.log('Fetched GIF data, size:', gifData.byteLength)
     await ffmpeg.writeFile('input.gif', gifData)
     
     // Convert GIF to MP4
@@ -65,6 +69,7 @@ export async function convertGifToMp4(
     
     // Read the output file
     const outputData = await ffmpeg.readFile('output.mp4')
+    console.log('Output MP4 size:', outputData.byteLength)
     
     // Clean up
     await ffmpeg.deleteFile('input.gif')
@@ -72,6 +77,7 @@ export async function convertGifToMp4(
     
     // Convert to Blob
     const mp4Blob = new Blob([outputData], { type: 'video/mp4' })
+    console.log('Created MP4 blob, size:', mp4Blob.size, 'type:', mp4Blob.type)
     
     return mp4Blob
   } catch (error) {

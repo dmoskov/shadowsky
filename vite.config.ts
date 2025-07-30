@@ -17,12 +17,22 @@ export default defineConfig({
     fs: {
       strict: false
     },
-    // Required headers for FFmpeg.wasm to work properly
-    // Using 'credentialless' instead of 'require-corp' to allow loading external images
+    // Headers required for FFmpeg with SharedArrayBuffer
     headers: {
-      'Cross-Origin-Embedder-Policy': 'credentialless',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
       'Cross-Origin-Opener-Policy': 'same-origin',
     },
+    // Proxy configuration for Bluesky CDN images to avoid CORS issues
+    proxy: {
+      '/bsky-cdn': {
+        target: 'https://cdn.bsky.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/bsky-cdn/, ''),
+        headers: {
+          'Referer': 'https://bsky.app',
+        }
+      }
+    }
   },
   preview: {
     port: 5174
