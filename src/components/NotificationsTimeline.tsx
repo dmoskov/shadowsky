@@ -94,7 +94,6 @@ export const NotificationsTimeline: React.FC = () => {
                         src={proxifyBskyImage(notification.author.avatar)} 
                         alt={notification.author.handle}
                         className="w-8 h-8 rounded-full"
-                        crossOrigin="anonymous"
                       />
                     ) : (
                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs" style={{ backgroundColor: 'var(--bsky-bg-hover)' }}>

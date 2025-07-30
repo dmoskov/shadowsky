@@ -373,7 +373,6 @@ export const VisualTimeline: React.FC = () => {
                             src={proxifyBskyImage(event.notifications[0].author.avatar)} 
                             alt={event.notifications[0].author.handle}
                             className="w-8 h-8 rounded-full"
-                            crossOrigin="anonymous"
                           />
                         </a>
                         <div className="flex-1 flex items-center gap-2">
@@ -542,7 +541,6 @@ export const VisualTimeline: React.FC = () => {
                                     alt={notif.author.handle}
                                     className="w-8 h-8 rounded-full"
                                     title={notif.author.displayName || notif.author.handle}
-                                    crossOrigin="anonymous"
                                   />
                                 </a>
                               ))}
@@ -579,7 +577,6 @@ export const VisualTimeline: React.FC = () => {
                                   className="w-6 h-6 rounded-full border-2"
                                   style={{ borderColor: 'var(--bsky-bg-secondary)' }}
                                   title={notif.author.displayName || notif.author.handle}
-                                  crossOrigin="anonymous"
                                 />
                               </a>
                             ))}

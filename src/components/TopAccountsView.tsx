@@ -287,7 +287,6 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
                     src={proxifyBskyImage(account.avatar)} 
                     alt={account.handle}
                     className="w-12 h-12 bsky-avatar"
-                    crossOrigin="anonymous"
                   />
                 ) : (
                   <div className="w-12 h-12 bsky-avatar flex items-center justify-center" 

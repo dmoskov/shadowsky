@@ -719,7 +719,6 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(({
                 src={proxifyBskyImage(post.author.avatar)} 
                 alt={post.author.handle}
                 className="w-5 h-5 bsky-avatar"
-                crossOrigin="anonymous"
               />
             ) : (
               <div className="w-5 h-5 bsky-avatar flex items-center justify-center text-xs" 
@@ -780,7 +779,6 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(({
                         height: images.length === 1 ? '200px' : '120px'
                       }}
                       loading="lazy"
-                      crossOrigin="anonymous"
                     />
                   ))}
                 </div>
@@ -808,7 +806,6 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(({
                 src={proxifyBskyImage(notification.author.avatar)} 
                 alt={notification.author.handle}
                 className="w-5 h-5 bsky-avatar"
-                crossOrigin="anonymous"
               />
             ) : (
               <div className="w-5 h-5 bsky-avatar flex items-center justify-center text-xs" 
@@ -871,7 +868,6 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(({
               src={proxifyBskyImage(notification.author.avatar)} 
               alt={notification.author.handle}
               className="w-10 h-10 bsky-avatar"
-              crossOrigin="anonymous"
             />
           ) : (
             <div className="w-10 h-10 bsky-avatar flex items-center justify-center" style={{ background: 'var(--bsky-bg-tertiary)' }}>
