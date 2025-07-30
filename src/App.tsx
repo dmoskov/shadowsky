@@ -12,6 +12,7 @@ import { NotificationsAnalytics } from './components/NotificationsAnalytics'
 import { RateLimitStatus } from './components/RateLimitStatus'
 import { ConversationsSimple as Conversations } from './components/ConversationsSimple'
 import { Composer } from './components/Composer'
+import { Search } from './components/Search'
 import { DebugConsole } from './components/DebugConsole'
 import { NotificationStorageDB } from './services/notification-storage-db'
 import { cleanupLocalStorage } from './utils/cleanupLocalStorage'
@@ -92,13 +93,14 @@ function AppContent() {
       <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div className="flex">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-        <main className="flex-1 lg:ml-64 mt-16">
+        <main className="flex-1 lg:ml-64 mt-16 overflow-hidden">
           <Routes>
             <Route path="/" element={<NotificationsFeed />} />
             <Route path="/timeline" element={<VisualTimeline />} />
             <Route path="/analytics" element={<NotificationsAnalytics />} />
             <Route path="/conversations" element={<Conversations />} />
             <Route path="/compose" element={<Composer />} />
+            <Route path="/search" element={<Search />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
@@ -123,7 +125,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ThemeProvider>
           <AuthProvider>
             <AppContent />

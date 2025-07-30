@@ -766,14 +766,15 @@ export const ConversationsSimple: React.FC = () => {
 
             {/* Post card */}
             <div 
-              className={`flex-1 p-4 rounded-lg cursor-pointer transition-all hover:bg-opacity-5 hover:bg-blue-500 ${
+              className={`flex-1 min-w-0 p-4 rounded-lg cursor-pointer transition-all hover:bg-opacity-5 hover:bg-blue-500 ${
                 isUnread ? 'ring-2 ring-blue-500 ring-opacity-30' : ''
               }`}
               style={{ 
                 backgroundColor: node.isRoot 
                   ? 'var(--bsky-bg-secondary)'
                   : (isUnread ? 'var(--bsky-bg-primary)' : 'var(--bsky-bg-secondary)'),
-                border: '1px solid var(--bsky-border-primary)'
+                border: '1px solid var(--bsky-border-primary)',
+                overflow: 'hidden'
               }}
               onClick={() => {
                 if (postUrl) {
@@ -847,7 +848,12 @@ export const ConversationsSimple: React.FC = () => {
                     </div>
                   </div>
                   
-                  <p className="text-sm break-words" style={{ color: 'var(--bsky-text-primary)', lineHeight: '1.5' }}>
+                  <p className="text-sm break-words overflow-wrap-anywhere" style={{ 
+                    color: 'var(--bsky-text-primary)', 
+                    lineHeight: '1.5',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'anywhere'
+                  }}>
                     {post ? ((post.record as any)?.text || '[No text]') : (
                       <span style={{ color: 'var(--bsky-text-secondary)' }}>
                         <Loader2 size={14} className="inline animate-spin mr-1" />
@@ -882,10 +888,14 @@ export const ConversationsSimple: React.FC = () => {
   // Always render the UI immediately, even if data is still loading
   // This provides a non-blocking experience
   return (
-    <div className="h-[calc(100vh-4rem)] max-w-7xl mx-auto overflow-hidden">
-      <div className="flex h-full relative" style={{ background: 'var(--bsky-bg-primary)', overflow: 'hidden' }}>
+    <div className="conversations-container h-[calc(100vh-4rem)] w-full max-w-7xl mx-auto overflow-hidden" style={{ position: 'relative' }}>
+      <div className="flex h-full relative w-full" style={{ 
+        background: 'var(--bsky-bg-primary)', 
+        overflow: 'hidden',
+        maxWidth: '100vw'
+      }}>
         {/* Left Panel - Conversations List */}
-        <div className={`${selectedConvo ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-96`} 
+        <div className={`${selectedConvo ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-96 flex-shrink-0`} 
              style={{ borderRight: '1px solid var(--bsky-border-primary)' }}>
         {/* Search Header */}
         <div className="py-4 px-4 sm:px-6" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
@@ -988,7 +998,7 @@ export const ConversationsSimple: React.FC = () => {
 
       {/* Right Panel - Conversation View */}
       {selectedConvo && selectedConversation && (
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Conversation Header */}
           <div className="p-4 flex items-center justify-between" 
                style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
@@ -1026,7 +1036,7 @@ export const ConversationsSimple: React.FC = () => {
           </div>
 
           {/* Thread View */}
-          <div className="flex-1 overflow-y-auto p-4" ref={threadContainerRef}>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4" ref={threadContainerRef}>
             {threadTree && renderThreadNodes(threadTree)}
           </div>
         </div>
