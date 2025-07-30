@@ -41,25 +41,25 @@ const NUMBERING_FORMATS: NumberingFormat[] = [
   },
   {
     id: 'simple',
-    name: 'Simple (1/5)',
+    name: 'Simple',
     format: (i, t) => `${i}/${t}`,
     example: '1/5'
   },
   {
     id: 'brackets',
-    name: 'Brackets [1/5]',
+    name: 'Brackets',
     format: (i, t) => `[${i}/${t}]`,
     example: '[1/5]'
   },
   {
     id: 'thread',
-    name: 'Thread 🧵',
+    name: 'Thread',
     format: (i, t) => i === 1 ? '🧵 1/' + t : `${i}/${t}`,
     example: '🧵 1/5'
   },
   {
     id: 'dots',
-    name: 'Dots (1•5)',
+    name: 'Dots',
     format: (i, t) => `${i}•${t}`,
     example: '1•5'
   }
