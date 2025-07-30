@@ -13,11 +13,20 @@ interface AggregatedEvent {
   types: Set<string>
   actors: Set<string>
   postUri?: string // For post-specific aggregations
-  aggregationType: 'post' | 'follow' | 'mixed' | 'post-burst' // Type of aggregation
+  aggregationType: 'post' | 'follow' | 'mixed' | 'post-burst' | 'user-activity' // Type of aggregation
   earliestTime?: Date // Track the earliest notification in the group
   latestTime?: Date // Track the latest notification in the group
   burstIntensity?: 'low' | 'medium' | 'high' // For post bursts
   postText?: string // Cache the post text for burst events
+  primaryActor?: { // For user activity aggregation
+    handle: string
+    displayName?: string
+    avatar?: string
+  }
+  affectedPosts?: Array<{ // Posts affected by user activity
+    uri: string
+    text?: string
+  }>
 }
 
 // Helper function to extract handle and rkey from AT URI
@@ -78,12 +87,118 @@ export const VisualTimeline: React.FC = () => {
       new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime()
     )
 
-    // First pass: Group notifications by post URI to identify post bursts
+    // First pass: Group notifications by user to identify user activity bursts
+    const userActivityGroups = new Map<string, any[]>()
+    const userActivityTimeWindows = new Map<string, { start: Date, end: Date }>()
+    
+    sorted.forEach(notification => {
+      const userKey = notification.author.handle
+      const notifTime = new Date(notification.indexedAt)
+      
+      if (!userActivityGroups.has(userKey)) {
+        userActivityGroups.set(userKey, [])
+        userActivityTimeWindows.set(userKey, { start: notifTime, end: notifTime })
+      } else {
+        const timeWindow = userActivityTimeWindows.get(userKey)!
+        // Check if this notification is within 30 minutes of the previous activity from this user
+        if (differenceInMinutes(timeWindow.end, notifTime) <= 30) {
+          // Part of the same activity burst
+          userActivityGroups.get(userKey)!.push(notification)
+          timeWindow.start = notifTime < timeWindow.start ? notifTime : timeWindow.start
+          timeWindow.end = notifTime > timeWindow.end ? notifTime : timeWindow.end
+        } else {
+          // Too far apart, treat as separate activity
+          // Process the previous burst if it qualifies
+          const userNotifs = userActivityGroups.get(userKey)!
+          if (userNotifs.length >= 3) {
+            // Create user activity event for previous burst
+            const affectedPosts = new Map<string, any>()
+            userNotifs.forEach(n => {
+              const postUri = (n.reason === 'repost' || n.reason === 'like') && n.reasonSubject 
+                ? n.reasonSubject 
+                : n.uri
+              if (postUri && !affectedPosts.has(postUri)) {
+                const post = postMap.get(postUri)
+                affectedPosts.set(postUri, {
+                  uri: postUri,
+                  text: post?.record?.text
+                })
+              }
+            })
+            
+            events.push({
+              time: timeWindow.end,
+              notifications: [...userNotifs],
+              types: new Set(userNotifs.map(n => n.reason)),
+              actors: new Set([userKey]),
+              aggregationType: 'user-activity',
+              earliestTime: timeWindow.start,
+              latestTime: timeWindow.end,
+              primaryActor: {
+                handle: userNotifs[0].author.handle,
+                displayName: userNotifs[0].author.displayName,
+                avatar: userNotifs[0].author.avatar
+              },
+              affectedPosts: Array.from(affectedPosts.values())
+            })
+          }
+          // Start new burst
+          userActivityGroups.set(userKey, [notification])
+          userActivityTimeWindows.set(userKey, { start: notifTime, end: notifTime })
+        }
+      }
+    })
+    
+    // Process remaining user activity bursts
+    userActivityGroups.forEach((notifications, userKey) => {
+      if (notifications.length >= 3) {
+        const timeWindow = userActivityTimeWindows.get(userKey)!
+        const affectedPosts = new Map<string, any>()
+        notifications.forEach(n => {
+          const postUri = (n.reason === 'repost' || n.reason === 'like') && n.reasonSubject 
+            ? n.reasonSubject 
+            : n.uri
+          if (postUri && !affectedPosts.has(postUri)) {
+            const post = postMap.get(postUri)
+            affectedPosts.set(postUri, {
+              uri: postUri,
+              text: post?.record?.text
+            })
+          }
+        })
+        
+        events.push({
+          time: timeWindow.end,
+          notifications: [...notifications],
+          types: new Set(notifications.map(n => n.reason)),
+          actors: new Set([userKey]),
+          aggregationType: 'user-activity',
+          earliestTime: timeWindow.start,
+          latestTime: timeWindow.end,
+          primaryActor: {
+            handle: notifications[0].author.handle,
+            displayName: notifications[0].author.displayName,
+            avatar: notifications[0].author.avatar
+          },
+          affectedPosts: Array.from(affectedPosts.values())
+        })
+      }
+    })
+
+    // Now handle remaining notifications that aren't part of user activity bursts
+    const handledNotifications = new Set<string>()
+    events.forEach(event => {
+      event.notifications.forEach(n => handledNotifications.add(n.uri))
+    })
+
+    // Group remaining notifications by post URI to identify post bursts
     const postGroups = new Map<string, any[]>()
     const followGroups: any[] = []
     const otherNotifications: any[] = []
 
     sorted.forEach(notification => {
+      if (handledNotifications.has(notification.uri)) return
+      
       if (['like', 'repost', 'quote', 'reply'].includes(notification.reason)) {
         // For likes and reposts, use reasonSubject which contains the original post URI
         const postUri = (notification.reason === 'repost' || notification.reason === 'like') && notification.reasonSubject 
@@ -247,17 +362,17 @@ export const VisualTimeline: React.FC = () => {
 
   const getReasonIcon = (reason: string) => {
     switch (reason) {
-      case 'like': return <Heart size={16} className="text-red-500" />
-      case 'repost': return <Repeat2 size={16} className="text-green-500" />
-      case 'follow': return <UserPlus size={16} className="text-blue-500" />
-      case 'reply': return <MessageCircle size={16} className="text-purple-500" />
-      case 'quote': return <Quote size={16} className="text-orange-500" />
-      case 'starterpack-joined': return <UserPlus size={16} className="text-blue-500" />
-      case 'verified': return <MessageCircle size={16} className="text-green-500" />
-      case 'unverified': return <MessageCircle size={16} className="text-red-500" />
-      case 'like-via-repost': return <Heart size={16} className="text-red-500" />
-      case 'repost-via-repost': return <Repeat2 size={16} className="text-green-500" />
-      default: return <MessageCircle size={16} className="text-gray-500" />
+      case 'like': return <Heart size={14} style={{ color: 'var(--bsky-text-secondary)' }} />
+      case 'repost': return <Repeat2 size={14} style={{ color: 'var(--bsky-text-secondary)' }} />
+      case 'follow': return <UserPlus size={14} style={{ color: 'var(--bsky-text-secondary)' }} />
+      case 'reply': return <MessageCircle size={14} style={{ color: 'var(--bsky-text-secondary)' }} />
+      case 'quote': return <Quote size={14} style={{ color: 'var(--bsky-text-secondary)' }} />
+      case 'starterpack-joined': return <UserPlus size={14} style={{ color: 'var(--bsky-text-secondary)' }} />
+      case 'verified': return <MessageCircle size={14} style={{ color: 'var(--bsky-text-secondary)' }} />
+      case 'unverified': return <MessageCircle size={14} style={{ color: 'var(--bsky-text-secondary)' }} />
+      case 'like-via-repost': return <Heart size={14} style={{ color: 'var(--bsky-text-secondary)' }} />
+      case 'repost-via-repost': return <Repeat2 size={14} style={{ color: 'var(--bsky-text-secondary)' }} />
+      default: return <MessageCircle size={14} style={{ color: 'var(--bsky-text-secondary)' }} />
     }
   }
 
@@ -284,7 +399,10 @@ export const VisualTimeline: React.FC = () => {
         {/* Timeline line */}
         <div 
           className="absolute left-12 top-0 bottom-0 w-0.5"
-          style={{ backgroundColor: 'var(--bsky-border-color)' }}
+          style={{ 
+            background: 'linear-gradient(to bottom, var(--bsky-border-color) 0%, var(--bsky-border-color) 100%)',
+            position: 'relative' 
+          }}
         />
 
         {aggregatedEvents.map((event, index) => {
@@ -319,23 +437,28 @@ export const VisualTimeline: React.FC = () => {
               <div className="flex gap-4 items-start timeline-event">
                 {/* Time */}
                 <div className="w-16 text-right text-sm pt-2 timeline-time-label" style={{ color: 'var(--bsky-text-secondary)' }}>
-                  {format(event.time, 'HH:mm')}
+                  <span className="inline-flex items-center gap-1">
+                    {format(event.time, 'h:mm a')}
+                    {/* Day/night indicator */}
+                    <span 
+                      className="w-1.5 h-1.5 rounded-full inline-block"
+                      style={{ 
+                        backgroundColor: event.time.getHours() >= 6 && event.time.getHours() < 18 
+                          ? '#fbbf24' // Day - amber
+                          : '#6366f1', // Night - indigo
+                        opacity: 0.6
+                      }}
+                    />
+                  </span>
                 </div>
 
                 {/* Timeline dot */}
                 <div className="relative flex-shrink-0" style={{ paddingTop: '14px' }}>
                   <div 
-                    className={`${event.aggregationType === 'post-burst' ? 'w-4 h-4' : 'w-2 h-2'} rounded-full ${differenceInHours(new Date(), event.time) < 1 ? 'timeline-dot-recent' : ''}`}
+                    className={`${event.aggregationType === 'post-burst' ? 'w-3 h-3' : 'w-2 h-2'} rounded-full ${differenceInHours(new Date(), event.time) < 1 ? 'timeline-dot-recent' : ''}`}
                     style={{ 
-                      backgroundColor: event.aggregationType === 'post-burst' ? 
-                                      (event.burstIntensity === 'high' ? '#ff4757' : 
-                                       event.burstIntensity === 'medium' ? '#ffa502' : 
-                                       'var(--bsky-primary)') :
-                                      event.aggregationType === 'post' ? 'var(--bsky-primary)' : 
-                                      event.aggregationType === 'follow' ? 'var(--bsky-follow)' :
-                                      'var(--bsky-text-secondary)',
-                      boxShadow: event.aggregationType === 'post-burst' && event.burstIntensity === 'high' ? 
-                                '0 0 0 4px rgba(255, 71, 87, 0.2)' : undefined
+                      backgroundColor: 'var(--bsky-text-tertiary)',
+                      opacity: event.aggregationType === 'post-burst' ? '0.8' : '0.6'
                     }}
                   />
                 </div>
@@ -347,16 +470,16 @@ export const VisualTimeline: React.FC = () => {
                   } ${
                     event.aggregationType === 'follow' ? 'timeline-follow-aggregate' : 
                     event.aggregationType === 'post' ? 'timeline-post-aggregate' : 
-                    event.aggregationType === 'post-burst' ? 'timeline-post-burst' : ''
+                    event.aggregationType === 'post-burst' ? 'timeline-post-burst' : 
+                    event.aggregationType === 'user-activity' ? 'timeline-user-activity' : ''
                   }`}
                   style={{ 
-                    backgroundColor: event.notifications.length === 1 && event.aggregationType !== 'post-burst' ? 'var(--bsky-bg-secondary)' : undefined,
-                    border: event.aggregationType === 'post-burst' ? 
-                           `2px solid ${event.burstIntensity === 'high' ? '#ff4757' : 
-                                        event.burstIntensity === 'medium' ? '#ffa502' : 
-                                        'var(--bsky-primary)'}` :
-                           '1px solid var(--bsky-border-color)',
-                    borderRadius: event.aggregationType === 'post-burst' ? '12px' : '8px'
+                    backgroundColor: event.notifications.length === 1 && event.aggregationType !== 'post-burst' && event.aggregationType !== 'user-activity' ? 'var(--bsky-bg-secondary)' : undefined,
+                    border: '1px solid var(--bsky-border-color)',
+                    borderRadius: '8px',
+                    boxShadow: event.time.getHours() >= 6 && event.time.getHours() < 18 
+                      ? 'inset 0 0 0 1px rgba(251, 191, 36, 0.05)' // Subtle day glow
+                      : 'inset 0 0 0 1px rgba(99, 102, 241, 0.05)' // Subtle night glow
                   }}
                 >
                   {/* Single notification */}
@@ -458,32 +581,128 @@ export const VisualTimeline: React.FC = () => {
                   ) : (
                     /* Aggregated notifications */
                     <div>
-                      {event.aggregationType === 'post-burst' ? (
+                      {event.aggregationType === 'user-activity' ? (
+                        // Special layout for user activity bursts
+                        <div>
+                          <div className="flex items-start gap-3 mb-3">
+                            <a 
+                              href={getProfileUrl(event.primaryActor!.handle)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                            >
+                              <img 
+                                src={proxifyBskyImage(event.primaryActor!.avatar)} 
+                                alt={event.primaryActor!.handle}
+                                className="w-10 h-10 rounded-full"
+                                style={{ 
+                                  border: '1px solid var(--bsky-border-color)'
+                                }}
+                              />
+                            </a>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <a 
+                                  href={getProfileUrl(event.primaryActor!.handle)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="font-bold text-base hover:underline"
+                                  style={{ color: 'var(--bsky-primary)' }}
+                                >
+                                  {event.primaryActor!.displayName || event.primaryActor!.handle}
+                                </a>
+                                <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                                  • active
+                                </span>
+                              </div>
+                              <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                                {event.notifications.length} interactions over {
+                                  event.earliestTime && event.latestTime ? 
+                                  formatDistanceToNow(event.earliestTime, { addSuffix: false }) : 
+                                  'time'
+                                }
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* Engagement breakdown */}
+                          <div className="flex flex-wrap gap-3 mb-3 text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                            {event.notifications.filter(n => n.reason === 'like').length > 0 && (
+                              <span>{event.notifications.filter(n => n.reason === 'like').length} likes</span>
+                            )}
+                            {event.notifications.filter(n => n.reason === 'repost').length > 0 && (
+                              <span>{event.notifications.filter(n => n.reason === 'repost').length} reposts</span>
+                            )}
+                            {event.notifications.filter(n => n.reason === 'reply').length > 0 && (
+                              <span>{event.notifications.filter(n => n.reason === 'reply').length} replies</span>
+                            )}
+                            {event.notifications.filter(n => n.reason === 'quote').length > 0 && (
+                              <span>{event.notifications.filter(n => n.reason === 'quote').length} quotes</span>
+                            )}
+                          </div>
+                          
+                          {/* Affected posts */}
+                          {event.affectedPosts && event.affectedPosts.length > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-xs font-medium" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                                Posts they interacted with:
+                              </p>
+                              <div className="space-y-1.5">
+                                {event.affectedPosts.slice(0, 3).map((post, i) => {
+                                  // Get the post from postMap to find its author
+                                  const fullPost = postMap.get(post.uri)
+                                  const postUrl = fullPost ? getPostUrl(post.uri, fullPost.author?.handle) : null
+                                  return (
+                                    <a 
+                                      key={`${post.uri}-${i}`}
+                                      href={postUrl || '#'}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="block p-2 rounded text-xs hover:opacity-90 transition-opacity line-clamp-2" 
+                                      style={{ 
+                                        backgroundColor: 'var(--bsky-bg-tertiary)',
+                                        border: '1px solid var(--bsky-border-primary)',
+                                        textDecoration: 'none',
+                                        color: 'var(--bsky-text-primary)'
+                                      }}
+                                    >
+                                      {post.text || '[Post with no text]'}
+                                    </a>
+                                  )
+                                })}
+                                {event.affectedPosts.length > 3 && (
+                                  <p className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                                    ...and {event.affectedPosts.length - 3} more posts
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : event.aggregationType === 'post-burst' ? (
                         // Special layout for post bursts
                         <div>
                           <div className="flex items-start gap-3 mb-3">
                             <div className="flex-shrink-0">
                               <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{
-                                backgroundColor: event.burstIntensity === 'high' ? 'rgba(255, 71, 87, 0.1)' : 
-                                               event.burstIntensity === 'medium' ? 'rgba(255, 165, 2, 0.1)' : 
-                                               'rgba(0, 149, 246, 0.1)'
+                                backgroundColor: 'var(--bsky-bg-tertiary)',
+                                border: '1px solid var(--bsky-border-color)'
                               }}>
-                                <span className="text-2xl">🔥</span>
+                                <MessageCircle size={20} style={{ color: 'var(--bsky-text-secondary)' }} />
                               </div>
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="font-bold text-base">
-                                  Post Activity Burst
+                                <span className="font-medium text-sm" style={{ color: 'var(--bsky-text-primary)' }}>
+                                  Popular Post
                                 </span>
-                                {event.burstIntensity === 'high' && (
-                                  <span className="px-2 py-0.5 rounded-full text-xs font-medium text-white" style={{ backgroundColor: '#ff4757' }}>
-                                    High Activity
-                                  </span>
-                                )}
-                                {event.burstIntensity === 'medium' && (
-                                  <span className="px-2 py-0.5 rounded-full text-xs font-medium text-white" style={{ backgroundColor: '#ffa502' }}>
-                                    Medium Activity
+                                {event.notifications.length >= 10 && (
+                                  <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ 
+                                    backgroundColor: 'var(--bsky-bg-tertiary)',
+                                    color: 'var(--bsky-text-secondary)',
+                                    border: '1px solid var(--bsky-border-color)'
+                                  }}>
+                                    {event.notifications.length}+ interactions
                                   </span>
                                 )}
                               </div>
@@ -498,29 +717,29 @@ export const VisualTimeline: React.FC = () => {
                           </div>
                           
                           {/* Engagement breakdown */}
-                          <div className="grid grid-cols-3 gap-2 mb-3">
+                          <div className="flex flex-wrap gap-3 mb-3">
                             {event.notifications.filter(n => n.reason === 'like').length > 0 && (
-                              <div className="flex items-center gap-2 p-2 rounded" style={{ backgroundColor: 'rgba(255, 71, 87, 0.1)' }}>
-                                <Heart size={20} className="text-red-500" />
-                                <span className="font-semibold">{event.notifications.filter(n => n.reason === 'like').length}</span>
+                              <div className="flex items-center gap-1 text-sm">
+                                <Heart size={16} style={{ color: 'var(--bsky-text-secondary)' }} />
+                                <span style={{ color: 'var(--bsky-text-secondary)' }}>{event.notifications.filter(n => n.reason === 'like').length}</span>
                               </div>
                             )}
                             {event.notifications.filter(n => n.reason === 'repost').length > 0 && (
-                              <div className="flex items-center gap-2 p-2 rounded" style={{ backgroundColor: 'rgba(52, 211, 153, 0.1)' }}>
-                                <Repeat2 size={20} className="text-green-500" />
-                                <span className="font-semibold">{event.notifications.filter(n => n.reason === 'repost').length}</span>
+                              <div className="flex items-center gap-1 text-sm">
+                                <Repeat2 size={16} style={{ color: 'var(--bsky-text-secondary)' }} />
+                                <span style={{ color: 'var(--bsky-text-secondary)' }}>{event.notifications.filter(n => n.reason === 'repost').length}</span>
                               </div>
                             )}
                             {event.notifications.filter(n => n.reason === 'reply').length > 0 && (
-                              <div className="flex items-center gap-2 p-2 rounded" style={{ backgroundColor: 'rgba(147, 51, 234, 0.1)' }}>
-                                <MessageCircle size={20} className="text-purple-500" />
-                                <span className="font-semibold">{event.notifications.filter(n => n.reason === 'reply').length}</span>
+                              <div className="flex items-center gap-1 text-sm">
+                                <MessageCircle size={16} style={{ color: 'var(--bsky-text-secondary)' }} />
+                                <span style={{ color: 'var(--bsky-text-secondary)' }}>{event.notifications.filter(n => n.reason === 'reply').length}</span>
                               </div>
                             )}
                             {event.notifications.filter(n => n.reason === 'quote').length > 0 && (
-                              <div className="flex items-center gap-2 p-2 rounded" style={{ backgroundColor: 'rgba(251, 146, 60, 0.1)' }}>
-                                <Quote size={20} className="text-orange-500" />
-                                <span className="font-semibold">{event.notifications.filter(n => n.reason === 'quote').length}</span>
+                              <div className="flex items-center gap-1 text-sm">
+                                <Quote size={16} style={{ color: 'var(--bsky-text-secondary)' }} />
+                                <span style={{ color: 'var(--bsky-text-secondary)' }}>{event.notifications.filter(n => n.reason === 'quote').length}</span>
                               </div>
                             )}
                           </div>

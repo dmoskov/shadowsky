@@ -1,6 +1,6 @@
 import { BskyAgent } from '@atproto/api'
 import type { AppBskyActorDefs } from '@atproto/api'
-import { getProfileService } from '@bsky/shared'
+import { getProfileService, debug } from '@bsky/shared'
 import { 
   getFollowerCacheDB, 
   profileToCached,
@@ -59,12 +59,14 @@ export class ProfileCacheService {
         const profilesToCache: CachedProfile[] = []
         
         // Convert and store fresh profiles
-        for (const [handle, profile] of freshProfiles) {
-          if (profile) {
-            const cachedProfile = profileToCached(profile)
-            // Mark as from API
-            profileMap.set(handle, { ...cachedProfile, fromCache: false })
-            profilesToCache.push(cachedProfile)
+        if (freshProfiles && 'profiles' in freshProfiles) {
+          for (const profile of freshProfiles.profiles) {
+            if (profile) {
+              const cachedProfile = profileToCached(profile as any)
+              // Mark as from API
+              profileMap.set(profile.handle, { ...cachedProfile, fromCache: false })
+              profilesToCache.push(cachedProfile)
+            }
           }
         }
         
@@ -205,7 +207,7 @@ export class ProfileCacheService {
           mentions: 0,
           quotes: 0,
           latestInteractionAt: new Date(notification.indexedAt),
-          firstInteractionAt: existing?.firstInteractionAt || new Date(notification.indexedAt),
+          firstInteractionAt: (existing as InteractionStats)?.firstInteractionAt || new Date(notification.indexedAt),
           likedPosts: [],
           repostedPosts: [],
           repliedPosts: [],

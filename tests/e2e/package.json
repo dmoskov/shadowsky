@@ -1,0 +1,15 @@
+{
+  "name": "bsky-e2e-tests",
+  "version": "1.0.0",
+  "description": "E2E tests for BSKY app",
+  "scripts": {
+    "test": "node test-search-fix.js",
+    "test:jest": "jest"
+  },
+  "dependencies": {
+    "puppeteer": "^21.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}

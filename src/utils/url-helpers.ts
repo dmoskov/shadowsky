@@ -42,6 +42,42 @@ export function atUriToBskyUrl(uri: string, handle: string): string | null {
 }
 
 /**
+ * Parse a Bluesky URL to extract the handle and post ID
+ * Accepts URLs like:
+ * - https://bsky.app/profile/handle/post/rkey
+ * - https://bsky.app/profile/did/post/rkey
+ */
+export function parseBskyUrl(url: string): { handle?: string, did?: string, postId?: string } | null {
+  if (!url) return null
+  
+  // Handle relative URLs (starting with /)
+  const cleanUrl = url.startsWith('/') ? `https://bsky.app${url}` : url
+  
+  // Parse the URL - handle both handle and DID formats
+  const match = cleanUrl.match(/^https?:\/\/bsky\.app\/profile\/([^\/]+)\/post\/([^\/\?#]+)/)
+  if (!match) return null
+  
+  const [, profileIdentifier, postId] = match
+  
+  // Check if profile identifier is a DID
+  if (profileIdentifier.startsWith('did:')) {
+    return { did: profileIdentifier, postId }
+  } else {
+    return { handle: profileIdentifier, postId }
+  }
+}
+
+/**
+ * Construct an AT URI from a handle/DID and post ID
+ */
+export function constructAtUri(identifier: string, postId: string): string {
+  // If it's a handle, we need to use the DID instead
+  // For now, we'll just construct with what we have
+  // The actual resolution will happen when fetching the thread
+  return `at://${identifier}/app.bsky.feed.post/${postId}`
+}
+
+/**
  * Get the appropriate URL for a notification based on its type
  * 
  * Note: For likes/reposts, the notification URI is the post being liked/reposted.

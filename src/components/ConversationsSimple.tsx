@@ -1,15 +1,17 @@
 import React, { useState, useMemo, useRef } from 'react'
-import { MessageCircle, Search, ArrowLeft, Users, Loader2, ExternalLink, CornerDownRight, ChevronDown } from 'lucide-react'
+import { MessageCircle, Search, ArrowLeft, Loader2, ExternalLink } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
-import { getNotificationUrl, atUriToBskyUrl } from '../utils/url-helpers'
 import type { AppBskyFeedDefs } from '@atproto/api'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
+import { getNotificationUrl } from '../utils/url-helpers'
 import { debug } from '@bsky/shared'
 import { useConversationTracking, useFeatureTracking, useInteractionTracking } from '../hooks/useAnalytics'
 import { proxifyBskyImage } from '../utils/image-proxy'
+import { atProtoClient, getThreadService } from '../services/atproto'
+import { ThreadViewer } from './ThreadViewer'
 
 type Post = AppBskyFeedDefs.PostView
 import '../styles/conversations.css'
@@ -24,13 +26,6 @@ interface ConversationThread {
   originalPostTime?: string
 }
 
-interface ThreadNode {
-  notification?: Notification
-  post?: Post
-  children: ThreadNode[]
-  depth: number
-  isRoot?: boolean
-}
 
 // Memoized conversation item component to prevent unnecessary re-renders
 // while still updating when root post data changes
@@ -280,7 +275,7 @@ export const ConversationsSimple: React.FC = () => {
     // Don't fetch - just subscribe to existing data from BackgroundNotificationLoader
     queryFn: () => {
       const data = queryClient.getQueryData(['notifications-extended']) || { pages: [] }
-      debug.log('[ConversationsSimple] Query function called, data pages:', data.pages?.length || 0)
+      debug.log('[ConversationsSimple] Query function called, data pages:', (data as any).pages?.length || 0)
       return data
     },
     staleTime: 0, // Always consider stale to pick up changes
@@ -471,6 +466,26 @@ export const ConversationsSimple: React.FC = () => {
     return map
   }, [allPosts])
 
+  // Fetch complete thread when a conversation is selected
+  const { data: completeThread } = useQuery({
+    queryKey: ['thread', selectedConvo],
+    queryFn: async () => {
+      if (!selectedConvo || !session) return null
+      
+      try {
+        const threadService = getThreadService(atProtoClient.agent!)
+        const thread = await threadService.getThread(selectedConvo, 100) // Get up to 100 posts deep
+        return thread
+      } catch (error) {
+        debug.error('[ConversationsSimple] Failed to fetch complete thread:', error)
+        return null
+      }
+    },
+    enabled: !!selectedConvo && !!session,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+  })
+
   // Group notifications into conversation threads
   // Include rootPostsVersion to force re-computation when root posts are loaded
   const conversations = useMemo(() => {
@@ -593,297 +608,63 @@ export const ConversationsSimple: React.FC = () => {
     })
   }, [extendedData, replyNotifications.length, posts, additionalRootPosts, allPostsMap.size, conversations.length, additionalRootUris.size, filteredConversations.length])
 
-  // Build thread tree structure for the selected conversation
-  const threadTree = useMemo(() => {
-    if (!selectedConversation) return null
+  // Helper function to extract all posts from thread data
+  const extractPostsFromThread = (thread: any): Post[] => {
+    const posts: Post[] = []
     
-    const nodeMap = new Map<string, ThreadNode>()
-    const rootNodes: ThreadNode[] = []
-    
-    // Create root node if we have the root post
-    if (selectedConversation.rootPost) {
-      const rootNode: ThreadNode = {
-        post: selectedConversation.rootPost,
-        children: [],
-        depth: 0,
-        isRoot: true
+    const processNode = (node: any) => {
+      if (node?.post && node.post.uri) {
+        posts.push(node.post as Post)
       }
-      nodeMap.set(selectedConversation.rootUri, rootNode)
-      rootNodes.push(rootNode)
-    } else {
-      // If we don't have the root post, create a placeholder
-      const rootNode: ThreadNode = {
-        post: undefined,
-        children: [],
-        depth: 0,
-        isRoot: true
+      
+      // Process replies
+      if (node?.replies && Array.isArray(node.replies)) {
+        node.replies.forEach((reply: any) => processNode(reply))
       }
-      nodeMap.set(selectedConversation.rootUri, rootNode)
-      rootNodes.push(rootNode)
     }
     
-    // Create nodes for all replies
-    selectedConversation.replies.forEach(notification => {
-      const post = allPostsMap.get(notification.uri)
-      if (post) {
-        const node: ThreadNode = {
-          notification,
-          post,
-          children: [],
-          depth: 0
-        }
-        nodeMap.set(notification.uri, node)
-      }
-    })
-    
-    // Build parent-child relationships
-    selectedConversation.replies.forEach(notification => {
-      const post = allPostsMap.get(notification.uri)
-      const childNode = nodeMap.get(notification.uri)
-      if (!childNode) return
-      
-      // Get the parent URI from the reply
-      const postRecord = post?.record as any
-      const parentUri = postRecord?.reply?.parent?.uri
-      
-      if (parentUri) {
-        const parentNode = nodeMap.get(parentUri)
-        
-        if (parentNode) {
-          // Found parent in our nodes
-          parentNode.children.push(childNode)
-          childNode.depth = parentNode.depth + 1
-        } else {
-          // Parent not in our nodes, check if it should be attached to root
-          if (parentUri === selectedConversation.rootUri || rootNodes.length > 0) {
-            // This is a direct reply to the root post or we have a root node
-            rootNodes[0].children.push(childNode)
-            childNode.depth = 1
-          }
-        }
-      }
-    })
-    
-    // Sort children by timestamp
-    const sortChildren = (node: ThreadNode) => {
-      node.children.sort((a, b) => {
-        const aTime = a.notification?.indexedAt || a.post?.indexedAt || ''
-        const bTime = b.notification?.indexedAt || b.post?.indexedAt || ''
-        return new Date(aTime).getTime() - new Date(bTime).getTime()
-      })
-      node.children.forEach(sortChildren)
+    if (thread?.thread) {
+      processNode(thread.thread)
     }
     
-    rootNodes.forEach(sortChildren)
-    
-    return rootNodes
-  }, [selectedConversation, allPostsMap])
-
-  // Render thread nodes recursively
-  const renderThreadNodes = (nodes: ThreadNode[]) => {
-    return nodes.map((node) => {
-      const post = node.post
-      const notification = node.notification
-      const isUnread = notification && !notification.isRead
-      const author = post?.author || notification?.author
-      const postUrl = post?.uri && author?.handle 
-        ? atUriToBskyUrl(post.uri, author.handle) 
-        : notification ? getNotificationUrl(notification) : null
-
-      // Handle root node without post
-      if (node.isRoot && !post) {
-        return (
-          <div key={selectedConversation?.rootUri || Math.random()} className="mb-4">
-            <div className="flex-1 p-4 rounded-lg" 
-                 style={{ 
-                   backgroundColor: 'var(--bsky-bg-secondary)',
-                   border: '1px solid var(--bsky-border-primary)'
-                 }}>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-medium px-2 py-1 rounded-full" 
-                      style={{ 
-                        backgroundColor: 'var(--bsky-bg-primary)', 
-                        color: 'var(--bsky-text-secondary)',
-                        border: '1px solid var(--bsky-border-primary)'
-                      }}>
-                  Original Post
-                </span>
-              </div>
-              <div className="flex items-center justify-center py-8">
-                <div className="text-center">
-                  <p className="text-sm mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>
-                    {percentageFetched < 100 || additionalRootUris.size > (additionalRootPosts?.length || 0) 
-                      ? 'Loading original post...' 
-                      : 'Original post unavailable'}
-                  </p>
-                  <p className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                    {percentageFetched < 100 
-                      ? `Loading posts: ${fetchedPosts}/${totalPosts}` 
-                      : additionalRootUris.size > (additionalRootPosts?.length || 0)
-                        ? `Loading root posts: ${additionalRootPosts?.length || 0}/${additionalRootUris.size}`
-                        : 'The post may have been deleted or is not accessible'}
-                  </p>
-                </div>
-              </div>
-            </div>
-            {/* Render children */}
-            {node.children.length > 0 && (
-              <div>{renderThreadNodes(node.children)}</div>
-            )}
-          </div>
-        )
-      }
-
-      return (
-        <div key={post?.uri || notification?.uri || `node-${node.depth}-${notification?.indexedAt}`} className="mb-4">
-          {/* Thread line connector for nested replies */}
-          {node.depth > 0 && (
-            <div className="flex">
-              <div 
-                className="w-8 flex-shrink-0 flex justify-center"
-                style={{ marginLeft: `${(node.depth - 1) * 48}px` }}
-              >
-                <div 
-                  className="w-0.5 h-6 -mt-6"
-                  style={{ backgroundColor: 'var(--bsky-border-primary)' }}
-                />
-              </div>
-              <div className="flex-1" />
-            </div>
-          )}
-
-          {/* Post content */}
-          <div 
-            className={`flex ${node.depth > 0 ? '' : ''}`}
-            style={{ marginLeft: `${node.depth * 48}px` }}
-          >
-            {/* Branch indicator */}
-            {node.depth > 0 && (
-              <div className="w-8 flex-shrink-0 flex items-start justify-center pt-3">
-                <CornerDownRight size={16} style={{ color: 'var(--bsky-text-tertiary)' }} />
-              </div>
-            )}
-
-            {/* Post card */}
-            <div 
-              className={`flex-1 min-w-0 p-4 rounded-lg cursor-pointer transition-all hover:bg-opacity-5 hover:bg-blue-500 ${
-                isUnread ? 'ring-2 ring-blue-500 ring-opacity-30' : ''
-              }`}
-              style={{ 
-                backgroundColor: node.isRoot 
-                  ? 'var(--bsky-bg-secondary)'
-                  : (isUnread ? 'var(--bsky-bg-primary)' : 'var(--bsky-bg-secondary)'),
-                border: '1px solid var(--bsky-border-primary)',
-                overflow: 'hidden'
-              }}
-              onClick={() => {
-                if (postUrl) {
-                  window.open(postUrl, '_blank', 'noopener,noreferrer')
-                }
-              }}
-            >
-              {node.isRoot && (
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-medium px-2 py-1 rounded-full" 
-                        style={{ 
-                          backgroundColor: 'var(--bsky-bg-primary)', 
-                          color: 'var(--bsky-text-secondary)',
-                          border: '1px solid var(--bsky-border-primary)'
-                        }}>
-                    Original Post
-                  </span>
-                  {post && (
-                    <span className="text-xs px-2 py-1 rounded" style={{ 
-                      color: 'var(--bsky-text-tertiary)',
-                      backgroundColor: 'var(--bsky-bg-primary)'
-                    }}>
-                      {formatDistanceToNow(
-                        new Date((post.record as any)?.createdAt || post.indexedAt), 
-                        { addSuffix: true }
-                      )}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0">
-                  {author?.avatar ? (
-                    <img 
-                      src={proxifyBskyImage(author.avatar)} 
-                      alt={author.handle}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center" 
-                         style={{ background: 'var(--bsky-bg-tertiary)' }}>
-                      <span className="text-sm font-semibold">
-                        {author?.handle?.charAt(0).toUpperCase() || 'U'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-1 min-w-0">
-                      <span className="font-semibold text-sm truncate" style={{ color: 'var(--bsky-text-primary)' }}>
-                        {author?.displayName || author?.handle || 'Unknown'}
-                      </span>
-                      <span className="text-xs flex-shrink-0" style={{ color: 'var(--bsky-text-secondary)' }}>
-                        @{author?.handle || 'unknown'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <time className="text-xs px-2 py-1 rounded" style={{ 
-                        color: 'var(--bsky-text-tertiary)',
-                        backgroundColor: 'var(--bsky-bg-primary)'
-                      }}>
-                        {formatDistanceToNow(
-                          new Date((post?.record as any)?.createdAt || post?.indexedAt || Date.now()), 
-                          { addSuffix: true }
-                        )}
-                      </time>
-                      <ExternalLink size={14} style={{ color: 'var(--bsky-text-tertiary)' }} />
-                    </div>
-                  </div>
-                  
-                  <p className="text-sm break-words overflow-wrap-anywhere" style={{ 
-                    color: 'var(--bsky-text-primary)', 
-                    lineHeight: '1.5',
-                    wordBreak: 'break-word',
-                    overflowWrap: 'anywhere'
-                  }}>
-                    {post ? ((post.record as any)?.text || '[No text]') : (
-                      <span style={{ color: 'var(--bsky-text-secondary)' }}>
-                        <Loader2 size={14} className="inline animate-spin mr-1" />
-                        Loading post content...
-                      </span>
-                    )}
-                  </p>
-                  
-                  {isUnread && (
-                    <span className="inline-block mt-2 text-xs px-2 py-0.5 rounded-full" 
-                          style={{ 
-                            backgroundColor: 'var(--bsky-primary)', 
-                            color: 'white'
-                          }}>
-                      New
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Render children */}
-          {node.children.length > 0 && (
-            <div>{renderThreadNodes(node.children)}</div>
-          )}
-        </div>
-      )
-    })
+    return posts
   }
+
+  // Prepare posts for ThreadViewer
+  const threadPosts = useMemo(() => {
+    if (!selectedConversation) return []
+    
+    const posts: Post[] = []
+    const postUris = new Set<string>()
+    
+    // Add posts from complete thread if available
+    if (completeThread) {
+      const threadPosts = extractPostsFromThread(completeThread)
+      threadPosts.forEach(post => {
+        if (!postUris.has(post.uri)) {
+          posts.push(post)
+          postUris.add(post.uri)
+        }
+      })
+    }
+    
+    // Add posts from our map
+    allPostsMap.forEach((post, uri) => {
+      if (!postUris.has(uri)) {
+        posts.push(post)
+        postUris.add(uri)
+      }
+    })
+    
+    return posts
+  }, [selectedConversation, allPostsMap, completeThread])
+  
+  // Prepare notifications for ThreadViewer
+  const threadNotifications = useMemo(() => {
+    if (!selectedConversation) return []
+    return selectedConversation.replies
+  }, [selectedConversation])
+
 
   // Always render the UI immediately, even if data is still loading
   // This provides a non-blocking experience
@@ -1037,7 +818,12 @@ export const ConversationsSimple: React.FC = () => {
 
           {/* Thread View */}
           <div className="flex-1 overflow-y-auto overflow-x-hidden p-4" ref={threadContainerRef}>
-            {threadTree && renderThreadNodes(threadTree)}
+            <ThreadViewer 
+              posts={threadPosts}
+              notifications={threadNotifications}
+              rootUri={selectedConversation?.rootUri}
+              showUnreadIndicators={true}
+            />
           </div>
         </div>
       )}

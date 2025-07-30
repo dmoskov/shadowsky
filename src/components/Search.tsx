@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Search as SearchIcon, X, Calendar, Globe, User, Hash, Link, Filter } from 'lucide-react'
+import { Search as SearchIcon, X, Calendar, Globe, User, Hash, Link, Filter, ExternalLink, ArrowLeft } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { atProtoClient } from '../services/atproto'
 import { useAuth } from '../contexts/AuthContext'
@@ -10,6 +10,9 @@ import { useFollowing } from '../hooks/useFollowing'
 import { getFollowerCacheDB } from '../services/follower-cache-db'
 import { getProfileCacheService } from '../services/profile-cache-service'
 import { debug } from '@bsky/shared'
+import { ThreadViewer } from './ThreadViewer'
+import { parseBskyUrl, constructAtUri } from '../utils/url-helpers'
+import type { AppBskyFeedDefs } from '@atproto/api'
 
 interface SearchFilters {
   query: string
@@ -112,6 +115,13 @@ export const Search: React.FC = () => {
     sinceDate: '',
     untilDate: ''
   })
+  
+  // Thread viewer state
+  const [showThreadViewer, setShowThreadViewer] = useState(false)
+  const [threadPosts, setThreadPosts] = useState<AppBskyFeedDefs.PostView[]>([])
+  const [selectedPostUri, setSelectedPostUri] = useState<string | null>(null)
+  const [highlightPostUri, setHighlightPostUri] = useState<string | null>(null)
+  const [isLoadingThread, setIsLoadingThread] = useState(false)
   
   // Build search query and debounce it for automatic search
   const searchQuery = buildSearchQuery(filters)
@@ -306,9 +316,158 @@ export const Search: React.FC = () => {
     enabled: !!activeSearchQuery.trim()
   })
   
+  // Fetch thread for a post
+  const fetchThread = async (uri: string, findRoot: boolean = true) => {
+    setIsLoadingThread(true)
+    try {
+      // Get the thread
+      const response = await atProtoClient.agent.getPostThread({
+        uri,
+        depth: 10
+      })
+      
+      // If this is a reply and we want the full thread, fetch from the root
+      if (findRoot && response.data.thread.parent) {
+        // Find the root post by traversing up the parent chain
+        let rootThread = response.data.thread
+        while (rootThread.parent) {
+          rootThread = rootThread.parent
+        }
+        
+        // Now fetch the full thread from the root
+        if (rootThread.post?.uri && rootThread.post.uri !== uri) {
+          const rootResponse = await atProtoClient.agent.getPostThread({
+            uri: rootThread.post.uri,
+            depth: 10
+          })
+          
+          // Extract all posts from the root thread
+          const posts: AppBskyFeedDefs.PostView[] = []
+          
+          const extractPosts = (thread: any) => {
+            if (thread.post) {
+              posts.push(thread.post)
+            }
+            if (thread.replies) {
+              thread.replies.forEach((reply: any) => {
+                extractPosts(reply)
+              })
+            }
+          }
+          
+          extractPosts(rootResponse.data.thread)
+          
+          setThreadPosts(posts)
+          setSelectedPostUri(rootThread.post.uri) // Set to root URI
+          setHighlightPostUri(uri) // Highlight the originally requested post
+          setShowThreadViewer(true)
+          return
+        }
+      }
+      
+      // Extract all posts from the thread (if not fetching from root)
+      const posts: AppBskyFeedDefs.PostView[] = []
+      
+      // First, collect any parent posts
+      const collectParents = (thread: any): AppBskyFeedDefs.PostView[] => {
+        const parentPosts: AppBskyFeedDefs.PostView[] = []
+        if (thread.parent) {
+          parentPosts.push(...collectParents(thread.parent))
+        }
+        if (thread.post) {
+          parentPosts.push(thread.post)
+        }
+        return parentPosts
+      }
+      
+      // Collect parent posts (excluding the current post)
+      if (response.data.thread.parent) {
+        const parentPosts = collectParents(response.data.thread.parent)
+        posts.push(...parentPosts)
+      }
+      
+      // Add the current post
+      if (response.data.thread.post) {
+        posts.push(response.data.thread.post)
+      }
+      
+      // Then collect all replies
+      const extractReplies = (thread: any) => {
+        if (thread.replies) {
+          thread.replies.forEach((reply: any) => {
+            if (reply.post) {
+              posts.push(reply.post)
+            }
+            extractReplies(reply)
+          })
+        }
+      }
+      
+      extractReplies(response.data.thread)
+      
+      setThreadPosts(posts)
+      setSelectedPostUri(posts[0]?.uri || uri) // Set to root if available
+      setHighlightPostUri(null) // No highlight needed when showing from root
+      setShowThreadViewer(true)
+    } catch (error) {
+      debug.error('Error fetching thread:', error)
+      // Still show the single post if thread fetch fails
+      const singlePost = searchResults?.posts.find(p => p.uri === uri)
+      if (singlePost) {
+        setThreadPosts([singlePost])
+        setSelectedPostUri(uri)
+        setHighlightPostUri(null)
+        setShowThreadViewer(true)
+      }
+    } finally {
+      setIsLoadingThread(false)
+    }
+  }
+  
+  // Handle search result click
+  const handlePostClick = async (post: AppBskyFeedDefs.PostView) => {
+    await fetchThread(post.uri, false) // Don't find root for search results, just show the thread from that point
+  }
+  
+  // Handle Bluesky URL input
+  const handleBskyUrlSubmit = async (url: string) => {
+    const parsed = parseBskyUrl(url)
+    if (!parsed || !parsed.postId) {
+      return
+    }
+    
+    setIsLoadingThread(true)
+    try {
+      // If we have a handle, we need to resolve it to a DID first
+      let uri: string
+      if (parsed.handle) {
+        const profile = await atProtoClient.agent.getProfile({ actor: parsed.handle })
+        uri = constructAtUri(profile.data.did, parsed.postId)
+      } else if (parsed.did) {
+        uri = constructAtUri(parsed.did, parsed.postId)
+      } else {
+        return
+      }
+      
+      await fetchThread(uri)
+      // Clear the search query after successful load
+      setFilters(prev => ({ ...prev, query: '' }))
+    } catch (error) {
+      debug.error('Error loading post from URL:', error)
+    } finally {
+      setIsLoadingThread(false)
+    }
+  }
+
   // Handle search button click
   const handleSearch = () => {
-    setActiveSearchQuery(searchQuery)
+    // Check if the query is a Bluesky URL
+    const trimmedQuery = filters.query.trim()
+    if (trimmedQuery.includes('bsky.app/profile/') && trimmedQuery.includes('/post/')) {
+      handleBskyUrlSubmit(trimmedQuery)
+    } else {
+      setActiveSearchQuery(searchQuery)
+    }
   }
 
   // Add or remove items from array filters
@@ -406,14 +565,63 @@ export const Search: React.FC = () => {
 
   return (
     <div className="min-h-screen p-4 max-w-4xl mx-auto">
-      {/* Search Bar */}
-      <div className="bsky-glass rounded-xl p-3 sm:p-4 mb-4">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-3">
+      {/* Thread Viewer */}
+      {showThreadViewer ? (
+        <div className="bsky-glass rounded-xl p-4 mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => {
+                setShowThreadViewer(false)
+                setThreadPosts([])
+                setSelectedPostUri(null)
+                setHighlightPostUri(null)
+              }}
+              className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-lg transition-all hover:bg-opacity-10 hover:bg-white"
+              style={{ color: 'var(--bsky-primary)' }}
+            >
+              <ArrowLeft size={16} />
+              Back to search
+            </button>
+            {selectedPostUri && (
+              <a
+                href={`https://bsky.app/profile/${threadPosts[0]?.author.handle}/post/${selectedPostUri.split('/').pop()}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-all"
+                style={{
+                  backgroundColor: 'var(--bsky-primary)',
+                  color: 'white'
+                }}
+              >
+                View on Bluesky
+                <ExternalLink size={14} />
+              </a>
+            )}
+          </div>
+          {isLoadingThread ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 mx-auto" style={{ borderColor: 'var(--bsky-primary)' }}></div>
+              <p className="mt-3 text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Loading thread...</p>
+            </div>
+          ) : (
+            <ThreadViewer 
+              posts={threadPosts} 
+              rootUri={selectedPostUri || undefined}
+              highlightUri={highlightPostUri || undefined}
+              className="max-h-[70vh] overflow-y-auto"
+            />
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Search Bar */}
+          <div className="bsky-glass rounded-xl p-3 sm:p-4 mb-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-3">
           <div className="flex items-center gap-2 flex-1">
             <SearchIcon size={20} style={{ color: 'var(--bsky-text-secondary)' }} className="hidden sm:block" />
             <input
               type="text"
-              placeholder="Search posts..."
+              placeholder="Search posts or paste a Bluesky URL..."
               value={filters.query}
               onChange={(e) => setFilters(prev => ({ ...prev, query: e.target.value }))}
               onKeyDown={(e) => {
@@ -1238,7 +1446,11 @@ export const Search: React.FC = () => {
             </div>
 
             {searchResults.posts.map((post) => (
-              <div key={post.uri} className="bsky-glass rounded-xl p-3 sm:p-4">
+              <div 
+                key={post.uri} 
+                className="bsky-glass rounded-xl p-3 sm:p-4 cursor-pointer transition-all hover:shadow-lg"
+                onClick={() => handlePostClick(post)}
+              >
                 <div className="flex items-start gap-2.5">
                   <img
                     src={proxifyBskyImage(post.author.avatar)}
@@ -1261,15 +1473,20 @@ export const Search: React.FC = () => {
                       {(post.record as any).text}
                     </div>
                     <div className="flex items-center gap-3 mt-2">
-                      <a
-                        href={`https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs hover:underline"
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          window.open(`https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`, '_blank', 'noopener,noreferrer')
+                        }}
+                        className="text-xs hover:underline flex items-center gap-1"
                         style={{ color: 'var(--bsky-primary)' }}
                       >
                         View on Bluesky
-                      </a>
+                        <ExternalLink size={12} />
+                      </button>
+                      <span className="text-xs" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                        Click to view thread
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1278,6 +1495,8 @@ export const Search: React.FC = () => {
           </>
         )}
       </div>
+      </>
+      )}
     </div>
   )
 }
