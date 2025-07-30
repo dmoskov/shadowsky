@@ -149,6 +149,17 @@ export class NotificationCacheService {
     return this.db.getStats()
   }
   
+  // Check if IndexedDB is ready
+  async isIndexedDBReady(): Promise<boolean> {
+    try {
+      await this.init()
+      return this.initialized
+    } catch (error) {
+      debug.error('IndexedDB not ready:', error)
+      return false
+    }
+  }
+  
   // Clear all cached data
   async clearCache(): Promise<void> {
     this.ensureInitialized()

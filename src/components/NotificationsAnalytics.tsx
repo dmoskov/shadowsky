@@ -70,14 +70,25 @@ export const NotificationsAnalytics: React.FC = () => {
     refetchOnWindowFocus: false
   })
 
-  // Query for analytics data - always fetch fresh data for accuracy
+  // Query for analytics data - use extended data if available, otherwise fetch
   const { data: notifications } = useQuery({
-    queryKey: ['notifications-analytics', timeRange],
+    queryKey: ['notifications-analytics', timeRange, hasExtendedData],
     queryFn: async () => {
       if (!agent) throw new Error('Not authenticated')
       
-      // Always fetch fresh data based on the selected time range
-      // This ensures we get the most recent notifications
+      // If we have extended data (from IndexedDB), use it instead of fetching
+      if (hasExtendedData && extendedData?.pages) {
+        const allNotifications = extendedData.pages.flatMap((page: any) => page.notifications)
+        console.log('📊 Using cached data for analytics:', {
+          totalNotifications: allNotifications.length,
+          oldestDate: allNotifications.length > 0 ? new Date(allNotifications[allNotifications.length - 1].indexedAt) : null,
+          newestDate: allNotifications.length > 0 ? new Date(allNotifications[0].indexedAt) : null,
+          timeRange
+        })
+        return { notifications: allNotifications }
+      }
+      
+      // Otherwise, fetch fresh data based on the selected time range
       const allNotifications: any[] = []
       let cursor: string | undefined
       
@@ -113,11 +124,11 @@ export const NotificationsAnalytics: React.FC = () => {
       return { notifications: allNotifications }
     },
     enabled: !!agent,
-    staleTime: 2 * 60 * 1000, // Consider data stale after 2 minutes
+    staleTime: hasExtendedData ? 5 * 60 * 1000 : 2 * 60 * 1000, // Longer stale time if using cached data
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
-    refetchInterval: 30 * 1000, // Refetch every 30 seconds
-    refetchOnMount: true, // Always refetch on mount to get fresh data
-    refetchOnWindowFocus: true // Refetch when window regains focus
+    refetchInterval: hasExtendedData ? false : 30 * 1000, // Don't auto-refetch if using cached data
+    refetchOnMount: !hasExtendedData, // Only refetch on mount if no cached data
+    refetchOnWindowFocus: !hasExtendedData // Only refetch on focus if no cached data
   })
 
   const analytics = React.useMemo(() => {
@@ -139,6 +150,14 @@ export const NotificationsAnalytics: React.FC = () => {
     const filteredNotifications = notifications.notifications.filter(
       (n: any) => new Date(n.indexedAt) >= cutoffDate
     )
+    
+    console.log('📊 Analytics filtering:', {
+      timeRange,
+      totalNotifications: notifications.notifications.length,
+      filteredCount: filteredNotifications.length,
+      cutoffDate,
+      hasExtendedData
+    })
     
     
     // Don't return null if no data - still show the chart structure
