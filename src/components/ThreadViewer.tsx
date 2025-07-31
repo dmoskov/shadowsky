@@ -159,6 +159,20 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   
   // Calculate dynamic indentation based on maximum thread depth
   const indentWidth = useMemo(() => {
+    // Use viewport width for responsive scaling on mobile
+    const isMobile = window.innerWidth < 640
+    
+    if (isMobile) {
+      // On mobile, use percentage-based indentation
+      if (maxThreadDepth <= 3) return Math.min(32, window.innerWidth * 0.08)
+      if (maxThreadDepth <= 5) return Math.min(24, window.innerWidth * 0.06)
+      if (maxThreadDepth <= 7) return Math.min(16, window.innerWidth * 0.04)
+      if (maxThreadDepth <= 9) return Math.min(12, window.innerWidth * 0.03)
+      if (maxThreadDepth <= 12) return Math.min(8, window.innerWidth * 0.02)
+      return Math.min(4, window.innerWidth * 0.01)
+    }
+    
+    // Desktop sizes remain the same
     if (maxThreadDepth <= 3) return 48
     if (maxThreadDepth <= 5) return 32
     if (maxThreadDepth <= 7) return 24

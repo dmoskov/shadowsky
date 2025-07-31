@@ -42,7 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
       {/* Sidebar */}
       <aside className={`
-        fixed top-16 left-0 bottom-0 w-64 bsky-glass
+        fixed top-16 left-0 bottom-0 w-64 max-w-[80vw] bsky-glass
         transform transition-transform duration-300 z-40
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
