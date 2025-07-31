@@ -13,6 +13,7 @@ import { RateLimitStatus } from './components/RateLimitStatus'
 import { ConversationsSimple as Conversations } from './components/ConversationsSimple'
 import { Composer } from './components/Composer'
 import { Search } from './components/Search'
+import { Home } from './components/Home'
 import { DebugConsole } from './components/DebugConsole'
 import { NotificationStorageDB } from './services/notification-storage-db'
 import { cleanupLocalStorage } from './utils/cleanupLocalStorage'
@@ -95,6 +96,7 @@ function AppContent() {
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <main className="flex-1 lg:ml-64 mt-16">
           <Routes>
+            <Route path="/home" element={<Home />} />
             <Route path="/" element={<NotificationsFeed />} />
             <Route path="/timeline" element={
               <div className="h-[calc(100vh-4rem)] overflow-y-auto">
@@ -105,7 +107,7 @@ function AppContent() {
             <Route path="/conversations" element={<Conversations />} />
             <Route path="/compose" element={<Composer />} />
             <Route path="/search" element={<Search />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>
         </main>
       </div>

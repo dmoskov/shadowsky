@@ -9,7 +9,8 @@ import {
   ExternalLink,
   X,
   PenSquare,
-  Search
+  Search,
+  Home
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -19,12 +20,13 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const navItems = [
-    { path: '/', label: 'All Notifications', icon: Bell },
+    { path: '/home', label: 'Home', icon: Home },
+    { path: '/', label: 'Notifications', icon: Bell },
     { path: '/conversations', label: 'Conversations', icon: MessageSquare },
-    { path: '/timeline', label: 'Visual Timeline', icon: Clock },
-    { path: '/analytics', label: 'Analytics', icon: BarChart3 },
-    { path: '/compose', label: 'Compose', icon: PenSquare },
     { path: '/search', label: 'Search', icon: Search },
+    { path: '/compose', label: 'Compose', icon: PenSquare },
+    { path: '/timeline', label: 'Timeline', icon: Clock },
+    { path: '/analytics', label: 'Analytics', icon: BarChart3 },
   ]
 
   return (
