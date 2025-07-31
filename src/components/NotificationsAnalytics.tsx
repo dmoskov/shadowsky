@@ -395,62 +395,35 @@ export const NotificationsAnalytics: React.FC = () => {
       {/* Background loader - no UI */}
       <BackgroundNotificationLoader />
       
-      {/* Current Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {hasExtendedData ? (
-          <>
-            <StatCard
-              icon={Clock}
-              label="Last 24 Hours"
-              value={stats?.total || 0}
-              color="blue"
-            />
-            <StatCard
-              icon={TrendingUp}
-              label="Daily Average"
-              value={Math.round(analytics?.averagePerDay || 0)}
-              color="green"
-            />
-            <StatCard
-              icon={Heart}
-              label="Today's Likes"
-              value={stats?.likes || 0}
-              color="pink"
-            />
-            <StatCard
-              icon={UserPlus}
-              label="Today's Followers"
-              value={stats?.follows || 0}
-              color="purple"
-            />
-          </>
-        ) : (
-          <>
-            <StatCard
-              icon={Bell}
-              label="Recent Activity"
-              value={stats?.total || 0}
-              color="blue"
-            />
-            <StatCard
-              icon={Clock}
-              label="Unread"
-              value={stats?.unread || 0}
-              color="yellow"
-            />
-            <StatCard
-              icon={Heart}
-              label="Likes"
-              value={stats?.likes || 0}
-              color="pink"
-            />
-            <StatCard
-              icon={UserPlus}
-              label="New Followers"
-              value={stats?.follows || 0}
-              color="green"
-            />
-          </>
+      {/* Page Header with inline stats */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--bsky-text-primary)' }}>Analytics</h1>
+          <div className="flex items-center gap-4 text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+            <span className="flex items-center gap-1">
+              <Bell size={16} />
+              {stats?.total || 0} in last 24h
+            </span>
+            <span className="flex items-center gap-1">
+              <TrendingUp size={16} />
+              {Math.round(analytics?.averagePerDay || 0)}/day avg
+            </span>
+            <span className="flex items-center gap-1">
+              <Users size={16} />
+              {analytics?.uniqueUsers || 0} unique users
+            </span>
+          </div>
+        </div>
+        
+        {/* Data source indicator */}
+        {hasExtendedData && (
+          <div className="flex items-center gap-2 text-sm px-3 py-1 rounded-lg" style={{
+            backgroundColor: 'var(--bsky-bg-tertiary)',
+            color: 'var(--bsky-text-secondary)'
+          }}>
+            <Activity size={14} />
+            <span>Using extended history</span>
+          </div>
         )}
       </div>
 
@@ -588,7 +561,7 @@ export const NotificationsAnalytics: React.FC = () => {
                           className="w-full transition-all duration-500"
                           style={{
                             height: `${(bucket.likes / maxValue) * 270}px`,
-                            background: 'linear-gradient(180deg, #ec4899 0%, #e11d48 100%)'
+                            background: 'linear-gradient(180deg, #f87171 0%, #ef4444 100%)'
                           }}
                           title={`${bucket.likes} likes`}
                         />
@@ -599,7 +572,7 @@ export const NotificationsAnalytics: React.FC = () => {
                           className="w-full transition-all duration-500"
                           style={{
                             height: `${(bucket.reposts / maxValue) * 270}px`,
-                            background: 'linear-gradient(180deg, #10b981 0%, #059669 100%)'
+                            background: 'linear-gradient(180deg, #93c5fd 0%, #60a5fa 100%)'
                           }}
                           title={`${bucket.reposts} reposts`}
                         />
@@ -610,7 +583,7 @@ export const NotificationsAnalytics: React.FC = () => {
                           className="w-full transition-all duration-500"
                           style={{
                             height: `${(bucket.follows / maxValue) * 270}px`,
-                            background: 'linear-gradient(180deg, #0085ff 0%, #0066cc 100%)'
+                            background: 'linear-gradient(180deg, #c4b5fd 0%, #a78bfa 100%)'
                           }}
                           title={`${bucket.follows} follows`}
                         />
@@ -621,7 +594,7 @@ export const NotificationsAnalytics: React.FC = () => {
                           className="w-full transition-all duration-500"
                           style={{
                             height: `${(bucket.replies / maxValue) * 270}px`,
-                            background: 'linear-gradient(180deg, #06b6d4 0%, #0891b2 100%)'
+                            background: 'linear-gradient(180deg, #86efac 0%, #4ade80 100%)'
                           }}
                           title={`${bucket.replies} replies`}
                         />
@@ -632,7 +605,7 @@ export const NotificationsAnalytics: React.FC = () => {
                           className="w-full transition-all duration-500"
                           style={{
                             height: `${(bucket.mentions / maxValue) * 270}px`,
-                            background: 'linear-gradient(180deg, #9333ea 0%, #7c3aed 100%)'
+                            background: 'linear-gradient(180deg, #fda4af 0%, #fb7185 100%)'
                           }}
                           title={`${bucket.mentions} mentions`}
                         />
@@ -648,11 +621,11 @@ export const NotificationsAnalytics: React.FC = () => {
                         border: '1px solid var(--bsky-border-primary)'
                       }}>
                         <div className="font-bold mb-1">{bucket.total} total</div>
-                        {bucket.likes > 0 && <div style={{ color: '#ec4899' }}>{bucket.likes} likes</div>}
-                        {bucket.reposts > 0 && <div style={{ color: '#10b981' }}>{bucket.reposts} reposts</div>}
-                        {bucket.follows > 0 && <div style={{ color: '#0085ff' }}>{bucket.follows} follows</div>}
-                        {bucket.replies > 0 && <div style={{ color: '#06b6d4' }}>{bucket.replies} replies</div>}
-                        {bucket.mentions > 0 && <div style={{ color: '#9333ea' }}>{bucket.mentions} mentions</div>}
+                        {bucket.likes > 0 && <div style={{ color: '#ef4444' }}>{bucket.likes} likes</div>}
+                        {bucket.reposts > 0 && <div style={{ color: '#60a5fa' }}>{bucket.reposts} reposts</div>}
+                        {bucket.follows > 0 && <div style={{ color: '#a78bfa' }}>{bucket.follows} follows</div>}
+                        {bucket.replies > 0 && <div style={{ color: '#4ade80' }}>{bucket.replies} replies</div>}
+                        {bucket.mentions > 0 && <div style={{ color: '#fb7185' }}>{bucket.mentions} mentions</div>}
                       </div>
                     </div>
                     
@@ -676,23 +649,23 @@ export const NotificationsAnalytics: React.FC = () => {
         
         <div className="flex flex-wrap gap-3 mt-4 text-xs">
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--bsky-like)' }}></div>
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }}></div>
             <span style={{ color: 'var(--bsky-text-secondary)' }}>Likes</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--bsky-repost)' }}></div>
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#60a5fa' }}></div>
             <span style={{ color: 'var(--bsky-text-secondary)' }}>Reposts</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--bsky-follow)' }}></div>
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#a78bfa' }}></div>
             <span style={{ color: 'var(--bsky-text-secondary)' }}>Follows</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--bsky-reply)' }}></div>
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#4ade80' }}></div>
             <span style={{ color: 'var(--bsky-text-secondary)' }}>Replies</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--bsky-accent)' }}></div>
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#fb7185' }}></div>
             <span style={{ color: 'var(--bsky-text-secondary)' }}>Mentions</span>
           </div>
         </div>
@@ -729,106 +702,50 @@ export const NotificationsAnalytics: React.FC = () => {
                 <p className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>{user?.displayName || handle}</p>
                 <p className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>@{handle}</p>
               </div>
-              <span className="text-sm" style={{ color: 'var(--bsky-text-primary)' }}>{count} notifications from them</span>
+              <span className="text-sm" style={{ color: 'var(--bsky-text-primary)' }}>{count} interactions</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bsky-card p-4">
-          <div className="flex items-center justify-between mb-2">
-            <TrendingUp className="text-green-500" size={24} />
-            <span className="text-2xl font-bold">{analytics.totalEngagement}</span>
-          </div>
-          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
-            Total in {timeRange === '1d' ? '24 hours' : timeRange === '3d' ? '3 days' : timeRange === '7d' ? '7 days' : '4 weeks'}
-            {(() => {
-              const now = new Date()
-              const startDate = timeRange === '1d' ? subHours(now, 24) :
-                               timeRange === '3d' ? subDays(now, 3) :
-                               timeRange === '7d' ? subDays(now, 7) :
-                               subDays(now, 28)
-              return (
-                <span className="block text-xs mt-1">
-                  {format(startDate, 'MMM d, h:mm a')} - {format(now, 'MMM d, h:mm a')}
-                  <span className="ml-1" style={{ opacity: 0.7 }}>
-                    ({Intl.DateTimeFormat().resolvedOptions().timeZone})
-                  </span>
-                </span>
-              )
-            })()}
-          </p>
-        </div>
-        
-        <div className="bsky-card p-4">
-          <div className="flex items-center justify-between mb-2">
-            <Users className="text-blue-500" size={24} />
-            <span className="text-2xl font-bold">{analytics.uniqueUsers}</span>
-          </div>
-          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>Unique Users</p>
-        </div>
-        
-        <div className="bsky-card p-4">
-          <div className="flex items-center justify-between mb-2">
-            <BarChart3 className="text-purple-500" size={24} />
-            <span className="text-2xl font-bold">
-              {timeRange === '1d' ? analytics.averagePerHour.toFixed(1) : analytics.averagePerDay.toFixed(1)}
+      {/* Engagement Summary */}
+      <div className="bsky-card p-4">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-2">
+            <Calendar size={20} className="text-blue-500" />
+            <span className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>
+              {timeRange === '1d' ? 'Last 24 hours' : timeRange === '3d' ? 'Last 3 days' : timeRange === '7d' ? 'Last 7 days' : 'Last 4 weeks'}
             </span>
           </div>
-          <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
-            {timeRange === '1d' ? 'Hourly Average' : 'Daily Average'}
-          </p>
-        </div>
-      </div>
-
-    </div>
-  )
-}
-
-interface StatCardProps {
-  icon: React.ElementType
-  label: string
-  value: number
-  color: string
-}
-
-const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, value, color }) => {
-  const colorStyles = {
-    blue: { backgroundColor: 'rgba(0, 133, 255, 0.1)', color: 'var(--bsky-primary)', borderColor: 'rgba(0, 133, 255, 0.3)', gradient: 'linear-gradient(135deg, #0085ff 0%, #0066cc 100%)' },
-    yellow: { backgroundColor: 'rgba(250, 204, 21, 0.1)', color: '#facc15', borderColor: 'rgba(250, 204, 21, 0.3)', gradient: 'linear-gradient(135deg, #facc15 0%, #f59e0b 100%)' },
-    pink: { backgroundColor: 'rgba(236, 72, 153, 0.1)', color: '#ec4899', borderColor: 'rgba(236, 72, 153, 0.3)', gradient: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' },
-    green: { backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderColor: 'rgba(34, 197, 94, 0.3)', gradient: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' },
-    purple: { backgroundColor: 'rgba(147, 51, 234, 0.1)', color: '#9333ea', borderColor: 'rgba(147, 51, 234, 0.3)', gradient: 'linear-gradient(135deg, #9333ea 0%, #7c3aed 100%)' },
-  }
-
-  const style = colorStyles[color as keyof typeof colorStyles]
-
-  return (
-    <div className="bsky-card p-6 transition-all duration-300 hover:scale-105 hover:shadow-lg" style={{ 
-      borderColor: style.borderColor,
-      backgroundColor: 'var(--bsky-bg-secondary)',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-      <div className="absolute top-0 right-0 w-32 h-32 opacity-10" style={{
-        background: style.gradient,
-        borderRadius: '50%',
-        transform: 'translate(50%, -50%)'
-      }} />
-      <div className="relative">
-        <div className="flex items-center justify-between mb-3">
-          <div className="p-3 rounded-xl" style={{ background: style.gradient }}>
-            <Icon size={24} className="text-white" />
+          <div className="flex items-center gap-6 text-sm">
+            <div>
+              <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>{analytics.totalEngagement}</span>
+              <span style={{ color: 'var(--bsky-text-secondary)' }}> total interactions</span>
+            </div>
+            <div>
+              <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+                {timeRange === '1d' ? analytics.averagePerHour.toFixed(1) : Math.round(analytics.averagePerDay)}
+              </span>
+              <span style={{ color: 'var(--bsky-text-secondary)' }}> {timeRange === '1d' ? 'per hour' : 'per day'}</span>
+            </div>
           </div>
-          <span className="text-3xl font-bold">{value}</span>
         </div>
-        <p className="text-sm font-medium" style={{ color: 'var(--bsky-text-secondary)' }}>{label}</p>
+        <div className="mt-2 text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
+          {(() => {
+            const now = new Date()
+            const startDate = timeRange === '1d' ? subHours(now, 24) :
+                             timeRange === '3d' ? subDays(now, 3) :
+                             timeRange === '7d' ? subDays(now, 7) :
+                             subDays(now, 28)
+            return `${format(startDate, 'MMM d, h:mm a')} - ${format(now, 'MMM d, h:mm a')} (${Intl.DateTimeFormat().resolvedOptions().timeZone})`
+          })()}
+        </div>
       </div>
+
     </div>
   )
 }
+
 
 
 function getNotificationAction(reason: string): string {
