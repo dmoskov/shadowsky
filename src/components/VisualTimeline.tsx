@@ -428,7 +428,7 @@ export const VisualTimeline: React.FC = () => {
       <div className="relative p-4 sm:p-6">
         {/* Timeline line */}
         <div 
-          className="absolute left-[7.5rem] top-0 bottom-0 w-0.5"
+          className="absolute left-[5rem] sm:left-[7.5rem] top-0 bottom-0 w-0.5"
           style={{ 
             background: 'linear-gradient(to bottom, var(--bsky-border-color) 0%, var(--bsky-border-color) 100%)',
             position: 'relative' 
@@ -964,7 +964,7 @@ export const VisualTimeline: React.FC = () => {
                   {/* Visual gap indicator for large time gaps */}
                   {previousEvent && differenceInHours(previousEvent.time, event.time) >= 12 && (
                     <div 
-                      className="absolute left-[7.5rem] -top-3 text-xs timeline-gap-indicator"
+                      className="absolute left-[5rem] sm:left-[7.5rem] -top-3 text-xs timeline-gap-indicator"
                       style={{ 
                         color: 'var(--bsky-text-tertiary)',
                         transform: 'translateX(-50%)',

@@ -94,7 +94,7 @@ function AppContent() {
       <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div className="flex">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-        <main className="flex-1 lg:ml-64 mt-16 h-[calc(100vh-4rem)]">
+        <main className="flex-1 lg:ml-64 mt-16 h-[calc(100vh-4rem)] overflow-x-hidden">
           <Routes>
             <Route path="/home" element={<Home />} />
             <Route path="/" element={<NotificationsFeed />} />

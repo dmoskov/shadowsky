@@ -43,7 +43,7 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bsky-font" style={{ background: 'var(--bsky-bg-primary)' }}>
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-12 items-start">
           {/* Left side - Login and info */}
           <div>
             <div className="text-center lg:text-left mb-8">

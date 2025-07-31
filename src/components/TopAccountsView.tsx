@@ -215,7 +215,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
           </button>
         </div>
         
-        <div className="text-center py-12">
+        <div className="text-center py-6 sm:py-12">
           <div className="text-5xl mb-4 opacity-20">👥</div>
           <p className="text-lg mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>
             No accounts with {minFollowerCount.toLocaleString()}+ followers

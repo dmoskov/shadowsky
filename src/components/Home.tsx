@@ -266,14 +266,14 @@ export const Home: React.FC = () => {
   }
   
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto px-3 sm:px-4">
       <div className="sticky top-0 z-10 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
         <div className="flex items-center justify-between gap-1 p-2 overflow-x-auto">
           {feedOptions.map((option) => (
             <button
               key={option.type}
               onClick={() => handleFeedChange(option.type)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all whitespace-nowrap flex-1 min-w-0 ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all flex-1 min-w-0 ${
                 selectedFeed === option.type
                   ? 'text-white shadow-md'
                   : 'hover:bg-opacity-10 hover:bg-blue-500'

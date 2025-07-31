@@ -29,9 +29,16 @@ html {
   box-sizing: border-box;
 }
 
+/* Ensure proper text wrapping on mobile */
+@media (max-width: 640px) {
+  p, span, div {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
 body {
   margin: 0;
-  min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
   width: 100%;
