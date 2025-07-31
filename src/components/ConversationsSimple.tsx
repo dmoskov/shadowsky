@@ -79,73 +79,7 @@ const ConversationItem = React.memo(({
     isLoadingRootPost
   })
 
-  debug.log('show loading state?', isGroup,isLoadingRootPost, convo.rootPost?.author)
-  // If we're loading the root post, show loading state
-  if (isLoadingRootPost && !convo.rootPost?.author) {
-    debug.log('--- show loading state', isGroup,isLoadingRootPost, convo.rootPost?.author)
-    return (
-      <div className={`w-full text-left py-4 px-4 sm:px-6 transition-all ${
-        isSelected ? 'bg-opacity-10 bg-blue-500' : ''
-      } ${unreadCount > 0 ? 'conversation-unread' : ''}`}
-      style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
-        <div className="flex items-center gap-3">
-          {/* Avatar placeholder */}
-          <div className="relative flex-shrink-0">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center animate-pulse"
-                 style={{ background: 'var(--bsky-bg-secondary)' }}>
-              <Loader2 size={20} className="animate-spin" style={{ color: 'var(--bsky-text-tertiary)' }} />
-            </div>
-            {unreadCount > 0 && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-medium"
-                   style={{ background: 'var(--bsky-primary)' }}>
-                {unreadCount}
-              </div>
-            )}
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2">
-                <div className="h-4 w-32 rounded animate-pulse" style={{ background: 'var(--bsky-bg-secondary)' }} />
-                <Loader2 size={12} className="animate-spin" style={{ color: 'var(--bsky-text-tertiary)' }} />
-              </div>
-              <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
-                {formatDistanceToNow(new Date(convo.latestReply.indexedAt), { addSuffix: true })}
-              </span>
-            </div>
-            
-            <div className="h-3 w-full rounded mb-2 animate-pulse" style={{ background: 'var(--bsky-bg-secondary)' }} />
-            
-            {/* Still show latest reply info */}
-            <div className="flex items-center gap-2 text-xs">
-              {convo.latestReply.author.avatar ? (
-                <img 
-                  src={proxifyBskyImage(convo.latestReply.author.avatar)} 
-                  alt={convo.latestReply.author.handle}
-                  className="w-5 h-5 rounded-full object-cover flex-shrink-0"
-                />
-              ) : (
-                <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" 
-                     style={{ background: 'var(--bsky-bg-tertiary)' }}>
-                  <span className="text-xs">
-                    {convo.latestReply.author.displayName?.[0] || convo.latestReply.author.handle?.[0] || 'U'}
-                  </span>
-                </div>
-              )}
-              <span className="truncate" style={{ color: 'var(--bsky-text-secondary)' }}>
-                {(() => {
-                  const latestPost = allPostsMap.get(convo.latestReply.uri)
-                  const latestText = (latestPost?.record as any)?.text || 'replied'
-                  return latestText.length > 50 ? latestText.substring(0, 50) + '...' : latestText
-                })()}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // Remove loading state - just render the conversation normally even if root post is loading
 
   return (
     <button
@@ -706,26 +640,7 @@ export const ConversationsSimple: React.FC = () => {
           </p>
         </div>
 
-        {/* Loading indicator for posts */}
-        {percentageFetched < 100 && totalPosts > 0 && (
-          <div className="px-4 sm:px-6 py-2" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
-            <div className="flex items-center gap-2">
-              <Loader2 size={16} className="animate-spin" style={{ color: 'var(--bsky-primary)' }} />
-              <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
-                Loading posts... {fetchedPosts}/{totalPosts} ({percentageFetched}%)
-              </span>
-            </div>
-            <div className="mt-1 h-1 rounded-full overflow-hidden" style={{ background: 'var(--bsky-bg-secondary)' }}>
-              <div 
-                className="h-full transition-all duration-300" 
-                style={{ 
-                  width: `${percentageFetched}%`,
-                  background: 'var(--bsky-primary)' 
-                }}
-              />
-            </div>
-          </div>
-        )}
+        {/* Removed loading indicator for posts */}
 
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto">
