@@ -3,9 +3,10 @@ import { Heart, Repeat2, MessageCircle, Image, Loader, MoreVertical, TrendingUp,
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '../contexts/AuthContext'
-import { proxifyBskyImage } from '../utils/image-proxy'
+import { proxifyBskyImage, proxifyBskyVideo } from '../utils/image-proxy'
 import { debug } from '@bsky/shared'
 import { useFeatureTracking, useInteractionTracking } from '../hooks/useAnalytics'
+import { VideoPlayer } from './VideoPlayer'
 
 type FeedType = 'following' | 'whats-hot' | 'popular-with-friends' | 'recent'
 
@@ -224,6 +225,19 @@ export const Home: React.FC = () => {
       )
     }
     
+    if (embed.$type === 'app.bsky.embed.video#view') {
+      return (
+        <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+          <VideoPlayer
+            src={proxifyBskyVideo(embed.playlist)}
+            thumbnail={embed.thumbnail ? proxifyBskyVideo(embed.thumbnail) : undefined}
+            aspectRatio={embed.aspectRatio}
+            alt={embed.alt}
+          />
+        </div>
+      )
+    }
+    
     return null
   }
   
@@ -277,11 +291,11 @@ export const Home: React.FC = () => {
       </div>
       
       <div className="divide-y" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-        {posts.map((item: any) => {
+        {posts.map((item: any, index: number) => {
           const post = item.post
           return (
             <div
-              key={post.uri}
+              key={`${post.uri}-${index}`}
               className="p-4 hover:bg-opacity-5 hover:bg-blue-500 transition-colors cursor-pointer relative"
               onClick={() => handlePostClick(post)}
               onMouseEnter={() => setHoveredPost(post.uri)}

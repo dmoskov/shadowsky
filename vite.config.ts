@@ -25,7 +25,7 @@ export default defineConfig({
     },
     // Headers required for FFmpeg with SharedArrayBuffer
     headers: {
-      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Embedder-Policy': 'credentialless',
       'Cross-Origin-Opener-Policy': 'same-origin',
     },
     // Proxy configuration for Bluesky CDN images to avoid CORS issues
@@ -36,6 +36,36 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/bsky-cdn/, ''),
         headers: {
           'Referer': 'https://bsky.app',
+        }
+      },
+      '/bsky-video': {
+        target: 'https://video.bsky.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/bsky-video/, ''),
+        headers: {
+          'Referer': 'https://bsky.app',
+        },
+        configure: (proxy, options) => {
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            // Add CORS headers to allow the resource
+            proxyRes.headers['Cross-Origin-Resource-Policy'] = 'cross-origin';
+            proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+          });
+        }
+      },
+      '/bsky-video-cdn': {
+        target: 'https://video.cdn.bsky.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/bsky-video-cdn/, ''),
+        headers: {
+          'Referer': 'https://bsky.app',
+        },
+        configure: (proxy, options) => {
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            // Add CORS headers to allow the resource
+            proxyRes.headers['Cross-Origin-Resource-Policy'] = 'cross-origin';
+            proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+          });
         }
       }
     }
