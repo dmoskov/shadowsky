@@ -47,11 +47,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
     enabled: enablePolling, // Enable polling after initial load
     staleTime: 30 * 60 * 1000, // 30 minutes
     refetchInterval: enablePolling ? 10 * 1000 : false, // Poll every 10 seconds when enabled
-    // Custom behavior for refetches to preserve existing pages
-    refetchPage: (lastPage, index) => {
-      // Only refetch the first page (newest notifications) during polling
-      return index === 0
-    },
   })
 
   // Initialize IndexedDB

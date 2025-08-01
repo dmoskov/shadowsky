@@ -26,8 +26,10 @@ export async function compressImage(file: File): Promise<File> {
           // Scale down if dimensions exceed max
           if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
             const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height)
+            // Calculate exact dimensions maintaining aspect ratio
             width = Math.round(width * ratio)
             height = Math.round(height * ratio)
+            
           }
           
           // Create canvas for compression
@@ -41,18 +43,22 @@ export async function compressImage(file: File): Promise<File> {
           canvas.width = width
           canvas.height = height
           
-          // Draw and compress image
+          // Disable image smoothing to prevent border artifacts
+          ctx.imageSmoothingEnabled = false
+          
+          // Draw the image scaled to fit exactly
           ctx.drawImage(img, 0, 0, width, height)
           
           // Try different quality levels until we're under the size limit
           let quality = 0.9
           let blob: Blob | null = null
+          const outputFormat = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
           
           while (quality > 0.1) {
             blob = await new Promise<Blob | null>((resolve) => {
               canvas.toBlob(
                 (b) => resolve(b),
-                file.type === 'image/png' ? 'image/png' : 'image/jpeg',
+                outputFormat,
                 quality
               )
             })

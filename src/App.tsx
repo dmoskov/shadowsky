@@ -13,6 +13,7 @@ import { RateLimitStatus } from './components/RateLimitStatus'
 import { ConversationsSimple as Conversations } from './components/ConversationsSimple'
 import { Composer } from './components/Composer'
 import { Search } from './components/Search'
+import { CompressionTest } from './components/CompressionTest'
 import { Home } from './components/Home'
 import { DebugConsole } from './components/DebugConsole'
 import { NotificationStorageDB } from './services/notification-storage-db'
@@ -107,6 +108,7 @@ function AppContent() {
             <Route path="/conversations" element={<Conversations />} />
             <Route path="/compose" element={<Composer />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/compression-test" element={<CompressionTest />} />
             <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>
         </main>

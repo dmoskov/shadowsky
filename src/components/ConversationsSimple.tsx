@@ -196,6 +196,11 @@ export const ConversationsSimple: React.FC = () => {
   
   // Wrap setSelectedConvo to track analytics
   const handleSelectConversation = (rootUri: string | null, messageCount?: number) => {
+    debug.log('[ConversationsSimple] Selecting conversation:', {
+      rootUri,
+      messageCount,
+      previousSelected: selectedConvo
+    })
     setSelectedConvo(rootUri)
     if (rootUri) {
       trackConversationView(rootUri, messageCount || 0)
@@ -203,22 +208,50 @@ export const ConversationsSimple: React.FC = () => {
     }
   }
 
-  // Subscribe to extended notifications data properly
-  const { data: extendedData } = useQuery({
-    queryKey: ['notifications-extended'],
-    // Don't fetch - just subscribe to existing data from BackgroundNotificationLoader
-    queryFn: () => {
-      const data = queryClient.getQueryData(['notifications-extended']) || { pages: [] }
-      debug.log('[ConversationsSimple] Query function called, data pages:', (data as any).pages?.length || 0)
-      return data
-    },
-    staleTime: 0, // Always consider stale to pick up changes
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    // Force React Query to always use the latest data
-    structuralSharing: false,
+  // Use state to store notifications data with persistence
+  const [extendedData, setExtendedData] = useState(() => {
+    const cached = queryClient.getQueryData(['notifications-extended']) as any
+    return cached || { pages: [], pageParams: [] }
   })
-  debug.log('[ConversationsSimple] Extended data:', !!extendedData, extendedData?.pages?.length)
+  
+  // Subscribe to query cache updates
+  React.useEffect(() => {
+    // Check for data periodically
+    const checkData = () => {
+      const currentData = queryClient.getQueryData(['notifications-extended']) as any
+      if (currentData?.pages?.length > 0) {
+        setExtendedData(currentData)
+        debug.log('[ConversationsSimple] Updated extended data from cache:', {
+          pages: currentData.pages.length,
+          notifications: currentData.pages[0]?.notifications?.length || 0
+        })
+      }
+    }
+    
+    // Initial check
+    checkData()
+    
+    // Set up interval
+    const interval = setInterval(checkData, 1000)
+    
+    // Also subscribe to cache updates
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      if (event?.query?.queryKey?.[0] === 'notifications-extended' && event.type === 'updated') {
+        checkData()
+      }
+    })
+    
+    return () => {
+      clearInterval(interval)
+      unsubscribe()
+    }
+  }, [queryClient])
+  
+  debug.log('[ConversationsSimple] Extended data from query:', {
+    hasData: !!extendedData,
+    pages: extendedData?.pages?.length || 0,
+    firstPageSize: extendedData?.pages?.[0]?.notifications?.length || 0
+  })
   
   // Extract reply notifications
   const replyNotifications = React.useMemo(() => {
@@ -227,9 +260,9 @@ export const ConversationsSimple: React.FC = () => {
       return []
     }
     debug.log(`[ConversationsSimple] Processing ${extendedData.pages.length} pages of notifications`)
-    const allNotifications = extendedData.pages.flatMap((page: any) => page.notifications)
+    const allNotifications = extendedData.pages.flatMap((page: any) => page.notifications || [])
     debug.log(`[ConversationsSimple] Total notifications: ${allNotifications.length}`)
-    const replies = allNotifications.filter((n: Notification) => n.reason === 'reply')
+    const replies = allNotifications.filter((n: Notification) => n && n.reason === 'reply')
     debug.log('[ConversationsSimple] Found reply notifications:', replies.length)
     
     // Log the newest and oldest reply dates for debugging
@@ -406,9 +439,16 @@ export const ConversationsSimple: React.FC = () => {
     queryFn: async () => {
       if (!selectedConvo || !session) return null
       
+      debug.log('[ConversationsSimple] Fetching complete thread for:', selectedConvo)
+      
       try {
         const threadService = getThreadService(atProtoClient.agent!)
         const thread = await threadService.getThread(selectedConvo, 100) // Get up to 100 posts deep
+        debug.log('[ConversationsSimple] Thread fetched successfully:', {
+          uri: selectedConvo,
+          hasThread: !!thread?.thread,
+          threadRootUri: thread?.thread?.post?.uri
+        })
         return thread
       } catch (error) {
         debug.error('[ConversationsSimple] Failed to fetch complete thread:', error)
@@ -426,7 +466,13 @@ export const ConversationsSimple: React.FC = () => {
     const threadMap = new Map<string, ConversationThread>()
     
     // Helper function to find the true root of a thread by following the reply chain
-    const findRootUri = (uri: string): string => {
+    const findRootUri = (uri: string, visitedUris = new Set<string>()): string => {
+      // Prevent infinite loops
+      if (visitedUris.has(uri)) {
+        return uri
+      }
+      visitedUris.add(uri)
+      
       const post = allPostsMap.get(uri)
       const record = post?.record as any
       
@@ -439,7 +485,7 @@ export const ConversationsSimple: React.FC = () => {
       if (record?.reply?.parent?.uri && record.reply.parent.uri !== uri) {
         const parentPost = allPostsMap.get(record.reply.parent.uri)
         if (parentPost) {
-          return findRootUri(record.reply.parent.uri)
+          return findRootUri(record.reply.parent.uri, visitedUris)
         }
       }
       
@@ -447,18 +493,42 @@ export const ConversationsSimple: React.FC = () => {
       return uri
     }
     
+    // First pass: collect all unique root URIs based on current data
+    const rootUriMap = new Map<string, string>() // Maps notification URI to its determined root URI
+    
     replyNotifications.forEach((notification: Notification) => {
-      // Start with reasonSubject as initial guess for root
-      let rootUri = notification.reasonSubject || notification.uri
-      
-      // If we have the post data, find the true root
-      const post = allPostsMap.get(notification.uri)
-      if (post) {
-        rootUri = findRootUri(notification.uri)
-      } else if (notification.reasonSubject && allPostsMap.get(notification.reasonSubject)) {
-        // If we don't have the reply post but have the parent, start from there
-        rootUri = findRootUri(notification.reasonSubject)
+      try {
+        // Determine the root URI for this notification
+        let rootUri = notification.reasonSubject || notification.uri
+        
+        // If we have the post data, find the true root
+        const post = allPostsMap.get(notification.uri)
+        if (post) {
+          const record = post.record as any
+          // If the post explicitly declares its root, use that
+          if (record?.reply?.root?.uri) {
+            rootUri = record.reply.root.uri
+          } else {
+            // Otherwise follow the chain
+            rootUri = findRootUri(notification.uri)
+          }
+        } else if (notification.reasonSubject) {
+          // If we don't have the reply post but have the reasonSubject, use that as a stable identifier
+          // Don't try to follow the chain if we don't have the data
+          rootUri = notification.reasonSubject
+        }
+        
+        rootUriMap.set(notification.uri, rootUri)
+      } catch (error) {
+        debug.error('[ConversationsSimple] Error determining root URI:', error, notification.uri)
+        // Fallback to using the notification URI itself
+        rootUriMap.set(notification.uri, notification.uri)
       }
+    })
+    
+    // Second pass: group notifications by their determined root URI
+    replyNotifications.forEach((notification: Notification) => {
+      const rootUri = rootUriMap.get(notification.uri) || notification.uri
       
       if (!threadMap.has(rootUri)) {
         // Try to get the root post if it's loaded
@@ -492,9 +562,18 @@ export const ConversationsSimple: React.FC = () => {
     })
     
     // Sort conversations by latest activity
-    return Array.from(threadMap.values()).sort((a, b) => 
+    const sortedConversations = Array.from(threadMap.values()).sort((a, b) => 
       new Date(b.latestReply.indexedAt).getTime() - new Date(a.latestReply.indexedAt).getTime()
     )
+    
+    debug.log('[ConversationsSimple] Conversations generated:', {
+      count: sortedConversations.length,
+      replyNotificationCount: replyNotifications.length,
+      allPostsMapSize: allPostsMap.size,
+      rootPostsVersion
+    })
+    
+    return sortedConversations
   }, [replyNotifications, allPostsMap, rootPostsVersion]) // Include rootPostsVersion to trigger updates
 
   // Filter conversations based on search
@@ -524,7 +603,15 @@ export const ConversationsSimple: React.FC = () => {
 
   // Get the selected conversation
   const selectedConversation = useMemo(() => {
-    return conversations.find(c => c.rootUri === selectedConvo)
+    const found = conversations.find(c => c.rootUri === selectedConvo)
+    debug.log('[ConversationsSimple] Finding selected conversation:', {
+      selectedConvo,
+      found: !!found,
+      foundRootUri: found?.rootUri,
+      conversationCount: conversations.length,
+      allRootUris: conversations.map(c => c.rootUri)
+    })
+    return found
   }, [conversations, selectedConvo])
 
   // Debug: Log rendering state
@@ -582,12 +669,36 @@ export const ConversationsSimple: React.FC = () => {
       })
     }
     
-    // Add posts from our map
-    allPostsMap.forEach((post, uri) => {
-      if (!postUris.has(uri)) {
+    // Only add posts that are part of this conversation
+    // 1. Add the root post if available
+    if (selectedConversation.rootPost && !postUris.has(selectedConversation.rootPost.uri)) {
+      posts.push(selectedConversation.rootPost)
+      postUris.add(selectedConversation.rootPost.uri)
+    }
+    
+    // 2. Add posts from the conversation's replies
+    selectedConversation.replies.forEach(notification => {
+      const post = allPostsMap.get(notification.uri)
+      if (post && !postUris.has(post.uri)) {
         posts.push(post)
-        postUris.add(uri)
+        postUris.add(post.uri)
       }
+      
+      // Also add the reasonSubject post if available (the post being replied to)
+      if (notification.reasonSubject) {
+        const parentPost = allPostsMap.get(notification.reasonSubject)
+        if (parentPost && !postUris.has(parentPost.uri)) {
+          posts.push(parentPost)
+          postUris.add(parentPost.uri)
+        }
+      }
+    })
+    
+    debug.log('[ConversationsSimple] Prepared thread posts:', {
+      postCount: posts.length,
+      hasCompleteThread: !!completeThread,
+      selectedConvoRootUri: selectedConversation.rootUri,
+      postUris: Array.from(postUris)
     })
     
     return posts

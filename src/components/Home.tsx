@@ -1,14 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Heart, Repeat2, MessageCircle, Image, Loader, MoreVertical, TrendingUp, Users, Clock, Hash } from 'lucide-react'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { Heart, Repeat2, MessageCircle, Image, Loader, MoreVertical, TrendingUp, Users, Clock, Hash, Star, Plus } from 'lucide-react'
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '../contexts/AuthContext'
 import { proxifyBskyImage, proxifyBskyVideo } from '../utils/image-proxy'
 import { debug } from '@bsky/shared'
 import { useFeatureTracking, useInteractionTracking } from '../hooks/useAnalytics'
 import { VideoPlayer } from './VideoPlayer'
+import { FeedDiscovery } from './FeedDiscovery'
 
-type FeedType = 'following' | 'whats-hot' | 'popular-with-friends' | 'recent'
+type FeedType = 'following' | 'whats-hot' | 'popular-with-friends' | 'recent' | string // Allow custom feed URIs
 
 interface Post {
   uri: string
@@ -42,21 +43,117 @@ interface Post {
   }
 }
 
+interface SavedFeed {
+  id: string
+  type: 'feed' | 'list' | 'timeline'
+  value: string
+  pinned: boolean
+}
+
+interface FeedGenerator {
+  uri: string
+  cid: string
+  did: string
+  creator: {
+    did: string
+    handle: string
+    displayName?: string
+    avatar?: string
+  }
+  displayName: string
+  description?: string
+  avatar?: string
+  likeCount?: number
+  viewer?: {
+    like?: string
+  }
+}
+
 export const Home: React.FC = () => {
   const { agent } = useAuth()
+  const queryClient = useQueryClient()
   const [hoveredPost, setHoveredPost] = useState<string | null>(null)
   const [selectedFeed, setSelectedFeed] = useState<FeedType>('following')
+  const [showFeedDiscovery, setShowFeedDiscovery] = useState(false)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   
   const { trackFeatureAction } = useFeatureTracking('home_feed')
   const { trackClick } = useInteractionTracking()
   
-  const feedOptions = [
-    { type: 'following' as FeedType, label: 'Following', icon: Users },
-    { type: 'whats-hot' as FeedType, label: "What's Hot", icon: TrendingUp },
-    { type: 'popular-with-friends' as FeedType, label: 'Popular w/ Friends', icon: Heart },
-    { type: 'recent' as FeedType, label: 'Recent', icon: Clock }
-  ]
+  // Fetch user's saved/pinned feeds
+  const { data: userPrefs } = useQuery({
+    queryKey: ['userPreferences'],
+    queryFn: async () => {
+      if (!agent) throw new Error('Not authenticated')
+      const prefs = await agent.getPreferences()
+      debug.log('User preferences:', prefs)
+      return prefs
+    },
+    enabled: !!agent,
+    staleTime: 5 * 60 * 1000
+  })
+  
+  // Fetch feed generator details for saved feeds
+  const { data: feedGenerators } = useQuery({
+    queryKey: ['feedGenerators', userPrefs?.savedFeeds],
+    queryFn: async () => {
+      if (!agent || !userPrefs?.savedFeeds?.length) return []
+      
+      const feedUris = userPrefs.savedFeeds
+        .filter((feed: SavedFeed) => feed.type === 'feed')
+        .map((feed: SavedFeed) => feed.value)
+      
+      if (feedUris.length === 0) return []
+      
+      try {
+        const response = await agent.app.bsky.feed.getFeedGenerators({
+          feeds: feedUris
+        })
+        debug.log('Feed generators:', response.data)
+        return response.data.feeds
+      } catch (error) {
+        debug.error('Failed to fetch feed generators:', error)
+        return []
+      }
+    },
+    enabled: !!agent && !!userPrefs?.savedFeeds
+  })
+  
+  // Build feed options including user's saved feeds
+  const feedOptions = React.useMemo(() => {
+    const defaultFeeds = [
+      { type: 'following' as FeedType, label: 'Following', icon: Users, uri: 'following' },
+      { type: 'whats-hot' as FeedType, label: "What's Hot", icon: TrendingUp, uri: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot' },
+      { type: 'popular-with-friends' as FeedType, label: 'Popular w/ Friends', icon: Heart, uri: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/with-friends' },
+      { type: 'recent' as FeedType, label: 'Recent', icon: Clock, uri: 'recent' }
+    ]
+    
+    // Add pinned feeds first, then other saved feeds
+    const savedFeeds: any[] = []
+    if (userPrefs?.savedFeeds && feedGenerators) {
+      const pinnedFeeds = userPrefs.savedFeeds.filter((feed: SavedFeed) => feed.pinned && feed.type === 'feed')
+      const unpinnedFeeds = userPrefs.savedFeeds.filter((feed: SavedFeed) => !feed.pinned && feed.type === 'feed')
+      
+      const addFeedOption = (savedFeed: SavedFeed) => {
+        const generator = feedGenerators.find((g: FeedGenerator) => g.uri === savedFeed.value)
+        if (generator) {
+          savedFeeds.push({
+            type: savedFeed.value,
+            label: generator.displayName,
+            icon: savedFeed.pinned ? Star : Hash,
+            uri: savedFeed.value,
+            pinned: savedFeed.pinned,
+            generator
+          })
+        }
+      }
+      
+      pinnedFeeds.forEach(addFeedOption)
+      unpinnedFeeds.forEach(addFeedOption)
+    }
+    
+    return [...defaultFeeds, ...savedFeeds]
+  }, [userPrefs, feedGenerators])
   
   const {
     data,
@@ -74,49 +171,7 @@ export const Home: React.FC = () => {
       
       switch (selectedFeed) {
         case 'following':
-          response = await agent.getTimeline({
-            cursor: pageParam,
-            limit: 30
-          })
-          break
-        
-        case 'whats-hot':
-          // Use the What's Hot algorithm feed
-          try {
-            response = await agent.app.bsky.feed.getFeed({
-              feed: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot',
-              cursor: pageParam,
-              limit: 30
-            })
-          } catch (error) {
-            debug.error('Failed to fetch whats-hot feed, falling back to timeline:', error)
-            response = await agent.getTimeline({
-              cursor: pageParam,
-              limit: 30
-            })
-          }
-          break
-        
-        case 'popular-with-friends':
-          // Use the Popular With Friends feed
-          try {
-            response = await agent.app.bsky.feed.getFeed({
-              feed: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/with-friends',
-              cursor: pageParam,
-              limit: 30
-            })
-          } catch (error) {
-            debug.error('Failed to fetch popular-with-friends feed, falling back to timeline:', error)
-            response = await agent.getTimeline({
-              cursor: pageParam,
-              limit: 30
-            })
-          }
-          break
-        
         case 'recent':
-          // For recent/chronological, we can use timeline with specific params
-          // or implement a reverse chronological sort
           response = await agent.getTimeline({
             cursor: pageParam,
             limit: 30
@@ -124,10 +179,63 @@ export const Home: React.FC = () => {
           break
         
         default:
-          response = await agent.getTimeline({
-            cursor: pageParam,
-            limit: 30
-          })
+          // Handle custom feed URIs
+          if (selectedFeed.startsWith('at://')) {
+            try {
+              response = await agent.app.bsky.feed.getFeed({
+                feed: selectedFeed,
+                cursor: pageParam,
+                limit: 30
+              })
+            } catch (error) {
+              debug.error(`Failed to fetch feed ${selectedFeed}, falling back to timeline:`, error)
+              response = await agent.getTimeline({
+                cursor: pageParam,
+                limit: 30
+              })
+            }
+          } else {
+            // Handle known feed types
+            switch (selectedFeed) {
+              case 'whats-hot':
+                try {
+                  response = await agent.app.bsky.feed.getFeed({
+                    feed: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot',
+                    cursor: pageParam,
+                    limit: 30
+                  })
+                } catch (error) {
+                  debug.error('Failed to fetch whats-hot feed, falling back to timeline:', error)
+                  response = await agent.getTimeline({
+                    cursor: pageParam,
+                    limit: 30
+                  })
+                }
+                break
+              
+              case 'popular-with-friends':
+                try {
+                  response = await agent.app.bsky.feed.getFeed({
+                    feed: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/with-friends',
+                    cursor: pageParam,
+                    limit: 30
+                  })
+                } catch (error) {
+                  debug.error('Failed to fetch popular-with-friends feed, falling back to timeline:', error)
+                  response = await agent.getTimeline({
+                    cursor: pageParam,
+                    limit: 30
+                  })
+                }
+                break
+              
+              default:
+                response = await agent.getTimeline({
+                  cursor: pageParam,
+                  limit: 30
+                })
+            }
+          }
       }
       
       debug.log(`${selectedFeed} feed response:`, response)
@@ -168,14 +276,78 @@ export const Home: React.FC = () => {
     window.open(postUrl, '_blank')
   }
   
-  const handleLike = async (post: Post) => {
+  const likeMutation = useMutation({
+    mutationFn: async ({ uri, cid }: { uri: string; cid: string }) => {
+      if (!agent) throw new Error('Not authenticated')
+      return await agent.like(uri, cid)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeline'] })
+    }
+  })
+  
+  const unlikeMutation = useMutation({
+    mutationFn: async (likeUri: string) => {
+      if (!agent) throw new Error('Not authenticated')
+      return await agent.deleteLike(likeUri)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeline'] })
+    }
+  })
+  
+  const repostMutation = useMutation({
+    mutationFn: async ({ uri, cid }: { uri: string; cid: string }) => {
+      if (!agent) throw new Error('Not authenticated')
+      return await agent.repost(uri, cid)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeline'] })
+    }
+  })
+  
+  const unrepostMutation = useMutation({
+    mutationFn: async (repostUri: string) => {
+      if (!agent) throw new Error('Not authenticated')
+      return await agent.deleteRepost(repostUri)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeline'] })
+    }
+  })
+  
+  const handleLike = async (post: Post, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
     trackFeatureAction('like_post', { postUri: post.uri })
-    // Like functionality would go here
+    
+    try {
+      if (post.viewer?.like) {
+        await unlikeMutation.mutateAsync(post.viewer.like)
+      } else {
+        await likeMutation.mutateAsync({ uri: post.uri, cid: post.cid })
+      }
+    } catch (error) {
+      debug.error('Failed to like/unlike post:', error)
+    }
   }
   
-  const handleRepost = async (post: Post) => {
+  const handleRepost = async (post: Post, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
     trackFeatureAction('repost_post', { postUri: post.uri })
-    // Repost functionality would go here
+    
+    try {
+      if (post.viewer?.repost) {
+        await unrepostMutation.mutateAsync(post.viewer.repost)
+      } else {
+        await repostMutation.mutateAsync({ uri: post.uri, cid: post.cid })
+      }
+    } catch (error) {
+      debug.error('Failed to repost/unrepost post:', error)
+    }
   }
   
   const renderEmbed = (embed: any) => {
@@ -261,6 +433,7 @@ export const Home: React.FC = () => {
   }
   
   const handleFeedChange = (feed: FeedType) => {
+    debug.log('Feed change clicked:', feed)
     setSelectedFeed(feed)
     trackFeatureAction('feed_changed', { feed })
   }
@@ -268,25 +441,38 @@ export const Home: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto px-3 sm:px-4">
       <div className="sticky top-0 z-10 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-        <div className="flex items-center justify-between gap-1 p-2 overflow-x-auto">
-          {feedOptions.map((option) => (
-            <button
-              key={option.type}
-              onClick={() => handleFeedChange(option.type)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all flex-1 min-w-0 ${
-                selectedFeed === option.type
-                  ? 'text-white shadow-md'
-                  : 'hover:bg-opacity-10 hover:bg-blue-500'
-              }`}
-              style={{
-                backgroundColor: selectedFeed === option.type ? 'var(--bsky-primary)' : 'transparent',
-                color: selectedFeed === option.type ? 'white' : 'var(--bsky-text-secondary)'
-              }}
-            >
-              <option.icon size={16} className="flex-shrink-0" />
-              <span className="font-medium text-sm truncate">{option.label}</span>
-            </button>
-          ))}
+        <div className="flex items-center gap-1 p-2">
+          <div className="flex-1 flex gap-1 overflow-x-auto scrollbar-hide">
+            {feedOptions.map((option) => (
+              <button
+                key={option.type}
+                onClick={() => handleFeedChange(option.type)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer select-none ${
+                  selectedFeed === option.type
+                    ? 'text-white shadow-md'
+                    : 'hover:bg-opacity-10 hover:bg-blue-500'
+                }`}
+                style={{
+                  backgroundColor: selectedFeed === option.type ? 'var(--bsky-primary)' : 'transparent',
+                  color: selectedFeed === option.type ? 'white' : 'var(--bsky-text-secondary)',
+                  WebkitTapHighlightColor: 'transparent',
+                  touchAction: 'manipulation'
+                }}
+                type="button"
+              >
+                <option.icon size={16} className="flex-shrink-0" />
+                <span className="font-medium text-sm">{option.label}</span>
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setShowFeedDiscovery(true)}
+            className="p-2 rounded-xl hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
+            style={{ color: 'var(--bsky-text-secondary)' }}
+            title="Discover more feeds"
+          >
+            <Plus size={16} />
+          </button>
         </div>
       </div>
       
@@ -344,40 +530,45 @@ export const Home: React.FC = () => {
                   
                   <div className="flex items-center gap-6 mt-3">
                     <button
-                      className="flex items-center gap-1 hover:text-blue-500 transition-colors"
-                      style={{ color: 'var(--bsky-text-secondary)' }}
+                      className="flex items-center gap-1 hover:text-blue-500 transition-colors cursor-pointer select-none p-1 -m-1"
+                      style={{ color: 'var(--bsky-text-secondary)', WebkitTapHighlightColor: 'transparent' }}
                       onClick={(e) => {
                         e.stopPropagation()
                         // Reply functionality would go here
                       }}
+                      type="button"
                     >
                       <MessageCircle size={16} />
                       <span className="text-sm">{post.replyCount || 0}</span>
                     </button>
                     
                     <button
-                      className={`flex items-center gap-1 hover:text-green-500 transition-colors ${
+                      className={`flex items-center gap-1 hover:text-green-500 transition-colors cursor-pointer select-none p-1 -m-1 ${
                         post.viewer?.repost ? 'text-green-500' : ''
-                      }`}
-                      style={{ color: post.viewer?.repost ? undefined : 'var(--bsky-text-secondary)' }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleRepost(post)
+                      } ${repostMutation.isPending || unrepostMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
+                      style={{ 
+                        color: post.viewer?.repost ? undefined : 'var(--bsky-text-secondary)',
+                        WebkitTapHighlightColor: 'transparent'
                       }}
+                      onClick={(e) => handleRepost(post, e)}
+                      disabled={repostMutation.isPending || unrepostMutation.isPending}
+                      type="button"
                     >
                       <Repeat2 size={16} />
                       <span className="text-sm">{post.repostCount || 0}</span>
                     </button>
                     
                     <button
-                      className={`flex items-center gap-1 hover:text-red-500 transition-colors ${
+                      className={`flex items-center gap-1 hover:text-red-500 transition-colors cursor-pointer select-none p-1 -m-1 ${
                         post.viewer?.like ? 'text-red-500' : ''
-                      }`}
-                      style={{ color: post.viewer?.like ? undefined : 'var(--bsky-text-secondary)' }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleLike(post)
+                      } ${likeMutation.isPending || unlikeMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
+                      style={{ 
+                        color: post.viewer?.like ? undefined : 'var(--bsky-text-secondary)',
+                        WebkitTapHighlightColor: 'transparent'
                       }}
+                      onClick={(e) => handleLike(post, e)}
+                      disabled={likeMutation.isPending || unlikeMutation.isPending}
+                      type="button"
                     >
                       <Heart size={16} fill={post.viewer?.like ? 'currentColor' : 'none'} />
                       <span className="text-sm">{post.likeCount || 0}</span>
@@ -397,6 +588,11 @@ export const Home: React.FC = () => {
       )}
       
       <div ref={loadMoreRef} className="h-20" />
+      
+      <FeedDiscovery 
+        isOpen={showFeedDiscovery} 
+        onClose={() => setShowFeedDiscovery(false)} 
+      />
     </div>
   )
 }
