@@ -18,6 +18,6 @@ frontend:
     paths:
       - node_modules/**/*
   customRules:
-    - source: '/<*>'
+    - source: '^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|wasm)$)([^.]+$)'
       target: /index.html
       status: '200'
