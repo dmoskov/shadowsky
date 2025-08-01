@@ -10,6 +10,10 @@ frontend:
         - echo "Checking for VITE_ environment variables:"
         - env | grep VITE_ || echo "No VITE_ variables found"
         - npm run build:skip-tsc
+    postBuild:
+      commands:
+        # Create a 404.html that redirects to index.html for client-side routing
+        - cp dist/index.html dist/404.html
   artifacts:
     baseDirectory: dist
     files:
@@ -17,7 +21,3 @@ frontend:
   cache:
     paths:
       - node_modules/**/*
-  customRules:
-    - source: '^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|wasm)$)([^.]+$)'
-      target: /index.html
-      status: '200'
