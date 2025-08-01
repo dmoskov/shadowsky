@@ -7,6 +7,7 @@ import { EmojiPicker } from './EmojiPicker'
 import { isGifFile } from '../utils/gif-to-video'
 import { generateAltText } from '../services/anthropic'
 import { compressImage, isCompressibleImage } from '../utils/image-compression'
+import { debug } from '../shared/debug'
 import { 
   saveDraft, 
   getDrafts, 
@@ -525,11 +526,19 @@ export function Composer() {
       const altText = await generateAltText(mediaItem.preview)
       updateMediaAlt(mediaId, altText)
       setGeneratingAltTextFor(null)
+      debug.log('Alt text generated successfully', { mediaId, altTextLength: altText.length })
     } catch (error) {
       console.error('Failed to generate alt text:', error)
+      debug.error('Alt text generation failed', { 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        mediaId,
+        hasApiKey: !!import.meta.env.VITE_ANTHROPIC_API_KEY
+      })
       setGeneratingAltTextFor(null)
-      // Only show error messages
-      setPostStatus({ type: 'error', message: 'Failed to generate alt text' })
+      
+      // Show more specific error message
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate alt text'
+      setPostStatus({ type: 'error', message: errorMessage })
       setTimeout(() => setPostStatus(null), 3000)
     }
   }, [media, updateMediaAlt])

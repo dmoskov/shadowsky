@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { trackError } from './analytics';
 
 const anthropic = new Anthropic({
   apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY || '',
@@ -7,6 +8,10 @@ const anthropic = new Anthropic({
 
 export async function generateAltText(imageDataUrl: string): Promise<string> {
   try {
+    // Check if API key is configured
+    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
+      throw new Error('Anthropic API key not configured');
+    }
     let base64Data: string;
     let mediaType: string = 'image/jpeg';
     
@@ -78,6 +83,23 @@ export async function generateAltText(imageDataUrl: string): Promise<string> {
     return '';
   } catch (error) {
     console.error('Error generating alt text:', error);
-    throw error;
+    
+    // Track error for analytics
+    trackError(error as Error, {
+      context: 'alt_text_generation',
+      apiKeyPresent: !!import.meta.env.VITE_ANTHROPIC_API_KEY,
+      imageFormat: imageDataUrl.substring(0, 20) // Log start of URL for debugging
+    });
+    
+    // Provide more specific error messages
+    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
+      throw new Error('Alt text generation failed: API key not configured');
+    } else if (error instanceof Error && error.message.includes('401')) {
+      throw new Error('Alt text generation failed: Invalid API key');
+    } else if (error instanceof Error && error.message.includes('429')) {
+      throw new Error('Alt text generation failed: Rate limit exceeded');
+    } else {
+      throw new Error(`Alt text generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 }
