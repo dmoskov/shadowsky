@@ -1327,7 +1327,7 @@ export function Composer() {
             disabled={!text.trim()}
           >
             <Save size={14} />
-            {currentDraftId ? 'Update' : 'Save Draft'}
+            <span className="hidden sm:inline">{currentDraftId ? 'Update' : 'Save Draft'}</span>
           </button>
           
           <button
@@ -1335,7 +1335,7 @@ export function Composer() {
             onClick={() => setShowDrafts(!showDrafts)}
           >
             <FileText size={14} />
-            Drafts ({drafts.length})
+            <span className="hidden sm:inline">Drafts ({drafts.length})</span>
           </button>
           
           {currentDraftId && (
@@ -1364,7 +1364,7 @@ export function Composer() {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4 text-sm">
             <span style={{ color: 'var(--bsky-text-secondary)' }}>
-              {text.length} characters
+              {text.length} <span className="hidden sm:inline">characters</span>
             </span>
             {posts.length > 1 && (
               <>
