@@ -29,6 +29,7 @@ export interface ComposerSettings {
   defaultDelaySeconds: number;
   showSettingsPanel: boolean;
   numberingPosition: 'beginning' | 'end';
+  autoGenerateAltText: boolean;
 }
 
 const DEFAULT_SETTINGS: ComposerSettings = {
@@ -36,6 +37,7 @@ const DEFAULT_SETTINGS: ComposerSettings = {
   defaultDelaySeconds: 3,
   showSettingsPanel: false,
   numberingPosition: 'end',
+  autoGenerateAltText: false,
 };
 
 // Draft management

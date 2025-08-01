@@ -27,12 +27,9 @@
     /* Path mappings */
     "baseUrl": ".",
     "paths": {
-      "@bsky/shared": ["./packages/shared/src"],
-      "@bsky/shared/*": ["./packages/shared/src/*"]
+      "@bsky/shared": ["./src/shared/index.ts"],
+      "@bsky/shared/*": ["./src/shared/*"]
     }
   },
-  "include": ["src"],
-  "references": [
-    { "path": "./packages/shared/tsconfig.json" }
-  ]
+  "include": ["src"]
 }

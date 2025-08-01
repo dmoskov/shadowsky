@@ -65,11 +65,18 @@ export const VisualTimeline: React.FC = () => {
       if (!agent) throw new Error('Not authenticated')
       const response = await agent.listNotifications({ limit: 100 })
       return response.data
-    }
+    },
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !!agent // Only run when agent is available
   })
 
-  // Fetch posts for notifications to show richer content
+
+  // Get notifications from the response
   const notifications = data?.notifications || []
+
+  // Fetch posts for notifications to show richer content
   const { data: posts } = useNotificationPosts(notifications)
   
   // Create a map for quick post lookup
@@ -377,6 +384,65 @@ export const VisualTimeline: React.FC = () => {
     return hour >= 6 && hour < 18
   }
 
+  // Get a color based on the time of day with smooth transitions
+  const getTimeOfDayColor = (date: Date) => {
+    const hour = date.getHours()
+    const minute = date.getMinutes()
+    const timeValue = hour + (minute / 60) // Convert to decimal hours
+    
+    // Define color stops for different times of day (REVERSED for newest-first display)
+    const colorStops = [
+      { time: 0, bg: 'rgba(25, 39, 77, 0.15)', border: 'rgba(55, 65, 81, 0.3)', shadow: 'rgba(17, 24, 39, 0.2)' }, // Midnight - deep blue
+      { time: 4, bg: 'rgba(99, 102, 241, 0.1)', border: 'rgba(79, 70, 229, 0.25)', shadow: 'rgba(67, 56, 202, 0.15)' }, // Early morning - purple (was evening)
+      { time: 6, bg: 'rgba(165, 180, 252, 0.1)', border: 'rgba(129, 140, 248, 0.25)', shadow: 'rgba(99, 102, 241, 0.15)' }, // Dawn - light purple (was dusk)
+      { time: 8, bg: 'rgba(251, 207, 232, 0.1)', border: 'rgba(244, 114, 182, 0.25)', shadow: 'rgba(236, 72, 153, 0.15)' }, // Early morning - pink (was sunset)
+      { time: 10, bg: 'rgba(254, 215, 170, 0.1)', border: 'rgba(251, 191, 36, 0.25)', shadow: 'rgba(245, 158, 11, 0.15)' }, // Morning - orange (was afternoon)
+      { time: 12, bg: 'rgba(254, 240, 138, 0.1)', border: 'rgba(253, 224, 71, 0.3)', shadow: 'rgba(250, 204, 21, 0.2)' }, // Noon - bright yellow
+      { time: 15, bg: 'rgba(254, 243, 199, 0.1)', border: 'rgba(252, 211, 77, 0.25)', shadow: 'rgba(251, 191, 36, 0.15)' }, // Afternoon - warm yellow (was morning)
+      { time: 17, bg: 'rgba(251, 207, 232, 0.1)', border: 'rgba(249, 168, 212, 0.25)', shadow: 'rgba(236, 72, 153, 0.15)' }, // Sunset - light pink (was early morning)
+      { time: 19, bg: 'rgba(236, 72, 153, 0.1)', border: 'rgba(244, 114, 182, 0.25)', shadow: 'rgba(219, 39, 119, 0.15)' }, // Dusk - pink (was dawn)
+      { time: 21, bg: 'rgba(49, 46, 129, 0.15)', border: 'rgba(79, 70, 229, 0.25)', shadow: 'rgba(55, 48, 163, 0.2)' }, // Evening - indigo (was early morning)
+      { time: 24, bg: 'rgba(25, 39, 77, 0.15)', border: 'rgba(55, 65, 81, 0.3)', shadow: 'rgba(17, 24, 39, 0.2)' } // Back to midnight
+    ]
+    
+    // Find the two color stops we're between
+    let prevStop = colorStops[0]
+    let nextStop = colorStops[1]
+    
+    for (let i = 0; i < colorStops.length - 1; i++) {
+      if (timeValue >= colorStops[i].time && timeValue < colorStops[i + 1].time) {
+        prevStop = colorStops[i]
+        nextStop = colorStops[i + 1]
+        break
+      }
+    }
+    
+    // Calculate interpolation factor
+    const factor = (timeValue - prevStop.time) / (nextStop.time - prevStop.time)
+    
+    // Helper function to interpolate between two rgba values
+    const interpolateRgba = (start: string, end: string, factor: number) => {
+      // Extract rgba values using regex
+      const startMatch = start.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/)
+      const endMatch = end.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/)
+      
+      if (!startMatch || !endMatch) return start
+      
+      const r = Math.round(parseInt(startMatch[1]) + (parseInt(endMatch[1]) - parseInt(startMatch[1])) * factor)
+      const g = Math.round(parseInt(startMatch[2]) + (parseInt(endMatch[2]) - parseInt(startMatch[2])) * factor)
+      const b = Math.round(parseInt(startMatch[3]) + (parseInt(endMatch[3]) - parseInt(startMatch[3])) * factor)
+      const a = parseFloat(startMatch[4]) + (parseFloat(endMatch[4]) - parseFloat(startMatch[4])) * factor
+      
+      return `rgba(${r}, ${g}, ${b}, ${a})`
+    }
+    
+    return {
+      backgroundColor: interpolateRgba(prevStop.bg, nextStop.bg, factor),
+      borderColor: interpolateRgba(prevStop.border, nextStop.border, factor),
+      shadowColor: interpolateRgba(prevStop.shadow, nextStop.shadow, factor)
+    }
+  }
+
   const getReasonIcon = (reason: string) => {
     switch (reason) {
       case 'like': return <Heart size={14} style={{ color: 'var(--bsky-text-secondary)' }} />
@@ -428,7 +494,7 @@ export const VisualTimeline: React.FC = () => {
       <div className="relative p-4 sm:p-6">
         {/* Timeline line */}
         <div 
-          className="absolute left-[5rem] sm:left-[7.5rem] top-0 bottom-0 w-0.5"
+          className="absolute left-[1.5rem] sm:left-[6.5rem] top-0 bottom-0 w-0.5"
           style={{ 
             background: 'linear-gradient(to bottom, var(--bsky-border-color) 0%, var(--bsky-border-color) 100%)',
             position: 'relative' 
@@ -438,17 +504,30 @@ export const VisualTimeline: React.FC = () => {
         {eventsByDay.map((dayGroup, dayIndex) => (
           <div key={dayGroup.label}>
             {/* Sticky day label */}
-            <div className="timeline-day-header sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-3" style={{ 
-              backgroundColor: 'var(--bsky-bg-primary)',
-              borderBottom: '1px solid var(--bsky-border-color)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-            }}>
+            <div 
+              className="timeline-day-header -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-3" 
+              style={{ 
+                position: '-webkit-sticky',
+                position: 'sticky',
+                top: '-1px', // iOS Safari fix
+                zIndex: 30,
+                backgroundColor: 'var(--bsky-bg-primary)',
+                borderBottom: '1px solid var(--bsky-border-color)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                // iOS Safari fixes
+                transform: 'translateZ(0)',
+                willChange: 'transform'
+              }}>
               <div className="flex items-center gap-2">
                 <div 
                   className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: 'var(--bsky-primary)' }}
+                  style={{ 
+                    backgroundColor: dayGroup.events.length > 0 
+                      ? getTimeOfDayColor(dayGroup.events[0].time).borderColor.replace(/[\d.]+\)$/, '1)')
+                      : 'var(--bsky-primary)' 
+                  }}
                 />
                 <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--bsky-text-secondary)' }}>
                   {dayGroup.label}
@@ -468,10 +547,10 @@ export const VisualTimeline: React.FC = () => {
                   className={`relative ${spacingClass}`}
                 >
                   {/* Time and event */}
-                  <div className="flex gap-4 items-start timeline-event">
-                {/* Time */}
-                <div className="w-24 text-right text-sm pt-2 timeline-time-label">
-                  <span className="font-medium" style={{ 
+                  <div className="flex gap-2 sm:gap-4 items-start timeline-event">
+                {/* Time - hide text on mobile, show only on desktop */}
+                <div className="w-3 sm:w-20 text-right text-xs sm:text-sm pt-2 timeline-time-label">
+                  <span className="hidden sm:inline font-medium" style={{ 
                     color: isDayTime(event.time) ? '#d97706' : '#6366f1',
                     opacity: 0.8
                   }}>
@@ -480,11 +559,11 @@ export const VisualTimeline: React.FC = () => {
                 </div>
 
                 {/* Timeline dot */}
-                <div className="relative flex-shrink-0" style={{ paddingTop: '14px' }}>
+                <div className="relative flex-shrink-0 px-1 sm:px-0" style={{ paddingTop: '14px' }}>
                   <div 
                     className={`${event.aggregationType === 'post-burst' ? 'w-3 h-3' : 'w-2 h-2'} rounded-full`}
                     style={{ 
-                      backgroundColor: isDayTime(event.time) ? '#fbbf24' : '#6366f1',
+                      backgroundColor: getTimeOfDayColor(event.time).borderColor.replace(/[\d.]+\)$/, '1)'), // Use solid color for dot
                       opacity: event.aggregationType === 'post-burst' ? '0.9' : '0.7'
                     }}
                   />
@@ -501,14 +580,10 @@ export const VisualTimeline: React.FC = () => {
                     event.aggregationType === 'user-activity' ? 'timeline-user-activity' : ''
                   }`}
                   style={{ 
-                    backgroundColor: isDayTime(event.time) 
-                      ? 'rgba(254, 243, 199, 0.1)' // Warm yellow tint for day
-                      : 'rgba(199, 210, 254, 0.1)', // Cool blue tint for night
-                    border: `1px solid ${isDayTime(event.time) ? 'rgba(251, 191, 36, 0.2)' : 'rgba(99, 102, 241, 0.2)'}`,
+                    backgroundColor: getTimeOfDayColor(event.time).backgroundColor,
+                    border: `1px solid ${getTimeOfDayColor(event.time).borderColor}`,
                     borderRadius: '8px',
-                    boxShadow: isDayTime(event.time)
-                      ? '0 1px 3px rgba(251, 191, 36, 0.1)' // Warm shadow for day
-                      : '0 1px 3px rgba(99, 102, 241, 0.1)' // Cool shadow for night
+                    boxShadow: `0 1px 3px ${getTimeOfDayColor(event.time).shadowColor}`
                   }}
                 >
                   {/* Single notification */}
@@ -527,20 +602,22 @@ export const VisualTimeline: React.FC = () => {
                             className="w-8 h-8 rounded-full"
                           />
                         </a>
-                        <div className="flex-1 flex items-center gap-2">
-                          {getReasonIcon(event.notifications[0].reason)}
-                          <a 
-                            href={getProfileUrl(event.notifications[0].author.handle)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-medium text-sm hover:underline"
-                            style={{ color: 'var(--bsky-primary)' }}
-                          >
-                            {event.notifications[0].author.displayName || event.notifications[0].author.handle}
-                          </a>
-                          <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            {getReasonIcon(event.notifications[0].reason)}
+                            <a 
+                              href={getProfileUrl(event.notifications[0].author.handle)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-sm hover:underline"
+                              style={{ color: 'var(--bsky-primary)' }}
+                            >
+                              {event.notifications[0].author.displayName || event.notifications[0].author.handle}
+                            </a>
+                          </div>
+                          <div className="text-xs sm:text-sm mt-0.5" style={{ color: 'var(--bsky-text-secondary)' }}>
                             {getActionText(event.notifications[0].reason)}
-                          </span>
+                          </div>
                         </div>
                       </div>
                       {/* Show post preview for single notifications too */}
@@ -988,7 +1065,7 @@ export const VisualTimeline: React.FC = () => {
             style={{ backgroundColor: 'var(--bsky-border-color)' }}
           />
           <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
-            End of timeline
+            {notifications.length === 0 ? 'No notifications yet' : `${notifications.length} recent notifications`}
           </span>
         </div>
       </div>

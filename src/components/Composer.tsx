@@ -1,10 +1,11 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
-import { Send, Split, Settings, AlertCircle, CheckCircle, Loader, Image, X, Video, Save, Clock, FileText, Trash2, Undo, Smile, Plus, GripVertical } from 'lucide-react'
+import { Send, Split, Settings, AlertCircle, CheckCircle, Loader, Image, X, Video, Save, Clock, FileText, Trash2, Undo, Smile, Plus, GripVertical, Sparkles } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { VideoUploadService } from '../services/atproto/video-upload'
 import { GiphySearch } from './GiphySearch'
 import { EmojiPicker } from './EmojiPicker'
 import { isGifFile } from '../utils/gif-to-video'
+import { generateAltText } from '../services/anthropic'
 import { 
   saveDraft, 
   getDrafts, 
@@ -79,7 +80,7 @@ export function Composer() {
   const [numberingFormat, setNumberingFormat] = useState<'none' | 'simple' | 'brackets' | 'thread' | 'dots'>('simple')
   const [showSettings, setShowSettings] = useState(false)
   const [isPosting, setIsPosting] = useState(false)
-  const [postStatus, setPostStatus] = useState<{ type: 'idle' | 'posting' | 'success' | 'error', message?: string }>({ type: 'idle' })
+  const [postStatus, setPostStatus] = useState<{ type: 'idle' | 'posting' | 'success' | 'error' | 'loading', message?: string } | null>({ type: 'idle' })
   const [media, setMedia] = useState<UploadedMedia[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadingVideo, setUploadingVideo] = useState(false)
@@ -93,13 +94,16 @@ export function Composer() {
   const [numberingPosition, setNumberingPosition] = useState<'beginning' | 'end'>('end')
   const [countdown, setCountdown] = useState<number | null>(null)
   const [pendingPost, setPendingPost] = useState<{ posts: string[], media: UploadedMedia[] } | null>(null)
+  const [autoGenerateAltText, setAutoGenerateAltText] = useState(false)
   const countdownInterval = useRef<NodeJS.Timeout | null>(null)
   const sendTimeout = useRef<NodeJS.Timeout | null>(null)
+  const autoGenerateAltTextRef = useRef<((mediaId: string) => Promise<void>) | null>(null)
   
   // Drag and drop state
   const [draggedMedia, setDraggedMedia] = useState<UploadedMedia | null>(null)
   const [dragOverPostIndex, setDragOverPostIndex] = useState<number | null>(null)
   const [dragOverMediaId, setDragOverMediaId] = useState<string | null>(null)
+  const [generatingAltTextFor, setGeneratingAltTextFor] = useState<string | null>(null)
   
   // Post reordering state
   const [postOrder, setPostOrder] = useState<number[]>([])
@@ -122,6 +126,7 @@ export function Composer() {
     setShowSettings(settings.showSettingsPanel)
     setDelaySeconds(settings.defaultDelaySeconds)
     setNumberingPosition(settings.numberingPosition || 'end')
+    setAutoGenerateAltText(settings.autoGenerateAltText || false)
   }, [])
   
   // Save settings when they change
@@ -130,9 +135,10 @@ export function Composer() {
       numberingFormat,
       showSettingsPanel: showSettings,
       defaultDelaySeconds: delaySeconds,
-      numberingPosition
+      numberingPosition,
+      autoGenerateAltText
     })
-  }, [numberingFormat, showSettings, delaySeconds, numberingPosition])
+  }, [numberingFormat, showSettings, delaySeconds, numberingPosition, autoGenerateAltText])
   
   // Load drafts
   useEffect(() => {
@@ -310,12 +316,19 @@ export function Composer() {
       setPostStatus({ type: 'success', message: 'Image pasted!' })
       setTimeout(() => setPostStatus({ type: 'idle' }), 2000)
       
+      // Auto-generate alt text if enabled
+      if (autoGenerateAltText && autoGenerateAltTextRef.current) {
+        setTimeout(() => {
+          autoGenerateAltTextRef.current?.(newMedia.id)
+        }, 100)
+      }
+      
       // Stop if we've reached the limit
       if (media.filter(m => m.type === 'image').length + 1 >= MAX_IMAGES_PER_POST) {
         break
       }
     }
-  }, [media])
+  }, [media, autoGenerateAltText])
 
   const handleMediaSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -439,6 +452,13 @@ export function Composer() {
           type: file.type.startsWith('video/') ? 'video' : 'image'
         }
         setMedia(prev => [...prev, newMedia])
+        
+        // Auto-generate alt text if enabled and it's an image
+        if (autoGenerateAltText && newMedia.type === 'image' && autoGenerateAltTextRef.current) {
+          setTimeout(() => {
+            autoGenerateAltTextRef.current?.(newMedia.id)
+          }, 100)
+        }
       }
     }
     
@@ -446,7 +466,7 @@ export function Composer() {
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
-  }, [media])
+  }, [media, autoGenerateAltText])
 
   const removeMedia = useCallback((id: string) => {
     setMedia(prev => {
@@ -463,6 +483,30 @@ export function Composer() {
       m.id === id ? { ...m, alt } : m
     ))
   }, [])
+
+  const autoGenerateAltTextForMedia = useCallback(async (mediaId: string) => {
+    const mediaItem = media.find(m => m.id === mediaId)
+    if (!mediaItem || mediaItem.type !== 'image') return
+
+    setGeneratingAltTextFor(mediaId)
+    
+    try {
+      const altText = await generateAltText(mediaItem.preview)
+      updateMediaAlt(mediaId, altText)
+      setGeneratingAltTextFor(null)
+    } catch (error) {
+      console.error('Failed to generate alt text:', error)
+      setGeneratingAltTextFor(null)
+      // Only show error messages
+      setPostStatus({ type: 'error', message: 'Failed to generate alt text' })
+      setTimeout(() => setPostStatus(null), 3000)
+    }
+  }, [media, updateMediaAlt])
+  
+  // Store the function in a ref so it can be used in other callbacks
+  useEffect(() => {
+    autoGenerateAltTextRef.current = autoGenerateAltTextForMedia
+  }, [autoGenerateAltTextForMedia])
 
   // Drag and drop handlers
   const handleDragStart = useCallback((e: React.DragEvent, media: UploadedMedia) => {
@@ -1149,6 +1193,20 @@ export function Composer() {
                 </div>
                 
                 <div className="flex items-center gap-2">
+                  <input
+                    id="auto-alt-text"
+                    type="checkbox"
+                    checked={autoGenerateAltText}
+                    onChange={(e) => setAutoGenerateAltText(e.target.checked)}
+                    className="rounded"
+                  />
+                  <label htmlFor="auto-alt-text" className="text-xs flex items-center gap-1" style={{ color: 'var(--bsky-text-secondary)' }}>
+                    <Sparkles size={12} />
+                    Auto-generate alt text
+                  </label>
+                </div>
+                
+                <div className="flex items-center gap-2">
                   <label htmlFor="send-delay" className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>Delay:</label>
                   <input
                     id="send-delay"
@@ -1172,6 +1230,7 @@ export function Composer() {
                 {numberingFormat !== 'none' && `${NUMBERING_FORMATS.find(f => f.id === numberingFormat)?.name} • `}
                 {numberingPosition === 'beginning' ? 'Start' : 'End'} • 
                 {delaySeconds > 0 ? ` ${delaySeconds}s delay` : ' Instant'}
+                {autoGenerateAltText && ' • Auto-alt'}
               </span>
             )}
           </div>
@@ -1451,15 +1510,26 @@ export function Composer() {
                 onDrop={(e) => handleMediaDrop(e, m)}
                 onDragLeave={() => setDragOverMediaId(null)}
               >
-                {m.type === 'video' ? (
-                  <video 
-                    src={m.preview} 
-                    controls 
-                    className="w-full h-32 object-cover pointer-events-none"
-                  />
-                ) : (
-                  <img src={m.preview} alt={m.alt || 'Upload preview'} className="w-full h-32 object-cover pointer-events-none" />
-                )}
+                <div className="relative w-full h-32 group/image">
+                  {m.type === 'video' ? (
+                    <video 
+                      src={m.preview} 
+                      controls 
+                      className="w-full h-full object-cover pointer-events-none"
+                    />
+                  ) : (
+                    <>
+                      <img src={m.preview} alt={m.alt || 'Upload preview'} className="w-full h-full object-cover pointer-events-none" />
+                      {m.alt && (
+                        <div className="absolute inset-0 bg-black bg-opacity-75 opacity-0 group-hover/image:opacity-100 transition-opacity duration-200 flex items-center justify-center p-3 pointer-events-none">
+                          <p className="text-white text-xs text-center line-clamp-4">
+                            {m.alt}
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
                 <button
                   className="absolute top-2 right-2 p-1 rounded-full bg-black bg-opacity-70 text-white hover:bg-opacity-90 transition-all"
                   onClick={() => removeMedia(m.id)}
@@ -1472,14 +1542,46 @@ export function Composer() {
                     <path d="M7 11V7a5 5 0 0110 0v4m-5-4v10m-4-6h8" />
                   </svg>
                 </div>
-                <input
-                  type="text"
-                  placeholder="Alt text (optional)"
-                  value={m.alt}
-                  onChange={(e) => updateMediaAlt(m.id, e.target.value)}
-                  className="w-full p-2 text-sm border-t focus:outline-none"
-                  style={{ borderColor: 'var(--bsky-border-primary)', background: 'var(--bsky-bg-primary)', color: 'var(--bsky-text-primary)' }}
-                />
+                <div className="relative border-t" style={{ borderColor: 'var(--bsky-border-primary)' }}>
+                  <textarea
+                    placeholder="Alt text (optional)"
+                    value={m.alt}
+                    onChange={(e) => updateMediaAlt(m.id, e.target.value)}
+                    className="w-full p-2 pr-10 text-sm resize-none focus:outline-none"
+                    rows={2}
+                    style={{ 
+                      background: 'var(--bsky-bg-primary)', 
+                      color: 'var(--bsky-text-primary)',
+                      minHeight: '3.5rem'
+                    }}
+                  />
+                  {m.type === 'image' && (
+                    <button
+                      onClick={() => autoGenerateAltTextForMedia(m.id)}
+                      className={`absolute right-2 top-2 p-1.5 rounded-lg transition-all ${
+                        generatingAltTextFor === m.id 
+                          ? 'bg-blue-100 dark:bg-blue-900 animate-pulse' 
+                          : 'hover:bg-gray-100 dark:hover:bg-gray-800 hover:scale-110'
+                      }`}
+                      disabled={generatingAltTextFor !== null}
+                      title="Generate alt text with AI"
+                    >
+                      {generatingAltTextFor === m.id ? (
+                        <Loader 
+                          size={16} 
+                          className="animate-spin"
+                          style={{ color: 'var(--bsky-primary)' }}
+                        />
+                      ) : (
+                        <Sparkles 
+                          size={16} 
+                          className="transition-transform"
+                          style={{ color: 'var(--bsky-text-secondary)' }} 
+                        />
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -1670,7 +1772,7 @@ export function Composer() {
       )}
       
       <div className="flex flex-col gap-4 items-end">
-        {postStatus.type !== 'idle' && (
+        {postStatus && postStatus.type !== 'idle' && (
           <div className={`w-full flex items-center gap-3 p-4 rounded-lg border ${
             postStatus.type === 'posting' ? 'bg-blue-50 border-blue-200' :
             postStatus.type === 'success' ? 'bg-green-50 border-green-200' :
