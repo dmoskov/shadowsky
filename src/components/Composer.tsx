@@ -6,6 +6,7 @@ import { GiphySearch } from './GiphySearch'
 import { EmojiPicker } from './EmojiPicker'
 import { isGifFile } from '../utils/gif-to-video'
 import { generateAltText } from '../services/anthropic'
+import { compressImage, isCompressibleImage } from '../utils/image-compression'
 import { 
   saveDraft, 
   getDrafts, 
@@ -67,7 +68,7 @@ const NUMBERING_FORMATS: NumberingFormat[] = [
 ]
 
 const MAX_POST_LENGTH = 300
-const MAX_IMAGE_SIZE = 1024 * 1024 // 1MB
+const MAX_IMAGE_SIZE = 1000000 // 1MB (Bluesky's exact limit)
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024 // 50MB
 const MAX_IMAGES_PER_POST = 4
 const MAX_VIDEO_LENGTH = 60 // seconds
@@ -294,14 +295,21 @@ export function Composer() {
       const blob = item.getAsFile()
       if (!blob) continue
       
-      // Check file size
-      if (blob.size > MAX_IMAGE_SIZE && !isGifFile(blob)) {
-        setPostStatus({ type: 'error', message: `Pasted image is too large (max 1MB)` })
-        continue
-      }
-      
       // Convert blob to File object
-      const file = new File([blob], `pasted-image-${Date.now()}.${blob.type.split('/')[1]}`, { type: blob.type })
+      let file = new File([blob], `pasted-image-${Date.now()}.${blob.type.split('/')[1]}`, { type: blob.type })
+      
+      // Compress if needed
+      if (file.size > MAX_IMAGE_SIZE && isCompressibleImage(file)) {
+        try {
+          setPostStatus({ type: 'loading', message: 'Compressing image...' })
+          file = await compressImage(file)
+          setPostStatus(null)
+        } catch (error) {
+          console.error('Failed to compress image:', error)
+          setPostStatus({ type: 'error', message: 'Failed to compress image' })
+          continue
+        }
+      }
       
       // Add to media
       const newMedia: UploadedMedia = {
@@ -361,10 +369,7 @@ export function Composer() {
         return false
       }
       
-      if (isImage && file.size > MAX_IMAGE_SIZE && !isGifFile(file)) {
-        setPostStatus({ type: 'error', message: `${file.name} is too large (max 1MB for images)` })
-        return false
-      }
+      // Images will be compressed if needed, so don't reject them
       
       if (isVideo && file.size > MAX_VIDEO_SIZE) {
         setPostStatus({ type: 'error', message: `${file.name} is too large (max 50MB for videos)` })
@@ -433,10 +438,21 @@ export function Composer() {
           setPostStatus({ type: 'error', message: 'Failed to convert GIF. Using static image.' })
           
           // Fall back to static image
+          let processedFile = file
+          
+          // Compress if needed
+          if (file.size > MAX_IMAGE_SIZE && isCompressibleImage(file)) {
+            try {
+              processedFile = await compressImage(file)
+            } catch (error) {
+              console.error('Failed to compress GIF fallback:', error)
+            }
+          }
+          
           const newMedia: UploadedMedia = {
             id: Math.random().toString(36).substr(2, 9),
-            file,
-            preview: URL.createObjectURL(file),
+            file: processedFile,
+            preview: URL.createObjectURL(processedFile),
             alt: '',
             type: 'image'
           }
@@ -444,12 +460,27 @@ export function Composer() {
         }
       } else {
         // Handle regular images and videos
+        let processedFile = file
+        
+        // Compress image if needed
+        if (!file.type.startsWith('video/') && file.size > MAX_IMAGE_SIZE && isCompressibleImage(file)) {
+          try {
+            setPostStatus({ type: 'loading', message: `Compressing ${file.name}...` })
+            processedFile = await compressImage(file)
+            setPostStatus({ type: 'success', message: 'Image compressed!' })
+            setTimeout(() => setPostStatus(null), 2000)
+          } catch (error) {
+            console.error('Failed to compress image:', error)
+            // Continue with original file if compression fails
+          }
+        }
+        
         const newMedia: UploadedMedia = {
           id: Math.random().toString(36).substr(2, 9),
-          file,
-          preview: URL.createObjectURL(file),
+          file: processedFile,
+          preview: URL.createObjectURL(processedFile),
           alt: '',
-          type: file.type.startsWith('video/') ? 'video' : 'image'
+          type: processedFile.type.startsWith('video/') ? 'video' : 'image'
         }
         setMedia(prev => [...prev, newMedia])
         
