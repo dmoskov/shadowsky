@@ -507,8 +507,8 @@ export const VisualTimeline: React.FC = () => {
             <div 
               className="timeline-day-header -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-3" 
               style={{ 
-                position: '-webkit-sticky',
                 position: 'sticky',
+                WebkitPosition: 'sticky' as any,
                 top: '-1px', // iOS Safari fix
                 zIndex: 30,
                 backgroundColor: 'var(--bsky-bg-primary)',
