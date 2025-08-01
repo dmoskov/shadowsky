@@ -29,11 +29,6 @@ export const NotificationsFeed: React.FC = () => {
   const [showConfigModal, setShowConfigModal] = useState(false)
   const [isFromCache, setIsFromCache] = useState(false)
   const [showMoreFilters, setShowMoreFilters] = useState(false)
-  const [compactTabs, setCompactTabs] = useState(() => {
-    // Load from localStorage if available
-    const saved = localStorage.getItem('notificationTabsCompact')
-    return saved === 'true'
-  })
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const moreFiltersRef = useRef<HTMLDivElement>(null)
   
@@ -357,7 +352,7 @@ export const NotificationsFeed: React.FC = () => {
         {/* Filter tabs */}
         <div className="flex gap-1 items-center">
           {/* Primary tabs - always visible */}
-          <div className={`flex gap-1 flex-1 min-w-0 overflow-x-auto bsky-tabs-container ${compactTabs ? 'bsky-tabs-icon-only' : ''}`}>
+          <div className="flex gap-1 flex-1 min-w-0 overflow-x-auto bsky-tabs-container bsky-tabs-icon-only-desktop">
             <FilterTab
               active={filter === 'all'}
               onClick={() => handleFilterChange('all')}
@@ -548,32 +543,6 @@ export const NotificationsFeed: React.FC = () => {
                 )}
               </div>
             )}
-          </div>
-          
-          {/* Compact mode toggle for desktop */}
-          <div className="hidden md:block">
-            <button
-              onClick={() => {
-                const newValue = !compactTabs
-                setCompactTabs(newValue)
-                localStorage.setItem('notificationTabsCompact', String(newValue))
-              }}
-              className="p-2 rounded-lg hover:bg-opacity-10 hover:bg-blue-500 transition-all"
-              title={compactTabs ? "Show tab labels" : "Hide tab labels"}
-              style={{ color: 'var(--bsky-text-secondary)' }}
-            >
-              {compactTabs ? (
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="1" y="6" width="4" height="4" rx="1" fill="currentColor" opacity="0.7"/>
-                  <rect x="6" y="6" width="8" height="4" rx="1" fill="currentColor"/>
-                </svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="1" y="6" width="4" height="4" rx="1" fill="currentColor"/>
-                  <rect x="6" y="6" width="8" height="4" rx="1" fill="currentColor" opacity="0.7"/>
-                </svg>
-              )}
-            </button>
           </div>
         </div>
         </div>

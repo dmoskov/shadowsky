@@ -223,17 +223,17 @@
   @apply text-xs;
 }
 
-/* Icon-only mode for desktop */
+/* Icon-only mode for desktop by default */
 @media (min-width: 769px) {
-  .bsky-tabs-icon-only .bsky-tab-label {
+  .bsky-tabs-icon-only-desktop .bsky-tab-label {
     display: none;
   }
 
-  .bsky-tabs-icon-only .bsky-tab {
+  .bsky-tabs-icon-only-desktop .bsky-tab {
     @apply px-3;
   }
 
-  .bsky-tabs-icon-only .bsky-tab-count {
+  .bsky-tabs-icon-only-desktop .bsky-tab-count {
     @apply ml-1 text-xs;
   }
 }
