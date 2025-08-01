@@ -197,9 +197,11 @@
 
 /* Tab styles */
 .bsky-tab {
-  @apply relative px-4 py-2 font-medium text-sm transition-all duration-200;
+  @apply relative px-3 py-2 font-medium text-sm transition-all duration-200 whitespace-nowrap;
   color: var(--bsky-text-secondary);
   @apply hover:text-opacity-80;
+  min-width: fit-content;
+  flex-shrink: 0;
 }
 
 .bsky-tab-active {
@@ -210,6 +212,30 @@
   content: '';
   @apply absolute bottom-0 left-0 right-0 h-0.5;
   background: linear-gradient(90deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%);
+}
+
+/* Compact mode for tabs */
+.bsky-tabs-compact .bsky-tab {
+  @apply px-2 py-1.5;
+}
+
+.bsky-tabs-compact .bsky-tab-label {
+  @apply text-xs;
+}
+
+/* Icon-only mode for desktop */
+@media (min-width: 769px) {
+  .bsky-tabs-icon-only .bsky-tab-label {
+    display: none;
+  }
+
+  .bsky-tabs-icon-only .bsky-tab {
+    @apply px-3;
+  }
+
+  .bsky-tabs-icon-only .bsky-tab-count {
+    @apply ml-1 text-xs;
+  }
 }
 
 /* Loading animation */
@@ -278,10 +304,42 @@
   max-width: 100%;
   flex-shrink: 1;
   -ms-overflow-style: none;
+  scroll-behavior: smooth;
+  position: relative;
 }
 
 .bsky-tabs-container::-webkit-scrollbar {
   display: none;
+}
+
+/* Add subtle fade indicators for scrollable tabs */
+.bsky-tabs-container::before,
+.bsky-tabs-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.bsky-tabs-container::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bsky-bg-primary), transparent);
+}
+
+.bsky-tabs-container::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bsky-bg-primary), transparent);
+}
+
+/* Show fade indicators when scrollable */
+.bsky-tabs-container.has-scroll::before,
+.bsky-tabs-container.has-scroll::after {
+  opacity: 1;
 }
 
 /* Hide tab labels on small screens */
