@@ -1,13 +1,14 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
-import { Send, Split, Settings, AlertCircle, CheckCircle, Loader, Image, X, Video, Save, Clock, FileText, Trash2, Undo, Smile, Plus, GripVertical, Sparkles } from 'lucide-react'
+import { Send, Split, Settings, AlertCircle, CheckCircle, Loader, Image, X, Video, Save, FileText, Trash2, Undo, Smile, Plus, GripVertical, Sparkles, Wand2 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { VideoUploadService } from '../services/atproto/video-upload'
 import { GiphySearch } from './GiphySearch'
 import { EmojiPicker } from './EmojiPicker'
 import { isGifFile } from '../utils/gif-to-video'
-import { generateAltText } from '../services/anthropic'
+import { generateAltText, adjustTone, type ToneOption } from '../services/anthropic'
 import { compressImage, isCompressibleImage } from '../utils/image-compression'
 import { debug } from '../shared/debug'
+import { analytics } from '../services/analytics'
 import { 
   saveDraft, 
   getDrafts, 
@@ -68,11 +69,18 @@ const NUMBERING_FORMATS: NumberingFormat[] = [
   }
 ]
 
+const TONE_OPTIONS: { value: ToneOption; label: string; description: string; icon: string }[] = [
+  { value: 'professional', label: 'Professional', description: 'Formal and business-like', icon: '💼' },
+  { value: 'casual', label: 'Casual', description: 'Relaxed and friendly', icon: '😊' },
+  { value: 'humorous', label: 'Humorous', description: 'Witty and playful', icon: '😄' },
+  { value: 'informative', label: 'Informative', description: 'Educational and clear', icon: '📚' },
+  { value: 'inspirational', label: 'Inspirational', description: 'Motivating and uplifting', icon: '✨' }
+]
+
 const MAX_POST_LENGTH = 300
 const MAX_IMAGE_SIZE = 1000000 // 1MB (Bluesky's exact limit)
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024 // 50MB
 const MAX_IMAGES_PER_POST = 4
-const MAX_VIDEO_LENGTH = 60 // seconds
 const SUPPORTED_VIDEO_FORMATS = ['.mp4', '.mpeg', '.webm', '.mov']
 
 export function Composer() {
@@ -117,6 +125,13 @@ export function Composer() {
   const [showGiphySearch, setShowGiphySearch] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  
+  // Tone adjustment state
+  const [showToneOptions, setShowToneOptions] = useState(false)
+  const [selectedTone, setSelectedTone] = useState<ToneOption | null>(null)
+  const [isAdjustingTone, setIsAdjustingTone] = useState(false)
+  const [tonePreview, setTonePreview] = useState<string | null>(null)
+  const [showTonePreview, setShowTonePreview] = useState(false)
   
   // Check if we're in development mode
   const isDev = import.meta.env.DEV
@@ -1177,6 +1192,95 @@ export function Composer() {
     }
   }, [text])
 
+  // Handle tone adjustment
+  const handleToneAdjustment = useCallback(async (tone: ToneOption) => {
+    if (!text.trim()) {
+      setPostStatus({ type: 'error', message: 'Please write some text first' })
+      return
+    }
+
+    setIsAdjustingTone(true)
+    setSelectedTone(tone)
+    
+    // Track tone adjustment request
+    analytics.trackEvent({
+      category: 'composer',
+      action: 'tone_adjustment_requested',
+      label: tone,
+      custom_parameters: {
+        text_length: text.length,
+        has_posts: posts.length > 0
+      }
+    })
+    
+    try {
+      const result = await adjustTone(text, tone)
+      setTonePreview(result.adjustedText)
+      setShowTonePreview(true)
+      setShowToneOptions(false)
+      debug.log('Tone adjusted successfully', { tone, originalLength: text.length, adjustedLength: result.adjustedText.length })
+      
+      // Track successful tone adjustment
+      analytics.trackEvent({
+        category: 'composer',
+        action: 'tone_adjustment_success',
+        label: tone,
+        custom_parameters: {
+          original_length: text.length,
+          adjusted_length: result.adjustedText.length,
+          length_change: result.adjustedText.length - text.length
+        }
+      })
+    } catch (error) {
+      console.error('Failed to adjust tone:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to adjust tone'
+      setPostStatus({ type: 'error', message: errorMessage })
+      setSelectedTone(null)
+      
+      // Track tone adjustment error
+      analytics.trackEvent({
+        category: 'composer',
+        action: 'tone_adjustment_error',
+        label: tone,
+        custom_parameters: {
+          error_message: errorMessage
+        }
+      })
+    } finally {
+      setIsAdjustingTone(false)
+    }
+  }, [text, posts.length])
+
+  // Apply tone adjustment
+  const applyToneAdjustment = useCallback(() => {
+    if (tonePreview && selectedTone) {
+      setText(tonePreview)
+      setTonePreview(null)
+      setShowTonePreview(false)
+      
+      // Track tone application
+      analytics.trackEvent({
+        category: 'composer',
+        action: 'tone_adjustment_applied',
+        label: selectedTone,
+        custom_parameters: {
+          final_length: tonePreview.length
+        }
+      })
+      
+      setSelectedTone(null)
+      setPostStatus({ type: 'success', message: 'Tone adjusted!' })
+      setTimeout(() => setPostStatus({ type: 'idle' }), 2000)
+    }
+  }, [tonePreview, selectedTone])
+
+  // Cancel tone adjustment
+  const cancelToneAdjustment = useCallback(() => {
+    setTonePreview(null)
+    setShowTonePreview(false)
+    setSelectedTone(null)
+  }, [])
+
   // Cleanup previews on unmount
   useEffect(() => {
     return () => {
@@ -1500,6 +1604,25 @@ export function Composer() {
                 <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap">
                   <div className="font-semibold mb-1">Add Emoji</div>
                   <div>Insert emoji at cursor</div>
+                  <div className="absolute bottom-0 right-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="relative group">
+              <button
+                className={`bsky-button-secondary flex items-center gap-2 ${selectedTone ? 'ring-2 ring-blue-400' : ''}`}
+                onClick={() => setShowToneOptions(!showToneOptions)}
+                disabled={isPosting || isAdjustingTone}
+                aria-label="Adjust tone"
+              >
+                <Wand2 size={20} />
+                {selectedTone && <span className="text-xs hidden sm:inline">{TONE_OPTIONS.find(t => t.value === selectedTone)?.icon}</span>}
+              </button>
+              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block z-10">
+                <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap">
+                  <div className="font-semibold mb-1">Adjust Tone</div>
+                  <div>AI-powered tone adjustment</div>
                   <div className="absolute bottom-0 right-4 transform translate-y-1/2 rotate-45 w-2 h-2 bg-gray-900"></div>
                 </div>
               </div>
@@ -1852,6 +1975,122 @@ export function Composer() {
           onSelectEmoji={handleSelectEmoji}
           onClose={() => setShowEmojiPicker(false)}
         />
+      )}
+      
+      {/* Tone Options Dropdown */}
+      {showToneOptions && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowToneOptions(false)}>
+          <div 
+            className="bsky-card p-4 max-w-md w-full shadow-lg" 
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxHeight: '80vh', overflowY: 'auto' }}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2" style={{ color: 'var(--bsky-text-primary)' }}>
+                <Wand2 size={20} />
+                Choose a Tone
+              </h3>
+              <button 
+                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+                onClick={() => setShowToneOptions(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="space-y-2">
+              {TONE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
+                    isAdjustingTone ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-400'
+                  }`}
+                  style={{ 
+                    borderColor: 'var(--bsky-border-primary)',
+                    background: 'var(--bsky-bg-secondary)'
+                  }}
+                  onClick={() => handleToneAdjustment(option.value)}
+                  disabled={isAdjustingTone}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{option.icon}</span>
+                    <div className="flex-1">
+                      <div className="font-medium" style={{ color: 'var(--bsky-text-primary)' }}>
+                        {option.label}
+                      </div>
+                      <div className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                        {option.description}
+                      </div>
+                    </div>
+                    {isAdjustingTone && selectedTone === option.value && (
+                      <Loader size={16} className="animate-spin" style={{ color: 'var(--bsky-primary)' }} />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Tone Preview Modal */}
+      {showTonePreview && tonePreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0, 0, 0, 0.5)' }}>
+          <div 
+            className="bsky-card p-6 max-w-2xl w-full shadow-xl" 
+            style={{ maxHeight: '80vh', overflowY: 'auto' }}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2" style={{ color: 'var(--bsky-text-primary)' }}>
+                <Wand2 size={20} />
+                Tone Adjusted - {TONE_OPTIONS.find(t => t.value === selectedTone)?.label}
+                <span className="text-2xl ml-2">{TONE_OPTIONS.find(t => t.value === selectedTone)?.icon}</span>
+              </h3>
+              <button 
+                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+                onClick={cancelToneAdjustment}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>Original:</h4>
+                <div className="p-3 rounded-lg" style={{ background: 'var(--bsky-bg-secondary)', color: 'var(--bsky-text-primary)' }}>
+                  {text}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>Adjusted:</h4>
+                <div className="p-3 rounded-lg border-2" style={{ 
+                  background: 'var(--bsky-bg-secondary)', 
+                  color: 'var(--bsky-text-primary)',
+                  borderColor: 'var(--bsky-primary)'
+                }}>
+                  {tonePreview}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6 justify-end">
+              <button
+                className="bsky-button-secondary px-4 py-2"
+                onClick={cancelToneAdjustment}
+              >
+                Cancel
+              </button>
+              <button
+                className="bsky-button-primary px-4 py-2 flex items-center gap-2"
+                onClick={applyToneAdjustment}
+              >
+                <CheckCircle size={16} />
+                Use This Version
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -6,7 +6,7 @@ import SkyColumn from './SkyColumn';
 
 export type ColumnType = 'notifications' | 'timeline' | 'conversations' | 'feed';
 
-interface Column {
+export interface Column {
   id: string;
   type: ColumnType;
   title?: string;
@@ -38,9 +38,12 @@ export default function SkyDeck() {
   const [columns, setColumns] = useState<Column[]>([]);
   const [isDragging, setIsDragging] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [draggedElement, setDraggedElement] = useState<HTMLElement | null>(null);
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [isNarrowView, setIsNarrowView] = useState(false);
   const [focusedColumnIndex, setFocusedColumnIndex] = useState(0);
+  const [customFeedUri, setCustomFeedUri] = useState('');
+  const [isLoadingCustomFeed, setIsLoadingCustomFeed] = useState(false);
   const columnsContainerRef = useRef<HTMLDivElement>(null);
 
   // Fetch user's saved/pinned feeds
@@ -101,18 +104,30 @@ export default function SkyDeck() {
         return;
       }
 
-      if (e.key === 'ArrowLeft') {
+      // Column navigation with arrows and h/l (vim-style)
+      if (e.key === 'ArrowLeft' || e.key === 'h') {
         e.preventDefault();
         setFocusedColumnIndex(prev => Math.max(0, prev - 1));
-      } else if (e.key === 'ArrowRight') {
+      } else if (e.key === 'ArrowRight' || e.key === 'l') {
         e.preventDefault();
         setFocusedColumnIndex(prev => Math.min(columns.length - 1, prev + 1));
+      }
+      // Space bar to scroll within focused column
+      else if (e.key === ' ' && !e.shiftKey) {
+        e.preventDefault();
+        // Find the focused column's scroll container
+        const columnElements = columnsContainerRef.current?.querySelectorAll('.column-wrapper');
+        const focusedColumn = columnElements?.[focusedColumnIndex];
+        const scrollContainer = focusedColumn?.querySelector('.skydeck-scrollbar');
+        if (scrollContainer) {
+          scrollContainer.scrollBy({ top: scrollContainer.clientHeight * 0.8, behavior: 'smooth' });
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [columns.length]);
+  }, [columns.length, focusedColumnIndex]);
 
   // Scroll focused column into view
   useEffect(() => {
@@ -181,7 +196,16 @@ export default function SkyDeck() {
 
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setIsDragging(id);
+    setDraggedElement(e.currentTarget as HTMLElement);
     e.dataTransfer.effectAllowed = 'move';
+    
+    // Create a custom drag image
+    const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
+    dragImage.style.opacity = '0.8';
+    dragImage.style.transform = 'rotate(2deg)';
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, e.clientX - e.currentTarget.getBoundingClientRect().left, 20);
+    setTimeout(() => document.body.removeChild(dragImage), 0);
   };
 
   const handleDragOver = (e: React.DragEvent, id: string) => {
@@ -213,7 +237,7 @@ export default function SkyDeck() {
     // Ensure we're showing the home column
     const homeColumn = columns.find(col => col.id === 'home') || columns[0];
     return (
-      <div className="h-screen dark:bg-gray-900">
+      <div className="h-full dark:bg-gray-900 overflow-hidden">
         <SkyColumn
           column={homeColumn}
           onClose={() => handleRemoveColumn(homeColumn.id)}
@@ -225,16 +249,18 @@ export default function SkyDeck() {
 
   // Full multi-column view for wider screens
   return (
-    <div className="h-screen flex flex-col dark:bg-gray-900">
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-4">
-        <div ref={columnsContainerRef} className="h-full flex gap-4 min-w-min">
+    <div className="h-full flex flex-col dark:bg-gray-900 overflow-hidden">
+      <div className="flex-1 overflow-x-auto overflow-y-hidden p-4 skydeck-columns-scrollbar">
+        <div ref={columnsContainerRef} className="h-full flex gap-4 min-w-min px-2">
           {columns.map((column, index) => (
             <div
               key={column.id}
-              className={`column-wrapper w-96 h-full transition-all ${
-                dragOverId === column.id ? 'opacity-50' : ''
+              className={`column-wrapper w-96 h-full ${
+                isDragging === column.id ? 'column-dragging' : ''
               } ${
-                focusedColumnIndex === index ? 'ring-2 ring-blue-500 rounded-lg' : ''
+                dragOverId === column.id && isDragging !== column.id ? 'column-drag-over' : ''
+              } ${
+                focusedColumnIndex === index ? 'column-focused rounded-lg' : ''
               }`}
               draggable
               onDragStart={(e) => handleDragStart(e, column.id)}
@@ -243,6 +269,12 @@ export default function SkyDeck() {
               onDragEnd={() => {
                 setIsDragging(null);
                 setDragOverId(null);
+                setDraggedElement(null);
+              }}
+              onDragLeave={() => {
+                if (dragOverId === column.id) {
+                  setDragOverId(null);
+                }
               }}
               onClick={() => setFocusedColumnIndex(index)}
             >
@@ -256,11 +288,7 @@ export default function SkyDeck() {
           
           <div className="w-96 h-full">
             {isAddingColumn ? (
-              <div className="h-full dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col">
-                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-                  Add Column
-                </h3>
-                
+              <div className="h-full dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col animate-fade-in">
                 <div className="flex-1 overflow-y-auto">
                   <div className="grid gap-2">
                     {columnOptions.map((option) => {
@@ -328,6 +356,63 @@ export default function SkyDeck() {
                         </div>
                       </>
                     )}
+                    
+                    {/* Add Custom Feed by URI */}
+                    <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 px-3 mb-2">
+                        Add Custom Feed by URI
+                      </h4>
+                      <div className="px-3 flex gap-2">
+                        <input
+                          type="text"
+                          value={customFeedUri}
+                          onChange={(e) => setCustomFeedUri(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && customFeedUri.trim() && !isLoadingCustomFeed) {
+                              e.preventDefault();
+                              document.getElementById('add-feed-button')?.click();
+                            }
+                          }}
+                          placeholder="at://did:plc:xyz/app.bsky.feed.generator/feed-name"
+                          className="flex-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <button
+                          id="add-feed-button"
+                          onClick={async () => {
+                            if (customFeedUri.trim()) {
+                              setIsLoadingCustomFeed(true);
+                              try {
+                                // Try to fetch feed info
+                                const response = await agent?.app.bsky.feed.getFeedGenerators({
+                                  feeds: [customFeedUri.trim()]
+                                });
+                                if (response?.data.feeds[0]) {
+                                  const feed = response.data.feeds[0];
+                                  handleAddColumn('feed', feed.uri, feed.displayName);
+                                  setCustomFeedUri('');
+                                } else {
+                                  // If no feed info, add with URI as name
+                                  handleAddColumn('feed', customFeedUri.trim(), customFeedUri.trim());
+                                  setCustomFeedUri('');
+                                }
+                              } catch (error) {
+                                console.error('Error fetching feed:', error);
+                                // Add anyway with URI as name
+                                handleAddColumn('feed', customFeedUri.trim(), customFeedUri.trim());
+                                setCustomFeedUri('');
+                              } finally {
+                                setIsLoadingCustomFeed(false);
+                              }
+                            }
+                          }}
+                          disabled={!customFeedUri.trim() || isLoadingCustomFeed}
+                          className="w-10 h-10 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                          title="Add Feed"
+                        >
+                          <Plus size={18} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   <div className="mt-4">
                     <button
@@ -342,7 +427,7 @@ export default function SkyDeck() {
             ) : (
               <button
                 onClick={() => setIsAddingColumn(true)}
-                className="h-full w-full dark:bg-gray-800 rounded-lg shadow-lg flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors group"
+                className="add-column-button h-full w-full dark:bg-gray-800 rounded-lg shadow-lg flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-all duration-300 group"
               >
                 <Plus className="w-12 h-12 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
               </button>

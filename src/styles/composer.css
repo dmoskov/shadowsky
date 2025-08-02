@@ -560,3 +560,74 @@
 .media-reorder-target.drag-right::after {
   opacity: 1;
 }
+
+/* Tone adjustment styles */
+.tone-button {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.tone-button.active {
+  background: var(--blue-100);
+  border-color: var(--blue-500);
+}
+
+.tone-option {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.tone-option:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tone-option:active {
+  transform: translateX(2px);
+}
+
+.tone-preview-modal {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.tone-adjusted-text {
+  position: relative;
+  overflow: hidden;
+}
+
+.tone-adjusted-text::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, var(--blue-400), var(--purple-400));
+  border-radius: 8px;
+  opacity: 0.3;
+  animation: shimmer 3s ease infinite;
+  z-index: -1;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}

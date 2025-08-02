@@ -47,8 +47,24 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
   const { agent } = useAuth();
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [showThread, setShowThread] = useState(false);
+  // Use a ref to store the focused post URI to persist across renders
+  const focusedPostUriRef = useRef<string | null>(null);
   const [focusedPostIndex, setFocusedPostIndex] = useState(0);
+  const [focusedPostUri, setFocusedPostUri] = useState<string | null>(null);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState(Date.now());
+  
+  // Helper to update both state and ref
+  const updateFocusedPost = (uri: string | null, index: number) => {
+    focusedPostUriRef.current = uri;
+    setFocusedPostUri(uri);
+    setFocusedPostIndex(index);
+    setHasUserInteracted(true);
+  };
   const containerRef = useRef<HTMLDivElement>(null);
+  const scrollPositionRef = useRef<number>(0);
+  const isRestoringScrollRef = useRef(false);
+  const previousPostsRef = useRef<any[]>([]);
 
   // Fetch feed posts
   const {
@@ -96,9 +112,59 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
     gcTime: 5 * 60 * 1000,
     refetchOnMount: 'always', // Always fetch fresh data on mount
     refetchInterval: 60 * 1000, // Poll every 60 seconds after initial load
+    // Keep previous data while fetching
+    keepPreviousData: true,
   });
 
   const allPosts = data?.pages.flatMap(page => page.posts) || [];
+
+  // Save scroll position when scrolling
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      if (!isRestoringScrollRef.current) {
+        scrollPositionRef.current = container.scrollTop;
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Maintain focused post index when data updates
+  useEffect(() => {
+    if (!hasUserInteracted || !focusedPostUriRef.current || allPosts.length === 0) return;
+    
+    // Find the focused post in the new data
+    const newIndex = allPosts.findIndex(feedPost => {
+      const post = feedPost.post || feedPost;
+      return post.uri === focusedPostUriRef.current;
+    });
+    
+    if (newIndex !== -1 && newIndex !== focusedPostIndex) {
+      // Update the index to match the new position
+      setFocusedPostIndex(newIndex);
+    }
+  }, [allPosts]); // Only depend on allPosts changing
+
+  // Restore scroll position after data changes
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || scrollPositionRef.current === 0) return;
+
+    // Restore scroll position
+    isRestoringScrollRef.current = true;
+    requestAnimationFrame(() => {
+      if (container) {
+        container.scrollTop = scrollPositionRef.current;
+      }
+      requestAnimationFrame(() => {
+        isRestoringScrollRef.current = false;
+      });
+    });
+  }, [data?.pages]); // Trigger when pages update
 
   // Handle j/k navigation when column is focused
   useEffect(() => {
@@ -110,18 +176,19 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
         return;
       }
 
-      if (e.key === 'j') {
+      if (e.key === 'j' || e.key === 'ArrowDown') {
         e.preventDefault();
-        setFocusedPostIndex(prev => Math.min(allPosts.length - 1, prev + 1));
-      } else if (e.key === 'k') {
-        e.preventDefault();
-        setFocusedPostIndex(prev => Math.max(0, prev - 1));
-      } else if (e.key === 'Enter' && allPosts[focusedPostIndex]) {
-        e.preventDefault();
-        const post = allPosts[focusedPostIndex]?.post || allPosts[focusedPostIndex];
+        const newIndex = Math.min(allPosts.length - 1, focusedPostIndex + 1);
+        const post = allPosts[newIndex]?.post || allPosts[newIndex];
         if (post) {
-          setSelectedPost(post);
-          setShowThread(true);
+          updateFocusedPost(post.uri, newIndex);
+        }
+      } else if (e.key === 'k' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const newIndex = Math.max(0, focusedPostIndex - 1);
+        const post = allPosts[newIndex]?.post || allPosts[newIndex];
+        if (post) {
+          updateFocusedPost(post.uri, newIndex);
         }
       }
     };
@@ -130,17 +197,24 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFocused, focusedPostIndex, allPosts]);
 
-  // Scroll focused post into view
+  // Scroll focused post into view when navigating with keyboard
   useEffect(() => {
-    if (containerRef.current && isFocused) {
-      const postElements = containerRef.current.querySelectorAll('.post-item');
-      const focusedElement = postElements[focusedPostIndex] as HTMLElement;
+    if (containerRef.current && focusedPostUri && hasUserInteracted) {
+      // Find the element by data-uri attribute for reliability
+      const focusedElement = containerRef.current.querySelector(`[data-uri="${focusedPostUri}"]`) as HTMLElement;
       
-      if (focusedElement) {
-        focusedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (focusedElement && !isRestoringScrollRef.current) {
+        const container = containerRef.current;
+        const containerRect = container.getBoundingClientRect();
+        const elementRect = focusedElement.getBoundingClientRect();
+        
+        // Only scroll if element is not fully visible
+        if (elementRect.top < containerRect.top || elementRect.bottom > containerRect.bottom) {
+          focusedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       }
     }
-  }, [focusedPostIndex, isFocused]);
+  }, [focusedPostIndex, focusedPostUri, hasUserInteracted]);
 
   // Render post component
   const renderPost = (feedPost: any, index: number) => {
@@ -152,20 +226,24 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
     }
     
     const isRepost = feedPost.reason?.$type === 'app.bsky.feed.defs#reasonRepost';
-    const isFocusedPost = isFocused && index === focusedPostIndex;
+    // Check if this post is focused - use the ref for stability across renders
+    const isFocusedPost = hasUserInteracted && focusedPostUriRef.current === post.uri;
     
     const handlePostClick = () => {
       setSelectedPost(post);
       setShowThread(true);
+      // Update focused post when clicking
+      updateFocusedPost(post.uri, index);
     };
     
     return (
       <div 
         key={post.uri} 
         className={`post-item border-b dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors ${
-          isFocusedPost ? 'bg-blue-50 dark:bg-gray-900/50 border-l-4 border-l-blue-500' : ''
+          isFocusedPost ? 'bg-blue-50 dark:bg-gray-900/50 border-l-4 border-l-blue-500 pl-3' : ''
         }`}
         onClick={handlePostClick}
+        data-uri={post.uri}
       >
         {isRepost && feedPost.reason?.by && (
           <div className="flex items-center gap-2 px-4 pt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -271,14 +349,20 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
     );
   }
 
+  // Don't memoize the posts - let them re-render with new data
+  // but keep the focused state stable
+
   return (
     <>
-      <div ref={containerRef} className="h-full overflow-y-auto dark:bg-gray-950">
-        {allPosts.map((post, index) => (
-          <React.Fragment key={post?.uri || index}>
-            {renderPost(post, index)}
-          </React.Fragment>
-        ))}
+      <div ref={containerRef} className="h-full overflow-y-auto dark:bg-gray-950 skydeck-scrollbar">
+        {allPosts.map((post, index) => {
+          const postUri = (post?.post || post)?.uri;
+          return (
+            <React.Fragment key={postUri || `post-${index}`}>
+              {renderPost(post, index)}
+            </React.Fragment>
+          );
+        })}
         
         {hasNextPage && (
           <div className="p-4 flex justify-center">
@@ -299,12 +383,11 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
       
       {showThread && selectedPost && (
         <ThreadModal
-          isOpen={showThread}
+          postUri={selectedPost.uri}
           onClose={() => {
             setShowThread(false);
             setSelectedPost(null);
           }}
-          post={selectedPost}
         />
       )}
     </>

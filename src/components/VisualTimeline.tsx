@@ -56,7 +56,11 @@ const getProfileUrl = (handle: string) => {
   return `https://bsky.app/profile/${cleanHandle}`
 }
 
-export const VisualTimeline: React.FC = () => {
+interface VisualTimelineProps {
+  hideTimeLabels?: boolean;
+}
+
+export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels = false }) => {
   const { agent } = useAuth()
 
   const { data, isLoading } = useQuery({
@@ -550,13 +554,15 @@ export const VisualTimeline: React.FC = () => {
                   {/* Time and event */}
                   <div className="flex gap-2 sm:gap-4 items-start timeline-event">
                 {/* Time - hide text on mobile, show only on desktop */}
-                <div className="w-3 sm:w-20 text-right text-xs sm:text-sm pt-2 timeline-time-label">
-                  <span className="hidden sm:inline font-medium" style={{ 
-                    color: isDayTime(event.time) ? '#d97706' : '#6366f1',
-                    opacity: 0.8
-                  }}>
-                    {getTimeOfDay(event.time)}
-                  </span>
+                <div className={`${hideTimeLabels ? 'w-3' : 'w-3 sm:w-20'} text-right text-xs sm:text-sm pt-2 timeline-time-label`}>
+                  {!hideTimeLabels && (
+                    <span className="hidden sm:inline font-medium" style={{ 
+                      color: isDayTime(event.time) ? '#d97706' : '#6366f1',
+                      opacity: 0.8
+                    }}>
+                      {getTimeOfDay(event.time)}
+                    </span>
+                  )}
                 </div>
 
                 {/* Timeline dot */}

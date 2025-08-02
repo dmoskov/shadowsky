@@ -6,6 +6,73 @@ const anthropic = new Anthropic({
   dangerouslyAllowBrowser: true
 });
 
+export type ToneOption = 'professional' | 'casual' | 'humorous' | 'informative' | 'inspirational';
+
+export interface ToneAdjustmentResult {
+  adjustedText: string;
+  originalText: string;
+  tone: ToneOption;
+}
+
+const TONE_DESCRIPTIONS: Record<ToneOption, string> = {
+  professional: 'formal, clear, and business-appropriate language',
+  casual: 'relaxed, conversational, and friendly language',
+  humorous: 'witty, playful, and entertaining language while maintaining the core message',
+  informative: 'educational, fact-focused, and explanatory language',
+  inspirational: 'motivating, uplifting, and encouraging language'
+};
+
+export async function adjustTone(text: string, tone: ToneOption): Promise<ToneAdjustmentResult> {
+  try {
+    // Check if API key is configured
+    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
+      throw new Error('Anthropic API key not configured');
+    }
+
+    const response = await anthropic.messages.create({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 1000,
+      messages: [
+        {
+          role: 'user',
+          content: `Rewrite the following text to have a ${tone} tone. Use ${TONE_DESCRIPTIONS[tone]}. Maintain the original meaning and key information, but adjust the style and word choice. Keep it concise and suitable for a social media post (under 300 characters per segment if it needs to be split).
+
+Original text: "${text}"
+
+Provide only the rewritten text without any explanation or prefixes.`
+        }
+      ]
+    });
+
+    const content = response.content[0];
+    if (content.type === 'text') {
+      return {
+        adjustedText: content.text.trim(),
+        originalText: text,
+        tone
+      };
+    }
+    
+    throw new Error('Unexpected response format');
+  } catch (error) {
+    console.error('Error adjusting tone:', error);
+    
+    // Track error for analytics
+    analytics.trackError(error as Error, 'tone_adjustment');
+    
+    // Provide more specific error messages
+    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
+      throw new Error('Tone adjustment failed: API key not configured');
+    } else if (error instanceof Error && error.message.includes('401')) {
+      throw new Error('Tone adjustment failed: Invalid API key');
+    } else if (error instanceof Error && error.message.includes('429')) {
+      throw new Error('Tone adjustment failed: Rate limit exceeded');
+    } else {
+      throw new Error(`Tone adjustment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+}
+
 export async function generateAltText(imageDataUrl: string): Promise<string> {
   try {
     // Check if API key is configured

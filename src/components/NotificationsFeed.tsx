@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, CheckCheck, Image, Loader, ChevronUp, Crown, Settings, Database, Users, MoreVertical } from 'lucide-react'
-import { useNotifications, useUnreadCount, useMarkNotificationsRead } from '../hooks/useNotifications'
+import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, Image, Loader, ChevronUp, Crown, Settings, Database, Users, MoreVertical } from 'lucide-react'
+import { useNotifications, useUnreadCount } from '../hooks/useNotifications'
 import { useNotificationPosts, postHasImages } from '../hooks/useNotificationPosts'
 import { useFollowing } from '../hooks/useFollowing'
 import { formatDistanceToNow } from 'date-fns'
@@ -23,7 +23,8 @@ export const NotificationsFeed: React.FC = () => {
   const debugMode = searchParams.has('debug')
   
   const [filter, setFilter] = useState<NotificationFilter>('all')
-  const [showUnreadOnly, setShowUnreadOnly] = useState(false)
+  // Removed unread only filter
+  // const [showUnreadOnly, setShowUnreadOnly] = useState(false)
   const [expandedAggregations, setExpandedAggregations] = useState<Set<string>>(new Set())
   const [minFollowerCount, setMinFollowerCount] = useState(10000)
   const [showConfigModal, setShowConfigModal] = useState(false)
@@ -59,7 +60,8 @@ export const NotificationsFeed: React.FC = () => {
     isFetchingNextPage 
   } = useNotifications()
   const { data: unreadCount } = useUnreadCount()
-  const { mutate: markAllAsRead, isPending: isMarkingAsRead } = useMarkNotificationsRead()
+  // Removed mark as read functionality
+  // const { mutate: markAllAsRead, isPending: isMarkingAsRead } = useMarkNotificationsRead()
   const { data: followingSet, isLoading: isLoadingFollowing } = useFollowing()
   
   const notifications = React.useMemo(() => {
@@ -208,12 +210,13 @@ export const NotificationsFeed: React.FC = () => {
       filtered = filtered.filter((n: Notification) => followingSet.has(n.author.did))
     }
 
-    if (showUnreadOnly) {
-      filtered = filtered.filter((n: Notification) => !n.isRead)
-    }
+    // Removed unread only filter
+    // if (showUnreadOnly) {
+    //   filtered = filtered.filter((n: Notification) => !n.isRead)
+    // }
 
     return filtered
-  }, [notifications, filter, showUnreadOnly, posts, followingSet])
+  }, [notifications, filter, posts, followingSet])
 
   // Calculate counts for each filter type
   const filterCounts = React.useMemo(() => {
@@ -325,29 +328,9 @@ export const NotificationsFeed: React.FC = () => {
 
   return (
     <div className="bsky-font">
-      {/* Header with filters */}
+      {/* Filter tabs without header */}
       <div className="sticky top-0 bsky-glass z-10" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
         <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            {unreadCount !== undefined && unreadCount !== null && unreadCount > 0 && (
-              <button
-                onClick={() => markAllAsRead()}
-                disabled={isMarkingAsRead}
-                className="bsky-button-primary flex items-center gap-1.5 text-sm disabled:opacity-50"
-              >
-                <CheckCheck size={16} />
-                Mark all read
-              </button>
-            )}
-            <button
-              onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-              className={showUnreadOnly ? 'bsky-button-primary text-sm' : 'bsky-button-secondary text-sm'}
-            >
-              {showUnreadOnly ? '✓ ' : ''}Unread Only
-            </button>
-          </div>
-        </div>
 
         {/* Filter tabs */}
         <div className="flex gap-1 items-center">

@@ -332,7 +332,7 @@ export const Home: React.FC = () => {
     }
   }, [selectedFeed])
   
-  // Keyboard shortcuts
+  // Keyboard shortcuts - simplified navigation only
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       // Don't handle shortcuts if user is typing in an input/textarea
@@ -340,69 +340,44 @@ export const Home: React.FC = () => {
         return
       }
       
-      switch (e.key.toLowerCase()) {
-        case 'j': // Next post
-          e.preventDefault()
-          setFocusedPostIndex(prev => {
-            const newIndex = Math.min(prev + 1, posts.length - 1)
-            const postKey = `${posts[newIndex]?.post?.uri}-${newIndex}`
-            const postEl = postRefs.current[postKey]
-            if (postEl) {
-              postEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
-              // Add visual feedback
-              postEl.style.outline = '2px solid var(--bsky-primary)'
-              setTimeout(() => {
-                postEl.style.outline = 'none'
-              }, 1000)
-            }
-            return newIndex
-          })
-          break
-          
-        case 'k': // Previous post
-          e.preventDefault()
-          setFocusedPostIndex(prev => {
-            const newIndex = Math.max(prev - 1, 0)
-            const postKey = `${posts[newIndex]?.post?.uri}-${newIndex}`
-            const postEl = postRefs.current[postKey]
-            if (postEl) {
-              postEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
-              // Add visual feedback
-              postEl.style.outline = '2px solid var(--bsky-primary)'
-              setTimeout(() => {
-                postEl.style.outline = 'none'
-              }, 1000)
-            }
-            return newIndex
-          })
-          break
-          
-        case 'l': // Like current post
-          e.preventDefault()
-          if (focusedPostIndex >= 0 && focusedPostIndex < posts.length) {
-            const post = posts[focusedPostIndex]?.post
-            if (post) {
-              handleLike(post, e as any)
-            }
+      // Handle navigation keys
+      if (e.key === 'j' || e.key === 'ArrowDown') {
+        e.preventDefault()
+        setFocusedPostIndex(prev => {
+          const newIndex = Math.min(prev + 1, posts.length - 1)
+          const postKey = `${posts[newIndex]?.post?.uri}-${newIndex}`
+          const postEl = postRefs.current[postKey]
+          if (postEl) {
+            postEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            // Add visual feedback
+            postEl.style.outline = '2px solid var(--bsky-primary)'
+            setTimeout(() => {
+              postEl.style.outline = 'none'
+            }, 1000)
           }
-          break
-          
-        case 'r': // Repost current post
-          e.preventDefault()
-          if (focusedPostIndex >= 0 && focusedPostIndex < posts.length) {
-            const post = posts[focusedPostIndex]?.post
-            if (post) {
-              handleRepost(post, e as any)
-            }
+          return newIndex
+        })
+      }
+      else if (e.key === 'k' || e.key === 'ArrowUp') {
+        e.preventDefault()
+        setFocusedPostIndex(prev => {
+          const newIndex = Math.max(prev - 1, 0)
+          const postKey = `${posts[newIndex]?.post?.uri}-${newIndex}`
+          const postEl = postRefs.current[postKey]
+          if (postEl) {
+            postEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            // Add visual feedback
+            postEl.style.outline = '2px solid var(--bsky-primary)'
+            setTimeout(() => {
+              postEl.style.outline = 'none'
+            }, 1000)
           }
-          break
-          
-        case ' ': // Space to scroll
-          if (!e.shiftKey) {
-            e.preventDefault()
-            window.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' })
-          }
-          break
+          return newIndex
+        })
+      }
+      else if (e.key === ' ' && !e.shiftKey) {
+        e.preventDefault()
+        window.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' })
       }
     }
     
@@ -819,7 +794,6 @@ export const Home: React.FC = () => {
                 title="Discover more feeds"
               >
                 <Plus size={16} className="group-hover:rotate-90 transition-transform duration-200" />
-                <span className="hidden md:inline font-medium text-sm">Add Feed</span>
               </button>
             </div>
           </div>
@@ -1042,19 +1016,6 @@ export const Home: React.FC = () => {
           }}
         />
       )}
-      
-      {/* Keyboard shortcuts hint */}
-      <div className="hidden sm:block fixed bottom-4 right-4 text-xs p-2 rounded-lg opacity-50 hover:opacity-100 transition-opacity"
-           style={{ backgroundColor: 'var(--bsky-bg-secondary)', color: 'var(--bsky-text-secondary)' }}>
-        <div>Keyboard shortcuts:</div>
-        <div className="mt-1 space-y-0.5">
-          <div><kbd>J</kbd> Next post</div>
-          <div><kbd>K</kbd> Previous post</div>
-          <div><kbd>L</kbd> Like</div>
-          <div><kbd>R</kbd> Repost</div>
-          <div><kbd>Space</kbd> Scroll</div>
-        </div>
-      </div>
     </div>
   )
 }

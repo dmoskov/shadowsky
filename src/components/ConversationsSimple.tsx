@@ -1,17 +1,16 @@
-import React, { useState, useMemo, useRef } from 'react'
-import { MessageCircle, Search, ArrowLeft, Loader2, ExternalLink } from 'lucide-react'
+import React, { useState, useMemo } from 'react'
+import { MessageCircle, Search, Loader2 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import type { AppBskyFeedDefs } from '@atproto/api'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
-import { getNotificationUrl } from '../utils/url-helpers'
 import { debug } from '@bsky/shared'
-import { useConversationTracking, useFeatureTracking, useInteractionTracking } from '../hooks/useAnalytics'
+import { useConversationTracking, useFeatureTracking } from '../hooks/useAnalytics'
 import { proxifyBskyImage } from '../utils/image-proxy'
-import { atProtoClient, getThreadService } from '../services/atproto'
-import { ThreadViewer } from './ThreadViewer'
+import { atProtoClient } from '../services/atproto'
+import { ThreadModal } from './ThreadModal'
 
 type Post = AppBskyFeedDefs.PostView
 import '../styles/conversations.css'
@@ -42,7 +41,6 @@ const ConversationItem = React.memo(({
   isSelected: boolean
   onClick: () => void
   allPostsMap: Map<string, Post>
-  session: any
   filteredConversationsIndex: number
   isLoadingRootPost: boolean
 }) => {
@@ -186,13 +184,11 @@ export const ConversationsSimple: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [additionalRootUris, setAdditionalRootUris] = useState<Set<string>>(new Set())
   const [rootPostsVersion, setRootPostsVersion] = useState(0) // Track root posts updates
-  const threadContainerRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
   
   // Analytics hooks
   const { trackConversationView, trackConversationAction } = useConversationTracking()
   const { trackFeatureAction } = useFeatureTracking('conversations')
-  const { trackClick } = useInteractionTracking()
   
   // Wrap setSelectedConvo to track analytics
   const handleSelectConversation = (rootUri: string | null, messageCount?: number) => {
@@ -282,7 +278,7 @@ export const ConversationsSimple: React.FC = () => {
     const fakeNotifications: Notification[] = []
     
     // First pass: collect all reply URIs and their reasonSubjects
-    replyNotifications.forEach((notification) => {
+    replyNotifications.forEach((notification: Notification) => {
       // Add the original notification
       fakeNotifications.push(notification)
       urisToFetch.add(notification.uri)
@@ -307,7 +303,7 @@ export const ConversationsSimple: React.FC = () => {
   }, [replyNotifications])
 
   // Fetch posts for all notifications including root posts
-  const { data: posts, fetchedPosts, totalPosts, percentageFetched } = useNotificationPosts(notificationsWithRoots)
+  const { data: posts, percentageFetched } = useNotificationPosts(notificationsWithRoots)
   
   // Create post map
   const postMap = React.useMemo(() => {
@@ -435,33 +431,6 @@ export const ConversationsSimple: React.FC = () => {
     return map
   }, [allPosts])
 
-  // Fetch complete thread when a conversation is selected
-  const { data: completeThread } = useQuery({
-    queryKey: ['thread', selectedConvo],
-    queryFn: async () => {
-      if (!selectedConvo || !session) return null
-      
-      debug.log('[ConversationsSimple] Fetching complete thread for:', selectedConvo)
-      
-      try {
-        const threadService = getThreadService(atProtoClient.agent!)
-        const thread = await threadService.getThread(selectedConvo, 100) // Get up to 100 posts deep
-        debug.log('[ConversationsSimple] Thread fetched successfully:', {
-          uri: selectedConvo,
-          hasThread: !!thread?.thread,
-          threadRootUri: thread?.thread?.post?.uri
-        })
-        return thread
-      } catch (error) {
-        debug.error('[ConversationsSimple] Failed to fetch complete thread:', error)
-        return null
-      }
-    },
-    enabled: !!selectedConvo && !!session,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
-    refetchOnMount: 'always', // Always fetch fresh data on mount
-  })
 
   // Group notifications into conversation threads
   // Include rootPostsVersion to force re-computation when root posts are loaded
@@ -617,23 +586,6 @@ export const ConversationsSimple: React.FC = () => {
     return found
   }, [conversations, selectedConvo])
   
-  // Get the notification to highlight (most recent unread, or latest if all are read)
-  const highlightNotificationUri = useMemo(() => {
-    if (!selectedConversation) return null
-    
-    // Find the most recent unread notification
-    const unreadNotifications = selectedConversation.replies.filter(r => !r.isRead)
-    if (unreadNotifications.length > 0) {
-      // Sort by date descending and get the most recent unread
-      const mostRecentUnread = unreadNotifications.sort((a, b) => 
-        new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime()
-      )[0]
-      return mostRecentUnread.uri
-    }
-    
-    // If all are read, highlight the latest reply
-    return selectedConversation.latestReply.uri
-  }, [selectedConversation])
 
   // Debug: Log rendering state
   React.useEffect(() => {
@@ -650,100 +602,19 @@ export const ConversationsSimple: React.FC = () => {
     })
   }, [extendedData, replyNotifications.length, posts, additionalRootPosts, allPostsMap.size, conversations.length, additionalRootUris.size, filteredConversations.length])
 
-  // Helper function to extract all posts from thread data
-  const extractPostsFromThread = (thread: any): Post[] => {
-    const posts: Post[] = []
-    
-    const processNode = (node: any) => {
-      if (node?.post && node.post.uri) {
-        posts.push(node.post as Post)
-      }
-      
-      // Process replies
-      if (node?.replies && Array.isArray(node.replies)) {
-        node.replies.forEach((reply: any) => processNode(reply))
-      }
-    }
-    
-    if (thread?.thread) {
-      processNode(thread.thread)
-    }
-    
-    return posts
-  }
-
-  // Prepare posts for ThreadViewer
-  const threadPosts = useMemo(() => {
-    if (!selectedConversation) return []
-    
-    const posts: Post[] = []
-    const postUris = new Set<string>()
-    
-    // Add posts from complete thread if available
-    if (completeThread) {
-      const threadPosts = extractPostsFromThread(completeThread)
-      threadPosts.forEach(post => {
-        if (!postUris.has(post.uri)) {
-          posts.push(post)
-          postUris.add(post.uri)
-        }
-      })
-    }
-    
-    // Only add posts that are part of this conversation
-    // 1. Add the root post if available
-    if (selectedConversation.rootPost && !postUris.has(selectedConversation.rootPost.uri)) {
-      posts.push(selectedConversation.rootPost)
-      postUris.add(selectedConversation.rootPost.uri)
-    }
-    
-    // 2. Add posts from the conversation's replies
-    selectedConversation.replies.forEach(notification => {
-      const post = allPostsMap.get(notification.uri)
-      if (post && !postUris.has(post.uri)) {
-        posts.push(post)
-        postUris.add(post.uri)
-      }
-      
-      // Also add the reasonSubject post if available (the post being replied to)
-      if (notification.reasonSubject) {
-        const parentPost = allPostsMap.get(notification.reasonSubject)
-        if (parentPost && !postUris.has(parentPost.uri)) {
-          posts.push(parentPost)
-          postUris.add(parentPost.uri)
-        }
-      }
-    })
-    
-    debug.log('[ConversationsSimple] Prepared thread posts:', {
-      postCount: posts.length,
-      hasCompleteThread: !!completeThread,
-      selectedConvoRootUri: selectedConversation.rootUri,
-      postUris: Array.from(postUris)
-    })
-    
-    return posts
-  }, [selectedConversation, allPostsMap, completeThread])
-  
-  // Prepare notifications for ThreadViewer
-  const threadNotifications = useMemo(() => {
-    if (!selectedConversation) return []
-    return selectedConversation.replies
-  }, [selectedConversation])
 
 
   // Always render the UI immediately, even if data is still loading
   // This provides a non-blocking experience
   return (
-    <div className="conversations-container h-[calc(100vh-4rem)] w-full max-w-7xl mx-auto overflow-hidden" style={{ position: 'relative' }}>
+    <div className="conversations-container h-[calc(100vh-4rem)] w-full overflow-hidden" style={{ position: 'relative' }}>
       <div className="flex h-full relative w-full" style={{ 
         background: 'var(--bsky-bg-primary)', 
         overflow: 'hidden',
         maxWidth: '100vw'
       }}>
-        {/* Left Panel - Conversations List */}
-        <div className={`${selectedConvo ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-96 flex-shrink-0`} 
-             style={{ borderRight: '1px solid var(--bsky-border-primary)' }}>
+        {/* Conversations List - Full width */}
+        <div className="flex flex-col w-full">
         {/* Search Header */}
         <div className="py-4 px-4 sm:px-6" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
           <div className="relative">
@@ -775,7 +646,7 @@ export const ConversationsSimple: React.FC = () => {
         {/* Removed loading indicator for posts */}
 
         {/* Conversations List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto skydeck-scrollbar">
           {filteredConversations.length === 0 ? (
             <div className="p-8 text-center">
               {!extendedData || percentageFetched < 100 ? (
@@ -815,7 +686,6 @@ export const ConversationsSimple: React.FC = () => {
                 isSelected={selectedConvo === convo.rootUri}
                 onClick={() => handleSelectConversation(convo.rootUri, convo.totalReplies)}
                 allPostsMap={allPostsMap}
-                session={session}
                 filteredConversationsIndex={index}
                 isLoadingRootPost={isLoadingRootPost}
               />
@@ -823,70 +693,15 @@ export const ConversationsSimple: React.FC = () => {
           })}
         </div>
       </div>
-
-      {/* Right Panel - Conversation View */}
-      {selectedConvo && selectedConversation && (
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {/* Conversation Header */}
-          <div className="p-4 flex items-center justify-between" 
-               style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => handleSelectConversation(null)}
-                className="md:hidden p-2 rounded-lg hover:bg-opacity-10 hover:bg-blue-500 transition-all"
-              >
-                <ArrowLeft size={20} style={{ color: 'var(--bsky-text-secondary)' }} />
-              </button>
-              
-              <div className="flex items-center gap-2">
-                <MessageCircle size={20} style={{ color: 'var(--bsky-text-secondary)' }} />
-                <div>
-                  <h2 className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-                    Thread with {selectedConversation.participants.size} participant{selectedConversation.participants.size !== 1 ? 's' : ''}
-                  </h2>
-                  <p className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
-                    {selectedConversation.totalReplies} repl{selectedConversation.totalReplies === 1 ? 'y' : 'ies'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <a
-              href={getNotificationUrl(selectedConversation.latestReply)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-lg hover:bg-opacity-10 hover:bg-blue-500 transition-all flex items-center gap-1"
-              style={{ color: 'var(--bsky-text-secondary)' }}
-            >
-              <ExternalLink size={20} />
-              <span className="text-sm">View on Bluesky</span>
-            </a>
-          </div>
-
-          {/* Thread View */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4" ref={threadContainerRef}>
-            <ThreadViewer 
-              posts={threadPosts}
-              notifications={threadNotifications}
-              rootUri={selectedConversation?.rootUri}
-              showUnreadIndicators={true}
-              highlightUri={highlightNotificationUri}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Empty state when no conversation selected (desktop only) */}
-      {!selectedConvo && (
-        <div className="hidden md:flex flex-1 items-center justify-center">
-          <div className="text-center">
-            <MessageCircle size={64} className="mx-auto mb-4" style={{ color: 'var(--bsky-text-tertiary)' }} />
-            <h2 className="text-xl font-semibold mb-2" style={{ color: 'var(--bsky-text-primary)' }}>Select a conversation</h2>
-            <p style={{ color: 'var(--bsky-text-secondary)' }}>Choose a conversation thread from the left to view replies</p>
-          </div>
-        </div>
-      )}
       </div>
+
+      {/* Thread Modal for Conversations */}
+      {selectedConvo && (
+        <ThreadModal
+          postUri={selectedConvo}
+          onClose={() => handleSelectConversation(null)}
+        />
+      )}
     </div>
   )
 }
