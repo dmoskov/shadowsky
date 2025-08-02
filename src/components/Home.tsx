@@ -8,6 +8,8 @@ import { debug } from '@bsky/shared'
 import { useFeatureTracking, useInteractionTracking } from '../hooks/useAnalytics'
 import { VideoPlayer } from './VideoPlayer'
 import { FeedDiscovery } from './FeedDiscovery'
+import { ImageGallery } from './ImageGallery'
+import { ThreadModal } from './ThreadModal'
 
 type FeedType = 'following' | 'whats-hot' | 'popular-with-friends' | 'recent' | string // Allow custom feed URIs
 
@@ -75,6 +77,10 @@ export const Home: React.FC = () => {
   const [hoveredPost, setHoveredPost] = useState<string | null>(null)
   const [selectedFeed, setSelectedFeed] = useState<FeedType>('following')
   const [showFeedDiscovery, setShowFeedDiscovery] = useState(false)
+  const [galleryImages, setGalleryImages] = useState<Array<{ thumb: string; fullsize: string; alt?: string }> | null>(null)
+  const [galleryIndex, setGalleryIndex] = useState(0)
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null)
+  const [showThread, setShowThread] = useState(false)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   
   const { trackFeatureAction } = useFeatureTracking('home_feed')
@@ -272,8 +278,8 @@ export const Home: React.FC = () => {
   
   const handlePostClick = (post: Post) => {
     trackClick('post', { postUri: post.uri })
-    const postUrl = `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`
-    window.open(postUrl, '_blank')
+    setSelectedPost(post)
+    setShowThread(true)
   }
   
   const likeMutation = useMutation({
@@ -354,19 +360,44 @@ export const Home: React.FC = () => {
     if (!embed) return null
     
     if (embed.$type === 'app.bsky.embed.images#view') {
+      const handleImageClick = (e: React.MouseEvent, index: number) => {
+        e.stopPropagation()
+        const images = embed.images.map((img: any) => ({
+          thumb: proxifyBskyImage(img.thumb),
+          fullsize: proxifyBskyImage(img.fullsize),
+          alt: img.alt
+        }))
+        setGalleryImages(images)
+        setGalleryIndex(index)
+        trackFeatureAction('image_gallery_opened', { imageCount: images.length })
+      }
+
       return (
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className={`mt-3 grid gap-2 ${embed.images.length === 1 ? 'grid-cols-1 max-w-2xl' : embed.images.length === 2 ? 'grid-cols-2 max-w-3xl' : embed.images.length === 3 ? 'grid-cols-2 max-w-3xl' : 'grid-cols-2 max-w-3xl'}`}>
           {embed.images.map((img: any, idx: number) => (
-            <img
+            <div
               key={idx}
-              src={proxifyBskyImage(img.thumb)}
-              alt={img.alt || ''}
-              className="rounded-lg w-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-              onClick={(e) => {
-                e.stopPropagation()
-                window.open(img.fullsize, '_blank')
-              }}
-            />
+              className={`relative rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity ${
+                embed.images.length === 3 && idx === 0 ? 'col-span-2' : ''
+              }`}
+              onClick={(e) => handleImageClick(e, idx)}
+            >
+              <img
+                src={proxifyBskyImage(img.thumb)}
+                alt={img.alt || ''}
+                className="w-full h-auto object-contain rounded-lg mx-auto"
+                style={{
+                  maxHeight: embed.images.length === 1 ? '500px' : '400px',
+                  maxWidth: embed.images.length === 1 ? '700px' : '100%',
+                  backgroundColor: 'var(--bsky-bg-tertiary)'
+                }}
+              />
+              {img.alt && (
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 opacity-0 hover:opacity-100 transition-opacity">
+                  ALT
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )
@@ -384,7 +415,8 @@ export const Home: React.FC = () => {
             <img
               src={proxifyBskyImage(embed.external.thumb)}
               alt=""
-              className="w-full h-48 object-cover rounded-lg mb-2"
+              className="w-full h-auto object-contain rounded-lg mb-2"
+              style={{ maxHeight: '300px', backgroundColor: 'var(--bsky-bg-tertiary)' }}
             />
           )}
           <div className="text-sm font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
@@ -406,6 +438,72 @@ export const Home: React.FC = () => {
             aspectRatio={embed.aspectRatio}
             alt={embed.alt}
           />
+        </div>
+      )
+    }
+    
+    // Handle quote posts
+    if (embed.$type === 'app.bsky.embed.record#view') {
+      const quotedPost = embed.record
+      if (quotedPost?.$type === 'app.bsky.embed.record#viewRecord') {
+        return (
+          <div className="mt-3 border rounded-lg p-3"
+               style={{ borderColor: 'var(--bsky-border-primary)' }}
+               onClick={(e) => {
+                 e.stopPropagation()
+                 handlePostClick({ uri: quotedPost.uri, cid: quotedPost.cid })
+               }}>
+            <div className="flex items-center gap-2 mb-2">
+              <img
+                src={proxifyBskyImage(quotedPost.author.avatar) || '/default-avatar.png'}
+                alt={quotedPost.author.handle}
+                className="w-5 h-5 rounded-full"
+              />
+              <div className="flex items-center gap-1 text-sm">
+                <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+                  {quotedPost.author.displayName || quotedPost.author.handle}
+                </span>
+                <span style={{ color: 'var(--bsky-text-secondary)' }}>
+                  @{quotedPost.author.handle}
+                </span>
+              </div>
+            </div>
+            <div className="text-sm" style={{ color: 'var(--bsky-text-primary)' }}>
+              {quotedPost.value.text}
+            </div>
+            {quotedPost.embeds?.[0] && renderEmbed(quotedPost.embeds[0])}
+          </div>
+        )
+      }
+      // Handle deleted or blocked quotes
+      if (quotedPost?.$type === 'app.bsky.embed.record#viewNotFound') {
+        return (
+          <div className="mt-3 border rounded-lg p-3"
+               style={{ borderColor: 'var(--bsky-border-primary)' }}>
+            <div className="text-sm italic" style={{ color: 'var(--bsky-text-secondary)' }}>
+              Quoted post not found
+            </div>
+          </div>
+        )
+      }
+      if (quotedPost?.$type === 'app.bsky.embed.record#viewBlocked') {
+        return (
+          <div className="mt-3 border rounded-lg p-3"
+               style={{ borderColor: 'var(--bsky-border-primary)' }}>
+            <div className="text-sm italic" style={{ color: 'var(--bsky-text-secondary)' }}>
+              Quoted post from blocked user
+            </div>
+          </div>
+        )
+      }
+    }
+    
+    // Handle record with media (quote post + media)
+    if (embed.$type === 'app.bsky.embed.recordWithMedia#view') {
+      return (
+        <div className="mt-3">
+          {embed.media && renderEmbed(embed.media)}
+          {embed.record && renderEmbed(embed.record)}
         </div>
       )
     }
@@ -439,51 +537,56 @@ export const Home: React.FC = () => {
   }
   
   return (
-    <div className="max-w-2xl mx-auto px-3 sm:px-4">
+    <div className="w-full">
       <div className="sticky top-0 z-10 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-        <div className="flex items-center gap-1 p-2">
-          <div className="flex-1 flex gap-1 overflow-x-auto scrollbar-hide">
-            {feedOptions.map((option) => (
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center p-2 md:px-6">
+            <div className="flex-1 flex gap-1 md:gap-2 overflow-x-auto scrollbar-hide">
+              {feedOptions.map((option) => (
+                <button
+                  key={option.type}
+                  onClick={() => handleFeedChange(option.type)}
+                  className={`flex items-center gap-2 px-3 md:px-6 py-2 md:py-2.5 rounded-xl transition-all whitespace-nowrap cursor-pointer select-none ${
+                    selectedFeed === option.type
+                      ? 'text-white shadow-md'
+                      : 'hover:bg-opacity-10 hover:bg-blue-500'
+                  }`}
+                  style={{
+                    backgroundColor: selectedFeed === option.type ? 'var(--bsky-primary)' : 'transparent',
+                    color: selectedFeed === option.type ? 'white' : 'var(--bsky-text-secondary)',
+                    WebkitTapHighlightColor: 'transparent',
+                    touchAction: 'manipulation'
+                  }}
+                  type="button"
+                >
+                  <option.icon size={18} className="flex-shrink-0" />
+                  <span className="font-medium text-sm md:text-base">{option.label}</span>
+                </button>
+              ))}
+            </div>
+            <div className="ml-2 md:ml-4 flex-shrink-0">
               <button
-                key={option.type}
-                onClick={() => handleFeedChange(option.type)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all whitespace-nowrap cursor-pointer select-none ${
-                  selectedFeed === option.type
-                    ? 'text-white shadow-md'
-                    : 'hover:bg-opacity-10 hover:bg-blue-500'
-                }`}
-                style={{
-                  backgroundColor: selectedFeed === option.type ? 'var(--bsky-primary)' : 'transparent',
-                  color: selectedFeed === option.type ? 'white' : 'var(--bsky-text-secondary)',
-                  WebkitTapHighlightColor: 'transparent',
-                  touchAction: 'manipulation'
-                }}
-                type="button"
+                onClick={() => setShowFeedDiscovery(true)}
+                className="p-2 md:px-4 md:py-2 rounded-xl hover:bg-opacity-10 hover:bg-blue-500 transition-colors flex items-center gap-2"
+                style={{ color: 'var(--bsky-text-secondary)' }}
+                title="Discover more feeds"
               >
-                <option.icon size={16} className="flex-shrink-0" />
-                <span className="font-medium text-sm">{option.label}</span>
+                <Plus size={18} />
+                <span className="hidden md:inline font-medium text-base">Discover</span>
               </button>
-            ))}
+            </div>
           </div>
-          <button
-            onClick={() => setShowFeedDiscovery(true)}
-            className="p-2 rounded-xl hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
-            style={{ color: 'var(--bsky-text-secondary)' }}
-            title="Discover more feeds"
-          >
-            <Plus size={16} />
-          </button>
         </div>
       </div>
       
-      <div className="divide-y" style={{ borderColor: 'var(--bsky-border-primary)' }}>
+      <div className="max-w-2xl mx-auto px-3 sm:px-4">
+        <div className="divide-y" style={{ borderColor: 'var(--bsky-border-primary)' }}>
         {posts.map((item: any, index: number) => {
           const post = item.post
           return (
             <div
               key={`${post.uri}-${index}`}
-              className="p-4 hover:bg-opacity-5 hover:bg-blue-500 transition-colors cursor-pointer relative"
-              onClick={() => handlePostClick(post)}
+              className="p-4 hover:bg-opacity-5 hover:bg-blue-500 transition-colors relative"
               onMouseEnter={() => setHoveredPost(post.uri)}
               onMouseLeave={() => setHoveredPost(null)}
             >
@@ -503,7 +606,10 @@ export const Home: React.FC = () => {
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between">
-                    <div>
+                    <div 
+                      className="cursor-pointer"
+                      onClick={() => handlePostClick(post)}
+                    >
                       <div className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
                         {post.author.displayName || post.author.handle}
                       </div>
@@ -512,17 +618,39 @@ export const Home: React.FC = () => {
                       </div>
                     </div>
                     
-                    {hoveredPost === post.uri && (
+                    <div 
+                      className="relative"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <button
-                        className="p-1 rounded-full hover:bg-opacity-10 hover:bg-gray-500 transition-colors"
-                        onClick={(e) => e.stopPropagation()}
+                        className={`p-2 -m-1 rounded-full transition-all ${
+                          hoveredPost === post.uri 
+                            ? 'opacity-100 hover:bg-gray-200 dark:hover:bg-gray-800' 
+                            : 'opacity-0 sm:opacity-100 sm:hover:opacity-100'
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          e.preventDefault()
+                          // Post menu functionality would go here
+                          console.log('Menu clicked for post:', post.uri)
+                        }}
+                        aria-label="More options"
                       >
-                        <MoreVertical size={16} style={{ color: 'var(--bsky-text-secondary)' }} />
+                        <MoreVertical 
+                          size={16} 
+                          style={{ 
+                            color: hoveredPost === post.uri ? 'var(--bsky-text-secondary)' : 'transparent'
+                          }} 
+                        />
                       </button>
-                    )}
+                    </div>
                   </div>
                   
-                  <div className="mt-2 whitespace-pre-wrap" style={{ color: 'var(--bsky-text-primary)' }}>
+                  <div 
+                    className="mt-2 whitespace-pre-wrap cursor-pointer" 
+                    style={{ color: 'var(--bsky-text-primary)' }}
+                    onClick={() => handlePostClick(post)}
+                  >
                     {post.record.text}
                   </div>
                   
@@ -579,20 +707,42 @@ export const Home: React.FC = () => {
             </div>
           )
         })}
-      </div>
-      
-      {isFetchingNextPage && (
-        <div className="flex items-center justify-center p-8">
-          <Loader className="animate-spin" size={24} style={{ color: 'var(--bsky-primary)' }} />
         </div>
-      )}
-      
-      <div ref={loadMoreRef} className="h-20" />
+        
+        {isFetchingNextPage && (
+          <div className="flex items-center justify-center p-8">
+            <Loader className="animate-spin" size={24} style={{ color: 'var(--bsky-primary)' }} />
+          </div>
+        )}
+        
+        <div ref={loadMoreRef} className="h-20" />
+      </div>
       
       <FeedDiscovery 
         isOpen={showFeedDiscovery} 
         onClose={() => setShowFeedDiscovery(false)} 
       />
+      
+      {galleryImages && (
+        <ImageGallery
+          images={galleryImages}
+          initialIndex={galleryIndex}
+          onClose={() => {
+            setGalleryImages(null)
+            setGalleryIndex(0)
+          }}
+        />
+      )}
+      
+      {showThread && selectedPost && (
+        <ThreadModal
+          postUri={selectedPost.uri}
+          onClose={() => {
+            setShowThread(false)
+            setSelectedPost(null)
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -613,6 +613,24 @@ export const ConversationsSimple: React.FC = () => {
     })
     return found
   }, [conversations, selectedConvo])
+  
+  // Get the notification to highlight (most recent unread, or latest if all are read)
+  const highlightNotificationUri = useMemo(() => {
+    if (!selectedConversation) return null
+    
+    // Find the most recent unread notification
+    const unreadNotifications = selectedConversation.replies.filter(r => !r.isRead)
+    if (unreadNotifications.length > 0) {
+      // Sort by date descending and get the most recent unread
+      const mostRecentUnread = unreadNotifications.sort((a, b) => 
+        new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime()
+      )[0]
+      return mostRecentUnread.uri
+    }
+    
+    // If all are read, highlight the latest reply
+    return selectedConversation.latestReply.uri
+  }, [selectedConversation])
 
   // Debug: Log rendering state
   React.useEffect(() => {
@@ -849,6 +867,7 @@ export const ConversationsSimple: React.FC = () => {
               notifications={threadNotifications}
               rootUri={selectedConversation?.rootUri}
               showUnreadIndicators={true}
+              highlightUri={highlightNotificationUri}
             />
           </div>
         </div>

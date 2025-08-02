@@ -1,10 +1,12 @@
-import React, { useMemo, useEffect, useRef } from 'react'
+import React, { useMemo, useEffect, useRef, useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { CornerDownRight, ExternalLink, Loader2 } from 'lucide-react'
 import type { AppBskyFeedDefs } from '@atproto/api'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
-import { proxifyBskyImage } from '../utils/image-proxy'
+import { proxifyBskyImage, proxifyBskyVideo } from '../utils/image-proxy'
 import { atUriToBskyUrl, getNotificationUrl } from '../utils/url-helpers'
+import { VideoPlayer } from './VideoPlayer'
+import { ImageGallery } from './ImageGallery'
 
 type Post = AppBskyFeedDefs.PostView
 
@@ -35,6 +37,8 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   showUnreadIndicators = true,
   className = ''
 }) => {
+  const [galleryImages, setGalleryImages] = useState<Array<{ thumb: string; fullsize: string; alt?: string }> | null>(null)
+  const [galleryIndex, setGalleryIndex] = useState(0)
   // Create a map of posts by URI
   const postMap = useMemo(() => {
     const map = new Map<string, Post>()
@@ -197,6 +201,128 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       }, 100) // Small delay to ensure DOM is ready
     }
   }, [highlightUri, posts])
+
+  // Render embeds (images, videos, quotes, etc)
+  const renderEmbed = (embed: any) => {
+    if (!embed) return null
+    
+    if (embed.$type === 'app.bsky.embed.images#view') {
+      const handleImageClick = (e: React.MouseEvent, index: number) => {
+        e.stopPropagation()
+        const images = embed.images.map((img: any) => ({
+          thumb: proxifyBskyImage(img.thumb),
+          fullsize: proxifyBskyImage(img.fullsize),
+          alt: img.alt
+        }))
+        setGalleryImages(images)
+        setGalleryIndex(index)
+      }
+
+      return (
+        <div className={`mt-2 grid gap-1 ${embed.images.length === 1 ? 'grid-cols-1 max-w-2xl' : embed.images.length === 2 ? 'grid-cols-2 max-w-3xl' : embed.images.length === 3 ? 'grid-cols-2 max-w-3xl' : 'grid-cols-2 max-w-3xl'}`}>
+          {embed.images.map((img: any, idx: number) => (
+            <div
+              key={idx}
+              className={`relative rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity ${
+                embed.images.length === 3 && idx === 0 ? 'col-span-2' : ''
+              }`}
+              onClick={(e) => handleImageClick(e, idx)}
+            >
+              <img
+                src={proxifyBskyImage(img.thumb)}
+                alt={img.alt || ''}
+                className="w-full h-auto object-contain rounded-lg mx-auto"
+                style={{
+                  maxHeight: embed.images.length === 1 ? '400px' : '300px',
+                  maxWidth: embed.images.length === 1 ? '600px' : '100%',
+                  backgroundColor: 'var(--bsky-bg-tertiary)'
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      )
+    }
+    
+    if (embed.$type === 'app.bsky.embed.external#view') {
+      return (
+        <div className="mt-2 border rounded-lg p-2 hover:bg-opacity-5 hover:bg-blue-500 transition-colors cursor-pointer text-xs"
+             style={{ borderColor: 'var(--bsky-border-primary)' }}
+             onClick={(e) => {
+               e.stopPropagation()
+               window.open(embed.external.uri, '_blank')
+             }}>
+          {embed.external.thumb && (
+            <img
+              src={proxifyBskyImage(embed.external.thumb)}
+              alt=""
+              className="w-full h-auto object-contain rounded mb-1"
+              style={{ maxHeight: '200px', backgroundColor: 'var(--bsky-bg-tertiary)' }}
+            />
+          )}
+          <div className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+            {embed.external.title}
+          </div>
+          <div className="mt-0.5 opacity-80" style={{ color: 'var(--bsky-text-secondary)' }}>
+            {embed.external.description}
+          </div>
+        </div>
+      )
+    }
+    
+    if (embed.$type === 'app.bsky.embed.video#view') {
+      return (
+        <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+          <VideoPlayer
+            src={proxifyBskyVideo(embed.playlist)}
+            thumbnail={embed.thumbnail ? proxifyBskyVideo(embed.thumbnail) : undefined}
+            aspectRatio={embed.aspectRatio}
+            alt={embed.alt}
+          />
+        </div>
+      )
+    }
+    
+    // Handle quote posts
+    if (embed.$type === 'app.bsky.embed.record#view') {
+      const quotedPost = embed.record
+      if (quotedPost?.$type === 'app.bsky.embed.record#viewRecord') {
+        return (
+          <div className="mt-2 border rounded-lg p-2 text-xs"
+               style={{ borderColor: 'var(--bsky-border-primary)' }}>
+            <div className="flex items-center gap-1 mb-1">
+              <img
+                src={proxifyBskyImage(quotedPost.author.avatar) || '/default-avatar.png'}
+                alt={quotedPost.author.handle}
+                className="w-4 h-4 rounded-full"
+              />
+              <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+                {quotedPost.author.displayName || quotedPost.author.handle}
+              </span>
+              <span style={{ color: 'var(--bsky-text-secondary)' }}>
+                @{quotedPost.author.handle}
+              </span>
+            </div>
+            <div style={{ color: 'var(--bsky-text-primary)' }}>
+              {quotedPost.value.text}
+            </div>
+          </div>
+        )
+      }
+    }
+    
+    // Handle record with media
+    if (embed.$type === 'app.bsky.embed.recordWithMedia#view') {
+      return (
+        <div className="mt-2">
+          {embed.media && renderEmbed(embed.media)}
+          {embed.record && renderEmbed(embed.record)}
+        </div>
+      )
+    }
+    
+    return null
+  }
 
   // Render thread nodes recursively
   const renderThreadNodes = (nodes: ThreadNode[]) => {
@@ -371,6 +497,8 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     )}
                   </p>
                   
+                  {post?.embed && renderEmbed(post.embed)}
+                  
                   {isUnread && (
                     <span className="inline-block mt-2 text-xs px-2 py-0.5 rounded-full" 
                           style={{ 
@@ -395,16 +523,29 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   }
 
   return (
-    <div className={`thread-viewer ${className}`}>
-      {threadTree.length > 0 ? (
-        renderThreadNodes(threadTree)
-      ) : (
-        <div className="p-8 text-center">
-          <p style={{ color: 'var(--bsky-text-secondary)' }}>
-            No posts to display
-          </p>
-        </div>
+    <>
+      <div className={`thread-viewer ${className}`}>
+        {threadTree.length > 0 ? (
+          renderThreadNodes(threadTree)
+        ) : (
+          <div className="p-8 text-center">
+            <p style={{ color: 'var(--bsky-text-secondary)' }}>
+              No posts to display
+            </p>
+          </div>
+        )}
+      </div>
+      
+      {galleryImages && (
+        <ImageGallery
+          images={galleryImages}
+          initialIndex={galleryIndex}
+          onClose={() => {
+            setGalleryImages(null)
+            setGalleryIndex(0)
+          }}
+        />
       )}
-    </div>
+    </>
   )
 }
