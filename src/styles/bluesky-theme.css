@@ -56,6 +56,7 @@
 }
 
 /* Dark theme */
+.dark,
 [data-theme="dark"] {
   /* Primary colors remain similar for consistency */
   --bsky-primary: #0085ff;
@@ -63,23 +64,23 @@
   --bsky-primary-light: #4da3ff;
   --bsky-accent: #a78bfa; /* Lighter purple for dark mode */
   
-  /* Background colors - dark theme */
-  --bsky-bg-primary: #0f172a;
-  --bsky-bg-secondary: #1e293b;
-  --bsky-bg-tertiary: #334155;
-  --bsky-bg-hover: #475569;
-  --bsky-bg-active: #64748b;
+  /* Background colors - improved contrast for dark theme */
+  --bsky-bg-primary: #0a0f1b;
+  --bsky-bg-secondary: #111827;
+  --bsky-bg-tertiary: #1f2937;
+  --bsky-bg-hover: #374151;
+  --bsky-bg-active: #4b5563;
   
-  /* Text colors - light for dark background */
-  --bsky-text-primary: #f1f5f9;
-  --bsky-text-secondary: #cbd5e1;
-  --bsky-text-tertiary: #94a3b8;
+  /* Text colors - improved contrast for better readability */
+  --bsky-text-primary: #f9fafb;
+  --bsky-text-secondary: #e5e7eb;
+  --bsky-text-tertiary: #d1d5db;
   --bsky-text-link: var(--bsky-primary-light);
   
-  /* Border colors - darker for dark theme */
-  --bsky-border-primary: #334155;
-  --bsky-border-secondary: #475569;
-  --bsky-border-light: #1e293b;
+  /* Border colors - better visibility in dark theme */
+  --bsky-border-primary: #374151;
+  --bsky-border-secondary: #4b5563;
+  --bsky-border-light: #1f2937;
   
   /* Notification type colors - adjusted for dark mode */
   --bsky-like: #f472b6;
@@ -277,15 +278,20 @@
 
 /* Glass effect */
 .bsky-glass {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
+.dark .bsky-glass {
+  background: rgba(17, 24, 39, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
 [data-theme="dark"] .bsky-glass {
-  background: rgba(30, 41, 59, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(17, 24, 39, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 /* Gradient text */

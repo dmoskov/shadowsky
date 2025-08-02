@@ -6,7 +6,6 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import { Sidebar } from './components/Sidebar'
 import { Header } from './components/Header'
 import { LandingPage } from './components/LandingPage'
-import { NotificationsFeed } from './components/NotificationsFeed'
 import { VisualTimeline } from './components/VisualTimeline'
 import { NotificationsAnalytics } from './components/NotificationsAnalytics'
 import { RateLimitStatus } from './components/RateLimitStatus'
@@ -14,7 +13,6 @@ import { ConversationsSimple as Conversations } from './components/Conversations
 import { Composer } from './components/Composer'
 import { Search } from './components/Search'
 import { CompressionTest } from './components/CompressionTest'
-import { Home } from './components/Home'
 import { DebugConsole } from './components/DebugConsole'
 import SkyDeck from './components/SkyDeck'
 import { NotificationStorageDB } from './services/notification-storage-db'
@@ -50,9 +48,6 @@ const queryClient = new QueryClient({
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth()
   
-  // Check for feature flag in URL params
-  const searchParams = new URLSearchParams(window.location.search)
-  const showHomeFeed = searchParams.get('feed') === 'home' || searchParams.get('home') === 'true'
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   
   // Initialize analytics tracking
@@ -102,8 +97,8 @@ function AppContent() {
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <main className="flex-1 lg:ml-64 mt-16 h-[calc(100vh-4rem)] overflow-x-hidden">
           <Routes>
-            <Route path="/home" element={<Home />} />
-            <Route path="/" element={showHomeFeed ? <Home /> : <NotificationsFeed />} />
+            <Route path="/home" element={<SkyDeck />} />
+            <Route path="/" element={<SkyDeck />} />
             <Route path="/timeline" element={
               <div className="h-full overflow-y-auto">
                 <VisualTimeline />
@@ -113,7 +108,6 @@ function AppContent() {
             <Route path="/conversations" element={<Conversations />} />
             <Route path="/compose" element={<Composer />} />
             <Route path="/search" element={<Search />} />
-            <Route path="/skydeck" element={<SkyDeck />} />
             <Route path="/compression-test" element={<CompressionTest />} />
             <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>

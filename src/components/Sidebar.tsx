@@ -21,12 +21,10 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const navItems = [
-    // { path: '/home', label: 'Home', icon: Home }, // Hidden in production for now
-    { path: '/', label: 'Notifications', icon: Bell },
+    { path: '/', label: 'Home', icon: Home },
     { path: '/conversations', label: 'Conversations', icon: MessageSquare },
     { path: '/search', label: 'Search', icon: Search },
     { path: '/compose', label: 'Compose', icon: PenSquare },
-    { path: '/skydeck', label: 'SkyDeck', icon: Columns },
     { path: '/timeline', label: 'Timeline', icon: Clock },
     { path: '/analytics', label: 'Analytics', icon: BarChart3 },
   ]

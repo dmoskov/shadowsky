@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
@@ -8,6 +8,7 @@ import { ThreadModal } from './ThreadModal';
 
 interface SkyColumnFeedProps {
   feedUri?: string;
+  isFocused?: boolean;
 }
 
 interface Post {
@@ -42,10 +43,12 @@ interface Post {
   };
 }
 
-export default function SkyColumnFeed({ feedUri }: SkyColumnFeedProps) {
+export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnFeedProps) {
   const { agent } = useAuth();
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [showThread, setShowThread] = useState(false);
+  const [focusedPostIndex, setFocusedPostIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Fetch feed posts
   const {
@@ -95,8 +98,50 @@ export default function SkyColumnFeed({ feedUri }: SkyColumnFeedProps) {
 
   const allPosts = data?.pages.flatMap(page => page.posts) || [];
 
+  // Handle j/k navigation when column is focused
+  useEffect(() => {
+    if (!isFocused) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't interfere with input fields
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if (e.key === 'j') {
+        e.preventDefault();
+        setFocusedPostIndex(prev => Math.min(allPosts.length - 1, prev + 1));
+      } else if (e.key === 'k') {
+        e.preventDefault();
+        setFocusedPostIndex(prev => Math.max(0, prev - 1));
+      } else if (e.key === 'Enter' && allPosts[focusedPostIndex]) {
+        e.preventDefault();
+        const post = allPosts[focusedPostIndex]?.post || allPosts[focusedPostIndex];
+        if (post) {
+          setSelectedPost(post);
+          setShowThread(true);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFocused, focusedPostIndex, allPosts]);
+
+  // Scroll focused post into view
+  useEffect(() => {
+    if (containerRef.current && isFocused) {
+      const postElements = containerRef.current.querySelectorAll('.post-item');
+      const focusedElement = postElements[focusedPostIndex] as HTMLElement;
+      
+      if (focusedElement) {
+        focusedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [focusedPostIndex, isFocused]);
+
   // Render post component
-  const renderPost = (feedPost: any) => {
+  const renderPost = (feedPost: any, index: number) => {
     // The actual post might be nested in feedPost.post
     const post = feedPost.post || feedPost;
     
@@ -105,6 +150,7 @@ export default function SkyColumnFeed({ feedUri }: SkyColumnFeedProps) {
     }
     
     const isRepost = feedPost.reason?.$type === 'app.bsky.feed.defs#reasonRepost';
+    const isFocusedPost = isFocused && index === focusedPostIndex;
     
     const handlePostClick = () => {
       setSelectedPost(post);
@@ -114,11 +160,13 @@ export default function SkyColumnFeed({ feedUri }: SkyColumnFeedProps) {
     return (
       <div 
         key={post.uri} 
-        className="border-b dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+        className={`post-item border-b dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors ${
+          isFocusedPost ? 'bg-blue-50 dark:bg-gray-900/50 border-l-4 border-l-blue-500' : ''
+        }`}
         onClick={handlePostClick}
       >
         {isRepost && feedPost.reason?.by && (
-          <div className="flex items-center gap-2 px-4 pt-2 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-2 px-4 pt-2 text-sm text-gray-600 dark:text-gray-400">
             <Repeat2 size={14} />
             <span>{feedPost.reason.by.displayName || feedPost.reason.by.handle} reposted</span>
           </div>
@@ -140,11 +188,11 @@ export default function SkyColumnFeed({ feedUri }: SkyColumnFeedProps) {
                   <span className="font-semibold text-gray-900 dark:text-white">
                     {post.author?.displayName || post.author?.handle || 'Unknown'}
                   </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-gray-500 dark:text-gray-500">
                     {post.record?.createdAt ? formatDistanceToNow(new Date(post.record.createdAt), { addSuffix: true }) : 'some time ago'}
                   </span>
                 </div>
-                <div className="text-gray-500 dark:text-gray-400">
+                <div className="text-gray-500 dark:text-gray-300">
                   @{post.author?.handle || 'unknown'}
                 </div>
               </div>
@@ -167,7 +215,7 @@ export default function SkyColumnFeed({ feedUri }: SkyColumnFeedProps) {
                 </div>
               )}
               
-              <div className="mt-3 flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
+              <div className="mt-3 flex items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
                 <button 
                   className="flex items-center gap-1 hover:text-blue-500 transition-colors"
                   onClick={(e) => e.stopPropagation()}
@@ -223,10 +271,10 @@ export default function SkyColumnFeed({ feedUri }: SkyColumnFeedProps) {
 
   return (
     <>
-      <div className="h-full overflow-y-auto">
+      <div ref={containerRef} className="h-full overflow-y-auto dark:bg-gray-950">
         {allPosts.map((post, index) => (
           <React.Fragment key={post?.uri || index}>
-            {renderPost(post)}
+            {renderPost(post, index)}
           </React.Fragment>
         ))}
         

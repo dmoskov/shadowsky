@@ -11,9 +11,10 @@ interface SkyColumnProps {
   column: Column;
   onClose: () => void;
   chromeless?: boolean;
+  isFocused?: boolean;
 }
 
-export default function SkyColumn({ column, onClose, chromeless = false }: SkyColumnProps) {
+export default function SkyColumn({ column, onClose, chromeless = false, isFocused = false }: SkyColumnProps) {
 
   // Render different components based on column type
   const renderContent = () => {
@@ -36,12 +37,12 @@ export default function SkyColumn({ column, onClose, chromeless = false }: SkyCo
         if (column.id === 'home') {
           return <Home />;
         }
-        return <SkyColumnFeed feedUri={column.data} />;
+        return <SkyColumnFeed feedUri={column.data} isFocused={isFocused} />;
       
       default:
         return (
           <div className="text-center py-8">
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-gray-500 dark:text-gray-300">
               Column type "{column.type}" coming soon
             </p>
           </div>
@@ -51,31 +52,22 @@ export default function SkyColumn({ column, onClose, chromeless = false }: SkyCo
 
   if (chromeless) {
     // In chromeless mode, render content directly without wrapper
-    return renderContent();
+    return <div data-theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}>{renderContent()}</div>;
   }
 
   return (
-    <div className="h-full bg-white dark:bg-gray-800 rounded-lg shadow-lg flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between p-3 border-b dark:border-gray-700">
-        <div className="flex-1 min-w-0 mr-2">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-            {column.title || column.type}
-          </h3>
-        </div>
-        <div className="flex items-center gap-1">
-          {column.id !== 'home' && (
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              title="Close column"
-            >
-              <X size={16} className="text-gray-600 dark:text-gray-400" />
-            </button>
-          )}
-        </div>
-      </div>
+    <div className="h-full rounded-lg shadow-lg flex flex-col overflow-hidden relative" data-theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}>
+      {column.id !== 'home' && (
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-gray-900/20 hover:bg-gray-900/30 dark:bg-gray-100/20 dark:hover:bg-gray-100/30 transition-colors"
+          title="Close column"
+        >
+          <X size={16} className="text-white dark:text-gray-900" />
+        </button>
+      )}
       
-      <div className="flex-1 overflow-y-auto">
+      <div className="h-full overflow-y-auto">
         {renderContent()}
       </div>
     </div>

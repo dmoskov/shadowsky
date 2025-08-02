@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plus, X, Home, Bell, Clock, MessageSquare, Hash, Star } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
@@ -40,6 +40,8 @@ export default function SkyDeck() {
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [isNarrowView, setIsNarrowView] = useState(false);
+  const [focusedColumnIndex, setFocusedColumnIndex] = useState(0);
+  const columnsContainerRef = useRef<HTMLDivElement>(null);
 
   // Fetch user's saved/pinned feeds
   const { data: userPrefs } = useQuery({
@@ -89,6 +91,40 @@ export default function SkyDeck() {
     window.addEventListener('resize', checkWidth);
     return () => window.removeEventListener('resize', checkWidth);
   }, []);
+
+  // Handle keyboard navigation between columns
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't interfere with input fields
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setFocusedColumnIndex(prev => Math.max(0, prev - 1));
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setFocusedColumnIndex(prev => Math.min(columns.length - 1, prev + 1));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [columns.length]);
+
+  // Scroll focused column into view
+  useEffect(() => {
+    if (columnsContainerRef.current && columns.length > 0) {
+      const container = columnsContainerRef.current;
+      const columnElements = container.querySelectorAll('.column-wrapper');
+      const focusedElement = columnElements[focusedColumnIndex] as HTMLElement;
+      
+      if (focusedElement) {
+        focusedElement.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+  }, [focusedColumnIndex, columns.length]);
 
   useEffect(() => {
     const homeColumn: Column = {
@@ -176,7 +212,7 @@ export default function SkyDeck() {
     // Ensure we're showing the home column
     const homeColumn = columns.find(col => col.id === 'home') || columns[0];
     return (
-      <div className="h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="h-screen dark:bg-gray-900">
         <SkyColumn
           column={homeColumn}
           onClose={() => handleRemoveColumn(homeColumn.id)}
@@ -188,14 +224,16 @@ export default function SkyDeck() {
 
   // Full multi-column view for wider screens
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex flex-col dark:bg-gray-900">
       <div className="flex-1 overflow-x-auto overflow-y-hidden p-4">
-        <div className="h-full flex gap-4 min-w-min">
-          {columns.map((column) => (
+        <div ref={columnsContainerRef} className="h-full flex gap-4 min-w-min">
+          {columns.map((column, index) => (
             <div
               key={column.id}
-              className={`w-96 h-full transition-all ${
+              className={`column-wrapper w-96 h-full transition-all ${
                 dragOverId === column.id ? 'opacity-50' : ''
+              } ${
+                focusedColumnIndex === index ? 'ring-2 ring-blue-500 rounded-lg' : ''
               }`}
               draggable
               onDragStart={(e) => handleDragStart(e, column.id)}
@@ -205,17 +243,19 @@ export default function SkyDeck() {
                 setIsDragging(null);
                 setDragOverId(null);
               }}
+              onClick={() => setFocusedColumnIndex(index)}
             >
               <SkyColumn
                 column={column}
                 onClose={() => handleRemoveColumn(column.id)}
+                isFocused={focusedColumnIndex === index}
               />
             </div>
           ))}
           
           <div className="w-96 h-full">
             {isAddingColumn ? (
-              <div className="h-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col">
+              <div className="h-full dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col">
                 <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
                   Add Column
                 </h3>
@@ -228,7 +268,7 @@ export default function SkyDeck() {
                         <button
                           key={option.type}
                           onClick={() => handleAddColumn(option.type)}
-                          className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+                          className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors text-left"
                         >
                           <Icon className="w-5 h-5 text-blue-500 mt-0.5" />
                           <div className="flex-1">
@@ -263,7 +303,7 @@ export default function SkyDeck() {
                                   <button
                                     key={savedFeed.value}
                                     onClick={() => handleAddColumn('feed', savedFeed.value, generator.displayName)}
-                                    className="flex items-start gap-2 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+                                    className="flex items-start gap-2 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors text-left"
                                   >
                                     {savedFeed.pinned ? (
                                       <Star className="w-4 h-4 text-yellow-500 mt-0.5" />
@@ -301,7 +341,7 @@ export default function SkyDeck() {
             ) : (
               <button
                 onClick={() => setIsAddingColumn(true)}
-                className="h-full w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
+                className="h-full w-full dark:bg-gray-800 rounded-lg shadow-lg flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors group"
               >
                 <Plus className="w-12 h-12 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
               </button>
