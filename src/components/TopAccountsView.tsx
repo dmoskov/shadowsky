@@ -140,6 +140,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
     },
     enabled: !!agent && uniqueHandles.length > 0,
     staleTime: 60 * 60 * 1000, // 1 hour (since we have our own cache)
+    refetchOnMount: 'always', // Always fetch fresh data on mount
   })
   
   // Query for cache statistics

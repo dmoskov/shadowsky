@@ -126,9 +126,9 @@ export const NotificationsAnalytics: React.FC = () => {
     enabled: !!agent,
     staleTime: hasExtendedData ? 5 * 60 * 1000 : 2 * 60 * 1000, // Longer stale time if using cached data
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
-    refetchInterval: hasExtendedData ? false : 30 * 1000, // Don't auto-refetch if using cached data
-    refetchOnMount: !hasExtendedData, // Only refetch on mount if no cached data
-    refetchOnWindowFocus: !hasExtendedData // Only refetch on focus if no cached data
+    refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
+    refetchOnMount: 'always', // Always fetch fresh data on mount
+    refetchOnWindowFocus: false // Don't refetch on window focus
   })
 
   const analytics = React.useMemo(() => {

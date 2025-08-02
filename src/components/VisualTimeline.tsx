@@ -67,8 +67,9 @@ export const VisualTimeline: React.FC = () => {
       return response.data
     },
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: 'always', // Always fetch fresh data on mount
+    refetchInterval: 60 * 1000, // Poll every 60 seconds after initial load
     enabled: !!agent // Only run when agent is available
   })
 

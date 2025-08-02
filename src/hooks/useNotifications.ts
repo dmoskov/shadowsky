@@ -13,6 +13,7 @@ const MAX_DAYS = 28 // 4 weeks
 
 export function useNotifications(priority: boolean = false) {
   const { session } = useAuth()
+  const queryClient = useQueryClient()
 
   // Try to load cached data first
   const cachedData = session ? NotificationCache.load(priority) : null
@@ -77,6 +78,11 @@ export function useNotifications(priority: boolean = false) {
     staleTime: cachedData ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000, // If we have cache, treat as fresh for 24h, otherwise 5min
     refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
     refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnMount: 'always', // Always fetch fresh data on mount
+    onSuccess: () => {
+      // Also invalidate visual timeline to keep it in sync
+      queryClient.invalidateQueries(['notifications-visual-timeline'])
+    },
     // Use cached data as initial data if available
     initialData: cachedData ? {
       pages: cachedData.pages,
@@ -129,6 +135,7 @@ export function useUnreadNotificationCount() {
     enabled: !!session,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
+    refetchOnMount: 'always', // Always fetch fresh data on mount
   })
 }
 

@@ -52,7 +52,8 @@ export default function SkyDeck() {
       return prefs;
     },
     enabled: !!agent,
-    staleTime: 5 * 60 * 1000
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: 'always', // Always fetch fresh data on mount
   });
   
   // Fetch feed generator details for saved feeds

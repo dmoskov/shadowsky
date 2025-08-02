@@ -93,7 +93,9 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
     getNextPageParam: (lastPage) => lastPage.cursor,
     enabled: !!agent,
     staleTime: 30 * 60 * 1000, // 30 minutes - feeds don't need frequent updates
-    gcTime: 5 * 60 * 1000
+    gcTime: 5 * 60 * 1000,
+    refetchOnMount: 'always', // Always fetch fresh data on mount
+    refetchInterval: 60 * 1000, // Poll every 60 seconds after initial load
   });
 
   const allPosts = data?.pages.flatMap(page => page.posts) || [];

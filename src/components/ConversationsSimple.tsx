@@ -396,6 +396,8 @@ export const ConversationsSimple: React.FC = () => {
     enabled: !!session && additionalRootUris.size > 0,
     staleTime: 60 * 60 * 1000, // 1 hour
     gcTime: 2 * 60 * 60 * 1000, // 2 hours
+    refetchOnMount: 'always', // Always fetch fresh data on mount
+    refetchInterval: 60 * 1000, // Poll every 60 seconds
   })
   
   // Combine all posts (replies + roots)
@@ -458,6 +460,7 @@ export const ConversationsSimple: React.FC = () => {
     enabled: !!selectedConvo && !!session,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnMount: 'always', // Always fetch fresh data on mount
   })
 
   // Group notifications into conversation threads

@@ -86,6 +86,7 @@ export function useNotificationsByType(options: UseNotificationsByTypeOptions = 
     refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
     refetchOnWindowFocus: false, // Already disabled globally, but be explicit
     refetchOnReconnect: false, // Prevent refetch on network reconnect
+    refetchOnMount: 'always', // Always fetch fresh data on mount
     placeholderData: (previousData) => previousData, // Keep showing old data while fetching new
   })
 }

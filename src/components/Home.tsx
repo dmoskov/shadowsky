@@ -107,7 +107,9 @@ export const Home: React.FC = () => {
       return prefs
     },
     enabled: !!agent,
-    staleTime: 5 * 60 * 1000
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: 'always', // Always fetch fresh data on mount
+    refetchInterval: 60 * 1000, // Poll every 60 seconds after initial load
   })
   
   // Fetch feed generator details for saved feeds
@@ -287,7 +289,9 @@ export const Home: React.FC = () => {
     getNextPageParam: (lastPage) => lastPage.cursor,
     enabled: !!agent,
     staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000
+    gcTime: 30 * 60 * 1000,
+    refetchOnMount: 'always', // Always fetch fresh data on mount
+    refetchInterval: 60 * 1000, // Poll every 60 seconds after initial load
   })
   
   const posts = React.useMemo(() => {
