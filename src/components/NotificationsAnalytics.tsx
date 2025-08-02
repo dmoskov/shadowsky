@@ -65,7 +65,7 @@ export const NotificationsAnalytics: React.FC = () => {
       const response = await agent.app.bsky.notification.listNotifications({ limit: 50 })
       return response.data
     },
-    refetchInterval: 10 * 1000, // Refetch every 10 seconds
+    refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
     enabled: !hasExtendedData, // Don't fetch if we have extended data
     refetchOnWindowFocus: false
   })

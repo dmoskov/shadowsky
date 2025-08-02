@@ -75,7 +75,7 @@ export function useNotifications(priority: boolean = false) {
     },
     enabled: !!session,
     staleTime: cachedData ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000, // If we have cache, treat as fresh for 24h, otherwise 5min
-    refetchInterval: 10 * 1000, // Refetch every 10 seconds
+    refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
     refetchOnWindowFocus: false, // Don't refetch on window focus
     // Use cached data as initial data if available
     initialData: cachedData ? {
@@ -128,7 +128,7 @@ export function useUnreadNotificationCount() {
     },
     enabled: !!session,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 10 * 1000, // Refetch every 10 seconds
+    refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
   })
 }
 

@@ -1,0 +1,314 @@
+import React, { useState, useEffect } from 'react';
+import { Plus, X, Home, Bell, Clock, MessageSquare, Hash, Star } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '../contexts/AuthContext';
+import SkyColumn from './SkyColumn';
+
+export type ColumnType = 'notifications' | 'timeline' | 'conversations' | 'feed';
+
+interface Column {
+  id: string;
+  type: ColumnType;
+  title?: string;
+  data?: string; // Can be threadUri, feedUri, profileHandle, listUri etc
+}
+
+interface SavedFeed {
+  id: string;
+  type: 'feed' | 'list' | 'timeline';
+  value: string;
+  pinned: boolean;
+}
+
+interface FeedGenerator {
+  uri: string;
+  displayName: string;
+  description?: string;
+  avatar?: string;
+}
+
+const columnOptions = [
+  { type: 'notifications' as ColumnType, label: 'Notifications', icon: Bell, description: 'All your notifications' },
+  { type: 'timeline' as ColumnType, label: 'Visual Timeline', icon: Clock, description: 'Timeline visualization' },
+  { type: 'conversations' as ColumnType, label: 'Conversations', icon: MessageSquare, description: 'Your conversations' },
+];
+
+export default function SkyDeck() {
+  const { agent } = useAuth();
+  const [columns, setColumns] = useState<Column[]>([]);
+  const [isDragging, setIsDragging] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [isAddingColumn, setIsAddingColumn] = useState(false);
+  const [isNarrowView, setIsNarrowView] = useState(false);
+
+  // Fetch user's saved/pinned feeds
+  const { data: userPrefs } = useQuery({
+    queryKey: ['userPreferences'],
+    queryFn: async () => {
+      if (!agent) throw new Error('Not authenticated');
+      const prefs = await agent.getPreferences();
+      return prefs;
+    },
+    enabled: !!agent,
+    staleTime: 5 * 60 * 1000
+  });
+  
+  // Fetch feed generator details for saved feeds
+  const { data: feedGenerators } = useQuery({
+    queryKey: ['feedGenerators', userPrefs?.savedFeeds],
+    queryFn: async () => {
+      if (!agent || !userPrefs?.savedFeeds?.length) return [];
+      
+      const feedUris = userPrefs.savedFeeds
+        .filter((feed: SavedFeed): boolean => feed.type === 'feed')
+        .map((feed: SavedFeed) => feed.value);
+      
+      if (feedUris.length === 0) return [];
+      
+      try {
+        const response = await agent.app.bsky.feed.getFeedGenerators({
+          feeds: feedUris
+        });
+        return response.data.feeds;
+      } catch (error) {
+        console.error('Failed to fetch feed generators:', error);
+        return [];
+      }
+    },
+    enabled: !!agent && !!userPrefs?.savedFeeds
+  });
+
+  // Handle responsive width detection
+  useEffect(() => {
+    const checkWidth = () => {
+      // Consider narrow view for screens less than 768px (tailwind md breakpoint)
+      setIsNarrowView(window.innerWidth < 768);
+    };
+
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, []);
+
+  useEffect(() => {
+    const homeColumn: Column = {
+      id: 'home',
+      type: 'feed',
+      title: 'Home',
+      data: 'following' // Default to following feed
+    };
+    
+    const savedColumns = localStorage.getItem('skyDeckColumns');
+    if (savedColumns) {
+      try {
+        const parsed = JSON.parse(savedColumns);
+        // Ensure the first column is always Home
+        if (parsed.length === 0 || parsed[0].id !== 'home') {
+          setColumns([homeColumn, ...parsed.filter((col: Column) => col.id !== 'home')]);
+        } else {
+          setColumns(parsed);
+        }
+      } catch {
+        // If parsing fails, start with just home column
+        setColumns([homeColumn]);
+      }
+    } else {
+      // First time - just home column
+      setColumns([homeColumn]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (columns.length > 0) {
+      localStorage.setItem('skyDeckColumns', JSON.stringify(columns));
+    }
+  }, [columns]);
+
+  const handleAddColumn = (type: ColumnType, feedUri?: string, feedTitle?: string) => {
+    const newColumn: Column = {
+      id: Date.now().toString(),
+      type: type,
+      title: feedTitle || columnOptions.find(opt => opt.type === type)?.label || type,
+      data: feedUri,
+    };
+
+    setColumns([...columns, newColumn]);
+    setIsAddingColumn(false);
+  };
+
+  const handleRemoveColumn = (id: string) => {
+    // Don't allow removing the home column
+    if (id === 'home') return;
+    setColumns(columns.filter(col => col.id !== id));
+  };
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setIsDragging(id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverId(id);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropId: string) => {
+    e.preventDefault();
+    
+    if (isDragging && isDragging !== dropId) {
+      const dragIndex = columns.findIndex(col => col.id === isDragging);
+      const dropIndex = columns.findIndex(col => col.id === dropId);
+      
+      const newColumns = [...columns];
+      const [draggedColumn] = newColumns.splice(dragIndex, 1);
+      newColumns.splice(dropIndex, 0, draggedColumn);
+      
+      setColumns(newColumns);
+    }
+    
+    setIsDragging(null);
+    setDragOverId(null);
+  };
+
+  // In narrow view, show only the home column without chrome
+  if (isNarrowView && columns.length > 0) {
+    // Ensure we're showing the home column
+    const homeColumn = columns.find(col => col.id === 'home') || columns[0];
+    return (
+      <div className="h-screen bg-gray-50 dark:bg-gray-900">
+        <SkyColumn
+          column={homeColumn}
+          onClose={() => handleRemoveColumn(homeColumn.id)}
+          chromeless={true}
+        />
+      </div>
+    );
+  }
+
+  // Full multi-column view for wider screens
+  return (
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="flex-1 overflow-x-auto overflow-y-hidden p-4">
+        <div className="h-full flex gap-4 min-w-min">
+          {columns.map((column) => (
+            <div
+              key={column.id}
+              className={`w-96 h-full transition-all ${
+                dragOverId === column.id ? 'opacity-50' : ''
+              }`}
+              draggable
+              onDragStart={(e) => handleDragStart(e, column.id)}
+              onDragOver={(e) => handleDragOver(e, column.id)}
+              onDrop={(e) => handleDrop(e, column.id)}
+              onDragEnd={() => {
+                setIsDragging(null);
+                setDragOverId(null);
+              }}
+            >
+              <SkyColumn
+                column={column}
+                onClose={() => handleRemoveColumn(column.id)}
+              />
+            </div>
+          ))}
+          
+          <div className="w-96 h-full">
+            {isAddingColumn ? (
+              <div className="h-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                  Add Column
+                </h3>
+                
+                <div className="flex-1 overflow-y-auto">
+                  <div className="grid gap-2">
+                    {columnOptions.map((option) => {
+                      const Icon = option.icon;
+                      return (
+                        <button
+                          key={option.type}
+                          onClick={() => handleAddColumn(option.type)}
+                          className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+                        >
+                          <Icon className="w-5 h-5 text-blue-500 mt-0.5" />
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900 dark:text-white">
+                              {option.label}
+                            </div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                              {option.description}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                    
+                    {/* Add Feed Section */}
+                    {userPrefs?.savedFeeds && feedGenerators && feedGenerators.length > 0 && (
+                      <>
+                        <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 px-3 mb-2">
+                            Add Feed
+                          </h4>
+                          <div className="grid gap-1">
+                            {userPrefs.savedFeeds
+                              .filter((feed: SavedFeed) => feed.type === 'feed')
+                              .map((savedFeed: SavedFeed) => {
+                                const generator = feedGenerators.find(
+                                  (g: FeedGenerator) => g.uri === savedFeed.value
+                                );
+                                if (!generator) return null;
+                                
+                                return (
+                                  <button
+                                    key={savedFeed.value}
+                                    onClick={() => handleAddColumn('feed', savedFeed.value, generator.displayName)}
+                                    className="flex items-start gap-2 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+                                  >
+                                    {savedFeed.pinned ? (
+                                      <Star className="w-4 h-4 text-yellow-500 mt-0.5" />
+                                    ) : (
+                                      <Hash className="w-4 h-4 text-gray-400 mt-0.5" />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                        {generator.displayName}
+                                      </div>
+                                      {generator.description && (
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                                          {generator.description}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <div className="mt-4">
+                    <button
+                      onClick={() => setIsAddingColumn(false)}
+                      className="w-full px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsAddingColumn(true)}
+                className="h-full w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
+              >
+                <Plus className="w-12 h-12 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

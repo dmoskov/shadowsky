@@ -83,7 +83,7 @@ export function useNotificationsByType(options: UseNotificationsByTypeOptions = 
     },
     enabled: !!session && enabled,
     staleTime: 30 * 60 * 1000, // 30 minutes - conversations don't change that often
-    refetchInterval: 10 * 1000, // Refetch every 10 seconds
+    refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
     refetchOnWindowFocus: false, // Already disabled globally, but be explicit
     refetchOnReconnect: false, // Prevent refetch on network reconnect
     placeholderData: (previousData) => previousData, // Keep showing old data while fetching new

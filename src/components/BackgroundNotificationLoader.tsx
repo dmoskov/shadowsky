@@ -46,7 +46,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
     getNextPageParam: (lastPage) => lastPage.cursor,
     enabled: enablePolling, // Enable polling after initial load
     staleTime: 30 * 60 * 1000, // 30 minutes
-    refetchInterval: enablePolling ? 10 * 1000 : false, // Poll every 10 seconds when enabled
+    refetchInterval: enablePolling ? 60 * 1000 : false, // Poll every 60 seconds when enabled - reduced from 10s
   })
 
   // Initialize IndexedDB

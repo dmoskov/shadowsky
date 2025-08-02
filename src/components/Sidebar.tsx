@@ -10,7 +10,8 @@ import {
   X,
   PenSquare,
   Search,
-  Home
+  Home,
+  Columns
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -25,6 +26,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { path: '/conversations', label: 'Conversations', icon: MessageSquare },
     { path: '/search', label: 'Search', icon: Search },
     { path: '/compose', label: 'Compose', icon: PenSquare },
+    { path: '/skydeck', label: 'SkyDeck', icon: Columns },
     { path: '/timeline', label: 'Timeline', icon: Clock },
     { path: '/analytics', label: 'Analytics', icon: BarChart3 },
   ]
