@@ -193,14 +193,26 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   // Scroll to highlighted post when it's rendered
   useEffect(() => {
     if (highlightUri && highlightRef.current) {
+      // Check if the highlighted post is the root post
+      const isRootPost = highlightUri === rootUri
+      
       setTimeout(() => {
-        highlightRef.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        })
+        if (isRootPost) {
+          // For root posts, scroll to the top of the container
+          highlightRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          })
+        } else {
+          // For other posts, center them in view
+          highlightRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          })
+        }
       }, 100) // Small delay to ensure DOM is ready
     }
-  }, [highlightUri, posts])
+  }, [highlightUri, rootUri, posts])
 
   // Render embeds (images, videos, quotes, etc)
   const renderEmbed = (embed: any) => {

@@ -89,6 +89,7 @@ export function ThreadModal({ postUri, onClose }: ThreadModalProps) {
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            style={{ color: 'var(--bsky-text-primary)' }}
           >
             <X size={20} />
           </button>
