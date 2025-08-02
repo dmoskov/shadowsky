@@ -304,7 +304,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                style={{ borderColor: 'var(--bsky-border-primary)' }}>
             <div className="flex items-center gap-1 mb-1">
               <img
-                src={proxifyBskyImage(quotedPost.author.avatar) || '/default-avatar.png'}
+                src={proxifyBskyImage(quotedPost.author.avatar) || '/default-avatar.svg'}
                 alt={quotedPost.author.handle}
                 className="w-4 h-4 rounded-full"
               />

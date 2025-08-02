@@ -610,7 +610,7 @@ export const Home: React.FC = () => {
                }}>
             <div className="flex items-center gap-2 mb-2">
               <img
-                src={proxifyBskyImage(quotedPost.author.avatar) || '/default-avatar.png'}
+                src={proxifyBskyImage(quotedPost.author.avatar) || '/default-avatar.svg'}
                 alt={quotedPost.author.handle}
                 className="w-5 h-5 rounded-full"
               />
@@ -849,7 +849,7 @@ export const Home: React.FC = () => {
               
               <div className="flex gap-3">
                 <img
-                  src={proxifyBskyImage(post.author.avatar) || '/default-avatar.png'}
+                  src={proxifyBskyImage(post.author.avatar) || '/default-avatar.svg'}
                   alt={post.author.handle}
                   className="w-12 h-12 rounded-full"
                 />
