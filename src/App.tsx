@@ -48,6 +48,10 @@ const queryClient = new QueryClient({
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth()
+  
+  // Check for feature flag in URL params
+  const searchParams = new URLSearchParams(window.location.search)
+  const showHomeFeed = searchParams.get('feed') === 'home' || searchParams.get('home') === 'true'
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   
   // Initialize analytics tracking
@@ -98,7 +102,7 @@ function AppContent() {
         <main className="flex-1 lg:ml-64 mt-16 h-[calc(100vh-4rem)] overflow-x-hidden">
           <Routes>
             <Route path="/home" element={<Home />} />
-            <Route path="/" element={<NotificationsFeed />} />
+            <Route path="/" element={showHomeFeed ? <Home /> : <NotificationsFeed />} />
             <Route path="/timeline" element={
               <div className="h-full overflow-y-auto">
                 <VisualTimeline />
