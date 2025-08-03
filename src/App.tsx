@@ -96,7 +96,7 @@ function AppContent() {
       <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div className="flex">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-        <main className="flex-1 lg:ml-64 mt-16 h-[calc(100vh-4rem)] overflow-y-auto">
+        <main className="flex-1 lg:ml-64 mt-16 min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] overflow-y-auto">
           <Routes>
             <Route path="/home" element={<SkyDeck />} />
             <Route path="/" element={<SkyDeck />} />

@@ -23,7 +23,7 @@
 }
 
 html {
-  overflow-x: hidden;
+  /* Allow normal scrolling on mobile */
 }
 
 * {
@@ -38,10 +38,18 @@ html {
   }
 }
 
+/* Prevent iOS rubber band scrolling issues */
+@media (max-width: 1024px) {
+  html, body {
+    height: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 body {
   margin: 0;
   min-height: 100vh;
-  overflow-x: hidden;
   width: 100%;
   position: relative;
 }
