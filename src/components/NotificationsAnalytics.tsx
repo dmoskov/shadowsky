@@ -628,6 +628,10 @@ export const NotificationsAnalytics: React.FC = () => {
   }
 
   const maxValue = Math.max(1, ...analytics.buckets.map(b => b.total))
+  const maxSentValue = sentActivity ? Math.max(1, ...sentActivity.buckets.map(b => 
+    b.posts + b.replies + b.reposts + b.quotes
+  )) : 1
+  const currentMaxValue = activityView === 'received' ? maxValue : maxSentValue
 
   return (
     <div className="p-6 space-y-6">
@@ -784,10 +788,10 @@ export const NotificationsAnalytics: React.FC = () => {
         <div className="relative" style={{ height: '300px', marginTop: '20px' }}>
           {/* Y-axis labels */}
           <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-xs" style={{ width: '40px', color: 'var(--bsky-text-secondary)' }}>
-            <span>{maxValue}</span>
-            <span>{Math.round(maxValue * 0.75)}</span>
-            <span>{Math.round(maxValue * 0.5)}</span>
-            <span>{Math.round(maxValue * 0.25)}</span>
+            <span>{currentMaxValue}</span>
+            <span>{Math.round(currentMaxValue * 0.75)}</span>
+            <span>{Math.round(currentMaxValue * 0.5)}</span>
+            <span>{Math.round(currentMaxValue * 0.25)}</span>
             <span>0</span>
           </div>
           
@@ -920,9 +924,6 @@ export const NotificationsAnalytics: React.FC = () => {
               ) : sentActivity ? (
                 // Sent view - show user's posts, replies, reposts
                 sentActivity.buckets.map((bucket, index) => {
-                  const maxSentValue = Math.max(1, ...sentActivity.buckets.map(b => 
-                    b.posts + b.replies + b.reposts + b.quotes
-                  ))
                   const barWidth = timeRange === '4w' 
                     ? `${100 / sentActivity.buckets.length}%` 
                     : `${100 / sentActivity.buckets.length - 1}%`
