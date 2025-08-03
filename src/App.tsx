@@ -15,6 +15,7 @@ import { Search } from './components/Search'
 import { CompressionTest } from './components/CompressionTest'
 import { DebugConsole } from './components/DebugConsole'
 import SkyDeck from './components/SkyDeck'
+import { Notifications } from './components/Notifications'
 import { NotificationStorageDB } from './services/notification-storage-db'
 import { cleanupLocalStorage } from './utils/cleanupLocalStorage'
 import { BackgroundNotificationLoader } from './components/BackgroundNotificationLoader'
@@ -95,7 +96,7 @@ function AppContent() {
       <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div className="flex">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-        <main className="flex-1 lg:ml-64 mt-16 h-[calc(100vh-4rem)] overflow-hidden">
+        <main className="flex-1 lg:ml-64 mt-16 h-[calc(100vh-4rem)] overflow-y-auto">
           <Routes>
             <Route path="/home" element={<SkyDeck />} />
             <Route path="/" element={<SkyDeck />} />
@@ -105,6 +106,7 @@ function AppContent() {
               </div>
             } />
             <Route path="/analytics" element={<NotificationsAnalytics />} />
+            <Route path="/notifications" element={<Notifications />} />
             <Route path="/conversations" element={<Conversations />} />
             <Route path="/compose" element={<Composer />} />
             <Route path="/search" element={<Search />} />

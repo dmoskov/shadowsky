@@ -22,6 +22,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const navItems = [
     { path: '/', label: 'Home', icon: Home },
+    { path: '/notifications', label: 'Notifications', icon: Bell },
     { path: '/conversations', label: 'Conversations', icon: MessageSquare },
     { path: '/search', label: 'Search', icon: Search },
     { path: '/compose', label: 'Compose', icon: PenSquare },
