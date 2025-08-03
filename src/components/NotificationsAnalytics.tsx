@@ -41,6 +41,7 @@ export const NotificationsAnalytics: React.FC = () => {
   const { agent, session } = useAuth()
   const queryClient = useQueryClient()
   const [timeRange, setTimeRange] = React.useState<TimeRange>('7d')
+  const [activityView, setActivityView] = React.useState<'received' | 'sent'>('received')
   
   // Analytics hooks
   const { trackFeatureAction } = useFeatureTracking('analytics')
@@ -103,6 +104,89 @@ export const NotificationsAnalytics: React.FC = () => {
         postsTotal: profile.data.postsCount || 0
       }
     },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false
+  })
+
+  // Query for user's sent activity (posts, likes, reposts they made)
+  const { data: sentActivity } = useQuery({
+    queryKey: ['user-sent-activity', session?.handle, timeRange],
+    queryFn: async () => {
+      if (!agent || !session?.handle) throw new Error('Not authenticated')
+      
+      const cutoffDate = timeRange === '1d' ? subDays(new Date(), 1) :
+                        timeRange === '3d' ? subDays(new Date(), 3) :
+                        timeRange === '7d' ? subDays(new Date(), 7) :
+                        subDays(new Date(), 28)
+
+      // Fetch user's recent posts
+      const posts = await agent.getAuthorFeed({ 
+        actor: session.handle, 
+        limit: 100 
+      })
+      
+      // Organize by time buckets
+      const buckets: Array<{
+        label: string
+        time: Date
+        posts: number
+        replies: number
+        reposts: number
+        quotes: number
+      }> = []
+      
+      // Create time buckets based on time range
+      const now = new Date()
+      if (timeRange === '1d') {
+        // Hourly buckets for last 24 hours
+        for (let i = 23; i >= 0; i--) {
+          const time = subHours(now, i)
+          buckets.push({ label: format(time, 'ha'), time, posts: 0, replies: 0, reposts: 0, quotes: 0 })
+        }
+      } else {
+        // Daily buckets
+        const days = timeRange === '3d' ? 3 : timeRange === '7d' ? 7 : 28
+        for (let i = days - 1; i >= 0; i--) {
+          const time = startOfDay(subDays(now, i))
+          buckets.push({ 
+            label: format(time, days > 7 ? 'M/d' : 'EEE'), 
+            time, 
+            posts: 0, 
+            replies: 0, 
+            reposts: 0,
+            quotes: 0
+          })
+        }
+      }
+      
+      // Count activities in each bucket
+      for (const item of posts.data.feed) {
+        const postDate = new Date(item.post.indexedAt)
+        if (postDate >= cutoffDate) {
+          // Find the right bucket
+          const bucketIndex = buckets.findIndex((b, i) => {
+            const nextTime = i < buckets.length - 1 ? buckets[i + 1].time : now
+            return postDate >= b.time && postDate < nextTime
+          })
+          
+          if (bucketIndex !== -1) {
+            // Check if it's a reply, repost, or quote
+            if (item.reply) {
+              buckets[bucketIndex].replies++
+            } else if (item.reason === 'repost') {
+              buckets[bucketIndex].reposts++
+            } else if (item.post.embed?.$type === 'app.bsky.embed.record') {
+              buckets[bucketIndex].quotes++
+            } else {
+              buckets[bucketIndex].posts++
+            }
+          }
+        }
+      }
+      
+      return { buckets }
+    },
+    enabled: activityView === 'sent',
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false
   })
@@ -492,7 +576,37 @@ export const NotificationsAnalytics: React.FC = () => {
             <Activity className="text-green-500" size={20} />
             Activity Timeline
           </h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            {/* Activity Toggle */}
+            <div className="flex items-center gap-2 text-sm">
+              <button
+                onClick={() => setActivityView('received')}
+                className={`px-3 py-1 rounded-lg transition-all ${
+                  activityView === 'received' ? 'font-semibold' : ''
+                }`}
+                style={{
+                  backgroundColor: activityView === 'received' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
+                  color: activityView === 'received' ? 'white' : 'var(--bsky-text-secondary)'
+                }}
+              >
+                Received
+              </button>
+              <button
+                onClick={() => setActivityView('sent')}
+                className={`px-3 py-1 rounded-lg transition-all ${
+                  activityView === 'sent' ? 'font-semibold' : ''
+                }`}
+                style={{
+                  backgroundColor: activityView === 'sent' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
+                  color: activityView === 'sent' ? 'white' : 'var(--bsky-text-secondary)'
+                }}
+              >
+                Sent
+              </button>
+            </div>
+            
+            {/* Time Range Buttons */}
+            <div className="flex items-center gap-2">
             <button
               onClick={(e) => {
                 e.preventDefault()
@@ -589,7 +703,9 @@ export const NotificationsAnalytics: React.FC = () => {
             
             {/* Bars */}
             <div className="relative h-full flex items-end justify-between" style={{ gap: timeRange === '4w' ? '2px' : '4px', paddingBottom: '30px' }}>
-              {analytics.buckets.map((bucket, index) => {
+              {activityView === 'received' ? (
+                // Received view - show notifications
+                analytics.buckets.map((bucket, index) => {
                 const barWidth = timeRange === '4w' 
                   ? `${100 / analytics.buckets.length}%` 
                   : `${100 / analytics.buckets.length - 1}%`
@@ -692,32 +808,155 @@ export const NotificationsAnalytics: React.FC = () => {
                     )}
                   </div>
                 )
-              })}
+              })
+              ) : sentActivity ? (
+                // Sent view - show user's posts, replies, reposts
+                sentActivity.buckets.map((bucket, index) => {
+                  const maxSentValue = Math.max(1, ...sentActivity.buckets.map(b => 
+                    b.posts + b.replies + b.reposts + b.quotes
+                  ))
+                  const barWidth = timeRange === '4w' 
+                    ? `${100 / sentActivity.buckets.length}%` 
+                    : `${100 / sentActivity.buckets.length - 1}%`
+                  const total = bucket.posts + bucket.replies + bucket.reposts + bucket.quotes
+                  
+                  return (
+                    <div
+                      key={`${bucket.label}-${index}`}
+                      className="relative group"
+                      style={{ 
+                        width: barWidth, 
+                        minWidth: timeRange === '4w' ? '8px' : '20px', 
+                        maxWidth: timeRange === '4w' ? '30px' : '60px' 
+                      }}
+                    >
+                      {/* Stacked bar */}
+                      <div className="absolute bottom-0 left-0 right-0 flex flex-col-reverse rounded-t-lg overflow-hidden transition-all duration-300 hover:opacity-90">
+                        {/* Posts - bottom of stack */}
+                        {bucket.posts > 0 && (
+                          <div
+                            className="w-full transition-all duration-500"
+                            style={{
+                              height: `${(bucket.posts / maxSentValue) * 270}px`,
+                              background: 'linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%)'
+                            }}
+                            title={`${bucket.posts} posts`}
+                          />
+                        )}
+                        {/* Replies */}
+                        {bucket.replies > 0 && (
+                          <div
+                            className="w-full transition-all duration-500"
+                            style={{
+                              height: `${(bucket.replies / maxSentValue) * 270}px`,
+                              background: 'linear-gradient(180deg, #86efac 0%, #4ade80 100%)'
+                            }}
+                            title={`${bucket.replies} replies`}
+                          />
+                        )}
+                        {/* Reposts */}
+                        {bucket.reposts > 0 && (
+                          <div
+                            className="w-full transition-all duration-500"
+                            style={{
+                              height: `${(bucket.reposts / maxSentValue) * 270}px`,
+                              background: 'linear-gradient(180deg, #c4b5fd 0%, #a78bfa 100%)'
+                            }}
+                            title={`${bucket.reposts} reposts`}
+                          />
+                        )}
+                        {/* Quotes */}
+                        {bucket.quotes > 0 && (
+                          <div
+                            className="w-full transition-all duration-500"
+                            style={{
+                              height: `${(bucket.quotes / maxSentValue) * 270}px`,
+                              background: 'linear-gradient(180deg, #fda4af 0%, #fb7185 100%)'
+                            }}
+                            title={`${bucket.quotes} quotes`}
+                          />
+                        )}
+                      </div>
+                      
+                      {/* Hover tooltip */}
+                      <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                        <div className="px-3 py-2 rounded-lg text-xs whitespace-nowrap" style={{
+                          backgroundColor: 'var(--bsky-bg-primary)',
+                          color: 'var(--bsky-text-primary)',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                          border: '1px solid var(--bsky-border-primary)'
+                        }}>
+                          <div className="font-bold mb-1">{total} total</div>
+                          {bucket.posts > 0 && <div style={{ color: '#3b82f6' }}>{bucket.posts} posts</div>}
+                          {bucket.replies > 0 && <div style={{ color: '#4ade80' }}>{bucket.replies} replies</div>}
+                          {bucket.reposts > 0 && <div style={{ color: '#a78bfa' }}>{bucket.reposts} reposts</div>}
+                          {bucket.quotes > 0 && <div style={{ color: '#fb7185' }}>{bucket.quotes} quotes</div>}
+                        </div>
+                      </div>
+                      
+                      {/* X-axis label */}
+                      {(timeRange !== '4w' || index % 4 === 0 || index === sentActivity.buckets.length - 1) && (
+                        <div className="absolute top-full mt-1 left-0 right-0 text-center">
+                          <span className="text-xs" style={{ 
+                            color: 'var(--bsky-text-tertiary)',
+                            fontSize: timeRange === '4w' ? '10px' : '12px' 
+                          }}>
+                            {bucket.label}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })
+              ) : null}
             </div>
           </div>
         </div>
         
         <div className="flex flex-wrap gap-3 mt-4 text-xs">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }}></div>
-            <span style={{ color: 'var(--bsky-text-secondary)' }}>Likes</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#60a5fa' }}></div>
-            <span style={{ color: 'var(--bsky-text-secondary)' }}>Reposts</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#a78bfa' }}></div>
-            <span style={{ color: 'var(--bsky-text-secondary)' }}>Follows</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#4ade80' }}></div>
-            <span style={{ color: 'var(--bsky-text-secondary)' }}>Replies</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded" style={{ backgroundColor: '#fb7185' }}></div>
-            <span style={{ color: 'var(--bsky-text-secondary)' }}>Mentions</span>
-          </div>
+          {activityView === 'received' ? (
+            <>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }}></div>
+                <span style={{ color: 'var(--bsky-text-secondary)' }}>Likes</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#60a5fa' }}></div>
+                <span style={{ color: 'var(--bsky-text-secondary)' }}>Reposts</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#a78bfa' }}></div>
+                <span style={{ color: 'var(--bsky-text-secondary)' }}>Follows</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#4ade80' }}></div>
+                <span style={{ color: 'var(--bsky-text-secondary)' }}>Replies</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#fb7185' }}></div>
+                <span style={{ color: 'var(--bsky-text-secondary)' }}>Mentions</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#3b82f6' }}></div>
+                <span style={{ color: 'var(--bsky-text-secondary)' }}>Posts</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#4ade80' }}></div>
+                <span style={{ color: 'var(--bsky-text-secondary)' }}>Replies</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#a78bfa' }}></div>
+                <span style={{ color: 'var(--bsky-text-secondary)' }}>Reposts</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#fb7185' }}></div>
+                <span style={{ color: 'var(--bsky-text-secondary)' }}>Quotes</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
