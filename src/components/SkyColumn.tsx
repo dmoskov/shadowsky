@@ -58,11 +58,8 @@ export default function SkyColumn({ column, onClose, chromeless = false, isFocus
         return <Conversations />;
       
       case 'feed':
-        // Use the full Home component for the home column
-        if (column.id === 'home') {
-          return <Home />;
-        }
-        return <SkyColumnFeed feedUri={column.data} isFocused={isFocused} />;
+        // Use the Home component for all feed columns
+        return <Home initialFeedUri={column.data} />;
       
       default:
         return (

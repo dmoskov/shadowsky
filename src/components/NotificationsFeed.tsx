@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, Image, Loader, ChevronUp, Crown, Settings, Database, Users, MoreVertical } from 'lucide-react'
+import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, Image, Loader, ChevronUp, Crown, Settings, Database, Users, MoreVertical, Bell } from 'lucide-react'
 import { useNotifications, useUnreadCount } from '../hooks/useNotifications'
 import { useNotificationPosts, postHasImages } from '../hooks/useNotificationPosts'
 import { useFollowing } from '../hooks/useFollowing'
@@ -328,9 +328,25 @@ export const NotificationsFeed: React.FC = () => {
 
   return (
     <div className="bsky-font">
-      {/* Filter tabs without header */}
-      <div className="sticky top-0 bsky-glass z-10" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
-        <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4">
+      {/* Header */}
+      <div className="sticky top-0 z-20 bsky-glass border-b" style={{ 
+        borderColor: 'var(--bsky-border-primary)',
+        paddingTop: 'env(safe-area-inset-top, 0px)'
+      }}>
+        <div className="px-4 py-3 flex items-center gap-2">
+          <Bell size={20} style={{ color: 'var(--bsky-primary)' }} />
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+            Notifications
+          </h2>
+        </div>
+      </div>
+      
+      {/* Filter tabs */}
+      <div className="sticky bsky-glass z-10" style={{ 
+        top: 'calc(53px + env(safe-area-inset-top, 0px))',
+        borderBottom: '1px solid var(--bsky-border-primary)' 
+      }}>
+        <div className="px-3 sm:px-6 py-2">
 
         {/* Filter tabs */}
         <div className="flex gap-1 items-center">
@@ -539,7 +555,7 @@ export const NotificationsFeed: React.FC = () => {
           fontSize: '0.875rem',
           color: 'var(--bsky-text-secondary)'
         }}>
-          <div className="max-w-4xl mx-auto px-3 sm:px-6 py-2">
+          <div className="px-3 sm:px-6 py-2">
             <div className="flex items-center justify-between">
               <span>Loading post content...</span>
               <span>{percentageFetched}% ({fetchedPosts}/{totalPosts} posts)</span>
@@ -558,7 +574,7 @@ export const NotificationsFeed: React.FC = () => {
       )}
 
       {/* Notifications list */}
-      <div className="max-w-4xl mx-auto">
+      <div className="px-3 sm:px-6">
         {filter === 'top-accounts' ? (
           <TopAccountsView 
             notifications={notifications} 

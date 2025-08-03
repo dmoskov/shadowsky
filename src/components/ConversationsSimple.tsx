@@ -615,6 +615,16 @@ export const ConversationsSimple: React.FC = () => {
       }}>
         {/* Conversations List - Full width */}
         <div className="flex flex-col w-full">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
+          <div className="px-4 py-3 flex items-center gap-2">
+            <MessageCircle size={20} style={{ color: 'var(--bsky-primary)' }} />
+            <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+              Conversations
+            </h2>
+          </div>
+        </div>
+        
         {/* Search Header */}
         <div className="py-4 px-4 sm:px-6" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
           <div className="relative">

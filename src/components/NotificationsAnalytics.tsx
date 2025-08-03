@@ -42,6 +42,7 @@ export const NotificationsAnalytics: React.FC = () => {
   const queryClient = useQueryClient()
   const [timeRange, setTimeRange] = React.useState<TimeRange>('7d')
   const [activityView, setActivityView] = React.useState<'received' | 'sent'>('received')
+  const [topUsersView, setTopUsersView] = React.useState<'received' | 'sent'>('received')
   
   // Analytics hooks
   const { trackFeatureAction } = useFeatureTracking('analytics')
@@ -104,6 +105,110 @@ export const NotificationsAnalytics: React.FC = () => {
         postsTotal: profile.data.postsCount || 0
       }
     },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false
+  })
+
+  // Query for users the current user engages with most
+  const { data: topUsersSent } = useQuery({
+    queryKey: ['top-users-sent', session?.handle, timeRange],
+    queryFn: async () => {
+      if (!agent || !session?.handle) throw new Error('Not authenticated')
+      
+      const cutoffDate = timeRange === '1d' ? subDays(new Date(), 1) :
+                        timeRange === '3d' ? subDays(new Date(), 3) :
+                        timeRange === '7d' ? subDays(new Date(), 7) :
+                        subDays(new Date(), 28)
+
+      // Track interactions per user
+      const userInteractions = new Map<string, { 
+        handle: string, 
+        displayName?: string, 
+        avatar?: string,
+        did: string,
+        likes: number,
+        replies: number,
+        reposts: number,
+        total: number 
+      }>()
+      
+      // Helper to add/update user interaction
+      const addInteraction = (author: any, type: 'likes' | 'replies' | 'reposts') => {
+        const key = author.handle
+        if (!userInteractions.has(key)) {
+          userInteractions.set(key, {
+            handle: author.handle,
+            displayName: author.displayName,
+            avatar: author.avatar,
+            did: author.did,
+            likes: 0,
+            replies: 0,
+            reposts: 0,
+            total: 0
+          })
+        }
+        
+        const user = userInteractions.get(key)!
+        user[type]++
+        user.total++
+      }
+
+      // Fetch user's own posts to see who they replied to
+      const ownFeed = await agent.getAuthorFeed({ 
+        actor: session.handle, 
+        limit: 100 
+      })
+      
+      // Process replies
+      for (const item of ownFeed.data.feed) {
+        const postDate = new Date(item.post.indexedAt)
+        if (postDate >= cutoffDate && item.reply) {
+          // This is a reply TO someone
+          const parentAuthor = item.reply.parent.author
+          if (parentAuthor.handle !== session.handle) {
+            addInteraction(parentAuthor, 'replies')
+          }
+        }
+      }
+
+      // Fetch user's likes
+      try {
+        // Note: This endpoint might not be available in all AT Protocol implementations
+        // Using the actor feed as a proxy to see what posts are liked
+        const feed = await agent.getTimeline({ limit: 100 })
+        
+        for (const item of feed.data.feed) {
+          const postDate = new Date(item.post.indexedAt)
+          if (postDate >= cutoffDate) {
+            // Check if current user liked this post
+            if (item.post.viewer?.like) {
+              const author = item.post.author
+              if (author.handle !== session.handle) {
+                addInteraction(author, 'likes')
+              }
+            }
+            
+            // Check if current user reposted
+            if (item.post.viewer?.repost) {
+              const author = item.post.author
+              if (author.handle !== session.handle) {
+                addInteraction(author, 'reposts')
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching timeline for likes/reposts:', error)
+      }
+      
+      // Sort by total interactions and get top 5
+      const topUsers = Array.from(userInteractions.values())
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5)
+      
+      return topUsers
+    },
+    enabled: topUsersView === 'sent',
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false
   })
@@ -562,21 +667,22 @@ export const NotificationsAnalytics: React.FC = () => {
       </div>
 
       {/* Activity Chart */}
-      <div className="bsky-card p-6" style={{
-        background: 'var(--bsky-bg-secondary)',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div className="absolute top-0 right-0 w-64 h-64 opacity-5" style={{
-          background: 'radial-gradient(circle, var(--bsky-primary) 0%, transparent 70%)',
-          transform: 'translate(30%, -30%)'
-        }} />
-        <div className="flex items-center justify-between mb-4" style={{ position: 'relative', zIndex: 10 }}>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Activity className="text-green-500" size={20} />
-            Activity Timeline
-          </h2>
-          <div className="flex items-center gap-4">
+      <TrackedChart chartName="activity_timeline">
+        <div className="bsky-card p-6" style={{
+          background: 'var(--bsky-bg-secondary)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <div className="absolute top-0 right-0 w-64 h-64 opacity-5" style={{
+            background: 'radial-gradient(circle, var(--bsky-primary) 0%, transparent 70%)',
+            transform: 'translate(30%, -30%)'
+          }} />
+          <div className="mb-4" style={{ position: 'relative', zIndex: 10 }}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Activity className="text-green-500" size={20} />
+              Activity Timeline
+            </h2>
             {/* Activity Toggle */}
             <div className="flex items-center gap-2 text-sm">
               <button
@@ -604,9 +710,10 @@ export const NotificationsAnalytics: React.FC = () => {
                 Sent
               </button>
             </div>
-            
-            {/* Time Range Buttons */}
-            <div className="flex items-center gap-2">
+          </div>
+          
+          {/* Time Range Buttons - on their own line */}
+          <div className="flex items-center gap-2">
             <button
               onClick={(e) => {
                 e.preventDefault()
@@ -673,6 +780,7 @@ export const NotificationsAnalytics: React.FC = () => {
             </button>
           </div>
         </div>
+        
         <div className="relative" style={{ height: '300px', marginTop: '20px' }}>
           {/* Y-axis labels */}
           <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-xs" style={{ width: '40px', color: 'var(--bsky-text-secondary)' }}>
@@ -911,9 +1019,8 @@ export const NotificationsAnalytics: React.FC = () => {
               ) : null}
             </div>
           </div>
-        </div>
-        
-        <div className="flex flex-wrap gap-3 mt-4 text-xs">
+          
+          <div className="flex flex-wrap gap-3 mt-4 text-xs">
           {activityView === 'received' ? (
             <>
               <div className="flex items-center gap-1">
@@ -957,43 +1064,124 @@ export const NotificationsAnalytics: React.FC = () => {
               </div>
             </>
           )}
+          </div>
         </div>
       </div>
+      </TrackedChart>
 
       {/* Top Users */}
       <div className="bsky-card p-6">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Heart style={{ color: 'var(--bsky-like)' }} size={20} />
-          Top Users Engaging With Your Content
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Heart style={{ color: 'var(--bsky-like)' }} size={20} />
+            {topUsersView === 'received' ? 'Top Users Engaging With You' : 'Users You Engage With Most'}
+          </h2>
+          <div className="flex items-center gap-2 text-sm">
+            <button
+              onClick={() => setTopUsersView('received')}
+              className={`px-3 py-1 rounded-lg transition-all ${
+                topUsersView === 'received' ? 'font-semibold' : ''
+              }`}
+              style={{
+                backgroundColor: topUsersView === 'received' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
+                color: topUsersView === 'received' ? 'white' : 'var(--bsky-text-secondary)'
+              }}
+            >
+              Received
+            </button>
+            <button
+              onClick={() => setTopUsersView('sent')}
+              className={`px-3 py-1 rounded-lg transition-all ${
+                topUsersView === 'sent' ? 'font-semibold' : ''
+              }`}
+              style={{
+                backgroundColor: topUsersView === 'sent' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
+                color: topUsersView === 'sent' ? 'white' : 'var(--bsky-text-secondary)'
+              }}
+            >
+              Sent
+            </button>
+          </div>
+        </div>
         <div className="space-y-3">
-          {analytics.topUsers.map(({ handle, count, user }) => (
-            <div key={handle} className="flex items-center gap-3">
-              {user?.avatar ? (
-                <img 
-                  src={proxifyBskyImage(user.avatar)} 
-                  alt={handle}
-                  className="w-10 h-10 rounded-full border-2"
-                  style={{ borderColor: 'var(--bsky-border-primary)' }}
-                />
-              ) : (
-                <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ 
-                    backgroundColor: 'var(--bsky-bg-tertiary)',
-                    color: 'var(--bsky-text-secondary)'
-                  }}
-                >
-                  {handle.charAt(0).toUpperCase()}
+          {topUsersView === 'received' ? (
+            analytics.topUsers.map(({ handle, count, user }) => (
+              <div key={handle} className="flex items-center gap-3">
+                {user?.avatar ? (
+                  <img 
+                    src={proxifyBskyImage(user.avatar)} 
+                    alt={handle}
+                    className="w-10 h-10 rounded-full border-2"
+                    style={{ borderColor: 'var(--bsky-border-primary)' }}
+                  />
+                ) : (
+                  <div 
+                    className="w-10 h-10 rounded-full flex items-center justify-center"
+                    style={{ 
+                      backgroundColor: 'var(--bsky-bg-tertiary)',
+                      color: 'var(--bsky-text-secondary)'
+                    }}
+                  >
+                    {handle.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="flex-1">
+                  <p className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>{user?.displayName || handle}</p>
+                  <p className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>@{handle}</p>
                 </div>
-              )}
-              <div className="flex-1">
-                <p className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>{user?.displayName || handle}</p>
-                <p className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>@{handle}</p>
+                <span className="text-sm" style={{ color: 'var(--bsky-text-primary)' }}>{count} interactions</span>
               </div>
-              <span className="text-sm" style={{ color: 'var(--bsky-text-primary)' }}>{count} interactions</span>
+            ))
+          ) : topUsersSent ? (
+            topUsersSent.map((user) => (
+              <div key={user.handle} className="flex items-center gap-3">
+                {user.avatar ? (
+                  <img 
+                    src={proxifyBskyImage(user.avatar)} 
+                    alt={user.handle}
+                    className="w-10 h-10 rounded-full border-2"
+                    style={{ borderColor: 'var(--bsky-border-primary)' }}
+                  />
+                ) : (
+                  <div 
+                    className="w-10 h-10 rounded-full flex items-center justify-center"
+                    style={{ 
+                      backgroundColor: 'var(--bsky-bg-tertiary)',
+                      color: 'var(--bsky-text-secondary)'
+                    }}
+                  >
+                    {user.handle.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="flex-1">
+                  <p className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>{user.displayName || user.handle}</p>
+                  <p className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>@{user.handle}</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    {user.likes > 0 && (
+                      <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
+                        <span style={{ color: '#ef4444' }}>♥</span> {user.likes}
+                      </span>
+                    )}
+                    {user.replies > 0 && (
+                      <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
+                        <span style={{ color: '#4ade80' }}>↩</span> {user.replies}
+                      </span>
+                    )}
+                    {user.reposts > 0 && (
+                      <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
+                        <span style={{ color: '#60a5fa' }}>⟲</span> {user.reposts}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <span className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>{user.total}</span>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8" style={{ color: 'var(--bsky-text-secondary)' }}>
+              <p className="text-sm">Loading...</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
 

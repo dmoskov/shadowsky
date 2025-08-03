@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Heart, Repeat2, MessageCircle, Loader, MoreVertical, TrendingUp, Users, Clock, Hash, Star, Plus, X } from 'lucide-react'
+import { Heart, Repeat2, MessageCircle, Loader, MoreVertical, TrendingUp, Users, Clock, Hash, Star, Plus, X, ChevronDown } from 'lucide-react'
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '../contexts/AuthContext'
@@ -71,12 +71,19 @@ interface FeedGenerator {
   }
 }
 
-export const Home: React.FC = () => {
+interface HomeProps {
+  initialFeedUri?: string;
+}
+
+export const Home: React.FC<HomeProps> = ({ initialFeedUri }) => {
   const { agent } = useAuth()
   const queryClient = useQueryClient()
   const [hoveredPost, setHoveredPost] = useState<string | null>(null)
   const [selectedFeed, setSelectedFeed] = useState<FeedType>(() => {
-    // Restore feed selection from localStorage
+    // Use initialFeedUri if provided, otherwise restore from localStorage
+    if (initialFeedUri) {
+      return initialFeedUri as FeedType
+    }
     const savedFeed = localStorage.getItem('selectedFeed')
     return (savedFeed as FeedType) || 'following'
   })
@@ -89,10 +96,12 @@ export const Home: React.FC = () => {
   const [feedOrder, setFeedOrder] = useState<string[]>([])
   const [draggedTab, setDraggedTab] = useState<string | null>(null)
   const [dragOverTab, setDragOverTab] = useState<string | null>(null)
+  const [showFeedDropdown, setShowFeedDropdown] = useState(false)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const scrollPositionRef = useRef<{ [key: string]: number }>({})
   const containerRef = useRef<HTMLDivElement>(null)
   const postRefs = useRef<{ [key: string]: HTMLDivElement }>({})
+  const dropdownRef = useRef<HTMLDivElement>(null)
   
   const { trackFeatureAction } = useFeatureTracking('home_feed')
   const { trackClick } = useInteractionTracking()
@@ -199,6 +208,20 @@ export const Home: React.FC = () => {
       return aIndex - bIndex
     })
   }, [userPrefs, feedGenerators, feedOrder])
+  
+  const currentFeedOption = feedOptions.find(opt => opt.type === selectedFeed)
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowFeedDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
   
   const {
     data,
@@ -670,7 +693,10 @@ export const Home: React.FC = () => {
     }
     
     setSelectedFeed(feed)
-    localStorage.setItem('selectedFeed', feed)
+    // Only save to localStorage if this is the main home column
+    if (!initialFeedUri) {
+      localStorage.setItem('selectedFeed', feed)
+    }
     trackFeatureAction('feed_changed', { feed })
     
     // Restore scroll position for the new feed after a short delay to allow content to render
@@ -735,67 +761,79 @@ export const Home: React.FC = () => {
   return (
     <div className="w-full" ref={containerRef}>
       <div className="sticky top-0 z-10 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center px-2 py-1 md:px-6 md:py-2">
-            <div className="flex-1 flex gap-1 overflow-x-auto scrollbar-hide">
-              {feedOptions.map((option) => (
-                <button
-                  key={option.type}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, option.type)}
-                  onDragOver={(e) => handleDragOver(e, option.type)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, option.type)}
-                  onDragEnd={handleDragEnd}
-                  onClick={() => handleFeedChange(option.type)}
-                  className={`group flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full transition-all whitespace-nowrap cursor-move select-none relative ${
-                    selectedFeed === option.type
-                      ? 'text-white shadow-lg'
-                      : 'hover:bg-opacity-10 hover:bg-gray-500'
-                  } ${
-                    draggedTab === option.type ? 'opacity-50' : ''
-                  } ${
-                    dragOverTab === option.type ? 'scale-105' : ''
-                  }`}
-                  style={{
-                    backgroundColor: selectedFeed === option.type ? 'var(--bsky-primary)' : 'transparent',
-                    color: selectedFeed === option.type ? 'white' : 'var(--bsky-text-secondary)',
-                    WebkitTapHighlightColor: 'transparent',
-                    touchAction: 'manipulation',
-                    border: dragOverTab === option.type ? '2px dashed var(--bsky-primary)' : '2px solid transparent'
-                  }}
-                  type="button"
-                >
-                  <option.icon size={16} className="flex-shrink-0" />
-                  <span className="font-medium text-xs md:text-sm">{option.label}</span>
-                  {option.pinned && (
-                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full" />
-                  )}
-                  {!option.isDefault && (
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity ml-1">
-                      <X 
-                        size={14} 
-                        className="hover:text-red-500"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          // TODO: Remove feed functionality
-                        }}
-                      />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-            <div className="ml-2 md:ml-4 flex-shrink-0">
-              <button
-                onClick={() => setShowFeedDiscovery(true)}
-                className="p-2 md:px-3 md:py-1.5 rounded-full hover:bg-opacity-10 hover:bg-gray-500 transition-all flex items-center gap-1.5 group"
-                style={{ color: 'var(--bsky-text-secondary)' }}
-                title="Discover more feeds"
-              >
-                <Plus size={16} className="group-hover:rotate-90 transition-transform duration-200" />
-              </button>
-            </div>
+        <div className="px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {currentFeedOption && <currentFeedOption.icon size={20} style={{ color: 'var(--bsky-primary)' }} />}
+            <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+              {currentFeedOption?.label || 'Feed'}
+            </h2>
+          </div>
+          
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setShowFeedDropdown(!showFeedDropdown)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-all"
+              style={{ color: 'var(--bsky-text-secondary)' }}
+            >
+              <span className="text-sm">Change</span>
+              <ChevronDown size={16} className={`transition-transform ${showFeedDropdown ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {showFeedDropdown && (
+              <div className="absolute right-0 mt-2 w-64 rounded-lg shadow-lg overflow-hidden"
+                style={{ 
+                  backgroundColor: 'var(--bsky-bg-secondary)',
+                  border: '1px solid var(--bsky-border-primary)'
+                }}>
+                <div className="max-h-96 overflow-y-auto">
+                  {feedOptions.map((option) => (
+                    <button
+                      key={option.type}
+                      onClick={() => {
+                        handleFeedChange(option.type)
+                        setShowFeedDropdown(false)
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-opacity-5 hover:bg-blue-500 transition-colors text-left ${
+                        selectedFeed === option.type ? 'bg-opacity-10 bg-blue-500' : ''
+                      }`}
+                    >
+                      <option.icon size={18} style={{ 
+                        color: selectedFeed === option.type ? 'var(--bsky-primary)' : 'var(--bsky-text-secondary)' 
+                      }} />
+                      <div className="flex-1">
+                        <div className="font-medium text-sm" style={{ color: 'var(--bsky-text-primary)' }}>
+                          {option.label}
+                        </div>
+                        {option.generator?.description && (
+                          <div className="text-xs mt-0.5" style={{ color: 'var(--bsky-text-tertiary)' }}>
+                            {option.generator.description}
+                          </div>
+                        )}
+                      </div>
+                      {option.pinned && <Star size={14} className="text-yellow-500" />}
+                      {selectedFeed === option.type && (
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--bsky-primary)' }} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+                
+                <div className="border-t" style={{ borderColor: 'var(--bsky-border-secondary)' }}>
+                  <button
+                    onClick={() => {
+                      setShowFeedDiscovery(true)
+                      setShowFeedDropdown(false)
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-opacity-5 hover:bg-blue-500 transition-colors"
+                  >
+                    <Plus size={18} style={{ color: 'var(--bsky-text-secondary)' }} />
+                    <span className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>
+                      Discover Feeds
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

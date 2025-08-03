@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
-import { Heart, Repeat2, MessageCircle, Loader } from 'lucide-react';
+import { Heart, Repeat2, MessageCircle, Loader, Hash } from 'lucide-react';
 import { proxifyBskyImage } from '../utils/image-proxy';
 import { ThreadModal } from './ThreadModal';
 
@@ -53,6 +53,26 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
   const [focusedPostUri, setFocusedPostUri] = useState<string | null>(null);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(Date.now());
+  
+  // Fetch feed generator info
+  const { data: feedInfo } = useQuery({
+    queryKey: ['feedGenerator', feedUri],
+    queryFn: async () => {
+      if (!agent || !feedUri || feedUri === 'following') return null;
+      
+      try {
+        const response = await agent.app.bsky.feed.getFeedGenerator({
+          feed: feedUri
+        });
+        return response.data.view;
+      } catch (error) {
+        console.error('Failed to fetch feed info:', error);
+        return null;
+      }
+    },
+    enabled: !!agent && !!feedUri && feedUri !== 'following',
+    staleTime: 5 * 60 * 1000,
+  });
   
   // Helper to update both state and ref
   const updateFocusedPost = (uri: string | null, index: number) => {
@@ -239,14 +259,15 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
     return (
       <div 
         key={post.uri} 
-        className={`post-item border-b dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors ${
-          isFocusedPost ? 'bg-blue-50 dark:bg-gray-900/50 border-l-4 border-l-blue-500 pl-3' : ''
+        className={`post-item border-b cursor-pointer hover:bg-opacity-5 hover:bg-blue-500 transition-colors ${
+          isFocusedPost ? 'bg-opacity-10 bg-blue-500 border-l-4 border-l-blue-500 pl-3' : ''
         }`}
+        style={{ borderColor: 'var(--bsky-border-primary)' }}
         onClick={handlePostClick}
         data-uri={post.uri}
       >
         {isRepost && feedPost.reason?.by && (
-          <div className="flex items-center gap-2 px-4 pt-2 text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center gap-2 px-4 pt-2 text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
             <Repeat2 size={14} />
             <span>{feedPost.reason.by.displayName || feedPost.reason.by.handle} reposted</span>
           </div>
@@ -334,7 +355,7 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader className="w-6 h-6 animate-spin text-blue-500" />
+        <Loader className="w-6 h-6 animate-spin" style={{ color: 'var(--bsky-primary)' }} />
       </div>
     );
   }
@@ -342,7 +363,7 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
   if (isError) {
     return (
       <div className="flex items-center justify-center h-full p-4">
-        <p className="text-red-500 dark:text-red-400 text-center">
+        <p className="text-center" style={{ color: 'var(--bsky-error)' }}>
           Failed to load feed. Please try again.
         </p>
       </div>
@@ -354,7 +375,17 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
 
   return (
     <>
-      <div ref={containerRef} className="h-full overflow-y-auto dark:bg-gray-950 skydeck-scrollbar">
+      {/* Header */}
+      <div className="sticky top-0 z-10 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
+        <div className="px-4 py-3 flex items-center gap-2">
+          <Hash size={20} style={{ color: 'var(--bsky-primary)' }} />
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+            {feedInfo?.displayName || (feedUri === 'following' ? 'Following' : 'Feed')}
+          </h2>
+        </div>
+      </div>
+      
+      <div ref={containerRef} className="h-full overflow-y-auto skydeck-scrollbar">
         {allPosts.map((post, index) => {
           const postUri = (post?.post || post)?.uri;
           return (
@@ -369,7 +400,11 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
             <button
               onClick={() => fetchNextPage()}
               disabled={isFetchingNextPage}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 rounded-lg disabled:opacity-50 transition-colors"
+              style={{ 
+                backgroundColor: 'var(--bsky-primary)',
+                color: 'white'
+              }}
             >
               {isFetchingNextPage ? (
                 <Loader className="w-4 h-4 animate-spin" />
