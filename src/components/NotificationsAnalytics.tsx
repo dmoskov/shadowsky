@@ -1,6 +1,6 @@
 import React from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { TrendingUp, Users, Heart, MessageCircle, BarChart3, Bell, Clock, Repeat2, UserPlus, Calendar, Activity } from 'lucide-react'
+import { TrendingUp, Users, Heart, MessageCircle, BarChart3, Bell, Clock, Repeat2, UserPlus, Calendar, Activity, Send } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { format, subDays, startOfDay, subHours } from 'date-fns'
 import { useExtendedNotifications } from '../hooks/useExtendedNotifications'
@@ -38,7 +38,7 @@ const TrackedChart: React.FC<{ chartName: string; children: React.ReactNode }> =
 }
 
 export const NotificationsAnalytics: React.FC = () => {
-  const { agent } = useAuth()
+  const { agent, session } = useAuth()
   const queryClient = useQueryClient()
   const [timeRange, setTimeRange] = React.useState<TimeRange>('7d')
   
@@ -56,6 +56,56 @@ export const NotificationsAnalytics: React.FC = () => {
 
   // Check if we have extended data available (from memory or IndexedDB)
   const { extendedData, hasExtendedData } = useExtendedNotifications()
+
+  // Query for user's own activity
+  const { data: userActivity } = useQuery({
+    queryKey: ['user-activity', session?.handle, timeRange],
+    queryFn: async () => {
+      if (!agent || !session?.handle) throw new Error('Not authenticated')
+      
+      const cutoffDate = timeRange === '1d' ? subDays(new Date(), 1) :
+                        timeRange === '3d' ? subDays(new Date(), 3) :
+                        timeRange === '7d' ? subDays(new Date(), 7) :
+                        subDays(new Date(), 28)
+
+      // Fetch user's recent posts to analyze their activity
+      const posts = await agent.getAuthorFeed({ 
+        actor: session.handle, 
+        limit: 100 
+      })
+      
+      // Count likes, reposts, and replies from the posts
+      let totalLikes = 0
+      let totalReposts = 0
+      let totalReplies = 0
+      let postsInTimeRange = 0
+      
+      for (const item of posts.data.feed) {
+        const postDate = new Date(item.post.indexedAt)
+        if (postDate >= cutoffDate) {
+          postsInTimeRange++
+          totalLikes += item.post.likeCount || 0
+          totalReposts += item.post.repostCount || 0
+          totalReplies += item.post.replyCount || 0
+        }
+      }
+
+      // Also fetch user's profile to get follower/following counts
+      const profile = await agent.getProfile({ actor: session.handle })
+      
+      return {
+        postsCount: postsInTimeRange,
+        likesReceived: totalLikes,
+        repostsReceived: totalReposts,
+        repliesReceived: totalReplies,
+        followersCount: profile.data.followersCount || 0,
+        followingCount: profile.data.followsCount || 0,
+        postsTotal: profile.data.postsCount || 0
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false
+  })
 
   // Query for current stats - only fetch if we don't have extended data
   const { data: currentStats, isLoading: isLoadingStats } = useQuery({
@@ -707,6 +757,88 @@ export const NotificationsAnalytics: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Your Activity */}
+      {userActivity && (
+        <TrackedChart chartName="your_activity">
+          <div className="bsky-card p-4">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--bsky-text-primary)' }}>
+              <Send size={20} className="text-blue-500" />
+              Your Activity
+            </h2>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
+                <div className="text-2xl font-bold" style={{ color: 'var(--bsky-primary)' }}>
+                  {userActivity.postsCount}
+                </div>
+                <div className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                  Posts
+                </div>
+              </div>
+              
+              <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
+                <div className="text-2xl font-bold text-red-500">
+                  {userActivity.likesReceived}
+                </div>
+                <div className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                  Likes Received
+                </div>
+              </div>
+              
+              <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
+                <div className="text-2xl font-bold text-blue-500">
+                  {userActivity.repostsReceived}
+                </div>
+                <div className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                  Reposts
+                </div>
+              </div>
+              
+              <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
+                <div className="text-2xl font-bold text-green-500">
+                  {userActivity.repliesReceived}
+                </div>
+                <div className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                  Replies
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="text-center">
+                <div className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+                  {userActivity.followersCount}
+                </div>
+                <div style={{ color: 'var(--bsky-text-secondary)' }}>Followers</div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+                  {userActivity.followingCount}
+                </div>
+                <div style={{ color: 'var(--bsky-text-secondary)' }}>Following</div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+                  {userActivity.postsTotal}
+                </div>
+                <div style={{ color: 'var(--bsky-text-secondary)' }}>Total Posts</div>
+              </div>
+            </div>
+            
+            {userActivity.postsCount > 0 && (
+              <div className="mt-4 text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                <div className="flex items-center justify-between">
+                  <span>Engagement Rate</span>
+                  <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+                    {((userActivity.likesReceived + userActivity.repostsReceived + userActivity.repliesReceived) / userActivity.postsCount).toFixed(1)} per post
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </TrackedChart>
+      )}
 
       {/* Engagement Summary */}
       <div className="bsky-card p-4">
