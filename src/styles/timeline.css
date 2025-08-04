@@ -304,6 +304,80 @@ a[href*="bsky.app/profile"] {
   overflow: hidden;
 }
 
+/* Keyboard navigation styles */
+.timeline-item {
+  position: relative;
+  transition: transform 0.2s ease-out;
+}
+
+.timeline-item-selected {
+  z-index: 10;
+}
+
+.timeline-focused {
+  transform: translateX(4px);
+  position: relative;
+}
+
+.timeline-focused::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: var(--bsky-primary);
+  border-radius: 0 3px 3px 0;
+  opacity: 0.8;
+}
+
+/* Focus ring for keyboard navigation */
+.timeline-event-card:focus {
+  outline: none;
+}
+
+.timeline-event-card:focus-visible {
+  outline: 2px solid var(--bsky-primary);
+  outline-offset: 2px;
+}
+
+/* Container focus styles */
+.max-w-4xl:focus {
+  outline: none;
+}
+
+.max-w-4xl:focus-visible {
+  outline: 2px solid var(--bsky-primary);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+/* Smooth scrolling for keyboard navigation */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Expanded state indicator */
+.timeline-event-card[aria-expanded="true"] {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Accessibility - Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .timeline-item,
+  .timeline-event-card,
+  .timeline-focused {
+    transition: none;
+  }
+}
+
+/* Hide expand indicators on mobile to save space */
+@media (max-width: 640px) {
+  .timeline-event-card .absolute.-left-8 {
+    display: none;
+  }
+}
+
 /* Mobile responsive adjustments */
 @media (max-width: 640px) {
   /* Reduce left spacing on mobile */
@@ -326,5 +400,15 @@ a[href*="bsky.app/profile"] {
   .timeline-post-preview {
     margin-left: 2.5rem;
     padding: 0.75rem;
+  }
+  
+  /* Adjust focus indicator on mobile */
+  .timeline-focused::before {
+    width: 2px;
+  }
+  
+  /* Smaller keyboard hint on mobile */
+  .text-xs.ml-auto {
+    font-size: 0.65rem;
   }
 }

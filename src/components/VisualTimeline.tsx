@@ -1,6 +1,6 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Calendar, Clock, Users, Heart, Repeat2, MessageCircle, Quote, UserPlus, ExternalLink } from 'lucide-react'
+import { Calendar, Clock, Users, Heart, Repeat2, MessageCircle, Quote, UserPlus, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { format, differenceInMinutes, differenceInHours, startOfDay, isSameDay, isToday, isYesterday, formatDistanceToNow } from 'date-fns'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
@@ -58,10 +58,15 @@ const getProfileUrl = (handle: string) => {
 
 interface VisualTimelineProps {
   hideTimeLabels?: boolean;
+  isInSkyDeck?: boolean;
 }
 
-export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels = false }) => {
+export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels = false, isInSkyDeck = false }) => {
   const { agent } = useAuth()
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const timelineItemsRef = React.useRef<Map<string, HTMLDivElement>>(new Map())
+  const [selectedItemIndex, setSelectedItemIndex] = React.useState<number>(-1)
+  const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set())
 
   const { data, isLoading } = useQuery({
     queryKey: ['notifications-visual-timeline'],
@@ -479,6 +484,166 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
     return Object.values(groups)
   }, [aggregatedEvents])
 
+  // Flatten all events for keyboard navigation
+  const allEvents = React.useMemo(() => {
+    return eventsByDay.flatMap(day => day.events)
+  }, [eventsByDay])
+
+  // Generate unique key for each event
+  const getEventKey = React.useCallback((event: AggregatedEvent, index: number) => {
+    return `${event.time.toISOString()}-${index}`
+  }, [])
+
+  // Handle keyboard navigation
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle keyboard navigation if focus is within the timeline
+      if (!containerRef.current?.contains(document.activeElement)) return
+      
+      // In SkyDeck mode, check if this column is focused
+      if (isInSkyDeck && !containerRef.current.closest('.column-focused')) return
+
+      let handled = false
+      const currentIndex = selectedItemIndex
+
+      switch (e.key) {
+        case 'ArrowDown':
+        case 'j': // vim-style down
+          e.preventDefault()
+          handled = true
+          if (currentIndex < allEvents.length - 1) {
+            setSelectedItemIndex(currentIndex + 1)
+          }
+          break
+          
+        case 'ArrowUp':
+        case 'k': // vim-style up
+          e.preventDefault()
+          handled = true
+          if (currentIndex > 0) {
+            setSelectedItemIndex(currentIndex - 1)
+          } else if (currentIndex === -1 && allEvents.length > 0) {
+            // If nothing selected, select last item when going up
+            setSelectedItemIndex(allEvents.length - 1)
+          }
+          break
+          
+        case 'ArrowLeft':
+        case 'h': // vim-style left
+          e.preventDefault()
+          handled = true
+          // Scroll horizontally left
+          if (containerRef.current) {
+            containerRef.current.scrollBy({ left: -200, behavior: 'smooth' })
+          }
+          break
+          
+        case 'ArrowRight':
+        case 'l': // vim-style right
+          e.preventDefault()
+          handled = true
+          // Scroll horizontally right
+          if (containerRef.current) {
+            containerRef.current.scrollBy({ left: 200, behavior: 'smooth' })
+          }
+          break
+          
+        case 'Enter':
+        case ' ': // Space bar
+          e.preventDefault()
+          handled = true
+          if (currentIndex >= 0 && currentIndex < allEvents.length) {
+            const event = allEvents[currentIndex]
+            const eventKey = getEventKey(event, currentIndex)
+            setExpandedItems(prev => {
+              const newSet = new Set(prev)
+              if (newSet.has(eventKey)) {
+                newSet.delete(eventKey)
+              } else {
+                newSet.add(eventKey)
+              }
+              return newSet
+            })
+          }
+          break
+          
+        case 'Home':
+          e.preventDefault()
+          handled = true
+          if (allEvents.length > 0) {
+            setSelectedItemIndex(0)
+          }
+          break
+          
+        case 'End':
+          e.preventDefault()
+          handled = true
+          if (allEvents.length > 0) {
+            setSelectedItemIndex(allEvents.length - 1)
+          }
+          break
+          
+        case 'PageUp':
+          e.preventDefault()
+          handled = true
+          // Jump up by 5 items
+          setSelectedItemIndex(Math.max(0, currentIndex - 5))
+          break
+          
+        case 'PageDown':
+          e.preventDefault()
+          handled = true
+          // Jump down by 5 items
+          setSelectedItemIndex(Math.min(allEvents.length - 1, currentIndex + 5))
+          break
+          
+        case 'Escape':
+          // Clear selection
+          setSelectedItemIndex(-1)
+          handled = true
+          break
+      }
+
+      // Prevent default browser scrolling if we handled the key
+      if (handled) {
+        e.stopPropagation()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedItemIndex, allEvents, getEventKey, isInSkyDeck])
+
+  // Scroll selected item into view
+  React.useEffect(() => {
+    if (selectedItemIndex >= 0 && selectedItemIndex < allEvents.length) {
+      const event = allEvents[selectedItemIndex]
+      const eventKey = getEventKey(event, selectedItemIndex)
+      const element = timelineItemsRef.current.get(eventKey)
+      
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest'
+        })
+      }
+    }
+  }, [selectedItemIndex, allEvents, getEventKey])
+
+  // Make timeline container focusable
+  React.useEffect(() => {
+    if (containerRef.current && !containerRef.current.hasAttribute('tabindex')) {
+      containerRef.current.setAttribute('tabindex', '0')
+      containerRef.current.style.outline = 'none'
+      
+      // Auto-focus in standalone mode for immediate keyboard navigation
+      if (!isInSkyDeck) {
+        containerRef.current.focus()
+      }
+    }
+  }, [isInSkyDeck])
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -495,7 +660,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto" ref={containerRef}>
       {/* Header */}
       <div className="sticky top-0 z-40 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
         <div className="px-4 py-3 flex items-center gap-2">
@@ -503,6 +668,9 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
           <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
             Visual Timeline
           </h2>
+          <span className="text-xs ml-auto" style={{ color: 'var(--bsky-text-secondary)' }}>
+            {selectedItemIndex === -1 ? 'Press ↓ or j to start' : 'Arrow keys/hjkl to navigate • Enter to expand'}
+          </span>
         </div>
       </div>
       
@@ -555,11 +723,29 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
               const previousEvent = eventIndex > 0 ? dayGroup.events[eventIndex - 1] : 
                                    dayIndex > 0 ? eventsByDay[dayIndex - 1].events[eventsByDay[dayIndex - 1].events.length - 1] : null
               const spacingClass = getSpacingClass(event.time, previousEvent?.time)
+              
+              // Calculate the global index for this event
+              let globalIndex = 0
+              for (let i = 0; i < dayIndex; i++) {
+                globalIndex += eventsByDay[i].events.length
+              }
+              globalIndex += eventIndex
+              
+              const eventKey = getEventKey(event, globalIndex)
+              const isSelected = selectedItemIndex === globalIndex
+              const isExpanded = expandedItems.has(eventKey)
 
               return (
                 <div 
-                  key={`${event.time.toISOString()}-${eventIndex}`} 
-                  className={`relative ${spacingClass}`}
+                  key={eventKey} 
+                  className={`relative ${spacingClass} timeline-item ${isSelected ? 'timeline-item-selected' : ''}`}
+                  ref={(el) => {
+                    if (el) {
+                      timelineItemsRef.current.set(eventKey, el)
+                    } else {
+                      timelineItemsRef.current.delete(eventKey)
+                    }
+                  }}
                 >
                   {/* Time and event */}
                   <div className="flex gap-2 sm:gap-4 items-start timeline-event">
@@ -595,18 +781,64 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
                     event.aggregationType === 'post' ? 'timeline-post-aggregate' : 
                     event.aggregationType === 'post-burst' ? 'timeline-post-burst' : 
                     event.aggregationType === 'user-activity' ? 'timeline-user-activity' : ''
-                  }`}
+                  } ${isSelected ? 'timeline-focused' : ''}`}
                   style={{ 
                     backgroundColor: getTimeOfDayColor(event.time).backgroundColor,
-                    border: `1px solid ${getTimeOfDayColor(event.time).borderColor}`,
+                    border: `1px solid ${isSelected ? 'var(--bsky-primary)' : getTimeOfDayColor(event.time).borderColor}`,
                     borderRadius: '8px',
-                    boxShadow: `0 1px 3px ${getTimeOfDayColor(event.time).shadowColor}`
+                    boxShadow: isSelected 
+                      ? `0 0 0 2px var(--bsky-primary), 0 1px 3px ${getTimeOfDayColor(event.time).shadowColor}`
+                      : `0 1px 3px ${getTimeOfDayColor(event.time).shadowColor}`,
+                    transition: 'all 0.2s ease-out',
+                    cursor: 'pointer'
+                  }}
+                  tabIndex={isSelected ? 0 : -1}
+                  aria-selected={isSelected}
+                  aria-expanded={isExpanded}
+                  role="button"
+                  onClick={() => {
+                    setSelectedItemIndex(globalIndex)
+                    // Toggle expansion on click
+                    setExpandedItems(prev => {
+                      const newSet = new Set(prev)
+                      if (newSet.has(eventKey)) {
+                        newSet.delete(eventKey)
+                      } else {
+                        newSet.add(eventKey)
+                      }
+                      return newSet
+                    })
+                  }}
+                  onKeyDown={(e) => {
+                    // Handle Enter/Space on the element itself
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setExpandedItems(prev => {
+                        const newSet = new Set(prev)
+                        if (newSet.has(eventKey)) {
+                          newSet.delete(eventKey)
+                        } else {
+                          newSet.add(eventKey)
+                        }
+                        return newSet
+                      })
+                    }
                   }}
                 >
                   {/* Single notification */}
                   {event.notifications.length === 1 ? (
                     <div>
                       <div className="flex items-center gap-3">
+                        {/* Expand/collapse indicator for expandable items */}
+                        {event.notifications[0].reason !== 'follow' && (
+                          <div className="absolute -left-8 top-3">
+                            {isExpanded ? (
+                              <ChevronDown size={16} style={{ color: 'var(--bsky-text-tertiary)' }} />
+                            ) : (
+                              <ChevronRight size={16} style={{ color: 'var(--bsky-text-tertiary)' }} />
+                            )}
+                          </div>
+                        )}
                         <a 
                           href={getProfileUrl(event.notifications[0].author?.handle || 'unknown')}
                           target="_blank"
@@ -638,7 +870,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
                         </div>
                       </div>
                       {/* Show post preview for single notifications too */}
-                      {event.notifications[0].reason !== 'follow' && (
+                      {event.notifications[0].reason !== 'follow' && isExpanded && (
                         (() => {
                           const notification = event.notifications[0]
                           
@@ -704,6 +936,17 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
                   ) : (
                     /* Aggregated notifications */
                     <div>
+                      {/* Expand/collapse indicator for aggregated items */}
+                      {(event.aggregationType === 'user-activity' || event.aggregationType === 'post-burst' || 
+                        ((event.aggregationType === 'post' || event.aggregationType === 'post-burst') && event.postUri)) && (
+                        <div className="absolute -left-8 top-3">
+                          {isExpanded ? (
+                            <ChevronDown size={16} style={{ color: 'var(--bsky-text-tertiary)' }} />
+                          ) : (
+                            <ChevronRight size={16} style={{ color: 'var(--bsky-text-tertiary)' }} />
+                          )}
+                        </div>
+                      )}
                       {event.aggregationType === 'user-activity' ? (
                         // Special layout for user activity bursts
                         <div>
@@ -765,7 +1008,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
                           </div>
                           
                           {/* Affected posts */}
-                          {event.affectedPosts && event.affectedPosts.length > 0 && (
+                          {event.affectedPosts && event.affectedPosts.length > 0 && isExpanded && (
                             <div className="space-y-2">
                               <p className="text-xs font-medium" style={{ color: 'var(--bsky-text-tertiary)' }}>
                                 Posts they interacted with:
@@ -969,7 +1212,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
                       )}
                       
                       {/* Post preview for aggregated post notifications */}
-                      {(event.aggregationType === 'post' || event.aggregationType === 'post-burst') && (
+                      {(event.aggregationType === 'post' || event.aggregationType === 'post-burst') && isExpanded && (
                         (() => {
                           const notification = event.notifications[0]
                           
