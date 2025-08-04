@@ -124,7 +124,7 @@ class BookmarkStorageDB {
 
     return allBookmarks.filter(bookmark => 
       bookmark.text.toLowerCase().includes(lowercaseQuery) ||
-      bookmark.author.handle.toLowerCase().includes(lowercaseQuery) ||
+      bookmark.author.handle?.toLowerCase().includes(lowercaseQuery) ||
       bookmark.author.displayName?.toLowerCase().includes(lowercaseQuery) ||
       bookmark.tags?.some(tag => tag.toLowerCase().includes(lowercaseQuery)) ||
       bookmark.notes?.toLowerCase().includes(lowercaseQuery)

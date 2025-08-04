@@ -261,7 +261,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                       borderColor: 'var(--bsky-bg-primary)'
                     }}
                   >
-                    <span className="text-xs font-semibold">{user.handle.charAt(0).toUpperCase()}</span>
+                    <span className="text-xs font-semibold">{user.handle?.charAt(0).toUpperCase() || 'U'}</span>
                   </div>
                 )}
               </div>

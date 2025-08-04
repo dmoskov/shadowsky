@@ -293,7 +293,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
                   <div className="w-12 h-12 bsky-avatar flex items-center justify-center" 
                        style={{ background: 'var(--bsky-bg-tertiary)' }}>
                     <span className="text-lg font-semibold">
-                      {account.handle.charAt(0).toUpperCase()}
+                      {account.handle?.charAt(0).toUpperCase() || 'U'}
                     </span>
                   </div>
                 )}

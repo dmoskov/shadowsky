@@ -641,7 +641,7 @@ export const Search: React.FC = () => {
             </button>
             {selectedPostUri && (
               <a
-                href={`https://bsky.app/profile/${threadPosts[0]?.author.handle}/post/${selectedPostUri.split('/').pop()}`}
+                href={`https://bsky.app/profile/${threadPosts[0]?.author?.handle || 'unknown'}/post/${selectedPostUri.split('/').pop()}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-all"
@@ -1560,7 +1560,7 @@ export const Search: React.FC = () => {
                         {post.author.displayName}
                       </span>
                       <span className="text-xs truncate" style={{ color: 'var(--bsky-text-secondary)' }}>
-                        @{post.author.handle}
+                        @{post.author?.handle || 'unknown'}
                       </span>
                       <span className="text-xs whitespace-nowrap" style={{ color: 'var(--bsky-text-tertiary)' }}>
                         · {formatDistanceToNow(new Date(post.indexedAt))} ago
@@ -1605,7 +1605,7 @@ export const Search: React.FC = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
-                          window.open(`https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`, '_blank', 'noopener,noreferrer')
+                          window.open(`https://bsky.app/profile/${post.author?.handle || 'unknown'}/post/${post.uri.split('/').pop()}`, '_blank', 'noopener,noreferrer')
                         }}
                         className="text-xs hover:underline flex items-center gap-1"
                         style={{ color: 'var(--bsky-primary)' }}

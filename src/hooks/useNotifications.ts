@@ -186,7 +186,7 @@ export function useMarkNotificationsRead() {
 }
 
 export function getNotificationText(notification: Notification): string {
-  const author = notification.author.displayName || `@${notification.author.handle}`
+  const author = notification.author?.displayName || `@${notification.author?.handle || 'unknown'}`
   
   switch (notification.reason) {
     case 'like':

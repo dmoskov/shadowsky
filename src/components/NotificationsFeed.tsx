@@ -1031,7 +1031,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(({
             ) : (
               <div className="w-5 h-5 bsky-avatar flex items-center justify-center text-xs" 
                    style={{ background: 'var(--bsky-bg-tertiary)' }}>
-                {notification.author.handle.charAt(0).toUpperCase()}
+                {notification.author?.handle?.charAt(0).toUpperCase() || 'U'}
               </div>
             )}
             <span className="text-xs font-medium" style={{ color: 'var(--bsky-text-secondary)' }}>
@@ -1091,7 +1091,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(({
           />
         ) : (
           <div className="w-10 h-10 bsky-avatar flex items-center justify-center" style={{ background: 'var(--bsky-bg-tertiary)' }}>
-            <span className="text-sm font-semibold">{notification.author.handle.charAt(0).toUpperCase()}</span>
+            <span className="text-sm font-semibold">{notification.author?.handle?.charAt(0).toUpperCase() || 'U'}</span>
           </div>
         )}
       </div>

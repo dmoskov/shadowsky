@@ -97,26 +97,26 @@ export function getNotificationUrl(
   switch (reason) {
     case 'follow':
       // For follows, link to the follower's profile
-      return getBskyProfileUrl(author.handle)
+      return getBskyProfileUrl(author?.handle || '')
       
     case 'like':
     case 'repost':
       // For likes/reposts, the URI is the post being liked/reposted
       // If we have the post author's handle, we can construct the proper URL
       if (uri && postAuthorHandle) {
-        return atUriToBskyUrl(uri, postAuthorHandle) || getBskyProfileUrl(author.handle)
+        return atUriToBskyUrl(uri, postAuthorHandle) || getBskyProfileUrl(author?.handle || '')
       }
       // Otherwise, fall back to the liker/reposter's profile
-      return getBskyProfileUrl(author.handle)
+      return getBskyProfileUrl(author?.handle || '')
       
     case 'reply':
     case 'mention':
     case 'quote':
       // For replies/mentions/quotes, the URI is the new post by the author
-      return atUriToBskyUrl(uri, author.handle) || getBskyProfileUrl(author.handle)
+      return atUriToBskyUrl(uri, author?.handle || '') || getBskyProfileUrl(author?.handle || '')
       
     default:
       // Default to author's profile
-      return getBskyProfileUrl(author.handle)
+      return getBskyProfileUrl(author?.handle || '')
   }
 }

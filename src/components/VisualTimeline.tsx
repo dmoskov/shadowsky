@@ -104,7 +104,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
     const userActivityTimeWindows = new Map<string, { start: Date, end: Date }>()
     
     sorted.forEach(notification => {
-      const userKey = notification.author.handle
+      const userKey = notification.author?.handle || notification.author?.did || 'unknown'
       const notifTime = new Date(notification.indexedAt)
       
       if (!userActivityGroups.has(userKey)) {
@@ -147,9 +147,9 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
               earliestTime: timeWindow.start,
               latestTime: timeWindow.end,
               primaryActor: {
-                handle: userNotifs[0].author.handle,
-                displayName: userNotifs[0].author.displayName,
-                avatar: userNotifs[0].author.avatar
+                handle: userNotifs[0].author?.handle || 'unknown',
+                displayName: userNotifs[0].author?.displayName,
+                avatar: userNotifs[0].author?.avatar
               },
               affectedPosts: Array.from(affectedPosts.values())
             })
@@ -188,9 +188,9 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
           earliestTime: timeWindow.start,
           latestTime: timeWindow.end,
           primaryActor: {
-            handle: notifications[0].author.handle,
-            displayName: notifications[0].author.displayName,
-            avatar: notifications[0].author.avatar
+            handle: notifications[0].author?.handle || 'unknown',
+            displayName: notifications[0].author?.displayName,
+            avatar: notifications[0].author?.avatar
           },
           affectedPosts: Array.from(affectedPosts.values())
         })
@@ -255,7 +255,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
           time: latestTime, // Use latest time for sorting
           notifications: notifications,
           types: new Set(notifications.map(n => n.reason)),
-          actors: new Set(notifications.map(n => n.author.handle)),
+          actors: new Set(notifications.map(n => n.author?.handle || 'unknown')),
           postUri: postUri,
           aggregationType: 'post-burst',
           earliestTime: earliestTime,
@@ -271,7 +271,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
             time: new Date(notification.indexedAt),
             notifications: [notification],
             types: new Set([notification.reason]),
-            actors: new Set([notification.author.handle]),
+            actors: new Set([notification.author?.handle || 'unknown']),
             postUri: postUri,
             aggregationType: 'post'
           })
@@ -318,7 +318,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
           time: latestTime,
           notifications: burst,
           types: new Set(['follow']),
-          actors: new Set(burst.map(n => n.author.handle)),
+          actors: new Set(burst.map(n => n.author?.handle || 'unknown')),
           aggregationType: 'follow',
           earliestTime: new Date(Math.min(...times)),
           latestTime: latestTime
@@ -329,7 +329,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
           time: new Date(burst[0].indexedAt),
           notifications: burst,
           types: new Set(['follow']),
-          actors: new Set([burst[0].author.handle]),
+          actors: new Set([burst[0].author?.handle || 'unknown']),
           aggregationType: 'follow'
         })
       }
@@ -341,7 +341,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
         time: new Date(notification.indexedAt),
         notifications: [notification],
         types: new Set([notification.reason]),
-        actors: new Set([notification.author.handle]),
+        actors: new Set([notification.author?.handle || 'unknown']),
         aggregationType: 'mixed'
       })
     })
@@ -608,14 +608,14 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
                     <div>
                       <div className="flex items-center gap-3">
                         <a 
-                          href={getProfileUrl(event.notifications[0].author.handle)}
+                          href={getProfileUrl(event.notifications[0].author?.handle || 'unknown')}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex-shrink-0 hover:opacity-80 transition-opacity"
                         >
                           <img 
                             src={proxifyBskyImage(event.notifications[0].author.avatar)} 
-                            alt={event.notifications[0].author.handle}
+                            alt={event.notifications[0].author?.handle || 'unknown'}
                             className="w-8 h-8 rounded-full"
                           />
                         </a>
@@ -623,13 +623,13 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
                           <div className="flex items-center gap-2">
                             {getReasonIcon(event.notifications[0].reason)}
                             <a 
-                              href={getProfileUrl(event.notifications[0].author.handle)}
+                              href={getProfileUrl(event.notifications[0].author?.handle || 'unknown')}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="font-medium text-sm hover:underline"
                               style={{ color: 'var(--bsky-primary)' }}
                             >
-                              {event.notifications[0].author.displayName || event.notifications[0].author.handle}
+                              {event.notifications[0].author?.displayName || event.notifications[0].author?.handle || 'Unknown'}
                             </a>
                           </div>
                           <div className="text-xs sm:text-sm mt-0.5" style={{ color: 'var(--bsky-text-secondary)' }}>
@@ -873,16 +873,16 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
                               {event.notifications.slice(0, 12).map((notif, i) => (
                                 <a
                                   key={`${notif.uri}-${i}`}
-                                  href={getProfileUrl(notif.author.handle)}
+                                  href={getProfileUrl(notif.author?.handle || 'unknown')}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="hover:opacity-80 transition-opacity"
                                 >
                                   <img 
                                     src={proxifyBskyImage(notif.author.avatar)} 
-                                    alt={notif.author.handle}
+                                    alt={notif.author?.handle || 'unknown'}
                                     className="w-8 h-8 rounded-full"
-                                    title={notif.author.displayName || notif.author.handle}
+                                    title={notif.author?.displayName || notif.author?.handle || 'Unknown'}
                                   />
                                 </a>
                               ))}
@@ -908,17 +908,17 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
                             {event.notifications.slice(0, 5).map((notif, i) => (
                               <a
                                 key={`${notif.uri}-${i}`}
-                                href={getProfileUrl(notif.author.handle)}
+                                href={getProfileUrl(notif.author?.handle || 'unknown')}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="hover:z-10 hover:scale-110 transition-transform"
                               >
                                 <img 
                                   src={proxifyBskyImage(notif.author.avatar)} 
-                                  alt={notif.author.handle}
+                                  alt={notif.author?.handle || 'unknown'}
                                   className="w-6 h-6 rounded-full border-2"
                                   style={{ borderColor: 'var(--bsky-bg-secondary)' }}
-                                  title={notif.author.displayName || notif.author.handle}
+                                  title={notif.author?.displayName || notif.author?.handle || 'Unknown'}
                                 />
                               </a>
                             ))}

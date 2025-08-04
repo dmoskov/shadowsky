@@ -246,7 +246,9 @@ export const Conversations: React.FC = () => {
       
       const thread = threadMap.get(rootUri)!
       thread.replies.push(notification)
-      thread.participants.add(notification.author.handle)
+      if (notification.author?.handle) {
+        thread.participants.add(notification.author.handle)
+      }
       thread.totalReplies++
       
       // Update latest reply if this one is newer

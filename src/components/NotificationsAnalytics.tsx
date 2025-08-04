@@ -1151,7 +1151,7 @@ export const NotificationsAnalytics: React.FC = () => {
                       color: 'var(--bsky-text-secondary)'
                     }}
                   >
-                    {user.handle.charAt(0).toUpperCase()}
+                    {user.handle?.charAt(0).toUpperCase() || 'U'}
                   </div>
                 )}
                 <div className="flex-1">

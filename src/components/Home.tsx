@@ -382,7 +382,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
                       }
                     }}
                   >
-                    @{item.reply.parent.author.handle}
+                    @{item.reply.parent.author?.handle || 'unknown'}
                   </button>
                 </span>
                 {item.reply.parent.record?.text && (
@@ -961,15 +961,15 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
               <div className="flex items-center gap-2 mb-2">
                 <img
                   src={proxifyBskyImage(quotedPost.author.avatar) || '/default-avatar.svg'}
-                  alt={quotedPost.author.handle}
+                  alt={quotedPost.author?.handle || 'unknown'}
                   className="w-5 h-5 rounded-full"
                 />
                 <div className="flex items-center gap-1 text-sm">
                   <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-                    {quotedPost.author.displayName || quotedPost.author.handle}
+                    {quotedPost.author?.displayName || quotedPost.author?.handle || 'Unknown'}
                   </span>
                   <span style={{ color: 'var(--bsky-text-secondary)' }}>
-                    @{quotedPost.author.handle}
+                    @{quotedPost.author?.handle || 'unknown'}
                   </span>
                 </div>
               </div>

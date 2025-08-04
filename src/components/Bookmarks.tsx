@@ -140,12 +140,12 @@ export const Bookmarks: React.FC = () => {
             <div className="bookmark-meta">
               <img
                 src={proxifyBskyImage(bookmark.author.avatar) || '/default-avatar.png'}
-                alt={bookmark.author.handle}
+                alt={bookmark.author?.handle || 'unknown'}
                 className="author-avatar"
               />
               <div className="author-info">
-                <span className="author-name">{bookmark.author.displayName || bookmark.author.handle}</span>
-                <span className="author-handle">@{bookmark.author.handle}</span>
+                <span className="author-name">{bookmark.author?.displayName || bookmark.author?.handle || 'Unknown'}</span>
+                <span className="author-handle">@{bookmark.author?.handle || 'unknown'}</span>
               </div>
               <span className="bookmark-time">
                 {formatDistanceToNow(new Date(bookmark.savedAt), { addSuffix: true })}
