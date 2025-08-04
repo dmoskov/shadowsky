@@ -5,6 +5,7 @@ import { VisualTimeline } from './VisualTimeline';
 import { ConversationsSimple as Conversations } from './ConversationsSimple';
 import SkyColumnFeed from './SkyColumnFeed';
 import { Home } from './Home';
+import { DirectMessages } from './DirectMessages';
 import type { Column } from './SkyDeck';
 
 interface SkyColumnProps {
@@ -55,11 +56,14 @@ export default function SkyColumn({ column, onClose, chromeless = false, isFocus
         );
       
       case 'conversations':
-        return <Conversations />;
+        return <Conversations isFocused={isFocused} />;
+      
+      case 'messages':
+        return <DirectMessages />;
       
       case 'feed':
         // Use the Home component for all feed columns
-        return <Home initialFeedUri={column.data} />;
+        return <Home initialFeedUri={column.data} isFocused={isFocused} />;
       
       default:
         return (

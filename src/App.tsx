@@ -21,6 +21,7 @@ import { cleanupLocalStorage } from './utils/cleanupLocalStorage'
 import { BackgroundNotificationLoader } from './components/BackgroundNotificationLoader'
 import { debug } from '@bsky/shared'
 import { analytics } from './services/analytics'
+import { Bookmarks } from './components/Bookmarks'
 import { usePageTracking, useErrorTracking } from './hooks/useAnalytics'
 import './utils/debug-control' // Initialize debug controls
 
@@ -107,6 +108,7 @@ function AppContent() {
             } />
             <Route path="/analytics" element={<NotificationsAnalytics />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/bookmarks" element={<Bookmarks />} />
             <Route path="/conversations" element={<Conversations />} />
             <Route path="/compose" element={<Composer />} />
             <Route path="/search" element={<Search />} />

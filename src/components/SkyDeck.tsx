@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, X, Home, Bell, Clock, MessageSquare, Hash, Star } from 'lucide-react';
+import { Plus, X, Home, Bell, Clock, MessageSquare, Hash, Star, Mail } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import SkyColumn from './SkyColumn';
 
-export type ColumnType = 'notifications' | 'timeline' | 'conversations' | 'feed';
+export type ColumnType = 'notifications' | 'timeline' | 'conversations' | 'feed' | 'messages';
 
 export interface Column {
   id: string;
@@ -30,6 +30,7 @@ interface FeedGenerator {
 const columnOptions = [
   { type: 'notifications' as ColumnType, label: 'Notifications', icon: Bell, description: 'All your notifications' },
   { type: 'timeline' as ColumnType, label: 'Visual Timeline', icon: Clock, description: 'Timeline visualization' },
+  { type: 'messages' as ColumnType, label: 'Messages', icon: Mail, description: 'Direct messages' },
   { type: 'conversations' as ColumnType, label: 'Conversations', icon: MessageSquare, description: 'Your conversations' },
 ];
 

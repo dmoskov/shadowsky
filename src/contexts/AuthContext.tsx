@@ -7,6 +7,8 @@ import { queryClient } from '@bsky/shared'
 import { debug } from '@bsky/shared'
 import type { BskyAgent } from '@atproto/api'
 import { analytics } from '../services/analytics'
+import { bookmarkService } from '../services/bookmark-service'
+import { dmService } from '../services/dm-service'
 
 interface AuthContextType {
   isAuthenticated: boolean
@@ -49,6 +51,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsAuthenticated(false)
     setSession(null)
     
+    // Clear agent from bookmark service and DM service
+    bookmarkService.setAgent(null)
+    dmService.setAgent(null)
+    
     // Clear React Query cache
     queryClient.clear()
     
@@ -86,6 +92,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setIsAuthenticated(true)
             setSession(resumedSession)
             initAttempts.current = 0 // Reset on success
+            // Set agent in bookmark service and DM service
+            bookmarkService.setAgent(atProtoClient.agent)
+            dmService.setAgent(atProtoClient.agent)
           } catch (error) {
             debug.error('Failed to resume session:', error)
             
@@ -138,6 +147,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const newSession = await atProtoClient.login(identifier, password, authFactorToken)
       setIsAuthenticated(true)
       setSession(newSession)
+      
+      // Set agent in bookmark service and DM service
+      bookmarkService.setAgent(atProtoClient.agent)
+      dmService.setAgent(atProtoClient.agent)
       
       // Track successful login
       analytics.trackLogin(pdsUrl ? 'custom_pds' : 'bluesky')

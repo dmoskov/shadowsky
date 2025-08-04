@@ -35,7 +35,9 @@ const ConversationItem = React.memo(({
   allPostsMap,
   session,
   filteredConversationsIndex,
-  isLoadingRootPost
+  isLoadingRootPost,
+  isFocused,
+  onKeyDown
 }: {
   convo: ConversationThread
   isSelected: boolean
@@ -43,6 +45,8 @@ const ConversationItem = React.memo(({
   allPostsMap: Map<string, Post>
   filteredConversationsIndex: number
   isLoadingRootPost: boolean
+  isFocused?: boolean
+  onKeyDown?: (e: React.KeyboardEvent) => void
 }) => {
   const rootRecord = convo.rootPost?.record as any
   const previewText = rootRecord?.text || '[Post unavailable]'
@@ -82,10 +86,14 @@ const ConversationItem = React.memo(({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left py-4 px-4 sm:px-6 transition-all hover:bg-opacity-10 hover:bg-blue-500 ${
+      onKeyDown={onKeyDown}
+      className={`conversation-item w-full text-left py-4 px-4 sm:px-6 transition-all hover:bg-opacity-10 hover:bg-blue-500 ${
         isSelected ? 'bg-opacity-10 bg-blue-500' : ''
-      } ${unreadCount > 0 ? 'conversation-unread' : ''}`}
+      } ${unreadCount > 0 ? 'conversation-unread' : ''} ${
+        isFocused ? 'ring-2 ring-blue-500 ring-inset' : ''
+      }`}
       style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}
+      tabIndex={isFocused ? 0 : -1}
     >
       <div className="flex items-center gap-3">
         {/* Avatar */}
@@ -166,6 +174,7 @@ const ConversationItem = React.memo(({
   // - Loading state changes
   return (
     prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isFocused === nextProps.isFocused &&
     prevProps.convo.rootPost?.uri === nextProps.convo.rootPost?.uri &&
     prevProps.convo.rootPost?.author?.handle === nextProps.convo.rootPost?.author?.handle &&
     prevProps.convo.rootPost?.author?.avatar === nextProps.convo.rootPost?.author?.avatar &&
@@ -176,7 +185,11 @@ const ConversationItem = React.memo(({
   )
 })
 
-export const ConversationsSimple: React.FC = () => {
+interface ConversationsSimpleProps {
+  isFocused?: boolean;
+}
+
+export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocused = true }) => {
   debug.log('[ConversationsSimple] Component rendering')
   
   const { session } = useAuth()
@@ -184,6 +197,7 @@ export const ConversationsSimple: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [additionalRootUris, setAdditionalRootUris] = useState<Set<string>>(new Set())
   const [rootPostsVersion, setRootPostsVersion] = useState(0) // Track root posts updates
+  const [focusedIndex, setFocusedIndex] = useState(0)
   const queryClient = useQueryClient()
   
   // Analytics hooks
@@ -602,6 +616,42 @@ export const ConversationsSimple: React.FC = () => {
     })
   }, [extendedData, replyNotifications.length, posts, additionalRootPosts, allPostsMap.size, conversations.length, additionalRootUris.size, filteredConversations.length])
 
+  // Handle keyboard navigation
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle if this column is focused
+      if (!isFocused) return
+      
+      // Only handle if no input is focused
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return
+      }
+
+      if (e.key === 'ArrowDown' || e.key === 'j') {
+        e.preventDefault()
+        setFocusedIndex(prev => Math.min(prev + 1, filteredConversations.length - 1))
+      } else if (e.key === 'ArrowUp' || e.key === 'k') {
+        e.preventDefault()
+        setFocusedIndex(prev => Math.max(prev - 1, 0))
+      } else if (e.key === 'Enter' && filteredConversations[focusedIndex]) {
+        e.preventDefault()
+        const convo = filteredConversations[focusedIndex]
+        handleSelectConversation(convo.rootUri, convo.totalReplies)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [filteredConversations, focusedIndex, handleSelectConversation, isFocused])
+
+  // Scroll focused item into view
+  React.useEffect(() => {
+    const focusedElement = document.querySelector('.conversation-item:focus, .conversation-item.ring-2')
+    if (focusedElement) {
+      focusedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+  }, [focusedIndex])
+
 
 
   // Always render the UI immediately, even if data is still loading
@@ -694,7 +744,14 @@ export const ConversationsSimple: React.FC = () => {
                 key={convo.rootUri}
                 convo={convo}
                 isSelected={selectedConvo === convo.rootUri}
+                isFocused={focusedIndex === index}
                 onClick={() => handleSelectConversation(convo.rootUri, convo.totalReplies)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleSelectConversation(convo.rootUri, convo.totalReplies)
+                  }
+                }}
                 allPostsMap={allPostsMap}
                 filteredConversationsIndex={index}
                 isLoadingRootPost={isLoadingRootPost}

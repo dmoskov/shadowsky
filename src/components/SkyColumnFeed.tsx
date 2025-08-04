@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
-import { Heart, Repeat2, MessageCircle, Loader, Hash } from 'lucide-react';
+import { Heart, Repeat2, MessageCircle, Loader, Hash, Bookmark } from 'lucide-react';
 import { proxifyBskyImage } from '../utils/image-proxy';
 import { ThreadModal } from './ThreadModal';
+import { bookmarkService } from '../services/bookmark-service';
 
 interface SkyColumnFeedProps {
   feedUri?: string;
@@ -53,6 +54,7 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
   const [focusedPostUri, setFocusedPostUri] = useState<string | null>(null);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState(Date.now());
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
   
   // Fetch feed generator info
   const { data: feedInfo } = useQuery({
@@ -137,6 +139,26 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
   });
 
   const allPosts = data?.pages.flatMap(page => page.posts) || [];
+
+  // Check bookmarked status for visible posts
+  useEffect(() => {
+    const checkBookmarks = async () => {
+      const postUris = allPosts.map(p => p.post?.uri || p.uri).filter(Boolean);
+      const bookmarked = new Set<string>();
+      
+      for (const uri of postUris) {
+        if (await bookmarkService.isPostBookmarked(uri)) {
+          bookmarked.add(uri);
+        }
+      }
+      
+      setBookmarkedPosts(bookmarked);
+    };
+    
+    if (allPosts.length > 0) {
+      checkBookmarks();
+    }
+  }, [allPosts]);
 
   // Save scroll position when scrolling
   useEffect(() => {
@@ -255,6 +277,27 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
       // Update focused post when clicking
       updateFocusedPost(post.uri, index);
     };
+
+    const handleBookmark = async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      
+      try {
+        const isBookmarked = await bookmarkService.toggleBookmark(post);
+        
+        // Update local state
+        setBookmarkedPosts(prev => {
+          const newSet = new Set(prev);
+          if (isBookmarked) {
+            newSet.add(post.uri);
+          } else {
+            newSet.delete(post.uri);
+          }
+          return newSet;
+        });
+      } catch (error) {
+        console.error('Failed to bookmark post:', error);
+      }
+    };
     
     return (
       <div 
@@ -343,6 +386,15 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
                 >
                   <Heart size={16} fill={post.viewer?.like ? 'currentColor' : 'none'} />
                   <span>{post.likeCount || 0}</span>
+                </button>
+                
+                <button 
+                  className={`flex items-center gap-1 hover:text-yellow-500 transition-colors ${
+                    bookmarkedPosts.has(post.uri) ? 'text-yellow-500' : ''
+                  }`}
+                  onClick={handleBookmark}
+                >
+                  <Bookmark size={16} fill={bookmarkedPosts.has(post.uri) ? 'currentColor' : 'none'} />
                 </button>
               </div>
             </div>

@@ -104,13 +104,14 @@
 
 /* Column hover effects */
 .column-wrapper {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease;
   cursor: grab;
 }
 
+/* Removed transform on hover to prevent jittery behavior
 .column-wrapper:hover {
   transform: translateY(-2px);
-}
+} */
 
 .column-wrapper:active {
   cursor: grabbing;
@@ -281,13 +282,13 @@ body.dragging-active * {
               opacity 0.3s ease;
 }
 
-/* Enhanced hover state for columns */
+/* Enhanced hover state for columns - subtle shadow only */
 .column-wrapper:hover {
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.1);
 }
 
 .dark .column-wrapper:hover {
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.3);
 }
 
 /* Pulse animation for drop indicator */

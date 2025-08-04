@@ -22,10 +22,12 @@ export function ThreadModal({ postUri, onClose }: ThreadModalProps) {
     }
     window.addEventListener('keydown', handleEsc)
     document.body.style.overflow = 'hidden'
+    document.body.classList.add('thread-modal-open')
     
     return () => {
       window.removeEventListener('keydown', handleEsc)
       document.body.style.overflow = ''
+      document.body.classList.remove('thread-modal-open')
     }
   }, [onClose])
 
@@ -83,13 +85,13 @@ export function ThreadModal({ postUri, onClose }: ThreadModalProps) {
     <>
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
       
-      <div className="fixed inset-y-0 right-0 w-full max-w-3xl bg-white dark:bg-gray-900 shadow-xl z-50 overflow-hidden flex flex-col">
+      <div className="fixed inset-y-0 right-0 w-full max-w-3xl bg-white dark:bg-gray-900 shadow-xl z-50 overflow-hidden flex flex-col thread-modal-container">
         <div className="relative flex-1 overflow-y-auto skydeck-scrollbar" style={{ backgroundColor: 'var(--bsky-bg-primary)' }}>
-          {/* Simple close button overlay */}
+          {/* Close button with higher z-index and explicit pointer events */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            style={{ color: 'var(--bsky-text-secondary)' }}
+            className="absolute top-4 right-4 z-50 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            style={{ color: 'var(--bsky-text-secondary)', pointerEvents: 'auto' }}
             aria-label="Close"
           >
             <X size={24} />

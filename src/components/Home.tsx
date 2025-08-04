@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Heart, Repeat2, MessageCircle, Loader, MoreVertical, TrendingUp, Users, Clock, Hash, Star, Plus, X, ChevronDown } from 'lucide-react'
+import { Heart, Repeat2, MessageCircle, Loader, MoreVertical, TrendingUp, Users, Clock, Hash, Star, Plus, X, ChevronDown, Bookmark, Reply } from 'lucide-react'
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '../contexts/AuthContext'
@@ -10,6 +10,8 @@ import { VideoPlayer } from './VideoPlayer'
 import { FeedDiscovery } from './FeedDiscovery'
 import { ImageGallery } from './ImageGallery'
 import { ThreadModal } from './ThreadModal'
+import { bookmarkService } from '../services/bookmark-service'
+import '../styles/feed-context.css'
 
 type FeedType = 'following' | 'whats-hot' | 'popular-with-friends' | 'recent' | string // Allow custom feed URIs
 
@@ -73,12 +75,14 @@ interface FeedGenerator {
 
 interface HomeProps {
   initialFeedUri?: string;
+  isFocused?: boolean;
 }
 
-export const Home: React.FC<HomeProps> = ({ initialFeedUri }) => {
+export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) => {
   const { agent } = useAuth()
   const queryClient = useQueryClient()
-  const [hoveredPost, setHoveredPost] = useState<string | null>(null)
+  // Removed hoveredPost state to prevent re-renders - using CSS hover instead
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set())
   const [selectedFeed, setSelectedFeed] = useState<FeedType>(() => {
     // Use initialFeedUri if provided, otherwise restore from localStorage
     if (initialFeedUri) {
@@ -322,6 +326,310 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri }) => {
     return data.pages.flatMap(page => page.feed)
   }, [data])
   
+  // Memoize post rendering to prevent unnecessary re-renders
+  const PostItem = React.memo(({ item, index }: { item: any; index: number }) => {
+    const post = item.post
+    const isFocused = focusedPostIndex === index
+    
+    return (
+      <div
+        key={`${post.uri}-${index}`}
+        ref={el => {
+          if (el) postRefs.current[`${post.uri}-${index}`] = el
+        }}
+        className={`post-item px-4 py-3 relative ${
+          (item.reply?.parent || post.record?.reply?.parent) ? 'post-is-reply' : ''
+        } ${isFocused ? 'post-focused' : ''}`}
+        data-post-uri={post.uri}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            handlePostClick(post)
+          }
+        }}
+      >
+        {item.reason && (
+          <div className="flex items-center gap-2 mb-1.5 text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
+            <Repeat2 size={12} />
+            <span>{item.reason.by.displayName || item.reason.by.handle} reposted</span>
+          </div>
+        )}
+        
+        {/* Show reply context from feed item */}
+        {item.reply?.parent && (
+          <div className="relative">
+            {/* Reply indicator with background */}
+            <div className="reply-indicator flex items-center gap-2 mb-3 px-3 py-2 rounded-lg">
+              <div className="flex items-center">
+                <div className="w-12 flex justify-center">
+                  <div className="w-0.5 h-6" style={{ backgroundColor: 'rgb(29, 155, 240)' }}></div>
+                </div>
+                <Reply size={16} className="mr-2" style={{ color: 'rgb(29, 155, 240)' }} />
+              </div>
+              <div className="flex-1">
+                <span className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>
+                  Replying to{' '}
+                  <button
+                    className="hover:underline font-semibold"
+                    style={{ color: 'rgb(29, 155, 240)' }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      // Navigate to parent post
+                      const parentPost = item.reply.parent
+                      if (parentPost) {
+                        handlePostClick(parentPost)
+                      }
+                    }}
+                  >
+                    @{item.reply.parent.author.handle}
+                  </button>
+                </span>
+                {item.reply.parent.record?.text && (
+                  <div className="text-xs mt-0.5 line-clamp-1" style={{ color: 'var(--bsky-text-secondary)' }}>
+                    "{item.reply.parent.record.text}"
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* Connecting line from reply indicator to avatar */}
+            <div className="absolute left-6 top-full h-3 w-0.5" 
+                 style={{ backgroundColor: 'rgba(29, 155, 240, 0.3)' }}></div>
+          </div>
+        )}
+        
+        {/* Show reply context from post record if not in feed item */}
+        {!item.reply?.parent && post.record?.reply?.parent && (
+          <div className="relative">
+            {/* Reply indicator with background */}
+            <div className="reply-indicator flex items-center gap-2 mb-3 px-3 py-2 rounded-lg">
+              <div className="flex items-center">
+                <div className="w-12 flex justify-center">
+                  <div className="w-0.5 h-6" style={{ backgroundColor: 'rgb(29, 155, 240)' }}></div>
+                </div>
+                <Reply size={16} className="mr-2" style={{ color: 'rgb(29, 155, 240)' }} />
+              </div>
+              <span className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>
+                This is a reply
+              </span>
+            </div>
+            {/* Connecting line from reply indicator to avatar */}
+            <div className="absolute left-6 top-full h-3 w-0.5" 
+                 style={{ backgroundColor: 'rgba(29, 155, 240, 0.3)' }}></div>
+          </div>
+        )}
+        
+        <div className="flex gap-3">
+          <img
+            src={proxifyBskyImage(post.author.avatar) || '/default-avatar.svg'}
+            alt={post.author.handle}
+            className="w-12 h-12 rounded-full"
+          />
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between">
+              <div 
+                className="cursor-pointer"
+                onClick={() => handlePostClick(post)}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+                    {post.author.displayName || post.author.handle}
+                  </span>
+                  {(item.reply?.parent || post.record?.reply?.parent) && (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                          style={{ 
+                            backgroundColor: 'rgb(29, 155, 240)',
+                            color: 'white'
+                          }}>
+                      REPLY
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                  @{post.author.handle} · {formatDistanceToNow(new Date(post.record.createdAt), { addSuffix: true })}
+                </div>
+              </div>
+              
+              <div 
+                className="relative"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  className="post-menu-button p-2 -m-1 rounded-full transition-all hover:bg-gray-200 dark:hover:bg-gray-800"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    // Post menu functionality would go here
+                    console.log('Menu clicked for post:', post.uri)
+                  }}
+                  aria-label="More options"
+                >
+                  <MoreVertical 
+                    size={16} 
+                    className="post-menu-icon"
+                    style={{ color: 'var(--bsky-text-secondary)' }}
+                  />
+                </button>
+              </div>
+            </div>
+            
+            <div 
+              className="mt-1 whitespace-pre-wrap cursor-pointer" 
+              style={{ color: 'var(--bsky-text-primary)' }}
+              onClick={() => handlePostClick(post)}
+            >
+              {post.record.text}
+            </div>
+            
+            {renderEmbed(post.embed)}
+            
+            {/* Floating action bar on hover - desktop only */}
+            <div className="post-action-bar hidden sm:flex items-center gap-3 absolute bottom-2 right-2 px-3 py-1.5 rounded-full transition-all duration-200" style={{ backgroundColor: 'var(--bsky-bg-secondary)', backdropFilter: 'blur(10px)' }}>
+              <button
+                className="flex items-center gap-1 hover:text-blue-500 transition-colors cursor-pointer select-none"
+                style={{ color: 'var(--bsky-text-secondary)' }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  // Reply functionality would go here
+                }}
+                type="button"
+              >
+                <MessageCircle size={14} />
+                <span className="text-xs">{post.replyCount || 0}</span>
+              </button>
+              
+              <button
+                className={`flex items-center gap-1 hover:text-green-500 transition-colors cursor-pointer select-none ${
+                  post.viewer?.repost ? 'text-green-500' : ''
+                } ${repostMutation.isPending || unrepostMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
+                style={{ 
+                  color: post.viewer?.repost ? undefined : 'var(--bsky-text-secondary)'
+                }}
+                onClick={(e) => handleRepost(post, e)}
+                disabled={repostMutation.isPending || unrepostMutation.isPending}
+                type="button"
+              >
+                <Repeat2 size={14} />
+                <span className="text-xs">{post.repostCount || 0}</span>
+              </button>
+              
+              <button
+                className={`flex items-center gap-1 hover:text-red-500 transition-colors cursor-pointer select-none ${
+                  post.viewer?.like ? 'text-red-500' : ''
+                } ${likeMutation.isPending || unlikeMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
+                style={{ 
+                  color: post.viewer?.like ? undefined : 'var(--bsky-text-secondary)'
+                }}
+                onClick={(e) => handleLike(post, e)}
+                disabled={likeMutation.isPending || unlikeMutation.isPending}
+                type="button"
+              >
+                <Heart size={14} fill={post.viewer?.like ? 'currentColor' : 'none'} />
+                <span className="text-xs">{post.likeCount || 0}</span>
+              </button>
+              
+              <button
+                className={`flex items-center gap-1 hover:text-yellow-500 transition-colors cursor-pointer select-none ${
+                  bookmarkedPosts.has(post.uri) ? 'text-yellow-500' : ''
+                }`}
+                style={{ 
+                  color: bookmarkedPosts.has(post.uri) ? undefined : 'var(--bsky-text-secondary)'
+                }}
+                onClick={(e) => handleBookmark(post, e)}
+                type="button"
+              >
+                <Bookmark size={14} fill={bookmarkedPosts.has(post.uri) ? 'currentColor' : 'none'} />
+              </button>
+            </div>
+            
+            {/* Mobile action bar - always visible */}
+            <div className="flex sm:hidden items-center gap-6 mt-2">
+              <button
+                className="flex items-center gap-1 hover:text-blue-500 transition-colors cursor-pointer select-none p-1 -m-1"
+                style={{ color: 'var(--bsky-text-secondary)', WebkitTapHighlightColor: 'transparent' }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  // Reply functionality would go here
+                }}
+                type="button"
+              >
+                <MessageCircle size={16} />
+                <span className="text-sm">{post.replyCount || 0}</span>
+              </button>
+              
+              <button
+                className={`flex items-center gap-1 hover:text-green-500 transition-colors cursor-pointer select-none p-1 -m-1 ${
+                  post.viewer?.repost ? 'text-green-500' : ''
+                } ${repostMutation.isPending || unrepostMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
+                style={{ 
+                  color: post.viewer?.repost ? undefined : 'var(--bsky-text-secondary)',
+                  WebkitTapHighlightColor: 'transparent'
+                }}
+                onClick={(e) => handleRepost(post, e)}
+                disabled={repostMutation.isPending || unrepostMutation.isPending}
+                type="button"
+              >
+                <Repeat2 size={16} />
+                <span className="text-sm">{post.repostCount || 0}</span>
+              </button>
+              
+              <button
+                className={`flex items-center gap-1 hover:text-red-500 transition-colors cursor-pointer select-none p-1 -m-1 ${
+                  post.viewer?.like ? 'text-red-500' : ''
+                } ${likeMutation.isPending || unlikeMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
+                style={{ 
+                  color: post.viewer?.like ? undefined : 'var(--bsky-text-secondary)',
+                  WebkitTapHighlightColor: 'transparent'
+                }}
+                onClick={(e) => handleLike(post, e)}
+                disabled={likeMutation.isPending || unlikeMutation.isPending}
+                type="button"
+              >
+                <Heart size={16} fill={post.viewer?.like ? 'currentColor' : 'none'} />
+                <span className="text-sm">{post.likeCount || 0}</span>
+              </button>
+              
+              <button
+                className={`flex items-center gap-1 hover:text-yellow-500 transition-colors cursor-pointer select-none p-1 -m-1 ${
+                  bookmarkedPosts.has(post.uri) ? 'text-yellow-500' : ''
+                }`}
+                style={{ 
+                  color: bookmarkedPosts.has(post.uri) ? undefined : 'var(--bsky-text-secondary)',
+                  WebkitTapHighlightColor: 'transparent'
+                }}
+                onClick={(e) => handleBookmark(post, e)}
+                type="button"
+              >
+                <Bookmark size={16} fill={bookmarkedPosts.has(post.uri) ? 'currentColor' : 'none'} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  })
+
+  // Check bookmarked status for visible posts
+  useEffect(() => {
+    const checkBookmarks = async () => {
+      const postUris = posts.map(p => p.post?.uri || p.uri).filter(Boolean)
+      const bookmarked = new Set<string>()
+      
+      for (const uri of postUris) {
+        if (await bookmarkService.isPostBookmarked(uri)) {
+          bookmarked.add(uri)
+        }
+      }
+      
+      setBookmarkedPosts(bookmarked)
+    }
+    
+    if (posts.length > 0) {
+      checkBookmarks()
+    }
+  }, [posts])
+  
   // Intersection observer for infinite scroll with optimistic pre-fetching
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -358,6 +666,9 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri }) => {
   // Keyboard shortcuts - simplified navigation only
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Only handle if this column is focused
+      if (!isFocused) return
+      
       // Don't handle shortcuts if user is typing in an input/textarea
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return
@@ -406,7 +717,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri }) => {
     
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [posts, focusedPostIndex])
+  }, [posts, focusedPostIndex, isFocused])
   
   const handlePostClick = (post: Post) => {
     trackClick('post', { postUri: post.uri })
@@ -468,6 +779,34 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri }) => {
       }
     } catch (error) {
       debug.error('Failed to like/unlike post:', error)
+    }
+  }
+
+  const handleBookmark = async (post: Post, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    trackFeatureAction('bookmark_post', { postUri: post.uri })
+    
+    try {
+      const isBookmarked = await bookmarkService.toggleBookmark(post)
+      
+      // Update local state
+      setBookmarkedPosts(prev => {
+        const newSet = new Set(prev)
+        if (isBookmarked) {
+          newSet.add(post.uri)
+        } else {
+          newSet.delete(post.uri)
+        }
+        return newSet
+      })
+      
+      // Invalidate bookmarks query
+      queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
+      queryClient.invalidateQueries({ queryKey: ['bookmarkCount'] })
+    } catch (error) {
+      debug.error('Failed to bookmark post:', error)
     }
   }
   
@@ -600,51 +939,87 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri }) => {
       const quotedPost = embed.record
       if (quotedPost?.$type === 'app.bsky.embed.record#viewRecord') {
         return (
-          <div className="mt-2 border rounded-lg p-2.5"
-               style={{ borderColor: 'var(--bsky-border-primary)' }}
-               onClick={(e) => {
-                 e.stopPropagation()
-                 handlePostClick({ uri: quotedPost.uri, cid: quotedPost.cid })
-               }}>
-            <div className="flex items-center gap-2 mb-2">
-              <img
-                src={proxifyBskyImage(quotedPost.author.avatar) || '/default-avatar.svg'}
-                alt={quotedPost.author.handle}
-                className="w-5 h-5 rounded-full"
-              />
-              <div className="flex items-center gap-1 text-sm">
-                <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-                  {quotedPost.author.displayName || quotedPost.author.handle}
-                </span>
-                <span style={{ color: 'var(--bsky-text-secondary)' }}>
-                  @{quotedPost.author.handle}
-                </span>
+          <div className="mt-2 border rounded-lg overflow-hidden transition-all hover:border-opacity-80"
+               style={{ borderColor: 'var(--bsky-border-primary)' }}>
+            {/* Quote post header */}
+            <div className="px-3 py-1.5 flex items-center gap-2 text-xs"
+                 style={{ 
+                   backgroundColor: 'var(--bsky-bg-tertiary)',
+                   borderBottom: `1px solid var(--bsky-border-primary)`,
+                   color: 'var(--bsky-text-secondary)'
+                 }}>
+              <MessageCircle size={12} />
+              <span>Quoted post</span>
+            </div>
+            
+            {/* Quote post content */}
+            <div className="p-3 cursor-pointer hover:bg-opacity-5 hover:bg-blue-500 transition-colors"
+                 onClick={(e) => {
+                   e.stopPropagation()
+                   handlePostClick({ uri: quotedPost.uri, cid: quotedPost.cid })
+                 }}>
+              <div className="flex items-center gap-2 mb-2">
+                <img
+                  src={proxifyBskyImage(quotedPost.author.avatar) || '/default-avatar.svg'}
+                  alt={quotedPost.author.handle}
+                  className="w-5 h-5 rounded-full"
+                />
+                <div className="flex items-center gap-1 text-sm">
+                  <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+                    {quotedPost.author.displayName || quotedPost.author.handle}
+                  </span>
+                  <span style={{ color: 'var(--bsky-text-secondary)' }}>
+                    @{quotedPost.author.handle}
+                  </span>
+                </div>
               </div>
+              <div className="text-sm" style={{ color: 'var(--bsky-text-primary)' }}>
+                {quotedPost.value.text}
+              </div>
+              {quotedPost.embeds?.[0] && renderEmbed(quotedPost.embeds[0])}
             </div>
-            <div className="text-sm" style={{ color: 'var(--bsky-text-primary)' }}>
-              {quotedPost.value.text}
-            </div>
-            {quotedPost.embeds?.[0] && renderEmbed(quotedPost.embeds[0])}
           </div>
         )
       }
       // Handle deleted or blocked quotes
       if (quotedPost?.$type === 'app.bsky.embed.record#viewNotFound') {
         return (
-          <div className="mt-2 border rounded-lg p-2.5"
+          <div className="mt-2 border rounded-lg overflow-hidden"
                style={{ borderColor: 'var(--bsky-border-primary)' }}>
-            <div className="text-sm italic" style={{ color: 'var(--bsky-text-secondary)' }}>
-              Quoted post not found
+            <div className="px-3 py-1.5 flex items-center gap-2 text-xs"
+                 style={{ 
+                   backgroundColor: 'var(--bsky-bg-tertiary)',
+                   borderBottom: `1px solid var(--bsky-border-primary)`,
+                   color: 'var(--bsky-text-secondary)'
+                 }}>
+              <MessageCircle size={12} />
+              <span>Quoted post</span>
+            </div>
+            <div className="p-3">
+              <div className="text-sm italic" style={{ color: 'var(--bsky-text-secondary)' }}>
+                Post not found or deleted
+              </div>
             </div>
           </div>
         )
       }
       if (quotedPost?.$type === 'app.bsky.embed.record#viewBlocked') {
         return (
-          <div className="mt-2 border rounded-lg p-2.5"
+          <div className="mt-2 border rounded-lg overflow-hidden"
                style={{ borderColor: 'var(--bsky-border-primary)' }}>
-            <div className="text-sm italic" style={{ color: 'var(--bsky-text-secondary)' }}>
-              Quoted post from blocked user
+            <div className="px-3 py-1.5 flex items-center gap-2 text-xs"
+                 style={{ 
+                   backgroundColor: 'var(--bsky-bg-tertiary)',
+                   borderBottom: `1px solid var(--bsky-border-primary)`,
+                   color: 'var(--bsky-text-secondary)'
+                 }}>
+              <MessageCircle size={12} />
+              <span>Quoted post</span>
+            </div>
+            <div className="p-3">
+              <div className="text-sm italic" style={{ color: 'var(--bsky-text-secondary)' }}>
+                Post from blocked user
+              </div>
             </div>
           </div>
         )
@@ -840,184 +1215,9 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri }) => {
       
       <div className="max-w-2xl mx-auto px-3 sm:px-4">
         <div className="divide-y" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-        {posts.map((item: any, index: number) => {
-          const post = item.post
-          return (
-            <div
-              key={`${post.uri}-${index}`}
-              ref={el => {
-                if (el) postRefs.current[`${post.uri}-${index}`] = el
-              }}
-              className="px-4 py-3 hover:bg-opacity-5 hover:bg-blue-500 transition-colors relative"
-              onMouseEnter={() => setHoveredPost(post.uri)}
-              onMouseLeave={() => setHoveredPost(null)}
-            >
-              {item.reason && (
-                <div className="flex items-center gap-2 mb-1.5 text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
-                  <Repeat2 size={12} />
-                  <span>{item.reason.by.displayName || item.reason.by.handle} reposted</span>
-                </div>
-              )}
-              
-              <div className="flex gap-3">
-                <img
-                  src={proxifyBskyImage(post.author.avatar) || '/default-avatar.svg'}
-                  alt={post.author.handle}
-                  className="w-12 h-12 rounded-full"
-                />
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between">
-                    <div 
-                      className="cursor-pointer"
-                      onClick={() => handlePostClick(post)}
-                    >
-                      <div className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-                        {post.author.displayName || post.author.handle}
-                      </div>
-                      <div className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
-                        @{post.author.handle} · {formatDistanceToNow(new Date(post.record.createdAt), { addSuffix: true })}
-                      </div>
-                    </div>
-                    
-                    <div 
-                      className="relative"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        className={`p-2 -m-1 rounded-full transition-all ${
-                          hoveredPost === post.uri 
-                            ? 'opacity-100 hover:bg-gray-200 dark:hover:bg-gray-800' 
-                            : 'opacity-0 sm:opacity-100 sm:hover:opacity-100'
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          e.preventDefault()
-                          // Post menu functionality would go here
-                          console.log('Menu clicked for post:', post.uri)
-                        }}
-                        aria-label="More options"
-                      >
-                        <MoreVertical 
-                          size={16} 
-                          style={{ 
-                            color: hoveredPost === post.uri ? 'var(--bsky-text-secondary)' : 'transparent'
-                          }} 
-                        />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div 
-                    className="mt-1 whitespace-pre-wrap cursor-pointer" 
-                    style={{ color: 'var(--bsky-text-primary)' }}
-                    onClick={() => handlePostClick(post)}
-                  >
-                    {post.record.text}
-                  </div>
-                  
-                  {renderEmbed(post.embed)}
-                  
-                  {/* Floating action bar on hover - desktop only */}
-                  <div className={`hidden sm:flex items-center gap-3 absolute bottom-2 right-2 px-3 py-1.5 rounded-full transition-all duration-200 ${
-                    hoveredPost === post.uri ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
-                  }`} style={{ backgroundColor: 'var(--bsky-bg-secondary)', backdropFilter: 'blur(10px)' }}>
-                    <button
-                      className="flex items-center gap-1 hover:text-blue-500 transition-colors cursor-pointer select-none"
-                      style={{ color: 'var(--bsky-text-secondary)' }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        // Reply functionality would go here
-                      }}
-                      type="button"
-                    >
-                      <MessageCircle size={14} />
-                      <span className="text-xs">{post.replyCount || 0}</span>
-                    </button>
-                    
-                    <button
-                      className={`flex items-center gap-1 hover:text-green-500 transition-colors cursor-pointer select-none ${
-                        post.viewer?.repost ? 'text-green-500' : ''
-                      } ${repostMutation.isPending || unrepostMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
-                      style={{ 
-                        color: post.viewer?.repost ? undefined : 'var(--bsky-text-secondary)'
-                      }}
-                      onClick={(e) => handleRepost(post, e)}
-                      disabled={repostMutation.isPending || unrepostMutation.isPending}
-                      type="button"
-                    >
-                      <Repeat2 size={14} />
-                      <span className="text-xs">{post.repostCount || 0}</span>
-                    </button>
-                    
-                    <button
-                      className={`flex items-center gap-1 hover:text-red-500 transition-colors cursor-pointer select-none ${
-                        post.viewer?.like ? 'text-red-500' : ''
-                      } ${likeMutation.isPending || unlikeMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
-                      style={{ 
-                        color: post.viewer?.like ? undefined : 'var(--bsky-text-secondary)'
-                      }}
-                      onClick={(e) => handleLike(post, e)}
-                      disabled={likeMutation.isPending || unlikeMutation.isPending}
-                      type="button"
-                    >
-                      <Heart size={14} fill={post.viewer?.like ? 'currentColor' : 'none'} />
-                      <span className="text-xs">{post.likeCount || 0}</span>
-                    </button>
-                  </div>
-                  
-                  {/* Mobile action bar - always visible */}
-                  <div className="flex sm:hidden items-center gap-6 mt-2">
-                    <button
-                      className="flex items-center gap-1 hover:text-blue-500 transition-colors cursor-pointer select-none p-1 -m-1"
-                      style={{ color: 'var(--bsky-text-secondary)', WebkitTapHighlightColor: 'transparent' }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        // Reply functionality would go here
-                      }}
-                      type="button"
-                    >
-                      <MessageCircle size={16} />
-                      <span className="text-sm">{post.replyCount || 0}</span>
-                    </button>
-                    
-                    <button
-                      className={`flex items-center gap-1 hover:text-green-500 transition-colors cursor-pointer select-none p-1 -m-1 ${
-                        post.viewer?.repost ? 'text-green-500' : ''
-                      } ${repostMutation.isPending || unrepostMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
-                      style={{ 
-                        color: post.viewer?.repost ? undefined : 'var(--bsky-text-secondary)',
-                        WebkitTapHighlightColor: 'transparent'
-                      }}
-                      onClick={(e) => handleRepost(post, e)}
-                      disabled={repostMutation.isPending || unrepostMutation.isPending}
-                      type="button"
-                    >
-                      <Repeat2 size={16} />
-                      <span className="text-sm">{post.repostCount || 0}</span>
-                    </button>
-                    
-                    <button
-                      className={`flex items-center gap-1 hover:text-red-500 transition-colors cursor-pointer select-none p-1 -m-1 ${
-                        post.viewer?.like ? 'text-red-500' : ''
-                      } ${likeMutation.isPending || unlikeMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
-                      style={{ 
-                        color: post.viewer?.like ? undefined : 'var(--bsky-text-secondary)',
-                        WebkitTapHighlightColor: 'transparent'
-                      }}
-                      onClick={(e) => handleLike(post, e)}
-                      disabled={likeMutation.isPending || unlikeMutation.isPending}
-                      type="button"
-                    >
-                      <Heart size={16} fill={post.viewer?.like ? 'currentColor' : 'none'} />
-                      <span className="text-sm">{post.likeCount || 0}</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )
-        })}
+        {posts.map((item: any, index: number) => (
+          <PostItem key={`${item.post.uri}-${index}`} item={item} index={index} />
+        ))}
         </div>
         
         {isFetchingNextPage && (
