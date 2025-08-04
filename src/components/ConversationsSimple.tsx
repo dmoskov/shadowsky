@@ -48,6 +48,20 @@ const ConversationItem = React.memo(({
   isFocused?: boolean
   onKeyDown?: (e: React.KeyboardEvent) => void
 }) => {
+  // Log each conversation item render
+  React.useEffect(() => {
+    debug.log('[ConversationItem] Rendering:', {
+      index: filteredConversationsIndex,
+      rootUri: convo.rootUri,
+      hasRootPost: !!convo.rootPost,
+      isLoadingRootPost,
+      isSelected,
+      isFocused,
+      unreadCount: convo.replies.filter(r => !r.isRead).length,
+      timestamp: new Date().toISOString()
+    })
+  })
+  
   const rootRecord = convo.rootPost?.record as any
   const previewText = rootRecord?.text || '[Post unavailable]'
   const isGroup = convo.participants.size > 2
@@ -172,7 +186,7 @@ const ConversationItem = React.memo(({
   // - Latest reply changes
   // - Unread count changes
   // - Loading state changes
-  return (
+  const shouldSkipRender = (
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.isFocused === nextProps.isFocused &&
     prevProps.convo.rootPost?.uri === nextProps.convo.rootPost?.uri &&
@@ -183,6 +197,27 @@ const ConversationItem = React.memo(({
     prevProps.allPostsMap.get(prevProps.convo.latestReply.uri) === nextProps.allPostsMap.get(nextProps.convo.latestReply.uri) &&
     prevProps.isLoadingRootPost === nextProps.isLoadingRootPost
   )
+  
+  if (!shouldSkipRender) {
+    debug.log('[ConversationItem] Re-rendering due to prop change:', {
+      index: nextProps.filteredConversationsIndex,
+      rootUri: nextProps.convo.rootUri,
+      changes: {
+        isSelected: prevProps.isSelected !== nextProps.isSelected,
+        isFocused: prevProps.isFocused !== nextProps.isFocused,
+        rootPostUri: prevProps.convo.rootPost?.uri !== nextProps.convo.rootPost?.uri,
+        rootPostAuthor: prevProps.convo.rootPost?.author?.handle !== nextProps.convo.rootPost?.author?.handle,
+        rootPostAvatar: prevProps.convo.rootPost?.author?.avatar !== nextProps.convo.rootPost?.author?.avatar,
+        latestReplyUri: prevProps.convo.latestReply.uri !== nextProps.convo.latestReply.uri,
+        unreadCount: prevProps.convo.replies.filter(r => !r.isRead).length !== nextProps.convo.replies.filter(r => !r.isRead).length,
+        latestReplyPost: prevProps.allPostsMap.get(prevProps.convo.latestReply.uri) !== nextProps.allPostsMap.get(nextProps.convo.latestReply.uri),
+        isLoadingRootPost: prevProps.isLoadingRootPost !== nextProps.isLoadingRootPost
+      },
+      timestamp: new Date().toISOString()
+    })
+  }
+  
+  return shouldSkipRender
 })
 
 interface ConversationsSimpleProps {
@@ -190,7 +225,10 @@ interface ConversationsSimpleProps {
 }
 
 export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocused = true }) => {
-  debug.log('[ConversationsSimple] Component rendering')
+  debug.log('[ConversationsSimple] Component rendering', {
+    timestamp: new Date().toISOString(),
+    isFocused
+  })
   
   const { session } = useAuth()
   const [selectedConvo, setSelectedConvo] = useState<string | null>(null)
@@ -209,7 +247,8 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
     debug.log('[ConversationsSimple] Selecting conversation:', {
       rootUri,
       messageCount,
-      previousSelected: selectedConvo
+      previousSelected: selectedConvo,
+      timestamp: new Date().toISOString()
     })
     setSelectedConvo(rootUri)
     if (rootUri) {
@@ -226,24 +265,39 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
   
   // Subscribe to query cache updates
   React.useEffect(() => {
+    debug.log('[ConversationsSimple] Setting up cache subscription')
     let checkCount = 0
     const maxChecks = 30 // Check for up to 30 seconds
     
     // Check for data periodically
     const checkData = () => {
       const currentData = queryClient.getQueryData(['notifications-extended']) as any
+      debug.log('[ConversationsSimple] Checking cache data:', {
+        checkCount,
+        hasData: !!currentData,
+        pages: currentData?.pages?.length || 0,
+        firstPageNotifications: currentData?.pages?.[0]?.notifications?.length || 0,
+        timestamp: new Date().toISOString()
+      })
+      
       if (currentData?.pages?.length > 0) {
         setExtendedData(currentData)
         debug.log('[ConversationsSimple] Updated extended data from cache:', {
           pages: currentData.pages.length,
-          notifications: currentData.pages[0]?.notifications?.length || 0
+          notifications: currentData.pages[0]?.notifications?.length || 0,
+          totalNotifications: currentData.pages.reduce((sum: number, page: any) => 
+            sum + (page.notifications?.length || 0), 0
+          ),
+          timestamp: new Date().toISOString()
         })
         return true // Data found
       }
       
       checkCount++
       if (checkCount >= maxChecks) {
-        debug.warn('[ConversationsSimple] No notification data found after 30 seconds')
+        debug.warn('[ConversationsSimple] No notification data found after 30 seconds', {
+          timestamp: new Date().toISOString()
+        })
         // Trigger a manual refresh of notifications
         queryClient.invalidateQueries({ queryKey: ['notifications-extended'] })
       }
@@ -267,8 +321,15 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
     
     // Also subscribe to cache updates
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      if (event?.query?.queryKey?.[0] === 'notifications-extended' && event.type === 'updated') {
-        checkData()
+      if (event?.query?.queryKey?.[0] === 'notifications-extended') {
+        debug.log('[ConversationsSimple] Cache event:', {
+          type: event.type,
+          state: event.query.state,
+          timestamp: new Date().toISOString()
+        })
+        if (event.type === 'updated') {
+          checkData()
+        }
       }
     })
     
@@ -286,22 +347,37 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
   
   // Extract reply notifications
   const replyNotifications = React.useMemo(() => {
+    const startTime = performance.now()
     if (!extendedData?.pages) {
-      debug.log('[ConversationsSimple] No extended data pages')
+      debug.log('[ConversationsSimple] No extended data pages', {
+        timestamp: new Date().toISOString()
+      })
       return []
     }
-    debug.log(`[ConversationsSimple] Processing ${extendedData.pages.length} pages of notifications`)
+    debug.log(`[ConversationsSimple] Processing ${extendedData.pages.length} pages of notifications`, {
+      timestamp: new Date().toISOString()
+    })
     const allNotifications = extendedData.pages.flatMap((page: any) => page.notifications || [])
-    debug.log(`[ConversationsSimple] Total notifications: ${allNotifications.length}`)
+    debug.log(`[ConversationsSimple] Total notifications: ${allNotifications.length}`, {
+      timestamp: new Date().toISOString()
+    })
     const replies = allNotifications.filter((n: Notification) => n && n.reason === 'reply')
-    debug.log('[ConversationsSimple] Found reply notifications:', replies.length)
+    debug.log('[ConversationsSimple] Found reply notifications:', {
+      count: replies.length,
+      processingTime: performance.now() - startTime,
+      timestamp: new Date().toISOString()
+    })
     
     // Log the newest and oldest reply dates for debugging
     if (replies.length > 0) {
       const newestReply = replies[0]
       const oldestReply = replies[replies.length - 1]
-      debug.log('[ConversationsSimple] Newest reply:', new Date(newestReply.indexedAt).toLocaleString())
-      debug.log('[ConversationsSimple] Oldest reply:', new Date(oldestReply.indexedAt).toLocaleString())
+      debug.log('[ConversationsSimple] Reply date range:', {
+        newest: new Date(newestReply.indexedAt).toISOString(),
+        oldest: new Date(oldestReply.indexedAt).toISOString(),
+        rangeInDays: (new Date(newestReply.indexedAt).getTime() - 
+                      new Date(oldestReply.indexedAt).getTime()) / (1000 * 60 * 60 * 24)
+      })
     }
     
     return replies
@@ -340,6 +416,13 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
   // Fetch posts for all notifications including root posts
   const { data: posts, percentageFetched } = useNotificationPosts(notificationsWithRoots)
   
+  debug.log('[ConversationsSimple] Post fetching status:', {
+    notificationsCount: notificationsWithRoots.length,
+    postsLoaded: posts?.length || 0,
+    percentageFetched,
+    timestamp: new Date().toISOString()
+  })
+  
   // Create post map
   const postMap = React.useMemo(() => {
     const map = new Map<string, Post>()
@@ -359,7 +442,14 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
   React.useEffect(() => {
     if (!session || !posts) return
     
+    const startTime = performance.now()
     const discoveredRootUris = new Set<string>()
+    
+    debug.log('[ConversationsSimple] Discovering root posts:', {
+      postsToCheck: posts.length,
+      currentRootUris: additionalRootUris.size,
+      timestamp: new Date().toISOString()
+    })
     
     // Look through all loaded posts to find root URIs we haven't fetched yet
     posts.forEach(post => {
@@ -375,6 +465,13 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
     
     // If we found new root URIs, update state to trigger fetching
     if (discoveredRootUris.size > 0) {
+      debug.log('[ConversationsSimple] Found new root URIs to fetch:', {
+        count: discoveredRootUris.size,
+        uris: Array.from(discoveredRootUris).slice(0, 5), // Log first 5
+        discoveryTime: performance.now() - startTime,
+        timestamp: new Date().toISOString()
+      })
+      
       setAdditionalRootUris(prev => {
         const newSet = new Set(prev)
         discoveredRootUris.forEach(uri => newSet.add(uri))
@@ -399,6 +496,14 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
       const urisToFetch = Array.from(additionalRootUris)
       const { cached, missing } = await PostCache.getCachedPostsAsync(urisToFetch)
       
+      debug.log('[ConversationsSimple] Root posts cache check:', {
+        totalUris: urisToFetch.length,
+        cachedCount: cached.length,
+        missingCount: missing.length,
+        cacheHitRate: cached.length > 0 ? (cached.length / urisToFetch.length * 100).toFixed(2) + '%' : '0%',
+        timestamp: new Date().toISOString()
+      })
+      
       if (missing.length === 0) {
         return cached
       }
@@ -408,6 +513,15 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
       // Batch fetch missing posts (25 at a time)
       for (let i = 0; i < missing.length; i += 25) {
         const batch = missing.slice(i, i + 25)
+        const batchStartTime = performance.now()
+        
+        debug.log('[ConversationsSimple] Fetching root posts batch:', {
+          batchIndex: Math.floor(i / 25) + 1,
+          totalBatches: Math.ceil(missing.length / 25),
+          batchSize: batch.length,
+          timestamp: new Date().toISOString()
+        })
+        
         try {
           const response = await rateLimitedPostFetch(async () => 
             agent.app.bsky.feed.getPosts({ uris: batch })
@@ -415,10 +529,22 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
           const newPosts = response.data.posts as Post[]
           posts.push(...newPosts)
           
+          debug.log('[ConversationsSimple] Root posts batch fetched:', {
+            requestedCount: batch.length,
+            receivedCount: newPosts.length,
+            fetchTime: performance.now() - batchStartTime,
+            timestamp: new Date().toISOString()
+          })
+          
           // Cache the newly fetched posts
           PostCache.save(newPosts)
         } catch (error) {
-          debug.error('Failed to fetch root posts batch:', error)
+          debug.error('[ConversationsSimple] Failed to fetch root posts batch:', {
+            error,
+            batchIndex: Math.floor(i / 25) + 1,
+            batchSize: batch.length,
+            timestamp: new Date().toISOString()
+          })
         }
       }
       
@@ -448,7 +574,11 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
   // This ensures conversation items update their avatars when root post authors become available
   React.useEffect(() => {
     if (additionalRootPosts && additionalRootPosts.length > 0) {
-      debug.log('[ConversationsSimple] Root posts loaded, forcing re-render:', additionalRootPosts.length)
+      debug.log('[ConversationsSimple] Root posts loaded, forcing re-render:', {
+        count: additionalRootPosts.length,
+        rootPostsWithAuthors: additionalRootPosts.filter(p => p.author).length,
+        timestamp: new Date().toISOString()
+      })
       setRootPostsVersion(v => v + 1)
     }
   }, [additionalRootPosts])
@@ -470,6 +600,14 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
   // Group notifications into conversation threads
   // Include rootPostsVersion to force re-computation when root posts are loaded
   const conversations = useMemo(() => {
+    const startTime = performance.now()
+    debug.log('[ConversationsSimple] Starting conversation grouping:', {
+      replyNotificationsCount: replyNotifications.length,
+      allPostsMapSize: allPostsMap.size,
+      rootPostsVersion,
+      timestamp: new Date().toISOString()
+    })
+    
     const threadMap = new Map<string, ConversationThread>()
     
     // Helper function to find the true root of a thread by following the reply chain
@@ -502,11 +640,13 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
     
     // First pass: collect all unique root URIs based on current data
     const rootUriMap = new Map<string, string>() // Maps notification URI to its determined root URI
+    const rootUriDeterminations = { found: 0, fromPost: 0, fromReasonSubject: 0, fallback: 0 }
     
     replyNotifications.forEach((notification: Notification) => {
       try {
         // Determine the root URI for this notification
         let rootUri = notification.reasonSubject || notification.uri
+        let method = 'fallback'
         
         // If we have the post data, find the true root
         const post = allPostsMap.get(notification.uri)
@@ -515,22 +655,39 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
           // If the post explicitly declares its root, use that
           if (record?.reply?.root?.uri) {
             rootUri = record.reply.root.uri
+            method = 'fromPost'
+            rootUriDeterminations.fromPost++
           } else {
             // Otherwise follow the chain
             rootUri = findRootUri(notification.uri)
+            method = 'fromPost'
+            rootUriDeterminations.fromPost++
           }
         } else if (notification.reasonSubject) {
           // If we don't have the reply post but have the reasonSubject, use that as a stable identifier
           // Don't try to follow the chain if we don't have the data
           rootUri = notification.reasonSubject
+          method = 'fromReasonSubject'
+          rootUriDeterminations.fromReasonSubject++
+        } else {
+          rootUriDeterminations.fallback++
         }
         
         rootUriMap.set(notification.uri, rootUri)
+        rootUriDeterminations.found++
       } catch (error) {
         debug.error('[ConversationsSimple] Error determining root URI:', error, notification.uri)
         // Fallback to using the notification URI itself
         rootUriMap.set(notification.uri, notification.uri)
+        rootUriDeterminations.fallback++
       }
+    })
+    
+    debug.log('[ConversationsSimple] Root URI determination stats:', {
+      ...rootUriDeterminations,
+      totalNotifications: replyNotifications.length,
+      uniqueRootUris: new Set(rootUriMap.values()).size,
+      timestamp: new Date().toISOString()
     })
     
     // Second pass: group notifications by their determined root URI
@@ -575,11 +732,16 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
       new Date(b.latestReply.indexedAt).getTime() - new Date(a.latestReply.indexedAt).getTime()
     )
     
+    const groupingTime = performance.now() - startTime
     debug.log('[ConversationsSimple] Conversations generated:', {
       count: sortedConversations.length,
       replyNotificationCount: replyNotifications.length,
       allPostsMapSize: allPostsMap.size,
-      rootPostsVersion
+      rootPostsVersion,
+      groupingTime,
+      conversationsWithRootPosts: sortedConversations.filter(c => c.rootPost).length,
+      conversationsWithMultipleReplies: sortedConversations.filter(c => c.replies.length > 1).length,
+      timestamp: new Date().toISOString()
     })
     
     return sortedConversations
@@ -617,8 +779,9 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
       selectedConvo,
       found: !!found,
       foundRootUri: found?.rootUri,
+      foundRootPost: !!found?.rootPost,
       conversationCount: conversations.length,
-      allRootUris: conversations.map(c => c.rootUri)
+      timestamp: new Date().toISOString()
     })
     return found
   }, [conversations, selectedConvo])
@@ -626,7 +789,7 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
 
   // Debug: Log rendering state
   React.useEffect(() => {
-    debug.log('[ConversationsSimple] State:', {
+    debug.log('[ConversationsSimple] Component state update:', {
       hasExtendedData: !!extendedData,
       extendedDataPages: extendedData?.pages?.length || 0,
       notificationCount: replyNotifications.length,
@@ -635,9 +798,13 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
       allPostsMapSize: allPostsMap.size,
       conversationsCount: conversations.length,
       rootUrisDiscovered: additionalRootUris.size,
-      filteredConversationsCount: filteredConversations.length
+      filteredConversationsCount: filteredConversations.length,
+      percentageFetched,
+      selectedConvo,
+      searchQuery,
+      timestamp: new Date().toISOString()
     })
-  }, [extendedData, replyNotifications.length, posts, additionalRootPosts, allPostsMap.size, conversations.length, additionalRootUris.size, filteredConversations.length])
+  }, [extendedData, replyNotifications.length, posts, additionalRootPosts, allPostsMap.size, conversations.length, additionalRootUris.size, filteredConversations.length, percentageFetched, selectedConvo, searchQuery])
 
   // Handle keyboard navigation
   React.useEffect(() => {
@@ -761,6 +928,20 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
               // Or we're still in the initial post loading phase
               percentageFetched < 100 && !convo.rootPost
             )
+            
+            // Log loading state for first few items
+            if (index < 5) {
+              debug.log('[ConversationsSimple] Conversation render state:', {
+                index,
+                rootUri: convo.rootUri,
+                hasRootPost: !!convo.rootPost,
+                hasRootPostAuthor: !!convo.rootPost?.author,
+                isInAdditionalRootUris: additionalRootUris.has(convo.rootUri),
+                percentageFetched,
+                isLoadingRootPost,
+                timestamp: new Date().toISOString()
+              })
+            }
             
             return (
               <ConversationItem

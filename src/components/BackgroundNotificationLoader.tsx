@@ -17,6 +17,10 @@ import React from 'react'
  * No UI - just data fetching
  */
 export const BackgroundNotificationLoader: React.FC = () => {
+  debug.log('[BackgroundNotificationLoader] Component mounting', {
+    timestamp: new Date().toISOString()
+  })
+  
   const { session } = useAuth()
   const queryClient = useQueryClient()
   const [cacheService] = useState(() => NotificationCacheService.getInstance())
@@ -34,7 +38,18 @@ export const BackgroundNotificationLoader: React.FC = () => {
     if (!hasCachedData || !cachedData?.pages?.[0]?.notifications?.[0]) return true
     const newestNotification = cachedData.pages[0].notifications[0]
     const dataAge = Date.now() - new Date(newestNotification.indexedAt).getTime()
-    return dataAge > 5 * 60 * 1000 // 5 minutes
+    const isStale = dataAge > 5 * 60 * 1000 // 5 minutes
+    
+    debug.log('[BackgroundNotificationLoader] Cache staleness check:', {
+      hasCachedData,
+      dataAgeMs: dataAge,
+      dataAgeMinutes: dataAge / (60 * 1000),
+      isStale,
+      newestNotificationDate: newestNotification.indexedAt,
+      timestamp: new Date().toISOString()
+    })
+    
+    return isStale
   }, [hasCachedData, cachedData])
   
   const {
@@ -45,11 +60,26 @@ export const BackgroundNotificationLoader: React.FC = () => {
   } = useInfiniteQuery({
     queryKey: ['notifications-extended'],
     queryFn: async ({ pageParam }) => {
+      debug.log('[BackgroundNotificationLoader] Fetching notifications page:', {
+        pageParam,
+        enablePolling,
+        timestamp: new Date().toISOString()
+      })
+      
       const { atProtoClient } = await import('../services/atproto')
       const agent = atProtoClient.agent
       if (!agent) throw new Error('Not authenticated')
       const notificationService = getNotificationService(agent)
-      return notificationService.listNotifications(pageParam, false, 100)
+      const result = await notificationService.listNotifications(pageParam, false, 100)
+      
+      debug.log('[BackgroundNotificationLoader] Fetched notifications page:', {
+        notificationCount: result.notifications.length,
+        cursor: result.cursor,
+        hasMore: !!result.cursor,
+        timestamp: new Date().toISOString()
+      })
+      
+      return result
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.cursor,
@@ -61,11 +91,18 @@ export const BackgroundNotificationLoader: React.FC = () => {
   // Initialize IndexedDB
   useEffect(() => {
     const initCache = async () => {
+      debug.log('[BackgroundNotificationLoader] Initializing IndexedDB', {
+        timestamp: new Date().toISOString()
+      })
+      
       try {
         await cacheService.init()
         setIsIndexedDBReady(true)
+        debug.log('[BackgroundNotificationLoader] IndexedDB ready', {
+          timestamp: new Date().toISOString()
+        })
       } catch (error) {
-        debug.error('Failed to initialize IndexedDB:', error)
+        debug.error('[BackgroundNotificationLoader] Failed to initialize IndexedDB:', error)
         setIsIndexedDBReady(false)
       }
     }
@@ -74,13 +111,29 @@ export const BackgroundNotificationLoader: React.FC = () => {
 
   // Load from IndexedDB on mount
   useEffect(() => {
+    debug.log('[BackgroundNotificationLoader] IndexedDB load check:', {
+      hasSession: !!session,
+      hasCachedData,
+      isCachedDataStale,
+      isIndexedDBReady,
+      shouldLoad: session && (isCachedDataStale || !hasCachedData) && isIndexedDBReady,
+      timestamp: new Date().toISOString()
+    })
+    
     if (!session || (hasCachedData && !isCachedDataStale) || !isIndexedDBReady) return
     
     const loadCachedData = async () => {
       const startTime = Date.now()
       const hasCached = await cacheService.hasCachedData()
+      debug.log('[BackgroundNotificationLoader] Checking for cached data:', {
+        hasCached,
+        timestamp: new Date().toISOString()
+      })
+      
       if (hasCached) {
-        debug.log('📊 Loading notifications from IndexedDB')
+        debug.log('[BackgroundNotificationLoader] Loading notifications from IndexedDB', {
+          timestamp: new Date().toISOString()
+        })
         const cachedResult = await cacheService.getCachedNotifications(10000)
         
         if (cachedResult.notifications.length > 0) {
@@ -99,6 +152,12 @@ export const BackgroundNotificationLoader: React.FC = () => {
             pageParams: [undefined, ...pages.slice(0, -1).map((_, i) => `page-${(i + 1) * pageSize}`)]
           })
           
+          debug.log('[BackgroundNotificationLoader] Set query data from cache:', {
+            pageCount: pages.length,
+            totalNotifications: cachedResult.notifications.length,
+            timestamp: new Date().toISOString()
+          })
+          
           // Trigger re-render in components watching this data
           queryClient.invalidateQueries({ 
             queryKey: ['notifications-extended'],
@@ -109,7 +168,9 @@ export const BackgroundNotificationLoader: React.FC = () => {
           
           // Enable polling after loading from cache
           setEnablePolling(true)
-          debug.log('🔄 Enabled polling after loading from cache')
+          debug.log('[BackgroundNotificationLoader] Enabled polling after loading from cache', {
+            timestamp: new Date().toISOString()
+          })
           
           // Track cache load performance
           const loadDuration = Date.now() - startTime
@@ -144,11 +205,24 @@ export const BackgroundNotificationLoader: React.FC = () => {
 
   // Auto-fetch 4 weeks if no data exists or data is stale
   useEffect(() => {
+    debug.log('[BackgroundNotificationLoader] Auto-fetch check:', {
+      hasSession: !!session,
+      isIndexedDBReady,
+      hasFetched,
+      hasCachedData,
+      isCachedDataStale,
+      enablePolling,
+      shouldFetch: session && isIndexedDBReady && !hasFetched && (isCachedDataStale || !hasCachedData) && !enablePolling,
+      timestamp: new Date().toISOString()
+    })
+    
     if (!session || !isIndexedDBReady || hasFetched || (hasCachedData && !isCachedDataStale) || enablePolling) return
     
     const fetchData = async () => {
       const startTime = Date.now()
-      debug.log('🚀 Auto-fetching 4 weeks of notifications')
+      debug.log('[BackgroundNotificationLoader] Starting auto-fetch of 4 weeks', {
+        timestamp: new Date().toISOString()
+      })
       setHasFetched(true)
       
       // Enable the query first to allow manual fetching
@@ -165,15 +239,38 @@ export const BackgroundNotificationLoader: React.FC = () => {
       
       // Continue fetching until we reach 4 weeks
       while (shouldContinue && currentPage < 100) {
+        debug.log('[BackgroundNotificationLoader] Fetching page:', {
+          currentPage,
+          timestamp: new Date().toISOString()
+        })
+        
         const result = await fetchNextPage()
-        if (result.isError || !result.data) break
+        if (result.isError || !result.data) {
+          debug.error('[BackgroundNotificationLoader] Fetch error:', {
+            error: result.error,
+            currentPage,
+            timestamp: new Date().toISOString()
+          })
+          break
+        }
         
         const latestData = result.data
         if (latestData?.pages) {
           const allNotifications = latestData.pages.flatMap(page => page.notifications)
+          totalNotifications = allNotifications.length
+          
           if (allNotifications.length > 0) {
             const oldestNotification = allNotifications[allNotifications.length - 1]
             const oldestDate = new Date(oldestNotification.indexedAt)
+            
+            debug.log('[BackgroundNotificationLoader] Progress:', {
+              currentPage,
+              totalNotifications,
+              oldestDate: oldestDate.toISOString(),
+              fourWeeksAgo: fourWeeksAgo.toISOString(),
+              reachedTarget: oldestDate < fourWeeksAgo,
+              timestamp: new Date().toISOString()
+            })
             
             if (oldestDate < fourWeeksAgo) {
               shouldContinue = false
@@ -183,6 +280,11 @@ export const BackgroundNotificationLoader: React.FC = () => {
           
           const lastPage = latestData.pages[latestData.pages.length - 1]
           if (!lastPage.cursor) {
+            debug.log('[BackgroundNotificationLoader] No more pages', {
+              currentPage,
+              totalNotifications,
+              timestamp: new Date().toISOString()
+            })
             shouldContinue = false
             break
           }
@@ -194,7 +296,11 @@ export const BackgroundNotificationLoader: React.FC = () => {
       // Save to IndexedDB
       const finalData = queryClient.getQueryData(['notifications-extended']) as any
       if (finalData?.pages && isIndexedDBReady) {
-        debug.log('💾 Saving to IndexedDB...')
+        debug.log('[BackgroundNotificationLoader] Saving to IndexedDB:', {
+          pageCount: finalData.pages.length,
+          timestamp: new Date().toISOString()
+        })
+        
         for (let i = 0; i < finalData.pages.length; i++) {
           const page = finalData.pages[i]
           await cacheService.cacheNotifications(page.notifications, i + 1)
@@ -252,12 +358,18 @@ export const BackgroundNotificationLoader: React.FC = () => {
     if (!data?.pages || !isIndexedDBReady || !enablePolling) return
     
     const saveNewNotifications = async () => {
-      debug.log('💾 Checking for new notifications to save to IndexedDB...')
-      debug.log(`📊 Current data has ${data.pages.length} pages`)
+      debug.log('[BackgroundNotificationLoader] Checking for new notifications to save:', {
+        pageCount: data.pages.length,
+        enablePolling,
+        timestamp: new Date().toISOString()
+      })
       
       // Get all notifications from the query data
       const allNotifications = data.pages.flatMap((page: any) => page.notifications)
-      debug.log(`📊 Total notifications in query data: ${allNotifications.length}`)
+      debug.log('[BackgroundNotificationLoader] Total notifications in query data:', {
+        count: allNotifications.length,
+        timestamp: new Date().toISOString()
+      })
       
       if (allNotifications.length > 0) {
         // Save to IndexedDB (it will handle deduplication)
@@ -278,7 +390,11 @@ export const BackgroundNotificationLoader: React.FC = () => {
           daysReached
         )
         
-        debug.log(`✅ Saved ${allNotifications.length} notifications to IndexedDB`)
+        debug.log('[BackgroundNotificationLoader] Saved notifications to IndexedDB:', {
+          count: allNotifications.length,
+          daysReached,
+          timestamp: new Date().toISOString()
+        })
         
         // Prefetch posts for new reply notifications
         const { atProtoClient } = await import('../services/atproto')
@@ -304,6 +420,19 @@ export const BackgroundNotificationLoader: React.FC = () => {
     saveNewNotifications()
   }, [data, isIndexedDBReady, enablePolling, cacheService, queryClient])
 
+  // Debug lifecycle
+  React.useEffect(() => {
+    debug.log('[BackgroundNotificationLoader] Component state:', {
+      isIndexedDBReady,
+      hasFetched,
+      enablePolling,
+      hasCachedData,
+      isCachedDataStale,
+      dataPages: data?.pages?.length || 0,
+      timestamp: new Date().toISOString()
+    })
+  }, [isIndexedDBReady, hasFetched, enablePolling, hasCachedData, isCachedDataStale, data])
+  
   // No UI - just background loading
   return null
 }
