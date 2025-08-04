@@ -77,7 +77,7 @@ const ConversationItem = React.memo(({
     mainParticipantHandle,
     mainParticipantAvatar: !!mainParticipantAvatar,
     rootPostAuthor: convo.rootPost?.author?.handle,
-    latestReplyAuthor: convo.latestReply.author.handle,
+    latestReplyAuthor: convo.latestReply.author?.handle,
     isLoadingRootPost
   })
 
@@ -138,17 +138,17 @@ const ConversationItem = React.memo(({
           {/* Show latest reply author and snippet */}
           <div className="flex items-center gap-2 text-xs">
             {/* Profile picture of commenter */}
-            {convo.latestReply.author.avatar ? (
+            {convo.latestReply.author?.avatar ? (
               <img 
                 src={proxifyBskyImage(convo.latestReply.author.avatar)} 
-                alt={convo.latestReply.author.handle}
+                alt={convo.latestReply.author?.handle || ''}
                 className="w-5 h-5 rounded-full object-cover flex-shrink-0"
               />
             ) : (
               <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" 
                    style={{ background: 'var(--bsky-bg-tertiary)' }}>
                 <span className="text-xs">
-                  {convo.latestReply.author.displayName?.[0] || convo.latestReply.author.handle?.[0] || 'U'}
+                  {convo.latestReply.author?.displayName?.[0] || convo.latestReply.author?.handle?.[0] || 'U'}
                 </span>
               </div>
             )}
@@ -532,7 +532,9 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
       
       const thread = threadMap.get(rootUri)!
       thread.replies.push(notification)
-      thread.participants.add(notification.author.handle)
+      if (notification.author?.handle) {
+        thread.participants.add(notification.author.handle)
+      }
       thread.totalReplies++
       
       // Update root post if we just loaded it
