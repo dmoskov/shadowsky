@@ -10,6 +10,7 @@ import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notif
 import { debug } from '@bsky/shared'
 import { useNotificationTracking } from '../hooks/useAnalytics'
 import { analytics } from '../services/analytics'
+import React from 'react'
 
 /**
  * Silently loads 4 weeks of notifications in the background
@@ -27,6 +28,14 @@ export const BackgroundNotificationLoader: React.FC = () => {
   // Check if we already have cached data
   const cachedData = queryClient.getQueryData(['notifications-extended']) as any
   const hasCachedData = cachedData?.pages?.length > 0
+  
+  // Check if cached data is stale (older than 5 minutes)
+  const isCachedDataStale = React.useMemo(() => {
+    if (!hasCachedData || !cachedData?.pages?.[0]?.notifications?.[0]) return true
+    const newestNotification = cachedData.pages[0].notifications[0]
+    const dataAge = Date.now() - new Date(newestNotification.indexedAt).getTime()
+    return dataAge > 5 * 60 * 1000 // 5 minutes
+  }, [hasCachedData, cachedData])
   
   const {
     data,
@@ -65,7 +74,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
 
   // Load from IndexedDB on mount
   useEffect(() => {
-    if (!session || hasCachedData || !isIndexedDBReady) return
+    if (!session || (hasCachedData && !isCachedDataStale) || !isIndexedDBReady) return
     
     const loadCachedData = async () => {
       const startTime = Date.now()
@@ -133,9 +142,9 @@ export const BackgroundNotificationLoader: React.FC = () => {
     loadCachedData()
   }, [session, hasCachedData, isIndexedDBReady, queryClient, cacheService])
 
-  // Auto-fetch 4 weeks if no data exists
+  // Auto-fetch 4 weeks if no data exists or data is stale
   useEffect(() => {
-    if (!session || !isIndexedDBReady || hasFetched || hasCachedData || enablePolling) return
+    if (!session || !isIndexedDBReady || hasFetched || (hasCachedData && !isCachedDataStale) || enablePolling) return
     
     const fetchData = async () => {
       const startTime = Date.now()

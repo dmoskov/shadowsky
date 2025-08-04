@@ -226,6 +226,9 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
   
   // Subscribe to query cache updates
   React.useEffect(() => {
+    let checkCount = 0
+    const maxChecks = 30 // Check for up to 30 seconds
+    
     // Check for data periodically
     const checkData = () => {
       const currentData = queryClient.getQueryData(['notifications-extended']) as any
@@ -235,14 +238,32 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
           pages: currentData.pages.length,
           notifications: currentData.pages[0]?.notifications?.length || 0
         })
+        return true // Data found
       }
+      
+      checkCount++
+      if (checkCount >= maxChecks) {
+        debug.warn('[ConversationsSimple] No notification data found after 30 seconds')
+        // Trigger a manual refresh of notifications
+        queryClient.invalidateQueries({ queryKey: ['notifications-extended'] })
+      }
+      return false // No data yet
     }
     
     // Initial check
-    checkData()
+    const hasData = checkData()
     
-    // Set up interval
-    const interval = setInterval(checkData, 1000)
+    // Set up interval if no data initially
+    let interval: NodeJS.Timeout | null = null
+    if (!hasData) {
+      interval = setInterval(() => {
+        const found = checkData()
+        if (found && interval) {
+          clearInterval(interval)
+          interval = null
+        }
+      }, 1000)
+    }
     
     // Also subscribe to cache updates
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
@@ -252,7 +273,7 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
     })
     
     return () => {
-      clearInterval(interval)
+      if (interval) clearInterval(interval)
       unsubscribe()
     }
   }, [queryClient])
