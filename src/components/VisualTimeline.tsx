@@ -59,9 +59,10 @@ const getProfileUrl = (handle: string) => {
 interface VisualTimelineProps {
   hideTimeLabels?: boolean;
   isInSkyDeck?: boolean;
+  isFocused?: boolean;
 }
 
-export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels = false, isInSkyDeck = false }) => {
+export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels = false, isInSkyDeck = false, isFocused = true }) => {
   const { agent } = useAuth()
   const containerRef = React.useRef<HTMLDivElement>(null)
   const timelineItemsRef = React.useRef<Map<string, HTMLDivElement>>(new Map())
@@ -501,7 +502,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
       if (!containerRef.current?.contains(document.activeElement)) return
       
       // In SkyDeck mode, check if this column is focused
-      if (isInSkyDeck && !containerRef.current.closest('.column-focused')) return
+      if (isInSkyDeck && !isFocused) return
 
       let handled = false
       const currentIndex = selectedItemIndex
@@ -612,7 +613,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedItemIndex, allEvents, getEventKey, isInSkyDeck])
+  }, [selectedItemIndex, allEvents, getEventKey, isInSkyDeck, isFocused])
 
   // Scroll selected item into view
   React.useEffect(() => {
@@ -637,12 +638,12 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
       containerRef.current.setAttribute('tabindex', '0')
       containerRef.current.style.outline = 'none'
       
-      // Auto-focus in standalone mode for immediate keyboard navigation
-      if (!isInSkyDeck) {
+      // Auto-focus in standalone mode or when focused in SkyDeck
+      if (!isInSkyDeck || (isInSkyDeck && isFocused)) {
         containerRef.current.focus()
       }
     }
-  }, [isInSkyDeck])
+  }, [isInSkyDeck, isFocused])
 
   if (isLoading) {
     return (

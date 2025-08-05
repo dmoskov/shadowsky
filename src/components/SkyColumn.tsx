@@ -51,7 +51,7 @@ export default function SkyColumn({ column, onClose, chromeless = false, isFocus
       case 'timeline':
         return (
           <div className="h-full overflow-y-auto skydeck-scrollbar">
-            <VisualTimeline hideTimeLabels={true} isInSkyDeck={true} />
+            <VisualTimeline hideTimeLabels={true} isInSkyDeck={true} isFocused={isFocused} />
           </div>
         );
       

@@ -54,7 +54,8 @@
   transition: all 0.2s ease-out;
 }
 
-.timeline-event-card:hover {
+/* Only apply hover effects when not focused/selected */
+.timeline-event-card:hover:not(.timeline-focused) {
   transform: translateX(2px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -314,8 +315,9 @@ a[href*="bsky.app/profile"] {
   z-index: 10;
 }
 
-.timeline-focused {
-  transform: translateX(4px);
+/* Override hover transform when focused */
+.timeline-event-card.timeline-focused {
+  transform: translateX(4px) !important;
   position: relative;
 }
 

@@ -97,6 +97,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
   const [showThread, setShowThread] = useState(false)
   const [focusedPostIndex, setFocusedPostIndex] = useState<number>(-1)
+  const postsContainerRef = useRef<HTMLDivElement>(null)
   const [feedOrder, setFeedOrder] = useState<string[]>([])
   const [draggedTab, setDraggedTab] = useState<string | null>(null)
   const [dragOverTab, setDragOverTab] = useState<string | null>(null)
@@ -341,7 +342,13 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
           (item.reply?.parent || post.record?.reply?.parent) ? 'post-is-reply' : ''
         } ${isFocused ? 'post-focused' : ''}`}
         data-post-uri={post.uri}
-        tabIndex={0}
+        tabIndex={isFocused ? 0 : -1}
+        aria-selected={isFocused}
+        role="article"
+        onClick={() => {
+          // Update focused index on click
+          setFocusedPostIndex(index)
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault()
@@ -663,10 +670,10 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     }
   }, [selectedFeed])
   
-  // Keyboard shortcuts - simplified navigation only
+  // Keyboard navigation
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      // Only handle if this column is focused
+      // Only handle if this column is focused (for SkyDeck compatibility)
       if (!isFocused) return
       
       // Don't handle shortcuts if user is typing in an input/textarea
@@ -674,50 +681,163 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
         return
       }
       
-      // Handle navigation keys
-      if (e.key === 'j' || e.key === 'ArrowDown') {
-        e.preventDefault()
-        setFocusedPostIndex(prev => {
-          const newIndex = Math.min(prev + 1, posts.length - 1)
-          const postKey = `${posts[newIndex]?.post?.uri}-${newIndex}`
-          const postEl = postRefs.current[postKey]
-          if (postEl) {
-            postEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            // Add visual feedback
-            postEl.style.outline = '2px solid var(--bsky-primary)'
-            setTimeout(() => {
-              postEl.style.outline = 'none'
-            }, 1000)
-          }
-          return newIndex
-        })
+      // Check if focus is within this component
+      if (containerRef.current && !containerRef.current.contains(document.activeElement)) {
+        return
       }
-      else if (e.key === 'k' || e.key === 'ArrowUp') {
-        e.preventDefault()
-        setFocusedPostIndex(prev => {
-          const newIndex = Math.max(prev - 1, 0)
-          const postKey = `${posts[newIndex]?.post?.uri}-${newIndex}`
-          const postEl = postRefs.current[postKey]
-          if (postEl) {
-            postEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            // Add visual feedback
-            postEl.style.outline = '2px solid var(--bsky-primary)'
-            setTimeout(() => {
-              postEl.style.outline = 'none'
-            }, 1000)
+      
+      let handled = false
+      const currentIndex = focusedPostIndex
+      
+      switch (e.key) {
+        case 'ArrowDown':
+        case 'j': // vim-style down
+          e.preventDefault()
+          handled = true
+          if (currentIndex < posts.length - 1) {
+            setFocusedPostIndex(currentIndex + 1)
+          } else if (currentIndex === -1 && posts.length > 0) {
+            // If nothing selected, select first item
+            setFocusedPostIndex(0)
           }
-          return newIndex
-        })
+          break
+          
+        case 'ArrowUp':
+        case 'k': // vim-style up
+          e.preventDefault()
+          handled = true
+          if (currentIndex > 0) {
+            setFocusedPostIndex(currentIndex - 1)
+          } else if (currentIndex === -1 && posts.length > 0) {
+            // If nothing selected, select last item when going up
+            setFocusedPostIndex(posts.length - 1)
+          }
+          break
+          
+        case 'Enter':
+          e.preventDefault()
+          handled = true
+          if (currentIndex >= 0 && currentIndex < posts.length) {
+            const post = posts[currentIndex]?.post
+            if (post) {
+              handlePostClick(post)
+            }
+          }
+          break
+          
+        case 'l': // Like post
+          e.preventDefault()
+          handled = true
+          if (currentIndex >= 0 && currentIndex < posts.length) {
+            const post = posts[currentIndex]?.post
+            if (post) {
+              handleLike(post, e as any)
+            }
+          }
+          break
+          
+        case 'r': // Repost
+          e.preventDefault()
+          handled = true
+          if (currentIndex >= 0 && currentIndex < posts.length) {
+            const post = posts[currentIndex]?.post
+            if (post) {
+              handleRepost(post, e as any)
+            }
+          }
+          break
+          
+        case 'b': // Bookmark
+          e.preventDefault()
+          handled = true
+          if (currentIndex >= 0 && currentIndex < posts.length) {
+            const post = posts[currentIndex]?.post
+            if (post) {
+              handleBookmark(post, e as any)
+            }
+          }
+          break
+          
+        case 'Home':
+          e.preventDefault()
+          handled = true
+          if (posts.length > 0) {
+            setFocusedPostIndex(0)
+          }
+          break
+          
+        case 'End':
+          e.preventDefault()
+          handled = true
+          if (posts.length > 0) {
+            setFocusedPostIndex(posts.length - 1)
+          }
+          break
+          
+        case 'PageUp':
+          e.preventDefault()
+          handled = true
+          // Jump up by 5 items
+          setFocusedPostIndex(Math.max(0, currentIndex - 5))
+          break
+          
+        case 'PageDown':
+          e.preventDefault()
+          handled = true
+          // Jump down by 5 items
+          setFocusedPostIndex(Math.min(posts.length - 1, currentIndex + 5))
+          break
+          
+        case 'Escape':
+          // Clear selection
+          setFocusedPostIndex(-1)
+          handled = true
+          break
+          
+        case ' ': // Space for page scroll
+          if (!e.shiftKey) {
+            e.preventDefault()
+            window.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' })
+            handled = true
+          }
+          break
       }
-      else if (e.key === ' ' && !e.shiftKey) {
-        e.preventDefault()
-        window.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' })
+      
+      // Prevent default browser scrolling if we handled the key
+      if (handled) {
+        e.stopPropagation()
       }
     }
     
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [posts, focusedPostIndex, isFocused])
+  }, [posts, focusedPostIndex, isFocused, handlePostClick, handleLike, handleRepost, handleBookmark])
+  
+  // Scroll focused post into view
+  useEffect(() => {
+    if (focusedPostIndex >= 0 && focusedPostIndex < posts.length) {
+      const post = posts[focusedPostIndex]?.post
+      if (post) {
+        const postKey = `${post.uri}-${focusedPostIndex}`
+        const postEl = postRefs.current[postKey]
+        if (postEl) {
+          postEl.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          })
+          postEl.focus()
+        }
+      }
+    }
+  }, [focusedPostIndex, posts])
+  
+  // Make container focusable for keyboard navigation
+  useEffect(() => {
+    if (containerRef.current && isFocused && focusedPostIndex === -1) {
+      // Focus container when column becomes focused and no post is selected
+      containerRef.current.focus()
+    }
+  }, [isFocused, focusedPostIndex])
   
   const handlePostClick = (post: Post) => {
     trackClick('post', { postUri: post.uri })
@@ -1134,7 +1254,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
   }
   
   return (
-    <div className="w-full" ref={containerRef}>
+    <div className="w-full" ref={containerRef} tabIndex={-1} style={{ outline: 'none' }}>
       <div className="sticky top-0 z-10 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -1142,6 +1262,15 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
             <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
               {currentFeedOption?.label || 'Feed'}
             </h2>
+            {focusedPostIndex === -1 ? (
+              <span className="text-xs ml-2" style={{ color: 'var(--bsky-text-secondary)' }}>
+                Press ↓/j to navigate
+              </span>
+            ) : (
+              <span className="text-xs ml-2 hidden sm:inline" style={{ color: 'var(--bsky-text-secondary)' }}>
+                ↑↓/jk: nav • Enter: open • l: like • r: repost • b: bookmark
+              </span>
+            )}
           </div>
           
           <div className="relative" ref={dropdownRef}>
@@ -1213,8 +1342,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
         </div>
       </div>
       
-      <div className="max-w-2xl mx-auto px-3 sm:px-4">
-        <div className="divide-y" style={{ borderColor: 'var(--bsky-border-primary)' }}>
+      <div className="max-w-2xl mx-auto px-3 sm:px-4" ref={postsContainerRef}>
+        <div className="divide-y" style={{ borderColor: 'var(--bsky-border-primary)' }} role="feed" aria-label="Posts">
         {posts.map((item: any, index: number) => (
           <PostItem key={`${item.post.uri}-${index}`} item={item} index={index} />
         ))}
