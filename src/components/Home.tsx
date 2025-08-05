@@ -670,6 +670,130 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     }
   }, [selectedFeed])
   
+  // Handler functions (must be defined before keyboard navigation useEffect)
+  const handlePostClick = (post: Post) => {
+    trackClick('post', { postUri: post.uri })
+    setSelectedPost(post)
+    setShowThread(true)
+  }
+  
+  const likeMutation = useMutation({
+    mutationFn: async ({ uri, cid }: { uri: string; cid: string }) => {
+      if (!agent) throw new Error('Not authenticated')
+      return await agent.like(uri, cid)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeline'] })
+    }
+  })
+  
+  const unlikeMutation = useMutation({
+    mutationFn: async (likeUri: string) => {
+      if (!agent) throw new Error('Not authenticated')
+      return await agent.deleteLike(likeUri)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeline'] })
+    }
+  })
+  
+  const repostMutation = useMutation({
+    mutationFn: async ({ uri, cid }: { uri: string; cid: string }) => {
+      if (!agent) throw new Error('Not authenticated')
+      return await agent.repost(uri, cid)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeline'] })
+    }
+  })
+  
+  const unrepostMutation = useMutation({
+    mutationFn: async (repostUri: string) => {
+      if (!agent) throw new Error('Not authenticated')
+      return await agent.deleteRepost(repostUri)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeline'] })
+    }
+  })
+  
+  const handleLike = async (post: Post, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!agent || !session) return
+    
+    trackFeatureAction('like_post', { postUri: post.uri })
+    
+    try {
+      if (post.viewer?.like) {
+        await unlikeMutation.mutateAsync(post.viewer.like)
+      } else {
+        await likeMutation.mutateAsync({
+          uri: post.uri,
+          cid: post.cid
+        })
+      }
+    } catch (error) {
+      debug.error('Failed to like/unlike post:', error)
+    }
+  }
+  
+  const handleBookmark = async (post: Post, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    trackFeatureAction('bookmark_post', { postUri: post.uri })
+    
+    try {
+      const isBookmarked = await bookmarkService.toggleBookmark(post)
+      
+      // Update local state
+      setBookmarkedPosts(prev => {
+        const newSet = new Set(prev)
+        if (isBookmarked) {
+          newSet.add(post.uri)
+        } else {
+          newSet.delete(post.uri)
+        }
+        return newSet
+      })
+      
+      // Force re-render to update UI
+      setBookmarkVersion(prev => prev + 1)
+      
+      // Invalidate bookmarks query
+      queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
+      queryClient.invalidateQueries({ queryKey: ['bookmarkCount'] })
+    } catch (error) {
+      debug.error('Failed to bookmark post:', error)
+      showNotification({
+        type: 'error',
+        message: 'Failed to bookmark post',
+      })
+    }
+  }
+  
+  const handleRepost = async (post: Post, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!agent || !session) return
+    
+    trackFeatureAction('repost_post', { postUri: post.uri })
+    
+    try {
+      if (post.viewer?.repost) {
+        await unrepostMutation.mutateAsync(post.viewer.repost)
+      } else {
+        await repostMutation.mutateAsync({
+          uri: post.uri,
+          cid: post.cid
+        })
+      }
+    } catch (error) {
+      debug.error('Failed to repost:', error)
+    }
+  }
+  
   // Keyboard navigation
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -838,114 +962,6 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
       containerRef.current.focus()
     }
   }, [isFocused, focusedPostIndex])
-  
-  const handlePostClick = (post: Post) => {
-    trackClick('post', { postUri: post.uri })
-    setSelectedPost(post)
-    setShowThread(true)
-  }
-  
-  const likeMutation = useMutation({
-    mutationFn: async ({ uri, cid }: { uri: string; cid: string }) => {
-      if (!agent) throw new Error('Not authenticated')
-      return await agent.like(uri, cid)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeline'] })
-    }
-  })
-  
-  const unlikeMutation = useMutation({
-    mutationFn: async (likeUri: string) => {
-      if (!agent) throw new Error('Not authenticated')
-      return await agent.deleteLike(likeUri)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeline'] })
-    }
-  })
-  
-  const repostMutation = useMutation({
-    mutationFn: async ({ uri, cid }: { uri: string; cid: string }) => {
-      if (!agent) throw new Error('Not authenticated')
-      return await agent.repost(uri, cid)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeline'] })
-    }
-  })
-  
-  const unrepostMutation = useMutation({
-    mutationFn: async (repostUri: string) => {
-      if (!agent) throw new Error('Not authenticated')
-      return await agent.deleteRepost(repostUri)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeline'] })
-    }
-  })
-  
-  const handleLike = async (post: Post, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    trackFeatureAction('like_post', { postUri: post.uri })
-    
-    try {
-      if (post.viewer?.like) {
-        await unlikeMutation.mutateAsync(post.viewer.like)
-      } else {
-        await likeMutation.mutateAsync({ uri: post.uri, cid: post.cid })
-      }
-    } catch (error) {
-      debug.error('Failed to like/unlike post:', error)
-    }
-  }
-
-  const handleBookmark = async (post: Post, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    trackFeatureAction('bookmark_post', { postUri: post.uri })
-    
-    try {
-      const isBookmarked = await bookmarkService.toggleBookmark(post)
-      
-      // Update local state
-      setBookmarkedPosts(prev => {
-        const newSet = new Set(prev)
-        if (isBookmarked) {
-          newSet.add(post.uri)
-        } else {
-          newSet.delete(post.uri)
-        }
-        return newSet
-      })
-      
-      // Invalidate bookmarks query
-      queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
-      queryClient.invalidateQueries({ queryKey: ['bookmarkCount'] })
-    } catch (error) {
-      debug.error('Failed to bookmark post:', error)
-    }
-  }
-  
-  const handleRepost = async (post: Post, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    trackFeatureAction('repost_post', { postUri: post.uri })
-    
-    try {
-      if (post.viewer?.repost) {
-        await unrepostMutation.mutateAsync(post.viewer.repost)
-      } else {
-        await repostMutation.mutateAsync({ uri: post.uri, cid: post.cid })
-      }
-    } catch (error) {
-      debug.error('Failed to repost/unrepost post:', error)
-    }
-  }
   
   const renderEmbed = (embed: any) => {
     if (!embed) return null
