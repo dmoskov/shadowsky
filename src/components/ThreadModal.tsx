@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import ReactDOM from 'react-dom'
 import { X, Loader } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
@@ -21,12 +22,15 @@ export function ThreadModal({ postUri, onClose }: ThreadModalProps) {
       if (e.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', handleEsc)
+    // Store original overflow value
+    const originalOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     document.body.classList.add('thread-modal-open')
     
     return () => {
       window.removeEventListener('keydown', handleEsc)
-      document.body.style.overflow = ''
+      // Restore original overflow value
+      document.body.style.overflow = originalOverflow
       document.body.classList.remove('thread-modal-open')
     }
   }, [onClose])
@@ -81,22 +85,33 @@ export function ThreadModal({ postUri, onClose }: ThreadModalProps) {
     return current?.post?.uri || postUri
   }, [threadData, postUri])
 
-  return (
+  return ReactDOM.createPortal(
     <>
-      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/50 z-[100]" onClick={onClose} />
       
-      <div className="fixed inset-y-0 right-0 w-full max-w-3xl bg-white dark:bg-gray-900 shadow-xl z-50 overflow-hidden flex flex-col thread-modal-container">
-        <div className="relative flex-1 overflow-y-auto skydeck-scrollbar" style={{ backgroundColor: 'var(--bsky-bg-primary)' }}>
-          {/* Close button with higher z-index and explicit pointer events */}
+      <div className="fixed inset-y-0 right-0 w-full max-w-3xl shadow-xl z-[101] thread-modal-container flex flex-col" style={{ backgroundColor: 'var(--bsky-bg-primary)' }}>
+        {/* Header with close button */}
+        <div className="flex items-center justify-between p-4 border-b flex-shrink-0" style={{ 
+          backgroundColor: 'var(--bsky-bg-primary)', 
+          borderColor: 'var(--bsky-border-primary)' 
+        }}>
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>Thread</h2>
           <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-50 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            style={{ color: 'var(--bsky-text-secondary)', pointerEvents: 'auto' }}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onClose()
+            }}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            style={{ color: 'var(--bsky-text-secondary)' }}
             aria-label="Close"
           >
             <X size={24} />
           </button>
-          
+        </div>
+        
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto skydeck-scrollbar" style={{ minHeight: 0 }}>
           <div className="p-4">
           {isLoading && (
             <div className="flex items-center justify-center py-8">
@@ -122,6 +137,7 @@ export function ThreadModal({ postUri, onClose }: ThreadModalProps) {
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   )
 }
