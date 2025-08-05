@@ -237,6 +237,7 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
   const [rootPostsVersion, setRootPostsVersion] = useState(0) // Track root posts updates
   const [focusedIndex, setFocusedIndex] = useState(0)
   const queryClient = useQueryClient()
+  const containerRef = React.useRef<HTMLDivElement>(null)
   
   // Analytics hooks
   const { trackConversationView, trackConversationAction } = useConversationTracking()
@@ -834,6 +835,15 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [filteredConversations, focusedIndex, handleSelectConversation, isFocused])
 
+  // Make container focusable for keyboard navigation
+  React.useEffect(() => {
+    if (containerRef.current && isFocused) {
+      // Focus container when column becomes focused
+      // This ensures keyboard events are captured
+      containerRef.current.focus()
+    }
+  }, [isFocused])
+
   // Scroll focused item into view
   React.useEffect(() => {
     const focusedElement = document.querySelector('.conversation-item:focus, .conversation-item.ring-2')
@@ -847,7 +857,7 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
   // Always render the UI immediately, even if data is still loading
   // This provides a non-blocking experience
   return (
-    <div className="conversations-container h-[calc(100vh-4rem)] w-full overflow-hidden" style={{ position: 'relative' }}>
+    <div ref={containerRef} className="conversations-container h-[calc(100vh-4rem)] w-full overflow-hidden" style={{ position: 'relative', outline: 'none' }} tabIndex={-1}>
       <div className="flex h-full relative w-full" style={{ 
         background: 'var(--bsky-bg-primary)', 
         overflow: 'hidden',

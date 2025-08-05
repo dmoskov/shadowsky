@@ -498,11 +498,11 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
   // Handle keyboard navigation
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only handle keyboard navigation if focus is within the timeline
-      if (!containerRef.current?.contains(document.activeElement)) return
-      
       // In SkyDeck mode, check if this column is focused
       if (isInSkyDeck && !isFocused) return
+      
+      // Only handle keyboard navigation if not in SkyDeck or focus is within the timeline
+      if (!isInSkyDeck && !containerRef.current?.contains(document.activeElement)) return
 
       let handled = false
       const currentIndex = selectedItemIndex
@@ -615,6 +615,15 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [selectedItemIndex, allEvents, getEventKey, isInSkyDeck, isFocused])
 
+  // Make container focusable for keyboard navigation in SkyDeck
+  React.useEffect(() => {
+    if (containerRef.current && isInSkyDeck && isFocused) {
+      // Focus container when column becomes focused in SkyDeck
+      // This ensures keyboard events are captured
+      containerRef.current.focus()
+    }
+  }, [isInSkyDeck, isFocused])
+
   // Scroll selected item into view
   React.useEffect(() => {
     if (selectedItemIndex >= 0 && selectedItemIndex < allEvents.length) {
@@ -661,7 +670,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
   }
 
   return (
-    <div className="max-w-4xl mx-auto" ref={containerRef}>
+    <div className="max-w-4xl mx-auto" ref={containerRef} tabIndex={-1} style={{ outline: 'none' }}>
       {/* Header */}
       <div className="sticky top-0 z-40 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
         <div className="px-4 py-3 flex items-center gap-2">

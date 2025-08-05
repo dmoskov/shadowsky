@@ -725,11 +725,6 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
         return
       }
       
-      // Check if focus is within this component
-      if (containerRef.current && !containerRef.current.contains(document.activeElement)) {
-        return
-      }
-      
       let handled = false
       const currentIndex = focusedPostIndex
       
@@ -765,28 +760,6 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
             const post = posts[currentIndex]?.post
             if (post) {
               handlePostClick(post)
-            }
-          }
-          break
-          
-        case 'l': // Like post
-          e.preventDefault()
-          handled = true
-          if (currentIndex >= 0 && currentIndex < posts.length) {
-            const post = posts[currentIndex]?.post
-            if (post) {
-              handleLike(post, e as any)
-            }
-          }
-          break
-          
-        case 'r': // Repost
-          e.preventDefault()
-          handled = true
-          if (currentIndex >= 0 && currentIndex < posts.length) {
-            const post = posts[currentIndex]?.post
-            if (post) {
-              handleRepost(post, e as any)
             }
           }
           break
@@ -845,7 +818,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [posts, focusedPostIndex, isFocused, handlePostClick, handleLike, handleRepost])
+  }, [posts, focusedPostIndex, isFocused, handlePostClick])
   
   // Scroll focused post into view
   useEffect(() => {
@@ -867,11 +840,12 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
   
   // Make container focusable for keyboard navigation
   useEffect(() => {
-    if (containerRef.current && isFocused && focusedPostIndex === -1) {
-      // Focus container when column becomes focused and no post is selected
+    if (containerRef.current && isFocused) {
+      // Focus container when column becomes focused
+      // This ensures keyboard events are captured
       containerRef.current.focus()
     }
-  }, [isFocused, focusedPostIndex])
+  }, [isFocused])
   
   const renderEmbed = (embed: any) => {
     if (!embed) return null
@@ -1194,7 +1168,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
               </span>
             ) : (
               <span className="text-xs ml-2 hidden sm:inline" style={{ color: 'var(--bsky-text-secondary)' }}>
-                ↑↓/jk: nav • Enter: open • l: like • r: repost
+                ↑↓/jk: navigate • Enter: open
               </span>
             )}
           </div>
