@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Heart, Repeat2, MessageCircle, Loader, MoreVertical, TrendingUp, Users, Clock, Hash, Star, Plus, X, ChevronDown, Bookmark, Reply } from 'lucide-react'
+import { Heart, Repeat2, MessageCircle, Loader, MoreVertical, TrendingUp, Users, Clock, Hash, Star, Plus, X, ChevronDown, Reply } from 'lucide-react'
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '../contexts/AuthContext'
@@ -10,7 +10,6 @@ import { VideoPlayer } from './VideoPlayer'
 import { FeedDiscovery } from './FeedDiscovery'
 import { ImageGallery } from './ImageGallery'
 import { ThreadModal } from './ThreadModal'
-import { bookmarkService } from '../services/bookmark-service'
 import '../styles/feed-context.css'
 
 type FeedType = 'following' | 'whats-hot' | 'popular-with-friends' | 'recent' | string // Allow custom feed URIs
@@ -82,7 +81,6 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
   const { agent } = useAuth()
   const queryClient = useQueryClient()
   // Removed hoveredPost state to prevent re-renders - using CSS hover instead
-  const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set())
   const [selectedFeed, setSelectedFeed] = useState<FeedType>(() => {
     // Use initialFeedUri if provided, otherwise restore from localStorage
     if (initialFeedUri) {
@@ -536,18 +534,6 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
                 <span className="text-xs">{post.likeCount || 0}</span>
               </button>
               
-              <button
-                className={`flex items-center gap-1 hover:text-yellow-500 transition-colors cursor-pointer select-none ${
-                  bookmarkedPosts.has(post.uri) ? 'text-yellow-500' : ''
-                }`}
-                style={{ 
-                  color: bookmarkedPosts.has(post.uri) ? undefined : 'var(--bsky-text-secondary)'
-                }}
-                onClick={(e) => handleBookmark(post, e)}
-                type="button"
-              >
-                <Bookmark size={14} fill={bookmarkedPosts.has(post.uri) ? 'currentColor' : 'none'} />
-              </button>
             </div>
             
             {/* Mobile action bar - always visible */}
@@ -597,19 +583,6 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
                 <span className="text-sm">{post.likeCount || 0}</span>
               </button>
               
-              <button
-                className={`flex items-center gap-1 hover:text-yellow-500 transition-colors cursor-pointer select-none p-1 -m-1 ${
-                  bookmarkedPosts.has(post.uri) ? 'text-yellow-500' : ''
-                }`}
-                style={{ 
-                  color: bookmarkedPosts.has(post.uri) ? undefined : 'var(--bsky-text-secondary)',
-                  WebkitTapHighlightColor: 'transparent'
-                }}
-                onClick={(e) => handleBookmark(post, e)}
-                type="button"
-              >
-                <Bookmark size={16} fill={bookmarkedPosts.has(post.uri) ? 'currentColor' : 'none'} />
-              </button>
             </div>
           </div>
         </div>
@@ -617,25 +590,6 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     )
   })
 
-  // Check bookmarked status for visible posts
-  useEffect(() => {
-    const checkBookmarks = async () => {
-      const postUris = posts.map(p => p.post?.uri || p.uri).filter(Boolean)
-      const bookmarked = new Set<string>()
-      
-      for (const uri of postUris) {
-        if (await bookmarkService.isPostBookmarked(uri)) {
-          bookmarked.add(uri)
-        }
-      }
-      
-      setBookmarkedPosts(bookmarked)
-    }
-    
-    if (posts.length > 0) {
-      checkBookmarks()
-    }
-  }, [posts])
   
   // Intersection observer for infinite scroll with optimistic pre-fetching
   useEffect(() => {
@@ -720,7 +674,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
   const handleLike = async (post: Post, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (!agent || !session) return
+    if (!agent) return
     
     trackFeatureAction('like_post', { postUri: post.uri })
     
@@ -738,45 +692,11 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     }
   }
   
-  const handleBookmark = async (post: Post, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    trackFeatureAction('bookmark_post', { postUri: post.uri })
-    
-    try {
-      const isBookmarked = await bookmarkService.toggleBookmark(post)
-      
-      // Update local state
-      setBookmarkedPosts(prev => {
-        const newSet = new Set(prev)
-        if (isBookmarked) {
-          newSet.add(post.uri)
-        } else {
-          newSet.delete(post.uri)
-        }
-        return newSet
-      })
-      
-      // Force re-render to update UI
-      setBookmarkVersion(prev => prev + 1)
-      
-      // Invalidate bookmarks query
-      queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
-      queryClient.invalidateQueries({ queryKey: ['bookmarkCount'] })
-    } catch (error) {
-      debug.error('Failed to bookmark post:', error)
-      showNotification({
-        type: 'error',
-        message: 'Failed to bookmark post',
-      })
-    }
-  }
   
   const handleRepost = async (post: Post, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (!agent || !session) return
+    if (!agent) return
     
     trackFeatureAction('repost_post', { postUri: post.uri })
     
@@ -871,16 +791,6 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
           }
           break
           
-        case 'b': // Bookmark
-          e.preventDefault()
-          handled = true
-          if (currentIndex >= 0 && currentIndex < posts.length) {
-            const post = posts[currentIndex]?.post
-            if (post) {
-              handleBookmark(post, e as any)
-            }
-          }
-          break
           
         case 'Home':
           e.preventDefault()
@@ -935,7 +845,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [posts, focusedPostIndex, isFocused, handlePostClick, handleLike, handleRepost, handleBookmark])
+  }, [posts, focusedPostIndex, isFocused, handlePostClick, handleLike, handleRepost])
   
   // Scroll focused post into view
   useEffect(() => {
@@ -1284,7 +1194,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
               </span>
             ) : (
               <span className="text-xs ml-2 hidden sm:inline" style={{ color: 'var(--bsky-text-secondary)' }}>
-                ↑↓/jk: nav • Enter: open • l: like • r: repost • b: bookmark
+                ↑↓/jk: nav • Enter: open • l: like • r: repost
               </span>
             )}
           </div>
