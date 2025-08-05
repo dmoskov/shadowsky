@@ -101,6 +101,15 @@ npm run build
 npm run deploy
 ```
 
+## Contributing
+
+This project is not currently accepting contributions from the community. While the source code is available under the MIT license, I am maintaining this project with a small group of selected collaborators.
+
+Feel free to:
+- Fork the project for your own use
+- Report issues
+- Share feedback and suggestions
+
 ## License
 
-MIT
+MIT - See [LICENSE](LICENSE) file for details
