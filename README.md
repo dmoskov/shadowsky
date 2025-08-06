@@ -53,7 +53,7 @@ All documentation is organized in the `docs/` directory:
 
 ```bash
 npm test          # Run tests
-npm run build     # Build for production
+npm run build     # Build for production (n.b. currently broken! working on it)
 npm run type-check # Check types
 ```
 
