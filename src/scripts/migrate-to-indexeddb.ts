@@ -9,7 +9,7 @@ export async function migrateToIndexedDB() {
   
   try {
     // Initialize IndexedDB
-    const db = new NotificationStorageDB()
+    const db = NotificationStorageDB.getInstance()
     await db.init()
     
     // Attempt migration

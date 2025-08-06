@@ -61,8 +61,7 @@ export class VideoUploadService {
         
         if (jobStatus.state === 'JOB_STATE_COMPLETED' && jobStatus.blob) {
           return {
-            blob: jobStatus.blob,
-            aspectRatio: jobStatus.aspectRatio
+            blob: jobStatus.blob
           }
         } else if (jobStatus.state === 'JOB_STATE_FAILED') {
           throw new Error(`Video processing failed: ${jobStatus.error || 'Unknown error'}`)

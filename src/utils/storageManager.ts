@@ -129,9 +129,14 @@ export class StorageManager {
    */
   static decompressNotification(compressed: CompressedNotification): Partial<Notification> {
     return {
-      ...compressed,
+      uri: compressed.uri,
+      cid: compressed.cid,
+      reason: compressed.reason,
+      reasonSubject: compressed.reasonSubject,
+      record: compressed.record,
+      isRead: compressed.isRead,
+      indexedAt: compressed.indexedAt,
       author: {
-        ...compressed.author,
         did: compressed.author.did,
         handle: compressed.author.handle,
         displayName: compressed.author.displayName,
@@ -143,7 +148,7 @@ export class StorageManager {
         labels: [],
         createdAt: ''
       } as any
-    }
+    } as Partial<Notification>
   }
 
   /**
@@ -278,7 +283,6 @@ export class StorageManager {
     
     // Reconstruct pages structure
     const optimizedPages: Array<{ notifications: CompressedNotification[], cursor?: string }> = []
-    let currentPage: CompressedNotification[] = []
     let notifIndex = 0
     
     for (const page of pages) {

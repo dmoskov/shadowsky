@@ -56,7 +56,7 @@ export function ConversationModal({ rootUri, conversation, allPostsMap, onClose 
         debug.log('[ConversationModal] Thread fetched successfully:', {
           uri: rootUri,
           hasThread: !!thread?.thread,
-          threadRootUri: thread?.thread?.post?.uri
+          threadRootUri: thread?.thread && 'post' in thread.thread ? thread.thread.post?.uri : undefined
         })
         return thread
       } catch (error) {

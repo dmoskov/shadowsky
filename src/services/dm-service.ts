@@ -130,7 +130,7 @@ class DmService {
     }
 
     try {
-      const headers = await this.agent.createAuthHeaders()
+      const headers = await this.getAuthHeaders()
       const response = await fetch(`https://api.bsky.chat/xrpc/chat.bsky.convo.getConvo?convoId=${encodeURIComponent(conversationId)}`, {
         headers
       })
@@ -177,7 +177,7 @@ class DmService {
     }
 
     try {
-      const headers = await this.agent.createAuthHeaders()
+      const headers = await this.getAuthHeaders()
       const response = await fetch('https://api.bsky.chat/xrpc/chat.bsky.convo.getConvoForMembers', {
         method: 'POST',
         headers: {
@@ -219,7 +219,7 @@ class DmService {
     }
 
     try {
-      const headers = await this.agent.createAuthHeaders()
+      const headers = await this.getAuthHeaders()
       const response = await fetch('https://api.bsky.chat/xrpc/chat.bsky.convo.sendMessage', {
         method: 'POST',
         headers: {
@@ -264,7 +264,7 @@ class DmService {
     }
 
     try {
-      const headers = await this.agent.createAuthHeaders()
+      const headers = await this.getAuthHeaders()
       const response = await fetch('https://api.bsky.chat/xrpc/chat.bsky.convo.deleteMessageForSelf', {
         method: 'POST',
         headers: {
@@ -292,7 +292,7 @@ class DmService {
     }
 
     try {
-      const headers = await this.agent.createAuthHeaders()
+      const headers = await this.getAuthHeaders()
       const response = await fetch('https://api.bsky.chat/xrpc/chat.bsky.convo.muteConvo', {
         method: 'POST',
         headers: {
@@ -319,7 +319,7 @@ class DmService {
     }
 
     try {
-      const headers = await this.agent.createAuthHeaders()
+      const headers = await this.getAuthHeaders()
       const response = await fetch('https://api.bsky.chat/xrpc/chat.bsky.convo.unmuteConvo', {
         method: 'POST',
         headers: {
@@ -346,7 +346,7 @@ class DmService {
     }
 
     try {
-      const headers = await this.agent.createAuthHeaders()
+      const headers = await this.getAuthHeaders()
       const response = await fetch('https://api.bsky.chat/xrpc/chat.bsky.convo.leaveConvo', {
         method: 'POST',
         headers: {

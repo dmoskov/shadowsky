@@ -13,7 +13,8 @@ import {
   ATProtoError,
   isRateLimitError,
   isAuthenticationError,
-  isSessionExpiredError
+  isSessionExpiredError,
+  debug
 } from '@bsky/shared'
 import { trackError } from '@bsky/shared'
 import type { ErrorCategory } from '@bsky/shared'
@@ -39,19 +40,15 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
     }
 
     // Track the error with our new system
-    trackError(error, { 
-      category, 
-      action,
-      metadata: error instanceof ATProtoError ? { code: error.code } : undefined
-    });
+    trackError(error, `${category}${action ? `: ${action}` : ''}`);
 
     // Handle rate limit errors
     if (isRateLimitError(error)) {
       if (options.onRateLimit) {
-        options.onRateLimit(error.resetAt)
+        options.onRateLimit((error as any).resetAt)
       } else {
         const minutesUntilReset = Math.ceil(
-          (error.resetAt.getTime() - Date.now()) / 60000
+          ((error as any).resetAt.getTime() - Date.now()) / 60000
         )
         const message = `Rate limited. Please try again in ${minutesUntilReset} minute(s).`
         if (options.silent) {

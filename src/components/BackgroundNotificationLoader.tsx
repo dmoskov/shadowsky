@@ -55,7 +55,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
   const {
     data,
     fetchNextPage,
-    hasNextPage,
     refetch,
   } = useInfiniteQuery({
     queryKey: ['notifications-extended'],

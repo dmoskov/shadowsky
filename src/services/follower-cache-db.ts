@@ -114,7 +114,7 @@ export class FollowerCacheDB {
     const tx = this.db.transaction(['profiles'], 'readonly')
     const request = tx.objectStore('profiles').get(did)
     const result = await request
-    return result as CachedProfile | undefined
+    return result as unknown as CachedProfile | undefined
   }
   
   async getProfileByHandle(handle: string): Promise<CachedProfile | undefined> {
@@ -125,8 +125,10 @@ export class FollowerCacheDB {
     const tx = this.db.transaction(['profiles'], 'readonly')
     const index = tx.objectStore('profiles').index('handle')
     const request = index.get(handle)
-    const result = await request
-    return result as CachedProfile | undefined
+    return new Promise<CachedProfile | undefined>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result)
+      request.onerror = () => reject(request.error)
+    })
   }
   
   async getProfiles(dids: string[]): Promise<Map<string, CachedProfile>> {
@@ -140,9 +142,12 @@ export class FollowerCacheDB {
     
     for (const did of dids) {
       const request = store.get(did)
-      const profile = await request
+      const profile = await new Promise<CachedProfile | undefined>((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result as CachedProfile | undefined)
+        request.onerror = () => reject(request.error)
+      })
       if (profile) {
-        profileMap.set(did, profile as CachedProfile)
+        profileMap.set(did, profile)
       }
     }
     
@@ -161,9 +166,12 @@ export class FollowerCacheDB {
     
     for (const handle of handles) {
       const request = index.get(handle)
-      const profile = await request
+      const profile = await new Promise<CachedProfile | undefined>((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result as CachedProfile | undefined)
+        request.onerror = () => reject(request.error)
+      })
       if (profile) {
-        profileMap.set(handle, profile as CachedProfile)
+        profileMap.set(handle, profile)
       }
     }
     
@@ -260,8 +268,11 @@ export class FollowerCacheDB {
     }
     const tx = this.db.transaction(['interactions'], 'readonly')
     const request = tx.objectStore('interactions').get(did)
-    const result = await request
-    return result as InteractionStats | undefined
+    const result = await new Promise<InteractionStats | undefined>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result as InteractionStats | undefined)
+      request.onerror = () => reject(request.error)
+    })
+    return result
   }
   
   async getInteractionStatsForMultiple(dids: string[]): Promise<Map<string, InteractionStats>> {
@@ -275,9 +286,12 @@ export class FollowerCacheDB {
     
     for (const did of dids) {
       const request = store.get(did)
-      const stats = await request
+      const stats = await new Promise<InteractionStats | undefined>((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result as InteractionStats | undefined)
+        request.onerror = () => reject(request.error)
+      })
       if (stats) {
-        statsMap.set(did, stats as InteractionStats)
+        statsMap.set(did, stats)
       }
     }
     
@@ -438,15 +452,15 @@ export class FollowerCacheDB {
     const profileCountRequest = tx.objectStore('profiles').count()
     const interactionCountRequest = tx.objectStore('interactions').count()
     
-    const profileCount = await profileCountRequest
-    const interactionCount = await interactionCountRequest
+    const profileCount = (await profileCountRequest) as unknown as number
+    const interactionCount = (await interactionCountRequest) as unknown as number
     
     // Count stale profiles
     const profileStore = tx.objectStore('profiles')
     const cutoffDate = new Date(Date.now() - CACHE_DURATION_MS)
     const staleRange = IDBKeyRange.upperBound(cutoffDate)
     const staleCountRequest = profileStore.index('lastFetched').count(staleRange)
-    const staleCount = await staleCountRequest
+    const staleCount = (await staleCountRequest) as unknown as number
     
     // Estimate cache size (rough approximation)
     const avgProfileSize = 500 // bytes

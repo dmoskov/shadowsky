@@ -175,7 +175,6 @@ export const Bookmarks: React.FC = () => {
                   onLike={() => {}}
                   onRepost={() => {}}
                   onReply={() => {}}
-                  onQuote={() => {}}
                   onBookmark={() => handleBookmarkToggle(bookmark.post!)}
                   isBookmarked={true}
                   compact

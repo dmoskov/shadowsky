@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Loader, TrendingUp, Users, Clock, Hash, Star, Plus, X, ChevronDown, Reply, Heart, Repeat2, MessageCircle } from 'lucide-react'
+import { Loader, TrendingUp, Users, Clock, Hash, Star, Plus, ChevronDown, Reply, Heart, Repeat2, MessageCircle } from 'lucide-react'
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '../contexts/AuthContext'
@@ -47,12 +47,6 @@ interface Post {
   }
 }
 
-interface SavedFeed {
-  id: string
-  type: 'feed' | 'list' | 'timeline'
-  value: string
-  pinned: boolean
-}
 
 interface FeedGenerator {
   uri: string
@@ -98,8 +92,6 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
   const [focusedPostIndex, setFocusedPostIndex] = useState<number>(-1)
   const postsContainerRef = useRef<HTMLDivElement>(null)
   const [feedOrder, setFeedOrder] = useState<string[]>([])
-  const [draggedTab, setDraggedTab] = useState<string | null>(null)
-  const [dragOverTab, setDragOverTab] = useState<string | null>(null)
   const [showFeedDropdown, setShowFeedDropdown] = useState(false)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const scrollPositionRef = useRef<{ [key: string]: number }>({})
@@ -132,8 +124,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
       if (!agent || !userPrefs?.savedFeeds?.length) return []
       
       const feedUris = userPrefs.savedFeeds
-        .filter((feed: SavedFeed): boolean => feed.type === 'feed')
-        .map((feed: SavedFeed) => feed.value)
+        .filter((feed) => feed.type === 'feed')
+        .map((feed) => feed.value)
       
       if (feedUris.length === 0) return []
       
@@ -163,10 +155,10 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     // Add pinned feeds first, then other saved feeds
     const savedFeeds: any[] = []
     if (userPrefs?.savedFeeds && feedGenerators) {
-      const pinnedFeeds = userPrefs.savedFeeds.filter((feed: SavedFeed) => feed.pinned && feed.type === 'feed')
-      const unpinnedFeeds = userPrefs.savedFeeds.filter((feed: SavedFeed) => !feed.pinned && feed.type === 'feed')
+      const pinnedFeeds = userPrefs.savedFeeds.filter((feed) => feed.pinned && feed.type === 'feed')
+      const unpinnedFeeds = userPrefs.savedFeeds.filter((feed) => !feed.pinned && feed.type === 'feed')
       
-      const addFeedOption = (savedFeed: SavedFeed) => {
+      const addFeedOption = (savedFeed: any) => {
         const generator = feedGenerators.find((g: FeedGenerator) => g.uri === savedFeed.value)
         if (generator) {
           savedFeeds.push({
@@ -181,8 +173,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
         }
       }
       
-      pinnedFeeds.forEach(addFeedOption)
-      unpinnedFeeds.forEach(addFeedOption)
+      pinnedFeeds.forEach((feed) => addFeedOption(feed))
+      unpinnedFeeds.forEach((feed) => addFeedOption(feed))
     }
     
     const allFeeds = [...defaultFeeds, ...savedFeeds]
@@ -236,7 +228,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     isFetchingNextPage
   } = useInfiniteQuery({
     queryKey: ['timeline', selectedFeed],
-    queryFn: async ({ pageParam }) => {
+    queryFn: async ({ pageParam }: { pageParam?: string }) => {
       if (!agent) throw new Error('Not authenticated')
       
       let response
@@ -313,6 +305,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
       debug.log(`${selectedFeed} feed response:`, response)
       return response.data
     },
+    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.cursor,
     enabled: !!agent,
     staleTime: 5 * 60 * 1000,
@@ -658,9 +651,9 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
           e.preventDefault()
           handled = true
           if (currentIndex >= 0 && currentIndex < posts.length) {
-            const post = posts[currentIndex]?.post
-            if (post) {
-              handlePostClick(post)
+            const feedItem = posts[currentIndex]
+            if (feedItem?.post && 'author' in feedItem.post && 'record' in feedItem.post) {
+              handlePostClick(feedItem.post as unknown as Post)
             }
           }
           break
@@ -846,7 +839,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
       return (
         <div className="mt-2 rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
           <VideoPlayer
-            src={proxifyBskyVideo(embed.playlist)}
+            src={proxifyBskyVideo(embed.playlist) || ''}
             thumbnail={embed.thumbnail ? proxifyBskyVideo(embed.thumbnail) : undefined}
             aspectRatio={embed.aspectRatio}
             alt={embed.alt}
@@ -877,7 +870,9 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
             <div className="p-3 cursor-pointer hover:bg-opacity-5 hover:bg-blue-500 transition-colors"
                  onClick={(e) => {
                    e.stopPropagation()
-                   handlePostClick({ uri: quotedPost.uri, cid: quotedPost.cid })
+                   if ('author' in quotedPost && 'record' in quotedPost) {
+                     handlePostClick(quotedPost as Post)
+                   }
                  }}>
               <div className="flex items-center gap-2 mb-2">
                 <img
@@ -1008,51 +1003,6 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     }, 100)
   }
   
-  // Drag and drop handlers
-  const handleDragStart = (e: React.DragEvent, feedType: string) => {
-    setDraggedTab(feedType)
-    e.dataTransfer.effectAllowed = 'move'
-  }
-  
-  const handleDragOver = (e: React.DragEvent, feedType: string) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-    setDragOverTab(feedType)
-  }
-  
-  const handleDragLeave = () => {
-    setDragOverTab(null)
-  }
-  
-  const handleDrop = (e: React.DragEvent, targetFeedType: string) => {
-    e.preventDefault()
-    setDragOverTab(null)
-    
-    if (!draggedTab || draggedTab === targetFeedType) {
-      setDraggedTab(null)
-      return
-    }
-    
-    const newOrder = [...feedOrder]
-    const draggedIndex = newOrder.indexOf(draggedTab)
-    const targetIndex = newOrder.indexOf(targetFeedType)
-    
-    if (draggedIndex !== -1 && targetIndex !== -1) {
-      // Remove dragged item and insert at new position
-      newOrder.splice(draggedIndex, 1)
-      newOrder.splice(targetIndex, 0, draggedTab)
-      
-      setFeedOrder(newOrder)
-      localStorage.setItem('feedOrder', JSON.stringify(newOrder))
-    }
-    
-    setDraggedTab(null)
-  }
-  
-  const handleDragEnd = () => {
-    setDraggedTab(null)
-    setDragOverTab(null)
-  }
   
   return (
     <div className="w-full" ref={containerRef} tabIndex={-1} style={{ outline: 'none' }}>

@@ -1,11 +1,11 @@
 import React from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { TrendingUp, Users, Heart, MessageCircle, BarChart3, Bell, Clock, Repeat2, UserPlus, Calendar, Activity, Send } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { TrendingUp, Users, Heart, Bell, Calendar, Activity, Send } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { format, subDays, startOfDay, subHours } from 'date-fns'
 import { useExtendedNotifications } from '../hooks/useExtendedNotifications'
 import { BackgroundNotificationLoader } from './BackgroundNotificationLoader'
-import { useFeatureTracking, useInteractionTracking } from '../hooks/useAnalytics'
+import { useFeatureTracking } from '../hooks/useAnalytics'
 import { analytics as analyticsService } from '../services/analytics'
 import { proxifyBskyImage } from '../utils/image-proxy'
 
@@ -39,14 +39,12 @@ const TrackedChart: React.FC<{ chartName: string; children: React.ReactNode }> =
 
 export const NotificationsAnalytics: React.FC = () => {
   const { agent, session } = useAuth()
-  const queryClient = useQueryClient()
   const [timeRange, setTimeRange] = React.useState<TimeRange>('7d')
   const [activityView, setActivityView] = React.useState<'received' | 'sent'>('received')
   const [topUsersView, setTopUsersView] = React.useState<'received' | 'sent'>('received')
   
   // Analytics hooks
   const { trackFeatureAction } = useFeatureTracking('analytics')
-  const { trackClick } = useInteractionTracking()
   
   // Wrap setTimeRange to track analytics
   const handleTimeRangeChange = (newRange: TimeRange) => {
@@ -164,8 +162,8 @@ export const NotificationsAnalytics: React.FC = () => {
         const postDate = new Date(item.post.indexedAt)
         if (postDate >= cutoffDate && item.reply) {
           // This is a reply TO someone
-          const parentAuthor = item.reply.parent.author
-          if (parentAuthor.handle !== session.handle) {
+          const parentAuthor = 'author' in item.reply.parent ? item.reply.parent.author : null
+          if (parentAuthor && 'handle' in parentAuthor && parentAuthor.handle !== session.handle) {
             addInteraction(parentAuthor, 'replies')
           }
         }
@@ -278,7 +276,7 @@ export const NotificationsAnalytics: React.FC = () => {
             // Check if it's a reply, repost, or quote
             if (item.reply) {
               buckets[bucketIndex].replies++
-            } else if (item.reason === 'repost') {
+            } else if (item.reason?.$type === 'app.bsky.feed.defs#reasonRepost') {
               buckets[bucketIndex].reposts++
             } else if (item.post.embed?.$type === 'app.bsky.embed.record') {
               buckets[bucketIndex].quotes++
@@ -1306,16 +1304,3 @@ export const NotificationsAnalytics: React.FC = () => {
   )
 }
 
-
-
-function getNotificationAction(reason: string): string {
-  switch (reason) {
-    case 'like': return 'liked your post'
-    case 'repost': return 'reposted your post'
-    case 'follow': return 'followed you'
-    case 'mention': return 'mentioned you'
-    case 'reply': return 'replied to your post'
-    case 'quote': return 'quoted your post'
-    default: return 'interacted with your post'
-  }
-}

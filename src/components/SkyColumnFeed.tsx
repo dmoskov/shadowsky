@@ -12,38 +12,6 @@ interface SkyColumnFeedProps {
   isFocused?: boolean;
 }
 
-interface Post {
-  uri: string;
-  cid: string;
-  author: {
-    did: string;
-    handle: string;
-    displayName?: string;
-    avatar?: string;
-  };
-  record: {
-    text: string;
-    createdAt: string;
-    embed?: any;
-  };
-  embed?: any;
-  replyCount: number;
-  repostCount: number;
-  likeCount: number;
-  viewer?: {
-    like?: string;
-    repost?: string;
-  };
-  reason?: {
-    $type: string;
-    by: {
-      did: string;
-      handle: string;
-      displayName?: string;
-    };
-  };
-}
-
 export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnFeedProps) {
   const { agent } = useAuth();
   const [selectedPost, setSelectedPost] = useState<any>(null);
@@ -53,7 +21,6 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
   const [focusedPostIndex, setFocusedPostIndex] = useState(0);
   const [focusedPostUri, setFocusedPostUri] = useState<string | null>(null);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
-  const [lastRefreshTime, setLastRefreshTime] = useState(Date.now());
   
   // Fetch feed generator info
   const { data: feedInfo } = useQuery({
@@ -85,7 +52,6 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef<number>(0);
   const isRestoringScrollRef = useRef(false);
-  const previousPostsRef = useRef<any[]>([]);
 
   // Fetch feed posts
   const {
@@ -95,9 +61,10 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
     isFetchingNextPage,
     isLoading,
     isError
-  } = useInfiniteQuery({
+  } = useInfiniteQuery<{posts: any[], cursor?: string}, Error>({
     queryKey: ['columnFeed', feedUri],
-    queryFn: async ({ pageParam = undefined }) => {
+    queryFn: async ({ pageParam }) => {
+      const cursor = pageParam as string | undefined;
       if (!agent) throw new Error('Not authenticated');
       
       let response;
@@ -105,7 +72,7 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
       if (!feedUri || feedUri === 'following') {
         // Following feed
         response = await agent.getTimeline({
-          cursor: pageParam,
+          cursor: cursor,
           limit: 30
         });
       } else {
@@ -113,7 +80,7 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
         try {
           response = await agent.app.bsky.feed.getFeed({
             feed: feedUri,
-            cursor: pageParam,
+            cursor: cursor,
             limit: 30
           });
         } catch (error) {
@@ -127,17 +94,16 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
         cursor: response.data.cursor
       };
     },
+    initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.cursor,
     enabled: !!agent,
     staleTime: 30 * 60 * 1000, // 30 minutes - feeds don't need frequent updates
     gcTime: 5 * 60 * 1000,
     refetchOnMount: 'always', // Always fetch fresh data on mount
     refetchInterval: 60 * 1000, // Poll every 60 seconds after initial load
-    // Keep previous data while fetching
-    keepPreviousData: true,
   });
 
-  const allPosts = data?.pages.flatMap(page => page.posts) || [];
+  const allPosts = data?.pages.flatMap((page: any) => page.posts) || [];
 
 
   // Save scroll position when scrolling
@@ -160,7 +126,7 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
     if (!hasUserInteracted || !focusedPostUriRef.current || allPosts.length === 0) return;
     
     // Find the focused post in the new data
-    const newIndex = allPosts.findIndex(feedPost => {
+    const newIndex = allPosts.findIndex((feedPost: any) => {
       const post = feedPost.post || feedPost;
       return post.uri === focusedPostUriRef.current;
     });
@@ -370,7 +336,7 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
       </div>
       
       <div ref={containerRef} className="h-full overflow-y-auto skydeck-scrollbar">
-        {allPosts.map((post, index) => {
+        {allPosts.map((post: any, index: number) => {
           const postUri = (post?.post || post)?.uri;
           return (
             <React.Fragment key={postUri || `post-${index}`}>

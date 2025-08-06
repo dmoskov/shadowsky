@@ -148,7 +148,7 @@ const buildSearchQuery = (searchFilters: SearchFilters) => {
 }
 
 export const Search: React.FC = () => {
-  const { user } = useAuth()
+  const { } = useAuth()
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [activeSearchQuery, setActiveSearchQuery] = useState('')
   const [filters, setFilters] = useState<SearchFilters>({
@@ -173,7 +173,6 @@ export const Search: React.FC = () => {
   
   // Build search query and debounce it for automatic search
   const searchQuery = buildSearchQuery(filters)
-  const debouncedSearchQuery = useDebounce(searchQuery, 500)
   
   // Typeahead state
   const [activeUserInput, setActiveUserInput] = useState<{ field: 'from' | 'mentions', index: number } | null>(null)
@@ -384,41 +383,44 @@ export const Search: React.FC = () => {
       })
       
       // If this is a reply and we want the full thread, fetch from the root
-      if (findRoot && response.data.thread.parent) {
-        // Find the root post by traversing up the parent chain
-        let rootThread = response.data.thread
-        while (rootThread.parent) {
-          rootThread = rootThread.parent
-        }
-        
-        // Now fetch the full thread from the root
-        if (rootThread.post?.uri && rootThread.post.uri !== uri) {
-          const rootResponse = await atProtoClient.agent.getPostThread({
-            uri: rootThread.post.uri,
-            depth: 10
-          })
-          
-          // Extract all posts from the root thread
-          const posts: AppBskyFeedDefs.PostView[] = []
-          
-          const extractPosts = (thread: any) => {
-            if (thread.post) {
-              posts.push(thread.post)
-            }
-            if (thread.replies) {
-              thread.replies.forEach((reply: any) => {
-                extractPosts(reply)
-              })
-            }
+      if (findRoot && response.data.thread.$type === 'app.bsky.feed.defs#threadViewPost') {
+        const thread = response.data.thread as AppBskyFeedDefs.ThreadViewPost
+        if (thread.parent) {
+          // Find the root post by traversing up the parent chain
+          let rootThread = thread
+          while (rootThread.parent && rootThread.parent.$type === 'app.bsky.feed.defs#threadViewPost') {
+            rootThread = rootThread.parent as AppBskyFeedDefs.ThreadViewPost
           }
           
-          extractPosts(rootResponse.data.thread)
-          
-          setThreadPosts(posts)
-          setSelectedPostUri(rootThread.post.uri) // Set to root URI
-          setHighlightPostUri(uri) // Highlight the originally requested post
-          setShowThreadViewer(true)
-          return
+          // Now fetch the full thread from the root
+          if (rootThread.post?.uri && rootThread.post.uri !== uri) {
+            const rootResponse = await atProtoClient.agent.getPostThread({
+              uri: rootThread.post.uri,
+              depth: 10
+            })
+            
+            // Extract all posts from the root thread
+            const posts: AppBskyFeedDefs.PostView[] = []
+            
+            const extractPosts = (thread: any) => {
+              if (thread.post) {
+                posts.push(thread.post)
+              }
+              if (thread.replies) {
+                thread.replies.forEach((reply: any) => {
+                  extractPosts(reply)
+                })
+              }
+            }
+            
+            extractPosts(rootResponse.data.thread)
+            
+            setThreadPosts(posts)
+            setSelectedPostUri(rootThread.post.uri) // Set to root URI
+            setHighlightPostUri(uri) // Highlight the originally requested post
+            setShowThreadViewer(true)
+            return
+          }
         }
       }
       
@@ -438,14 +440,17 @@ export const Search: React.FC = () => {
       }
       
       // Collect parent posts (excluding the current post)
-      if (response.data.thread.parent) {
-        const parentPosts = collectParents(response.data.thread.parent)
-        posts.push(...parentPosts)
-      }
-      
-      // Add the current post
-      if (response.data.thread.post) {
-        posts.push(response.data.thread.post)
+      if (response.data.thread.$type === 'app.bsky.feed.defs#threadViewPost') {
+        const thread = response.data.thread as AppBskyFeedDefs.ThreadViewPost
+        if (thread.parent) {
+          const parentPosts = collectParents(thread.parent)
+          posts.push(...parentPosts)
+        }
+        
+        // Add the current post
+        if (thread.post) {
+          posts.push(thread.post)
+        }
       }
       
       // Then collect all replies
@@ -580,7 +585,7 @@ export const Search: React.FC = () => {
   }
 
   // Handle keyboard navigation for typeahead
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, field: 'from' | 'mentions', index: number) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     switch (e.key) {
       case 'ArrowDown':
         // Only allow arrow navigation if user has typed at least 2 characters
@@ -691,7 +696,7 @@ export const Search: React.FC = () => {
                 backgroundColor: 'var(--bsky-bg-secondary)',
                 borderColor: 'var(--bsky-border-primary)',
                 color: 'var(--bsky-text-primary)',
-                '--tw-ring-color': 'var(--bsky-primary)'
+                ['--tw-ring-color' as any]: 'var(--bsky-primary)'
               }}
             />
           </div>
@@ -740,7 +745,7 @@ export const Search: React.FC = () => {
                 backgroundColor: filters.hasMedia ? 'var(--bsky-primary)' : 'var(--bsky-bg-secondary)',
                 borderWidth: '1px',
                 borderColor: filters.hasMedia ? 'var(--bsky-primary)' : 'var(--bsky-border-primary)',
-                '--tw-ring-color': 'var(--bsky-primary)'
+                ['--tw-ring-color' as any]: 'var(--bsky-primary)'
               }}
             >
               <Image size={12} />
@@ -874,7 +879,7 @@ export const Search: React.FC = () => {
                     backgroundColor: filters.hasMedia ? 'var(--bsky-primary)' : 'var(--bsky-bg-secondary)',
                     borderColor: filters.hasMedia ? 'var(--bsky-primary)' : 'var(--bsky-border-primary)',
                     color: filters.hasMedia ? 'white' : 'var(--bsky-text-primary)',
-                    '--tw-ring-color': 'var(--bsky-primary)'
+                    ['--tw-ring-color' as any]: 'var(--bsky-primary)'
                   }}
                 >
                   {filters.hasMedia ? '✓ ' : ''}Show only posts with media
@@ -897,7 +902,7 @@ export const Search: React.FC = () => {
                         type="text"
                         value={user}
                         onChange={(e) => handleUserInputChange('from', i, e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e, 'from', i)}
+                        onKeyDown={(e) => handleKeyDown(e)}
                         onFocus={() => {
                           setActiveUserInput({ field: 'from', index: i })
                           setUserSearchQuery(user)
@@ -920,7 +925,7 @@ export const Search: React.FC = () => {
                           backgroundColor: 'var(--bsky-bg-secondary)',
                           borderColor: 'var(--bsky-border-primary)',
                           color: 'var(--bsky-text-primary)',
-                          '--tw-ring-color': 'var(--bsky-primary)'
+                          ['--tw-ring-color' as any]: 'var(--bsky-primary)'
                         }}
                       />
                       <button
@@ -1124,7 +1129,7 @@ export const Search: React.FC = () => {
                       backgroundColor: 'var(--bsky-bg-secondary)',
                       borderColor: 'var(--bsky-border-primary)',
                       color: 'var(--bsky-text-primary)',
-                      '--tw-ring-color': 'var(--bsky-primary)',
+                      ['--tw-ring-color' as any]: 'var(--bsky-primary)',
                       colorScheme: 'dark',
                       width: '140px'
                     }}
@@ -1151,7 +1156,7 @@ export const Search: React.FC = () => {
                       backgroundColor: 'var(--bsky-bg-secondary)',
                       borderColor: 'var(--bsky-border-primary)',
                       color: 'var(--bsky-text-primary)',
-                      '--tw-ring-color': 'var(--bsky-primary)',
+                      ['--tw-ring-color' as any]: 'var(--bsky-primary)',
                       colorScheme: 'dark',
                       width: '140px'
                     }}
@@ -1204,7 +1209,7 @@ export const Search: React.FC = () => {
                         backgroundColor: 'var(--bsky-bg-secondary)',
                         borderColor: 'var(--bsky-border-primary)',
                         color: 'var(--bsky-text-primary)',
-                        '--tw-ring-color': 'var(--bsky-primary)'
+                        ['--tw-ring-color' as any]: 'var(--bsky-primary)'
                       }}
                     />
                     <button
@@ -1254,7 +1259,7 @@ export const Search: React.FC = () => {
                         backgroundColor: 'var(--bsky-bg-secondary)',
                         borderColor: 'var(--bsky-border-primary)',
                         color: 'var(--bsky-text-primary)',
-                        '--tw-ring-color': 'var(--bsky-primary)'
+                        ['--tw-ring-color' as any]: 'var(--bsky-primary)'
                       }}
                     />
                     <button
@@ -1296,7 +1301,7 @@ export const Search: React.FC = () => {
                         type="text"
                         value={user}
                         onChange={(e) => handleUserInputChange('mentions', i, e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e, 'mentions', i)}
+                        onKeyDown={(e) => handleKeyDown(e)}
                         onFocus={() => {
                           setActiveUserInput({ field: 'mentions', index: i })
                           setUserSearchQuery(user)
@@ -1319,7 +1324,7 @@ export const Search: React.FC = () => {
                           backgroundColor: 'var(--bsky-bg-secondary)',
                           borderColor: 'var(--bsky-border-primary)',
                           color: 'var(--bsky-text-primary)',
-                          '--tw-ring-color': 'var(--bsky-primary)'
+                          ['--tw-ring-color' as any]: 'var(--bsky-primary)'
                         }}
                       />
                       <button
@@ -1429,7 +1434,7 @@ export const Search: React.FC = () => {
                         backgroundColor: 'var(--bsky-bg-secondary)',
                         borderColor: 'var(--bsky-border-primary)',
                         color: 'var(--bsky-text-primary)',
-                        '--tw-ring-color': 'var(--bsky-primary)'
+                        ['--tw-ring-color' as any]: 'var(--bsky-primary)'
                       }}
                     />
                     <button
@@ -1470,7 +1475,7 @@ export const Search: React.FC = () => {
                   backgroundColor: 'var(--bsky-bg-secondary)',
                   borderColor: 'var(--bsky-border-primary)',
                   color: 'var(--bsky-text-primary)',
-                  '--tw-ring-color': 'var(--bsky-primary)'
+                  ['--tw-ring-color' as any]: 'var(--bsky-primary)'
                 }}
               >
                 <option value="">Any language</option>

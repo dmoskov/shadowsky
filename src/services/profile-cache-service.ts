@@ -1,5 +1,4 @@
 import { BskyAgent } from '@atproto/api'
-import type { AppBskyActorDefs } from '@atproto/api'
 import { getProfileService, debug } from '@bsky/shared'
 import { 
   getFollowerCacheDB, 
@@ -207,7 +206,7 @@ export class ProfileCacheService {
           mentions: 0,
           quotes: 0,
           latestInteractionAt: new Date(notification.indexedAt),
-          firstInteractionAt: (existing as InteractionStats)?.firstInteractionAt || new Date(notification.indexedAt),
+          firstInteractionAt: new Date(notification.indexedAt),
           likedPosts: [],
           repostedPosts: [],
           repliedPosts: [],

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, X, Home, Bell, Clock, MessageSquare, Hash, Star, Mail } from 'lucide-react';
+import { Plus, Bell, Clock, MessageSquare, Hash, Star, Mail } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import SkyColumn from './SkyColumn';
@@ -13,12 +13,6 @@ export interface Column {
   data?: string; // Can be threadUri, feedUri, profileHandle, listUri etc
 }
 
-interface SavedFeed {
-  id: string;
-  type: 'feed' | 'list' | 'timeline';
-  value: string;
-  pinned: boolean;
-}
 
 interface FeedGenerator {
   uri: string;
@@ -39,7 +33,7 @@ export default function SkyDeck() {
   const [columns, setColumns] = useState<Column[]>([]);
   const [isDragging, setIsDragging] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
-  const [draggedElement, setDraggedElement] = useState<HTMLElement | null>(null);
+  const [_draggedElement, setDraggedElement] = useState<HTMLElement | null>(null);
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [isNarrowView, setIsNarrowView] = useState(false);
   const [focusedColumnIndex, setFocusedColumnIndex] = useState(0);
@@ -67,8 +61,8 @@ export default function SkyDeck() {
       if (!agent || !userPrefs?.savedFeeds?.length) return [];
       
       const feedUris = userPrefs.savedFeeds
-        .filter((feed: SavedFeed): boolean => feed.type === 'feed')
-        .map((feed: SavedFeed) => feed.value);
+        .filter((feed: any): boolean => feed.type === 'feed')
+        .map((feed: any) => feed.value);
       
       if (feedUris.length === 0) return [];
       
@@ -322,8 +316,8 @@ export default function SkyDeck() {
                           </h4>
                           <div className="grid gap-1">
                             {userPrefs.savedFeeds
-                              .filter((feed: SavedFeed) => feed.type === 'feed')
-                              .map((savedFeed: SavedFeed) => {
+                              .filter((feed: any) => feed.type === 'feed')
+                              .map((savedFeed: any) => {
                                 const generator = feedGenerators.find(
                                   (g: FeedGenerator) => g.uri === savedFeed.value
                                 );

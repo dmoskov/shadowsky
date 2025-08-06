@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Search, Plus, Check, Star, TrendingUp, Users, Hash } from 'lucide-react'
+import { X, Search, Plus, Check, Users, Hash } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import { proxifyBskyImage } from '../utils/image-proxy'

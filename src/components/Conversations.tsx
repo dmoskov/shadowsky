@@ -5,7 +5,6 @@ import { formatDistanceToNow } from 'date-fns'
 import { useReplyNotificationsFromCache } from '../hooks/useReplyNotificationsFromCache'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
 import { usePostsByUris } from '../hooks/usePostsByUris'
-import { useQueryClient } from '@tanstack/react-query'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import { getNotificationUrl, atUriToBskyUrl } from '../utils/url-helpers'
 import type { AppBskyFeedDefs } from '@atproto/api'
@@ -116,7 +115,6 @@ export const Conversations: React.FC = () => {
   const [selectedConvo, setSelectedConvo] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const threadContainerRef = useRef<HTMLDivElement>(null)
-  const queryClient = useQueryClient()
 
   // Use the cache-aware hook which automatically checks extended notifications cache
   const { 
@@ -139,7 +137,6 @@ export const Conversations: React.FC = () => {
   const { 
     data: posts, 
     isLoading: isLoadingPosts,
-    isFetchingMore: isFetchingMorePosts,
     percentageFetched: postsPercentageFetched
   } = useNotificationPosts(replyNotifications)
 
@@ -743,10 +740,6 @@ export const Conversations: React.FC = () => {
             const isGroup = convo.participants.size > 2
             const unreadCount = convo.replies.filter(r => !r.isRead).length
 
-            // Get the latest reply post for preview
-            const latestReplyPost = postMap.get(convo.latestReply.uri)
-            const latestReplyRecord = latestReplyPost?.record as any
-            const latestReplyText = latestReplyRecord?.text || '[Loading reply...]'
 
             return (
               <button
@@ -879,7 +872,7 @@ export const Conversations: React.FC = () => {
               const latestReplyText = latestReplyRecord?.text || '[Loading reply...]'
               const latestReplyUrl = latestReplyPost?.uri && latestReplyAuthor?.handle 
                 ? atUriToBskyUrl(latestReplyPost.uri, latestReplyAuthor.handle) 
-                : (getNotificationUrl(selectedConversation.latestReply) || undefined)
+                : (getNotificationUrl(selectedConversation.latestReply) ?? undefined)
               
               return (
                 <div className="mb-4 p-4 rounded-lg shadow-sm" 
@@ -960,16 +953,18 @@ export const Conversations: React.FC = () => {
                         {latestReplyText.length > 200 ? latestReplyText.substring(0, 200) + '...' : latestReplyText}
                       </p>
                       
-                      <a
-                        href={latestReplyUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs hover:underline"
-                        style={{ color: 'var(--bsky-primary)' }}
-                      >
-                        <ExternalLink size={12} />
-                        View on Bluesky
-                      </a>
+                      {latestReplyUrl && (
+                        <a
+                          href={latestReplyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs hover:underline"
+                          style={{ color: 'var(--bsky-primary)' }}
+                        >
+                          <ExternalLink size={12} />
+                          View on Bluesky
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>

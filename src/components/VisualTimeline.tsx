@@ -1,8 +1,8 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Calendar, Clock, Users, Heart, Repeat2, MessageCircle, Quote, UserPlus, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react'
+import { Clock, Heart, Repeat2, MessageCircle, Quote, UserPlus, ExternalLink } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { format, differenceInMinutes, differenceInHours, startOfDay, isSameDay, isToday, isYesterday, formatDistanceToNow } from 'date-fns'
+import { format, differenceInMinutes, differenceInHours, isToday, isYesterday, formatDistanceToNow } from 'date-fns'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
 import { proxifyBskyImage } from '../utils/image-proxy'
 import { ThreadModal } from './ThreadModal'
@@ -319,14 +319,14 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
     // Create events for follow bursts
     followBursts.forEach(burst => {
       if (burst.length >= 2) {
-        const times = burst.map(n => new Date(n.indexedAt).getTime())
+        const times = burst.map((n: any) => new Date(n.indexedAt).getTime())
         const latestTime = new Date(Math.max(...times))
         
         events.push({
           time: latestTime,
           notifications: burst,
           types: new Set(['follow']),
-          actors: new Set(burst.map(n => n.author?.handle || 'unknown')),
+          actors: new Set(burst.map((n: any) => n.author?.handle || 'unknown')),
           aggregationType: 'follow',
           earliestTime: new Date(Math.min(...times)),
           latestTime: latestTime
@@ -710,7 +710,8 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
               className="timeline-day-header -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-3" 
               style={{ 
                 position: 'sticky',
-                WebkitPosition: 'sticky' as any,
+                // @ts-ignore - WebKit prefix for sticky positioning
+                WebkitPosition: '-webkit-sticky',
                 top: '60px', // Position below the main header which is ~60px tall
                 zIndex: 30, // Higher than 20 but lower than main header's 40
                 backgroundColor: 'var(--bsky-bg-primary)',

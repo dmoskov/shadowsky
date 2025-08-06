@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Send, X, Loader2 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import type { AppBskyFeedDefs } from '@atproto/api'
 
 interface InlineReplyComposerProps {
   replyTo: {

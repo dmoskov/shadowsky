@@ -1,9 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { NotificationsFeed } from './NotificationsFeed';
 import { VisualTimeline } from './VisualTimeline';
 import { ConversationsSimple as Conversations } from './ConversationsSimple';
-import SkyColumnFeed from './SkyColumnFeed';
 import { Home } from './Home';
 import { DirectMessages } from './DirectMessages';
 import type { Column } from './SkyDeck';

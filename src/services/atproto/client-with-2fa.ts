@@ -5,7 +5,6 @@
 
 export class ATProtoClientWith2FA {
   private client: any
-  private savedCredentials: { identifier: string; password: string } | null = null
 
   constructor(client: any) {
     this.client = client
@@ -13,10 +12,7 @@ export class ATProtoClientWith2FA {
 
   async login(identifier: string, password: string, authFactorToken?: string) {
     try {
-      // Save credentials for retry with auth factor
-      if (!authFactorToken) {
-        this.savedCredentials = { identifier, password }
-      }
+      // No need to save credentials - auth factor token is passed directly
 
       // Check if the underlying client supports auth factor tokens
       if (authFactorToken && this.client.agent?.login) {
@@ -27,8 +23,7 @@ export class ATProtoClientWith2FA {
           authFactorToken
         })
         
-        // Clear saved credentials on success
-        this.savedCredentials = null
+        // Login successful
         return response.data
       } else {
         // Fall back to standard login
@@ -47,15 +42,13 @@ export class ATProtoClientWith2FA {
         throw authError
       }
       
-      // Clear saved credentials on other errors
-      this.savedCredentials = null
+      // Re-throw other errors
       throw error
     }
   }
 
   // Delegate all other methods to the underlying client
   logout() {
-    this.savedCredentials = null
     return this.client.logout()
   }
 

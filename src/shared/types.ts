@@ -2,7 +2,6 @@
  * Shared type definitions
  */
 
-import type { AppBskyNotificationListNotifications } from '@atproto/api'
 
 export type { Session } from './client'
 

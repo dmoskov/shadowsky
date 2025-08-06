@@ -23,7 +23,7 @@ export function atUriToBskyUrl(uri: string, handle: string): string | null {
   const match = uri.match(/^at:\/\/([^\/]+)\/([^\/]+)\/([^\/]+)$/)
   if (!match) return null
   
-  const [, did, collection, rkey] = match
+  const [, , collection, rkey] = match
   const cleanHandle = handle.startsWith('@') ? handle.slice(1) : handle
   
   // Handle different collection types
@@ -92,7 +92,7 @@ export function getNotificationUrl(
   },
   postAuthorHandle?: string // Optional handle of the post author for likes/reposts
 ): string {
-  const { reason, uri, author, reasonSubject } = notification
+  const { reason, uri, author } = notification
   
   switch (reason) {
     case 'follow':

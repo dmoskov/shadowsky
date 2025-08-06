@@ -75,7 +75,7 @@ export function useBookmarks() {
       
       return { wasBookmarked, postUri: post.uri }
     },
-    onError: (err, post, context) => {
+    onError: (_err, _post, context) => {
       // Revert on error
       if (context) {
         bookmarkStore.setBookmarked(context.postUri, context.wasBookmarked)

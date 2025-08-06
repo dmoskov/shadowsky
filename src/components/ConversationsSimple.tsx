@@ -2,14 +2,13 @@ import React, { useState, useMemo } from 'react'
 import { MessageCircle, Search, Loader2 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
-import { useQueryClient, useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
 import type { AppBskyFeedDefs } from '@atproto/api'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
 import { debug } from '@bsky/shared'
 import { useConversationTracking, useFeatureTracking } from '../hooks/useAnalytics'
 import { proxifyBskyImage } from '../utils/image-proxy'
-import { atProtoClient } from '../services/atproto'
 import { ThreadModal } from './ThreadModal'
 
 type Post = AppBskyFeedDefs.PostView
@@ -33,7 +32,6 @@ const ConversationItem = React.memo(({
   isSelected,
   onClick,
   allPostsMap,
-  session,
   filteredConversationsIndex,
   isLoadingRootPost,
   isFocused,
@@ -321,7 +319,7 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
     }
     
     // Also subscribe to cache updates
-    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+    const unsubscribe = queryClient.getQueryCache().subscribe((event: any) => {
       if (event?.query?.queryKey?.[0] === 'notifications-extended') {
         debug.log('[ConversationsSimple] Cache event:', {
           type: event.type,
@@ -647,7 +645,6 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
       try {
         // Determine the root URI for this notification
         let rootUri = notification.reasonSubject || notification.uri
-        let method = 'fallback'
         
         // If we have the post data, find the true root
         const post = allPostsMap.get(notification.uri)
@@ -656,19 +653,16 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
           // If the post explicitly declares its root, use that
           if (record?.reply?.root?.uri) {
             rootUri = record.reply.root.uri
-            method = 'fromPost'
             rootUriDeterminations.fromPost++
           } else {
             // Otherwise follow the chain
             rootUri = findRootUri(notification.uri)
-            method = 'fromPost'
             rootUriDeterminations.fromPost++
           }
         } else if (notification.reasonSubject) {
           // If we don't have the reply post but have the reasonSubject, use that as a stable identifier
           // Don't try to follow the chain if we don't have the data
           rootUri = notification.reasonSubject
-          method = 'fromReasonSubject'
           rootUriDeterminations.fromReasonSubject++
         } else {
           rootUriDeterminations.fallback++
@@ -773,8 +767,8 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
     })
   }, [conversations, searchQuery, allPostsMap])
 
-  // Get the selected conversation
-  const selectedConversation = useMemo(() => {
+  // Debug selected conversation (kept for logging)
+  useMemo(() => {
     const found = conversations.find(c => c.rootUri === selectedConvo)
     debug.log('[ConversationsSimple] Finding selected conversation:', {
       selectedConvo,

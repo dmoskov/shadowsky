@@ -1,7 +1,6 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { 
-  LayoutDashboard,
   Bell,
   Clock,
   BarChart3,
@@ -11,7 +10,6 @@ import {
   PenSquare,
   Search,
   Home,
-  Columns,
   Bookmark
 } from 'lucide-react'
 

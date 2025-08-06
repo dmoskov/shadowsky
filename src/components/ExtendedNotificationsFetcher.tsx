@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
-import { Download, Loader2, Calendar, CheckCircle, RefreshCw, HardDrive, Database } from 'lucide-react'
+import { Loader2, Calendar, RefreshCw, Database } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getNotificationService } from '../services/atproto/notifications'
 import { format, subDays } from 'date-fns'
 import { ExtendedFetchCache } from '../utils/extendedFetchCache'
-import { StorageManager } from '../utils/storageManager'
 import { NotificationCacheService } from '../services/notification-cache-service'
 import { prefetchNotificationPosts, prefetchRootPosts } from '../utils/prefetchNotificationPosts'
 import { debug } from '@bsky/shared'
@@ -51,7 +50,6 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     data,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage,
     refetch,
   } = useInfiniteQuery({
     queryKey: ['notifications-extended'],

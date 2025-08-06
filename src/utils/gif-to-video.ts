@@ -1,5 +1,5 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg'
-import { fetchFile, toBlobURL } from '@ffmpeg/util'
+import { fetchFile } from '@ffmpeg/util'
 
 let ffmpeg: FFmpeg | null = null
 let ffmpegLoaded = false
@@ -69,7 +69,7 @@ export async function convertGifToMp4(
     
     // Read the output file
     const outputData = await ffmpeg.readFile('output.mp4')
-    console.log('Output MP4 size:', outputData.byteLength)
+    console.log('Output MP4 size:', outputData instanceof Uint8Array ? outputData.byteLength : outputData.length)
     
     // Clean up
     await ffmpeg.deleteFile('input.gif')

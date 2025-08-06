@@ -44,16 +44,6 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   const [galleryImages, setGalleryImages] = useState<Array<{ thumb: string; fullsize: string; alt?: string }> | null>(null)
   const [galleryIndex, setGalleryIndex] = useState(0)
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
-  // Create a map of posts by URI
-  const postMap = useMemo(() => {
-    const map = new Map<string, Post>()
-    posts.forEach(post => {
-      if (post?.uri) {
-        map.set(post.uri, post)
-      }
-    })
-    return map
-  }, [posts])
 
   // Create a map of notifications by URI
   const notificationMap = useMemo(() => {
@@ -106,7 +96,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     }
     
     // Build parent-child relationships
-    nodeMap.forEach((childNode, uri) => {
+    nodeMap.forEach((childNode) => {
       if (childNode.isRoot) return
       
       const post = childNode.post
@@ -291,7 +281,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       return (
         <div className="mt-2" onClick={(e) => e.stopPropagation()}>
           <VideoPlayer
-            src={proxifyBskyVideo(embed.playlist)}
+            src={proxifyBskyVideo(embed.playlist) || ''}
             thumbnail={embed.thumbnail ? proxifyBskyVideo(embed.thumbnail) : undefined}
             aspectRatio={embed.aspectRatio}
             alt={embed.alt}

@@ -1,4 +1,4 @@
-import { debug } from '../utils/debug-control'
+import { debug } from '@bsky/shared'
 
 interface JetstreamEvent {
   did: string

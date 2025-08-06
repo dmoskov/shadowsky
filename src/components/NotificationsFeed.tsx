@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, Image, Loader, ChevronUp, Crown, Settings, Database, Users, MoreVertical, Bell } from 'lucide-react'
+import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, Image, Loader, ChevronUp, Crown, Users, MoreVertical, Bell } from 'lucide-react'
 import { useNotifications, useUnreadCount } from '../hooks/useNotifications'
 import { useNotificationPosts, postHasImages } from '../hooks/useNotificationPosts'
 import { useFollowing } from '../hooks/useFollowing'
@@ -11,7 +11,7 @@ import { getNotificationUrl } from '../utils/url-helpers'
 import { useLocation } from 'react-router-dom'
 import { NotificationCache } from '../utils/notificationCache'
 import { debug } from '@bsky/shared'
-import { useNotificationTracking, useFeatureTracking, useInteractionTracking } from '../hooks/useAnalytics'
+import { useNotificationTracking, useFeatureTracking } from '../hooks/useAnalytics'
 import { proxifyBskyImage } from '../utils/image-proxy'
 
 type NotificationFilter = 'all' | 'likes' | 'reposts' | 'follows' | 'mentions' | 'replies' | 'quotes' | 'images' | 'top-accounts' | 'from-following'
@@ -20,7 +20,6 @@ export const NotificationsFeed: React.FC = () => {
   const location = useLocation()
   const searchParams = new URLSearchParams(location.search)
   const showTopAccounts = searchParams.get('top') === '1'
-  const debugMode = searchParams.has('debug')
   
   const [filter, setFilter] = useState<NotificationFilter>('all')
   // Removed unread only filter
@@ -28,15 +27,14 @@ export const NotificationsFeed: React.FC = () => {
   const [expandedAggregations, setExpandedAggregations] = useState<Set<string>>(new Set())
   const [minFollowerCount, setMinFollowerCount] = useState(10000)
   const [showConfigModal, setShowConfigModal] = useState(false)
-  const [isFromCache, setIsFromCache] = useState(false)
   const [showMoreFilters, setShowMoreFilters] = useState(false)
+  const [isFromCache, setIsFromCache] = useState(false)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const moreFiltersRef = useRef<HTMLDivElement>(null)
   
   // Analytics hooks
-  const { trackNotificationView, trackNotificationInteraction } = useNotificationTracking()
+  const { trackNotificationView } = useNotificationTracking()
   const { trackFeatureAction } = useFeatureTracking('notifications_feed')
-  const { trackClick } = useInteractionTracking()
   
   // Wrap setFilter to track analytics
   const handleFilterChange = (newFilter: NotificationFilter) => {
@@ -220,10 +218,8 @@ export const NotificationsFeed: React.FC = () => {
 
   // Calculate counts for each filter type
   const filterCounts = React.useMemo(() => {
-    if (!notifications) return {}
-    
     const counts: Record<NotificationFilter, number> = {
-      'all': notifications.length,
+      'all': notifications?.length || 0,
       'likes': 0,
       'reposts': 0,
       'follows': 0,
@@ -236,7 +232,7 @@ export const NotificationsFeed: React.FC = () => {
     }
     
     // Count notifications by type
-    notifications.forEach((n: Notification) => {
+    notifications?.forEach((n: Notification) => {
       switch (n.reason) {
         case 'like':
           counts.likes++
@@ -338,6 +334,15 @@ export const NotificationsFeed: React.FC = () => {
           <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
             Notifications
           </h2>
+          {isFromCache && (
+            <span className="text-xs px-2 py-1 rounded" style={{ 
+              backgroundColor: 'var(--bsky-bg-secondary)', 
+              color: 'var(--bsky-text-secondary)',
+              border: '1px solid var(--bsky-border-primary)'
+            }}>
+              From cache
+            </span>
+          )}
         </div>
       </div>
       

@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { NotificationCacheService } from '../services/notification-cache-service'
 import { useAuth } from '../contexts/AuthContext'
-import { useEffect } from 'react'
 
 /**
  * Hook to load extended notifications from IndexedDB

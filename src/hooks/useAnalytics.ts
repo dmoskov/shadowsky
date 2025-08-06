@@ -6,17 +6,17 @@ import { useAuth } from '../contexts/AuthContext'
 // Hook for automatic page tracking
 export function usePageTracking() {
   const location = useLocation()
-  const { profile } = useAuth()
+  const { session } = useAuth()
 
   useEffect(() => {
     // Set user ID if available
-    if (profile?.did) {
-      analytics.setUserId(profile.did)
+    if (session?.did) {
+      analytics.setUserId(session.did)
     }
 
     // Track page view
     analytics.trackPageView(location.pathname)
-  }, [location.pathname, profile?.did])
+  }, [location.pathname, session?.did])
 }
 
 // Hook for tracking component performance
