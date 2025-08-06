@@ -108,6 +108,10 @@ class BookmarkService {
   async clearAllBookmarks(): Promise<void> {
     await bookmarkStorage.clearAllBookmarks()
   }
+
+  async removeBookmark(postUri: string): Promise<void> {
+    await bookmarkStorage.removeBookmark(postUri)
+  }
 }
 
 export const bookmarkService = new BookmarkService()

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Loader, TrendingUp, Users, Clock, Hash, Star, Plus, ChevronDown, Reply, Heart, Repeat2, MessageCircle } from 'lucide-react'
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Loader, TrendingUp, Users, Clock, Hash, Star, Plus, ChevronDown, Reply, Heart, Repeat2, MessageCircle, RefreshCw, X } from 'lucide-react'
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '../contexts/AuthContext'
 import { proxifyBskyImage, proxifyBskyVideo } from '../utils/image-proxy'
@@ -11,6 +11,8 @@ import { FeedDiscovery } from './FeedDiscovery'
 import { ImageGallery } from './ImageGallery'
 import { ThreadModal } from './ThreadModal'
 import { PostActionBar } from './PostActionBar'
+import { useOptimisticPosts } from '../hooks/useOptimisticPosts'
+import { columnFeedPrefs } from '../utils/cookies'
 import '../styles/feed-context.css'
 
 type FeedType = 'following' | 'whats-hot' | 'popular-with-friends' | 'recent' | string // Allow custom feed URIs
@@ -70,17 +72,28 @@ interface FeedGenerator {
 interface HomeProps {
   initialFeedUri?: string;
   isFocused?: boolean;
+  columnId?: string;
+  onClose?: () => void;
 }
 
-export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) => {
+export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, columnId, onClose }) => {
   const { agent } = useAuth()
   const queryClient = useQueryClient()
+  const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } = useOptimisticPosts()
   // Removed hoveredPost state to prevent re-renders - using CSS hover instead
   const [selectedFeed, setSelectedFeed] = useState<FeedType>(() => {
-    // Use initialFeedUri if provided, otherwise restore from localStorage
+    // Use initialFeedUri if provided
     if (initialFeedUri) {
       return initialFeedUri as FeedType
     }
+    // Otherwise check cookie for this column
+    if (columnId) {
+      const savedFeed = columnFeedPrefs.getFeedForColumn(columnId)
+      if (savedFeed) {
+        return savedFeed as FeedType
+      }
+    }
+    // Fall back to localStorage for backwards compatibility
     const savedFeed = localStorage.getItem('selectedFeed')
     return (savedFeed as FeedType) || 'following'
   })
@@ -112,9 +125,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
       return prefs
     },
     enabled: !!agent,
-    staleTime: 5 * 60 * 1000,
-    refetchOnMount: 'always', // Always fetch fresh data on mount
-    refetchInterval: 60 * 1000, // Poll every 60 seconds after initial load
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnMount: false
   })
   
   // Fetch feed generator details for saved feeds
@@ -308,15 +320,20 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.cursor,
     enabled: !!agent,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnMount: 'always', // Always fetch fresh data on mount
-    refetchInterval: 60 * 1000, // Poll every 60 seconds after initial load
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
+    refetchOnMount: false, // Don't automatically refetch
   })
   
   const posts = React.useMemo(() => {
     if (!data?.pages) return []
-    return data.pages.flatMap(page => page.feed)
+    return data.pages.flatMap((page, pageIndex) => 
+      page.feed.map((item: any, itemIndex: number) => ({
+        ...item,
+        _pageIndex: pageIndex,
+        _itemIndex: itemIndex
+      }))
+    )
   }, [data])
   
   // Memoize post rendering to prevent unnecessary re-renders
@@ -521,45 +538,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     setShowThread(true)
   }
   
-  const likeMutation = useMutation({
-    mutationFn: async ({ uri, cid }: { uri: string; cid: string }) => {
-      if (!agent) throw new Error('Not authenticated')
-      return await agent.like(uri, cid)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeline'] })
-    }
-  })
-  
-  const unlikeMutation = useMutation({
-    mutationFn: async (likeUri: string) => {
-      if (!agent) throw new Error('Not authenticated')
-      return await agent.deleteLike(likeUri)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeline'] })
-    }
-  })
-  
-  const repostMutation = useMutation({
-    mutationFn: async ({ uri, cid }: { uri: string; cid: string }) => {
-      if (!agent) throw new Error('Not authenticated')
-      return await agent.repost(uri, cid)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeline'] })
-    }
-  })
-  
-  const unrepostMutation = useMutation({
-    mutationFn: async (repostUri: string) => {
-      if (!agent) throw new Error('Not authenticated')
-      return await agent.deleteRepost(repostUri)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeline'] })
-    }
-  })
+  // Mutations are handled by useOptimisticPosts hook
   
   const handleLike = async (post: Post, e?: React.MouseEvent) => {
     if (e) {
@@ -572,7 +551,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     
     try {
       if (post.viewer?.like) {
-        await unlikeMutation.mutateAsync(post.viewer.like)
+        await unlikeMutation.mutateAsync({ likeUri: post.viewer.like, postUri: post.uri })
       } else {
         await likeMutation.mutateAsync({
           uri: post.uri,
@@ -596,7 +575,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     
     try {
       if (post.viewer?.repost) {
-        await unrepostMutation.mutateAsync(post.viewer.repost)
+        await unrepostMutation.mutateAsync({ repostUri: post.viewer.repost, postUri: post.uri })
       } else {
         await repostMutation.mutateAsync({
           uri: post.uri,
@@ -984,8 +963,11 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     }
     
     setSelectedFeed(feed)
-    // Only save to localStorage if this is the main home column
-    if (!initialFeedUri) {
+    // Save to cookies if we have a column ID
+    if (columnId) {
+      columnFeedPrefs.setFeedForColumn(columnId, feed)
+    } else if (!initialFeedUri) {
+      // Only save to localStorage if this is the main home column
       localStorage.setItem('selectedFeed', feed)
     }
     trackFeatureAction('feed_changed', { feed })
@@ -1006,33 +988,34 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
   
   return (
     <div className="w-full" ref={containerRef} tabIndex={-1} style={{ outline: 'none' }}>
-      <div className="sticky top-0 z-10 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-        <div className="px-4 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-20 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
+        <div className="px-4 py-3 flex items-center justify-between group">
           <div className="flex items-center gap-2">
             {currentFeedOption && <currentFeedOption.icon size={20} style={{ color: 'var(--bsky-primary)' }} />}
             <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
               {currentFeedOption?.label || 'Feed'}
             </h2>
-            {focusedPostIndex === -1 ? (
-              <span className="text-xs ml-2" style={{ color: 'var(--bsky-text-secondary)' }}>
-                Press ↓/j to navigate
-              </span>
-            ) : (
-              <span className="text-xs ml-2 hidden sm:inline" style={{ color: 'var(--bsky-text-secondary)' }}>
-                ↑↓/jk: navigate • Enter: open
-              </span>
-            )}
           </div>
           
-          <div className="relative" ref={dropdownRef}>
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowFeedDropdown(!showFeedDropdown)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-all"
+              onClick={() => queryClient.invalidateQueries({ queryKey: ['timeline', selectedFeed] })}
+              className="p-2 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-all"
               style={{ color: 'var(--bsky-text-secondary)' }}
+              aria-label="Refresh feed"
             >
-              <span className="text-sm">Change</span>
-              <ChevronDown size={16} className={`transition-transform ${showFeedDropdown ? 'rotate-180' : ''}`} />
+              <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
             </button>
+            
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setShowFeedDropdown(!showFeedDropdown)}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-all"
+                style={{ color: 'var(--bsky-text-secondary)' }}
+              >
+                <span className="text-sm">Change</span>
+                <ChevronDown size={16} className={`transition-transform ${showFeedDropdown ? 'rotate-180' : ''}`} />
+              </button>
             
             {showFeedDropdown && (
               <div className="absolute right-0 mt-2 w-64 rounded-lg shadow-lg overflow-hidden"
@@ -1089,6 +1072,18 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
                 </div>
               </div>
             )}
+            </div>
+            
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100"
+                style={{ color: 'var(--bsky-text-secondary)' }}
+                aria-label="Close column"
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1096,7 +1091,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
       <div className="max-w-2xl mx-auto px-3 sm:px-4" ref={postsContainerRef}>
         <div className="divide-y" style={{ borderColor: 'var(--bsky-border-primary)' }} role="feed" aria-label="Posts">
         {posts.map((item: any, index: number) => (
-          <PostItem key={`${item.post.uri}-${index}`} item={item} index={index} />
+          <PostItem key={`${item.post.uri}-page${item._pageIndex}-item${item._itemIndex}`} item={item} index={index} />
         ))}
         </div>
         

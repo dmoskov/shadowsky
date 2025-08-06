@@ -180,3 +180,10 @@
   background-size: 0% 0%;
   transition: 0s;
 }
+
+/* Always show action bar when post is focused */
+.post-item.bg-opacity-10 .post-action-bar,
+.post-item:has(.bg-opacity-10) .post-action-bar {
+  opacity: 1 !important;
+  visibility: visible !important;
+}

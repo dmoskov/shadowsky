@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
-import { Repeat2, Loader, Hash } from 'lucide-react';
+import { Repeat2, Loader, Hash, RefreshCw } from 'lucide-react';
 import { proxifyBskyImage } from '../utils/image-proxy';
 import { ThreadModal } from './ThreadModal';
 import { PostActionBar } from './PostActionBar';
+import { useOptimisticPosts } from '../hooks/useOptimisticPosts';
 
 interface SkyColumnFeedProps {
   feedUri?: string;
@@ -14,6 +15,8 @@ interface SkyColumnFeedProps {
 
 export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnFeedProps) {
   const { agent } = useAuth();
+  const queryClient = useQueryClient();
+  const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } = useOptimisticPosts();
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [showThread, setShowThread] = useState(false);
   // Use a ref to store the focused post URI to persist across renders
@@ -98,12 +101,20 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
     getNextPageParam: (lastPage) => lastPage.cursor,
     enabled: !!agent,
     staleTime: 30 * 60 * 1000, // 30 minutes - feeds don't need frequent updates
-    gcTime: 5 * 60 * 1000,
-    refetchOnMount: 'always', // Always fetch fresh data on mount
-    refetchInterval: 60 * 1000, // Poll every 60 seconds after initial load
+    gcTime: 60 * 60 * 1000, // 1 hour
+    refetchOnMount: false // Don't automatically refetch
   });
 
-  const allPosts = data?.pages.flatMap((page: any) => page.posts) || [];
+  const allPosts = React.useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flatMap((page: any, pageIndex: number) => 
+      page.posts.map((post: any, postIndex: number) => ({
+        ...post,
+        _pageIndex: pageIndex,
+        _postIndex: postIndex
+      }))
+    );
+  }, [data]);
 
 
   // Save scroll position when scrolling
@@ -204,6 +215,42 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
     }
   }, [focusedPostIndex, focusedPostUri, hasUserInteracted]);
 
+  // Handle like action
+  const handleLike = async (post: any) => {
+    if (!agent) return;
+    
+    try {
+      if (post.viewer?.like) {
+        await unlikeMutation.mutateAsync({ likeUri: post.viewer.like, postUri: post.uri });
+      } else {
+        await likeMutation.mutateAsync({
+          uri: post.uri,
+          cid: post.cid
+        });
+      }
+    } catch (error) {
+      console.error('Failed to like/unlike post:', error);
+    }
+  };
+  
+  // Handle repost action
+  const handleRepost = async (post: any) => {
+    if (!agent) return;
+    
+    try {
+      if (post.viewer?.repost) {
+        await unrepostMutation.mutateAsync({ repostUri: post.viewer.repost, postUri: post.uri });
+      } else {
+        await repostMutation.mutateAsync({
+          uri: post.uri,
+          cid: post.cid
+        });
+      }
+    } catch (error) {
+      console.error('Failed to repost:', error);
+    }
+  };
+
   // Render post component
   const renderPost = (feedPost: any, index: number) => {
     // The actual post might be nested in feedPost.post
@@ -292,6 +339,8 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
                   // Reply functionality
                   console.log('Reply to:', post.uri)
                 }}
+                onLike={() => handleLike(post)}
+                onRepost={() => handleRepost(post)}
                 showCounts={true}
                 size="medium"
               />
@@ -320,28 +369,40 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
     );
   }
 
-  // Don't memoize the posts - let them re-render with new data
-  // but keep the focused state stable
+  // Memoize post component to prevent unnecessary re-renders
+  const PostComponent = React.memo(({ feedPost, index }: { feedPost: any; index: number }) => {
+    return renderPost(feedPost, index);
+  });
 
   return (
     <>
       {/* Header */}
-      <div className="sticky top-0 z-10 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-        <div className="px-4 py-3 flex items-center gap-2">
-          <Hash size={20} style={{ color: 'var(--bsky-primary)' }} />
-          <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-            {feedInfo?.displayName || (feedUri === 'following' ? 'Following' : 'Feed')}
-          </h2>
+      <div className="sticky top-0 z-20 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
+        <div className="px-4 py-3 pr-12 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Hash size={20} style={{ color: 'var(--bsky-primary)' }} />
+            <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+              {feedInfo?.displayName || (feedUri === 'following' ? 'Following' : 'Feed')}
+            </h2>
+          </div>
+          <button
+            onClick={() => queryClient.invalidateQueries({ queryKey: ['columnFeed', feedUri] })}
+            className="p-2 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-all"
+            style={{ color: 'var(--bsky-text-secondary)' }}
+            aria-label="Refresh feed"
+          >
+            <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
+          </button>
         </div>
       </div>
       
       <div ref={containerRef} className="h-full overflow-y-auto skydeck-scrollbar">
         {allPosts.map((post: any, index: number) => {
-          const postUri = (post?.post || post)?.uri;
+          const actualPost = post?.post || post;
+          const postUri = actualPost?.uri;
+          const uniqueKey = `${postUri}-page${post._pageIndex}-post${post._postIndex}`;
           return (
-            <React.Fragment key={postUri || `post-${index}`}>
-              {renderPost(post, index)}
-            </React.Fragment>
+            <PostComponent key={uniqueKey} feedPost={post} index={index} />
           );
         })}
         

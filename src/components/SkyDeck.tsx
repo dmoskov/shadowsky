@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Bell, Clock, MessageSquare, Hash, Star, Mail } from 'lucide-react';
+import { Plus, Bell, Clock, MessageSquare, Hash, Star, Mail, Bookmark } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import SkyColumn from './SkyColumn';
+import { columnFeedPrefs } from '../utils/cookies';
 
-export type ColumnType = 'notifications' | 'timeline' | 'conversations' | 'feed' | 'messages';
+export type ColumnType = 'notifications' | 'timeline' | 'conversations' | 'feed' | 'messages' | 'bookmarks';
 
 export interface Column {
   id: string;
@@ -22,10 +23,12 @@ interface FeedGenerator {
 }
 
 const columnOptions = [
+  { type: 'feed' as ColumnType, label: 'Feed Column', icon: Hash, description: 'Add another feed column' },
   { type: 'notifications' as ColumnType, label: 'Notifications', icon: Bell, description: 'All your notifications' },
   { type: 'timeline' as ColumnType, label: 'Visual Timeline', icon: Clock, description: 'Timeline visualization' },
   { type: 'messages' as ColumnType, label: 'Messages', icon: Mail, description: 'Direct messages' },
   { type: 'conversations' as ColumnType, label: 'Conversations', icon: MessageSquare, description: 'Your conversations' },
+  { type: 'bookmarks' as ColumnType, label: 'Bookmarks', icon: Bookmark, description: 'Your saved posts' },
 ];
 
 export default function SkyDeck() {
@@ -151,9 +154,28 @@ export default function SkyDeck() {
         const parsed = JSON.parse(savedColumns);
         // Ensure the first column is always Home
         if (parsed.length === 0 || parsed[0].id !== 'home') {
-          setColumns([homeColumn, ...parsed.filter((col: Column) => col.id !== 'home')]);
+          const restoredColumns = [homeColumn, ...parsed.filter((col: Column) => col.id !== 'home')].map((col: Column) => {
+            if (col.type === 'feed' && col.id) {
+              const savedFeed = columnFeedPrefs.getFeedForColumn(col.id);
+              if (savedFeed) {
+                return { ...col, data: savedFeed };
+              }
+            }
+            return col;
+          });
+          setColumns(restoredColumns);
         } else {
-          setColumns(parsed);
+          // Restore feed preferences from cookies
+          const restoredColumns = parsed.map((col: Column) => {
+            if (col.type === 'feed' && col.id) {
+              const savedFeed = columnFeedPrefs.getFeedForColumn(col.id);
+              if (savedFeed) {
+                return { ...col, data: savedFeed };
+              }
+            }
+            return col;
+          });
+          setColumns(restoredColumns);
         }
       } catch {
         // If parsing fails, start with just home column
@@ -175,12 +197,26 @@ export default function SkyDeck() {
     const newColumn: Column = {
       id: Date.now().toString(),
       type: type,
-      title: feedTitle || columnOptions.find(opt => opt.type === type)?.label || type,
-      data: feedUri,
+      title: feedTitle || (type === 'feed' ? 'Feed' : columnOptions.find(opt => opt.type === type)?.label || type),
+      data: feedUri || (type === 'feed' ? 'following' : undefined),
     };
 
     setColumns([...columns, newColumn]);
     setIsAddingColumn(false);
+    
+    // Focus and scroll to the new column
+    setTimeout(() => {
+      setFocusedColumnIndex(columns.length);
+      
+      // Scroll to show the new column
+      if (columnsContainerRef.current) {
+        const container = columnsContainerRef.current;
+        const newColumnElement = container.querySelector('.column-wrapper:last-of-type') as HTMLElement;
+        if (newColumnElement) {
+          newColumnElement.scrollIntoView({ behavior: 'smooth', inline: 'end', block: 'nearest' });
+        }
+      }
+    }, 100);
   };
 
   const handleRemoveColumn = (id: string) => {
@@ -292,14 +328,14 @@ export default function SkyDeck() {
                         <button
                           key={option.type}
                           onClick={() => handleAddColumn(option.type)}
-                          className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors text-left"
+                          className="flex items-start gap-3 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors text-left min-h-[4rem]"
                         >
                           <Icon className="w-5 h-5 text-blue-500 mt-0.5" />
                           <div className="flex-1">
                             <div className="font-medium text-gray-900 dark:text-white">
                               {option.label}
                             </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                            <div className="text-sm text-gray-500 dark:text-gray-400 whitespace-normal">
                               {option.description}
                             </div>
                           </div>

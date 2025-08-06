@@ -1,133 +1,96 @@
-/**
- * Cookie utility functions for cross-subdomain authentication
- */
+// Cookie utilities for persistent storage
 
-interface CookieOptions {
-  expires?: Date
-  maxAge?: number
-  domain?: string
-  path?: string
-  secure?: boolean
-  sameSite?: 'strict' | 'lax' | 'none'
-}
+// Individual exports for backwards compatibility
+export const setCookie = (name: string, value: string, options?: { secure?: boolean; sameSite?: string } | number) => {
+  let days = 365;
+  let secure = false;
+  let sameSite = 'Lax';
+  
+  if (typeof options === 'number') {
+    days = options;
+  } else if (options) {
+    secure = options.secure || false;
+    sameSite = options.sameSite || 'Lax';
+  }
+  
+  const expires = new Date();
+  expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+  
+  let cookieString = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=${sameSite}`;
+  if (secure) {
+    cookieString += ';Secure';
+  }
+  document.cookie = cookieString;
+};
 
-/**
- * Set a cookie with proper domain configuration for cross-subdomain access
- */
-export function setCookie(name: string, value: string, options: CookieOptions = {}) {
-  if (typeof document === 'undefined') return
+export const getCookie = (name: string): string | null => {
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) {
+      return decodeURIComponent(c.substring(nameEQ.length, c.length));
+    }
+  }
+  return null;
+};
 
-  let cookieString = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`
+export const deleteCookie = (name: string) => {
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+};
 
-  // Set domain to root domain for cross-subdomain access
-  // Extract root domain from current hostname
-  const hostname = window.location.hostname
-  let domain = options.domain
+export const cookies = {
+  set(name: string, value: string, days: number = 365) {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+  },
 
-  if (!domain && hostname !== 'localhost') {
-    // For shadowsky.io domains, use the root domain
-    if (hostname.includes('shadowsky.io')) {
-      domain = '.shadowsky.io'
-    } else {
-      // For other domains, try to extract the root domain
-      const parts = hostname.split('.')
-      if (parts.length > 2) {
-        domain = '.' + parts.slice(-2).join('.')
+  get(name: string): string | null {
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+      if (c.indexOf(nameEQ) === 0) {
+        return decodeURIComponent(c.substring(nameEQ.length, c.length));
       }
     }
+    return null;
+  },
+
+  delete(name: string) {
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
   }
+};
 
-  if (domain) {
-    cookieString += `; Domain=${domain}`
-  }
+// Specific functions for column feed preferences
+export const columnFeedPrefs = {
+  setFeedForColumn(columnId: string, feedUri: string) {
+    const prefs = this.getAll();
+    prefs[columnId] = feedUri;
+    cookies.set('columnFeedPrefs', JSON.stringify(prefs));
+  },
 
-  // Default to root path for accessibility across all routes
-  cookieString += `; Path=${options.path || '/'}`
+  getFeedForColumn(columnId: string): string | null {
+    const prefs = this.getAll();
+    return prefs[columnId] || null;
+  },
 
-  // Set expiration (default to 30 days if not specified)
-  if (options.expires) {
-    cookieString += `; Expires=${options.expires.toUTCString()}`
-  } else if (options.maxAge) {
-    cookieString += `; Max-Age=${options.maxAge}`
-  } else {
-    // Default to 30 days
-    const defaultExpires = new Date()
-    defaultExpires.setDate(defaultExpires.getDate() + 30)
-    cookieString += `; Expires=${defaultExpires.toUTCString()}`
-  }
-
-  // Security settings
-  if (options.secure !== false && window.location.protocol === 'https:') {
-    cookieString += '; Secure'
-  }
-
-  // SameSite attribute (default to 'lax' for security)
-  cookieString += `; SameSite=${options.sameSite || 'lax'}`
-
-  document.cookie = cookieString
-}
-
-/**
- * Get a cookie value by name
- */
-export function getCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null
-
-  const nameEQ = encodeURIComponent(name) + '='
-  const cookies = document.cookie.split(';')
-
-  for (let cookie of cookies) {
-    cookie = cookie.trim()
-    if (cookie.indexOf(nameEQ) === 0) {
-      return decodeURIComponent(cookie.substring(nameEQ.length))
-    }
-  }
-
-  return null
-}
-
-/**
- * Delete a cookie by name
- */
-export function deleteCookie(name: string, options: Pick<CookieOptions, 'domain' | 'path'> = {}) {
-  if (typeof document === 'undefined') return
-
-  // Extract domain logic same as setCookie
-  const hostname = window.location.hostname
-  let domain = options.domain
-
-  if (!domain && hostname !== 'localhost') {
-    if (hostname.includes('shadowsky.io')) {
-      domain = '.shadowsky.io'
-    } else {
-      const parts = hostname.split('.')
-      if (parts.length > 2) {
-        domain = '.' + parts.slice(-2).join('.')
+  getAll(): Record<string, string> {
+    const stored = cookies.get('columnFeedPrefs');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return {};
       }
     }
+    return {};
+  },
+
+  clear() {
+    cookies.delete('columnFeedPrefs');
   }
-
-  setCookie(name, '', {
-    ...options,
-    domain,
-    expires: new Date(0),
-    maxAge: 0
-  })
-}
-
-/**
- * Check if cookies are enabled
- */
-export function areCookiesEnabled(): boolean {
-  if (typeof document === 'undefined') return false
-
-  try {
-    const testKey = '__cookie_test__'
-    setCookie(testKey, 'test', { maxAge: 60 })
-    const result = getCookie(testKey) === 'test'
-    deleteCookie(testKey)
-    return result
-  } catch {
-    return false
-  }
-}
+};

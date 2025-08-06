@@ -49,6 +49,12 @@ export const Bookmarks: React.FC = () => {
     queryClient.invalidateQueries({ queryKey: ['bookmarkCount'] })
   }
 
+  const handleDeleteBookmark = async (postUri: string) => {
+    await bookmarkService.removeBookmark(postUri)
+    queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
+    queryClient.invalidateQueries({ queryKey: ['bookmarkCount'] })
+  }
+
   const handleExport = async () => {
     const bookmarks = await bookmarkService.exportBookmarks()
     const blob = new Blob([JSON.stringify(bookmarks, null, 2)], { type: 'application/json' })
@@ -166,6 +172,16 @@ export const Bookmarks: React.FC = () => {
               <span className="bookmark-time">
                 {formatDistanceToNow(new Date(bookmark.savedAt), { addSuffix: true })}
               </span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDeleteBookmark(bookmark.postUri)
+                }}
+                className="delete-bookmark-button"
+                title="Delete bookmark"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
             
             {bookmark.post ? (

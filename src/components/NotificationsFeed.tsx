@@ -329,7 +329,7 @@ export const NotificationsFeed: React.FC = () => {
         borderColor: 'var(--bsky-border-primary)',
         paddingTop: 'env(safe-area-inset-top, 0px)'
       }}>
-        <div className="px-4 py-3 flex items-center gap-2">
+        <div className="px-4 py-3 pr-12 flex items-center gap-2">
           <Bell size={20} style={{ color: 'var(--bsky-primary)' }} />
           <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
             Notifications

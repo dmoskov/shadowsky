@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { MessageCircle, Search, Loader2 } from 'lucide-react'
+import { MessageCircle, Search, Loader2, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -220,9 +220,10 @@ const ConversationItem = React.memo(({
 
 interface ConversationsSimpleProps {
   isFocused?: boolean;
+  onClose?: () => void;
 }
 
-export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocused = true }) => {
+export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocused = true, onClose }) => {
   debug.log('[ConversationsSimple] Component rendering', {
     timestamp: new Date().toISOString(),
     isFocused
@@ -233,7 +234,7 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
   const [searchQuery, setSearchQuery] = useState('')
   const [additionalRootUris, setAdditionalRootUris] = useState<Set<string>>(new Set())
   const [rootPostsVersion, setRootPostsVersion] = useState(0) // Track root posts updates
-  const [focusedIndex, setFocusedIndex] = useState(0)
+  const [focusedIndex, setFocusedIndex] = useState(-1)
   const queryClient = useQueryClient()
   const containerRef = React.useRef<HTMLDivElement>(null)
   
@@ -814,11 +815,11 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
 
       if (e.key === 'ArrowDown' || e.key === 'j') {
         e.preventDefault()
-        setFocusedIndex(prev => Math.min(prev + 1, filteredConversations.length - 1))
+        setFocusedIndex(prev => prev === -1 ? 0 : Math.min(prev + 1, filteredConversations.length - 1))
       } else if (e.key === 'ArrowUp' || e.key === 'k') {
         e.preventDefault()
-        setFocusedIndex(prev => Math.max(prev - 1, 0))
-      } else if (e.key === 'Enter' && filteredConversations[focusedIndex]) {
+        setFocusedIndex(prev => prev === -1 ? 0 : Math.max(prev - 1, 0))
+      } else if (e.key === 'Enter' && focusedIndex >= 0 && filteredConversations[focusedIndex]) {
         e.preventDefault()
         const convo = filteredConversations[focusedIndex]
         handleSelectConversation(convo.rootUri, convo.totalReplies)
@@ -836,7 +837,13 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
       // This ensures keyboard events are captured
       containerRef.current.focus()
     }
-  }, [isFocused])
+    // Clear selection when column loses focus or is not focused initially
+    if (!isFocused) {
+      if (selectedConvo) {
+        handleSelectConversation(null)
+      }
+    }
+  }, [isFocused, selectedConvo, handleSelectConversation])
 
   // Scroll focused item into view
   React.useEffect(() => {
@@ -860,12 +867,24 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
         {/* Conversations List - Full width */}
         <div className="flex flex-col w-full">
         {/* Header */}
-        <div className="sticky top-0 z-10 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-          <div className="px-4 py-3 flex items-center gap-2">
-            <MessageCircle size={20} style={{ color: 'var(--bsky-primary)' }} />
-            <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-              Conversations
-            </h2>
+        <div className="sticky top-0 z-20 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
+          <div className="px-4 py-3 flex items-center justify-between group">
+            <div className="flex items-center gap-2">
+              <MessageCircle size={20} style={{ color: 'var(--bsky-primary)' }} />
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+                Conversations
+              </h2>
+            </div>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100"
+                style={{ color: 'var(--bsky-text-secondary)' }}
+                aria-label="Close column"
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
         </div>
         
@@ -953,9 +972,13 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
                 convo={convo}
                 isSelected={selectedConvo === convo.rootUri}
                 isFocused={focusedIndex === index}
-                onClick={() => handleSelectConversation(convo.rootUri, convo.totalReplies)}
+                onClick={() => {
+                  if (isFocused) {
+                    handleSelectConversation(convo.rootUri, convo.totalReplies)
+                  }
+                }}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === 'Enter' && isFocused) {
                     e.preventDefault()
                     handleSelectConversation(convo.rootUri, convo.totalReplies)
                   }

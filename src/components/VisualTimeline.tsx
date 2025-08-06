@@ -1,6 +1,6 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Clock, Heart, Repeat2, MessageCircle, Quote, UserPlus, ExternalLink } from 'lucide-react'
+import { Clock, Heart, Repeat2, MessageCircle, Quote, UserPlus, ExternalLink, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { format, differenceInMinutes, differenceInHours, isToday, isYesterday, formatDistanceToNow } from 'date-fns'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
@@ -61,9 +61,10 @@ interface VisualTimelineProps {
   hideTimeLabels?: boolean;
   isInSkyDeck?: boolean;
   isFocused?: boolean;
+  onClose?: () => void;
 }
 
-export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels = false, isInSkyDeck = false, isFocused = true }) => {
+export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels = false, isInSkyDeck = false, isFocused = true, onClose }) => {
   const { agent } = useAuth()
   const containerRef = React.useRef<HTMLDivElement>(null)
   const timelineItemsRef = React.useRef<Map<string, HTMLDivElement>>(new Map())
@@ -682,14 +683,26 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
     <div className="max-w-4xl mx-auto" ref={containerRef} tabIndex={-1} style={{ outline: 'none' }}>
       {/* Header */}
       <div className="sticky top-0 z-40 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-        <div className="px-4 py-3 flex items-center gap-2">
-          <Clock size={20} style={{ color: 'var(--bsky-primary)' }} />
-          <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-            Visual Timeline
-          </h2>
-          <span className="text-xs ml-auto" style={{ color: 'var(--bsky-text-secondary)' }}>
-            {selectedItemIndex === -1 ? 'Press ↓ or j to start' : 'Arrow keys/hjkl to navigate'}
-          </span>
+        <div className="px-4 py-3 flex items-center justify-between group">
+          <div className="flex items-center gap-2">
+            <Clock size={20} style={{ color: 'var(--bsky-primary)' }} />
+            <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+              Visual Timeline
+            </h2>
+            <span className="text-xs ml-auto" style={{ color: 'var(--bsky-text-secondary)' }}>
+              {selectedItemIndex === -1 ? 'Press ↓ or j to start' : 'Arrow keys/hjkl to navigate'}
+            </span>
+          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100"
+              style={{ color: 'var(--bsky-text-secondary)' }}
+              aria-label="Close column"
+            >
+              <X size={18} />
+            </button>
+          )}
         </div>
       </div>
       
