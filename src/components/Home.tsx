@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Heart, Repeat2, MessageCircle, Loader, MoreVertical, TrendingUp, Users, Clock, Hash, Star, Plus, X, ChevronDown, Reply } from 'lucide-react'
+import { Loader, TrendingUp, Users, Clock, Hash, Star, Plus, X, ChevronDown, Reply, Heart, Repeat2, MessageCircle } from 'lucide-react'
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '../contexts/AuthContext'
@@ -10,6 +10,7 @@ import { VideoPlayer } from './VideoPlayer'
 import { FeedDiscovery } from './FeedDiscovery'
 import { ImageGallery } from './ImageGallery'
 import { ThreadModal } from './ThreadModal'
+import { PostActionBar } from './PostActionBar'
 import '../styles/feed-context.css'
 
 type FeedType = 'following' | 'whats-hot' | 'popular-with-friends' | 'recent' | string // Allow custom feed URIs
@@ -456,27 +457,6 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
                 </div>
               </div>
               
-              <div 
-                className="relative"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  className="post-menu-button p-2 -m-1 rounded-full transition-all hover:bg-gray-200 dark:hover:bg-gray-800"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    e.preventDefault()
-                    // Post menu functionality would go here
-                    console.log('Menu clicked for post:', post.uri)
-                  }}
-                  aria-label="More options"
-                >
-                  <MoreVertical 
-                    size={16} 
-                    className="post-menu-icon"
-                    style={{ color: 'var(--bsky-text-secondary)' }}
-                  />
-                </button>
-              </div>
             </div>
             
             <div 
@@ -489,101 +469,18 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
             
             {renderEmbed(post.embed)}
             
-            {/* Floating action bar on hover - desktop only */}
-            <div className="post-action-bar hidden sm:flex items-center gap-3 absolute bottom-2 right-2 px-3 py-1.5 rounded-full transition-all duration-200" style={{ backgroundColor: 'var(--bsky-bg-secondary)', backdropFilter: 'blur(10px)' }}>
-              <button
-                className="flex items-center gap-1 hover:text-blue-500 transition-colors cursor-pointer select-none"
-                style={{ color: 'var(--bsky-text-secondary)' }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  // Reply functionality would go here
-                }}
-                type="button"
-              >
-                <MessageCircle size={14} />
-                <span className="text-xs">{post.replyCount || 0}</span>
-              </button>
-              
-              <button
-                className={`flex items-center gap-1 hover:text-green-500 transition-colors cursor-pointer select-none ${
-                  post.viewer?.repost ? 'text-green-500' : ''
-                } ${repostMutation.isPending || unrepostMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
-                style={{ 
-                  color: post.viewer?.repost ? undefined : 'var(--bsky-text-secondary)'
-                }}
-                onClick={(e) => handleRepost(post, e)}
-                disabled={repostMutation.isPending || unrepostMutation.isPending}
-                type="button"
-              >
-                <Repeat2 size={14} />
-                <span className="text-xs">{post.repostCount || 0}</span>
-              </button>
-              
-              <button
-                className={`flex items-center gap-1 hover:text-red-500 transition-colors cursor-pointer select-none ${
-                  post.viewer?.like ? 'text-red-500' : ''
-                } ${likeMutation.isPending || unlikeMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
-                style={{ 
-                  color: post.viewer?.like ? undefined : 'var(--bsky-text-secondary)'
-                }}
-                onClick={(e) => handleLike(post, e)}
-                disabled={likeMutation.isPending || unlikeMutation.isPending}
-                type="button"
-              >
-                <Heart size={14} fill={post.viewer?.like ? 'currentColor' : 'none'} />
-                <span className="text-xs">{post.likeCount || 0}</span>
-              </button>
-              
-            </div>
-            
-            {/* Mobile action bar - always visible */}
-            <div className="flex sm:hidden items-center gap-6 mt-2">
-              <button
-                className="flex items-center gap-1 hover:text-blue-500 transition-colors cursor-pointer select-none p-1 -m-1"
-                style={{ color: 'var(--bsky-text-secondary)', WebkitTapHighlightColor: 'transparent' }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  // Reply functionality would go here
-                }}
-                type="button"
-              >
-                <MessageCircle size={16} />
-                <span className="text-sm">{post.replyCount || 0}</span>
-              </button>
-              
-              <button
-                className={`flex items-center gap-1 hover:text-green-500 transition-colors cursor-pointer select-none p-1 -m-1 ${
-                  post.viewer?.repost ? 'text-green-500' : ''
-                } ${repostMutation.isPending || unrepostMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
-                style={{ 
-                  color: post.viewer?.repost ? undefined : 'var(--bsky-text-secondary)',
-                  WebkitTapHighlightColor: 'transparent'
-                }}
-                onClick={(e) => handleRepost(post, e)}
-                disabled={repostMutation.isPending || unrepostMutation.isPending}
-                type="button"
-              >
-                <Repeat2 size={16} />
-                <span className="text-sm">{post.repostCount || 0}</span>
-              </button>
-              
-              <button
-                className={`flex items-center gap-1 hover:text-red-500 transition-colors cursor-pointer select-none p-1 -m-1 ${
-                  post.viewer?.like ? 'text-red-500' : ''
-                } ${likeMutation.isPending || unlikeMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
-                style={{ 
-                  color: post.viewer?.like ? undefined : 'var(--bsky-text-secondary)',
-                  WebkitTapHighlightColor: 'transparent'
-                }}
-                onClick={(e) => handleLike(post, e)}
-                disabled={likeMutation.isPending || unlikeMutation.isPending}
-                type="button"
-              >
-                <Heart size={16} fill={post.viewer?.like ? 'currentColor' : 'none'} />
-                <span className="text-sm">{post.likeCount || 0}</span>
-              </button>
-              
-            </div>
+            {/* Post Action Bar */}
+            <PostActionBar
+              post={post}
+              onReply={() => {
+                // Reply functionality
+                console.log('Reply to:', post.uri)
+              }}
+              onRepost={() => handleRepost(post)}
+              onLike={() => handleLike(post)}
+              showCounts={true}
+              size="medium"
+            />
           </div>
         </div>
       </div>
@@ -671,9 +568,11 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     }
   })
   
-  const handleLike = async (post: Post, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const handleLike = async (post: Post, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
     if (!agent) return
     
     trackFeatureAction('like_post', { postUri: post.uri })
@@ -693,9 +592,11 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
   }
   
   
-  const handleRepost = async (post: Post, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const handleRepost = async (post: Post, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
     if (!agent) return
     
     trackFeatureAction('repost_post', { postUri: post.uri })

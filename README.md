@@ -1,32 +1,72 @@
-# ShadowSky - Bluesky Notifications Analytics
+# ShadowSky - Advanced Bluesky Client
 
-A powerful Bluesky notifications dashboard and analytics app built with React, TypeScript, and Vite.
+A full-featured Bluesky client with TweetDeck-style multi-column interface, advanced analytics, and real-time updates. Built with React, TypeScript, and Vite.
 
 ## Features
 
+- **SkyDeck Multi-Column Interface**
+  - TweetDeck-style layout with customizable columns
+  - Drag-and-drop column reordering
+  - Support for notifications, timeline, messages, conversations, and custom feeds
+  - Keyboard navigation (arrow keys, h/l for column switching)
+  - Responsive design with automatic single-column on mobile
+
 - **Advanced Notifications Management**
-  - Real-time notifications feed
-  - Conversation threading and analysis
-  - Notification aggregation by type
-  - Visual timeline of activity
+  - Real-time notifications feed with auto-refresh
+  - Full conversation threading and context
+  - Inline reply composer in thread views
+  - Notification aggregation by type (likes, replies, mentions, follows)
+  - Search and filter capabilities
+
+- **Direct Messages** (In Progress)
+  - Full messaging functionality
+  - Real-time message updates
+  - Conversation list and individual chats
+  - Requires app password with DM permissions
+
+- **Bookmarks System**
+  - Save posts for later reading
+  - Search within bookmarks
+  - Export/import bookmark collections as JSON
+  - Local storage persistence with IndexedDB
+
+- **Feed Discovery & Management**
+  - Browse suggested and popular feeds
+  - Add/remove custom feeds
+  - Search for new feeds
+  - Custom feed columns in SkyDeck
 
 - **Analytics Dashboard**
-  - Engagement metrics and trends
+  - Engagement metrics and trends visualization
   - Top accounts interaction analysis
-  - Post performance tracking
-  - Custom time range filtering
+  - Activity patterns over time
+  - Custom date range filtering
+  - Storage usage monitoring
+
+- **Rich Media Support**
+  - Image galleries with full-screen viewer
+  - Video upload and playback
+  - GIF search integration (requires Giphy API)
+  - Automatic alt text generation (requires Anthropic API)
+
+- **Real-time Updates** (In Progress)
+  - WebSocket connection via Jetstream
+  - Live notifications for posts, likes, reposts, and follows
+  - Auto-refresh capabilities
 
 - **Performance Optimized**
   - IndexedDB caching for instant loads
   - Smart prefetching of related posts
   - Rate-limited API calls
   - Background data synchronization
+  - 4 weeks of notifications cached locally
 
-- **Modern UI**
+- **Modern UI & UX**
   - Dark/light theme support
   - Responsive design with Tailwind CSS
-  - Real-time updates
-  - Keyboard shortcuts
+  - Advanced keyboard navigation (j/k, h/l, space, arrows)
+  - Cross-subdomain authentication
+  - Progressive Web App capabilities
 
 ## Getting Started
 
@@ -50,27 +90,48 @@ The app will be available at `http://localhost:5174`
 
 ### Configuration
 
-The app works out of the box with no configuration needed. Simply log in with your Bluesky credentials.
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
 
-## Key Features
+2. Optional: Add API keys for enhanced features:
+   - **Google Analytics**: Add your measurement ID for analytics
+   - **Giphy API**: Required for GIF search in the composer
+   - **Anthropic API**: Required for automatic alt text generation
 
-### Notifications Analytics
-- Track engagement patterns
-- Identify top interacting accounts
-- Analyze conversation threads
-- Monitor notification trends over time
+The app works without these API keys, but some features will be disabled.
 
-### Composer Integration
-- Thread-aware posting
-- Auto-numbering for threads
-- Image upload support
-- Draft management
+## Key Highlights
 
-### Performance
+### SkyDeck - Multi-Column Dashboard
+- Create your personalized dashboard with multiple columns
+- Mix and match notifications, timeline, messages, and custom feeds
+- Drag columns to reorder them
+- Navigate between columns with keyboard shortcuts
+- Responsive design adapts to your screen size
+
+### Advanced Composer
+- Create multi-post threads with auto-numbering
+- Reply inline without leaving thread views  
+- Save drafts and manage them
+- Schedule posts for later
+- Upload images and videos
+- Auto-generate alt text for accessibility
+
+### Powerful Analytics
+- Track engagement patterns and trends
+- Identify your top interacting accounts
+- Analyze conversation threads and depth
+- Monitor notification patterns over time
+- View storage usage and health metrics
+
+### Performance & Offline Support
 - 4 weeks of notifications cached locally
-- Instant conversation loading
+- Instant conversation loading from cache
 - Minimal API calls through smart caching
 - Progressive data loading
+- Works offline with cached data
 
 ## Development
 
@@ -79,7 +140,7 @@ The app works out of the box with no configuration needed. Simply log in with yo
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
-- `npm run deploy` - Deploy to GitHub Pages
+- `npm run build:prod` - Build for production (skip TypeScript check)
 
 ### Architecture
 
@@ -91,15 +152,21 @@ The app works out of the box with no configuration needed. Simply log in with yo
 
 ## Deployment
 
-The app can be deployed to any static hosting service:
+The app can be deployed to any static hosting service (Vercel, Netlify, AWS Amplify, etc.):
 
 ```bash
 # Build for production
 npm run build
 
-# Deploy to GitHub Pages
-npm run deploy
+# The 'dist' folder contains the static files ready for deployment
 ```
+
+### Environment Variables
+
+For production deployments, ensure you set the environment variables in your hosting platform:
+- `VITE_GA_MEASUREMENT_ID` (optional)
+- `VITE_GIPHY_API_KEY` (optional)
+- `VITE_ANTHROPIC_API_KEY` (optional)
 
 ## Contributing
 

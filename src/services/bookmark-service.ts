@@ -5,7 +5,11 @@ import { PostCacheService } from './post-cache-service'
 
 class BookmarkService {
   private agent: BskyAgent | null = null
-  private postCacheService = new PostCacheService()
+  private postCacheService = PostCacheService.getInstance()
+
+  async init() {
+    await this.postCacheService.init()
+  }
 
   setAgent(agent: BskyAgent | null) {
     this.agent = agent
@@ -35,7 +39,7 @@ class BookmarkService {
       await bookmarkStorage.addBookmark(bookmark)
       
       // Cache the full post data
-      await this.postCacheService.cachePost(post)
+      await this.postCacheService.cachePosts([post])
       
       return true
     }
@@ -54,7 +58,7 @@ class BookmarkService {
           const response = await this.agent.getPostThread({ uri: bookmark.postUri })
           if (response.data.thread && 'post' in response.data.thread) {
             post = response.data.thread.post
-            await this.postCacheService.cachePost(post)
+            await this.postCacheService.cachePosts([post])
           }
         } catch (error) {
           console.error('Failed to fetch bookmarked post:', error)

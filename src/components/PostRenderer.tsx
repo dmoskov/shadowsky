@@ -1,5 +1,5 @@
 import React from 'react'
-import { Heart, MessageCircle, Repeat2, Quote, Reply } from 'lucide-react'
+import { Heart, MessageCircle, Repeat2, Quote, Reply, Bookmark } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { AppBskyFeedDefs } from '@atproto/api'
 import { proxifyBskyImage } from '../utils/image-proxy'
@@ -10,6 +10,8 @@ interface PostRendererProps {
   onRepost?: () => void
   onReply?: () => void
   onQuote?: () => void
+  onBookmark?: () => void
+  isBookmarked?: boolean
   compact?: boolean
 }
 
@@ -19,6 +21,8 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
   onRepost,
   onReply,
   onQuote,
+  onBookmark,
+  isBookmarked = false,
   compact = false
 }) => {
   const record = post.record as any
@@ -126,6 +130,17 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
             <span>{post.likeCount || 0}</span>
           </button>
           
+          {onBookmark && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onBookmark()
+              }}
+              className={`action-button ${isBookmarked ? 'active bookmark' : ''}`}
+            >
+              <Bookmark className="w-4 h-4" fill={isBookmarked ? 'currentColor' : 'none'} />
+            </button>
+          )}
         </div>
       )}
     </div>

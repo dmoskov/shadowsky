@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
-import { Heart, Repeat2, MessageCircle, Loader, Hash } from 'lucide-react';
+import { Repeat2, Loader, Hash } from 'lucide-react';
 import { proxifyBskyImage } from '../utils/image-proxy';
 import { ThreadModal } from './ThreadModal';
+import { PostActionBar } from './PostActionBar';
 
 interface SkyColumnFeedProps {
   feedUri?: string;
@@ -318,36 +319,16 @@ export default function SkyColumnFeed({ feedUri, isFocused = false }: SkyColumnF
                 </div>
               )}
               
-              <div className="mt-3 flex items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
-                <button 
-                  className="flex items-center gap-1 hover:text-blue-500 transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <MessageCircle size={16} />
-                  <span>{post.replyCount || 0}</span>
-                </button>
-                
-                <button 
-                  className={`flex items-center gap-1 hover:text-green-500 transition-colors ${
-                    post.viewer?.repost ? 'text-green-500' : ''
-                  }`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Repeat2 size={16} />
-                  <span>{post.repostCount || 0}</span>
-                </button>
-                
-                <button 
-                  className={`flex items-center gap-1 hover:text-red-500 transition-colors ${
-                    post.viewer?.like ? 'text-red-500' : ''
-                  }`}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Heart size={16} fill={post.viewer?.like ? 'currentColor' : 'none'} />
-                  <span>{post.likeCount || 0}</span>
-                </button>
-                
-              </div>
+              {/* Post Action Bar */}
+              <PostActionBar
+                post={post}
+                onReply={() => {
+                  // Reply functionality
+                  console.log('Reply to:', post.uri)
+                }}
+                showCounts={true}
+                size="medium"
+              />
             </div>
           </div>
         </div>

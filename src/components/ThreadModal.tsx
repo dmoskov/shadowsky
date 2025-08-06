@@ -35,7 +35,7 @@ export function ThreadModal({ postUri, onClose }: ThreadModalProps) {
     }
   }, [onClose])
 
-  const { data: threadData, isLoading, error } = useQuery({
+  const { data: threadData, isLoading, error, refetch } = useQuery({
     queryKey: ['thread', postUri],
     queryFn: async () => {
       if (!agent) throw new Error('Not authenticated')
@@ -132,6 +132,10 @@ export function ThreadModal({ postUri, onClose }: ThreadModalProps) {
               highlightUri={postUri}
               showUnreadIndicators={false}
               className="max-w-full"
+              onReplySuccess={() => {
+                // Refresh the thread to show the new reply
+                refetch()
+              }}
             />
           )}
           </div>
