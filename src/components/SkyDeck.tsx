@@ -311,6 +311,11 @@ export default function SkyDeck() {
                 }
               }}
               onClick={() => setFocusedColumnIndex(index)}
+              onClickCapture={() => {
+                // Also handle clicks in capture phase to ensure column gets focused
+                // even if child elements stop propagation
+                setFocusedColumnIndex(index)
+              }}
             >
               <SkyColumn
                 column={column}

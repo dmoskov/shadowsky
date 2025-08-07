@@ -112,6 +112,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
   const containerRef = useRef<HTMLDivElement>(null)
   const postRefs = useRef<{ [key: string]: HTMLDivElement }>({})
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const isKeyboardNavigationRef = useRef(false)
   
   const { trackFeatureAction } = useFeatureTracking('home_feed')
   const { trackClick } = useInteractionTracking()
@@ -356,7 +357,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         aria-selected={isFocused}
         role="article"
         onClick={() => {
-          // Update focused index on click
+          // Update focused index on click (not keyboard navigation)
+          isKeyboardNavigationRef.current = false
           setFocusedPostIndex(index)
         }}
         onKeyDown={(e) => {
@@ -613,6 +615,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'j': // vim-style down
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           if (currentIndex < posts.length - 1) {
             setFocusedPostIndex(currentIndex + 1)
           } else if (currentIndex === -1 && posts.length > 0) {
@@ -625,6 +628,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'k': // vim-style up
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           if (currentIndex > 0) {
             setFocusedPostIndex(currentIndex - 1)
           } else if (currentIndex === -1 && posts.length > 0) {
@@ -648,6 +652,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'Home':
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           if (posts.length > 0) {
             setFocusedPostIndex(0)
           }
@@ -656,6 +661,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'End':
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           if (posts.length > 0) {
             setFocusedPostIndex(posts.length - 1)
           }
@@ -664,6 +670,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'PageUp':
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           // Jump up by 5 items
           setFocusedPostIndex(Math.max(0, currentIndex - 5))
           break
@@ -671,6 +678,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'PageDown':
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           // Jump down by 5 items
           setFocusedPostIndex(Math.min(posts.length - 1, currentIndex + 5))
           break
@@ -700,9 +708,9 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
     return () => window.removeEventListener('keydown', handleKeyPress)
   }, [posts, focusedPostIndex, isFocused, handlePostClick])
   
-  // Scroll focused post into view
+  // Scroll focused post into view only for keyboard navigation
   useEffect(() => {
-    if (focusedPostIndex >= 0 && focusedPostIndex < posts.length) {
+    if (focusedPostIndex >= 0 && focusedPostIndex < posts.length && isKeyboardNavigationRef.current) {
       const post = posts[focusedPostIndex]?.post
       if (post) {
         const postKey = `${post.uri}-${focusedPostIndex}`
@@ -715,6 +723,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
           postEl.focus()
         }
       }
+      // Reset the flag after scrolling
+      isKeyboardNavigationRef.current = false
     }
   }, [focusedPostIndex, posts])
   

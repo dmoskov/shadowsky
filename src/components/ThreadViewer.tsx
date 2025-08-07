@@ -46,6 +46,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   const [galleryIndex, setGalleryIndex] = useState(0)
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [hasShownInitialHighlight, setHasShownInitialHighlight] = useState(false)
+  const [hasScrolledToHighlight, setHasScrolledToHighlight] = useState(false)
   
   // Get optimistic post mutations
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } = useOptimisticPosts()
@@ -238,9 +239,9 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   // Ref for the highlighted post
   const highlightRef = useRef<HTMLDivElement>(null)
   
-  // Scroll to highlighted post when it's rendered
+  // Scroll to highlighted post only on initial render
   useEffect(() => {
-    if (highlightUri && highlightRef.current) {
+    if (highlightUri && highlightRef.current && !hasScrolledToHighlight) {
       // Check if the highlighted post is the root post
       const isRootPost = highlightUri === rootUri
       
@@ -258,9 +259,10 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             block: 'center'
           })
         }
+        setHasScrolledToHighlight(true)
       }, 100) // Small delay to ensure DOM is ready
     }
-  }, [highlightUri, rootUri, posts])
+  }, [highlightUri, rootUri, posts, hasScrolledToHighlight])
   
   // Clear the initial highlight after 2 seconds
   useEffect(() => {

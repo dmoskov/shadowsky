@@ -973,9 +973,11 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
                 isSelected={selectedConvo === convo.rootUri && selectedConvo !== null}
                 isFocused={focusedIndex === index}
                 onClick={() => {
-                  if (isFocused) {
-                    handleSelectConversation(convo.rootUri, convo.totalReplies)
-                  }
+                  // Always handle click, even if column is not focused
+                  // This will allow clicking in unfocused columns
+                  handleSelectConversation(convo.rootUri, convo.totalReplies)
+                  // Also update the focused index when clicking
+                  setFocusedIndex(index)
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && isFocused) {
