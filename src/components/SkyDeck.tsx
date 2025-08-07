@@ -462,7 +462,7 @@ export default function SkyDeck() {
                               document.getElementById('add-feed-button')?.click();
                             }
                           }}
-                          placeholder="at://did/app.bsky.feed.generator/name or at://did/app.bsky.graph.list/name"
+                          placeholder="Paste feed/list AT-URI or bsky.app URL"
                           className="flex-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <button
@@ -471,7 +471,50 @@ export default function SkyDeck() {
                             if (customFeedUri.trim()) {
                               setIsLoadingCustomFeed(true);
                               try {
-                                const uri = customFeedUri.trim();
+                                let uri = customFeedUri.trim();
+                                
+                                // Handle starter pack URLs
+                                if (uri.includes('bsky.app/starter-pack/')) {
+                                  // Extract the handle and rkey from starter pack URL
+                                  const match = uri.match(/starter-pack\/([^\/]+)\/([^\/\?]+)/);
+                                  if (match) {
+                                    const [, handle, rkey] = match;
+                                    try {
+                                      // Resolve the handle to DID
+                                      const resolveResponse = await agent?.com.atproto.identity.resolveHandle({
+                                        handle: handle
+                                      });
+                                      if (resolveResponse?.data?.did) {
+                                        // Construct the starter pack AT-URI
+                                        const starterPackUri = `at://${resolveResponse.data.did}/app.bsky.graph.starterpack/${rkey}`;
+                                        
+                                        // Fetch the starter pack to get the list URI
+                                        const starterPackResponse = await agent?.app.bsky.graph.getStarterPack({
+                                          starterPack: starterPackUri
+                                        });
+                                        
+                                        if (starterPackResponse?.data?.starterPack?.list) {
+                                          // Use the list URI from the starter pack
+                                          const listData = starterPackResponse.data.starterPack.list;
+                                          // Handle both string URI and object with uri property
+                                          uri = typeof listData === 'string' ? listData : listData.uri;
+                                          console.log('Extracted list URI from starter pack:', uri);
+                                        } else {
+                                          console.error('Starter pack does not contain a list');
+                                          throw new Error('Starter pack does not contain a list');
+                                        }
+                                      }
+                                    } catch (error) {
+                                      console.error('Failed to resolve starter pack:', error);
+                                      throw error;
+                                    }
+                                  }
+                                }
+                                
+                                // Ensure uri is a string
+                                if (!uri || typeof uri !== 'string') {
+                                  throw new Error('Invalid feed URI');
+                                }
                                 
                                 // Check if it's a list URI
                                 if (uri.includes('/app.bsky.graph.list/')) {
@@ -503,11 +546,10 @@ export default function SkyDeck() {
                                     setCustomFeedUri('');
                                   }
                                 }
-                              } catch (error) {
+                              } catch (error: any) {
                                 console.error('Error fetching feed/list:', error);
-                                // Add anyway with URI as name
-                                handleAddColumn('feed', customFeedUri.trim(), customFeedUri.trim());
-                                setCustomFeedUri('');
+                                // Show error to user instead of adding invalid feed
+                                alert(`Failed to add feed: ${error?.message || 'Invalid feed URL'}`);
                               } finally {
                                 setIsLoadingCustomFeed(false);
                               }
