@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "build:prod": "vite build",
-    "build:skip-tsc": "vite build",
-    "preview": "vite preview"
+    "build": "wireit",
+    "build:app": "wireit",
+    "preview": "vite preview",
+    "test": "wireit",
+    "test:types": "wireit"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.57.0",
@@ -34,5 +35,43 @@
     "typescript": "^5.9.2",
     "vite": "^5.0.0",
     "wireit": "^0.14.12"
+  },
+  "wireit": {
+    "build": {
+      "dependencies": [
+        "build:app",
+        "test:types"
+      ]
+    },
+    "build:app": {
+      "command": "vite build",
+      "files": [
+        "src/**/*",
+        "vite.config.ts",
+        "tsconfig.json",
+        "postcss.config.js",
+        "tailwindcss.config.js",
+        "index.html"
+      ],
+      "output": [
+        "dist/**/*"
+      ]
+    },
+    "test": {
+      "dependencies": [
+        "build:app",
+        "test:types"
+      ]
+    },
+    "test:types": {
+      "command": "tsc --build --pretty",
+      "files": [
+        "src/**/*.{ts,tsx}",
+        "tsconfig.json"
+      ],
+      "output": [
+        "tsconfig.tsbuildinfo"
+      ]
+    }
   }
 }
