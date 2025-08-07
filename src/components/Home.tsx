@@ -259,18 +259,37 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         default:
           // Handle custom feed URIs
           if (selectedFeed.startsWith('at://')) {
-            try {
-              response = await agent.app.bsky.feed.getFeed({
-                feed: selectedFeed,
-                cursor: pageParam,
-                limit: 30
-              })
-            } catch (error) {
-              debug.error(`Failed to fetch feed ${selectedFeed}, falling back to timeline:`, error)
-              response = await agent.getTimeline({
-                cursor: pageParam,
-                limit: 30
-              })
+            // Check if it's a list feed or a regular feed
+            if (selectedFeed.includes('/app.bsky.graph.list/')) {
+              // It's a list feed
+              try {
+                response = await agent.app.bsky.feed.getListFeed({
+                  list: selectedFeed,
+                  cursor: pageParam,
+                  limit: 30
+                })
+              } catch (error) {
+                debug.error(`Failed to fetch list feed ${selectedFeed}, falling back to timeline:`, error)
+                response = await agent.getTimeline({
+                  cursor: pageParam,
+                  limit: 30
+                })
+              }
+            } else {
+              // It's a regular feed
+              try {
+                response = await agent.app.bsky.feed.getFeed({
+                  feed: selectedFeed,
+                  cursor: pageParam,
+                  limit: 30
+                })
+              } catch (error) {
+                debug.error(`Failed to fetch feed ${selectedFeed}, falling back to timeline:`, error)
+                response = await agent.getTimeline({
+                  cursor: pageParam,
+                  limit: 30
+                })
+              }
             }
           } else {
             // Handle known feed types
