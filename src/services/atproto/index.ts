@@ -35,7 +35,9 @@ const clientWith2FA = new Proxy(baseClient, {
   }
 })
 
-export const atProtoClient = clientWith2FA
+export const atProtoClient = clientWith2FA as ATProtoClient & {
+  login: (identifier: string, password: string, authFactorToken?: string) => Promise<any>
+}
 
 export const feedService = new FeedService(baseClient)
 // Initialize deduplication after service creation

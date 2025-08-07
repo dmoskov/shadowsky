@@ -1,7 +1,6 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { 
-  LayoutDashboard,
   Bell,
   Clock,
   BarChart3,
@@ -11,7 +10,7 @@ import {
   PenSquare,
   Search,
   Home,
-  Columns
+  Bookmark
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -24,6 +23,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { path: '/', label: 'Home', icon: Home },
     { path: '/notifications', label: 'Notifications', icon: Bell },
     { path: '/conversations', label: 'Conversations', icon: MessageSquare },
+    { path: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
     { path: '/search', label: 'Search', icon: Search },
     { path: '/compose', label: 'Compose', icon: PenSquare },
     { path: '/timeline', label: 'Timeline', icon: Clock },

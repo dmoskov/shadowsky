@@ -18,12 +18,10 @@ export interface AnalyticsEvent {
 class AnalyticsService {
   private initialized = false
   private userId: string | null = null
-  private measurementId: string | null = null
 
   initialize(measurementId: string) {
     if (this.initialized || !measurementId) return
 
-    this.measurementId = measurementId
     
     // Initialize dataLayer
     window.dataLayer = window.dataLayer || []
@@ -230,7 +228,7 @@ class AnalyticsService {
 export const analytics = new AnalyticsService()
 
 // Export tracking hooks for React components
-export const usePageTracking = (pageName: string) => {
+export const usePageTracking = () => {
   // This will be implemented as a React hook
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Bookmark, Search, Download, Upload, Trash2, X, MoreVertical } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
@@ -16,13 +16,23 @@ export const Bookmarks: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
-  const { data: bookmarks, isLoading } = useQuery({
+  // Initialize bookmark service
+  useEffect(() => {
+    bookmarkService.init()
+  }, [])
+
+  const { data: bookmarks, isLoading, error } = useQuery({
     queryKey: ['bookmarks', searchQuery],
     queryFn: async () => {
+      console.log('Fetching bookmarks...')
       if (searchQuery) {
-        return await bookmarkService.searchBookmarks(searchQuery)
+        const results = await bookmarkService.searchBookmarks(searchQuery)
+        console.log('Search results:', results)
+        return results
       }
-      return await bookmarkService.getBookmarkedPosts()
+      const bookmarks = await bookmarkService.getBookmarkedPosts()
+      console.log('Bookmarks loaded:', bookmarks)
+      return bookmarks
     },
     staleTime: 30000,
   })
@@ -35,6 +45,12 @@ export const Bookmarks: React.FC = () => {
 
   const handleBookmarkToggle = async (post: AppBskyFeedDefs.PostView) => {
     await bookmarkService.toggleBookmark(post)
+    queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
+    queryClient.invalidateQueries({ queryKey: ['bookmarkCount'] })
+  }
+
+  const handleDeleteBookmark = async (postUri: string) => {
+    await bookmarkService.removeBookmark(postUri)
     queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
     queryClient.invalidateQueries({ queryKey: ['bookmarkCount'] })
   }
@@ -122,7 +138,13 @@ export const Bookmarks: React.FC = () => {
         </div>
       )}
 
-      {!isLoading && bookmarks?.length === 0 && (
+      {error && (
+        <div className="error-state p-4 text-center">
+          <p className="text-red-500">Error loading bookmarks: {(error as Error).message}</p>
+        </div>
+      )}
+
+      {!isLoading && !error && bookmarks?.length === 0 && (
         <div className="empty-state">
           <Bookmark className="w-12 h-12 text-gray-400" />
           <p className="empty-message">
@@ -150,6 +172,16 @@ export const Bookmarks: React.FC = () => {
               <span className="bookmark-time">
                 {formatDistanceToNow(new Date(bookmark.savedAt), { addSuffix: true })}
               </span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDeleteBookmark(bookmark.postUri)
+                }}
+                className="delete-bookmark-button"
+                title="Delete bookmark"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
             
             {bookmark.post ? (
@@ -159,7 +191,6 @@ export const Bookmarks: React.FC = () => {
                   onLike={() => {}}
                   onRepost={() => {}}
                   onReply={() => {}}
-                  onQuote={() => {}}
                   onBookmark={() => handleBookmarkToggle(bookmark.post!)}
                   isBookmarked={true}
                   compact

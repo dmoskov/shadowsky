@@ -1,10 +1,11 @@
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Calendar, Clock, Users, Heart, Repeat2, MessageCircle, Quote, UserPlus, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react'
+import { Clock, Heart, Repeat2, MessageCircle, Quote, UserPlus, ExternalLink, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { format, differenceInMinutes, differenceInHours, startOfDay, isSameDay, isToday, isYesterday, formatDistanceToNow } from 'date-fns'
+import { format, differenceInMinutes, differenceInHours, isToday, isYesterday, formatDistanceToNow } from 'date-fns'
 import { useNotificationPosts } from '../hooks/useNotificationPosts'
 import { proxifyBskyImage } from '../utils/image-proxy'
+import { ThreadModal } from './ThreadModal'
 import '../styles/timeline.css'
 
 interface AggregatedEvent {
@@ -60,14 +61,16 @@ interface VisualTimelineProps {
   hideTimeLabels?: boolean;
   isInSkyDeck?: boolean;
   isFocused?: boolean;
+  onClose?: () => void;
 }
 
-export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels = false, isInSkyDeck = false, isFocused = true }) => {
+export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels = false, isInSkyDeck = false, isFocused = true, onClose }) => {
   const { agent } = useAuth()
   const containerRef = React.useRef<HTMLDivElement>(null)
   const timelineItemsRef = React.useRef<Map<string, HTMLDivElement>>(new Map())
   const [selectedItemIndex, setSelectedItemIndex] = React.useState<number>(-1)
-  const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set())
+  const [selectedPostUri, setSelectedPostUri] = React.useState<string | null>(null)
+  // Removed expandedItems state - cards are always expanded
 
   const { data, isLoading } = useQuery({
     queryKey: ['notifications-visual-timeline'],
@@ -317,14 +320,14 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
     // Create events for follow bursts
     followBursts.forEach(burst => {
       if (burst.length >= 2) {
-        const times = burst.map(n => new Date(n.indexedAt).getTime())
+        const times = burst.map((n: any) => new Date(n.indexedAt).getTime())
         const latestTime = new Date(Math.max(...times))
         
         events.push({
           time: latestTime,
           notifications: burst,
           types: new Set(['follow']),
-          actors: new Set(burst.map(n => n.author?.handle || 'unknown')),
+          actors: new Set(burst.map((n: any) => n.author?.handle || 'unknown')),
           aggregationType: 'follow',
           earliestTime: new Date(Math.min(...times)),
           latestTime: latestTime
@@ -553,18 +556,25 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
         case ' ': // Space bar
           e.preventDefault()
           handled = true
+          // Open thread viewer for the selected item
           if (currentIndex >= 0 && currentIndex < allEvents.length) {
             const event = allEvents[currentIndex]
-            const eventKey = getEventKey(event, currentIndex)
-            setExpandedItems(prev => {
-              const newSet = new Set(prev)
-              if (newSet.has(eventKey)) {
-                newSet.delete(eventKey)
-              } else {
-                newSet.add(eventKey)
-              }
-              return newSet
-            })
+            let postUriToOpen: string | null = null
+            
+            // For post bursts and post aggregations, use the postUri
+            if (event.postUri) {
+              postUriToOpen = event.postUri
+            } else if (event.notifications.length > 0 && event.notifications[0].reason !== 'follow') {
+              // For single notifications or other aggregations
+              const notification = event.notifications[0]
+              postUriToOpen = (notification.reason === 'repost' || notification.reason === 'like') && notification.reasonSubject 
+                ? notification.reasonSubject 
+                : notification.uri
+            }
+            
+            if (postUriToOpen) {
+              setSelectedPostUri(postUriToOpen)
+            }
           }
           break
           
@@ -673,14 +683,26 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
     <div className="max-w-4xl mx-auto" ref={containerRef} tabIndex={-1} style={{ outline: 'none' }}>
       {/* Header */}
       <div className="sticky top-0 z-40 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-        <div className="px-4 py-3 flex items-center gap-2">
-          <Clock size={20} style={{ color: 'var(--bsky-primary)' }} />
-          <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-            Visual Timeline
-          </h2>
-          <span className="text-xs ml-auto" style={{ color: 'var(--bsky-text-secondary)' }}>
-            {selectedItemIndex === -1 ? 'Press ↓ or j to start' : 'Arrow keys/hjkl to navigate • Enter to expand'}
-          </span>
+        <div className="px-4 py-3 flex items-center justify-between group">
+          <div className="flex items-center gap-2">
+            <Clock size={20} style={{ color: 'var(--bsky-primary)' }} />
+            <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+              Visual Timeline
+            </h2>
+            <span className="text-xs ml-auto" style={{ color: 'var(--bsky-text-secondary)' }}>
+              {selectedItemIndex === -1 ? 'Press ↓ or j to start' : 'Arrow keys/hjkl to navigate'}
+            </span>
+          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100"
+              style={{ color: 'var(--bsky-text-secondary)' }}
+              aria-label="Close column"
+            >
+              <X size={18} />
+            </button>
+          )}
         </div>
       </div>
       
@@ -701,7 +723,8 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
               className="timeline-day-header -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-3" 
               style={{ 
                 position: 'sticky',
-                WebkitPosition: 'sticky' as any,
+                // @ts-ignore - WebKit prefix for sticky positioning
+                WebkitPosition: '-webkit-sticky',
                 top: '60px', // Position below the main header which is ~60px tall
                 zIndex: 30, // Higher than 20 but lower than main header's 40
                 backgroundColor: 'var(--bsky-bg-primary)',
@@ -743,7 +766,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
               
               const eventKey = getEventKey(event, globalIndex)
               const isSelected = selectedItemIndex === globalIndex
-              const isExpanded = expandedItems.has(eventKey)
+              const isExpanded = true // Cards are always expanded
 
               return (
                 <div 
@@ -808,30 +831,45 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
                   role="button"
                   onClick={() => {
                     setSelectedItemIndex(globalIndex)
-                    // Toggle expansion on click
-                    setExpandedItems(prev => {
-                      const newSet = new Set(prev)
-                      if (newSet.has(eventKey)) {
-                        newSet.delete(eventKey)
-                      } else {
-                        newSet.add(eventKey)
-                      }
-                      return newSet
-                    })
+                    // Open thread viewer for post notifications
+                    let postUriToOpen: string | null = null
+                    
+                    // For post bursts and post aggregations, use the postUri
+                    if (event.postUri) {
+                      postUriToOpen = event.postUri
+                    } else if (event.notifications.length > 0 && event.notifications[0].reason !== 'follow') {
+                      // For single notifications or other aggregations
+                      const notification = event.notifications[0]
+                      postUriToOpen = (notification.reason === 'repost' || notification.reason === 'like') && notification.reasonSubject 
+                        ? notification.reasonSubject 
+                        : notification.uri
+                    }
+                    
+                    if (postUriToOpen) {
+                      setSelectedPostUri(postUriToOpen)
+                    }
                   }}
                   onKeyDown={(e) => {
                     // Handle Enter/Space on the element itself
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault()
-                      setExpandedItems(prev => {
-                        const newSet = new Set(prev)
-                        if (newSet.has(eventKey)) {
-                          newSet.delete(eventKey)
-                        } else {
-                          newSet.add(eventKey)
-                        }
-                        return newSet
-                      })
+                      // Open thread viewer for post notifications
+                      let postUriToOpen: string | null = null
+                      
+                      // For post bursts and post aggregations, use the postUri
+                      if (event.postUri) {
+                        postUriToOpen = event.postUri
+                      } else if (event.notifications.length > 0 && event.notifications[0].reason !== 'follow') {
+                        // For single notifications or other aggregations
+                        const notification = event.notifications[0]
+                        postUriToOpen = (notification.reason === 'repost' || notification.reason === 'like') && notification.reasonSubject 
+                          ? notification.reasonSubject 
+                          : notification.uri
+                      }
+                      
+                      if (postUriToOpen) {
+                        setSelectedPostUri(postUriToOpen)
+                      }
                     }
                   }}
                 >
@@ -839,16 +877,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
                   {event.notifications.length === 1 ? (
                     <div>
                       <div className="flex items-center gap-3">
-                        {/* Expand/collapse indicator for expandable items */}
-                        {event.notifications[0].reason !== 'follow' && (
-                          <div className="absolute -left-8 top-3">
-                            {isExpanded ? (
-                              <ChevronDown size={16} style={{ color: 'var(--bsky-text-tertiary)' }} />
-                            ) : (
-                              <ChevronRight size={16} style={{ color: 'var(--bsky-text-tertiary)' }} />
-                            )}
-                          </div>
-                        )}
+                        {/* Removed expand/collapse indicator - cards are always expanded */}
                         <a 
                           href={getProfileUrl(event.notifications[0].author?.handle || 'unknown')}
                           target="_blank"
@@ -946,17 +975,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
                   ) : (
                     /* Aggregated notifications */
                     <div>
-                      {/* Expand/collapse indicator for aggregated items */}
-                      {(event.aggregationType === 'user-activity' || event.aggregationType === 'post-burst' || 
-                        ((event.aggregationType === 'post' || event.aggregationType === 'post-burst') && event.postUri)) && (
-                        <div className="absolute -left-8 top-3">
-                          {isExpanded ? (
-                            <ChevronDown size={16} style={{ color: 'var(--bsky-text-tertiary)' }} />
-                          ) : (
-                            <ChevronRight size={16} style={{ color: 'var(--bsky-text-tertiary)' }} />
-                          )}
-                        </div>
-                      )}
+                      {/* Removed expand/collapse indicator - cards are always expanded */}
                       {event.aggregationType === 'user-activity' ? (
                         // Special layout for user activity bursts
                         <div>
@@ -1339,6 +1358,14 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
           </span>
         </div>
       </div>
+      
+      {/* Thread Modal */}
+      {selectedPostUri && (
+        <ThreadModal
+          postUri={selectedPostUri}
+          onClose={() => setSelectedPostUri(null)}
+        />
+      )}
     </div>
   )
 }

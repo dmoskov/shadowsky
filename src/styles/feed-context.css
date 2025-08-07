@@ -147,23 +147,8 @@
   }
 }
 
-/* Floating action bar hover behavior */
-.post-action-bar {
-  opacity: 0;
-  transform: translateY(8px);
-  pointer-events: none;
-  background-color: var(--bsky-bg-secondary);
-  backdrop-filter: blur(10px);
-  /* Smooth transition and GPU acceleration */
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  will-change: opacity, transform;
-}
-
-.post-item:hover .post-action-bar {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
+/* Floating action bar hover behavior - REMOVED to keep always visible */
+/* Action bar is now always visible per design requirements */
 
 /* Prevent re-rendering issues when thread modal is open */
 .thread-modal-open .post-item {
@@ -174,9 +159,7 @@
   background-color: transparent !important;
 }
 
-.thread-modal-open .post-action-bar {
-  display: none !important;
-}
+/* Action bar remains visible */
 
 .thread-modal-open .post-menu-button {
   display: none !important;
@@ -190,6 +173,15 @@
 .thread-modal-container .post-item .post-action-bar,
 .thread-modal-container .post-item .post-menu-button {
   display: flex !important;
+}
+
+/* Always show action bar when post is focused/selected */
+.post-item.bg-opacity-10 .post-action-bar,
+.post-item.border-l-4 .post-action-bar {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: translateY(0) !important;
 }
 
 /* Disable column hover effects when thread modal is open */

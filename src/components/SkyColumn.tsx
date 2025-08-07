@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { NotificationsFeed } from './NotificationsFeed';
 import { VisualTimeline } from './VisualTimeline';
 import { ConversationsSimple as Conversations } from './ConversationsSimple';
-import SkyColumnFeed from './SkyColumnFeed';
 import { Home } from './Home';
 import { DirectMessages } from './DirectMessages';
+import { BookmarksColumn } from './BookmarksColumn';
 import type { Column } from './SkyDeck';
 
 interface SkyColumnProps {
@@ -51,19 +51,22 @@ export default function SkyColumn({ column, onClose, chromeless = false, isFocus
       case 'timeline':
         return (
           <div className="h-full overflow-y-auto skydeck-scrollbar">
-            <VisualTimeline hideTimeLabels={true} isInSkyDeck={true} isFocused={isFocused} />
+            <VisualTimeline hideTimeLabels={true} isInSkyDeck={true} isFocused={isFocused} onClose={onClose} />
           </div>
         );
       
       case 'conversations':
-        return <Conversations isFocused={isFocused} />;
+        return <Conversations isFocused={isFocused} onClose={onClose} />;
       
       case 'messages':
         return <DirectMessages />;
       
+      case 'bookmarks':
+        return <BookmarksColumn isFocused={isFocused} onClose={onClose} />;
+      
       case 'feed':
         // Use the Home component for all feed columns
-        return <Home initialFeedUri={column.data} isFocused={isFocused} />;
+        return <Home initialFeedUri={column.data} isFocused={isFocused} columnId={column.id} onClose={column.id !== 'home' ? onClose : undefined} />;
       
       default:
         return (
@@ -83,16 +86,6 @@ export default function SkyColumn({ column, onClose, chromeless = false, isFocus
 
   return (
     <div className="h-full rounded-lg shadow-lg flex flex-col overflow-hidden relative" data-theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}>
-      {column.id !== 'home' && (
-        <button
-          onClick={onClose}
-          className="column-close-button absolute top-2 right-2 z-10 p-1.5 rounded-full bg-gray-900/20 hover:bg-gray-900/30 dark:bg-gray-100/20 dark:hover:bg-gray-100/30 transition-all duration-200"
-          title="Close column"
-        >
-          <X size={16} className="text-white dark:text-gray-900" />
-        </button>
-      )}
-      
       <div 
         ref={scrollContainerRef}
         className={`h-full overflow-y-auto skydeck-scrollbar scroll-shadow-container ${

@@ -79,10 +79,6 @@ export function useNotifications(priority: boolean = false) {
     refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
     refetchOnWindowFocus: false, // Don't refetch on window focus
     refetchOnMount: 'always', // Always fetch fresh data on mount
-    onSuccess: () => {
-      // Also invalidate visual timeline to keep it in sync
-      queryClient.invalidateQueries(['notifications-visual-timeline'])
-    },
     // Use cached data as initial data if available
     initialData: cachedData ? {
       pages: cachedData.pages,
@@ -94,6 +90,14 @@ export function useNotifications(priority: boolean = false) {
       pageParams: [undefined, ...cachedData.pages.slice(0, -1).map(p => p.cursor)]
     } : undefined
   })
+
+  // Invalidate visual timeline when data changes
+  React.useEffect(() => {
+    if (query.data) {
+      // Also invalidate visual timeline to keep it in sync
+      queryClient.invalidateQueries({ queryKey: ['notifications-visual-timeline'] })
+    }
+  }, [query.data, queryClient])
 
   // Save to cache after successful data fetch
   React.useEffect(() => {

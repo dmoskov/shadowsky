@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
-import { Users, TrendingUp, Settings, Loader, Database } from 'lucide-react'
+import { Users, TrendingUp, Settings, Database } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { getBskyProfileUrl } from '../utils/url-helpers'
 import { getProfileCacheService } from '../services/profile-cache-service'
@@ -118,7 +118,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
   }, [agent, notifications])
 
   // Fetch profiles for all unique accounts using cache
-  const { data: profilesData, isLoading: isLoadingProfiles } = useQuery({
+  const { data: profilesData } = useQuery({
     queryKey: ['cached-profiles', uniqueHandles],
     queryFn: async () => {
       if (!agent || uniqueHandles.length === 0) return new Map()

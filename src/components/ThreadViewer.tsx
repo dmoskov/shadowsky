@@ -7,6 +7,8 @@ import { proxifyBskyImage, proxifyBskyVideo } from '../utils/image-proxy'
 import { atUriToBskyUrl, getNotificationUrl } from '../utils/url-helpers'
 import { VideoPlayer } from './VideoPlayer'
 import { ImageGallery } from './ImageGallery'
+import { InlineReplyComposer } from './InlineReplyComposer'
+import { PostActionBar } from './PostActionBar'
 
 type Post = AppBskyFeedDefs.PostView
 
@@ -26,6 +28,7 @@ export interface ThreadViewerProps {
   onPostClick?: (uri: string) => void
   showUnreadIndicators?: boolean
   className?: string
+  onReplySuccess?: () => void
 }
 
 export const ThreadViewer: React.FC<ThreadViewerProps> = ({
@@ -35,20 +38,12 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   highlightUri,
   onPostClick,
   showUnreadIndicators = true,
-  className = ''
+  className = '',
+  onReplySuccess
 }) => {
   const [galleryImages, setGalleryImages] = useState<Array<{ thumb: string; fullsize: string; alt?: string }> | null>(null)
   const [galleryIndex, setGalleryIndex] = useState(0)
-  // Create a map of posts by URI
-  const postMap = useMemo(() => {
-    const map = new Map<string, Post>()
-    posts.forEach(post => {
-      if (post?.uri) {
-        map.set(post.uri, post)
-      }
-    })
-    return map
-  }, [posts])
+  const [replyingTo, setReplyingTo] = useState<string | null>(null)
 
   // Create a map of notifications by URI
   const notificationMap = useMemo(() => {
@@ -101,7 +96,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     }
     
     // Build parent-child relationships
-    nodeMap.forEach((childNode, uri) => {
+    nodeMap.forEach((childNode) => {
       if (childNode.isRoot) return
       
       const post = childNode.post
@@ -286,7 +281,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       return (
         <div className="mt-2" onClick={(e) => e.stopPropagation()}>
           <VideoPlayer
-            src={proxifyBskyVideo(embed.playlist)}
+            src={proxifyBskyVideo(embed.playlist) || ''}
             thumbnail={embed.thumbnail ? proxifyBskyVideo(embed.thumbnail) : undefined}
             aspectRatio={embed.aspectRatio}
             alt={embed.alt}
@@ -522,6 +517,39 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                   )}
                 </div>
               </div>
+              
+              {/* Post Action Bar */}
+              {post && (
+                <PostActionBar
+                  post={post}
+                  onReply={() => {
+                    setReplyingTo(post.uri === replyingTo ? null : post.uri)
+                  }}
+                  showCounts={true}
+                  size={maxThreadDepth > 10 ? 'small' : 'medium'}
+                />
+              )}
+              
+              {/* Inline reply composer */}
+              {post && replyingTo === post.uri && (
+                <div className="mt-2 ml-10">
+                  <InlineReplyComposer
+                    replyTo={{
+                      uri: post.uri,
+                      cid: post.cid,
+                      author: {
+                        handle: post.author.handle,
+                        displayName: post.author.displayName
+                      }
+                    }}
+                    onClose={() => setReplyingTo(null)}
+                    onSuccess={() => {
+                      setReplyingTo(null)
+                      onReplySuccess?.()
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
 

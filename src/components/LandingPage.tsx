@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { 
-  Bell, TrendingUp, MessageSquare, Clock, Zap, Shield, 
-  BarChart3, Users, Image, Filter, Search, Database,
-  Smartphone, ChevronRight, Star, Activity, Sparkles, Mail
+  Bell, MessageSquare, Zap, Shield, 
+  BarChart3, Database,
+  Activity, Sparkles, Mail
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import butterflyIcon from '/butterfly-icon.svg'

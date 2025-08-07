@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { BarChart3, TrendingUp, Users, Clock, Activity, Zap, Database } from 'lucide-react'
-import { analytics } from '../services/analytics'
+import { BarChart3, Users, Clock, Activity, Zap, Database } from 'lucide-react'
 
 interface AnalyticsEvent {
   category: string

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Heart, Repeat2, MessageCircle, Loader, MoreVertical, TrendingUp, Users, Clock, Hash, Star, Plus, X, ChevronDown, Reply } from 'lucide-react'
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Loader, TrendingUp, Users, Clock, Hash, Star, Plus, ChevronDown, Reply, Heart, Repeat2, MessageCircle, RefreshCw, X } from 'lucide-react'
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '../contexts/AuthContext'
 import { proxifyBskyImage, proxifyBskyVideo } from '../utils/image-proxy'
@@ -10,6 +10,9 @@ import { VideoPlayer } from './VideoPlayer'
 import { FeedDiscovery } from './FeedDiscovery'
 import { ImageGallery } from './ImageGallery'
 import { ThreadModal } from './ThreadModal'
+import { PostActionBar } from './PostActionBar'
+import { useOptimisticPosts } from '../hooks/useOptimisticPosts'
+import { columnFeedPrefs } from '../utils/cookies'
 import '../styles/feed-context.css'
 
 type FeedType = 'following' | 'whats-hot' | 'popular-with-friends' | 'recent' | string // Allow custom feed URIs
@@ -46,12 +49,6 @@ interface Post {
   }
 }
 
-interface SavedFeed {
-  id: string
-  type: 'feed' | 'list' | 'timeline'
-  value: string
-  pinned: boolean
-}
 
 interface FeedGenerator {
   uri: string
@@ -75,17 +72,28 @@ interface FeedGenerator {
 interface HomeProps {
   initialFeedUri?: string;
   isFocused?: boolean;
+  columnId?: string;
+  onClose?: () => void;
 }
 
-export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) => {
+export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, columnId, onClose }) => {
   const { agent } = useAuth()
   const queryClient = useQueryClient()
+  const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } = useOptimisticPosts()
   // Removed hoveredPost state to prevent re-renders - using CSS hover instead
   const [selectedFeed, setSelectedFeed] = useState<FeedType>(() => {
-    // Use initialFeedUri if provided, otherwise restore from localStorage
+    // Use initialFeedUri if provided
     if (initialFeedUri) {
       return initialFeedUri as FeedType
     }
+    // Otherwise check cookie for this column
+    if (columnId) {
+      const savedFeed = columnFeedPrefs.getFeedForColumn(columnId)
+      if (savedFeed) {
+        return savedFeed as FeedType
+      }
+    }
+    // Fall back to localStorage for backwards compatibility
     const savedFeed = localStorage.getItem('selectedFeed')
     return (savedFeed as FeedType) || 'following'
   })
@@ -97,8 +105,6 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
   const [focusedPostIndex, setFocusedPostIndex] = useState<number>(-1)
   const postsContainerRef = useRef<HTMLDivElement>(null)
   const [feedOrder, setFeedOrder] = useState<string[]>([])
-  const [draggedTab, setDraggedTab] = useState<string | null>(null)
-  const [dragOverTab, setDragOverTab] = useState<string | null>(null)
   const [showFeedDropdown, setShowFeedDropdown] = useState(false)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const scrollPositionRef = useRef<{ [key: string]: number }>({})
@@ -119,9 +125,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
       return prefs
     },
     enabled: !!agent,
-    staleTime: 5 * 60 * 1000,
-    refetchOnMount: 'always', // Always fetch fresh data on mount
-    refetchInterval: 60 * 1000, // Poll every 60 seconds after initial load
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnMount: false
   })
   
   // Fetch feed generator details for saved feeds
@@ -131,8 +136,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
       if (!agent || !userPrefs?.savedFeeds?.length) return []
       
       const feedUris = userPrefs.savedFeeds
-        .filter((feed: SavedFeed): boolean => feed.type === 'feed')
-        .map((feed: SavedFeed) => feed.value)
+        .filter((feed) => feed.type === 'feed')
+        .map((feed) => feed.value)
       
       if (feedUris.length === 0) return []
       
@@ -162,10 +167,10 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     // Add pinned feeds first, then other saved feeds
     const savedFeeds: any[] = []
     if (userPrefs?.savedFeeds && feedGenerators) {
-      const pinnedFeeds = userPrefs.savedFeeds.filter((feed: SavedFeed) => feed.pinned && feed.type === 'feed')
-      const unpinnedFeeds = userPrefs.savedFeeds.filter((feed: SavedFeed) => !feed.pinned && feed.type === 'feed')
+      const pinnedFeeds = userPrefs.savedFeeds.filter((feed) => feed.pinned && feed.type === 'feed')
+      const unpinnedFeeds = userPrefs.savedFeeds.filter((feed) => !feed.pinned && feed.type === 'feed')
       
-      const addFeedOption = (savedFeed: SavedFeed) => {
+      const addFeedOption = (savedFeed: any) => {
         const generator = feedGenerators.find((g: FeedGenerator) => g.uri === savedFeed.value)
         if (generator) {
           savedFeeds.push({
@@ -180,8 +185,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
         }
       }
       
-      pinnedFeeds.forEach(addFeedOption)
-      unpinnedFeeds.forEach(addFeedOption)
+      pinnedFeeds.forEach((feed) => addFeedOption(feed))
+      unpinnedFeeds.forEach((feed) => addFeedOption(feed))
     }
     
     const allFeeds = [...defaultFeeds, ...savedFeeds]
@@ -235,7 +240,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     isFetchingNextPage
   } = useInfiniteQuery({
     queryKey: ['timeline', selectedFeed],
-    queryFn: async ({ pageParam }) => {
+    queryFn: async ({ pageParam }: { pageParam?: string }) => {
       if (!agent) throw new Error('Not authenticated')
       
       let response
@@ -312,17 +317,23 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
       debug.log(`${selectedFeed} feed response:`, response)
       return response.data
     },
+    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.cursor,
     enabled: !!agent,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnMount: 'always', // Always fetch fresh data on mount
-    refetchInterval: 60 * 1000, // Poll every 60 seconds after initial load
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
+    refetchOnMount: false, // Don't automatically refetch
   })
   
   const posts = React.useMemo(() => {
     if (!data?.pages) return []
-    return data.pages.flatMap(page => page.feed)
+    return data.pages.flatMap((page, pageIndex) => 
+      page.feed.map((item: any, itemIndex: number) => ({
+        ...item,
+        _pageIndex: pageIndex,
+        _itemIndex: itemIndex
+      }))
+    )
   }, [data])
   
   // Memoize post rendering to prevent unnecessary re-renders
@@ -456,27 +467,6 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
                 </div>
               </div>
               
-              <div 
-                className="relative"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  className="post-menu-button p-2 -m-1 rounded-full transition-all hover:bg-gray-200 dark:hover:bg-gray-800"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    e.preventDefault()
-                    // Post menu functionality would go here
-                    console.log('Menu clicked for post:', post.uri)
-                  }}
-                  aria-label="More options"
-                >
-                  <MoreVertical 
-                    size={16} 
-                    className="post-menu-icon"
-                    style={{ color: 'var(--bsky-text-secondary)' }}
-                  />
-                </button>
-              </div>
             </div>
             
             <div 
@@ -489,101 +479,18 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
             
             {renderEmbed(post.embed)}
             
-            {/* Floating action bar on hover - desktop only */}
-            <div className="post-action-bar hidden sm:flex items-center gap-3 absolute bottom-2 right-2 px-3 py-1.5 rounded-full transition-all duration-200" style={{ backgroundColor: 'var(--bsky-bg-secondary)', backdropFilter: 'blur(10px)' }}>
-              <button
-                className="flex items-center gap-1 hover:text-blue-500 transition-colors cursor-pointer select-none"
-                style={{ color: 'var(--bsky-text-secondary)' }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  // Reply functionality would go here
-                }}
-                type="button"
-              >
-                <MessageCircle size={14} />
-                <span className="text-xs">{post.replyCount || 0}</span>
-              </button>
-              
-              <button
-                className={`flex items-center gap-1 hover:text-green-500 transition-colors cursor-pointer select-none ${
-                  post.viewer?.repost ? 'text-green-500' : ''
-                } ${repostMutation.isPending || unrepostMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
-                style={{ 
-                  color: post.viewer?.repost ? undefined : 'var(--bsky-text-secondary)'
-                }}
-                onClick={(e) => handleRepost(post, e)}
-                disabled={repostMutation.isPending || unrepostMutation.isPending}
-                type="button"
-              >
-                <Repeat2 size={14} />
-                <span className="text-xs">{post.repostCount || 0}</span>
-              </button>
-              
-              <button
-                className={`flex items-center gap-1 hover:text-red-500 transition-colors cursor-pointer select-none ${
-                  post.viewer?.like ? 'text-red-500' : ''
-                } ${likeMutation.isPending || unlikeMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
-                style={{ 
-                  color: post.viewer?.like ? undefined : 'var(--bsky-text-secondary)'
-                }}
-                onClick={(e) => handleLike(post, e)}
-                disabled={likeMutation.isPending || unlikeMutation.isPending}
-                type="button"
-              >
-                <Heart size={14} fill={post.viewer?.like ? 'currentColor' : 'none'} />
-                <span className="text-xs">{post.likeCount || 0}</span>
-              </button>
-              
-            </div>
-            
-            {/* Mobile action bar - always visible */}
-            <div className="flex sm:hidden items-center gap-6 mt-2">
-              <button
-                className="flex items-center gap-1 hover:text-blue-500 transition-colors cursor-pointer select-none p-1 -m-1"
-                style={{ color: 'var(--bsky-text-secondary)', WebkitTapHighlightColor: 'transparent' }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  // Reply functionality would go here
-                }}
-                type="button"
-              >
-                <MessageCircle size={16} />
-                <span className="text-sm">{post.replyCount || 0}</span>
-              </button>
-              
-              <button
-                className={`flex items-center gap-1 hover:text-green-500 transition-colors cursor-pointer select-none p-1 -m-1 ${
-                  post.viewer?.repost ? 'text-green-500' : ''
-                } ${repostMutation.isPending || unrepostMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
-                style={{ 
-                  color: post.viewer?.repost ? undefined : 'var(--bsky-text-secondary)',
-                  WebkitTapHighlightColor: 'transparent'
-                }}
-                onClick={(e) => handleRepost(post, e)}
-                disabled={repostMutation.isPending || unrepostMutation.isPending}
-                type="button"
-              >
-                <Repeat2 size={16} />
-                <span className="text-sm">{post.repostCount || 0}</span>
-              </button>
-              
-              <button
-                className={`flex items-center gap-1 hover:text-red-500 transition-colors cursor-pointer select-none p-1 -m-1 ${
-                  post.viewer?.like ? 'text-red-500' : ''
-                } ${likeMutation.isPending || unlikeMutation.isPending ? 'opacity-50 cursor-wait' : ''}`}
-                style={{ 
-                  color: post.viewer?.like ? undefined : 'var(--bsky-text-secondary)',
-                  WebkitTapHighlightColor: 'transparent'
-                }}
-                onClick={(e) => handleLike(post, e)}
-                disabled={likeMutation.isPending || unlikeMutation.isPending}
-                type="button"
-              >
-                <Heart size={16} fill={post.viewer?.like ? 'currentColor' : 'none'} />
-                <span className="text-sm">{post.likeCount || 0}</span>
-              </button>
-              
-            </div>
+            {/* Post Action Bar */}
+            <PostActionBar
+              post={post}
+              onReply={() => {
+                // Reply functionality
+                console.log('Reply to:', post.uri)
+              }}
+              onRepost={() => handleRepost(post)}
+              onLike={() => handleLike(post)}
+              showCounts={true}
+              size="medium"
+            />
           </div>
         </div>
       </div>
@@ -631,56 +538,20 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     setShowThread(true)
   }
   
-  const likeMutation = useMutation({
-    mutationFn: async ({ uri, cid }: { uri: string; cid: string }) => {
-      if (!agent) throw new Error('Not authenticated')
-      return await agent.like(uri, cid)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeline'] })
-    }
-  })
+  // Mutations are handled by useOptimisticPosts hook
   
-  const unlikeMutation = useMutation({
-    mutationFn: async (likeUri: string) => {
-      if (!agent) throw new Error('Not authenticated')
-      return await agent.deleteLike(likeUri)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeline'] })
+  const handleLike = async (post: Post, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
     }
-  })
-  
-  const repostMutation = useMutation({
-    mutationFn: async ({ uri, cid }: { uri: string; cid: string }) => {
-      if (!agent) throw new Error('Not authenticated')
-      return await agent.repost(uri, cid)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeline'] })
-    }
-  })
-  
-  const unrepostMutation = useMutation({
-    mutationFn: async (repostUri: string) => {
-      if (!agent) throw new Error('Not authenticated')
-      return await agent.deleteRepost(repostUri)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['timeline'] })
-    }
-  })
-  
-  const handleLike = async (post: Post, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
     if (!agent) return
     
     trackFeatureAction('like_post', { postUri: post.uri })
     
     try {
       if (post.viewer?.like) {
-        await unlikeMutation.mutateAsync(post.viewer.like)
+        await unlikeMutation.mutateAsync({ likeUri: post.viewer.like, postUri: post.uri })
       } else {
         await likeMutation.mutateAsync({
           uri: post.uri,
@@ -693,16 +564,18 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
   }
   
   
-  const handleRepost = async (post: Post, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const handleRepost = async (post: Post, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
     if (!agent) return
     
     trackFeatureAction('repost_post', { postUri: post.uri })
     
     try {
       if (post.viewer?.repost) {
-        await unrepostMutation.mutateAsync(post.viewer.repost)
+        await unrepostMutation.mutateAsync({ repostUri: post.viewer.repost, postUri: post.uri })
       } else {
         await repostMutation.mutateAsync({
           uri: post.uri,
@@ -757,9 +630,9 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
           e.preventDefault()
           handled = true
           if (currentIndex >= 0 && currentIndex < posts.length) {
-            const post = posts[currentIndex]?.post
-            if (post) {
-              handlePostClick(post)
+            const feedItem = posts[currentIndex]
+            if (feedItem?.post && 'author' in feedItem.post && 'record' in feedItem.post) {
+              handlePostClick(feedItem.post as unknown as Post)
             }
           }
           break
@@ -945,7 +818,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
       return (
         <div className="mt-2 rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
           <VideoPlayer
-            src={proxifyBskyVideo(embed.playlist)}
+            src={proxifyBskyVideo(embed.playlist) || ''}
             thumbnail={embed.thumbnail ? proxifyBskyVideo(embed.thumbnail) : undefined}
             aspectRatio={embed.aspectRatio}
             alt={embed.alt}
@@ -976,7 +849,9 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
             <div className="p-3 cursor-pointer hover:bg-opacity-5 hover:bg-blue-500 transition-colors"
                  onClick={(e) => {
                    e.stopPropagation()
-                   handlePostClick({ uri: quotedPost.uri, cid: quotedPost.cid })
+                   if ('author' in quotedPost && 'record' in quotedPost) {
+                     handlePostClick(quotedPost as Post)
+                   }
                  }}>
               <div className="flex items-center gap-2 mb-2">
                 <img
@@ -1088,8 +963,11 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     }
     
     setSelectedFeed(feed)
-    // Only save to localStorage if this is the main home column
-    if (!initialFeedUri) {
+    // Save to cookies if we have a column ID
+    if (columnId) {
+      columnFeedPrefs.setFeedForColumn(columnId, feed)
+    } else if (!initialFeedUri) {
+      // Only save to localStorage if this is the main home column
       localStorage.setItem('selectedFeed', feed)
     }
     trackFeatureAction('feed_changed', { feed })
@@ -1107,81 +985,37 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
     }, 100)
   }
   
-  // Drag and drop handlers
-  const handleDragStart = (e: React.DragEvent, feedType: string) => {
-    setDraggedTab(feedType)
-    e.dataTransfer.effectAllowed = 'move'
-  }
-  
-  const handleDragOver = (e: React.DragEvent, feedType: string) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-    setDragOverTab(feedType)
-  }
-  
-  const handleDragLeave = () => {
-    setDragOverTab(null)
-  }
-  
-  const handleDrop = (e: React.DragEvent, targetFeedType: string) => {
-    e.preventDefault()
-    setDragOverTab(null)
-    
-    if (!draggedTab || draggedTab === targetFeedType) {
-      setDraggedTab(null)
-      return
-    }
-    
-    const newOrder = [...feedOrder]
-    const draggedIndex = newOrder.indexOf(draggedTab)
-    const targetIndex = newOrder.indexOf(targetFeedType)
-    
-    if (draggedIndex !== -1 && targetIndex !== -1) {
-      // Remove dragged item and insert at new position
-      newOrder.splice(draggedIndex, 1)
-      newOrder.splice(targetIndex, 0, draggedTab)
-      
-      setFeedOrder(newOrder)
-      localStorage.setItem('feedOrder', JSON.stringify(newOrder))
-    }
-    
-    setDraggedTab(null)
-  }
-  
-  const handleDragEnd = () => {
-    setDraggedTab(null)
-    setDragOverTab(null)
-  }
   
   return (
     <div className="w-full" ref={containerRef} tabIndex={-1} style={{ outline: 'none' }}>
-      <div className="sticky top-0 z-10 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-        <div className="px-4 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-20 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
+        <div className="px-4 py-3 flex items-center justify-between group">
           <div className="flex items-center gap-2">
             {currentFeedOption && <currentFeedOption.icon size={20} style={{ color: 'var(--bsky-primary)' }} />}
             <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
               {currentFeedOption?.label || 'Feed'}
             </h2>
-            {focusedPostIndex === -1 ? (
-              <span className="text-xs ml-2" style={{ color: 'var(--bsky-text-secondary)' }}>
-                Press ↓/j to navigate
-              </span>
-            ) : (
-              <span className="text-xs ml-2 hidden sm:inline" style={{ color: 'var(--bsky-text-secondary)' }}>
-                ↑↓/jk: navigate • Enter: open
-              </span>
-            )}
           </div>
           
-          <div className="relative" ref={dropdownRef}>
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowFeedDropdown(!showFeedDropdown)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-all"
+              onClick={() => queryClient.invalidateQueries({ queryKey: ['timeline', selectedFeed] })}
+              className="p-2 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-all"
               style={{ color: 'var(--bsky-text-secondary)' }}
+              aria-label="Refresh feed"
             >
-              <span className="text-sm">Change</span>
-              <ChevronDown size={16} className={`transition-transform ${showFeedDropdown ? 'rotate-180' : ''}`} />
+              <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
             </button>
+            
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setShowFeedDropdown(!showFeedDropdown)}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-all"
+                style={{ color: 'var(--bsky-text-secondary)' }}
+              >
+                <span className="text-sm">Change</span>
+                <ChevronDown size={16} className={`transition-transform ${showFeedDropdown ? 'rotate-180' : ''}`} />
+              </button>
             
             {showFeedDropdown && (
               <div className="absolute right-0 mt-2 w-64 rounded-lg shadow-lg overflow-hidden"
@@ -1238,6 +1072,18 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
                 </div>
               </div>
             )}
+            </div>
+            
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100"
+                style={{ color: 'var(--bsky-text-secondary)' }}
+                aria-label="Close column"
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1245,7 +1091,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true }) 
       <div className="max-w-2xl mx-auto px-3 sm:px-4" ref={postsContainerRef}>
         <div className="divide-y" style={{ borderColor: 'var(--bsky-border-primary)' }} role="feed" aria-label="Posts">
         {posts.map((item: any, index: number) => (
-          <PostItem key={`${item.post.uri}-${index}`} item={item} index={index} />
+          <PostItem key={`${item.post.uri}-page${item._pageIndex}-item${item._itemIndex}`} item={item} index={index} />
         ))}
         </div>
         

@@ -12,11 +12,13 @@ import { RateLimitStatus } from './components/RateLimitStatus'
 import { ConversationsSimple as Conversations } from './components/ConversationsSimple'
 import { Composer } from './components/Composer'
 import { Search } from './components/Search'
+import { Bookmarks } from './components/Bookmarks'
 import { CompressionTest } from './components/CompressionTest'
 import { DebugConsole } from './components/DebugConsole'
 import SkyDeck from './components/SkyDeck'
 import { Notifications } from './components/Notifications'
 import { NotificationStorageDB } from './services/notification-storage-db'
+import { bookmarkStorage } from './services/bookmark-storage-db'
 import { cleanupLocalStorage } from './utils/cleanupLocalStorage'
 import { BackgroundNotificationLoader } from './components/BackgroundNotificationLoader'
 import { debug } from '@bsky/shared'
@@ -59,6 +61,9 @@ function AppContent() {
   useEffect(() => {
     const runMigration = async () => {
       try {
+        // Initialize bookmark storage
+        await bookmarkStorage.init()
+        
         const db = NotificationStorageDB.getInstance()
         await db.init()
         const migrated = await db.migrateFromLocalStorage()
@@ -108,6 +113,7 @@ function AppContent() {
             <Route path="/analytics" element={<NotificationsAnalytics />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/conversations" element={<Conversations />} />
+            <Route path="/bookmarks" element={<Bookmarks />} />
             <Route path="/compose" element={<Composer />} />
             <Route path="/search" element={<Search />} />
             <Route path="/compression-test" element={<CompressionTest />} />

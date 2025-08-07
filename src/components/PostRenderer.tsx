@@ -1,6 +1,5 @@
 import React from 'react'
-import { Heart, MessageCircle, Repeat2, Quote, Reply } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
+import { Heart, MessageCircle, Repeat2, Reply, Bookmark } from 'lucide-react'
 import { AppBskyFeedDefs } from '@atproto/api'
 import { proxifyBskyImage } from '../utils/image-proxy'
 
@@ -9,7 +8,8 @@ interface PostRendererProps {
   onLike?: () => void
   onRepost?: () => void
   onReply?: () => void
-  onQuote?: () => void
+  onBookmark?: () => void
+  isBookmarked?: boolean
   compact?: boolean
 }
 
@@ -18,7 +18,8 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
   onLike,
   onRepost,
   onReply,
-  onQuote,
+  onBookmark,
+  isBookmarked = false,
   compact = false
 }) => {
   const record = post.record as any
@@ -49,7 +50,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
         <p className="post-text">{record?.text || ''}</p>
         
         {/* Render embedded images if any */}
-        {post.embed?.images && (
+        {post.embed && 'images' in post.embed && (post.embed as any).images && (
           <div className="post-images">
             {(post.embed as any).images.map((image: any, index: number) => (
               <img
@@ -63,7 +64,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
         )}
         
         {/* Render quoted post if any */}
-        {post.embed?.record && (
+        {post.embed && 'record' in post.embed && (
           <div className="mt-2 border rounded-lg overflow-hidden" style={{ borderColor: 'var(--bsky-border-primary)' }}>
             <div className="px-3 py-1.5 flex items-center gap-2 text-xs"
                  style={{ 
@@ -77,15 +78,15 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
             <div className="p-3">
               <div className="quote-author flex items-center gap-2 mb-2">
                 <img
-                  src={proxifyBskyImage((post.embed.record as any).author?.avatar) || '/default-avatar.png'}
+                  src={proxifyBskyImage((post.embed as any).record?.author?.avatar) || '/default-avatar.png'}
                   alt=""
                   className="quote-avatar w-5 h-5 rounded-full"
                 />
                 <span className="quote-author-name text-sm">
-                  {(post.embed.record as any).author?.displayName || (post.embed.record as any).author?.handle}
+                  {(post.embed as any).record?.author?.displayName || (post.embed as any).record?.author?.handle}
                 </span>
               </div>
-              <p className="quote-text text-sm">{(post.embed.record as any).value?.text || ''}</p>
+              <p className="quote-text text-sm">{(post.embed as any).record?.value?.text || ''}</p>
             </div>
           </div>
         )}
@@ -126,6 +127,17 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
             <span>{post.likeCount || 0}</span>
           </button>
           
+          {onBookmark && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onBookmark()
+              }}
+              className={`action-button ${isBookmarked ? 'active bookmark' : ''}`}
+            >
+              <Bookmark className="w-4 h-4" fill={isBookmarked ? 'currentColor' : 'none'} />
+            </button>
+          )}
         </div>
       )}
     </div>

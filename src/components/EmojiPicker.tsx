@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Search, X, Clock, Smile } from 'lucide-react'
 
 interface EmojiPickerProps {

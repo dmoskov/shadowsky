@@ -21,7 +21,7 @@ export function CompressionTest() {
     {
       name: 'Simple scale',
       compress: async (file: File) => {
-        return new Promise<Blob>((resolve, reject) => {
+        return new Promise<Blob>((resolve) => {
           const reader = new FileReader()
           reader.onload = (e) => {
             const img = new Image()
@@ -51,7 +51,7 @@ export function CompressionTest() {
     {
       name: 'With white background',
       compress: async (file: File) => {
-        return new Promise<Blob>((resolve, reject) => {
+        return new Promise<Blob>((resolve) => {
           const reader = new FileReader()
           reader.onload = (e) => {
             const img = new Image()
@@ -86,7 +86,7 @@ export function CompressionTest() {
     {
       name: 'No smoothing',
       compress: async (file: File) => {
-        return new Promise<Blob>((resolve, reject) => {
+        return new Promise<Blob>((resolve) => {
           const reader = new FileReader()
           reader.onload = (e) => {
             const img = new Image()
@@ -117,7 +117,7 @@ export function CompressionTest() {
     {
       name: 'High quality smoothing',
       compress: async (file: File) => {
-        return new Promise<Blob>((resolve, reject) => {
+        return new Promise<Blob>((resolve) => {
           const reader = new FileReader()
           reader.onload = (e) => {
             const img = new Image()
@@ -149,7 +149,7 @@ export function CompressionTest() {
     {
       name: 'Clear rect first',
       compress: async (file: File) => {
-        return new Promise<Blob>((resolve, reject) => {
+        return new Promise<Blob>((resolve) => {
           const reader = new FileReader()
           reader.onload = (e) => {
             const img = new Image()
@@ -180,7 +180,7 @@ export function CompressionTest() {
     {
       name: 'Precise source dimensions',
       compress: async (file: File) => {
-        return new Promise<Blob>((resolve, reject) => {
+        return new Promise<Blob>((resolve) => {
           const reader = new FileReader()
           reader.onload = (e) => {
             const img = new Image()
@@ -210,7 +210,7 @@ export function CompressionTest() {
     {
       name: 'No alpha context',
       compress: async (file: File) => {
-        return new Promise<Blob>((resolve, reject) => {
+        return new Promise<Blob>((resolve) => {
           const reader = new FileReader()
           reader.onload = (e) => {
             const img = new Image()
@@ -240,7 +240,7 @@ export function CompressionTest() {
     {
       name: 'Floor dimensions',
       compress: async (file: File) => {
-        return new Promise<Blob>((resolve, reject) => {
+        return new Promise<Blob>((resolve) => {
           const reader = new FileReader()
           reader.onload = (e) => {
             const img = new Image()
@@ -270,7 +270,7 @@ export function CompressionTest() {
     {
       name: 'PNG output',
       compress: async (file: File) => {
-        return new Promise<Blob>((resolve, reject) => {
+        return new Promise<Blob>((resolve) => {
           const reader = new FileReader()
           reader.onload = (e) => {
             const img = new Image()

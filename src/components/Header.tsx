@@ -3,7 +3,6 @@ import { Menu, LogOut } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { ThemeToggle } from './ThemeToggle'
 import butterflyIcon from '/butterfly-icon.svg'
-import { proxifyBskyImage } from '../utils/image-proxy'
 
 interface HeaderProps {
   onMenuToggle: () => void
@@ -36,14 +35,6 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
 
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex items-center gap-2">
-            {session?.avatar && (
-              <img 
-                src={proxifyBskyImage(session.avatar)} 
-                alt={session.handle} 
-                className="w-8 h-8 bsky-avatar"
-                crossOrigin="anonymous"
-              />
-            )}
             <span className="text-sm font-medium" style={{ color: 'var(--bsky-text-secondary)' }}>
               @{session?.handle || 'user'}
             </span>

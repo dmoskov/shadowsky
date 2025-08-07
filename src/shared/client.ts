@@ -5,6 +5,7 @@
 import { BskyAgent } from '@atproto/api'
 import type { AtpSessionData, AtpSessionEvent } from '@atproto/api'
 import { debug } from './debug'
+import { setCookie, getCookie, deleteCookie } from '../utils/cookies'
 
 export interface ATProtoConfig {
   service: string
@@ -101,12 +102,20 @@ export class ATProtoClient {
 
   private saveSession(session: Session) {
     if (typeof window !== 'undefined') {
+      // Use cookies for cross-subdomain access
+      setCookie(this.sessionKey, JSON.stringify(session), {
+        secure: true,
+        sameSite: 'lax'
+      })
+      // Also save to localStorage for backward compatibility
       localStorage.setItem(this.sessionKey, JSON.stringify(session))
     }
   }
 
   private clearSession() {
     if (typeof window !== 'undefined') {
+      // Clear from both cookie and localStorage
+      deleteCookie(this.sessionKey)
       localStorage.removeItem(this.sessionKey)
     }
   }
@@ -116,7 +125,21 @@ export class ATProtoClient {
     
     try {
       const sessionKey = `${prefix}bsky_session`
-      const saved = localStorage.getItem(sessionKey)
+      // Try to load from cookie first (for cross-subdomain access)
+      let saved = getCookie(sessionKey)
+      
+      // Fall back to localStorage if cookie not found
+      if (!saved) {
+        saved = localStorage.getItem(sessionKey)
+        // If found in localStorage, migrate to cookie
+        if (saved) {
+          setCookie(sessionKey, saved, {
+            secure: true,
+            sameSite: 'lax'
+          })
+        }
+      }
+      
       return saved ? JSON.parse(saved) : null
     } catch {
       return null

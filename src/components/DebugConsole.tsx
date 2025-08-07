@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { HardDrive, Database, Package, AlertCircle, CheckCircle, Trash2, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react'
 import { NotificationCache } from '../utils/notificationCache'
 import { NotificationObjectCache } from '../utils/notificationObjectCache'
@@ -140,7 +140,6 @@ export function DebugConsole() {
     // Analyze storage by type
     storageMetrics.largestItems.forEach(item => {
       let category: StorageBreakdown | undefined
-      let color = 'var(--bsky-primary)'
       
       if (item.key.includes('notifications_cache')) {
         category = breakdown.find(b => b.key === 'notifications')
@@ -655,7 +654,7 @@ export function DebugConsole() {
                             background: 'var(--bsky-bg-secondary)',
                             color: 'var(--bsky-text-secondary)'
                           }}>
-                            {reason}: {count}
+                            {reason}: {String(count)}
                           </span>
                         ))}
                       </div>

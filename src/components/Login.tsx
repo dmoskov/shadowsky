@@ -113,7 +113,6 @@ export const Login: React.FC = () => {
             />
           </div>
 
-          {console.log('showEmailCode state:', showEmailCode)}
           {showEmailCode && (
             <div className="mb-6">
               <label htmlFor="emailCode" className="block text-sm font-medium mb-2" style={{ color: 'var(--bsky-text-secondary)' }}>

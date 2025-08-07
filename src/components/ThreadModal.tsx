@@ -35,7 +35,7 @@ export function ThreadModal({ postUri, onClose }: ThreadModalProps) {
     }
   }, [onClose])
 
-  const { data: threadData, isLoading, error } = useQuery({
+  const { data: threadData, isLoading, error, refetch } = useQuery({
     queryKey: ['thread', postUri],
     queryFn: async () => {
       if (!agent) throw new Error('Not authenticated')
@@ -75,14 +75,23 @@ export function ThreadModal({ postUri, onClose }: ThreadModalProps) {
 
   // Find the root post
   const rootPost = React.useMemo(() => {
-    if (!threadData) return null
+    if (!threadData) return undefined
     
     let current = threadData
-    while (current?.parent?.$type === 'app.bsky.feed.defs#threadViewPost') {
-      current = current.parent
+    while (current?.$type === 'app.bsky.feed.defs#threadViewPost') {
+      const threadViewPost = current as AppBskyFeedDefs.ThreadViewPost
+      if (threadViewPost.parent?.$type === 'app.bsky.feed.defs#threadViewPost') {
+        current = threadViewPost.parent
+      } else {
+        break
+      }
     }
     
-    return current?.post?.uri || postUri
+    if (current?.$type === 'app.bsky.feed.defs#threadViewPost') {
+      const threadViewPost = current as AppBskyFeedDefs.ThreadViewPost
+      return threadViewPost.post?.uri || postUri
+    }
+    return postUri
   }, [threadData, postUri])
 
   return ReactDOM.createPortal(
@@ -132,6 +141,10 @@ export function ThreadModal({ postUri, onClose }: ThreadModalProps) {
               highlightUri={postUri}
               showUnreadIndicators={false}
               className="max-w-full"
+              onReplySuccess={() => {
+                // Refresh the thread to show the new reply
+                refetch()
+              }}
             />
           )}
           </div>

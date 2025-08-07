@@ -24,6 +24,7 @@ class BookmarkStorageDB {
   private dbName = 'bsky_bookmarks_db'
   private dbVersion = 1
   private db: IDBPDatabase | null = null
+  private localStorageKey = 'bsky_bookmarked_uris'
 
   async init() {
     try {
@@ -42,12 +43,24 @@ class BookmarkStorageDB {
       console.error('Failed to initialize bookmark storage DB:', error)
     }
   }
+  
+  // Sync bookmarked URIs to localStorage for quick access
+  private async syncToLocalStorage() {
+    try {
+      const bookmarks = await this.getAllBookmarks()
+      const uris = bookmarks.map(b => b.postUri)
+      localStorage.setItem(this.localStorageKey, JSON.stringify(uris))
+    } catch (error) {
+      console.error('Failed to sync bookmarks to localStorage:', error)
+    }
+  }
 
   async addBookmark(bookmark: Bookmark): Promise<void> {
     if (!this.db) await this.init()
     if (!this.db) throw new Error('Failed to initialize database')
 
     await this.db.put('bookmarks', bookmark)
+    await this.syncToLocalStorage()
   }
 
   async removeBookmark(postUri: string): Promise<void> {
@@ -57,6 +70,7 @@ class BookmarkStorageDB {
     const bookmark = await this.getBookmarkByUri(postUri)
     if (bookmark) {
       await this.db.delete('bookmarks', bookmark.id)
+      await this.syncToLocalStorage()
     }
   }
 
