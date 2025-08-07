@@ -12,6 +12,7 @@ interface PostActionBarProps {
   onShare?: () => void
   showCounts?: boolean
   size?: 'small' | 'medium' | 'large'
+  isReplying?: boolean
 }
 
 export const PostActionBar: React.FC<PostActionBarProps> = memo(({
@@ -21,7 +22,8 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(({
   onLike,
   onShare,
   showCounts = true,
-  size = 'medium'
+  size = 'medium',
+  isReplying = false
 }) => {
   const { isBookmarked, toggleBookmark } = useBookmarks()
   
@@ -46,11 +48,11 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(({
     <div className={`post-action-bar ${size}`} onClick={(e) => e.stopPropagation()} data-post-uri={post.uri}>
       {/* Reply */}
       <button
-        className="action-item reply"
+        className={`action-item reply ${isReplying ? 'active' : ''}`}
         onClick={(e) => handleAction(e, onReply)}
         aria-label="Reply"
       >
-        <MessageCircle size={iconSize} />
+        <MessageCircle size={iconSize} fill={isReplying ? 'currentColor' : 'none'} />
         {showCounts && <span className="action-count">{post.replyCount || 0}</span>}
       </button>
 

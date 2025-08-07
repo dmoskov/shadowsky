@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { X } from 'lucide-react';
 import { NotificationsFeed } from './NotificationsFeed';
 import { VisualTimeline } from './VisualTimeline';
 import { ConversationsSimple as Conversations } from './ConversationsSimple';
@@ -86,13 +85,17 @@ export default function SkyColumn({ column, onClose, chromeless = false, isFocus
 
   return (
     <div className="h-full rounded-lg shadow-lg flex flex-col overflow-hidden relative" data-theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}>
-      <div 
-        ref={scrollContainerRef}
-        className={`h-full overflow-y-auto skydeck-scrollbar scroll-shadow-container ${
+      <div className="h-full relative overflow-hidden">
+        <div 
+          ref={scrollContainerRef}
+          className="h-full overflow-y-auto skydeck-scrollbar"
+        >
+          {renderContent()}
+        </div>
+        {/* Fade overlays positioned outside the scroll container */}
+        <div className={`absolute inset-0 pointer-events-none scroll-shadow-overlay ${
           hasScrollTop ? 'has-scroll-top' : ''
-        } ${hasScrollBottom ? 'has-scroll-bottom' : ''}`}
-      >
-        {renderContent()}
+        } ${hasScrollBottom ? 'has-scroll-bottom' : ''}`} />
       </div>
     </div>
   );

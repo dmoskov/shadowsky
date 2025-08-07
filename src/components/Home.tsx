@@ -102,6 +102,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
   const [galleryIndex, setGalleryIndex] = useState(0)
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
   const [showThread, setShowThread] = useState(false)
+  const [openThreadToReply, setOpenThreadToReply] = useState(false)
   const [focusedPostIndex, setFocusedPostIndex] = useState<number>(-1)
   const postsContainerRef = useRef<HTMLDivElement>(null)
   const [feedOrder, setFeedOrder] = useState<string[]>([])
@@ -111,6 +112,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
   const containerRef = useRef<HTMLDivElement>(null)
   const postRefs = useRef<{ [key: string]: HTMLDivElement }>({})
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const isKeyboardNavigationRef = useRef(false)
   
   const { trackFeatureAction } = useFeatureTracking('home_feed')
   const { trackClick } = useInteractionTracking()
@@ -355,7 +357,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         aria-selected={isFocused}
         role="article"
         onClick={() => {
-          // Update focused index on click
+          // Update focused index on click (not keyboard navigation)
+          isKeyboardNavigationRef.current = false
           setFocusedPostIndex(index)
         }}
         onKeyDown={(e) => {
@@ -483,8 +486,10 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
             <PostActionBar
               post={post}
               onReply={() => {
-                // Reply functionality
-                console.log('Reply to:', post.uri)
+                // Open thread modal with reply focus
+                setSelectedPost(post)
+                setOpenThreadToReply(true)
+                setShowThread(true)
               }}
               onRepost={() => handleRepost(post)}
               onLike={() => handleLike(post)}
@@ -535,6 +540,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
   const handlePostClick = (post: Post) => {
     trackClick('post', { postUri: post.uri })
     setSelectedPost(post)
+    setOpenThreadToReply(false)  // Reset when clicking on post normally
     setShowThread(true)
   }
   
@@ -593,8 +599,11 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
       // Only handle if this column is focused (for SkyDeck compatibility)
       if (!isFocused) return
       
-      // Don't handle shortcuts if user is typing in an input/textarea
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      // Don't handle shortcuts if user is typing in an input/textarea or modals are open
+      if (e.target instanceof HTMLInputElement || 
+          e.target instanceof HTMLTextAreaElement ||
+          document.body.classList.contains('thread-modal-open') ||
+          document.body.classList.contains('conversation-modal-open')) {
         return
       }
       
@@ -606,6 +615,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'j': // vim-style down
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           if (currentIndex < posts.length - 1) {
             setFocusedPostIndex(currentIndex + 1)
           } else if (currentIndex === -1 && posts.length > 0) {
@@ -618,6 +628,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'k': // vim-style up
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           if (currentIndex > 0) {
             setFocusedPostIndex(currentIndex - 1)
           } else if (currentIndex === -1 && posts.length > 0) {
@@ -641,6 +652,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'Home':
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           if (posts.length > 0) {
             setFocusedPostIndex(0)
           }
@@ -649,6 +661,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'End':
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           if (posts.length > 0) {
             setFocusedPostIndex(posts.length - 1)
           }
@@ -657,6 +670,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'PageUp':
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           // Jump up by 5 items
           setFocusedPostIndex(Math.max(0, currentIndex - 5))
           break
@@ -664,6 +678,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'PageDown':
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           // Jump down by 5 items
           setFocusedPostIndex(Math.min(posts.length - 1, currentIndex + 5))
           break
@@ -693,9 +708,9 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
     return () => window.removeEventListener('keydown', handleKeyPress)
   }, [posts, focusedPostIndex, isFocused, handlePostClick])
   
-  // Scroll focused post into view
+  // Scroll focused post into view only for keyboard navigation
   useEffect(() => {
-    if (focusedPostIndex >= 0 && focusedPostIndex < posts.length) {
+    if (focusedPostIndex >= 0 && focusedPostIndex < posts.length && isKeyboardNavigationRef.current) {
       const post = posts[focusedPostIndex]?.post
       if (post) {
         const postKey = `${post.uri}-${focusedPostIndex}`
@@ -708,6 +723,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
           postEl.focus()
         }
       }
+      // Reset the flag after scrolling
+      isKeyboardNavigationRef.current = false
     }
   }, [focusedPostIndex, posts])
   
@@ -794,7 +811,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
              style={{ borderColor: 'var(--bsky-border-primary)' }}
              onClick={(e) => {
                e.stopPropagation()
-               window.open(embed.external.uri, '_blank')
+               // Removed external link - only open links from ThreadViewer
              }}>
           {embed.external.thumb && (
             <img
@@ -1123,9 +1140,11 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
       {showThread && selectedPost && (
         <ThreadModal
           postUri={selectedPost.uri}
+          openToReply={openThreadToReply}
           onClose={() => {
             setShowThread(false)
             setSelectedPost(null)
+            setOpenThreadToReply(false)
           }}
         />
       )}

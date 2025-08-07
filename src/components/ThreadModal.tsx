@@ -5,16 +5,19 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../contexts/AuthContext'
 import { debug } from '@bsky/shared'
 import { ThreadViewer } from './ThreadViewer'
+import { BaseComposer } from './BaseComposer'
+import { VideoUploadService } from '../services/atproto/video-upload'
 import type { AppBskyFeedDefs } from '@atproto/api'
 
 interface ThreadModalProps {
   postUri: string
   onClose: () => void
+  openToReply?: boolean  // When true, opens with the post ready to reply
 }
 
 type PostView = AppBskyFeedDefs.PostView
 
-export function ThreadModal({ postUri, onClose }: ThreadModalProps) {
+export function ThreadModal({ postUri, onClose, openToReply = false }: ThreadModalProps) {
   const { agent } = useAuth()
 
   useEffect(() => {
@@ -94,6 +97,83 @@ export function ThreadModal({ postUri, onClose }: ThreadModalProps) {
     return postUri
   }, [threadData, postUri])
 
+  // Find the main post that was clicked on to open this thread
+  const mainPost = React.useMemo(() => {
+    if (!posts.length) return null
+    
+    // Find the post that matches the postUri (the one clicked to open the modal)
+    const targetPost = posts.find(p => p.uri === postUri)
+    
+    // If we found it, return it. Otherwise, return the first post
+    return targetPost || posts[0]
+  }, [posts, postUri])
+
+  const handleReply = async (text: string, media?: any[]) => {
+    if (!agent || !mainPost || !rootPost) throw new Error('Missing required context')
+    
+    const rootCid = posts.find(p => p.uri === rootPost)?.cid || mainPost.cid
+    
+    // Upload media if present
+    let embed = undefined
+    if (media && media.length > 0) {
+      const hasVideo = media.some(m => m.type === 'video')
+      
+      if (hasVideo) {
+        // Handle video upload
+        const videoFile = media.find(m => m.type === 'video')
+        if (videoFile) {
+          // Convert File to Uint8Array
+          const arrayBuffer = await videoFile.file.arrayBuffer()
+          const videoData = new Uint8Array(arrayBuffer)
+          
+          const uploadService = new VideoUploadService(agent)
+          const videoBlob = await uploadService.uploadVideo(
+            videoData,
+            videoFile.file.type || 'video/mp4'
+          )
+          
+          embed = {
+            $type: 'app.bsky.embed.video',
+            video: videoBlob.blob,
+            aspectRatio: videoBlob.aspectRatio
+          }
+        }
+      } else {
+        // Handle image uploads
+        const images = await Promise.all(
+          media.filter(m => m.type === 'image').map(async (img) => {
+            const response = await agent.uploadBlob(img.file, { encoding: 'image/jpeg' })
+            return {
+              alt: img.alt || '',
+              image: response.data.blob,
+              aspectRatio: undefined // Let Bluesky determine this
+            }
+          })
+        )
+        
+        if (images.length > 0) {
+          embed = {
+            $type: 'app.bsky.embed.images',
+            images
+          }
+        }
+      }
+    }
+    
+    const record = {
+      text: text.trim(),
+      reply: {
+        root: { uri: rootPost, cid: rootCid },
+        parent: { uri: mainPost.uri, cid: mainPost.cid }
+      },
+      embed,
+      createdAt: new Date().toISOString()
+    }
+    
+    await agent.post(record)
+    refetch() // Refresh the thread to show the new reply
+  }
+
   return ReactDOM.createPortal(
     <>
       <div className="fixed inset-0 bg-black/50 z-[100]" onClick={onClose} />
@@ -135,20 +215,55 @@ export function ThreadModal({ postUri, onClose }: ThreadModalProps) {
           )}
           
           {posts.length > 0 && (
-            <ThreadViewer
-              posts={posts}
-              rootUri={rootPost}
-              highlightUri={postUri}
-              showUnreadIndicators={false}
-              className="max-w-full"
-              onReplySuccess={() => {
-                // Refresh the thread to show the new reply
-                refetch()
-              }}
-            />
+            <>
+              
+              <ThreadViewer
+                posts={posts}
+                rootUri={rootPost}
+                highlightUri={postUri}
+                showUnreadIndicators={false}
+                className="max-w-full"
+                onReplySuccess={() => {
+                  // Refresh the thread to show the new reply
+                  refetch()
+                }}
+              />
+            </>
           )}
           </div>
         </div>
+        
+        {/* Fixed composer at the bottom - only show when explicitly replying */}
+        {posts.length > 0 && mainPost && openToReply && (
+          <div className="flex-shrink-0 border-t p-4" style={{ 
+            backgroundColor: 'var(--bsky-bg-primary)', 
+            borderColor: 'var(--bsky-border-primary)' 
+          }}>
+            <BaseComposer
+              onSubmit={handleReply}
+              placeholder={`Reply to @${mainPost.author.handle}...`}
+              autoFocus={openToReply}
+              replyTo={{
+                uri: mainPost.uri,
+                cid: mainPost.cid,
+                author: {
+                  handle: mainPost.author.handle,
+                  displayName: mainPost.author.displayName
+                }
+              }}
+              features={{
+                media: true,
+                emoji: true,
+                giphy: false, // Can enable if needed
+                altTextGeneration: true,
+                shortcuts: true
+              }}
+              layout="full"
+              showCharCount={true}
+              submitLabel="Reply"
+            />
+          </div>
+        )}
       </div>
     </>,
     document.body

@@ -830,20 +830,20 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [filteredConversations, focusedIndex, handleSelectConversation, isFocused])
 
-  // Make container focusable for keyboard navigation
+  // Make container focusable for keyboard navigation and handle selection clearing
   React.useEffect(() => {
-    if (containerRef.current && isFocused) {
+    if (isFocused) {
       // Focus container when column becomes focused
       // This ensures keyboard events are captured
-      containerRef.current.focus()
-    }
-    // Clear selection when column loses focus or is not focused initially
-    if (!isFocused) {
-      if (selectedConvo) {
-        handleSelectConversation(null)
+      if (containerRef.current) {
+        containerRef.current.focus()
       }
+    } else {
+      // Clear selection when column loses focus
+      // Using setSelectedConvo directly to avoid circular dependency
+      setSelectedConvo(null)
     }
-  }, [isFocused, selectedConvo, handleSelectConversation])
+  }, [isFocused]) // Only depend on isFocused
 
   // Scroll focused item into view
   React.useEffect(() => {
@@ -970,12 +970,14 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
               <ConversationItem
                 key={convo.rootUri}
                 convo={convo}
-                isSelected={selectedConvo === convo.rootUri}
+                isSelected={selectedConvo === convo.rootUri && selectedConvo !== null}
                 isFocused={focusedIndex === index}
                 onClick={() => {
-                  if (isFocused) {
-                    handleSelectConversation(convo.rootUri, convo.totalReplies)
-                  }
+                  // Always handle click, even if column is not focused
+                  // This will allow clicking in unfocused columns
+                  handleSelectConversation(convo.rootUri, convo.totalReplies)
+                  // Also update the focused index when clicking
+                  setFocusedIndex(index)
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && isFocused) {
