@@ -45,8 +45,8 @@ export default defineConfig({
         headers: {
           'Referer': 'https://bsky.app',
         },
-        configure: (proxy, options) => {
-          proxy.on('proxyRes', (proxyRes, req, res) => {
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes) => {
             // Add CORS headers to allow the resource
             proxyRes.headers['Cross-Origin-Resource-Policy'] = 'cross-origin';
             proxyRes.headers['Access-Control-Allow-Origin'] = '*';
@@ -60,8 +60,8 @@ export default defineConfig({
         headers: {
           'Referer': 'https://bsky.app',
         },
-        configure: (proxy, options) => {
-          proxy.on('proxyRes', (proxyRes, req, res) => {
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes) => {
             // Add CORS headers to allow the resource
             proxyRes.headers['Cross-Origin-Resource-Policy'] = 'cross-origin';
             proxyRes.headers['Access-Control-Allow-Origin'] = '*';
