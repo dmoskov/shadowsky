@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { X } from 'lucide-react';
 import { NotificationsFeed } from './NotificationsFeed';
 import { VisualTimeline } from './VisualTimeline';
 import { ConversationsSimple as Conversations } from './ConversationsSimple';

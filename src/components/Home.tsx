@@ -102,6 +102,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
   const [galleryIndex, setGalleryIndex] = useState(0)
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
   const [showThread, setShowThread] = useState(false)
+  const [openThreadToReply, setOpenThreadToReply] = useState(false)
   const [focusedPostIndex, setFocusedPostIndex] = useState<number>(-1)
   const postsContainerRef = useRef<HTMLDivElement>(null)
   const [feedOrder, setFeedOrder] = useState<string[]>([])
@@ -483,8 +484,10 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
             <PostActionBar
               post={post}
               onReply={() => {
-                // Reply functionality
-                console.log('Reply to:', post.uri)
+                // Open thread modal with reply focus
+                setSelectedPost(post)
+                setOpenThreadToReply(true)
+                setShowThread(true)
               }}
               onRepost={() => handleRepost(post)}
               onLike={() => handleLike(post)}
@@ -535,6 +538,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
   const handlePostClick = (post: Post) => {
     trackClick('post', { postUri: post.uri })
     setSelectedPost(post)
+    setOpenThreadToReply(false)  // Reset when clicking on post normally
     setShowThread(true)
   }
   
@@ -593,8 +597,11 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
       // Only handle if this column is focused (for SkyDeck compatibility)
       if (!isFocused) return
       
-      // Don't handle shortcuts if user is typing in an input/textarea
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      // Don't handle shortcuts if user is typing in an input/textarea or modals are open
+      if (e.target instanceof HTMLInputElement || 
+          e.target instanceof HTMLTextAreaElement ||
+          document.body.classList.contains('thread-modal-open') ||
+          document.body.classList.contains('conversation-modal-open')) {
         return
       }
       
@@ -794,7 +801,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
              style={{ borderColor: 'var(--bsky-border-primary)' }}
              onClick={(e) => {
                e.stopPropagation()
-               window.open(embed.external.uri, '_blank')
+               // Removed external link - only open links from ThreadViewer
              }}>
           {embed.external.thumb && (
             <img
@@ -1123,9 +1130,11 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
       {showThread && selectedPost && (
         <ThreadModal
           postUri={selectedPost.uri}
+          openToReply={openThreadToReply}
           onClose={() => {
             setShowThread(false)
             setSelectedPost(null)
+            setOpenThreadToReply(false)
           }}
         />
       )}

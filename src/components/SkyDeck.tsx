@@ -97,8 +97,11 @@ export default function SkyDeck() {
   // Handle keyboard navigation between columns
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't interfere with input fields
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      // Don't interfere with input fields or when modals are open
+      if (e.target instanceof HTMLInputElement || 
+          e.target instanceof HTMLTextAreaElement ||
+          document.body.classList.contains('thread-modal-open') ||
+          document.body.classList.contains('conversation-modal-open')) {
         return;
       }
 

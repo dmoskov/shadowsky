@@ -1,0 +1,49 @@
+/* Base Composer Styles */
+
+.base-composer {
+  width: 100%;
+}
+
+.base-composer-inline {
+  /* Compact layout for inline replies */
+}
+
+.base-composer-full {
+  /* Full layout for main composer */
+}
+
+/* Ensure emoji picker and other dropdowns appear above other content */
+.base-composer .relative {
+  z-index: 10;
+}
+
+/* Media preview grid adjustments */
+.base-composer img,
+.base-composer video {
+  object-fit: cover;
+}
+
+/* Transition for hover effects */
+.base-composer button {
+  transition: transform 0.1s ease-in-out, background-color 0.2s ease;
+}
+
+/* Focus styles for accessibility */
+.base-composer textarea:focus,
+.base-composer input:focus {
+  outline: none;
+  ring: 2;
+}
+
+/* Alt text input styling */
+.base-composer input[type="text"] {
+  font-size: 0.75rem;
+}
+
+/* Error message styling */
+.base-composer .text-red-500 {
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}

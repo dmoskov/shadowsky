@@ -507,6 +507,14 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({ hideTimeLabels =
       // Only handle keyboard navigation if not in SkyDeck or focus is within the timeline
       if (!isInSkyDeck && !containerRef.current?.contains(document.activeElement)) return
 
+      // Don't interfere with input fields or when modals are open
+      if (e.target instanceof HTMLInputElement || 
+          e.target instanceof HTMLTextAreaElement ||
+          document.body.classList.contains('thread-modal-open') ||
+          document.body.classList.contains('conversation-modal-open')) {
+        return
+      }
+
       let handled = false
       const currentIndex = selectedItemIndex
 

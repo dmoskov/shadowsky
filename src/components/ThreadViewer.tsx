@@ -9,6 +9,7 @@ import { VideoPlayer } from './VideoPlayer'
 import { ImageGallery } from './ImageGallery'
 import { InlineReplyComposer } from './InlineReplyComposer'
 import { PostActionBar } from './PostActionBar'
+import { useOptimisticPosts } from '../hooks/useOptimisticPosts'
 
 type Post = AppBskyFeedDefs.PostView
 
@@ -44,6 +45,58 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   const [galleryImages, setGalleryImages] = useState<Array<{ thumb: string; fullsize: string; alt?: string }> | null>(null)
   const [galleryIndex, setGalleryIndex] = useState(0)
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
+  const [hasShownInitialHighlight, setHasShownInitialHighlight] = useState(false)
+  
+  // Get optimistic post mutations
+  const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } = useOptimisticPosts()
+  
+  // Find the root post info
+  const rootPost = useMemo(() => {
+    if (rootUri) {
+      const root = posts.find(p => p.uri === rootUri)
+      if (root) {
+        return { uri: root.uri, cid: root.cid }
+      }
+    }
+    // If no root URI specified, find the post that has no parent
+    const rootCandidate = posts.find(post => {
+      const record = post.record as any
+      return !record?.reply?.parent
+    })
+    return rootCandidate ? { uri: rootCandidate.uri, cid: rootCandidate.cid } : null
+  }, [posts, rootUri])
+  
+  // Handle like action
+  const handleLike = async (post: Post) => {
+    try {
+      if (post.viewer?.like) {
+        await unlikeMutation.mutateAsync({ likeUri: post.viewer.like, postUri: post.uri })
+      } else {
+        await likeMutation.mutateAsync({
+          uri: post.uri,
+          cid: post.cid
+        })
+      }
+    } catch (error) {
+      console.error('Failed to like/unlike post:', error)
+    }
+  }
+  
+  // Handle repost action
+  const handleRepost = async (post: Post) => {
+    try {
+      if (post.viewer?.repost) {
+        await unrepostMutation.mutateAsync({ repostUri: post.viewer.repost, postUri: post.uri })
+      } else {
+        await repostMutation.mutateAsync({
+          uri: post.uri,
+          cid: post.cid
+        })
+      }
+    } catch (error) {
+      console.error('Failed to repost/unrepost:', error)
+    }
+  }
 
   // Create a map of notifications by URI
   const notificationMap = useMemo(() => {
@@ -208,6 +261,16 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       }, 100) // Small delay to ensure DOM is ready
     }
   }, [highlightUri, rootUri, posts])
+  
+  // Clear the initial highlight after 2 seconds
+  useEffect(() => {
+    if (highlightUri && !hasShownInitialHighlight) {
+      const timer = setTimeout(() => {
+        setHasShownInitialHighlight(true)
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [highlightUri, hasShownInitialHighlight])
 
   // Render embeds (images, videos, quotes, etc)
   const renderEmbed = (embed: any) => {
@@ -257,7 +320,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
              style={{ borderColor: 'var(--bsky-border-primary)' }}
              onClick={(e) => {
                e.stopPropagation()
-               window.open(embed.external.uri, '_blank')
+               // Removed external link - only the link icon opens external links
              }}>
           {embed.external.thumb && (
             <img
@@ -338,6 +401,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       const notification = node.notification
       const isUnread = showUnreadIndicators && notification && !notification.isRead
       const isHighlighted = highlightUri && post?.uri === highlightUri
+      const isReplyingTo = post && replyingTo === post.uri
       const author = post?.author || notification?.author
       const postUrl = post?.uri && author?.handle 
         ? atUriToBskyUrl(post.uri, author.handle) 
@@ -391,28 +455,44 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             <div 
               className={`flex-1 min-w-0 ${maxThreadDepth > 15 ? 'p-2' : maxThreadDepth > 10 ? 'p-3' : 'p-4'} rounded-lg cursor-pointer transition-all hover:bg-opacity-5 hover:bg-blue-500 ${
                 isUnread ? 'ring-2 ring-blue-500 ring-opacity-30' : ''
-              } ${isHighlighted ? 'ring-2 ring-orange-500 ring-opacity-50' : ''}`}
+              } ${isHighlighted && !hasShownInitialHighlight ? 'ring-2 ring-orange-500 ring-opacity-50' : ''}`}
               style={{ 
-                backgroundColor: isHighlighted 
-                  ? 'rgba(251, 146, 60, 0.1)' // Orange highlight background
+                backgroundColor: isReplyingTo
+                  ? 'rgba(59, 130, 246, 0.1)' // Blue when replying
+                  : (isHighlighted && !hasShownInitialHighlight)
+                  ? 'rgba(251, 146, 60, 0.1)' // Orange highlight background (only initially)
                   : (node.isRoot 
                     ? 'var(--bsky-bg-secondary)'
                     : (isUnread ? 'var(--bsky-bg-primary)' : 'var(--bsky-bg-secondary)')),
-                border: isHighlighted 
+                border: isReplyingTo
+                  ? '2px solid rgba(59, 130, 246, 0.5)'
+                  : (isHighlighted && !hasShownInitialHighlight)
                   ? '2px solid rgba(251, 146, 60, 0.5)' 
                   : '1px solid var(--bsky-border-primary)',
+                boxShadow: isReplyingTo ? '0 0 0 3px rgba(59, 130, 246, 0.1)' : undefined,
                 overflow: 'hidden',
                 fontSize: maxThreadDepth > 15 ? '0.75rem' : maxThreadDepth > 10 ? '0.875rem' : '1rem'
               }}
-              onClick={() => {
+              onClick={(e) => {
+                // Don't navigate if clicking on interactive elements
+                const target = e.target as HTMLElement
+                if (target.closest('button') || target.closest('a') || target.closest('textarea') || target.closest('input')) {
+                  return
+                }
+                
                 if (onPostClick && post?.uri) {
                   onPostClick(post.uri)
-                } else if (postUrl) {
-                  window.open(postUrl, '_blank', 'noopener,noreferrer')
+                }
+                // Removed fallback to window.open - only explicit link icon opens external links
+              }}
+              onKeyDown={(e) => {
+                // Prevent Enter key from triggering the click handler
+                if (e.key === 'Enter') {
+                  e.stopPropagation()
                 }
               }}
             >
-              {(node.isRoot || node.depth > 5) && (
+              {(node.isRoot || node.depth > 5 || (isHighlighted && hasShownInitialHighlight)) && (
                 <div className="flex items-center gap-2 mb-2">
                   {node.isRoot && (
                     <span className="text-xs font-medium px-2 py-1 rounded-full" 
@@ -432,6 +512,17 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                             opacity: 0.8
                           }}>
                       Depth: {node.depth}
+                    </span>
+                  )}
+                  {isHighlighted && hasShownInitialHighlight && !node.isRoot && (
+                    <span className="text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1" 
+                          style={{ 
+                            backgroundColor: 'rgba(251, 146, 60, 0.1)', 
+                            color: 'rgb(251, 146, 60)',
+                            border: '1px solid rgba(251, 146, 60, 0.3)'
+                          }}>
+                      <ExternalLink size={10} />
+                      Opened here
                     </span>
                   )}
                   {post && node.isRoot && (
@@ -486,7 +577,18 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                           { addSuffix: true }
                         )}
                       </time>
-                      <ExternalLink size={14} style={{ color: 'var(--bsky-text-tertiary)' }} />
+                      {postUrl && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            window.open(postUrl, '_blank', 'noopener,noreferrer')
+                          }}
+                          className="hover:opacity-70 transition-opacity"
+                          aria-label="Open in Bluesky"
+                        >
+                          <ExternalLink size={14} style={{ color: 'var(--bsky-text-tertiary)' }} />
+                        </button>
+                      )}
                     </div>
                   </div>
                   
@@ -525,29 +627,40 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                   onReply={() => {
                     setReplyingTo(post.uri === replyingTo ? null : post.uri)
                   }}
+                  onRepost={() => handleRepost(post)}
+                  onLike={() => handleLike(post)}
                   showCounts={true}
                   size={maxThreadDepth > 10 ? 'small' : 'medium'}
+                  isReplying={replyingTo === post.uri}
                 />
               )}
               
               {/* Inline reply composer */}
               {post && replyingTo === post.uri && (
-                <div className="mt-2 ml-10">
-                  <InlineReplyComposer
-                    replyTo={{
-                      uri: post.uri,
-                      cid: post.cid,
-                      author: {
-                        handle: post.author.handle,
-                        displayName: post.author.displayName
-                      }
-                    }}
-                    onClose={() => setReplyingTo(null)}
-                    onSuccess={() => {
-                      setReplyingTo(null)
-                      onReplySuccess?.()
-                    }}
-                  />
+                <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+                  {/* Visual indicator showing which post is being replied to */}
+                  <div className="ml-10 mb-2 flex items-center gap-2 text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                    <CornerDownRight size={16} />
+                    <span>Replying to this post</span>
+                  </div>
+                  <div className="ml-10">
+                    <InlineReplyComposer
+                      replyTo={{
+                        uri: post.uri,
+                        cid: post.cid,
+                        author: {
+                          handle: post.author.handle,
+                          displayName: post.author.displayName
+                        }
+                      }}
+                      root={rootPost || undefined}
+                      onClose={() => setReplyingTo(null)}
+                      onSuccess={() => {
+                        setReplyingTo(null)
+                        onReplySuccess?.()
+                      }}
+                    />
+                  </div>
                 </div>
               )}
             </div>
