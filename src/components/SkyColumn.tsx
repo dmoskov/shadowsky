@@ -5,6 +5,7 @@ import { ConversationsSimple as Conversations } from './ConversationsSimple';
 import { Home } from './Home';
 import { DirectMessages } from './DirectMessages';
 import { BookmarksColumn } from './BookmarksColumn';
+import { ColumnHeader } from './ColumnHeader';
 import type { Column } from './SkyDeck';
 
 interface SkyColumnProps {
@@ -48,24 +49,20 @@ export default function SkyColumn({ column, onClose, chromeless = false, isFocus
         return <NotificationsFeed />;
       
       case 'timeline':
-        return (
-          <div className="h-full overflow-y-auto skydeck-scrollbar">
-            <VisualTimeline hideTimeLabels={true} isInSkyDeck={true} isFocused={isFocused} onClose={onClose} />
-          </div>
-        );
+        return <VisualTimeline hideTimeLabels={true} isInSkyDeck={true} isFocused={isFocused} />;
       
       case 'conversations':
-        return <Conversations isFocused={isFocused} onClose={onClose} />;
+        return <Conversations isFocused={isFocused} />;
       
       case 'messages':
         return <DirectMessages />;
       
       case 'bookmarks':
-        return <BookmarksColumn isFocused={isFocused} onClose={onClose} />;
+        return <BookmarksColumn isFocused={isFocused} />;
       
       case 'feed':
         // Use the Home component for all feed columns
-        return <Home initialFeedUri={column.data} isFocused={isFocused} columnId={column.id} onClose={column.id !== 'home' ? onClose : undefined} />;
+        return <Home initialFeedUri={column.data} isFocused={isFocused} columnId={column.id} />;
       
       default:
         return (
@@ -77,6 +74,30 @@ export default function SkyColumn({ column, onClose, chromeless = false, isFocus
         );
     }
   };
+  
+  // Render content with header
+  const renderContentWithHeader = () => {
+    return (
+      <div className="h-full flex flex-col">
+        <ColumnHeader 
+          column={column} 
+          onRemove={() => onClose()}
+        />
+        <div className="flex-1 overflow-hidden relative">
+          <div 
+            ref={scrollContainerRef}
+            className="h-full overflow-y-auto skydeck-scrollbar"
+          >
+            {renderContent()}
+          </div>
+          {/* Fade overlays positioned outside the scroll container */}
+          <div className={`absolute inset-0 pointer-events-none scroll-shadow-overlay ${
+            hasScrollTop ? 'has-scroll-top' : ''
+          } ${hasScrollBottom ? 'has-scroll-bottom' : ''}`} />
+        </div>
+      </div>
+    );
+  };
 
   if (chromeless) {
     // In chromeless mode, render content directly without wrapper
@@ -85,18 +106,7 @@ export default function SkyColumn({ column, onClose, chromeless = false, isFocus
 
   return (
     <div className="h-full rounded-lg shadow-lg flex flex-col overflow-hidden relative" data-theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}>
-      <div className="h-full relative overflow-hidden">
-        <div 
-          ref={scrollContainerRef}
-          className="h-full overflow-y-auto skydeck-scrollbar"
-        >
-          {renderContent()}
-        </div>
-        {/* Fade overlays positioned outside the scroll container */}
-        <div className={`absolute inset-0 pointer-events-none scroll-shadow-overlay ${
-          hasScrollTop ? 'has-scroll-top' : ''
-        } ${hasScrollBottom ? 'has-scroll-bottom' : ''}`} />
-      </div>
+      {renderContentWithHeader()}
     </div>
   );
 }

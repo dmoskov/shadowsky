@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Bell, Clock, MessageSquare, Hash, Star, Mail, Bookmark } from 'lucide-react';
+import { Plus, Bell, Clock, MessageSquare, Hash, Star, Mail, Bookmark, Users } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import SkyColumn from './SkyColumn';
@@ -80,6 +80,21 @@ export default function SkyDeck() {
       }
     },
     enabled: !!agent && !!userPrefs?.savedFeeds
+  });
+  
+  // Fetch user's lists
+  const { data: userLists } = useQuery({
+    queryKey: ['userLists', agent?.session?.did],
+    queryFn: async () => {
+      if (!agent || !agent.session?.did) throw new Error('Not authenticated');
+      const response = await agent.app.bsky.graph.getLists({
+        actor: agent.session.did,
+        limit: 50
+      });
+      return response.data.lists;
+    },
+    enabled: !!agent?.session?.did,
+    staleTime: 30 * 60 * 1000, // 30 minutes
   });
 
   // Handle responsive width detection
@@ -396,10 +411,45 @@ export default function SkyDeck() {
                       </>
                     )}
                     
+                    {/* Add Lists Section */}
+                    {userLists && userLists.length > 0 && (
+                      <>
+                        <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 px-3 mb-2">
+                            Add List
+                          </h4>
+                          <div className="grid gap-1">
+                            {userLists.map((list: any) => (
+                              <button
+                                key={list.uri}
+                                onClick={() => handleAddColumn('feed', list.uri, list.name)}
+                                className="flex items-start gap-2 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors text-left"
+                              >
+                                <Users className="w-4 h-4 text-blue-500 mt-0.5" />
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                    {list.name}
+                                  </div>
+                                  {list.description && (
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                      {list.description}
+                                    </div>
+                                  )}
+                                  <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                                    {list.listItemCount || 0} members
+                                  </div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    
                     {/* Add Custom Feed by URI */}
                     <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
                       <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 px-3 mb-2">
-                        Add Custom Feed by URI
+                        Add Custom Feed or List by URI
                       </h4>
                       <div className="px-3 flex gap-2">
                         <input
@@ -412,7 +462,7 @@ export default function SkyDeck() {
                               document.getElementById('add-feed-button')?.click();
                             }
                           }}
-                          placeholder="at://did:plc:xyz/app.bsky.feed.generator/feed-name"
+                          placeholder="Paste feed/list AT-URI or bsky.app URL"
                           className="flex-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <button
@@ -421,24 +471,85 @@ export default function SkyDeck() {
                             if (customFeedUri.trim()) {
                               setIsLoadingCustomFeed(true);
                               try {
-                                // Try to fetch feed info
-                                const response = await agent?.app.bsky.feed.getFeedGenerators({
-                                  feeds: [customFeedUri.trim()]
-                                });
-                                if (response?.data.feeds[0]) {
-                                  const feed = response.data.feeds[0];
-                                  handleAddColumn('feed', feed.uri, feed.displayName);
-                                  setCustomFeedUri('');
-                                } else {
-                                  // If no feed info, add with URI as name
-                                  handleAddColumn('feed', customFeedUri.trim(), customFeedUri.trim());
-                                  setCustomFeedUri('');
+                                let uri = customFeedUri.trim();
+                                
+                                // Handle starter pack URLs
+                                if (uri.includes('bsky.app/starter-pack/')) {
+                                  // Extract the handle and rkey from starter pack URL
+                                  const match = uri.match(/starter-pack\/([^\/]+)\/([^\/\?]+)/);
+                                  if (match) {
+                                    const [, handle, rkey] = match;
+                                    try {
+                                      // Resolve the handle to DID
+                                      const resolveResponse = await agent?.com.atproto.identity.resolveHandle({
+                                        handle: handle
+                                      });
+                                      if (resolveResponse?.data?.did) {
+                                        // Construct the starter pack AT-URI
+                                        const starterPackUri = `at://${resolveResponse.data.did}/app.bsky.graph.starterpack/${rkey}`;
+                                        
+                                        // Fetch the starter pack to get the list URI
+                                        const starterPackResponse = await agent?.app.bsky.graph.getStarterPack({
+                                          starterPack: starterPackUri
+                                        });
+                                        
+                                        if (starterPackResponse?.data?.starterPack?.list) {
+                                          // Use the list URI from the starter pack
+                                          const listData = starterPackResponse.data.starterPack.list;
+                                          // Handle both string URI and object with uri property
+                                          uri = typeof listData === 'string' ? listData : listData.uri;
+                                          console.log('Extracted list URI from starter pack:', uri);
+                                        } else {
+                                          console.error('Starter pack does not contain a list');
+                                          throw new Error('Starter pack does not contain a list');
+                                        }
+                                      }
+                                    } catch (error) {
+                                      console.error('Failed to resolve starter pack:', error);
+                                      throw error;
+                                    }
+                                  }
                                 }
-                              } catch (error) {
-                                console.error('Error fetching feed:', error);
-                                // Add anyway with URI as name
-                                handleAddColumn('feed', customFeedUri.trim(), customFeedUri.trim());
-                                setCustomFeedUri('');
+                                
+                                // Ensure uri is a string
+                                if (!uri || typeof uri !== 'string') {
+                                  throw new Error('Invalid feed URI');
+                                }
+                                
+                                // Check if it's a list URI
+                                if (uri.includes('/app.bsky.graph.list/')) {
+                                  // Try to fetch list info
+                                  const response = await agent?.app.bsky.graph.getList({
+                                    list: uri
+                                  });
+                                  if (response?.data.list) {
+                                    const list = response.data.list;
+                                    handleAddColumn('feed', list.uri, list.name);
+                                    setCustomFeedUri('');
+                                  } else {
+                                    // If no list info, add with URI as name
+                                    handleAddColumn('feed', uri, uri);
+                                    setCustomFeedUri('');
+                                  }
+                                } else {
+                                  // It's a feed URI
+                                  const response = await agent?.app.bsky.feed.getFeedGenerators({
+                                    feeds: [uri]
+                                  });
+                                  if (response?.data.feeds[0]) {
+                                    const feed = response.data.feeds[0];
+                                    handleAddColumn('feed', feed.uri, feed.displayName);
+                                    setCustomFeedUri('');
+                                  } else {
+                                    // If no feed info, add with URI as name
+                                    handleAddColumn('feed', uri, uri);
+                                    setCustomFeedUri('');
+                                  }
+                                }
+                              } catch (error: any) {
+                                console.error('Error fetching feed/list:', error);
+                                // Show error to user instead of adding invalid feed
+                                alert(`Failed to add feed: ${error?.message || 'Invalid feed URL'}`);
                               } finally {
                                 setIsLoadingCustomFeed(false);
                               }

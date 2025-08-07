@@ -247,7 +247,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
       
       let response
       
-      switch (selectedFeed) {
+      try {
+        switch (selectedFeed) {
         case 'following':
         case 'recent':
           response = await agent.getTimeline({
@@ -259,15 +260,18 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         default:
           // Handle custom feed URIs
           if (selectedFeed.startsWith('at://')) {
-            try {
-              response = await agent.app.bsky.feed.getFeed({
-                feed: selectedFeed,
+            // Check if it's a list feed or a regular feed
+            if (selectedFeed.includes('/app.bsky.graph.list/')) {
+              // It's a list feed
+              response = await agent.app.bsky.feed.getListFeed({
+                list: selectedFeed,
                 cursor: pageParam,
                 limit: 30
               })
-            } catch (error) {
-              debug.error(`Failed to fetch feed ${selectedFeed}, falling back to timeline:`, error)
-              response = await agent.getTimeline({
+            } else {
+              // It's a regular feed
+              response = await agent.app.bsky.feed.getFeed({
+                feed: selectedFeed,
                 cursor: pageParam,
                 limit: 30
               })
@@ -276,44 +280,47 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
             // Handle known feed types
             switch (selectedFeed) {
               case 'whats-hot':
-                try {
-                  response = await agent.app.bsky.feed.getFeed({
-                    feed: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot',
-                    cursor: pageParam,
-                    limit: 30
-                  })
-                } catch (error) {
-                  debug.error('Failed to fetch whats-hot feed, falling back to timeline:', error)
-                  response = await agent.getTimeline({
-                    cursor: pageParam,
-                    limit: 30
-                  })
-                }
-                break
-              
-              case 'popular-with-friends':
-                try {
-                  response = await agent.app.bsky.feed.getFeed({
-                    feed: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/with-friends',
-                    cursor: pageParam,
-                    limit: 30
-                  })
-                } catch (error) {
-                  debug.error('Failed to fetch popular-with-friends feed, falling back to timeline:', error)
-                  response = await agent.getTimeline({
-                    cursor: pageParam,
-                    limit: 30
-                  })
-                }
-                break
-              
-              default:
-                response = await agent.getTimeline({
+                response = await agent.app.bsky.feed.getFeed({
+                  feed: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot',
                   cursor: pageParam,
                   limit: 30
                 })
+                break
+              
+              case 'popular-with-friends':
+                response = await agent.app.bsky.feed.getFeed({
+                  feed: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/with-friends',
+                  cursor: pageParam,
+                  limit: 30
+                })
+                break
+              
+              default:
+                throw new Error(`Unknown feed type: ${selectedFeed}`)
             }
           }
+        }
+      } catch (error: any) {
+        debug.error(`Failed to fetch feed ${selectedFeed}:`, error)
+        
+        // Provide more user-friendly error messages
+        if (error?.message?.includes('List not found')) {
+          throw new Error('This list could not be found. It may have been deleted or you may not have access to it.')
+        } else if (error?.message?.includes('Feed not found')) {
+          throw new Error('This feed could not be found. It may have been removed or you may not have access to it.')
+        } else if (error?.message?.includes('must be a valid at-uri')) {
+          throw new Error('Invalid feed URL. Please check the URL and try again.')
+        } else if (error?.status === 400) {
+          throw new Error('Invalid feed request. Please check the feed URL.')
+        } else if (error?.status === 403) {
+          throw new Error('You do not have permission to view this feed.')
+        } else if (error?.status === 404) {
+          throw new Error('Feed not found. It may have been deleted.')
+        } else if (error?.status >= 500) {
+          throw new Error('Server error. Please try again later.')
+        } else {
+          throw new Error(error?.message || 'Failed to load feed. Please try again.')
+        }
       }
       
       debug.log(`${selectedFeed} feed response:`, response)
