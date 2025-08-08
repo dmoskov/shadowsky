@@ -487,7 +487,7 @@ export const NotificationsAnalytics: React.FC = () => {
         : now;
 
     // Create time buckets based on the selected range
-    let buckets: Array<{
+    const buckets: Array<{
       startDate: Date;
       endDate: Date;
       label: string;

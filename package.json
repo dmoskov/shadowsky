@@ -9,6 +9,7 @@
     "dev": "vite",
     "fix": "wireit",
     "fix:format": "wireit",
+    "fix:lint": "wireit",
     "preview": "vite preview",
     "test": "wireit",
     "test:format": "wireit",
@@ -77,11 +78,15 @@
     },
     "fix": {
       "dependencies": [
-        "fix:format"
+        "fix:format",
+        "fix:lint"
       ]
     },
     "fix:format": {
       "command": "prettier --cache --write '*.{html,js,md,ts,yml}' '.github/workflows/*.yml' 'docs/**/*.md' 'server/**/*.js' 'src/**/*.{ts,tsx,css}' 'tests/**/*.{js,md,ts}' 'tools/**/*'"
+    },
+    "fix:lint": {
+      "command": "eslint --color --cache --fix src '*.{js,ts}'"
     },
     "test": {
       "dependencies": [
