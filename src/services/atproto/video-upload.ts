@@ -40,7 +40,7 @@ export class VideoUploadService {
           'Content-Type': mimeType,
           'Content-Length': videoData.length.toString(),
         },
-        body: videoData,
+        body: videoData as any,
       })
 
       if (!uploadResponse.ok) {

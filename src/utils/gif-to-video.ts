@@ -76,7 +76,7 @@ export async function convertGifToMp4(
     await ffmpeg.deleteFile('output.mp4')
     
     // Convert to Blob
-    const mp4Blob = new Blob([outputData], { type: 'video/mp4' })
+    const mp4Blob = new Blob([outputData as any], { type: 'video/mp4' })
     console.log('Created MP4 blob, size:', mp4Blob.size, 'type:', mp4Blob.type)
     
     return mp4Blob
