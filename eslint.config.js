@@ -6,4 +6,9 @@ export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.recommended,
   reactHooks.configs["recommended-latest"],
+  {
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
 );
