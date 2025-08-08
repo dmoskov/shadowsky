@@ -57,3 +57,4 @@ test-results/
 # Build artifacts
 .wireit/
 *.tsbuildinfo
+.eslintcache

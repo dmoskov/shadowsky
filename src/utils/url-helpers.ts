@@ -20,6 +20,7 @@ export function atUriToBskyUrl(uri: string, handle: string): string | null {
   if (!uri || !handle) return null;
 
   // Parse the AT URI
+  // eslint-disable-next-line no-useless-escape
   const match = uri.match(/^at:\/\/([^\/]+)\/([^\/]+)\/([^\/]+)$/);
   if (!match) return null;
 
@@ -57,6 +58,7 @@ export function parseBskyUrl(
 
   // Parse the URL - handle both handle and DID formats
   const match = cleanUrl.match(
+    // eslint-disable-next-line no-useless-escape
     /^https?:\/\/bsky\.app\/profile\/([^\/]+)\/post\/([^\/\?#]+)/,
   );
   if (!match) return null;

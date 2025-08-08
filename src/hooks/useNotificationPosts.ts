@@ -101,6 +101,7 @@ export function useNotificationPosts(
       for (let i = 0; i < missing.length; i += 25) {
         const batch = missing.slice(i, i + 25);
         try {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           apiCallCount++;
           // Rate limit the API call
           const response = await rateLimitedPostFetch(async () =>

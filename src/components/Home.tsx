@@ -116,7 +116,7 @@ export const Home: React.FC<HomeProps> = ({
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
     useOptimisticPosts();
   // Removed hoveredPost state to prevent re-renders - using CSS hover instead
-  const [selectedFeed, _] = useState<FeedType>(() => {
+  const [selectedFeed] = useState<FeedType>(() => {
     // Use initialFeedUri if provided
     if (initialFeedUri) {
       return initialFeedUri as FeedType;

@@ -164,7 +164,7 @@ const buildSearchQuery = (searchFilters: SearchFilters) => {
 };
 
 export const Search: React.FC = () => {
-  const {} = useAuth();
+  useAuth();
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [activeSearchQuery, setActiveSearchQuery] = useState("");
   const [filters, setFilters] = useState<SearchFilters>({
