@@ -5,22 +5,29 @@ This guide documents the essential practices and rules to maintain proper mobile
 ## Critical Viewport Rules
 
 ### 1. Viewport Meta Tag
+
 ```html
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
+/>
 ```
 
 **DO NOT:**
+
 - Use `maximum-scale=1.0` - This prevents users from zooming
 - Use `user-scalable=no` - This completely disables zoom and hurts accessibility
 - Use both together - This causes browsers to force zoom at narrow viewports
 
 **DO:**
+
 - Use `minimum-scale=1.0` - This prevents zoom-out while allowing zoom-in
 - Allow users to zoom for accessibility
 
 ### 2. Global Overflow Prevention
 
 **Essential CSS in `index.css`:**
+
 ```css
 html {
   overflow-x: hidden;
@@ -36,6 +43,7 @@ body {
 ```
 
 **Main container in `App.tsx`:**
+
 ```jsx
 <main className="flex-1 lg:ml-64 mt-16 h-[calc(100vh-4rem)] overflow-x-hidden">
 ```
@@ -43,7 +51,9 @@ body {
 ## Component-Level Best Practices
 
 ### 1. Responsive Padding
+
 Always use responsive padding that reduces on mobile:
+
 ```jsx
 // ❌ BAD - Same padding on all screen sizes
 <div className="px-6">
@@ -56,7 +66,9 @@ Always use responsive padding that reduces on mobile:
 ```
 
 ### 2. Fixed Width Elements
+
 Avoid fixed pixel widths without responsive alternatives:
+
 ```jsx
 // ❌ BAD - Fixed width that might overflow
 <div className="w-64">
@@ -69,7 +81,9 @@ Avoid fixed pixel widths without responsive alternatives:
 ```
 
 ### 3. Absolute Positioning
+
 Make absolute positioning responsive:
+
 ```jsx
 // ❌ BAD - Fixed position that pushes content off-screen
 <div className="absolute left-[7.5rem]">
@@ -79,11 +93,15 @@ Make absolute positioning responsive:
 ```
 
 ### 4. Text Overflow
+
 Ensure text wraps properly on mobile:
+
 ```css
 /* Global rule for mobile in index.css */
 @media (max-width: 640px) {
-  p, span, div {
+  p,
+  span,
+  div {
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
@@ -91,6 +109,7 @@ Ensure text wraps properly on mobile:
 ```
 
 For specific elements:
+
 ```jsx
 // ❌ BAD - Forces text to stay on one line
 <span className="whitespace-nowrap">
@@ -100,7 +119,9 @@ For specific elements:
 ```
 
 ### 5. Large Spacing Values
+
 Reduce large spacing on mobile:
+
 ```jsx
 // ❌ BAD - Excessive padding on mobile
 <div className="p-12">
@@ -118,6 +139,7 @@ Reduce large spacing on mobile:
 ## Testing Checklist
 
 ### Critical Viewport Widths to Test:
+
 - **280px** - Galaxy Fold (folded)
 - **320px** - iPhone SE, older small phones
 - **360px** - Many Android devices
@@ -128,6 +150,7 @@ Reduce large spacing on mobile:
 - **430px** - iPhone Pro Max models
 
 ### Testing Process:
+
 1. Open Chrome/Firefox DevTools (F12)
 2. Toggle device mode
 3. Test each width listed above
@@ -141,22 +164,25 @@ Reduce large spacing on mobile:
 ## Common Problem Areas
 
 ### 1. Thread/Comment Indentation
+
 ```jsx
 // Calculate responsive indentation based on viewport
-const isMobile = window.innerWidth < 640
+const isMobile = window.innerWidth < 640;
 if (isMobile) {
   // Use percentage-based or smaller values
-  return Math.min(32, window.innerWidth * 0.08)
+  return Math.min(32, window.innerWidth * 0.08);
 }
 ```
 
 ### 2. Sidebar on Mobile
+
 ```jsx
 // Ensure sidebar doesn't exceed viewport width
 <aside className="w-64 max-w-[80vw]">
 ```
 
 ### 3. Images and Media
+
 ```jsx
 // Always constrain images
 <img className="w-full max-w-full object-cover" />
@@ -168,6 +194,7 @@ if (isMobile) {
 ```
 
 ### 4. Modal and Overlay Widths
+
 ```jsx
 // Ensure modals fit on mobile
 <div className="w-full max-w-lg mx-auto px-4">
@@ -188,21 +215,25 @@ Before committing any UI changes:
 ## Component-Specific Notes
 
 ### NotificationsFeed
+
 - Uses `px-3 sm:px-6` for responsive padding
 - Max width container: `max-w-4xl mx-auto`
 - Sticky header must not overflow
 
 ### Home
+
 - Feed selector uses `overflow-x-auto` for horizontal scroll
 - Container uses `px-3 sm:px-4` padding
 - Removed `whitespace-nowrap` from feed buttons
 
 ### ThreadViewer
+
 - Dynamic indentation based on viewport width
 - Special handling for mobile vs desktop
 - Uses percentage-based calculations on mobile
 
 ### VisualTimeline
+
 - Absolute positioned elements use responsive classes
 - Timeline line position: `left-[5rem] sm:left-[7.5rem]`
 - Reduced padding values on mobile
@@ -212,19 +243,22 @@ Before committing any UI changes:
 If you see horizontal scroll or zoom issues:
 
 1. **In DevTools Console:**
+
    ```javascript
    // Find elements causing overflow
-   Array.from(document.querySelectorAll('*')).filter(el => 
-     el.scrollWidth > el.clientWidth
-   )
+   Array.from(document.querySelectorAll("*")).filter(
+     (el) => el.scrollWidth > el.clientWidth,
+   );
    ```
 
 2. **Add temporary CSS:**
+
    ```css
    * {
      outline: 1px solid red !important;
    }
    ```
+
    This helps visualize which elements are overflowing
 
 3. **Check computed styles:**
@@ -235,6 +269,7 @@ If you see horizontal scroll or zoom issues:
 ## Remember: Mobile First!
 
 When adding new features:
+
 1. Design for 320px width first
 2. Add complexity for larger screens
 3. Test at multiple breakpoints

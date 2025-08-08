@@ -3,12 +3,14 @@
 ## Current Issues
 
 ### Statistical Problems
+
 1. **Meaningless Visualization**: The colored dots provide no data insight
 2. **Arbitrary Metrics**: "Mutual Connections" calculated as min(followers, following) × 0.4 has no basis
 3. **Inconsistent Scaling**: Engagement bars normalized to max value, hiding actual engagement patterns
 4. **Missing Key Metrics**: No engagement quality by follower type, growth velocity, or network health indicators
 
 ### Design Problems
+
 1. **Wasted Space**: Large area devoted to non-functional visualization
 2. **Poor Information Hierarchy**: All elements have equal visual weight
 3. **Lack of Context**: Numbers without explanation or benchmarks

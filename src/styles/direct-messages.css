@@ -200,15 +200,15 @@
   .dm-conversations-list {
     width: 100%;
   }
-  
+
   .dm-conversations-list.has-selection {
     display: none;
   }
-  
+
   .dm-chat-container {
     position: relative;
   }
-  
+
   .dm-back-button {
     display: inline-flex;
     align-items: center;

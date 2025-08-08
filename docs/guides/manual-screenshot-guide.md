@@ -3,6 +3,7 @@
 Since automated login is blocked, please follow these steps to capture screenshots:
 
 ## Login Credentials
+
 - **Username**: test-account@example.com
 - **Password**: C%;,!2iO"]Wu%11T9+Y8
 
@@ -49,9 +50,11 @@ Since automated login is blocked, please follow these steps to capture screensho
     - Capture showing quote post styling
 
 ## Save Location
+
 Save all screenshots to: `/tmp/bsky-screenshots/`
 
 ## Tips
+
 - Use Chrome DevTools > Device Mode to check mobile responsiveness
 - Capture both light areas and dark theme elements
 - Include examples of different post types if possible

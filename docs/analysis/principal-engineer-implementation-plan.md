@@ -14,9 +14,11 @@ This implementation plan addresses the comprehensive UX critique findings throug
 ## Phase 1: Foundation & Critical Fixes (Weeks 1-4)
 
 ### 1.1 Mobile Experience Overhaul
+
 **Priority: CRITICAL - Addresses 70% mobile usage pattern**
 
 #### Technical Implementation
+
 ```typescript
 // Create responsive design system
 // File: src/styles/responsive-system.css
@@ -26,7 +28,7 @@ This implementation plan addresses the comprehensive UX critique findings throug
   --tablet-min: 769px;
   --tablet-max: 1024px;
   --desktop-min: 1025px;
-  
+
   /* Touch-friendly sizing */
   --touch-target-min: 44px;
   --mobile-padding: 16px;
@@ -39,7 +41,7 @@ This implementation plan addresses the comprehensive UX critique findings throug
     padding: var(--mobile-padding);
     border-radius: 0; /* Full-width on mobile */
   }
-  
+
   .engagement-bar button {
     min-height: var(--touch-target-min);
     min-width: var(--touch-target-min);
@@ -48,20 +50,24 @@ This implementation plan addresses the comprehensive UX critique findings throug
 ```
 
 #### Components to Modify
+
 - **PostCard.tsx**: Add mobile layout variants
 - **Header.tsx**: Implement hamburger menu for mobile
 - **Sidebar.tsx**: Convert to bottom navigation on mobile
 - **ComposeModal.tsx**: Full-screen on mobile, modal on desktop
 
 #### Success Metrics
+
 - Touch target size ≥44px for all interactive elements
 - Mobile viewport optimization score >95%
 - Mobile user session time increase by 40%
 
 ### 1.2 Visual Hierarchy & Content Scannability
+
 **Priority: CRITICAL - Core engagement driver**
 
 #### Technical Implementation
+
 ```css
 /* Enhanced post boundaries */
 .post-card {
@@ -69,7 +75,7 @@ This implementation plan addresses the comprehensive UX critique findings throug
   border-radius: 8px;
   margin-bottom: 8px;
   background: var(--color-surface);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Content hierarchy */
@@ -94,20 +100,24 @@ This implementation plan addresses the comprehensive UX critique findings throug
 ```
 
 #### Implementation Strategy
+
 1. **Week 1**: Update CSS spacing system with consistent scale
 2. **Week 2**: Implement post card visual improvements
 3. **Week 3**: Add content type indicators (text, image, link)
 4. **Week 4**: Implement engagement state feedback
 
 #### Success Metrics
+
 - Posts per viewport increase from 2 to 3-4
 - Content scan time decrease by 30%
 - Visual hierarchy user testing score >80%
 
 ### 1.3 Error States & Loading Feedback
+
 **Priority: CRITICAL - Basic user confidence**
 
 #### Technical Implementation
+
 ```typescript
 // Create loading and error components
 // File: src/components/ui/LoadingStates.tsx
@@ -136,20 +146,24 @@ export const Toast = ({ type, message, action }) => (
 ```
 
 #### Implementation Strategy
+
 1. **Skeleton loading states** for all async content
 2. **Error boundaries** with retry functionality
 3. **Toast notifications** for actions and failures
 4. **Network state indicators** in header
 
 #### Success Metrics
+
 - Zero silent failures reported in user testing
 - Error recovery rate >85%
 - User confidence score increase by 50%
 
 ### 1.4 Basic Accessibility Compliance
+
 **Priority: CRITICAL - Legal requirement**
 
 #### Technical Implementation
+
 ```typescript
 // Accessibility improvements across components
 // Focus management
@@ -157,14 +171,14 @@ const useFocusManagement = () => {
   const trapFocus = (container: HTMLElement) => {
     // Implement focus trap for modals
   };
-  
+
   const restoreFocus = (element: HTMLElement) => {
     // Restore focus after modal close
   };
 };
 
 // ARIA improvements
-<button 
+<button
   aria-label="Like post by @username"
   aria-pressed={isLiked}
   onClick={handleLike}
@@ -177,6 +191,7 @@ const useFocusManagement = () => {
 ```
 
 #### Implementation Checklist
+
 - [ ] All interactive elements keyboard accessible
 - [ ] ARIA labels for all buttons and inputs
 - [ ] Focus indicators visible and consistent
@@ -188,9 +203,11 @@ const useFocusManagement = () => {
 ## Phase 2: User Retention Features (Weeks 5-8)
 
 ### 2.1 Rich Compose Experience
+
 **Priority: HIGH - Content quality drives engagement**
 
 #### Technical Implementation
+
 ```typescript
 // Enhanced compose modal
 // File: src/components/modals/ComposeModal.tsx
@@ -205,24 +222,24 @@ interface ComposeFeatures {
 const ComposeModal = () => {
   const [text, setText] = useState('');
   const [features, setFeatures] = useState<ComposeFeatures>({});
-  
+
   // Auto-save drafts every 30 seconds
   useAutoSave(text, 30000);
-  
+
   // Rich text features
   const { mentions, hashtags } = useTextParsing(text);
   const linkPreviews = useLinkPreview(text);
-  
+
   return (
     <div className="compose-modal">
-      <ComposeTextarea 
+      <ComposeTextarea
         value={text}
         onChange={setText}
         suggestions={mentions.concat(hashtags)}
       />
       <MediaUploader onUpload={handleMediaUpload} />
       <LinkPreviewPanel previews={linkPreviews} />
-      <ComposeToolbar 
+      <ComposeToolbar
         features={features}
         onFeatureToggle={handleFeatureToggle}
       />
@@ -232,6 +249,7 @@ const ComposeModal = () => {
 ```
 
 #### Features to Implement
+
 1. **@ mention autocomplete** with user search
 2. **# hashtag suggestions** based on content
 3. **Link preview generation** with meta data
@@ -240,25 +258,27 @@ const ComposeModal = () => {
 6. **Character count** with threading support
 
 ### 2.2 Thread Visualization Improvements
+
 **Priority: HIGH - Core platform differentiator**
 
 #### Technical Implementation
+
 ```typescript
 // Enhanced thread visualization
 // File: src/components/thread/ThreadVisualization.tsx
 const ThreadVisualization = ({ posts, currentPost }) => {
-  const threadStructure = useMemo(() => 
+  const threadStructure = useMemo(() =>
     buildThreadTree(posts), [posts]
   );
-  
+
   return (
     <div className="thread-visualization">
-      <ThreadBranchDiagram 
+      <ThreadBranchDiagram
         structure={threadStructure}
         currentPost={currentPost}
         compact={false}
       />
-      <ThreadNavigationControls 
+      <ThreadNavigationControls
         onJumpTo={handleJumpTo}
         onCollapse={handleCollapse}
       />
@@ -290,6 +310,7 @@ const ThreadVisualization = ({ posts, currentPost }) => {
 ```
 
 #### Implementation Features
+
 1. **Improved thread lines** with active state indication
 2. **Collapsible thread branches** for complex conversations
 3. **Thread overview map** with jump-to functionality
@@ -297,9 +318,11 @@ const ThreadVisualization = ({ posts, currentPost }) => {
 5. **Thread progress indicator** showing position in conversation
 
 ### 2.3 Search & Discovery Features
+
 **Priority: HIGH - Essential for growth**
 
 #### Technical Implementation
+
 ```typescript
 // Enhanced search functionality
 // File: src/components/profile/Search.tsx
@@ -311,24 +334,24 @@ const SearchInterface = () => {
     hasMedia: false,
     hasLinks: false,
   });
-  
+
   const searchResults = useSearchWithFilters(query, filters);
   const trendingTopics = useTrendingTopics();
   const suggestedUsers = useSuggestedUsers();
-  
+
   return (
     <div className="search-interface">
-      <SearchInput 
+      <SearchInput
         value={query}
         onChange={setQuery}
         suggestions={searchSuggestions}
       />
-      <SearchFilters 
+      <SearchFilters
         filters={filters}
         onChange={setFilters}
       />
       {!query && (
-        <SearchDiscovery 
+        <SearchDiscovery
           trending={trendingTopics}
           suggested={suggestedUsers}
         />
@@ -340,21 +363,23 @@ const SearchInterface = () => {
 ```
 
 ### 2.4 Navigation Context & Breadcrumbs
+
 **Priority: HIGH - User orientation**
 
 #### Technical Implementation
+
 ```typescript
 // Navigation context system
 // File: src/hooks/useNavigationContext.ts
 export const useNavigationContext = () => {
   const location = useLocation();
   const [breadcrumbs, setBreadcrumbs] = useState<Breadcrumb[]>([]);
-  
+
   useEffect(() => {
     const crumbs = generateBreadcrumbs(location.pathname);
     setBreadcrumbs(crumbs);
   }, [location]);
-  
+
   return { breadcrumbs, currentPage: breadcrumbs[breadcrumbs.length - 1] };
 };
 
@@ -381,9 +406,11 @@ const Breadcrumbs = ({ items }) => (
 ## Phase 3: Mobile Excellence (Weeks 9-12)
 
 ### 3.1 Touch Interactions & Gestures
+
 **Priority: HIGH - Modern mobile expectations**
 
 #### Technical Implementation
+
 ```typescript
 // Touch gesture system
 // File: src/hooks/useGestures.ts
@@ -404,7 +431,7 @@ export const useSwipeGestures = (
       }
     }
   });
-  
+
   return gestureHandlers;
 };
 
@@ -414,7 +441,7 @@ const PostCard = ({ post }) => {
     () => handleQuickAction('like'),
     () => handleQuickAction('reply')
   );
-  
+
   return (
     <div {...swipeHandlers} className="post-card">
       {/* Post content */}
@@ -424,15 +451,17 @@ const PostCard = ({ post }) => {
 ```
 
 ### 3.2 Mobile Navigation Patterns
+
 **Priority: HIGH - Core mobile UX**
 
 #### Technical Implementation
+
 ```typescript
 // Bottom navigation for mobile
 // File: src/components/navigation/MobileBottomNav.tsx
 const MobileBottomNav = () => {
   const { pathname } = useLocation();
-  
+
   const navItems = [
     { path: '/', icon: HomeIcon, label: 'Home' },
     { path: '/search', icon: SearchIcon, label: 'Search' },
@@ -440,11 +469,11 @@ const MobileBottomNav = () => {
     { path: '/notifications', icon: BellIcon, label: 'Notifications' },
     { path: '/profile', icon: UserIcon, label: 'Profile' },
   ];
-  
+
   return (
     <nav className="mobile-bottom-nav">
       {navItems.map(item => (
-        <Link 
+        <Link
           key={item.path}
           to={item.path}
           className={`nav-item ${pathname === item.path ? 'active' : ''}`}
@@ -460,9 +489,11 @@ const MobileBottomNav = () => {
 ```
 
 ### 3.3 Progressive Web App Features
+
 **Priority: MEDIUM - Mobile app-like experience**
 
 #### Technical Implementation
+
 ```json
 // public/manifest.json
 {
@@ -490,17 +521,12 @@ const MobileBottomNav = () => {
 ```typescript
 // Service worker for offline functionality
 // public/sw.js
-const CACHE_NAME = 'bluesky-client-v1';
-const urlsToCache = [
-  '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css'
-];
+const CACHE_NAME = "bluesky-client-v1";
+const urlsToCache = ["/", "/static/js/bundle.js", "/static/css/main.css"];
 
-self.addEventListener('install', event => {
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)),
   );
 });
 ```
@@ -510,9 +536,11 @@ self.addEventListener('install', event => {
 ## Phase 4: Advanced Features & Polish (Weeks 13-16)
 
 ### 4.1 Micro-Interactions & Animations
+
 **Priority: MEDIUM - Professional polish**
 
 #### Technical Implementation
+
 ```typescript
 // Animation system using Framer Motion
 // File: src/components/ui/AnimatedButton.tsx
@@ -522,9 +550,9 @@ const AnimatedButton = ({ children, isActive, onClick }) => (
   <motion.button
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
-    animate={{ 
+    animate={{
       color: isActive ? '#ff4444' : '#666',
-      scale: isActive ? 1.1 : 1 
+      scale: isActive ? 1.1 : 1
     }}
     transition={{ duration: 0.2 }}
     onClick={onClick}
@@ -560,9 +588,11 @@ const LoadingTransition = ({ isLoading, children }) => (
 ```
 
 ### 4.2 Performance Optimizations
+
 **Priority: MEDIUM - User experience quality**
 
 #### Technical Implementation
+
 ```typescript
 // Virtual scrolling for large feeds
 // File: src/components/feed/VirtualizedFeed.tsx
@@ -574,7 +604,7 @@ const VirtualizedFeed = ({ posts, onLoadMore }) => {
       <PostCard post={posts[index]} />
     </div>
   ));
-  
+
   return (
     <List
       height={window.innerHeight - 100}
@@ -595,7 +625,7 @@ const VirtualizedFeed = ({ posts, onLoadMore }) => {
 const LazyImage = ({ src, alt, ...props }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const imgRef = useRef();
-  
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -606,14 +636,14 @@ const LazyImage = ({ src, alt, ...props }) => {
       },
       { threshold: 0.1 }
     );
-    
+
     if (imgRef.current) {
       observer.observe(imgRef.current);
     }
-    
+
     return () => observer.disconnect();
   }, []);
-  
+
   return (
     <div ref={imgRef}>
       {isLoaded ? (
@@ -631,18 +661,21 @@ const LazyImage = ({ src, alt, ...props }) => {
 ## Implementation Strategy & Risk Management
 
 ### Development Approach
+
 1. **Component-First**: Build reusable UI components before features
 2. **Mobile-First**: Design for mobile, enhance for desktop
 3. **Progressive Enhancement**: Core functionality works without JS
 4. **Testing-Driven**: Test each component before integration
 
 ### Risk Mitigation
+
 1. **Feature Flags**: Enable gradual rollout of new features
 2. **Rollback Strategy**: Git-based deployment with instant rollback
 3. **Performance Monitoring**: Real-time metrics for all changes
 4. **User Testing**: Weekly usability testing with target users
 
 ### Quality Assurance
+
 ```typescript
 // Component testing strategy
 // File: src/components/__tests__/PostCard.test.tsx
@@ -651,18 +684,18 @@ describe('PostCard', () => {
     render(<PostCard post={mockPost} />);
     expect(screen.getByText(mockPost.text)).toBeInTheDocument();
   });
-  
+
   it('should handle engagement interactions', async () => {
     const onLike = jest.fn();
     render(<PostCard post={mockPost} onLike={onLike} />);
-    
+
     await user.click(screen.getByLabelText('Like post'));
     expect(onLike).toHaveBeenCalledWith(mockPost.id);
   });
-  
+
   it('should be accessible via keyboard', async () => {
     render(<PostCard post={mockPost} />);
-    
+
     await user.tab();
     expect(screen.getByRole('button', { name: /like/i })).toHaveFocus();
   });
@@ -674,18 +707,21 @@ describe('PostCard', () => {
 ## Success Metrics & Validation
 
 ### Key Performance Indicators
+
 - **Mobile User Retention**: Target 70% (currently ~30%)
 - **Engagement Rate**: Target 25% (currently ~15%)
 - **Time-on-Site**: Target 15+ minutes (currently 5-8 minutes)
 - **Accessibility Score**: Target 95% (currently ~60%)
 
 ### Testing Protocol
+
 1. **Week 4**: Mobile usability testing with 10 users
 2. **Week 8**: Feature comprehension testing with 15 users
 3. **Week 12**: Cross-platform consistency testing
 4. **Week 16**: Full accessibility audit with disabled users
 
 ### Deployment Strategy
+
 1. **Feature Flags**: Gradual rollout to 10%, 50%, 100% of users
 2. **A/B Testing**: Compare new vs. old experiences
 3. **Performance Monitoring**: Real-time metrics for all changes
@@ -696,18 +732,21 @@ describe('PostCard', () => {
 ## Resource Requirements
 
 ### Development Team
+
 - **1 Senior Frontend Developer** (lead implementation)
 - **1 UI/UX Designer** (design validation and refinement)
 - **1 QA Engineer** (testing and validation)
 - **Part-time Product Manager** (prioritization and metrics)
 
 ### Technical Infrastructure
+
 - **Design System Documentation** (Storybook setup)
 - **Testing Infrastructure** (Jest, React Testing Library, Playwright)
 - **Performance Monitoring** (Web Vitals, user analytics)
 - **Feature Flag System** (LaunchDarkly or similar)
 
 ### Timeline Milestones
+
 - **Week 4**: Mobile experience foundation complete
 - **Week 8**: Core user retention features live
 - **Week 12**: Advanced mobile features deployed

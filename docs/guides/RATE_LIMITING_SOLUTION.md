@@ -1,49 +1,59 @@
 # Rate Limiting and API Optimization Solution
 
 ## Problem Statement
+
 During development, Hot Module Replacement (HMR) was causing cascading component updates, which resulted in multiple API calls to Bluesky's servers. This was potentially hitting rate limits and degrading the development experience.
 
 ## Solution Architecture
 
 ### 1. **Extended Cache Times** (Query Client)
+
 - **Stale Time**: Increased from 1 minute to 5 minutes
 - **Cache Time**: Increased from 5 minutes to 30 minutes
 - **Benefits**: Reduces unnecessary refetches, keeps data fresh longer
 
 ### 2. **Client-Side Rate Limiting**
+
 Implemented a token bucket algorithm with different limits for different endpoints:
+
 - **General API**: 300 requests per 5 minutes
-- **Feed API**: 100 requests per 5 minutes  
+- **Feed API**: 100 requests per 5 minutes
 - **Interactions**: 500 requests per 5 minutes
 - **Search**: 50 requests per minute
 
 ### 3. **Request Deduplication**
+
 Prevents duplicate simultaneous requests:
+
 - If an identical request is already in flight, returns the existing promise
 - 5-second cache for pending requests
 - Especially useful during HMR updates
 
 ### 4. **Exponential Backoff**
+
 Added to retry logic:
+
 - Waits 1s, 2s, 4s between retries
 - Prevents aggressive retry loops
 
 ## Implementation Details
 
 ### Rate Limiter (`src/lib/rate-limiter.ts`)
+
 ```typescript
 // Usage example
-await withRateLimit(rateLimiters.feed, 'timeline', async () => {
+await withRateLimit(rateLimiters.feed, "timeline", async () => {
   // Make API call
 });
 ```
 
 ### Request Deduplication (`src/lib/request-deduplication.ts`)
+
 ```typescript
 // Automatically applied to service methods
 this.getTimeline = withDeduplication(
   this.getTimeline.bind(this),
-  (cursor) => `timeline:${cursor || 'initial'}`
+  (cursor) => `timeline:${cursor || "initial"}`,
 );
 ```
 
@@ -66,9 +76,10 @@ this.getTimeline = withDeduplication(
 ## Monitoring
 
 To check current rate limit status:
+
 ```javascript
 // In browser console
-rateLimiters.feed.getTimeUntilNextRequest('timeline')
+rateLimiters.feed.getTimeUntilNextRequest("timeline");
 ```
 
 ## Future Improvements
@@ -81,6 +92,7 @@ rateLimiters.feed.getTimeUntilNextRequest('timeline')
 ## Testing
 
 To test rate limiting:
+
 ```javascript
 // Simulate rapid requests
 for (let i = 0; i < 200; i++) {

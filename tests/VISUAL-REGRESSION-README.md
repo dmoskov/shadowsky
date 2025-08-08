@@ -47,6 +47,7 @@ npx playwright test visual-regression.spec.ts -g "Thread view styling"
 ## Screenshot Storage
 
 Screenshots are stored in:
+
 - **Baseline**: `tests/visual-regression.spec.ts-snapshots/`
 - **Actual**: Generated during test runs
 - **Diff**: Created when tests fail
@@ -56,6 +57,7 @@ Screenshots are stored in:
 ### When to Update Baselines
 
 Update baseline screenshots when:
+
 1. Intentional design changes are made
 2. New features are added
 3. CSS refactoring is complete
@@ -63,17 +65,17 @@ Update baseline screenshots when:
 ### Writing New Tests
 
 ```typescript
-test('New component styling', async ({ page }) => {
+test("New component styling", async ({ page }) => {
   // Navigate to component
-  await page.goto('/path/to/component');
-  
+  await page.goto("/path/to/component");
+
   // Wait for specific elements
-  await page.waitForSelector('.component-class');
-  
+  await page.waitForSelector(".component-class");
+
   // Take screenshot
-  await expect(page).toHaveScreenshot('component-name.png', {
+  await expect(page).toHaveScreenshot("component-name.png", {
     fullPage: false,
-    animations: 'disabled'
+    animations: "disabled",
   });
 });
 ```
@@ -92,7 +94,7 @@ To run in CI:
 ```yaml
 - name: Run visual tests
   run: npx playwright test visual-regression.spec.ts
-  
+
 - name: Upload test results
   if: always()
   uses: actions/upload-artifact@v3
@@ -129,6 +131,7 @@ To run in CI:
 ### Adding New Pages/Components
 
 When adding new UI:
+
 1. Write visual test for the component
 2. Generate initial baseline
 3. Review baseline for correctness

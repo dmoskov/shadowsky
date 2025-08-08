@@ -389,8 +389,12 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .send-button {
@@ -457,7 +461,9 @@
 
 .draggable-attachment {
   cursor: grab;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .draggable-attachment:hover {
@@ -528,7 +534,7 @@
 }
 
 .media-reorder-target::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -4px;
@@ -545,7 +551,7 @@
 }
 
 .media-reorder-target::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   right: -4px;
@@ -607,7 +613,7 @@
 }
 
 .tone-adjusted-text::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -2px;
   left: -2px;

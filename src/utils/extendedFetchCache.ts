@@ -1,4 +1,4 @@
-import { debug } from '@bsky/shared'
+import { debug } from "@bsky/shared";
 
 /**
  * Manages metadata for extended notification fetches (4-week downloads)
@@ -7,27 +7,27 @@ import { debug } from '@bsky/shared'
  */
 
 interface ExtendedFetchMetadata {
-  lastFetchTimestamp: number
-  totalNotificationsFetched: number
-  oldestNotificationDate: number
-  newestNotificationDate: number
-  daysReached: number
-  version: string
+  lastFetchTimestamp: number;
+  totalNotificationsFetched: number;
+  oldestNotificationDate: number;
+  newestNotificationDate: number;
+  daysReached: number;
+  version: string;
 }
 
 interface ExtendedFetchData {
-  metadata: ExtendedFetchMetadata
+  metadata: ExtendedFetchMetadata;
   pages: Array<{
-    notifications: any[]
-    cursor?: string
-  }>
-  version: string
+    notifications: any[];
+    cursor?: string;
+  }>;
+  version: string;
 }
 
-const METADATA_KEY = 'bsky_extended_fetch_metadata_v1'
-const DATA_KEY = 'bsky_extended_fetch_data_v1'
-const REFRESH_THRESHOLD_HOURS = 4 // Consider data stale after 4 hours
-const MAX_STORAGE_SIZE = 1024 * 1024 // 1MB limit for localStorage
+const METADATA_KEY = "bsky_extended_fetch_metadata_v1";
+const DATA_KEY = "bsky_extended_fetch_data_v1";
+const REFRESH_THRESHOLD_HOURS = 4; // Consider data stale after 4 hours
+const MAX_STORAGE_SIZE = 1024 * 1024; // 1MB limit for localStorage
 
 export class ExtendedFetchCache {
   /**
@@ -37,7 +37,7 @@ export class ExtendedFetchCache {
     totalNotifications: number,
     oldestDate: Date,
     newestDate: Date,
-    daysReached: number
+    daysReached: number,
   ): void {
     const metadata: ExtendedFetchMetadata = {
       lastFetchTimestamp: Date.now(),
@@ -45,19 +45,19 @@ export class ExtendedFetchCache {
       oldestNotificationDate: oldestDate.getTime(),
       newestNotificationDate: newestDate.getTime(),
       daysReached,
-      version: 'v1'
-    }
-    
+      version: "v1",
+    };
+
     try {
-      localStorage.setItem(METADATA_KEY, JSON.stringify(metadata))
-      debug.log('📊 Extended fetch metadata saved:', {
+      localStorage.setItem(METADATA_KEY, JSON.stringify(metadata));
+      debug.log("📊 Extended fetch metadata saved:", {
         totalNotifications,
         daysReached,
         oldestDate: oldestDate.toLocaleDateString(),
-        newestDate: newestDate.toLocaleDateString()
-      })
+        newestDate: newestDate.toLocaleDateString(),
+      });
     } catch (error) {
-      debug.error('Failed to save extended fetch metadata:', error)
+      debug.error("Failed to save extended fetch metadata:", error);
     }
   }
 
@@ -67,31 +67,35 @@ export class ExtendedFetchCache {
    */
   static getRecentMetadata(): ExtendedFetchMetadata | null {
     try {
-      const stored = localStorage.getItem(METADATA_KEY)
-      if (!stored) return null
-      
-      const metadata = JSON.parse(stored) as ExtendedFetchMetadata
-      
+      const stored = localStorage.getItem(METADATA_KEY);
+      if (!stored) return null;
+
+      const metadata = JSON.parse(stored) as ExtendedFetchMetadata;
+
       // Check version
-      if (metadata.version !== 'v1') {
-        this.clearMetadata()
-        return null
+      if (metadata.version !== "v1") {
+        this.clearMetadata();
+        return null;
       }
-      
+
       // Check if data is still fresh
-      const hoursSinceLastFetch = (Date.now() - metadata.lastFetchTimestamp) / (1000 * 60 * 60)
-      
+      const hoursSinceLastFetch =
+        (Date.now() - metadata.lastFetchTimestamp) / (1000 * 60 * 60);
+
       if (hoursSinceLastFetch > REFRESH_THRESHOLD_HOURS) {
-        debug.log(`📊 Extended fetch metadata is stale (${hoursSinceLastFetch.toFixed(1)} hours old)`)
-        return null
+        debug.log(
+          `📊 Extended fetch metadata is stale (${hoursSinceLastFetch.toFixed(1)} hours old)`,
+        );
+        return null;
       }
-      
-      debug.log(`📊 Found recent extended fetch metadata (${hoursSinceLastFetch.toFixed(1)} hours old)`)
-      return metadata
-      
+
+      debug.log(
+        `📊 Found recent extended fetch metadata (${hoursSinceLastFetch.toFixed(1)} hours old)`,
+      );
+      return metadata;
     } catch (error) {
-      debug.error('Failed to load extended fetch metadata:', error)
-      return null
+      debug.error("Failed to load extended fetch metadata:", error);
+      return null;
     }
   }
 
@@ -100,34 +104,34 @@ export class ExtendedFetchCache {
    * Returns true if we have recent metadata and should fetch only new notifications
    */
   static shouldAutoFetchMissing(): boolean {
-    const metadata = this.getRecentMetadata()
-    if (!metadata) return false
-    
+    const metadata = this.getRecentMetadata();
+    if (!metadata) return false;
+
     // If we fetched 4 weeks of data within the last few hours,
     // we should auto-fetch only the missing recent notifications
-    return metadata.daysReached >= 28
+    return metadata.daysReached >= 28;
   }
 
   /**
    * Get info about what needs to be fetched
    */
   static getFetchInfo(): {
-    hasRecentFullFetch: boolean
-    metadata: ExtendedFetchMetadata | null
-    shouldAutoFetch: boolean
-    hoursSinceLastFetch: number | null
+    hasRecentFullFetch: boolean;
+    metadata: ExtendedFetchMetadata | null;
+    shouldAutoFetch: boolean;
+    hoursSinceLastFetch: number | null;
   } {
-    const metadata = this.getRecentMetadata()
-    const hoursSinceLastFetch = metadata 
+    const metadata = this.getRecentMetadata();
+    const hoursSinceLastFetch = metadata
       ? (Date.now() - metadata.lastFetchTimestamp) / (1000 * 60 * 60)
-      : null
-    
+      : null;
+
     return {
       hasRecentFullFetch: !!metadata,
       metadata,
       shouldAutoFetch: this.shouldAutoFetchMissing(),
-      hoursSinceLastFetch
-    }
+      hoursSinceLastFetch,
+    };
   }
 
   /**
@@ -135,16 +139,21 @@ export class ExtendedFetchCache {
    * This method is kept only for backward compatibility during migration
    */
   static saveData(
-    pages: Array<{ notifications: any[], cursor?: string }>,
+    pages: Array<{ notifications: any[]; cursor?: string }>,
     totalNotifications: number,
     oldestDate: Date,
     newestDate: Date,
-    daysReached: number
+    daysReached: number,
   ): boolean {
     try {
       // First save metadata
-      this.saveMetadata(totalNotifications, oldestDate, newestDate, daysReached)
-      
+      this.saveMetadata(
+        totalNotifications,
+        oldestDate,
+        newestDate,
+        daysReached,
+      );
+
       // Prepare data for storage
       const data: ExtendedFetchData = {
         metadata: {
@@ -153,42 +162,50 @@ export class ExtendedFetchCache {
           oldestNotificationDate: oldestDate.getTime(),
           newestNotificationDate: newestDate.getTime(),
           daysReached,
-          version: 'v1'
+          version: "v1",
         },
         pages,
-        version: 'v1'
-      }
-      
+        version: "v1",
+      };
+
       // Check size before saving
-      const dataStr = JSON.stringify(data)
-      const sizeInBytes = new Blob([dataStr]).size
-      
+      const dataStr = JSON.stringify(data);
+      const sizeInBytes = new Blob([dataStr]).size;
+
       if (sizeInBytes > MAX_STORAGE_SIZE) {
-        debug.log(`📊 Extended fetch data too large for localStorage (${(sizeInBytes / 1024 / 1024).toFixed(2)}MB > 1MB limit)`)
+        debug.log(
+          `📊 Extended fetch data too large for localStorage (${(sizeInBytes / 1024 / 1024).toFixed(2)}MB > 1MB limit)`,
+        );
         // Try to save a truncated version
-        const truncatedPages = this.truncateToFitSize(pages, MAX_STORAGE_SIZE)
+        const truncatedPages = this.truncateToFitSize(pages, MAX_STORAGE_SIZE);
         if (truncatedPages.length > 0) {
-          data.pages = truncatedPages
-          const truncatedStr = JSON.stringify(data)
-          localStorage.setItem(DATA_KEY, truncatedStr)
-          debug.log(`📊 Saved truncated extended fetch data (${truncatedPages.length} pages, ${(new Blob([truncatedStr]).size / 1024).toFixed(1)}KB)`)
-          return true
+          data.pages = truncatedPages;
+          const truncatedStr = JSON.stringify(data);
+          localStorage.setItem(DATA_KEY, truncatedStr);
+          debug.log(
+            `📊 Saved truncated extended fetch data (${truncatedPages.length} pages, ${(new Blob([truncatedStr]).size / 1024).toFixed(1)}KB)`,
+          );
+          return true;
         }
-        return false
+        return false;
       }
-      
-      localStorage.setItem(DATA_KEY, dataStr)
-      debug.log(`📊 Extended fetch data saved to localStorage (${(sizeInBytes / 1024).toFixed(1)}KB)`)
-      return true
-      
+
+      localStorage.setItem(DATA_KEY, dataStr);
+      debug.log(
+        `📊 Extended fetch data saved to localStorage (${(sizeInBytes / 1024).toFixed(1)}KB)`,
+      );
+      return true;
     } catch (error) {
-      debug.error('Failed to save extended fetch data:', error)
+      debug.error("Failed to save extended fetch data:", error);
       // If it's a quota error, try to clear old data and retry
-      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        this.clearData()
-        return false
+      if (
+        error instanceof DOMException &&
+        error.name === "QuotaExceededError"
+      ) {
+        this.clearData();
+        return false;
       }
-      return false
+      return false;
     }
   }
 
@@ -199,38 +216,39 @@ export class ExtendedFetchCache {
   static loadData(): ExtendedFetchData | null {
     try {
       // First check if we have recent metadata
-      const metadata = this.getRecentMetadata()
+      const metadata = this.getRecentMetadata();
       if (!metadata) {
         // Data is stale or missing
-        this.clearData()
-        return null
+        this.clearData();
+        return null;
       }
-      
-      const stored = localStorage.getItem(DATA_KEY)
-      if (!stored) return null
-      
-      const data = JSON.parse(stored) as ExtendedFetchData
-      
+
+      const stored = localStorage.getItem(DATA_KEY);
+      if (!stored) return null;
+
+      const data = JSON.parse(stored) as ExtendedFetchData;
+
       // Validate version
-      if (data.version !== 'v1') {
-        this.clearData()
-        return null
+      if (data.version !== "v1") {
+        this.clearData();
+        return null;
       }
-      
+
       // Validate that metadata matches
       if (data.metadata.lastFetchTimestamp !== metadata.lastFetchTimestamp) {
-        debug.log('📊 Extended fetch data metadata mismatch, clearing')
-        this.clearData()
-        return null
+        debug.log("📊 Extended fetch data metadata mismatch, clearing");
+        this.clearData();
+        return null;
       }
-      
-      debug.log(`📊 Loaded extended fetch data from localStorage (${data.pages.length} pages, ${data.metadata.totalNotificationsFetched} notifications)`)
-      return data
-      
+
+      debug.log(
+        `📊 Loaded extended fetch data from localStorage (${data.pages.length} pages, ${data.metadata.totalNotificationsFetched} notifications)`,
+      );
+      return data;
     } catch (error) {
-      debug.error('Failed to load extended fetch data:', error)
-      this.clearData()
-      return null
+      debug.error("Failed to load extended fetch data:", error);
+      this.clearData();
+      return null;
     }
   }
 
@@ -239,25 +257,25 @@ export class ExtendedFetchCache {
    * Keeps most recent notifications
    */
   private static truncateToFitSize(
-    pages: Array<{ notifications: any[], cursor?: string }>,
-    maxSize: number
-  ): Array<{ notifications: any[], cursor?: string }> {
-    const truncated: Array<{ notifications: any[], cursor?: string }> = []
-    let currentSize = 100 // Start with some overhead for metadata
-    
+    pages: Array<{ notifications: any[]; cursor?: string }>,
+    maxSize: number,
+  ): Array<{ notifications: any[]; cursor?: string }> {
+    const truncated: Array<{ notifications: any[]; cursor?: string }> = [];
+    let currentSize = 100; // Start with some overhead for metadata
+
     for (const page of pages) {
-      const pageStr = JSON.stringify(page)
-      const pageSize = new Blob([pageStr]).size
-      
+      const pageStr = JSON.stringify(page);
+      const pageSize = new Blob([pageStr]).size;
+
       if (currentSize + pageSize > maxSize) {
-        break
+        break;
       }
-      
-      truncated.push(page)
-      currentSize += pageSize
+
+      truncated.push(page);
+      currentSize += pageSize;
     }
-    
-    return truncated
+
+    return truncated;
   }
 
   /**
@@ -265,10 +283,10 @@ export class ExtendedFetchCache {
    */
   static clearMetadata(): void {
     try {
-      localStorage.removeItem(METADATA_KEY)
-      debug.log('📊 Extended fetch metadata cleared')
+      localStorage.removeItem(METADATA_KEY);
+      debug.log("📊 Extended fetch metadata cleared");
     } catch (error) {
-      debug.error('Failed to clear extended fetch metadata:', error)
+      debug.error("Failed to clear extended fetch metadata:", error);
     }
   }
 
@@ -277,10 +295,10 @@ export class ExtendedFetchCache {
    */
   static clearData(): void {
     try {
-      localStorage.removeItem(DATA_KEY)
-      debug.log('📊 Extended fetch data cleared')
+      localStorage.removeItem(DATA_KEY);
+      debug.log("📊 Extended fetch data cleared");
     } catch (error) {
-      debug.error('Failed to clear extended fetch data:', error)
+      debug.error("Failed to clear extended fetch data:", error);
     }
   }
 
@@ -288,7 +306,7 @@ export class ExtendedFetchCache {
    * Clear all stored data and metadata
    */
   static clearAll(): void {
-    this.clearMetadata()
-    this.clearData()
+    this.clearMetadata();
+    this.clearData();
   }
 }

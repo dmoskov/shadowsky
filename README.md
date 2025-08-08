@@ -91,6 +91,7 @@ The app will be available at `http://localhost:5174`
 ### Configuration
 
 1. Copy `.env.example` to `.env`:
+
    ```bash
    cp .env.example .env
    ```
@@ -105,6 +106,7 @@ The app works without these API keys, but some features will be disabled.
 ## Key Highlights
 
 ### SkyDeck - Multi-Column Dashboard
+
 - Create your personalized dashboard with multiple columns
 - Mix and match notifications, timeline, messages, and custom feeds
 - Drag columns to reorder them
@@ -112,14 +114,16 @@ The app works without these API keys, but some features will be disabled.
 - Responsive design adapts to your screen size
 
 ### Advanced Composer
+
 - Create multi-post threads with auto-numbering
-- Reply inline without leaving thread views  
+- Reply inline without leaving thread views
 - Save drafts and manage them
 - Schedule posts for later
 - Upload images and videos
 - Auto-generate alt text for accessibility
 
 ### Powerful Analytics
+
 - Track engagement patterns and trends
 - Identify your top interacting accounts
 - Analyze conversation threads and depth
@@ -127,6 +131,7 @@ The app works without these API keys, but some features will be disabled.
 - View storage usage and health metrics
 
 ### Performance & Offline Support
+
 - 4 weeks of notifications cached locally
 - Instant conversation loading from cache
 - Minimal API calls through smart caching
@@ -164,6 +169,7 @@ npm run build
 ### Environment Variables
 
 For production deployments, ensure you set the environment variables in your hosting platform:
+
 - `VITE_GA_MEASUREMENT_ID` (optional)
 - `VITE_GIPHY_API_KEY` (optional)
 - `VITE_ANTHROPIC_API_KEY` (optional)
@@ -173,6 +179,7 @@ For production deployments, ensure you set the environment variables in your hos
 This project is not currently accepting contributions from the community. While the source code is available under the MIT license, I am maintaining this project with a small group of selected collaborators.
 
 Feel free to:
+
 - Fork the project for your own use
 - Report issues
 - Share feedback and suggestions

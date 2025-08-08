@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from "react";
 
 interface DragAnimationState {
   isDragging: boolean;
@@ -21,15 +21,15 @@ export function useDragAnimation() {
     });
 
     // Add visual feedback class to body
-    document.body.classList.add('dragging-active');
-    
+    document.body.classList.add("dragging-active");
+
     // Create ripple effect at drag start position
-    const ripple = document.createElement('div');
-    ripple.className = 'drag-ripple';
+    const ripple = document.createElement("div");
+    ripple.className = "drag-ripple";
     ripple.style.left = `${e.clientX}px`;
     ripple.style.top = `${e.clientY}px`;
     document.body.appendChild(ripple);
-    
+
     setTimeout(() => {
       ripple.remove();
     }, 600);
@@ -43,12 +43,12 @@ export function useDragAnimation() {
     });
 
     // Remove visual feedback class from body
-    document.body.classList.remove('dragging-active');
+    document.body.classList.remove("dragging-active");
   }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    setDragState(prev => ({
+    setDragState((prev) => ({
       ...prev,
       isDragOver: true,
       dragPosition: { x: e.clientX, y: e.clientY },
@@ -56,7 +56,7 @@ export function useDragAnimation() {
   }, []);
 
   const handleDragLeave = useCallback(() => {
-    setDragState(prev => ({
+    setDragState((prev) => ({
       ...prev,
       isDragOver: false,
     }));

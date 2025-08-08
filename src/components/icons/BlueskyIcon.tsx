@@ -1,11 +1,14 @@
-import React from 'react'
+import React from "react";
 
 interface BlueskyIconProps {
-  size?: number
-  className?: string
+  size?: number;
+  className?: string;
 }
 
-export const BlueskyIcon: React.FC<BlueskyIconProps> = ({ size = 32, className = '' }) => {
+export const BlueskyIcon: React.FC<BlueskyIconProps> = ({
+  size = 32,
+  className = "",
+}) => {
   return (
     <svg
       width={size}
@@ -26,11 +29,14 @@ export const BlueskyIcon: React.FC<BlueskyIconProps> = ({ size = 32, className =
       <circle cx="9" cy="8" r="1.5" fill="currentColor" opacity="0.3" />
       <circle cx="15" cy="8" r="1.5" fill="currentColor" opacity="0.3" />
     </svg>
-  )
-}
+  );
+};
 
 // Alternative stylized version
-export const BlueskyLogoStyled: React.FC<BlueskyIconProps> = ({ size = 32, className = '' }) => {
+export const BlueskyLogoStyled: React.FC<BlueskyIconProps> = ({
+  size = 32,
+  className = "",
+}) => {
   return (
     <svg
       width={size}
@@ -41,7 +47,13 @@ export const BlueskyLogoStyled: React.FC<BlueskyIconProps> = ({ size = 32, class
       className={className}
     >
       <defs>
-        <linearGradient id="bluesky-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient
+          id="bluesky-gradient"
+          x1="0%"
+          y1="0%"
+          x2="100%"
+          y2="100%"
+        >
           <stop offset="0%" stopColor="#00A8E8" />
           <stop offset="100%" stopColor="#007EA7" />
         </linearGradient>
@@ -55,5 +67,5 @@ export const BlueskyLogoStyled: React.FC<BlueskyIconProps> = ({ size = 32, class
         fill="url(#bluesky-gradient)"
       />
     </svg>
-  )
-}
+  );
+};

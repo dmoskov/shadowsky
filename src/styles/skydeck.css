@@ -80,7 +80,7 @@
 }
 
 .column-drag-over::before {
-  content: '';
+  content: "";
   position: absolute;
   left: -2px;
   top: 0;
@@ -92,7 +92,8 @@
 }
 
 @keyframes drag-indicator-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.5;
     transform: scaleX(1);
   }
@@ -147,7 +148,7 @@
 }
 
 .add-column-button::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -156,7 +157,9 @@
   border-radius: 50%;
   background: rgba(59, 130, 246, 0.1);
   transform: translate(-50%, -50%);
-  transition: width 0.3s ease, height 0.3s ease;
+  transition:
+    width 0.3s ease,
+    height 0.3s ease;
 }
 
 .add-column-button:hover::before {
@@ -167,7 +170,9 @@
 /* Column close button enhancements */
 .column-close-button {
   opacity: 0.7;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .column-wrapper:hover .column-close-button {
@@ -185,7 +190,7 @@
 
 .scroll-shadow-container::before,
 .scroll-shadow-container::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   right: 0;
@@ -222,7 +227,7 @@
 /* Fixed scroll shadow overlay */
 .scroll-shadow-overlay::before,
 .scroll-shadow-overlay::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   right: 0;
@@ -298,7 +303,7 @@ body.dragging-active * {
 }
 
 .column-drop-zone::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: -4px;
   border: 2px dashed rgba(59, 130, 246, 0.3);
@@ -314,9 +319,10 @@ body.dragging-active * {
 
 /* Smooth reordering animation */
 .column-wrapper {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-              box-shadow 0.3s ease,
-              opacity 0.3s ease;
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s ease,
+    opacity 0.3s ease;
 }
 
 /* Enhanced hover state for columns - subtle shadow only */
@@ -339,7 +345,8 @@ body.dragging-active * {
 }
 
 @keyframes pulse-width {
-  0%, 100% {
+  0%,
+  100% {
     transform: scaleX(1);
     opacity: 0.7;
   }

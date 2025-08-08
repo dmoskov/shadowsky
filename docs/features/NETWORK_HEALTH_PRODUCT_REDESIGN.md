@@ -3,20 +3,25 @@
 ## Product Person's Analysis
 
 ### The Core Problem
+
 The current Network Health section suffers from the classic analytics trap: **it tells you WHAT but not SO WHAT or NOW WHAT**. Users see their network quality score is 15, but:
-- What does 15 mean? 
+
+- What does 15 mean?
 - Why should they care?
 - What specific actions will improve it?
 - How will improvement benefit them?
 
 ### User Jobs to be Done
+
 When users visit this section, they want to:
+
 1. **Understand** - "Is my network healthy?"
 2. **Diagnose** - "What specific problems exist?"
 3. **Act** - "What should I do right now?"
 4. **Track** - "Is what I'm doing working?"
 
 ### Current Failures
+
 - **Quality Score of 15** - Meaningless without context or benchmarks
 - **0% engagement from core** - Scary but not actionable
 - **70% ghost followers** - So what? Why does this matter?
@@ -25,6 +30,7 @@ When users visit this section, they want to:
 ## Designer's Vision
 
 ### Design Principles
+
 1. **Progressive Disclosure** - Start with simple health status, dive deeper on demand
 2. **Action-Oriented** - Every metric links to a specific action
 3. **Contextual Education** - Teach users why metrics matter through the UI
@@ -69,26 +75,27 @@ When users visit this section, they want to:
 ### Phase 1: Make it Actionable (Now)
 
 1. **Replace Abstract Metrics with Plain Language**
+
    ```typescript
    // Instead of: "Quality Score: 15"
    getHealthStatus(score: number): HealthStatus {
-     if (score < 20) return { 
-       label: "Needs Attention", 
-       icon: "🟠", 
+     if (score < 20) return {
+       label: "Needs Attention",
+       icon: "🟠",
        message: "Your network isn't engaging with your content"
      }
-     if (score < 50) return { 
-       label: "Building Momentum", 
+     if (score < 50) return {
+       label: "Building Momentum",
        icon: "🟡",
-       message: "You're starting to build an engaged audience" 
+       message: "You're starting to build an engaged audience"
      }
-     if (score < 80) return { 
-       label: "Healthy & Growing", 
+     if (score < 80) return {
+       label: "Healthy & Growing",
        icon: "🟢",
        message: "Your network actively engages with your content"
      }
-     return { 
-       label: "Thriving Community", 
+     return {
+       label: "Thriving Community",
        icon: "🌟",
        message: "You've built an exceptional engaged community"
      }
@@ -96,85 +103,87 @@ When users visit this section, they want to:
    ```
 
 2. **Create Action Cards Based on Diagnosis**
+
    ```typescript
    interface ActionCard {
-     priority: 'high' | 'medium' | 'low'
-     title: string
-     description: string
-     actionType: 'compose' | 'engage' | 'analyze'
-     actionLabel: string
-     onClick: () => void
-     expectedImpact: string
+     priority: "high" | "medium" | "low";
+     title: string;
+     description: string;
+     actionType: "compose" | "engage" | "analyze";
+     actionLabel: string;
+     onClick: () => void;
+     expectedImpact: string;
    }
-   
+
    // Generate personalized actions
    function generateActions(metrics: NetworkMetrics): ActionCard[] {
-     const actions: ActionCard[] = []
-     
+     const actions: ActionCard[] = [];
+
      // Low engagement? Suggest conversation starters
      if (metrics.engagementRate < 0.1) {
        actions.push({
-         priority: 'high',
-         title: 'Start a conversation',
-         description: 'Questions get 3x more engagement than statements',
-         actionType: 'compose',
-         actionLabel: 'Write a Question Post',
-         onClick: () => openComposeModal({ template: 'question' }),
-         expectedImpact: '+50% engagement rate'
-       })
+         priority: "high",
+         title: "Start a conversation",
+         description: "Questions get 3x more engagement than statements",
+         actionType: "compose",
+         actionLabel: "Write a Question Post",
+         onClick: () => openComposeModal({ template: "question" }),
+         expectedImpact: "+50% engagement rate",
+       });
      }
-     
+
      // Have supportive users? Nurture them
      if (metrics.topEngagers.length > 0) {
-       const topFan = metrics.topEngagers[0]
+       const topFan = metrics.topEngagers[0];
        actions.push({
-         priority: 'medium',
-         title: 'Nurture your supporters',
+         priority: "medium",
+         title: "Nurture your supporters",
          description: `@${topFan.handle} regularly engages with you`,
-         actionType: 'engage',
-         actionLabel: 'Visit Their Profile',
+         actionType: "engage",
+         actionLabel: "Visit Their Profile",
          onClick: () => navigateToProfile(topFan.handle),
-         expectedImpact: 'Strengthen core network'
-       })
+         expectedImpact: "Strengthen core network",
+       });
      }
-     
-     return actions.slice(0, 3) // Max 3 actions to avoid overwhelm
+
+     return actions.slice(0, 3); // Max 3 actions to avoid overwhelm
    }
    ```
 
 3. **Gamify Progress**
+
    ```typescript
    interface NetworkChallenge {
-     id: string
-     title: string
-     description: string
-     progress: number
-     target: number
-     reward: string
-     daysLeft: number
+     id: string;
+     title: string;
+     description: string;
+     progress: number;
+     target: number;
+     reward: string;
+     daysLeft: number;
    }
-   
+
    // Weekly challenges to improve network health
    const challenges: NetworkChallenge[] = [
      {
-       id: 'conversation-starter',
-       title: 'Conversation Catalyst',
-       description: 'Get 10 replies on your posts this week',
+       id: "conversation-starter",
+       title: "Conversation Catalyst",
+       description: "Get 10 replies on your posts this week",
        progress: 3,
        target: 10,
        reward: 'Unlock "Question Master" insights',
-       daysLeft: 4
+       daysLeft: 4,
      },
      {
-       id: 'ghost-buster',
-       title: 'Ghost Buster',
-       description: 'Re-engage 5 silent followers',
+       id: "ghost-buster",
+       title: "Ghost Buster",
+       description: "Re-engage 5 silent followers",
        progress: 1,
        target: 5,
-       reward: 'Reduce ghost follower %',
-       daysLeft: 4
-     }
-   ]
+       reward: "Reduce ghost follower %",
+       daysLeft: 4,
+     },
+   ];
    ```
 
 ### Phase 2: Smart Insights (Next Week)

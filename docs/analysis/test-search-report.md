@@ -1,6 +1,7 @@
 # Search Functionality Test Report
 
 ## Test Setup
+
 - **Test Account**: bskyclienttest.bsky.social
 - **Search Query**: "non-farm payrolls"
 - **App URL**: http://127.0.0.1:5173/
@@ -8,6 +9,7 @@
 ## Implementation Analysis
 
 ### Search Components Found:
+
 1. **Search Component** (`/src/components/Search.tsx`)
    - Full search page with Posts and Users tabs
    - Search input with typeahead suggestions
@@ -55,6 +57,7 @@
 ## Testing Instructions
 
 1. **Login**:
+
    ```
    Handle: bskyclienttest.bsky.social
    Password: [provided by user]
@@ -97,6 +100,7 @@
 - Responsive design for mobile/desktop
 
 The search functionality appears to be fully implemented and should work as expected. To test it, you'll need to:
+
 1. Open the app in Chrome
 2. Login with the test credentials
 3. Use the search feature

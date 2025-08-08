@@ -3,10 +3,13 @@
 This test verifies the fix for the bug where an empty dropdown appeared when pressing the down arrow key after clicking "Add user" in the search component.
 
 ## Bug Description
+
 When users clicked "Add user" and then pressed the down arrow key, the typeahead would show an empty dropdown if the followers data hadn't loaded yet.
 
 ## Fix Applied
+
 The fix ensures that:
+
 1. The dropdown only shows when there are actual suggestions to display
 2. The arrow down key only triggers the dropdown if `followersWithData` has content
 3. Proper null/undefined checks are in place for the `userSuggestions` array
@@ -14,11 +17,13 @@ The fix ensures that:
 ## Running the Test
 
 1. First, make sure your development server is running:
+
    ```bash
    npm run dev
    ```
 
 2. Install test dependencies:
+
    ```bash
    cd tests/e2e
    npm install

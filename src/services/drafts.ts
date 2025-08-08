@@ -16,41 +16,45 @@ export interface ThreadDraft {
   media?: Array<{
     file: string; // base64 or blob URL
     alt: string;
-    type: 'image' | 'video';
+    type: "image" | "video";
     postIndex?: number; // Which post this media belongs to
   }>;
 }
 
-const DRAFTS_KEY = 'bsky_thread_drafts';
-const SETTINGS_KEY = 'bsky_composer_settings';
+const DRAFTS_KEY = "bsky_thread_drafts";
+const SETTINGS_KEY = "bsky_composer_settings";
 
 export interface ComposerSettings {
-  numberingFormat: 'none' | 'simple' | 'brackets' | 'thread' | 'dots';
+  numberingFormat: "none" | "simple" | "brackets" | "thread" | "dots";
   defaultDelaySeconds: number;
   showSettingsPanel: boolean;
-  numberingPosition: 'beginning' | 'end';
+  numberingPosition: "beginning" | "end";
   autoGenerateAltText: boolean;
 }
 
 const DEFAULT_SETTINGS: ComposerSettings = {
-  numberingFormat: 'simple',
+  numberingFormat: "simple",
   defaultDelaySeconds: 3,
   showSettingsPanel: false,
-  numberingPosition: 'end',
+  numberingPosition: "end",
   autoGenerateAltText: false,
 };
 
 // Draft management
 export const saveDraft = (draft: ThreadDraft): void => {
   const drafts = getDrafts();
-  const existingIndex = drafts.findIndex(d => d.id === draft.id);
-  
+  const existingIndex = drafts.findIndex((d) => d.id === draft.id);
+
   if (existingIndex >= 0) {
     drafts[existingIndex] = { ...draft, updatedAt: new Date().toISOString() };
   } else {
-    drafts.push({ ...draft, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    drafts.push({
+      ...draft,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
   }
-  
+
   localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
 };
 
@@ -65,12 +69,12 @@ export const getDrafts = (): ThreadDraft[] => {
 
 export const getDraft = (id: string): ThreadDraft | null => {
   const drafts = getDrafts();
-  return drafts.find(d => d.id === id) || null;
+  return drafts.find((d) => d.id === id) || null;
 };
 
 export const deleteDraft = (id: string): void => {
   const drafts = getDrafts();
-  const filtered = drafts.filter(d => d.id !== id);
+  const filtered = drafts.filter((d) => d.id !== id);
   localStorage.setItem(DRAFTS_KEY, JSON.stringify(filtered));
 };
 
@@ -78,13 +82,17 @@ export const deleteDraft = (id: string): void => {
 export const getComposerSettings = (): ComposerSettings => {
   try {
     const settings = localStorage.getItem(SETTINGS_KEY);
-    return settings ? { ...DEFAULT_SETTINGS, ...JSON.parse(settings) } : DEFAULT_SETTINGS;
+    return settings
+      ? { ...DEFAULT_SETTINGS, ...JSON.parse(settings) }
+      : DEFAULT_SETTINGS;
   } catch {
     return DEFAULT_SETTINGS;
   }
 };
 
-export const saveComposerSettings = (settings: Partial<ComposerSettings>): void => {
+export const saveComposerSettings = (
+  settings: Partial<ComposerSettings>,
+): void => {
   const current = getComposerSettings();
   const updated = { ...current, ...settings };
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated));
@@ -94,4 +102,3 @@ export const saveComposerSettings = (settings: Partial<ComposerSettings>): void 
 export const generateDraftId = (): string => {
   return `draft_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
-

@@ -2,31 +2,51 @@
 
 /* Reply post styling */
 .reply-indicator {
-  background: linear-gradient(135deg, rgba(29, 155, 240, 0.1) 0%, rgba(29, 155, 240, 0.05) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(29, 155, 240, 0.1) 0%,
+    rgba(29, 155, 240, 0.05) 100%
+  );
   border: 1px solid rgba(29, 155, 240, 0.2);
   backdrop-filter: blur(8px);
   animation: fadeIn 0.3s ease-out;
 }
 
 .reply-indicator:hover {
-  background: linear-gradient(135deg, rgba(29, 155, 240, 0.15) 0%, rgba(29, 155, 240, 0.08) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(29, 155, 240, 0.15) 0%,
+    rgba(29, 155, 240, 0.08) 100%
+  );
   border-color: rgba(29, 155, 240, 0.3);
 }
 
 /* Posts that are replies get a left border */
 .post-is-reply {
   border-left: 4px solid rgb(29, 155, 240);
-  background: linear-gradient(90deg, rgba(29, 155, 240, 0.03) 0%, transparent 50%);
+  background: linear-gradient(
+    90deg,
+    rgba(29, 155, 240, 0.03) 0%,
+    transparent 50%
+  );
 }
 
 /* Connecting lines for reply threads */
 .reply-connector {
-  background: linear-gradient(180deg, rgb(29, 155, 240) 0%, rgba(29, 155, 240, 0.3) 100%);
+  background: linear-gradient(
+    180deg,
+    rgb(29, 155, 240) 0%,
+    rgba(29, 155, 240, 0.3) 100%
+  );
 }
 
 /* Quote post styling */
 .quote-header {
-  background: linear-gradient(135deg, rgba(120, 86, 255, 0.1) 0%, rgba(120, 86, 255, 0.05) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(120, 86, 255, 0.1) 0%,
+    rgba(120, 86, 255, 0.05) 100%
+  );
   border-bottom: 1px solid rgba(120, 86, 255, 0.2);
 }
 
@@ -55,16 +75,28 @@
 /* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
   .reply-indicator {
-    background: linear-gradient(135deg, rgba(29, 155, 240, 0.15) 0%, rgba(29, 155, 240, 0.08) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(29, 155, 240, 0.15) 0%,
+      rgba(29, 155, 240, 0.08) 100%
+    );
     border-color: rgba(29, 155, 240, 0.3);
   }
-  
+
   .post-is-reply {
-    background: linear-gradient(90deg, rgba(29, 155, 240, 0.05) 0%, transparent 50%);
+    background: linear-gradient(
+      90deg,
+      rgba(29, 155, 240, 0.05) 0%,
+      transparent 50%
+    );
   }
-  
+
   .quote-header {
-    background: linear-gradient(135deg, rgba(120, 86, 255, 0.15) 0%, rgba(120, 86, 255, 0.08) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(120, 86, 255, 0.15) 0%,
+      rgba(120, 86, 255, 0.08) 100%
+    );
     border-bottom-color: rgba(120, 86, 255, 0.3);
   }
 }
@@ -96,7 +128,9 @@
 /* Post hover effects without JavaScript state */
 .post-item {
   position: relative;
-  transition: background-color 0.15s ease, outline 0.2s ease;
+  transition:
+    background-color 0.15s ease,
+    outline 0.2s ease;
   /* Prevent layout shift on hover */
   will-change: background-color;
 }
@@ -120,7 +154,9 @@
 /* Post menu button hover behavior */
 .post-menu-button {
   opacity: 0;
-  transition: opacity 0.2s ease, background-color 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .post-menu-icon {
@@ -141,7 +177,7 @@
   .post-menu-button {
     opacity: 1;
   }
-  
+
   .post-menu-icon {
     color: var(--bsky-text-secondary) !important;
   }

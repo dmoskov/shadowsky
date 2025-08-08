@@ -3,30 +3,69 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/butterfly-icon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
-    <meta name="description" content="ShadowSky - Your companion app for deeper Bluesky insights" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
+    />
+    <meta
+      name="description"
+      content="ShadowSky - Your companion app for deeper Bluesky insights"
+    />
     <title>ShadowSky - Bluesky Companion</title>
-    
+
     <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"></script>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"
+    ></script>
     <script>
       // Analytics will be initialized by the app if a measurement ID is provided
       window.dataLayer = window.dataLayer || [];
     </script>
-    
   </head>
   <body>
     <div id="root">
       <!-- Loading state while React initializes -->
-      <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #0a0e1a;">
-        <div style="text-align: center;">
-          <div style="width: 50px; height: 50px; border: 3px solid #1e293b; border-top-color: #0085ff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-          <p style="color: #94a3b8; margin-top: 16px; font-family: system-ui, -apple-system, sans-serif;">Loading ShadowSky...</p>
+      <div
+        style="
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          background-color: #0a0e1a;
+        "
+      >
+        <div style="text-align: center">
+          <div
+            style="
+              width: 50px;
+              height: 50px;
+              border: 3px solid #1e293b;
+              border-top-color: #0085ff;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+              margin: 0 auto;
+            "
+          ></div>
+          <p
+            style="
+              color: #94a3b8;
+              margin-top: 16px;
+              font-family:
+                system-ui,
+                -apple-system,
+                sans-serif;
+            "
+          >
+            Loading ShadowSky...
+          </p>
         </div>
       </div>
       <style>
         @keyframes spin {
-          to { transform: rotate(360deg); }
+          to {
+            transform: rotate(360deg);
+          }
         }
       </style>
     </div>

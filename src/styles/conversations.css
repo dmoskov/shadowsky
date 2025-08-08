@@ -82,7 +82,7 @@
 }
 
 .conversation-item.selected::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 0;
@@ -99,7 +99,7 @@
 }
 
 .most-recent-notification::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -4px;
   border: 2px solid var(--bsky-primary);
@@ -109,7 +109,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.3;
     transform: scale(1);
   }
@@ -230,30 +231,30 @@ html {
   .thread-depth-1 {
     margin-left: 24px;
   }
-  
+
   .thread-depth-2 {
     margin-left: 48px;
   }
-  
+
   .thread-depth-3 {
     margin-left: 72px;
   }
-  
+
   .thread-depth-4 {
     margin-left: 96px;
   }
-  
+
   .thread-depth-indicator {
     padding-left: 24px;
   }
-  
+
   /* Adjust thread lines on mobile */
   .thread-line,
   .thread-branch,
   .thread-corner {
     left: 10px;
   }
-  
+
   .thread-branch {
     width: 14px;
   }

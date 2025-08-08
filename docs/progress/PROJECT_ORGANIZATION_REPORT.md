@@ -1,7 +1,9 @@
 # Project Organization Report - Bluesky Client
+
 Generated: 2025-06-07
 
 ## Executive Summary
+
 The Bluesky client project has grown significantly with 7,692 lines of TypeScript/TSX code and 6,323 lines of CSS. While the project maintains good separation of concerns and has no circular dependencies, several areas need attention for better organization and maintainability.
 
 ## Current State Analysis
@@ -9,6 +11,7 @@ The Bluesky client project has grown significantly with 7,692 lines of TypeScrip
 ### 1. File Size Issues
 
 #### Large Component Files (300+ lines)
+
 - **ThreadBranchDiagramCompact.tsx** (479 lines) - Largest file, contains complex visualization logic
 - **ThreadView.tsx** (432 lines) - Complex component handling thread display
 - **ThreadBranchDiagram.tsx** (425 lines) - Similar to Compact version with duplication
@@ -16,6 +19,7 @@ The Bluesky client project has grown significantly with 7,692 lines of TypeScrip
 - **Profile.tsx** (359 lines) - Profile page component
 
 #### Large CSS Files
+
 - **thread-improvements.css** (790 lines) - Needs breaking down into smaller focused files
 - **post-card.css** (403 lines) - Could be split by feature
 - **experimental-features.css** (367 lines) - Should be integrated or removed
@@ -24,6 +28,7 @@ The Bluesky client project has grown significantly with 7,692 lines of TypeScrip
 ### 2. Code Duplication
 
 #### Thread Diagram Components
+
 - `ThreadBranchDiagram.tsx` and `ThreadBranchDiagramCompact.tsx` share:
   - Similar interfaces (ThreadBranch, LayoutNode)
   - Same color palettes
@@ -31,6 +36,7 @@ The Bluesky client project has grown significantly with 7,692 lines of TypeScrip
   - Similar rendering logic
 
 #### Component Patterns
+
 - Multiple skeleton loader implementations across components
 - Repeated error handling patterns
 - Similar modal structures (ComposeModal, FollowersModal, KeyboardShortcutsModal)
@@ -38,7 +44,9 @@ The Bluesky client project has grown significantly with 7,692 lines of TypeScrip
 ### 3. Directory Organization Issues
 
 #### Components Directory (25 files)
+
 Currently flat structure with mixed concerns:
+
 - Core UI components (PostCard, Feed, Header)
 - Feature components (Search, Profile, Notifications)
 - Utility components (ErrorBoundary, SkeletonLoaders)
@@ -46,22 +54,26 @@ Currently flat structure with mixed concerns:
 - Thread-related components (7 different files)
 
 #### Styles Directory (23 CSS files)
+
 - No clear naming convention
 - Mix of component-specific and feature-wide styles
 - Experimental features file suggests incomplete work
 
 #### Test Screenshots (61 files)
+
 - Contains development screenshots
 - Should be in .gitignore or organized by date/feature
 
 ### 4. Missing Organization
 
 #### No Test Files
+
 - No unit tests found
 - No integration tests
 - No test utilities
 
 #### Limited Utils
+
 - Only one utility file (url-helpers.ts)
 - Common patterns not abstracted
 
@@ -70,6 +82,7 @@ Currently flat structure with mixed concerns:
 ### Phase 1: Non-Breaking Organization (Low Risk)
 
 1. **Create Component Subdirectories**
+
    ```
    components/
    ├── core/          # PostCard, Feed, Header
@@ -87,6 +100,7 @@ Currently flat structure with mixed concerns:
    - Merge diagram components with configuration options
 
 3. **Organize Styles**
+
    ```
    styles/
    ├── base/          # design-system, typography, layout
@@ -119,6 +133,7 @@ Currently flat structure with mixed concerns:
 ### Phase 3: Architecture Improvements (Higher Risk)
 
 1. **Implement Testing Structure**
+
    ```
    src/
    ├── __tests__/
@@ -128,6 +143,7 @@ Currently flat structure with mixed concerns:
    ```
 
 2. **Create Feature-Based Structure**
+
    ```
    features/
    ├── thread/
@@ -143,7 +159,9 @@ Currently flat structure with mixed concerns:
    - Move thread navigation state to global store
 
 ## Circular Dependencies & Import Issues
+
 ✅ **No circular dependencies detected**
+
 - Clean import structure
 - Good separation between layers
 
@@ -158,23 +176,28 @@ Currently flat structure with mixed concerns:
 ## Risk Assessment
 
 ### Low Risk
+
 - Creating subdirectories
 - Moving files with import updates
 - Extracting interfaces to types
 - Adding documentation
 
 ### Medium Risk
+
 - Splitting large components
 - Consolidating duplicate code
 - Reorganizing styles
 
 ### High Risk
+
 - Changing state management
 - Major architectural changes
 - Feature-based restructuring
 
 ## Conclusion
+
 The project is well-structured at a high level but needs organization as it scales. The most pressing issues are:
+
 1. Large monolithic components that are hard to maintain
 2. Duplicate code in thread visualization components
 3. Flat component directory making navigation difficult

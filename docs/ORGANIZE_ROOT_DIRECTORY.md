@@ -1,15 +1,18 @@
 # Root Directory Organization Plan
 
 ## Goal
+
 Clean up the root directory to make it easy for humans to navigate while ensuring nothing breaks.
 
 ## Principles
+
 1. **Don't break anything** - Keep all config files in root
 2. **Clear structure** - Group related files logically
 3. **Easy navigation** - Essential files stay visible
 4. **Preserve git history** - Use git mv for moves
 
 ## Current State
+
 - 103 files in root (way too many!)
 - 57 are documentation files
 - 18 are test scripts
@@ -18,6 +21,7 @@ Clean up the root directory to make it easy for humans to navigate while ensurin
 ## Proposed Structure
 
 ### Files that MUST stay in root:
+
 ```
 # Configuration (NEVER MOVE THESE)
 - package.json
@@ -44,6 +48,7 @@ Clean up the root directory to make it easy for humans to navigate while ensurin
 ```
 
 ### New Directory Structure:
+
 ```
 docs/
 ├── architecture/
@@ -114,7 +119,7 @@ git mv CREDENTIAL_MIGRATION_REPORT.json docs/migration/
 # Move test scripts
 git mv test-*.mjs scripts/test/
 
-# Move capture scripts  
+# Move capture scripts
 git mv capture-*.js capture-*.mjs scripts/capture/
 
 # Move utility files
@@ -126,9 +131,10 @@ git mv tailwind-style-guide.html tailwind-v4-test.css tools/style-guides/
 ## After Organization
 
 Root directory will have ~20 files (down from 103):
+
 - Essential configs (10 files)
 - README.md
-- CLAUDE.md  
+- CLAUDE.md
 - SESSION_NOTES.md
 - index.html
 - setup-local-mac.sh

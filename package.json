@@ -76,7 +76,7 @@
       ]
     },
     "fix:format": {
-      "command": "prettier --cache --write '*.{html,js,md,ts}' '.github/workflows/*.yml' 'docs/**/*.md' 'server/**/*.js' 'src/**/*.{ts,tsx,css}' 'tests/**/*.{js,md,ts}' 'tools/**/*'"
+      "command": "prettier --cache --write '*.{html,js,md,ts,yml}' '.github/workflows/*.yml' 'docs/**/*.md' 'server/**/*.js' 'src/**/*.{ts,tsx,css}' 'tests/**/*.{js,md,ts}' 'tools/**/*'"
     },
     "test": {
       "dependencies": [
@@ -86,9 +86,9 @@
       ]
     },
     "test:format": {
-      "command": "prettier --cache --check '*.{html,js,md,ts}' '.github/workflows/*.yml' 'docs/**/*.md' 'server/**/*.js' 'src/**/*.{ts,tsx,css}' 'tests/**/*.{js,md,ts}' 'tools/**/*'",
+      "command": "prettier --cache --check '*.{html,js,md,ts,yml}' '.github/workflows/*.yml' 'docs/**/*.md' 'server/**/*.js' 'src/**/*.{ts,tsx,css}' 'tests/**/*.{js,md,ts}' 'tools/**/*'",
       "files": [
-        "*.{html,js,md,ts}",
+        "*.{html,js,md,ts,yml}",
         ".github/workflows/*.yml",
         "docs/**/*.md",
         "server/**/*.js",
