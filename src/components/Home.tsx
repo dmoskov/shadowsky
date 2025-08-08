@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Loader, TrendingUp, Users, Clock, Hash, Star, Plus, ChevronDown, Reply, Heart, Repeat2, MessageCircle, RefreshCw, X } from 'lucide-react'
+import { Loader, TrendingUp, Users, Clock, Hash, Star, Reply, Heart, Repeat2, MessageCircle } from 'lucide-react'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '../contexts/AuthContext'
@@ -74,9 +74,13 @@ interface HomeProps {
   isFocused?: boolean;
   columnId?: string;
   onClose?: () => void;
+  onFeedChange?: (feed: string, label: string, feedOptions: any[]) => void;
+  onRefreshRequest?: number;
+  showFeedDiscovery?: boolean;
+  onCloseFeedDiscovery?: () => void;
 }
 
-export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, columnId, onClose }) => {
+export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, columnId, onFeedChange, onRefreshRequest, showFeedDiscovery: externalShowFeedDiscovery, onCloseFeedDiscovery }) => {
   const { agent } = useAuth()
   const queryClient = useQueryClient()
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } = useOptimisticPosts()
@@ -97,7 +101,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
     const savedFeed = localStorage.getItem('selectedFeed')
     return (savedFeed as FeedType) || 'following'
   })
-  const [showFeedDiscovery, setShowFeedDiscovery] = useState(false)
+  const [internalShowFeedDiscovery, setInternalShowFeedDiscovery] = useState(false)
+  const showFeedDiscovery = externalShowFeedDiscovery !== undefined ? externalShowFeedDiscovery : internalShowFeedDiscovery
   const [galleryImages, setGalleryImages] = useState<Array<{ thumb: string; fullsize: string; alt?: string }> | null>(null)
   const [galleryIndex, setGalleryIndex] = useState(0)
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
@@ -106,12 +111,12 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
   const [focusedPostIndex, setFocusedPostIndex] = useState<number>(-1)
   const postsContainerRef = useRef<HTMLDivElement>(null)
   const [feedOrder, setFeedOrder] = useState<string[]>([])
-  const [showFeedDropdown, setShowFeedDropdown] = useState(false)
+  // Removed showFeedDropdown - now handled by parent component
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const scrollPositionRef = useRef<{ [key: string]: number }>({})
   const containerRef = useRef<HTMLDivElement>(null)
   const postRefs = useRef<{ [key: string]: HTMLDivElement }>({})
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  // Removed dropdownRef - now handled by parent component
   const isKeyboardNavigationRef = useRef(false)
   
   const { trackFeatureAction } = useFeatureTracking('home_feed')
@@ -221,17 +226,21 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
   
   const currentFeedOption = feedOptions.find(opt => opt.type === selectedFeed)
   
-  // Close dropdown when clicking outside
+  // Notify parent of current feed on mount and feed change
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowFeedDropdown(false)
-      }
+    if (onFeedChange && currentFeedOption) {
+      onFeedChange(selectedFeed, currentFeedOption.label, feedOptions);
     }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [selectedFeed, currentFeedOption, feedOptions, onFeedChange]);
+  
+  // Handle refresh request from parent
+  useEffect(() => {
+    if (onRefreshRequest && onRefreshRequest > 0) {
+      queryClient.invalidateQueries({ queryKey: ['timeline', selectedFeed] });
+    }
+  }, [onRefreshRequest, queryClient, selectedFeed]);
+  
+  // Dropdown is now handled by the parent component
   
   const {
     data,
@@ -977,141 +986,11 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
     )
   }
   
-  const handleFeedChange = (feed: FeedType) => {
-    debug.log('Feed change clicked:', feed)
-    
-    // Save current scroll position for the current feed
-    if (containerRef.current) {
-      scrollPositionRef.current[selectedFeed] = window.scrollY
-      debug.log(`Saved scroll position for ${selectedFeed}:`, window.scrollY)
-    }
-    
-    setSelectedFeed(feed)
-    // Save to cookies if we have a column ID
-    if (columnId) {
-      columnFeedPrefs.setFeedForColumn(columnId, feed)
-    } else if (!initialFeedUri) {
-      // Only save to localStorage if this is the main home column
-      localStorage.setItem('selectedFeed', feed)
-    }
-    trackFeatureAction('feed_changed', { feed })
-    
-    // Restore scroll position for the new feed after a short delay to allow content to render
-    setTimeout(() => {
-      const savedPosition = scrollPositionRef.current[feed]
-      if (savedPosition !== undefined) {
-        debug.log(`Restoring scroll position for ${feed}:`, savedPosition)
-        window.scrollTo(0, savedPosition)
-      } else {
-        // Scroll to top for new feeds
-        window.scrollTo(0, 0)
-      }
-    }, 100)
-  }
+  // Feed change is now handled by parent component
   
   
   return (
     <div className="w-full" ref={containerRef} tabIndex={-1} style={{ outline: 'none' }}>
-      <div className="sticky top-0 z-20 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-        <div className="px-4 py-3 flex items-center justify-between group">
-          <div className="flex items-center gap-2">
-            {currentFeedOption && <currentFeedOption.icon size={20} style={{ color: 'var(--bsky-primary)' }} />}
-            <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-              {currentFeedOption?.label || 'Feed'}
-            </h2>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => queryClient.invalidateQueries({ queryKey: ['timeline', selectedFeed] })}
-              className="p-2 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-all"
-              style={{ color: 'var(--bsky-text-secondary)' }}
-              aria-label="Refresh feed"
-            >
-              <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
-            </button>
-            
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setShowFeedDropdown(!showFeedDropdown)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-all"
-                style={{ color: 'var(--bsky-text-secondary)' }}
-              >
-                <span className="text-sm">Change</span>
-                <ChevronDown size={16} className={`transition-transform ${showFeedDropdown ? 'rotate-180' : ''}`} />
-              </button>
-            
-            {showFeedDropdown && (
-              <div className="absolute right-0 mt-2 w-64 rounded-lg shadow-lg overflow-hidden"
-                style={{ 
-                  backgroundColor: 'var(--bsky-bg-secondary)',
-                  border: '1px solid var(--bsky-border-primary)'
-                }}>
-                <div className="max-h-96 overflow-y-auto">
-                  {feedOptions.map((option) => (
-                    <button
-                      key={option.type}
-                      onClick={() => {
-                        handleFeedChange(option.type)
-                        setShowFeedDropdown(false)
-                      }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-opacity-5 hover:bg-blue-500 transition-colors text-left ${
-                        selectedFeed === option.type ? 'bg-opacity-10 bg-blue-500' : ''
-                      }`}
-                    >
-                      <option.icon size={18} style={{ 
-                        color: selectedFeed === option.type ? 'var(--bsky-primary)' : 'var(--bsky-text-secondary)' 
-                      }} />
-                      <div className="flex-1">
-                        <div className="font-medium text-sm" style={{ color: 'var(--bsky-text-primary)' }}>
-                          {option.label}
-                        </div>
-                        {option.generator?.description && (
-                          <div className="text-xs mt-0.5" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                            {option.generator.description}
-                          </div>
-                        )}
-                      </div>
-                      {option.pinned && <Star size={14} className="text-yellow-500" />}
-                      {selectedFeed === option.type && (
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--bsky-primary)' }} />
-                      )}
-                    </button>
-                  ))}
-                </div>
-                
-                <div className="border-t" style={{ borderColor: 'var(--bsky-border-secondary)' }}>
-                  <button
-                    onClick={() => {
-                      setShowFeedDiscovery(true)
-                      setShowFeedDropdown(false)
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-opacity-5 hover:bg-blue-500 transition-colors"
-                  >
-                    <Plus size={18} style={{ color: 'var(--bsky-text-secondary)' }} />
-                    <span className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>
-                      Discover Feeds
-                    </span>
-                  </button>
-                </div>
-              </div>
-            )}
-            </div>
-            
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100"
-                style={{ color: 'var(--bsky-text-secondary)' }}
-                aria-label="Close column"
-              >
-                <X size={18} />
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-      
       <div className="max-w-2xl mx-auto px-3 sm:px-4" ref={postsContainerRef}>
         <div className="divide-y" style={{ borderColor: 'var(--bsky-border-primary)' }} role="feed" aria-label="Posts">
         {posts.map((item: any, index: number) => (
@@ -1130,7 +1009,13 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
       
       <FeedDiscovery 
         isOpen={showFeedDiscovery} 
-        onClose={() => setShowFeedDiscovery(false)} 
+        onClose={() => {
+          if (onCloseFeedDiscovery) {
+            onCloseFeedDiscovery();
+          } else {
+            setInternalShowFeedDiscovery(false);
+          }
+        }} 
       />
       
       {galleryImages && (

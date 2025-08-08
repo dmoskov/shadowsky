@@ -19,6 +19,10 @@ export default function SkyColumn({ column, onClose, chromeless = false, isFocus
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [hasScrollTop, setHasScrollTop] = useState(false);
   const [hasScrollBottom, setHasScrollBottom] = useState(false);
+  const [currentFeedLabel, setCurrentFeedLabel] = useState<string>('');
+  const [feedOptions, setFeedOptions] = useState<any[]>([]);
+  const [refreshCounter, setRefreshCounter] = useState(0);
+  const [showFeedDiscovery, setShowFeedDiscovery] = useState(false);
 
   useEffect(() => {
     const checkScroll = () => {
@@ -62,7 +66,20 @@ export default function SkyColumn({ column, onClose, chromeless = false, isFocus
       
       case 'feed':
         // Use the Home component for all feed columns
-        return <Home initialFeedUri={column.data} isFocused={isFocused} columnId={column.id} />;
+        return (
+          <Home 
+            initialFeedUri={column.data} 
+            isFocused={isFocused} 
+            columnId={column.id}
+            onFeedChange={(feed, label, options) => {
+              setCurrentFeedLabel(label);
+              setFeedOptions(options);
+            }}
+            onRefreshRequest={refreshCounter}
+            showFeedDiscovery={showFeedDiscovery}
+            onCloseFeedDiscovery={() => setShowFeedDiscovery(false)}
+          />
+        );
       
       default:
         return (
@@ -82,6 +99,14 @@ export default function SkyColumn({ column, onClose, chromeless = false, isFocus
         <ColumnHeader 
           column={column} 
           onRemove={() => onClose()}
+          onRefresh={column.type === 'feed' ? () => setRefreshCounter(prev => prev + 1) : undefined}
+          onFeedChange={column.type === 'feed' ? (feed: string) => {
+            // Feed change is handled by Home component internally
+            // The feed parameter is not used but required by the interface
+          } : undefined}
+          currentFeedLabel={column.type === 'feed' ? currentFeedLabel : undefined}
+          feedOptions={column.type === 'feed' ? feedOptions : undefined}
+          onDiscoverFeeds={column.type === 'feed' ? () => setShowFeedDiscovery(true) : undefined}
         />
         <div className="flex-1 overflow-hidden relative">
           <div 
