@@ -9,6 +9,7 @@ The project contains 11 test scripts located in the `/scripts` directory. These 
 ## Test Scripts
 
 ### 1. check-dev-errors.js
+
 - **Location**: `/scripts/check-dev-errors.js`
 - **Purpose**: Monitors Vite development server output for common errors and provides developer-friendly suggestions
 - **Authentication**: No
@@ -18,11 +19,12 @@ The project contains 11 test scripts located in the `/scripts` directory. These 
   - Detects TypeScript errors and CSS import issues
   - Provides actionable error messages
   - Exits with error code if issues found
-- **Special Capabilities**: 
+- **Special Capabilities**:
   - Pattern-based error detection
   - Severity classification (error/warning)
 
 ### 2. debug-notification-badge.cjs
+
 - **Location**: `/scripts/debug-notification-badge.cjs`
 - **Purpose**: Debug and inspect notification badge rendering and styling
 - **Authentication**: Yes (hardcoded credentials)
@@ -39,6 +41,7 @@ The project contains 11 test scripts located in the `/scripts` directory. These 
   - Style computation analysis
 
 ### 3. dev-server.sh
+
 - **Location**: `/scripts/dev-server.sh`
 - **Purpose**: Robust development server management with health checking
 - **Authentication**: No
@@ -54,6 +57,7 @@ The project contains 11 test scripts located in the `/scripts` directory. These 
   - Error detection in running server
 
 ### 4. diagnose-app.js
+
 - **Location**: `/scripts/diagnose-app.js`
 - **Purpose**: Comprehensive diagnostic tool for troubleshooting app loading issues
 - **Authentication**: No
@@ -72,6 +76,7 @@ The project contains 11 test scripts located in the `/scripts` directory. These 
   - Blank page detection
 
 ### 5. open-chrome.sh
+
 - **Location**: `/scripts/open-chrome.sh`
 - **Purpose**: Opens the app in Chrome browser for better development experience
 - **Authentication**: No
@@ -84,6 +89,7 @@ The project contains 11 test scripts located in the `/scripts` directory. These 
   - Fallback handling
 
 ### 6. test-app.mjs
+
 - **Location**: `/scripts/test-app.mjs`
 - **Purpose**: End-to-end testing of basic app functionality including login and feed display
 - **Authentication**: Yes (hardcoded test credentials)
@@ -101,6 +107,7 @@ The project contains 11 test scripts located in the `/scripts` directory. These 
   - Thread structure analysis
 
 ### 7. test-browser.mjs
+
 - **Location**: `/scripts/test-browser.mjs`
 - **Purpose**: Basic browser connectivity and app mounting test
 - **Authentication**: No
@@ -117,6 +124,7 @@ The project contains 11 test scripts located in the `/scripts` directory. These 
   - Extended observation period
 
 ### 8. test-likes.mjs
+
 - **Location**: `/scripts/test-likes.mjs`
 - **Purpose**: Tests like and repost functionality including state changes and count updates
 - **Authentication**: Yes (hardcoded test credentials)
@@ -133,6 +141,7 @@ The project contains 11 test scripts located in the `/scripts` directory. These 
   - Interaction testing
 
 ### 9. test-search.js
+
 - **Location**: `/scripts/test-search.js`
 - **Purpose**: Manual test instructions for search functionality
 - **Authentication**: Yes (manual)
@@ -146,6 +155,7 @@ The project contains 11 test scripts located in the `/scripts` directory. These 
   - No automation (manual only)
 
 ### 10. test-thread-lines.mjs
+
 - **Location**: `/scripts/test-thread-lines.mjs`
 - **Purpose**: Debug and test thread line visual indicators in reply posts
 - **Authentication**: Yes (hardcoded test credentials)
@@ -161,6 +171,7 @@ The project contains 11 test scripts located in the `/scripts` directory. These 
   - Visual thread debugging
 
 ### 11. test-threads.mjs
+
 - **Location**: `/scripts/test-threads.mjs`
 - **Purpose**: Tests thread display and interaction, includes following accounts to populate feed
 - **Authentication**: Yes (hardcoded test credentials)
@@ -180,27 +191,32 @@ The project contains 11 test scripts located in the `/scripts` directory. These 
 ## Test Infrastructure
 
 ### Authentication
+
 - Most test scripts use hardcoded credentials for the test account: `bskyclienttest.bsky.social`
 - Password is embedded in scripts (security consideration for production use)
 
 ### Browser Automation
+
 - Uses Playwright for browser automation
 - Consistent viewport: 1280x720
 - Most tests run with visible browser (headless: false) for debugging
 - DevTools often enabled for inspection
 
 ### Screenshot Management
+
 - Screenshots saved to `/test-screenshots/` directory
 - Naming conventions include timestamps and test purpose
 - Used for visual regression and debugging
 
 ### Error Detection
+
 - Multiple approaches: console logging, error element detection, network monitoring
 - Comprehensive error aggregation in diagnostic scripts
 
 ## Usage Patterns
 
 ### Development Workflow Testing
+
 ```bash
 # Check for dev errors
 node ./scripts/check-dev-errors.js
@@ -211,6 +227,7 @@ node ./scripts/check-dev-errors.js
 ```
 
 ### Functionality Testing
+
 ```bash
 # Test basic app functionality
 node scripts/test-app.mjs
@@ -221,6 +238,7 @@ node scripts/test-threads.mjs
 ```
 
 ### Debugging
+
 ```bash
 # Diagnose app issues
 node scripts/diagnose-app.js

@@ -3,6 +3,7 @@
 ## Option 1: AWS Amplify (Recommended - Easiest)
 
 AWS Amplify is the simplest way to deploy a React SPA on AWS. It handles everything automatically including:
+
 - CI/CD from GitHub
 - HTTPS/SSL certificates
 - CloudFront CDN distribution
@@ -23,6 +24,7 @@ AWS Amplify is the simplest way to deploy a React SPA on AWS. It handles everyth
 
 3. **Configure build settings**
    - Amplify should auto-detect Vite, but verify the build settings:
+
    ```yaml
    version: 1
    frontend:
@@ -36,7 +38,7 @@ AWS Amplify is the simplest way to deploy a React SPA on AWS. It handles everyth
      artifacts:
        baseDirectory: dist
        files:
-         - '**/*'
+         - "**/*"
      cache:
        paths:
          - node_modules/**/*
@@ -45,6 +47,7 @@ AWS Amplify is the simplest way to deploy a React SPA on AWS. It handles everyth
 4. **Add redirect rules for SPA**
    - In the Amplify console, go to "Rewrites and redirects"
    - Add this rule:
+
    ```
    Source: </^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|ttf|map|json)$)([^.]+$)/>
    Target: /index.html
@@ -60,6 +63,7 @@ AWS Amplify is the simplest way to deploy a React SPA on AWS. It handles everyth
    - Follow the DNS configuration instructions
 
 ### Total time: ~15-20 minutes
+
 ### Cost: ~$0.01 per GB served (very cheap for most apps)
 
 ---
@@ -69,12 +73,14 @@ AWS Amplify is the simplest way to deploy a React SPA on AWS. It handles everyth
 This gives you more control but requires more setup.
 
 ### Prerequisites:
+
 - AWS CLI installed: `brew install awscli`
 - Configure AWS CLI: `aws configure`
 
 ### Steps:
 
 1. **Create S3 bucket**
+
    ```bash
    # Create bucket (use a unique name)
    aws s3 mb s3://shadowsky-app
@@ -85,8 +91,9 @@ This gives you more control but requires more setup.
      --error-document index.html
    ```
 
-2. **Update bucket policy** 
+2. **Update bucket policy**
    Create `bucket-policy.json`:
+
    ```json
    {
      "Version": "2012-10-17",
@@ -101,7 +108,9 @@ This gives you more control but requires more setup.
      ]
    }
    ```
+
    Apply it:
+
    ```bash
    aws s3api put-bucket-policy \
      --bucket shadowsky-app \
@@ -110,36 +119,38 @@ This gives you more control but requires more setup.
 
 3. **Build and deploy script**
    Create `deploy-aws.sh`:
+
    ```bash
    #!/bin/bash
-   
+
    # Build the app
    npm run build
-   
+
    # Sync to S3
    aws s3 sync dist/ s3://shadowsky-app \
      --delete \
      --cache-control "public, max-age=31536000" \
      --exclude "index.html" \
      --exclude "*.json"
-   
+
    # Upload index.html and JSON files with no cache
    aws s3 cp dist/index.html s3://shadowsky-app/index.html \
      --cache-control "no-cache, no-store, must-revalidate"
-   
+
    aws s3 cp dist/ s3://shadowsky-app/ \
      --recursive \
      --exclude "*" \
      --include "*.json" \
      --cache-control "no-cache, no-store, must-revalidate"
-   
+
    # Copy index.html to handle client-side routing
    aws s3 cp dist/index.html s3://shadowsky-app/error.html
-   
+
    echo "✅ Deployed to S3!"
    ```
 
 4. **Create CloudFront distribution**
+
    ```bash
    aws cloudfront create-distribution \
      --origin-domain-name shadowsky-app.s3-website-us-east-1.amazonaws.com \
@@ -161,6 +172,7 @@ This gives you more control but requires more setup.
    - Update DNS to point to CloudFront distribution
 
 ### Deployment command:
+
 ```bash
 chmod +x deploy-aws.sh
 ./deploy-aws.sh
@@ -192,24 +204,25 @@ amplify publish
 
 ## Comparison
 
-| Feature | Amplify Console | S3 + CloudFront | GitHub Pages |
-|---------|----------------|-----------------|--------------|
-| Setup Time | 15 min | 45 min | 5 min |
-| SPA Routing | ✅ Perfect | ✅ Good | ❌ Hacky |
-| HTTPS | ✅ Automatic | ✅ Manual | ✅ Automatic |
-| Custom Domain | ✅ Easy | ✅ Manual | ✅ Easy |
-| CI/CD | ✅ Built-in | ❌ Need GitHub Actions | ✅ Built-in |
-| Cost | ~$1-5/month | ~$1-5/month | Free |
-| Performance | ⚡ Excellent | ⚡ Excellent | ⚡ Good |
-| Preview Deploys | ✅ Yes | ❌ No | ❌ No |
+| Feature         | Amplify Console | S3 + CloudFront        | GitHub Pages |
+| --------------- | --------------- | ---------------------- | ------------ |
+| Setup Time      | 15 min          | 45 min                 | 5 min        |
+| SPA Routing     | ✅ Perfect      | ✅ Good                | ❌ Hacky     |
+| HTTPS           | ✅ Automatic    | ✅ Manual              | ✅ Automatic |
+| Custom Domain   | ✅ Easy         | ✅ Manual              | ✅ Easy      |
+| CI/CD           | ✅ Built-in     | ❌ Need GitHub Actions | ✅ Built-in  |
+| Cost            | ~$1-5/month     | ~$1-5/month            | Free         |
+| Performance     | ⚡ Excellent    | ⚡ Excellent           | ⚡ Good      |
+| Preview Deploys | ✅ Yes          | ❌ No                  | ❌ No        |
 
 ---
 
 ## My Recommendation
 
 **Go with AWS Amplify Console** (Option 1) because:
+
 - It's specifically designed for SPAs like yours
-- Handles all the routing issues automatically  
+- Handles all the routing issues automatically
 - Gives you preview deployments for testing
 - Still very cheap (you'll probably stay in free tier)
 - Can be set up in 15 minutes tomorrow

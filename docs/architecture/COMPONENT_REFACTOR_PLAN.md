@@ -1,6 +1,7 @@
 # Component Refactoring Plan
 
 ## Safety Checklist
+
 - [x] Create dedicated branch: `refactor/split-components`
 - [ ] Test app functionality before starting
 - [ ] Refactor one component at a time
@@ -11,8 +12,10 @@
 ## Components to Split (in order of priority)
 
 ### 1. PostCard (397 lines) - HIGH PRIORITY
+
 **Current file**: `src/components/feed/PostCard.tsx`
 **Split into**:
+
 - `PostCard.tsx` - Main container (orchestrator)
 - `PostHeader.tsx` - Author info, timestamp, menu button ✅
 - `PostContent.tsx` - Text content and reply context
@@ -21,8 +24,10 @@
 - `PostMenu.tsx` - Dropdown menu with actions
 
 ### 2. ThreadView (432 lines)
+
 **Current file**: `src/components/thread/ThreadView.tsx`
 **Split into**:
+
 - `ThreadView.tsx` - Main container
 - `ThreadViewHeader.tsx` - Navigation and mode toggles
 - `ThreadViewModes.tsx` - Reader/compact mode UI
@@ -30,8 +35,10 @@
 - `useThreadData.ts` - Data fetching hook
 
 ### 3. Profile (359 lines)
+
 **Current file**: `src/components/profile/Profile.tsx`
 **Split into**:
+
 - `Profile.tsx` - Main container
 - `ProfileHeader.tsx` - Avatar, name, follow button
 - `ProfileStats.tsx` - Followers/following counts
@@ -39,8 +46,10 @@
 - `ProfileContent.tsx` - Tab content rendering
 
 ### 4. Search (291 lines)
+
 **Current file**: `src/components/profile/Search.tsx`
 **Split into**:
+
 - `Search.tsx` - Main container
 - `SearchInput.tsx` - Search bar with suggestions
 - `SearchTabs.tsx` - Posts/Users tabs
@@ -48,8 +57,10 @@
 - `UserSearchResult.tsx` - Individual user result
 
 ### 5. Header (245 lines)
+
 **Current file**: `src/components/core/Header.tsx`
 **Split into**:
+
 - `Header.tsx` - Main container
 - `HeaderSearch.tsx` - Search functionality
 - `UserDropdown.tsx` - User menu
@@ -59,6 +70,7 @@
 ## Refactoring Process
 
 ### For each component:
+
 1. **Analyze** current implementation
 2. **Create** new sub-components
 3. **Move** code carefully, preserving functionality
@@ -67,6 +79,7 @@
 6. **Commit** with descriptive message
 
 ### Testing checklist after each refactor:
+
 - [ ] Component renders correctly
 - [ ] All interactions work (clicks, hovers)
 - [ ] Data flows properly (props, hooks)
@@ -75,7 +88,9 @@
 - [ ] No TypeScript errors
 
 ## Rollback Strategy
+
 If anything breaks:
+
 ```bash
 # Check what changed
 git status
@@ -94,6 +109,7 @@ git branch -D refactor/split-components
 ```
 
 ## Success Criteria
+
 - All components < 200 lines
 - Clear separation of concerns
 - No functionality lost

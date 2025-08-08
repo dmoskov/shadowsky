@@ -1,39 +1,40 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Tailwind v4 Manual Test</title>
     <script type="module">
-        // Test if Tailwind utilities are generating styles
-        async function testTailwind() {
-            try {
-                const response = await fetch('/src/styles/tailwind-import.css');
-                const css = await response.text();
-                
-                console.log('CSS Length:', css.length);
-                console.log('Contains bg-blue-500:', css.includes('bg-blue-500'));
-                console.log('Contains text-3xl:', css.includes('text-3xl'));
-                
-                // Display results
-                const results = document.getElementById('results');
-                results.innerHTML = `
+      // Test if Tailwind utilities are generating styles
+      async function testTailwind() {
+        try {
+          const response = await fetch("/src/styles/tailwind-import.css");
+          const css = await response.text();
+
+          console.log("CSS Length:", css.length);
+          console.log("Contains bg-blue-500:", css.includes("bg-blue-500"));
+          console.log("Contains text-3xl:", css.includes("text-3xl"));
+
+          // Display results
+          const results = document.getElementById("results");
+          results.innerHTML = `
                     <h2>Tailwind CSS Test Results</h2>
-                    <p>CSS loaded: ${css.length > 1000 ? '✅ Yes' : '❌ No'}</p>
-                    <p>Has bg-blue-500: ${css.includes('bg-blue-500') ? '✅ Yes' : '❌ No'}</p>
-                    <p>Has text-3xl: ${css.includes('text-3xl') ? '✅ Yes' : '❌ No'}</p>
+                    <p>CSS loaded: ${css.length > 1000 ? "✅ Yes" : "❌ No"}</p>
+                    <p>Has bg-blue-500: ${css.includes("bg-blue-500") ? "✅ Yes" : "❌ No"}</p>
+                    <p>Has text-3xl: ${css.includes("text-3xl") ? "✅ Yes" : "❌ No"}</p>
                     <pre style="max-height: 200px; overflow: auto;">${css.substring(0, 1000)}...</pre>
                 `;
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('results').innerHTML = `<p>Error: ${error.message}</p>`;
-            }
+        } catch (error) {
+          console.error("Error:", error);
+          document.getElementById("results").innerHTML =
+            `<p>Error: ${error.message}</p>`;
         }
-        
-        window.onload = testTailwind;
+      }
+
+      window.onload = testTailwind;
     </script>
-</head>
-<body>
-    <div id="results" style="padding: 20px;">
-        <p>Loading...</p>
+  </head>
+  <body>
+    <div id="results" style="padding: 20px">
+      <p>Loading...</p>
     </div>
-</body>
+  </body>
 </html>

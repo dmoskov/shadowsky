@@ -12,7 +12,7 @@
   background-color: var(--bsky-bg-primary);
   position: relative;
   z-index: 10;
-  
+
   /* Prevent text selection */
   user-select: none;
   -webkit-user-select: none;
@@ -48,7 +48,7 @@
   border-radius: 9999px;
   position: relative;
   font-size: 0.875rem;
-  
+
   /* Larger touch target on mobile */
   -webkit-tap-highlight-color: transparent;
 }
@@ -131,16 +131,16 @@
     padding-left: 0.5rem;
     padding-right: 0.5rem;
   }
-  
+
   .action-item {
     padding: 0.5rem;
     font-size: 0.75rem;
   }
-  
+
   .action-count {
     font-size: 0.7rem;
   }
-  
+
   /* Hide counts on very small screens if needed */
   @media (max-width: 360px) {
     .action-count {
@@ -164,7 +164,7 @@
 
 /* Ripple effect on click */
 .action-item::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -172,7 +172,9 @@
   background: radial-gradient(circle, currentColor 10%, transparent 10%);
   background-size: 1000% 1000%;
   background-position: center;
-  transition: opacity 0.3s, background-size 0.3s;
+  transition:
+    opacity 0.3s,
+    background-size 0.3s;
 }
 
 .action-item:active::after {

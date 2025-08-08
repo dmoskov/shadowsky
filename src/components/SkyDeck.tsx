@@ -1,11 +1,27 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Bell, Clock, MessageSquare, Hash, Star, Mail, Bookmark, Users } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '../contexts/AuthContext';
-import SkyColumn from './SkyColumn';
-import { columnFeedPrefs } from '../utils/cookies';
+import { useQuery } from "@tanstack/react-query";
+import {
+  Bell,
+  Bookmark,
+  Clock,
+  Hash,
+  Mail,
+  MessageSquare,
+  Plus,
+  Star,
+  Users,
+} from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { columnFeedPrefs } from "../utils/cookies";
+import SkyColumn from "./SkyColumn";
 
-export type ColumnType = 'notifications' | 'timeline' | 'conversations' | 'feed' | 'messages' | 'bookmarks';
+export type ColumnType =
+  | "notifications"
+  | "timeline"
+  | "conversations"
+  | "feed"
+  | "messages"
+  | "bookmarks";
 
 export interface Column {
   id: string;
@@ -13,7 +29,6 @@ export interface Column {
   title?: string;
   data?: string; // Can be threadUri, feedUri, profileHandle, listUri etc
 }
-
 
 interface FeedGenerator {
   uri: string;
@@ -23,12 +38,42 @@ interface FeedGenerator {
 }
 
 const columnOptions = [
-  { type: 'feed' as ColumnType, label: 'Feed Column', icon: Hash, description: 'Add another feed column' },
-  { type: 'notifications' as ColumnType, label: 'Notifications', icon: Bell, description: 'All your notifications' },
-  { type: 'timeline' as ColumnType, label: 'Visual Timeline', icon: Clock, description: 'Timeline visualization' },
-  { type: 'messages' as ColumnType, label: 'Messages', icon: Mail, description: 'Direct messages' },
-  { type: 'conversations' as ColumnType, label: 'Conversations', icon: MessageSquare, description: 'Your conversations' },
-  { type: 'bookmarks' as ColumnType, label: 'Bookmarks', icon: Bookmark, description: 'Your saved posts' },
+  {
+    type: "feed" as ColumnType,
+    label: "Feed Column",
+    icon: Hash,
+    description: "Add another feed column",
+  },
+  {
+    type: "notifications" as ColumnType,
+    label: "Notifications",
+    icon: Bell,
+    description: "All your notifications",
+  },
+  {
+    type: "timeline" as ColumnType,
+    label: "Visual Timeline",
+    icon: Clock,
+    description: "Timeline visualization",
+  },
+  {
+    type: "messages" as ColumnType,
+    label: "Messages",
+    icon: Mail,
+    description: "Direct messages",
+  },
+  {
+    type: "conversations" as ColumnType,
+    label: "Conversations",
+    icon: MessageSquare,
+    description: "Your conversations",
+  },
+  {
+    type: "bookmarks" as ColumnType,
+    label: "Bookmarks",
+    icon: Bookmark,
+    description: "Your saved posts",
+  },
 ];
 
 export default function SkyDeck() {
@@ -36,60 +81,62 @@ export default function SkyDeck() {
   const [columns, setColumns] = useState<Column[]>([]);
   const [isDragging, setIsDragging] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
-  const [_draggedElement, setDraggedElement] = useState<HTMLElement | null>(null);
+  const [_draggedElement, setDraggedElement] = useState<HTMLElement | null>(
+    null,
+  );
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [isNarrowView, setIsNarrowView] = useState(false);
   const [focusedColumnIndex, setFocusedColumnIndex] = useState(0);
-  const [customFeedUri, setCustomFeedUri] = useState('');
+  const [customFeedUri, setCustomFeedUri] = useState("");
   const [isLoadingCustomFeed, setIsLoadingCustomFeed] = useState(false);
   const columnsContainerRef = useRef<HTMLDivElement>(null);
 
   // Fetch user's saved/pinned feeds
   const { data: userPrefs } = useQuery({
-    queryKey: ['userPreferences'],
+    queryKey: ["userPreferences"],
     queryFn: async () => {
-      if (!agent) throw new Error('Not authenticated');
+      if (!agent) throw new Error("Not authenticated");
       const prefs = await agent.getPreferences();
       return prefs;
     },
     enabled: !!agent,
     staleTime: 5 * 60 * 1000,
-    refetchOnMount: 'always', // Always fetch fresh data on mount
+    refetchOnMount: "always", // Always fetch fresh data on mount
   });
-  
+
   // Fetch feed generator details for saved feeds
   const { data: feedGenerators } = useQuery({
-    queryKey: ['feedGenerators', userPrefs?.savedFeeds],
+    queryKey: ["feedGenerators", userPrefs?.savedFeeds],
     queryFn: async () => {
       if (!agent || !userPrefs?.savedFeeds?.length) return [];
-      
+
       const feedUris = userPrefs.savedFeeds
-        .filter((feed: any): boolean => feed.type === 'feed')
+        .filter((feed: any): boolean => feed.type === "feed")
         .map((feed: any) => feed.value);
-      
+
       if (feedUris.length === 0) return [];
-      
+
       try {
         const response = await agent.app.bsky.feed.getFeedGenerators({
-          feeds: feedUris
+          feeds: feedUris,
         });
         return response.data.feeds;
       } catch (error) {
-        console.error('Failed to fetch feed generators:', error);
+        console.error("Failed to fetch feed generators:", error);
         return [];
       }
     },
-    enabled: !!agent && !!userPrefs?.savedFeeds
+    enabled: !!agent && !!userPrefs?.savedFeeds,
   });
-  
+
   // Fetch user's lists
   const { data: userLists } = useQuery({
-    queryKey: ['userLists', agent?.session?.did],
+    queryKey: ["userLists", agent?.session?.did],
     queryFn: async () => {
-      if (!agent || !agent.session?.did) throw new Error('Not authenticated');
+      if (!agent || !agent.session?.did) throw new Error("Not authenticated");
       const response = await agent.app.bsky.graph.getLists({
         actor: agent.session.did,
-        limit: 50
+        limit: 50,
       });
       return response.data.lists;
     },
@@ -105,75 +152,89 @@ export default function SkyDeck() {
     };
 
     checkWidth();
-    window.addEventListener('resize', checkWidth);
-    return () => window.removeEventListener('resize', checkWidth);
+    window.addEventListener("resize", checkWidth);
+    return () => window.removeEventListener("resize", checkWidth);
   }, []);
 
   // Handle keyboard navigation between columns
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't interfere with input fields or when modals are open
-      if (e.target instanceof HTMLInputElement || 
-          e.target instanceof HTMLTextAreaElement ||
-          document.body.classList.contains('thread-modal-open') ||
-          document.body.classList.contains('conversation-modal-open')) {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        document.body.classList.contains("thread-modal-open") ||
+        document.body.classList.contains("conversation-modal-open")
+      ) {
         return;
       }
 
       // Column navigation with arrows and h/l (vim-style)
-      if (e.key === 'ArrowLeft' || e.key === 'h') {
+      if (e.key === "ArrowLeft" || e.key === "h") {
         e.preventDefault();
-        setFocusedColumnIndex(prev => Math.max(0, prev - 1));
-      } else if (e.key === 'ArrowRight' || e.key === 'l') {
+        setFocusedColumnIndex((prev) => Math.max(0, prev - 1));
+      } else if (e.key === "ArrowRight" || e.key === "l") {
         e.preventDefault();
-        setFocusedColumnIndex(prev => Math.min(columns.length - 1, prev + 1));
+        setFocusedColumnIndex((prev) => Math.min(columns.length - 1, prev + 1));
       }
       // Space bar to scroll within focused column
-      else if (e.key === ' ' && !e.shiftKey) {
+      else if (e.key === " " && !e.shiftKey) {
         e.preventDefault();
         // Find the focused column's scroll container
-        const columnElements = columnsContainerRef.current?.querySelectorAll('.column-wrapper');
+        const columnElements =
+          columnsContainerRef.current?.querySelectorAll(".column-wrapper");
         const focusedColumn = columnElements?.[focusedColumnIndex];
-        const scrollContainer = focusedColumn?.querySelector('.skydeck-scrollbar');
+        const scrollContainer =
+          focusedColumn?.querySelector(".skydeck-scrollbar");
         if (scrollContainer) {
-          scrollContainer.scrollBy({ top: scrollContainer.clientHeight * 0.8, behavior: 'smooth' });
+          scrollContainer.scrollBy({
+            top: scrollContainer.clientHeight * 0.8,
+            behavior: "smooth",
+          });
         }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [columns.length, focusedColumnIndex]);
 
   // Scroll focused column into view
   useEffect(() => {
     if (columnsContainerRef.current && columns.length > 0) {
       const container = columnsContainerRef.current;
-      const columnElements = container.querySelectorAll('.column-wrapper');
+      const columnElements = container.querySelectorAll(".column-wrapper");
       const focusedElement = columnElements[focusedColumnIndex] as HTMLElement;
-      
+
       if (focusedElement) {
-        focusedElement.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        focusedElement.scrollIntoView({
+          behavior: "smooth",
+          inline: "center",
+          block: "nearest",
+        });
       }
     }
   }, [focusedColumnIndex, columns.length]);
 
   useEffect(() => {
     const homeColumn: Column = {
-      id: 'home',
-      type: 'feed',
-      title: 'Home',
-      data: 'following' // Default to following feed
+      id: "home",
+      type: "feed",
+      title: "Home",
+      data: "following", // Default to following feed
     };
-    
-    const savedColumns = localStorage.getItem('skyDeckColumns');
+
+    const savedColumns = localStorage.getItem("skyDeckColumns");
     if (savedColumns) {
       try {
         const parsed = JSON.parse(savedColumns);
         // Ensure the first column is always Home
-        if (parsed.length === 0 || parsed[0].id !== 'home') {
-          const restoredColumns = [homeColumn, ...parsed.filter((col: Column) => col.id !== 'home')].map((col: Column) => {
-            if (col.type === 'feed' && col.id) {
+        if (parsed.length === 0 || parsed[0].id !== "home") {
+          const restoredColumns = [
+            homeColumn,
+            ...parsed.filter((col: Column) => col.id !== "home"),
+          ].map((col: Column) => {
+            if (col.type === "feed" && col.id) {
               const savedFeed = columnFeedPrefs.getFeedForColumn(col.id);
               if (savedFeed) {
                 return { ...col, data: savedFeed };
@@ -185,7 +246,7 @@ export default function SkyDeck() {
         } else {
           // Restore feed preferences from cookies
           const restoredColumns = parsed.map((col: Column) => {
-            if (col.type === 'feed' && col.id) {
+            if (col.type === "feed" && col.id) {
               const savedFeed = columnFeedPrefs.getFeedForColumn(col.id);
               if (savedFeed) {
                 return { ...col, data: savedFeed };
@@ -207,31 +268,45 @@ export default function SkyDeck() {
 
   useEffect(() => {
     if (columns.length > 0) {
-      localStorage.setItem('skyDeckColumns', JSON.stringify(columns));
+      localStorage.setItem("skyDeckColumns", JSON.stringify(columns));
     }
   }, [columns]);
 
-  const handleAddColumn = (type: ColumnType, feedUri?: string, feedTitle?: string) => {
+  const handleAddColumn = (
+    type: ColumnType,
+    feedUri?: string,
+    feedTitle?: string,
+  ) => {
     const newColumn: Column = {
       id: Date.now().toString(),
       type: type,
-      title: feedTitle || (type === 'feed' ? 'Feed' : columnOptions.find(opt => opt.type === type)?.label || type),
-      data: feedUri || (type === 'feed' ? 'following' : undefined),
+      title:
+        feedTitle ||
+        (type === "feed"
+          ? "Feed"
+          : columnOptions.find((opt) => opt.type === type)?.label || type),
+      data: feedUri || (type === "feed" ? "following" : undefined),
     };
 
     setColumns([...columns, newColumn]);
     setIsAddingColumn(false);
-    
+
     // Focus and scroll to the new column
     setTimeout(() => {
       setFocusedColumnIndex(columns.length);
-      
+
       // Scroll to show the new column
       if (columnsContainerRef.current) {
         const container = columnsContainerRef.current;
-        const newColumnElement = container.querySelector('.column-wrapper:last-of-type') as HTMLElement;
+        const newColumnElement = container.querySelector(
+          ".column-wrapper:last-of-type",
+        ) as HTMLElement;
         if (newColumnElement) {
-          newColumnElement.scrollIntoView({ behavior: 'smooth', inline: 'end', block: 'nearest' });
+          newColumnElement.scrollIntoView({
+            behavior: "smooth",
+            inline: "end",
+            block: "nearest",
+          });
         }
       }
     }, 100);
@@ -239,44 +314,48 @@ export default function SkyDeck() {
 
   const handleRemoveColumn = (id: string) => {
     // Don't allow removing the home column
-    if (id === 'home') return;
-    setColumns(columns.filter(col => col.id !== id));
+    if (id === "home") return;
+    setColumns(columns.filter((col) => col.id !== id));
   };
 
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setIsDragging(id);
     setDraggedElement(e.currentTarget as HTMLElement);
-    e.dataTransfer.effectAllowed = 'move';
-    
+    e.dataTransfer.effectAllowed = "move";
+
     // Create a custom drag image
     const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
-    dragImage.style.opacity = '0.8';
-    dragImage.style.transform = 'rotate(2deg)';
+    dragImage.style.opacity = "0.8";
+    dragImage.style.transform = "rotate(2deg)";
     document.body.appendChild(dragImage);
-    e.dataTransfer.setDragImage(dragImage, e.clientX - e.currentTarget.getBoundingClientRect().left, 20);
+    e.dataTransfer.setDragImage(
+      dragImage,
+      e.clientX - e.currentTarget.getBoundingClientRect().left,
+      20,
+    );
     setTimeout(() => document.body.removeChild(dragImage), 0);
   };
 
   const handleDragOver = (e: React.DragEvent, id: string) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = "move";
     setDragOverId(id);
   };
 
   const handleDrop = (e: React.DragEvent, dropId: string) => {
     e.preventDefault();
-    
+
     if (isDragging && isDragging !== dropId) {
-      const dragIndex = columns.findIndex(col => col.id === isDragging);
-      const dropIndex = columns.findIndex(col => col.id === dropId);
-      
+      const dragIndex = columns.findIndex((col) => col.id === isDragging);
+      const dropIndex = columns.findIndex((col) => col.id === dropId);
+
       const newColumns = [...columns];
       const [draggedColumn] = newColumns.splice(dragIndex, 1);
       newColumns.splice(dropIndex, 0, draggedColumn);
-      
+
       setColumns(newColumns);
     }
-    
+
     setIsDragging(null);
     setDragOverId(null);
   };
@@ -284,9 +363,9 @@ export default function SkyDeck() {
   // In narrow view, show only the home column without chrome
   if (isNarrowView && columns.length > 0) {
     // Ensure we're showing the home column
-    const homeColumn = columns.find(col => col.id === 'home') || columns[0];
+    const homeColumn = columns.find((col) => col.id === "home") || columns[0];
     return (
-      <div className="h-full dark:bg-gray-900 overflow-hidden">
+      <div className="h-full overflow-hidden dark:bg-gray-900">
         <SkyColumn
           column={homeColumn}
           onClose={() => handleRemoveColumn(homeColumn.id)}
@@ -298,18 +377,23 @@ export default function SkyDeck() {
 
   // Full multi-column view for wider screens
   return (
-    <div className="h-full flex flex-col dark:bg-gray-900 overflow-hidden">
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-4 skydeck-columns-scrollbar">
-        <div ref={columnsContainerRef} className="h-full flex gap-4 min-w-min px-2">
+    <div className="flex h-full flex-col overflow-hidden dark:bg-gray-900">
+      <div className="skydeck-columns-scrollbar flex-1 overflow-x-auto overflow-y-hidden p-4">
+        <div
+          ref={columnsContainerRef}
+          className="flex h-full min-w-min gap-4 px-2"
+        >
           {columns.map((column, index) => (
             <div
               key={column.id}
-              className={`column-wrapper w-96 h-full ${
-                isDragging === column.id ? 'column-dragging' : ''
+              className={`column-wrapper h-full w-96 ${
+                isDragging === column.id ? "column-dragging" : ""
               } ${
-                dragOverId === column.id && isDragging !== column.id ? 'column-drag-over' : ''
+                dragOverId === column.id && isDragging !== column.id
+                  ? "column-drag-over"
+                  : ""
               } ${
-                focusedColumnIndex === index ? 'column-focused rounded-lg' : ''
+                focusedColumnIndex === index ? "column-focused rounded-lg" : ""
               }`}
               draggable
               onDragStart={(e) => handleDragStart(e, column.id)}
@@ -329,7 +413,7 @@ export default function SkyDeck() {
               onClickCapture={() => {
                 // Also handle clicks in capture phase to ensure column gets focused
                 // even if child elements stop propagation
-                setFocusedColumnIndex(index)
+                setFocusedColumnIndex(index);
               }}
             >
               <SkyColumn
@@ -339,10 +423,10 @@ export default function SkyDeck() {
               />
             </div>
           ))}
-          
-          <div className="w-96 h-full">
+
+          <div className="h-full w-96">
             {isAddingColumn ? (
-              <div className="h-full dark:bg-gray-800 rounded-lg shadow-lg p-4 flex flex-col animate-fade-in">
+              <div className="animate-fade-in flex h-full flex-col rounded-lg p-4 shadow-lg dark:bg-gray-800">
                 <div className="flex-1 overflow-y-auto">
                   <div className="grid gap-2">
                     {columnOptions.map((option) => {
@@ -351,91 +435,102 @@ export default function SkyDeck() {
                         <button
                           key={option.type}
                           onClick={() => handleAddColumn(option.type)}
-                          className="flex items-start gap-3 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors text-left min-h-[4rem]"
+                          className="flex min-h-[4rem] items-start gap-3 rounded-lg border border-gray-200 p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900/50"
                         >
-                          <Icon className="w-5 h-5 text-blue-500 mt-0.5" />
+                          <Icon className="mt-0.5 h-5 w-5 text-blue-500" />
                           <div className="flex-1">
                             <div className="font-medium text-gray-900 dark:text-white">
                               {option.label}
                             </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400 whitespace-normal">
+                            <div className="whitespace-normal text-sm text-gray-500 dark:text-gray-400">
                               {option.description}
                             </div>
                           </div>
                         </button>
                       );
                     })}
-                    
+
                     {/* Add Feed Section */}
-                    {userPrefs?.savedFeeds && feedGenerators && feedGenerators.length > 0 && (
-                      <>
-                        <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
-                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 px-3 mb-2">
-                            Add Feed
-                          </h4>
-                          <div className="grid gap-1">
-                            {userPrefs.savedFeeds
-                              .filter((feed: any) => feed.type === 'feed')
-                              .map((savedFeed: any) => {
-                                const generator = feedGenerators.find(
-                                  (g: FeedGenerator) => g.uri === savedFeed.value
-                                );
-                                if (!generator) return null;
-                                
-                                return (
-                                  <button
-                                    key={savedFeed.value}
-                                    onClick={() => handleAddColumn('feed', savedFeed.value, generator.displayName)}
-                                    className="flex items-start gap-2 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors text-left"
-                                  >
-                                    {savedFeed.pinned ? (
-                                      <Star className="w-4 h-4 text-yellow-500 mt-0.5" />
-                                    ) : (
-                                      <Hash className="w-4 h-4 text-gray-400 mt-0.5" />
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                      <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                        {generator.displayName}
-                                      </div>
-                                      {generator.description && (
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
-                                          {generator.description}
-                                        </div>
+                    {userPrefs?.savedFeeds &&
+                      feedGenerators &&
+                      feedGenerators.length > 0 && (
+                        <>
+                          <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+                            <h4 className="mb-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Add Feed
+                            </h4>
+                            <div className="grid gap-1">
+                              {userPrefs.savedFeeds
+                                .filter((feed: any) => feed.type === "feed")
+                                .map((savedFeed: any) => {
+                                  const generator = feedGenerators.find(
+                                    (g: FeedGenerator) =>
+                                      g.uri === savedFeed.value,
+                                  );
+                                  if (!generator) return null;
+
+                                  return (
+                                    <button
+                                      key={savedFeed.value}
+                                      onClick={() =>
+                                        handleAddColumn(
+                                          "feed",
+                                          savedFeed.value,
+                                          generator.displayName,
+                                        )
+                                      }
+                                      className="flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/50"
+                                    >
+                                      {savedFeed.pinned ? (
+                                        <Star className="mt-0.5 h-4 w-4 text-yellow-500" />
+                                      ) : (
+                                        <Hash className="mt-0.5 h-4 w-4 text-gray-400" />
                                       )}
-                                    </div>
-                                  </button>
-                                );
-                              })}
+                                      <div className="min-w-0 flex-1">
+                                        <div className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                                          {generator.displayName}
+                                        </div>
+                                        {generator.description && (
+                                          <div className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
+                                            {generator.description}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                            </div>
                           </div>
-                        </div>
-                      </>
-                    )}
-                    
+                        </>
+                      )}
+
                     {/* Add Lists Section */}
                     {userLists && userLists.length > 0 && (
                       <>
-                        <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
-                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 px-3 mb-2">
+                        <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+                          <h4 className="mb-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300">
                             Add List
                           </h4>
                           <div className="grid gap-1">
                             {userLists.map((list: any) => (
                               <button
                                 key={list.uri}
-                                onClick={() => handleAddColumn('feed', list.uri, list.name)}
-                                className="flex items-start gap-2 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors text-left"
+                                onClick={() =>
+                                  handleAddColumn("feed", list.uri, list.name)
+                                }
+                                className="flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/50"
                               >
-                                <Users className="w-4 h-4 text-blue-500 mt-0.5" />
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                <Users className="mt-0.5 h-4 w-4 text-blue-500" />
+                                <div className="min-w-0 flex-1">
+                                  <div className="truncate text-sm font-medium text-gray-900 dark:text-white">
                                     {list.name}
                                   </div>
                                   {list.description && (
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                    <div className="truncate text-xs text-gray-500 dark:text-gray-400">
                                       {list.description}
                                     </div>
                                   )}
-                                  <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                                  <div className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
                                     {list.listItemCount || 0} members
                                   </div>
                                 </div>
@@ -445,25 +540,31 @@ export default function SkyDeck() {
                         </div>
                       </>
                     )}
-                    
+
                     {/* Add Custom Feed by URI */}
-                    <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 px-3 mb-2">
+                    <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+                      <h4 className="mb-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300">
                         Add Custom Feed or List by URI
                       </h4>
-                      <div className="px-3 flex gap-2">
+                      <div className="flex gap-2 px-3">
                         <input
                           type="text"
                           value={customFeedUri}
                           onChange={(e) => setCustomFeedUri(e.target.value)}
                           onKeyPress={(e) => {
-                            if (e.key === 'Enter' && customFeedUri.trim() && !isLoadingCustomFeed) {
+                            if (
+                              e.key === "Enter" &&
+                              customFeedUri.trim() &&
+                              !isLoadingCustomFeed
+                            ) {
                               e.preventDefault();
-                              document.getElementById('add-feed-button')?.click();
+                              document
+                                .getElementById("add-feed-button")
+                                ?.click();
                             }
                           }}
                           placeholder="Paste feed/list AT-URI or bsky.app URL"
-                          className="flex-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
                         />
                         <button
                           id="add-feed-button"
@@ -472,91 +573,136 @@ export default function SkyDeck() {
                               setIsLoadingCustomFeed(true);
                               try {
                                 let uri = customFeedUri.trim();
-                                
+
                                 // Handle starter pack URLs
-                                if (uri.includes('bsky.app/starter-pack/')) {
+                                if (uri.includes("bsky.app/starter-pack/")) {
                                   // Extract the handle and rkey from starter pack URL
-                                  const match = uri.match(/starter-pack\/([^\/]+)\/([^\/\?]+)/);
+                                  const match = uri.match(
+                                    /starter-pack\/([^\/]+)\/([^\/\?]+)/,
+                                  );
                                   if (match) {
                                     const [, handle, rkey] = match;
                                     try {
                                       // Resolve the handle to DID
-                                      const resolveResponse = await agent?.com.atproto.identity.resolveHandle({
-                                        handle: handle
-                                      });
+                                      const resolveResponse =
+                                        await agent?.com.atproto.identity.resolveHandle(
+                                          {
+                                            handle: handle,
+                                          },
+                                        );
                                       if (resolveResponse?.data?.did) {
                                         // Construct the starter pack AT-URI
                                         const starterPackUri = `at://${resolveResponse.data.did}/app.bsky.graph.starterpack/${rkey}`;
-                                        
+
                                         // Fetch the starter pack to get the list URI
-                                        const starterPackResponse = await agent?.app.bsky.graph.getStarterPack({
-                                          starterPack: starterPackUri
-                                        });
-                                        
-                                        if (starterPackResponse?.data?.starterPack?.list) {
+                                        const starterPackResponse =
+                                          await agent?.app.bsky.graph.getStarterPack(
+                                            {
+                                              starterPack: starterPackUri,
+                                            },
+                                          );
+
+                                        if (
+                                          starterPackResponse?.data?.starterPack
+                                            ?.list
+                                        ) {
                                           // Use the list URI from the starter pack
-                                          const listData = starterPackResponse.data.starterPack.list;
+                                          const listData =
+                                            starterPackResponse.data.starterPack
+                                              .list;
                                           // Handle both string URI and object with uri property
-                                          uri = typeof listData === 'string' ? listData : listData.uri;
-                                          console.log('Extracted list URI from starter pack:', uri);
+                                          uri =
+                                            typeof listData === "string"
+                                              ? listData
+                                              : listData.uri;
+                                          console.log(
+                                            "Extracted list URI from starter pack:",
+                                            uri,
+                                          );
                                         } else {
-                                          console.error('Starter pack does not contain a list');
-                                          throw new Error('Starter pack does not contain a list');
+                                          console.error(
+                                            "Starter pack does not contain a list",
+                                          );
+                                          throw new Error(
+                                            "Starter pack does not contain a list",
+                                          );
                                         }
                                       }
                                     } catch (error) {
-                                      console.error('Failed to resolve starter pack:', error);
+                                      console.error(
+                                        "Failed to resolve starter pack:",
+                                        error,
+                                      );
                                       throw error;
                                     }
                                   }
                                 }
-                                
+
                                 // Ensure uri is a string
-                                if (!uri || typeof uri !== 'string') {
-                                  throw new Error('Invalid feed URI');
+                                if (!uri || typeof uri !== "string") {
+                                  throw new Error("Invalid feed URI");
                                 }
-                                
+
                                 // Check if it's a list URI
-                                if (uri.includes('/app.bsky.graph.list/')) {
+                                if (uri.includes("/app.bsky.graph.list/")) {
                                   // Try to fetch list info
-                                  const response = await agent?.app.bsky.graph.getList({
-                                    list: uri
-                                  });
+                                  const response =
+                                    await agent?.app.bsky.graph.getList({
+                                      list: uri,
+                                    });
                                   if (response?.data.list) {
                                     const list = response.data.list;
-                                    handleAddColumn('feed', list.uri, list.name);
-                                    setCustomFeedUri('');
+                                    handleAddColumn(
+                                      "feed",
+                                      list.uri,
+                                      list.name,
+                                    );
+                                    setCustomFeedUri("");
                                   } else {
                                     // If no list info, add with URI as name
-                                    handleAddColumn('feed', uri, uri);
-                                    setCustomFeedUri('');
+                                    handleAddColumn("feed", uri, uri);
+                                    setCustomFeedUri("");
                                   }
                                 } else {
                                   // It's a feed URI
-                                  const response = await agent?.app.bsky.feed.getFeedGenerators({
-                                    feeds: [uri]
-                                  });
+                                  const response =
+                                    await agent?.app.bsky.feed.getFeedGenerators(
+                                      {
+                                        feeds: [uri],
+                                      },
+                                    );
                                   if (response?.data.feeds[0]) {
                                     const feed = response.data.feeds[0];
-                                    handleAddColumn('feed', feed.uri, feed.displayName);
-                                    setCustomFeedUri('');
+                                    handleAddColumn(
+                                      "feed",
+                                      feed.uri,
+                                      feed.displayName,
+                                    );
+                                    setCustomFeedUri("");
                                   } else {
                                     // If no feed info, add with URI as name
-                                    handleAddColumn('feed', uri, uri);
-                                    setCustomFeedUri('');
+                                    handleAddColumn("feed", uri, uri);
+                                    setCustomFeedUri("");
                                   }
                                 }
                               } catch (error: any) {
-                                console.error('Error fetching feed/list:', error);
+                                console.error(
+                                  "Error fetching feed/list:",
+                                  error,
+                                );
                                 // Show error to user instead of adding invalid feed
-                                alert(`Failed to add feed: ${error?.message || 'Invalid feed URL'}`);
+                                alert(
+                                  `Failed to add feed: ${error?.message || "Invalid feed URL"}`,
+                                );
                               } finally {
                                 setIsLoadingCustomFeed(false);
                               }
                             }
                           }}
-                          disabled={!customFeedUri.trim() || isLoadingCustomFeed}
-                          className="w-10 h-10 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                          disabled={
+                            !customFeedUri.trim() || isLoadingCustomFeed
+                          }
+                          className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-500 text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
                           title="Add Feed"
                         >
                           <Plus size={18} />
@@ -567,7 +713,7 @@ export default function SkyDeck() {
                   <div className="mt-4">
                     <button
                       onClick={() => setIsAddingColumn(false)}
-                      className="w-full px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+                      className="w-full rounded-md bg-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-400 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500"
                     >
                       Cancel
                     </button>
@@ -577,9 +723,9 @@ export default function SkyDeck() {
             ) : (
               <button
                 onClick={() => setIsAddingColumn(true)}
-                className="add-column-button h-full w-full dark:bg-gray-800 rounded-lg shadow-lg flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-all duration-300 group"
+                className="add-column-button group flex h-full w-full items-center justify-center rounded-lg shadow-lg transition-all duration-300 hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-900/50"
               >
-                <Plus className="w-12 h-12 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
+                <Plus className="h-12 w-12 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
               </button>
             )}
           </div>

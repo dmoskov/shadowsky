@@ -7,6 +7,7 @@ This report presents findings from a comprehensive audit of the BSKY codebase, f
 ## Critical Security Issues 🚨
 
 ### 1. Hardcoded Credentials in Test Scripts
+
 **Severity: CRITICAL**
 
 Multiple test scripts contain hardcoded credentials that pose a severe security risk:
@@ -15,6 +16,7 @@ Multiple test scripts contain hardcoded credentials that pose a severe security 
 - **Password exposed**: `C%;,!2iO"]Wu%11T9+Y8` found in `capture-postcard-comparison.mjs`
 
 **Affected Files:**
+
 ```
 ./capture-postcard-comparison.mjs
 ./capture-long-threads.js
@@ -28,18 +30,21 @@ Multiple test scripts contain hardcoded credentials that pose a severe security 
 ./tests/playwright/comprehensive-ui-audit.mjs
 ```
 
-**Recommendation**: 
+**Recommendation**:
+
 - Immediately rotate the exposed password
 - Remove all hardcoded credentials from the repository
 - Use environment variables exclusively (already implemented in `src/lib/test-credentials.ts`)
 - Add pre-commit hooks to prevent credential commits
 
 ### 2. Credential Management Inconsistency
+
 The codebase has proper credential management infrastructure (`src/lib/test-credentials.ts`, `.env.example`) but it's not being used consistently. Many test scripts still hardcode values instead of using the secure credential system.
 
 ## Code Organization Issues 📁
 
 ### 1. Scattered Test Scripts in Root Directory
+
 **38 test/capture scripts** are scattered in the root directory, making the project structure cluttered:
 
 ```
@@ -71,14 +76,17 @@ debug-app-state.mjs
 **Recommendation**: Move all test scripts to appropriate directories under `tests/` or `scripts/`
 
 ### 2. Abandoned Tailwind Migration Artifacts
+
 Evidence of an incomplete or abandoned Tailwind CSS migration:
 
 **Duplicate Components:**
+
 - 5 `.original.tsx` files (backups of pre-Tailwind components)
 - 10 `*Tailwind*.tsx` components (experimental Tailwind versions)
 - Multiple Tailwind configuration and test files in root
 
 **Files to Review:**
+
 ```
 src/components/**/*.original.tsx
 src/components/**/*Tailwind*.tsx
@@ -88,12 +96,14 @@ tailwind-*.css
 postcss.config.js
 ```
 
-**Recommendation**: 
+**Recommendation**:
+
 - Make a decision on Tailwind adoption
 - Remove experimental/backup files
 - Consolidate documentation
 
 ### 3. Excessive Documentation Files
+
 **34 markdown files** in the root directory create clutter:
 
 ```
@@ -113,7 +123,9 @@ DESIGN-IMPLEMENTATION-PLAN.md
 **Recommendation**: Create a `docs/` directory and organize documentation by category
 
 ### 4. Inconsistent Component Variants
+
 Multiple versions of the same components exist:
+
 - `PostCard.tsx`, `PostCardNative.tsx`, `PostCardBluesky.tsx`, `PostCardTailwind.tsx`, `PostCardComparison.tsx`
 - `Feed.tsx`, `FeedTailwind.tsx`, `FeedTailwindTest.tsx`
 - `ThreadPostList.tsx`, `ThreadPostListBluesky.tsx`
@@ -123,6 +135,7 @@ Multiple versions of the same components exist:
 ## Development Artifacts 🗑️
 
 ### 1. Files That Should Be in .gitignore
+
 These files/directories are currently tracked but should be ignored:
 
 ```
@@ -134,12 +147,15 @@ test-results/     # Test outputs
 ```
 
 ### 2. Log Files
+
 Found: `tests/analytics-console-log.txt`
 
 **Recommendation**: Add `*.txt` pattern to .gitignore for test outputs
 
 ### 3. HTML Test Files
+
 Several HTML files appear to be temporary test fixtures:
+
 ```
 screenshot-helper.html
 tailwind-style-guide.html
@@ -153,17 +169,20 @@ visual-comparison.html
 The analytics system uses **IndexedDB** (browser storage) for data persistence:
 
 ### Current Implementation:
+
 - **Storage**: IndexedDB with 5 object stores (users, posts, dailySnapshots, engagementHistory, activeEngagers)
 - **Location**: Browser-based, no server-side database
 - **Data Model**: Well-structured with proper indexes
 
 ### Considerations:
+
 1. **Data Loss Risk**: IndexedDB can be cleared by users or browsers
 2. **No Backup**: No server-side persistence mechanism
 3. **Size Limits**: Browser storage quotas may limit analytics data
 4. **Privacy**: All analytics data stays client-side (good for privacy)
 
-**Recommendation**: 
+**Recommendation**:
+
 - Document the client-side analytics approach clearly
 - Consider optional server-side sync for data persistence
 - Implement data export functionality
@@ -171,6 +190,7 @@ The analytics system uses **IndexedDB** (browser storage) for data persistence:
 ## Unused Code & Dead Imports 🧹
 
 ### Components with Potential Dead Code:
+
 1. Error tracking implementations exist in multiple places:
    - `src/lib/error-tracking.ts`
    - `src/components/common/ErrorTracking.tsx`
@@ -184,23 +204,27 @@ The analytics system uses **IndexedDB** (browser storage) for data persistence:
 ## Recommendations Priority List
 
 ### Immediate Actions (Security Critical):
+
 1. ⚠️ **Rotate exposed password immediately**
 2. ⚠️ **Remove all hardcoded credentials from repository**
 3. ⚠️ **Audit git history for other credential leaks**
 
 ### High Priority (Within 1 Week):
+
 1. Move all test scripts from root to organized directories
 2. Clean up Tailwind migration artifacts - make a decision
 3. Remove duplicate component implementations
 4. Fix .gitignore and remove tracked artifacts
 
 ### Medium Priority (Within 2 Weeks):
+
 1. Organize documentation into proper directory structure
 2. Implement pre-commit hooks for security checks
 3. Set up proper test data management system
 4. Document analytics architecture decisions
 
 ### Low Priority (Ongoing):
+
 1. Run dead code elimination
 2. Standardize file naming conventions
 3. Implement automated code quality checks
@@ -222,5 +246,5 @@ The project has good bones - proper TypeScript usage, comprehensive testing setu
 
 ---
 
-*Report generated: January 11, 2025*
-*Next review recommended: After implementing critical security fixes*
+_Report generated: January 11, 2025_
+_Next review recommended: After implementing critical security fixes_

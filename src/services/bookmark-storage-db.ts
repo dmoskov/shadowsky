@@ -1,174 +1,180 @@
-import { openDB, IDBPDatabase } from 'idb'
+import { IDBPDatabase, openDB } from "idb";
 
 export interface Bookmark {
-  id: string
-  postUri: string
-  postCid: string
-  savedAt: string
+  id: string;
+  postUri: string;
+  postCid: string;
+  savedAt: string;
   author: {
-    did: string
-    handle: string
-    displayName?: string
-    avatar?: string
-  }
-  text: string
-  tags?: string[]
-  notes?: string
+    did: string;
+    handle: string;
+    displayName?: string;
+    avatar?: string;
+  };
+  text: string;
+  tags?: string[];
+  notes?: string;
 }
 
 export interface BookmarkPost extends Bookmark {
-  post?: any // Full post data if available
+  post?: any; // Full post data if available
 }
 
 class BookmarkStorageDB {
-  private dbName = 'bsky_bookmarks_db'
-  private dbVersion = 1
-  private db: IDBPDatabase | null = null
-  private localStorageKey = 'bsky_bookmarked_uris'
+  private dbName = "bsky_bookmarks_db";
+  private dbVersion = 1;
+  private db: IDBPDatabase | null = null;
+  private localStorageKey = "bsky_bookmarked_uris";
 
   async init() {
     try {
       this.db = await openDB(this.dbName, this.dbVersion, {
         upgrade(db) {
           // Create bookmarks store
-          if (!db.objectStoreNames.contains('bookmarks')) {
-            const store = db.createObjectStore('bookmarks', { keyPath: 'id' })
-            store.createIndex('postUri', 'postUri', { unique: true })
-            store.createIndex('savedAt', 'savedAt', { unique: false })
-            store.createIndex('authorDid', 'author.did', { unique: false })
+          if (!db.objectStoreNames.contains("bookmarks")) {
+            const store = db.createObjectStore("bookmarks", { keyPath: "id" });
+            store.createIndex("postUri", "postUri", { unique: true });
+            store.createIndex("savedAt", "savedAt", { unique: false });
+            store.createIndex("authorDid", "author.did", { unique: false });
           }
         },
-      })
+      });
     } catch (error) {
-      console.error('Failed to initialize bookmark storage DB:', error)
+      console.error("Failed to initialize bookmark storage DB:", error);
     }
   }
-  
+
   // Sync bookmarked URIs to localStorage for quick access
   private async syncToLocalStorage() {
     try {
-      const bookmarks = await this.getAllBookmarks()
-      const uris = bookmarks.map(b => b.postUri)
-      localStorage.setItem(this.localStorageKey, JSON.stringify(uris))
+      const bookmarks = await this.getAllBookmarks();
+      const uris = bookmarks.map((b) => b.postUri);
+      localStorage.setItem(this.localStorageKey, JSON.stringify(uris));
     } catch (error) {
-      console.error('Failed to sync bookmarks to localStorage:', error)
+      console.error("Failed to sync bookmarks to localStorage:", error);
     }
   }
 
   async addBookmark(bookmark: Bookmark): Promise<void> {
-    if (!this.db) await this.init()
-    if (!this.db) throw new Error('Failed to initialize database')
+    if (!this.db) await this.init();
+    if (!this.db) throw new Error("Failed to initialize database");
 
-    await this.db.put('bookmarks', bookmark)
-    await this.syncToLocalStorage()
+    await this.db.put("bookmarks", bookmark);
+    await this.syncToLocalStorage();
   }
 
   async removeBookmark(postUri: string): Promise<void> {
-    if (!this.db) await this.init()
-    if (!this.db) throw new Error('Failed to initialize database')
+    if (!this.db) await this.init();
+    if (!this.db) throw new Error("Failed to initialize database");
 
-    const bookmark = await this.getBookmarkByUri(postUri)
+    const bookmark = await this.getBookmarkByUri(postUri);
     if (bookmark) {
-      await this.db.delete('bookmarks', bookmark.id)
-      await this.syncToLocalStorage()
+      await this.db.delete("bookmarks", bookmark.id);
+      await this.syncToLocalStorage();
     }
   }
 
   async getBookmark(id: string): Promise<Bookmark | undefined> {
-    if (!this.db) await this.init()
-    if (!this.db) throw new Error('Failed to initialize database')
+    if (!this.db) await this.init();
+    if (!this.db) throw new Error("Failed to initialize database");
 
-    return await this.db.get('bookmarks', id)
+    return await this.db.get("bookmarks", id);
   }
 
   async getBookmarkByUri(postUri: string): Promise<Bookmark | undefined> {
-    if (!this.db) await this.init()
-    if (!this.db) throw new Error('Failed to initialize database')
+    if (!this.db) await this.init();
+    if (!this.db) throw new Error("Failed to initialize database");
 
-    const index = this.db.transaction('bookmarks').objectStore('bookmarks').index('postUri')
-    return await index.get(postUri)
+    const index = this.db
+      .transaction("bookmarks")
+      .objectStore("bookmarks")
+      .index("postUri");
+    return await index.get(postUri);
   }
 
   async getAllBookmarks(limit?: number, offset?: number): Promise<Bookmark[]> {
-    if (!this.db) await this.init()
-    if (!this.db) throw new Error('Failed to initialize database')
+    if (!this.db) await this.init();
+    if (!this.db) throw new Error("Failed to initialize database");
 
-    const tx = this.db.transaction('bookmarks', 'readonly')
-    const store = tx.objectStore('bookmarks')
-    const index = store.index('savedAt')
-    
+    const tx = this.db.transaction("bookmarks", "readonly");
+    const store = tx.objectStore("bookmarks");
+    const index = store.index("savedAt");
+
     // Get bookmarks in reverse chronological order
-    const bookmarks: Bookmark[] = []
-    let cursor = await index.openCursor(null, 'prev')
-    let count = 0
-    let skipped = 0
+    const bookmarks: Bookmark[] = [];
+    let cursor = await index.openCursor(null, "prev");
+    let count = 0;
+    let skipped = 0;
 
     while (cursor) {
       if (offset && skipped < offset) {
-        skipped++
+        skipped++;
       } else {
-        bookmarks.push(cursor.value)
-        count++
-        if (limit && count >= limit) break
+        bookmarks.push(cursor.value);
+        count++;
+        if (limit && count >= limit) break;
       }
-      cursor = await cursor.continue()
+      cursor = await cursor.continue();
     }
 
-    return bookmarks
+    return bookmarks;
   }
 
   async isBookmarked(postUri: string): Promise<boolean> {
-    const bookmark = await this.getBookmarkByUri(postUri)
-    return !!bookmark
+    const bookmark = await this.getBookmarkByUri(postUri);
+    return !!bookmark;
   }
 
   async getBookmarkCount(): Promise<number> {
-    if (!this.db) await this.init()
-    if (!this.db) throw new Error('Failed to initialize database')
+    if (!this.db) await this.init();
+    if (!this.db) throw new Error("Failed to initialize database");
 
-    return await this.db.count('bookmarks')
+    return await this.db.count("bookmarks");
   }
 
   async searchBookmarks(query: string): Promise<Bookmark[]> {
-    if (!this.db) await this.init()
-    if (!this.db) throw new Error('Failed to initialize database')
+    if (!this.db) await this.init();
+    if (!this.db) throw new Error("Failed to initialize database");
 
-    const allBookmarks = await this.getAllBookmarks()
-    const lowercaseQuery = query.toLowerCase()
+    const allBookmarks = await this.getAllBookmarks();
+    const lowercaseQuery = query.toLowerCase();
 
-    return allBookmarks.filter(bookmark => 
-      bookmark.text.toLowerCase().includes(lowercaseQuery) ||
-      bookmark.author.handle?.toLowerCase().includes(lowercaseQuery) ||
-      bookmark.author.displayName?.toLowerCase().includes(lowercaseQuery) ||
-      bookmark.tags?.some(tag => tag.toLowerCase().includes(lowercaseQuery)) ||
-      bookmark.notes?.toLowerCase().includes(lowercaseQuery)
-    )
+    return allBookmarks.filter(
+      (bookmark) =>
+        bookmark.text.toLowerCase().includes(lowercaseQuery) ||
+        bookmark.author.handle?.toLowerCase().includes(lowercaseQuery) ||
+        bookmark.author.displayName?.toLowerCase().includes(lowercaseQuery) ||
+        bookmark.tags?.some((tag) =>
+          tag.toLowerCase().includes(lowercaseQuery),
+        ) ||
+        bookmark.notes?.toLowerCase().includes(lowercaseQuery),
+    );
   }
 
   async clearAllBookmarks(): Promise<void> {
-    if (!this.db) await this.init()
-    if (!this.db) throw new Error('Failed to initialize database')
+    if (!this.db) await this.init();
+    if (!this.db) throw new Error("Failed to initialize database");
 
-    await this.db.clear('bookmarks')
+    await this.db.clear("bookmarks");
   }
 
   async exportBookmarks(): Promise<Bookmark[]> {
-    return await this.getAllBookmarks()
+    return await this.getAllBookmarks();
   }
 
   async importBookmarks(bookmarks: Bookmark[]): Promise<void> {
-    if (!this.db) await this.init()
-    if (!this.db) throw new Error('Failed to initialize database')
+    if (!this.db) await this.init();
+    if (!this.db) throw new Error("Failed to initialize database");
 
-    const tx = this.db.transaction('bookmarks', 'readwrite')
-    const store = tx.objectStore('bookmarks')
+    const tx = this.db.transaction("bookmarks", "readwrite");
+    const store = tx.objectStore("bookmarks");
 
     for (const bookmark of bookmarks) {
-      await store.put(bookmark)
+      await store.put(bookmark);
     }
 
-    await tx.done
+    await tx.done;
   }
 }
 
-export const bookmarkStorage = new BookmarkStorageDB()
+export const bookmarkStorage = new BookmarkStorageDB();

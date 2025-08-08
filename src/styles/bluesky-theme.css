@@ -11,25 +11,25 @@
   --bsky-primary-dark: #0066cc;
   --bsky-primary-light: #4da3ff;
   --bsky-accent: #7c3aed; /* Purple accent for distinction */
-  
+
   /* Background colors - much lighter for better readability */
   --bsky-bg-primary: #f8fafc;
   --bsky-bg-secondary: #ffffff;
   --bsky-bg-tertiary: #f1f5f9;
   --bsky-bg-hover: #e2e8f0;
   --bsky-bg-active: #cbd5e1;
-  
+
   /* Text colors - dark for light background */
   --bsky-text-primary: #0f172a;
   --bsky-text-secondary: #475569;
   --bsky-text-tertiary: #64748b;
   --bsky-text-link: var(--bsky-primary-light);
-  
+
   /* Border colors - light gray for light theme */
   --bsky-border-primary: #e2e8f0;
   --bsky-border-secondary: #cbd5e1;
   --bsky-border-light: #f1f5f9;
-  
+
   /* Notification type colors - more vibrant */
   --bsky-like: #f91880;
   --bsky-repost: #00ba7c;
@@ -37,19 +37,19 @@
   --bsky-mention: #a855f7;
   --bsky-reply: #06b6d4;
   --bsky-quote: #8b5cf6;
-  
+
   /* Status colors */
   --bsky-success: #10b981;
   --bsky-warning: #f59e0b;
   --bsky-error: #ef4444;
   --bsky-info: #3b82f6;
-  
+
   /* Shadows and effects */
   --bsky-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --bsky-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
   --bsky-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
   --bsky-glow: 0 0 20px rgba(0, 133, 255, 0.3);
-  
+
   /* Landing page accent backgrounds */
   --bsky-primary-10: rgba(0, 133, 255, 0.1);
   --bsky-success-10: rgba(16, 185, 129, 0.1);
@@ -63,25 +63,25 @@
   --bsky-primary-dark: #0066cc;
   --bsky-primary-light: #4da3ff;
   --bsky-accent: #a78bfa; /* Lighter purple for dark mode */
-  
+
   /* Background colors - improved contrast for dark theme */
   --bsky-bg-primary: #0a0f1b;
   --bsky-bg-secondary: #111827;
   --bsky-bg-tertiary: #1f2937;
   --bsky-bg-hover: #374151;
   --bsky-bg-active: #4b5563;
-  
+
   /* Text colors - improved contrast for better readability */
   --bsky-text-primary: #f9fafb;
   --bsky-text-secondary: #e5e7eb;
   --bsky-text-tertiary: #d1d5db;
   --bsky-text-link: var(--bsky-primary-light);
-  
+
   /* Border colors - better visibility in dark theme */
   --bsky-border-primary: #374151;
   --bsky-border-secondary: #4b5563;
   --bsky-border-light: #1f2937;
-  
+
   /* Notification type colors - adjusted for dark mode */
   --bsky-like: #f472b6;
   --bsky-repost: #34d399;
@@ -89,19 +89,19 @@
   --bsky-mention: #c084fc;
   --bsky-reply: #38bdf8;
   --bsky-quote: #a78bfa;
-  
+
   /* Status colors - adjusted for dark mode */
   --bsky-success: #34d399;
   --bsky-warning: #fbbf24;
   --bsky-error: #f87171;
   --bsky-info: #60a5fa;
-  
+
   /* Shadows and effects for dark theme */
   --bsky-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --bsky-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.6);
   --bsky-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.7);
   --bsky-glow: 0 0 20px rgba(0, 133, 255, 0.5);
-  
+
   /* Landing page accent backgrounds - dark theme */
   --bsky-primary-10: rgba(0, 133, 255, 0.15);
   --bsky-success-10: rgba(52, 211, 153, 0.15);
@@ -109,18 +109,24 @@
 
 /* Typography */
 .bsky-font {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
 }
 
 /* Button styles */
 .bsky-button {
-  @apply px-4 py-2 rounded-full font-medium transition-all duration-200;
+  @apply rounded-full px-4 py-2 font-medium transition-all duration-200;
   @apply hover:shadow-md active:scale-95;
 }
 
 .bsky-button-primary {
   @apply bsky-button;
-  background: linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--bsky-primary) 0%,
+    var(--bsky-accent) 100%
+  );
   color: white;
   @apply hover:opacity-90;
 }
@@ -167,7 +173,7 @@
 
 /* Badge styles */
 .bsky-badge {
-  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
   background: var(--bsky-bg-tertiary);
   color: var(--bsky-text-secondary);
   border: 1px solid var(--bsky-border-primary);
@@ -187,18 +193,26 @@
 
 .bsky-notification-unread {
   border-left: 4px solid var(--bsky-primary);
-  background: linear-gradient(90deg, rgba(0, 133, 255, 0.08) 0%, transparent 50%);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 133, 255, 0.08) 0%,
+    transparent 50%
+  );
 }
 
 /* Conversation item unread style */
 .conversation-unread {
   border-left: 4px solid var(--bsky-primary);
-  background: linear-gradient(90deg, rgba(0, 133, 255, 0.08) 0%, transparent 50%);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 133, 255, 0.08) 0%,
+    transparent 50%
+  );
 }
 
 /* Tab styles */
 .bsky-tab {
-  @apply relative px-3 py-2 font-medium text-sm transition-all duration-200 whitespace-nowrap;
+  @apply relative whitespace-nowrap px-3 py-2 text-sm font-medium transition-all duration-200;
   color: var(--bsky-text-secondary);
   @apply hover:text-opacity-80;
   min-width: fit-content;
@@ -210,9 +224,13 @@
 }
 
 .bsky-tab-active::after {
-  content: '';
+  content: "";
   @apply absolute bottom-0 left-0 right-0 h-0.5;
-  background: linear-gradient(90deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--bsky-primary) 0%,
+    var(--bsky-accent) 100%
+  );
 }
 
 /* Compact mode for tabs */
@@ -241,7 +259,8 @@
 
 /* Loading animation */
 @keyframes bsky-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -296,7 +315,11 @@
 
 /* Gradient text */
 .bsky-gradient-text {
-  background: linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--bsky-primary) 0%,
+    var(--bsky-accent) 100%
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -321,7 +344,7 @@
 /* Add subtle fade indicators for scrollable tabs */
 .bsky-tabs-container::before,
 .bsky-tabs-container::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   bottom: 0;
@@ -354,11 +377,11 @@
     @apply px-3 py-2;
     flex-shrink: 0;
   }
-  
+
   .bsky-tab-label {
     display: none;
   }
-  
+
   .bsky-tab span:first-child {
     /* Icon */
     margin: 0;
@@ -407,11 +430,11 @@
   .md\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  
+
   .md\:text-6xl {
     font-size: 3.75rem;
   }
-  
+
   .md\:text-2xl {
     font-size: 1.5rem;
   }
@@ -527,11 +550,15 @@
 }
 
 .shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .hover\:shadow-lg:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .transition-shadow {
@@ -667,15 +694,15 @@
     padding-left: 2rem;
     padding-right: 2rem;
   }
-  
+
   .lg\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  
+
   .lg\:text-left {
     text-align: left;
   }
-  
+
   .lg\:justify-start {
     justify-content: flex-start;
   }
@@ -707,7 +734,9 @@
 }
 
 .shadow-md {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .space-y-3 > * + * {

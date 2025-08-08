@@ -1,5 +1,6 @@
 # Tailwind CSS Migration Plan
-*A Distinguished Engineer's Perspective*
+
+_A Distinguished Engineer's Perspective_
 
 ## Executive Summary
 
@@ -12,12 +13,14 @@ After conducting a comprehensive audit of our CSS architecture (10,585 lines acr
 ## Current State Analysis
 
 ### Strengths We Must Preserve
+
 1. **Design Token System** - Our CSS variables are excellent and map well to Tailwind config
 2. **Dark Theme Support** - First-class dark mode that must remain seamless
 3. **Component Architecture** - Clear separation that aligns with Tailwind's component-first approach
 4. **Accessibility Features** - Motion preferences and screen reader utilities
 
 ### Critical Problems to Solve
+
 1. **Inline Styles** (23 components) - Direct impediment to consistent theming
 2. **Hardcoded Values** (155+ instances) - Source of design inconsistencies
 3. **File Size** - 10KB+ of CSS loaded upfront
@@ -27,15 +30,18 @@ After conducting a comprehensive audit of our CSS architecture (10,585 lines acr
 ## Migration Strategy
 
 ### Phase 0: Foundation (Week 1)
+
 **Goal:** Set up Tailwind without breaking existing styles
 
 1. **Install and Configure Tailwind**
+
    ```bash
    npm install -D tailwindcss postcss autoprefixer
    npx tailwindcss init -p
    ```
 
 2. **Create Custom Tailwind Config**
+
    ```js
    // Map our CSS variables to Tailwind
    theme: {
@@ -63,6 +69,7 @@ After conducting a comprehensive audit of our CSS architecture (10,585 lines acr
    - Component migration tracker
 
 ### Phase 1: Core Infrastructure (Week 2)
+
 **Goal:** Migrate foundational styles and establish patterns
 
 1. **Migrate Design System**
@@ -71,11 +78,11 @@ After conducting a comprehensive audit of our CSS architecture (10,585 lines acr
    - `color-system.css` → Tailwind color config
 
 2. **Create Component Classes**
+
    ```css
    @layer components {
      .btn-primary {
-       @apply px-4 py-2 bg-brand-primary text-white rounded-full 
-              hover:bg-brand-primary-dark transition-colors;
+       @apply bg-brand-primary hover:bg-brand-primary-dark rounded-full px-4 py-2 text-white transition-colors;
      }
    }
    ```
@@ -86,9 +93,11 @@ After conducting a comprehensive audit of our CSS architecture (10,585 lines acr
    - Set up Prettier plugin for class sorting
 
 ### Phase 2: Component Migration (Weeks 3-5)
+
 **Goal:** Systematically migrate components from highest to lowest impact
 
 #### Week 3: High-Impact Components
+
 Priority based on usage frequency and inline style count:
 
 1. **PostCard** (536 lines, used everywhere)
@@ -105,6 +114,7 @@ Priority based on usage frequency and inline style count:
    - High visibility components
 
 #### Week 4: Interactive Components
+
 1. **Modals** (ComposeModal, etc.)
    - Complex positioning → Tailwind position utilities
    - Z-index management → Tailwind z-index scale
@@ -118,6 +128,7 @@ Priority based on usage frequency and inline style count:
    - Ensure consistency across all instances
 
 #### Week 5: Remaining Components
+
 1. **Analytics Components**
    - Complex layouts benefit from Tailwind's grid system
    - Chart styles remain as custom CSS
@@ -131,6 +142,7 @@ Priority based on usage frequency and inline style count:
    - Great candidates for Tailwind animation utilities
 
 ### Phase 3: Optimization & Cleanup (Week 6)
+
 **Goal:** Remove old CSS, optimize bundle, ensure quality
 
 1. **Remove Old CSS Files**
@@ -149,6 +161,7 @@ Priority based on usage frequency and inline style count:
    - First paint improvements
 
 ### Phase 4: Documentation & Training (Week 7)
+
 **Goal:** Ensure team success with new system
 
 1. **Documentation**
@@ -169,41 +182,45 @@ Priority based on usage frequency and inline style count:
 ## Technical Considerations
 
 ### 1. Build Pipeline Changes
+
 ```js
 // vite.config.ts additions
 export default {
   css: {
     postcss: {
-      plugins: [
-        tailwindcss(),
-        autoprefixer(),
-      ],
+      plugins: [tailwindcss(), autoprefixer()],
     },
   },
-}
+};
 ```
 
 ### 2. Component Pattern Evolution
+
 **Before:**
+
 ```tsx
 <div className="post-card" style={{ marginBottom: '16px' }}>
   <div className="post-header">
 ```
 
 **After:**
+
 ```tsx
 <div className="mb-4 bg-bg-secondary rounded-lg border border-border p-4 hover:border-border-hover">
   <div className="flex items-center justify-between mb-3">
 ```
 
 ### 3. Dynamic Styles Strategy
+
 For truly dynamic styles (e.g., user-defined colors):
+
 ```tsx
 // Use CSS variables for dynamic values
 <div className="bg-brand-primary" style={{ '--tw-bg-opacity': opacity }}>
 ```
 
 ### 4. Third-Party Component Integration
+
 - Monaco Editor, Chart libraries stay with custom CSS
 - Wrap third-party components with Tailwind utility classes
 - Document exceptions clearly
@@ -211,21 +228,25 @@ For truly dynamic styles (e.g., user-defined colors):
 ## Risk Mitigation
 
 ### 1. Visual Regression
+
 - **Solution:** Automated screenshot testing before/after each component
 - **Tool:** Playwright visual regression tests
 - **Process:** No component ships without visual approval
 
 ### 2. Performance Degradation
+
 - **Solution:** Bundle size monitoring, Lighthouse CI
 - **Metric:** Must maintain or improve current performance
 - **Fallback:** Ability to rollback individual components
 
 ### 3. Developer Resistance
+
 - **Solution:** Gradual adoption, clear benefits demonstration
 - **Training:** Hands-on workshops, pair programming
 - **Support:** Dedicated Slack channel for questions
 
 ### 4. Design System Drift
+
 - **Solution:** Strict Tailwind config, no arbitrary values
 - **Process:** All custom utilities require design review
 - **Tooling:** Automated checks for non-standard classes
@@ -233,12 +254,14 @@ For truly dynamic styles (e.g., user-defined colors):
 ## Success Metrics
 
 ### Quantitative
+
 1. **Bundle Size:** Target 50% reduction in CSS size
 2. **Build Time:** Faster builds with JIT compilation
 3. **Developer Velocity:** 30% reduction in style-related bugs
 4. **Performance:** 10% improvement in FCP/LCP
 
 ### Qualitative
+
 1. **Developer Satisfaction:** Survey before/after migration
 2. **Code Consistency:** Reduction in style-related PR comments
 3. **Onboarding Time:** New developers productive faster
@@ -247,18 +270,22 @@ For truly dynamic styles (e.g., user-defined colors):
 ## Alternative Approaches Considered
 
 ### 1. CSS Modules
+
 - **Pros:** Type safety, true encapsulation
 - **Cons:** Still requires writing CSS, doesn't solve utility problem
 
 ### 2. Styled Components / Emotion
+
 - **Pros:** Component-scoped styles, dynamic theming
 - **Cons:** Runtime overhead, larger bundle, requires different mental model
 
 ### 3. Vanilla Extract
+
 - **Pros:** Zero-runtime, type-safe, CSS-in-TS
 - **Cons:** Less ecosystem support, steeper learning curve
 
 ### 4. UnoCSS
+
 - **Pros:** Faster than Tailwind, more flexible
 - **Cons:** Less mature ecosystem, less documentation
 
@@ -275,6 +302,7 @@ Tailwind CSS is the optimal choice because:
 ## Implementation Checklist
 
 ### Pre-Migration
+
 - [ ] Team buy-in and training plan
 - [ ] Tailwind config matching design system
 - [ ] Visual regression test suite
@@ -282,6 +310,7 @@ Tailwind CSS is the optimal choice because:
 - [ ] Rollback strategy documented
 
 ### During Migration
+
 - [ ] Phase 0: Foundation complete
 - [ ] Phase 1: Core infrastructure migrated
 - [ ] Phase 2: All components migrated
@@ -289,6 +318,7 @@ Tailwind CSS is the optimal choice because:
 - [ ] Phase 4: Team trained
 
 ### Post-Migration
+
 - [ ] Performance metrics validated
 - [ ] Documentation complete
 - [ ] Team satisfaction survey
@@ -298,6 +328,7 @@ Tailwind CSS is the optimal choice because:
 ## Long-Term Vision
 
 Post-migration, we'll have:
+
 1. **Consistent Design Language:** Every pixel follows the design system
 2. **Rapid Development:** New features built faster with utility classes
 3. **Performance Excellence:** Minimal CSS, optimal loading
@@ -312,6 +343,6 @@ The key to success is maintaining momentum while being thoughtful about preservi
 
 ---
 
-*Prepared by: Distinguished Engineer*  
-*Date: January 2025*  
-*Status: Ready for Review*
+_Prepared by: Distinguished Engineer_  
+_Date: January 2025_  
+_Status: Ready for Review_

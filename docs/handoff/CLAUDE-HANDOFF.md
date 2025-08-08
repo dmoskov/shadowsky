@@ -7,6 +7,7 @@ This document provides comprehensive instructions for using Claude Code to conti
 You are working on a custom Bluesky (AT Protocol) client built with React, TypeScript, and Vite. The client provides a full-featured interface for interacting with the Bluesky social network, with additional features beyond the official client.
 
 ### Core Principles
+
 1. **Type Safety First**: Use TypeScript strictly, avoid `any` types
 2. **AT Protocol Compliance**: Always use authenticated agents and proper namespaces
 3. **Performance Matters**: Optimize for speed and smooth interactions
@@ -16,6 +17,7 @@ You are working on a custom Bluesky (AT Protocol) client built with React, TypeS
 ## 🏗️ Architecture Context
 
 ### Technology Stack
+
 ```yaml
 Frontend:
   - React 18 with TypeScript
@@ -39,12 +41,13 @@ State Management:
 ### Critical Patterns
 
 #### 1. AT Protocol Authentication
+
 ```typescript
 // ALWAYS use authenticated agent from context
-const { agent } = useAuth()
+const { agent } = useAuth();
 
 // NEVER use convenience methods
-// ❌ agent.searchPosts() 
+// ❌ agent.searchPosts()
 // ✅ agent.app.bsky.feed.searchPosts()
 
 // ALWAYS use full namespaces
@@ -53,9 +56,10 @@ const { agent } = useAuth()
 ```
 
 #### 2. Service Layer Pattern
+
 ```typescript
 // All API calls go through service classes
-import { feedService } from '../services/atproto'
+import { feedService } from "../services/atproto";
 
 // Services handle:
 // - Error mapping
@@ -65,6 +69,7 @@ import { feedService } from '../services/atproto'
 ```
 
 #### 3. Component Organization
+
 ```typescript
 // Feature-based structure
 components/
@@ -80,6 +85,7 @@ components/
 ### Adding a New Feature
 
 1. **Check Existing Code First**
+
 ```bash
 # Search for similar functionality
 grep -r "feature_name" src/
@@ -88,11 +94,13 @@ cat src/components/index.ts
 ```
 
 2. **Follow Established Patterns**
+
 - Look at similar features for guidance
 - Use existing hooks and utilities
 - Maintain consistent styling
 
 3. **Update Documentation**
+
 - Add to SESSION_NOTES.md during development
 - Update CLAUDE.md when feature stabilizes
 - Document in progress/ folder
@@ -100,40 +108,43 @@ cat src/components/index.ts
 ### Working with AT Protocol
 
 #### Fetching Data
+
 ```typescript
 // Use service layer
-const posts = await feedService.getTimeline(cursor)
+const posts = await feedService.getTimeline(cursor);
 
 // Use React Query hooks
-const { data, isLoading } = useTimeline()
+const { data, isLoading } = useTimeline();
 
 // Handle errors properly
 try {
-  const result = await service.method()
+  const result = await service.method();
 } catch (error) {
-  handleError(mapATProtoError(error))
+  handleError(mapATProtoError(error));
 }
 ```
 
 #### Creating Content
+
 ```typescript
 // Always validate before sending
 const post = {
   text: validatePostText(content),
-  createdAt: new Date().toISOString()
-}
+  createdAt: new Date().toISOString(),
+};
 
 // Use proper record creation
 await agent.com.atproto.repo.createRecord({
   repo: session.did,
-  collection: 'app.bsky.feed.post',
-  record: post
-})
+  collection: "app.bsky.feed.post",
+  record: post,
+});
 ```
 
 ### Styling Guidelines
 
 #### Color System
+
 ```css
 /* Use CSS variables from design system */
 background: var(--color-bg-primary);    /* #0F172A */
@@ -147,6 +158,7 @@ border-gray-800 /* Borders */
 ```
 
 #### Responsive Design
+
 ```typescript
 // Use ResponsiveContainer for consistent widths
 <ResponsiveContainer>
@@ -160,41 +172,46 @@ border-gray-800 /* Borders */
 ### Testing
 
 #### Unit Tests
+
 ```typescript
 // Test utilities and hooks
-describe('usePostInteractions', () => {
-  it('should handle like action', async () => {
+describe("usePostInteractions", () => {
+  it("should handle like action", async () => {
     // Test implementation
-  })
-})
+  });
+});
 ```
 
 #### E2E Tests
+
 ```typescript
 // Test user flows with Playwright
-test('user can create post', async ({ page }) => {
-  await page.goto('/')
-  await loginUser(page)
-  await createPost(page, 'Test content')
-  await expect(page.locator('.post')).toContainText('Test content')
-})
+test("user can create post", async ({ page }) => {
+  await page.goto("/");
+  await loginUser(page);
+  await createPost(page, "Test content");
+  await expect(page.locator(".post")).toContainText("Test content");
+});
 ```
 
 ## 🚨 Important Warnings
 
 ### Security
+
 1. **NEVER hardcode credentials** - Use environment variables
 2. **NEVER commit .env.local** - It's gitignored for a reason
 3. **ALWAYS validate user input** - Prevent XSS and injection
 4. **USE the test-credentials helper** - For test scripts
 
 ### Performance
+
 1. **Avoid unnecessary re-renders** - Use React.memo wisely
 2. **Implement virtualization** - For long lists
 3. **Optimize images** - Use proper sizing and lazy loading
 4. **Cache API responses** - TanStack Query handles this
 
 ### Common Pitfalls
+
 1. **Don't create duplicate components** - Check existing first
 2. **Don't use relative imports** - Use `@/` alias
 3. **Don't skip error boundaries** - Wrap risky components
@@ -203,6 +220,7 @@ test('user can create post', async ({ page }) => {
 ## 🛠️ Development Workflow
 
 ### Daily Development
+
 ```bash
 # Start dev server
 npm run dev
@@ -216,6 +234,7 @@ npm run type-check
 ```
 
 ### Git Workflow
+
 ```bash
 # Claude manages commits autonomously
 # Commits happen at natural breakpoints
@@ -224,6 +243,7 @@ git checkout -b feature/new-feature
 ```
 
 ### Documentation Flow
+
 ```
 Active Work → SESSION_NOTES.md → progress/*.md → CLAUDE.md
 (immediate)   (session end)      (complete)     (stable)
@@ -232,18 +252,21 @@ Active Work → SESSION_NOTES.md → progress/*.md → CLAUDE.md
 ## 📚 Key Files Reference
 
 ### Configuration
+
 - `vite.config.ts` - Build configuration
 - `tailwind.config.js` - Styling configuration
 - `tsconfig.json` - TypeScript configuration
 - `.env.example` - Environment variables template
 
 ### Core Application
+
 - `src/App.tsx` - Main application component
 - `src/main.tsx` - Application entry point
 - `src/contexts/AuthContext.tsx` - Authentication state
 - `src/services/atproto/` - AT Protocol services
 
 ### Documentation
+
 - `CLAUDE.md` - This file, AI development guide
 - `SESSION_NOTES.md` - Current session progress
 - `DECISIONS.md` - Architecture decisions
@@ -252,43 +275,48 @@ Active Work → SESSION_NOTES.md → progress/*.md → CLAUDE.md
 ## 🔧 Debugging Tools
 
 ### Browser Tools
+
 ```javascript
 // Debug in console
 window.__BLUESKY_CLIENT__ = {
-  auth: () => console.log(localStorage.getItem('auth')),
+  auth: () => console.log(localStorage.getItem("auth")),
   clearCache: () => queryClient.clear(),
-  toggleDebug: () => localStorage.setItem('debug', 'true')
-}
+  toggleDebug: () => localStorage.setItem("debug", "true"),
+};
 ```
 
 ### Performance Monitoring
+
 ```typescript
 // Built-in performance tracking
-import { performanceTracker } from '@/lib/performance-tracking'
+import { performanceTracker } from "@/lib/performance-tracking";
 
-performanceTracker.startMeasure('my-operation')
+performanceTracker.startMeasure("my-operation");
 // ... operation ...
-performanceTracker.endMeasure('my-operation')
+performanceTracker.endMeasure("my-operation");
 ```
 
 ### Error Tracking
+
 ```typescript
 // Centralized error handling
-import { useErrorHandler } from '@/hooks/useErrorHandler'
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 
-const { handleError } = useErrorHandler()
-handleError(error) // Logs and displays appropriately
+const { handleError } = useErrorHandler();
+handleError(error); // Logs and displays appropriately
 ```
 
 ## 🚀 Next Steps
 
 ### Immediate Priorities
+
 1. Complete cleanup plan (see CLEANUP_PLAN.md)
 2. Remove hardcoded credentials
 3. Organize scattered test files
 4. Update documentation
 
 ### Feature Development
+
 1. Multi-account support
 2. Offline mode
 3. Advanced search filters
@@ -296,6 +324,7 @@ handleError(error) // Logs and displays appropriately
 5. Plugin system
 
 ### Technical Debt
+
 1. Migrate analytics to server-side storage
 2. Implement proper WebSocket support
 3. Add service worker for offline

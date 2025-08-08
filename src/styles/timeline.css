@@ -31,7 +31,7 @@
 
 .timeline-gap-indicator::before,
 .timeline-gap-indicator::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -98,7 +98,7 @@
 }
 
 .timeline-post-preview::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 0;
@@ -265,7 +265,9 @@ a[href*="bsky.app/profile"] {
 }
 
 .ring-offset-2 {
-  box-shadow: 0 0 0 2px var(--ring-offset-color), 0 0 0 4px var(--ring-color);
+  box-shadow:
+    0 0 0 2px var(--ring-offset-color),
+    0 0 0 4px var(--ring-color);
 }
 
 /* Additional utility classes */
@@ -322,7 +324,7 @@ a[href*="bsky.app/profile"] {
 }
 
 .timeline-focused::before {
-  content: '';
+  content: "";
   position: absolute;
   left: -4px;
   top: 0;
@@ -386,29 +388,29 @@ html {
   .timeline-event-card {
     margin-left: -0.5rem;
   }
-  
+
   /* Adjust timeline line position on mobile */
   .timeline-line-mobile {
     left: 2.5rem;
   }
-  
+
   /* Smaller avatars on mobile */
   .timeline-avatar-mobile {
     width: 2rem;
     height: 2rem;
   }
-  
+
   /* Adjust post preview spacing */
   .timeline-post-preview {
     margin-left: 2.5rem;
     padding: 0.75rem;
   }
-  
+
   /* Adjust focus indicator on mobile */
   .timeline-focused::before {
     width: 2px;
   }
-  
+
   /* Smaller keyboard hint on mobile */
   .text-xs.ml-auto {
     font-size: 0.65rem;

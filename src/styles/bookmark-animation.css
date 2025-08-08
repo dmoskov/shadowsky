@@ -28,7 +28,9 @@
 
 /* Icon fill animation */
 .bookmark-icon {
-  transition: fill 0.2s ease-out, color 0.2s ease-out;
+  transition:
+    fill 0.2s ease-out,
+    color 0.2s ease-out;
 }
 
 .bookmark-icon.filling {

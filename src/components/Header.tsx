@@ -1,42 +1,50 @@
-import React from 'react'
-import { Menu, LogOut } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
-import { ThemeToggle } from './ThemeToggle'
-import butterflyIcon from '/butterfly-icon.svg'
+import { LogOut, Menu } from "lucide-react";
+import React from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { ThemeToggle } from "./ThemeToggle";
+import butterflyIcon from "/butterfly-icon.svg";
 
 interface HeaderProps {
-  onMenuToggle: () => void
+  onMenuToggle: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
-  const { session, logout } = useAuth()
+  const { session, logout } = useAuth();
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bsky-glass z-50" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
-      <div className="flex items-center justify-between h-full px-4 max-w-7xl mx-auto">
+    <header
+      className="bsky-glass fixed left-0 right-0 top-0 z-50 h-16"
+      style={{ borderBottom: "1px solid var(--bsky-border-primary)" }}
+    >
+      <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <button
             onClick={onMenuToggle}
-            className="lg:hidden p-2 rounded-lg hover:bg-white hover:bg-opacity-10 transition-all"
+            className="rounded-lg p-2 transition-all hover:bg-white hover:bg-opacity-10 lg:hidden"
           >
-            <Menu size={24} style={{ color: 'var(--bsky-text-primary)' }} />
+            <Menu size={24} style={{ color: "var(--bsky-text-primary)" }} />
           </button>
-          
+
           <div className="flex items-center gap-2">
-            <img 
-              src={butterflyIcon} 
-              alt="ShadowSky Logo" 
-              className="w-7 h-7"
-              style={{ marginTop: '2px' }}
+            <img
+              src={butterflyIcon}
+              alt="ShadowSky Logo"
+              className="h-7 w-7"
+              style={{ marginTop: "2px" }}
             />
-            <h1 className="text-xl font-bold hidden sm:block bsky-gradient-text">ShadowSky</h1>
+            <h1 className="bsky-gradient-text hidden text-xl font-bold sm:block">
+              ShadowSky
+            </h1>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="hidden sm:flex items-center gap-2">
-            <span className="text-sm font-medium" style={{ color: 'var(--bsky-text-secondary)' }}>
-              @{session?.handle || 'user'}
+          <div className="hidden items-center gap-2 sm:flex">
+            <span
+              className="text-sm font-medium"
+              style={{ color: "var(--bsky-text-secondary)" }}
+            >
+              @{session?.handle || "user"}
             </span>
           </div>
           <ThemeToggle />
@@ -50,5 +58,5 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
         </div>
       </div>
     </header>
-  )
-}
+  );
+};

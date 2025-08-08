@@ -3,6 +3,7 @@
 ## 🔍 BEFORE CREATING ANY NEW FILE
 
 ### 1. CHECK EXISTING CODE FIRST
+
 **ALWAYS** search for existing implementations before creating new files:
 
 ```bash
@@ -20,11 +21,13 @@ ls -la src/utils/ src/lib/ src/hooks/
 ```
 
 ### 2. EXTEND RATHER THAN DUPLICATE
+
 - If a similar file exists, extend it with new functionality
 - If a test script exists that does 80% of what you need, modify it
 - Create new files ONLY when existing ones cannot be reasonably extended
 
 ### 3. USE EXISTING PATTERNS
+
 - Authentication: Use `auth.json` or `.test-credentials`
 - Test scripts: Extend existing Playwright tests
 - Components: Follow existing component structure
@@ -33,32 +36,37 @@ ls -la src/utils/ src/lib/ src/hooks/
 ## 📁 Project Structure Reference
 
 ### Test Scripts Location
+
 - **Playwright tests**: `tests/playwright/`
 - **Unit tests**: `tests/` (future)
 - **Scripts**: `scripts/`
 - **Screenshots**: `tests/screenshots/`
 
 ### Key Reusable Components
-- **Authentication**: 
+
+- **Authentication**:
   - `src/contexts/AuthContext.tsx`
   - Scripts with auth: `test-app.mjs`, `diagnose-app.js`
-- **Error Handling**: 
+- **Error Handling**:
   - `src/lib/errors.ts`
   - `src/hooks/useErrorHandler.ts`
-- **API Services**: 
+- **API Services**:
   - `src/services/atproto/`
-- **UI Components**: 
+- **UI Components**:
   - `src/components/` (organized by feature)
 
 ## 🧪 Testing Best Practices
 
 ### For UI Issues (like notification badge):
+
 1. **First check**: `diagnose-app.js` - Has comprehensive diagnostics
 2. **For auth testing**: `test-app.mjs` - Already handles login flow
 3. **For component testing**: Extend existing component tests
 
 ### Example: Testing Notification Badge
+
 Instead of creating new script:
+
 ```javascript
 // ❌ DON'T: Create scripts/debug-notification-badge.js
 
@@ -69,11 +77,13 @@ Instead of creating new script:
 ## 📝 Documentation Requirements
 
 ### When Creating New Files:
+
 1. Update relevant inventory (e.g., `TEST_SCRIPTS_INVENTORY.md`)
 2. Add inline comments explaining why existing files couldn't be used
 3. Follow existing naming conventions
 
 ### When Extending Files:
+
 1. Add clear section comments
 2. Update file's header documentation
 3. Maintain backward compatibility
@@ -81,11 +91,13 @@ Instead of creating new script:
 ## 🔄 Regular Maintenance
 
 ### Weekly Tasks:
+
 - Review and update `TEST_SCRIPTS_INVENTORY.md`
 - Remove duplicate functionality
 - Consolidate similar scripts
 
 ### Before Major Features:
+
 - Audit existing code for reusable patterns
 - Update this process document if needed
 

@@ -1,98 +1,116 @@
-import React from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { TrendingUp, Users, Heart, Bell, Calendar, Activity, Send } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
-import { format, subDays, startOfDay, subHours } from 'date-fns'
-import { useExtendedNotifications } from '../hooks/useExtendedNotifications'
-import { BackgroundNotificationLoader } from './BackgroundNotificationLoader'
-import { useFeatureTracking } from '../hooks/useAnalytics'
-import { analytics as analyticsService } from '../services/analytics'
-import { proxifyBskyImage } from '../utils/image-proxy'
+import { useQuery } from "@tanstack/react-query";
+import { format, startOfDay, subDays, subHours } from "date-fns";
+import {
+  Activity,
+  Bell,
+  Calendar,
+  Heart,
+  Send,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import React from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useFeatureTracking } from "../hooks/useAnalytics";
+import { useExtendedNotifications } from "../hooks/useExtendedNotifications";
+import { analytics as analyticsService } from "../services/analytics";
+import { proxifyBskyImage } from "../utils/image-proxy";
+import { BackgroundNotificationLoader } from "./BackgroundNotificationLoader";
 
-type TimeRange = '1d' | '3d' | '7d' | '4w'
+type TimeRange = "1d" | "3d" | "7d" | "4w";
 
 // Component to track when charts come into view
-const TrackedChart: React.FC<{ chartName: string; children: React.ReactNode }> = ({ chartName, children }) => {
-  const ref = React.useRef<HTMLDivElement>(null)
-  const [hasTracked, setHasTracked] = React.useState(false)
-  
+const TrackedChart: React.FC<{
+  chartName: string;
+  children: React.ReactNode;
+}> = ({ chartName, children }) => {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [hasTracked, setHasTracked] = React.useState(false);
+
   React.useEffect(() => {
-    if (hasTracked || !ref.current) return
-    
+    if (hasTracked || !ref.current) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasTracked) {
-          analyticsService.trackAnalyticsView(chartName)
-          setHasTracked(true)
+          analyticsService.trackAnalyticsView(chartName);
+          setHasTracked(true);
         }
       },
-      { threshold: 0.5 }
-    )
-    
-    observer.observe(ref.current)
-    
-    return () => observer.disconnect()
-  }, [chartName, hasTracked])
-  
-  return <div ref={ref}>{children}</div>
-}
+      { threshold: 0.5 },
+    );
+
+    observer.observe(ref.current);
+
+    return () => observer.disconnect();
+  }, [chartName, hasTracked]);
+
+  return <div ref={ref}>{children}</div>;
+};
 
 export const NotificationsAnalytics: React.FC = () => {
-  const { agent, session } = useAuth()
-  const [timeRange, setTimeRange] = React.useState<TimeRange>('7d')
-  const [activityView, setActivityView] = React.useState<'received' | 'sent'>('received')
-  const [topUsersView, setTopUsersView] = React.useState<'received' | 'sent'>('received')
-  
+  const { agent, session } = useAuth();
+  const [timeRange, setTimeRange] = React.useState<TimeRange>("7d");
+  const [activityView, setActivityView] = React.useState<"received" | "sent">(
+    "received",
+  );
+  const [topUsersView, setTopUsersView] = React.useState<"received" | "sent">(
+    "received",
+  );
+
   // Analytics hooks
-  const { trackFeatureAction } = useFeatureTracking('analytics')
-  
+  const { trackFeatureAction } = useFeatureTracking("analytics");
+
   // Wrap setTimeRange to track analytics
   const handleTimeRangeChange = (newRange: TimeRange) => {
-    setTimeRange(newRange)
-    trackFeatureAction('time_range_changed', { range: newRange })
-    analyticsService.trackAnalyticsInteraction('time_range_changed', newRange)
-  }
-  
+    setTimeRange(newRange);
+    trackFeatureAction("time_range_changed", { range: newRange });
+    analyticsService.trackAnalyticsInteraction("time_range_changed", newRange);
+  };
 
   // Check if we have extended data available (from memory or IndexedDB)
-  const { extendedData, hasExtendedData } = useExtendedNotifications()
+  const { extendedData, hasExtendedData } = useExtendedNotifications();
 
   // Query for user's own activity
   const { data: userActivity } = useQuery({
-    queryKey: ['user-activity', session?.handle, timeRange],
+    queryKey: ["user-activity", session?.handle, timeRange],
     queryFn: async () => {
-      if (!agent || !session?.handle) throw new Error('Not authenticated')
-      
-      const cutoffDate = timeRange === '1d' ? subDays(new Date(), 1) :
-                        timeRange === '3d' ? subDays(new Date(), 3) :
-                        timeRange === '7d' ? subDays(new Date(), 7) :
-                        subDays(new Date(), 28)
+      if (!agent || !session?.handle) throw new Error("Not authenticated");
+
+      const cutoffDate =
+        timeRange === "1d"
+          ? subDays(new Date(), 1)
+          : timeRange === "3d"
+            ? subDays(new Date(), 3)
+            : timeRange === "7d"
+              ? subDays(new Date(), 7)
+              : subDays(new Date(), 28);
 
       // Fetch user's recent posts to analyze their activity
-      const posts = await agent.getAuthorFeed({ 
-        actor: session.handle, 
-        limit: 100 
-      })
-      
+      const posts = await agent.getAuthorFeed({
+        actor: session.handle,
+        limit: 100,
+      });
+
       // Count likes, reposts, and replies from the posts
-      let totalLikes = 0
-      let totalReposts = 0
-      let totalReplies = 0
-      let postsInTimeRange = 0
-      
+      let totalLikes = 0;
+      let totalReposts = 0;
+      let totalReplies = 0;
+      let postsInTimeRange = 0;
+
       for (const item of posts.data.feed) {
-        const postDate = new Date(item.post.indexedAt)
+        const postDate = new Date(item.post.indexedAt);
         if (postDate >= cutoffDate) {
-          postsInTimeRange++
-          totalLikes += item.post.likeCount || 0
-          totalReposts += item.post.repostCount || 0
-          totalReplies += item.post.replyCount || 0
+          postsInTimeRange++;
+          totalLikes += item.post.likeCount || 0;
+          totalReposts += item.post.repostCount || 0;
+          totalReplies += item.post.replyCount || 0;
         }
       }
 
       // Also fetch user's profile to get follower/following counts
-      const profile = await agent.getProfile({ actor: session.handle })
-      
+      const profile = await agent.getProfile({ actor: session.handle });
+
       return {
         postsCount: postsInTimeRange,
         likesReceived: totalLikes,
@@ -100,39 +118,49 @@ export const NotificationsAnalytics: React.FC = () => {
         repliesReceived: totalReplies,
         followersCount: profile.data.followersCount || 0,
         followingCount: profile.data.followsCount || 0,
-        postsTotal: profile.data.postsCount || 0
-      }
+        postsTotal: profile.data.postsCount || 0,
+      };
     },
     staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false
-  })
+    refetchOnWindowFocus: false,
+  });
 
   // Query for users the current user engages with most
   const { data: topUsersSent } = useQuery({
-    queryKey: ['top-users-sent', session?.handle, timeRange],
+    queryKey: ["top-users-sent", session?.handle, timeRange],
     queryFn: async () => {
-      if (!agent || !session?.handle) throw new Error('Not authenticated')
-      
-      const cutoffDate = timeRange === '1d' ? subDays(new Date(), 1) :
-                        timeRange === '3d' ? subDays(new Date(), 3) :
-                        timeRange === '7d' ? subDays(new Date(), 7) :
-                        subDays(new Date(), 28)
+      if (!agent || !session?.handle) throw new Error("Not authenticated");
+
+      const cutoffDate =
+        timeRange === "1d"
+          ? subDays(new Date(), 1)
+          : timeRange === "3d"
+            ? subDays(new Date(), 3)
+            : timeRange === "7d"
+              ? subDays(new Date(), 7)
+              : subDays(new Date(), 28);
 
       // Track interactions per user
-      const userInteractions = new Map<string, { 
-        handle: string, 
-        displayName?: string, 
-        avatar?: string,
-        did: string,
-        likes: number,
-        replies: number,
-        reposts: number,
-        total: number 
-      }>()
-      
+      const userInteractions = new Map<
+        string,
+        {
+          handle: string;
+          displayName?: string;
+          avatar?: string;
+          did: string;
+          likes: number;
+          replies: number;
+          reposts: number;
+          total: number;
+        }
+      >();
+
       // Helper to add/update user interaction
-      const addInteraction = (author: any, type: 'likes' | 'replies' | 'reposts') => {
-        const key = author.handle
+      const addInteraction = (
+        author: any,
+        type: "likes" | "replies" | "reposts",
+      ) => {
+        const key = author.handle;
         if (!userInteractions.has(key)) {
           userInteractions.set(key, {
             handle: author.handle,
@@ -142,29 +170,34 @@ export const NotificationsAnalytics: React.FC = () => {
             likes: 0,
             replies: 0,
             reposts: 0,
-            total: 0
-          })
+            total: 0,
+          });
         }
-        
-        const user = userInteractions.get(key)!
-        user[type]++
-        user.total++
-      }
+
+        const user = userInteractions.get(key)!;
+        user[type]++;
+        user.total++;
+      };
 
       // Fetch user's own posts to see who they replied to
-      const ownFeed = await agent.getAuthorFeed({ 
-        actor: session.handle, 
-        limit: 100 
-      })
-      
+      const ownFeed = await agent.getAuthorFeed({
+        actor: session.handle,
+        limit: 100,
+      });
+
       // Process replies
       for (const item of ownFeed.data.feed) {
-        const postDate = new Date(item.post.indexedAt)
+        const postDate = new Date(item.post.indexedAt);
         if (postDate >= cutoffDate && item.reply) {
           // This is a reply TO someone
-          const parentAuthor = 'author' in item.reply.parent ? item.reply.parent.author : null
-          if (parentAuthor && 'handle' in parentAuthor && parentAuthor.handle !== session.handle) {
-            addInteraction(parentAuthor, 'replies')
+          const parentAuthor =
+            "author" in item.reply.parent ? item.reply.parent.author : null;
+          if (
+            parentAuthor &&
+            "handle" in parentAuthor &&
+            parentAuthor.handle !== session.handle
+          ) {
+            addInteraction(parentAuthor, "replies");
           }
         }
       }
@@ -173,281 +206,320 @@ export const NotificationsAnalytics: React.FC = () => {
       try {
         // Note: This endpoint might not be available in all AT Protocol implementations
         // Using the actor feed as a proxy to see what posts are liked
-        const feed = await agent.getTimeline({ limit: 100 })
-        
+        const feed = await agent.getTimeline({ limit: 100 });
+
         for (const item of feed.data.feed) {
-          const postDate = new Date(item.post.indexedAt)
+          const postDate = new Date(item.post.indexedAt);
           if (postDate >= cutoffDate) {
             // Check if current user liked this post
             if (item.post.viewer?.like) {
-              const author = item.post.author
+              const author = item.post.author;
               if (author.handle !== session.handle) {
-                addInteraction(author, 'likes')
+                addInteraction(author, "likes");
               }
             }
-            
+
             // Check if current user reposted
             if (item.post.viewer?.repost) {
-              const author = item.post.author
+              const author = item.post.author;
               if (author.handle !== session.handle) {
-                addInteraction(author, 'reposts')
+                addInteraction(author, "reposts");
               }
             }
           }
         }
       } catch (error) {
-        console.error('Error fetching timeline for likes/reposts:', error)
+        console.error("Error fetching timeline for likes/reposts:", error);
       }
-      
+
       // Sort by total interactions and get top 5
       const topUsers = Array.from(userInteractions.values())
         .sort((a, b) => b.total - a.total)
-        .slice(0, 5)
-      
-      return topUsers
+        .slice(0, 5);
+
+      return topUsers;
     },
-    enabled: topUsersView === 'sent',
+    enabled: topUsersView === "sent",
     staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false
-  })
+    refetchOnWindowFocus: false,
+  });
 
   // Query for user's sent activity (posts, likes, reposts they made)
   const { data: sentActivity } = useQuery({
-    queryKey: ['user-sent-activity', session?.handle, timeRange],
+    queryKey: ["user-sent-activity", session?.handle, timeRange],
     queryFn: async () => {
-      if (!agent || !session?.handle) throw new Error('Not authenticated')
-      
-      const cutoffDate = timeRange === '1d' ? subDays(new Date(), 1) :
-                        timeRange === '3d' ? subDays(new Date(), 3) :
-                        timeRange === '7d' ? subDays(new Date(), 7) :
-                        subDays(new Date(), 28)
+      if (!agent || !session?.handle) throw new Error("Not authenticated");
+
+      const cutoffDate =
+        timeRange === "1d"
+          ? subDays(new Date(), 1)
+          : timeRange === "3d"
+            ? subDays(new Date(), 3)
+            : timeRange === "7d"
+              ? subDays(new Date(), 7)
+              : subDays(new Date(), 28);
 
       // Fetch user's recent posts
-      const posts = await agent.getAuthorFeed({ 
-        actor: session.handle, 
-        limit: 100 
-      })
-      
+      const posts = await agent.getAuthorFeed({
+        actor: session.handle,
+        limit: 100,
+      });
+
       // Organize by time buckets
       const buckets: Array<{
-        label: string
-        time: Date
-        posts: number
-        replies: number
-        reposts: number
-        quotes: number
-      }> = []
-      
+        label: string;
+        time: Date;
+        posts: number;
+        replies: number;
+        reposts: number;
+        quotes: number;
+      }> = [];
+
       // Create time buckets based on time range
-      const now = new Date()
-      if (timeRange === '1d') {
+      const now = new Date();
+      if (timeRange === "1d") {
         // Hourly buckets for last 24 hours
         for (let i = 23; i >= 0; i--) {
-          const time = subHours(now, i)
-          buckets.push({ label: format(time, 'ha'), time, posts: 0, replies: 0, reposts: 0, quotes: 0 })
+          const time = subHours(now, i);
+          buckets.push({
+            label: format(time, "ha"),
+            time,
+            posts: 0,
+            replies: 0,
+            reposts: 0,
+            quotes: 0,
+          });
         }
       } else {
         // Daily buckets
-        const days = timeRange === '3d' ? 3 : timeRange === '7d' ? 7 : 28
+        const days = timeRange === "3d" ? 3 : timeRange === "7d" ? 7 : 28;
         for (let i = days - 1; i >= 0; i--) {
-          const time = startOfDay(subDays(now, i))
-          buckets.push({ 
-            label: format(time, days > 7 ? 'M/d' : 'EEE'), 
-            time, 
-            posts: 0, 
-            replies: 0, 
+          const time = startOfDay(subDays(now, i));
+          buckets.push({
+            label: format(time, days > 7 ? "M/d" : "EEE"),
+            time,
+            posts: 0,
+            replies: 0,
             reposts: 0,
-            quotes: 0
-          })
+            quotes: 0,
+          });
         }
       }
-      
+
       // Count activities in each bucket
       for (const item of posts.data.feed) {
-        const postDate = new Date(item.post.indexedAt)
+        const postDate = new Date(item.post.indexedAt);
         if (postDate >= cutoffDate) {
           // Find the right bucket
           const bucketIndex = buckets.findIndex((b, i) => {
-            const nextTime = i < buckets.length - 1 ? buckets[i + 1].time : now
-            return postDate >= b.time && postDate < nextTime
-          })
-          
+            const nextTime = i < buckets.length - 1 ? buckets[i + 1].time : now;
+            return postDate >= b.time && postDate < nextTime;
+          });
+
           if (bucketIndex !== -1) {
             // Check if it's a reply, repost, or quote
             if (item.reply) {
-              buckets[bucketIndex].replies++
-            } else if (item.reason?.$type === 'app.bsky.feed.defs#reasonRepost') {
-              buckets[bucketIndex].reposts++
-            } else if (item.post.embed?.$type === 'app.bsky.embed.record') {
-              buckets[bucketIndex].quotes++
+              buckets[bucketIndex].replies++;
+            } else if (
+              item.reason?.$type === "app.bsky.feed.defs#reasonRepost"
+            ) {
+              buckets[bucketIndex].reposts++;
+            } else if (item.post.embed?.$type === "app.bsky.embed.record") {
+              buckets[bucketIndex].quotes++;
             } else {
-              buckets[bucketIndex].posts++
+              buckets[bucketIndex].posts++;
             }
           }
         }
       }
-      
-      return { buckets }
+
+      return { buckets };
     },
-    enabled: activityView === 'sent',
+    enabled: activityView === "sent",
     staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false
-  })
+    refetchOnWindowFocus: false,
+  });
 
   // Query for current stats - only fetch if we don't have extended data
   const { data: currentStats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['notifications-summary'],
+    queryKey: ["notifications-summary"],
     queryFn: async () => {
-      if (!agent) throw new Error('Not authenticated')
-      const response = await agent.app.bsky.notification.listNotifications({ limit: 50 })
-      return response.data
+      if (!agent) throw new Error("Not authenticated");
+      const response = await agent.app.bsky.notification.listNotifications({
+        limit: 50,
+      });
+      return response.data;
     },
     refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
     enabled: !hasExtendedData, // Don't fetch if we have extended data
-    refetchOnWindowFocus: false
-  })
+    refetchOnWindowFocus: false,
+  });
 
   // Query for analytics data - use extended data if available, otherwise fetch
   const { data: notifications } = useQuery({
-    queryKey: ['notifications-analytics', timeRange, hasExtendedData],
+    queryKey: ["notifications-analytics", timeRange, hasExtendedData],
     queryFn: async () => {
-      if (!agent) throw new Error('Not authenticated')
-      
+      if (!agent) throw new Error("Not authenticated");
+
       // If we have extended data (from IndexedDB), use it instead of fetching
       if (hasExtendedData && extendedData?.pages) {
-        const allNotifications = extendedData.pages.flatMap((page: any) => page.notifications)
-        console.log('📊 Using cached data for analytics:', {
+        const allNotifications = extendedData.pages.flatMap(
+          (page: any) => page.notifications,
+        );
+        console.log("📊 Using cached data for analytics:", {
           totalNotifications: allNotifications.length,
-          oldestDate: allNotifications.length > 0 ? new Date(allNotifications[allNotifications.length - 1].indexedAt) : null,
-          newestDate: allNotifications.length > 0 ? new Date(allNotifications[0].indexedAt) : null,
-          timeRange
-        })
-        return { notifications: allNotifications }
+          oldestDate:
+            allNotifications.length > 0
+              ? new Date(
+                  allNotifications[allNotifications.length - 1].indexedAt,
+                )
+              : null,
+          newestDate:
+            allNotifications.length > 0
+              ? new Date(allNotifications[0].indexedAt)
+              : null,
+          timeRange,
+        });
+        return { notifications: allNotifications };
       }
-      
+
       // Otherwise, fetch fresh data based on the selected time range
-      const allNotifications: any[] = []
-      let cursor: string | undefined
-      
+      const allNotifications: any[] = [];
+      let cursor: string | undefined;
+
       // Determine how far back to fetch based on time range
-      const cutoffDate = timeRange === '1d' ? subDays(new Date(), 1) :
-                        timeRange === '3d' ? subDays(new Date(), 3) :
-                        timeRange === '7d' ? subDays(new Date(), 7) :
-                        subDays(new Date(), 28)
-      
-      let hasMoreToFetch = true
-      
+      const cutoffDate =
+        timeRange === "1d"
+          ? subDays(new Date(), 1)
+          : timeRange === "3d"
+            ? subDays(new Date(), 3)
+            : timeRange === "7d"
+              ? subDays(new Date(), 7)
+              : subDays(new Date(), 28);
+
+      let hasMoreToFetch = true;
+
       while (hasMoreToFetch) {
-        const response = await agent.app.bsky.notification.listNotifications({ 
+        const response = await agent.app.bsky.notification.listNotifications({
           limit: 100,
-          cursor 
-        })
-        
-        allNotifications.push(...response.data.notifications)
-        cursor = response.data.cursor
-        
+          cursor,
+        });
+
+        allNotifications.push(...response.data.notifications);
+        cursor = response.data.cursor;
+
         // Check if we've fetched notifications older than cutoff date or no more cursor
-        const oldestNotification = response.data.notifications[response.data.notifications.length - 1]
-        if (!cursor || (oldestNotification && new Date(oldestNotification.indexedAt) < cutoffDate)) {
-          hasMoreToFetch = false
+        const oldestNotification =
+          response.data.notifications[response.data.notifications.length - 1];
+        if (
+          !cursor ||
+          (oldestNotification &&
+            new Date(oldestNotification.indexedAt) < cutoffDate)
+        ) {
+          hasMoreToFetch = false;
         }
-        
+
         // Safety limit to prevent infinite loops
         if (allNotifications.length > 5000) {
-          hasMoreToFetch = false
+          hasMoreToFetch = false;
         }
       }
-      
-      return { notifications: allNotifications }
+
+      return { notifications: allNotifications };
     },
     enabled: !!agent,
     staleTime: hasExtendedData ? 5 * 60 * 1000 : 2 * 60 * 1000, // Longer stale time if using cached data
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
-    refetchOnMount: 'always', // Always fetch fresh data on mount
-    refetchOnWindowFocus: false // Don't refetch on window focus
-  })
+    refetchOnMount: "always", // Always fetch fresh data on mount
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+  });
 
   const analytics = React.useMemo(() => {
     // Always generate analytics structure, even with no data
-    if (!notifications?.notifications) return null
+    if (!notifications?.notifications) return null;
 
-    const now = new Date()
-    
+    const now = new Date();
+
     // Filter notifications based on selected time range
     // Note: notification.indexedAt is in UTC but new Date() automatically converts to local timezone
     const timeRangeHours = {
-      '1d': 24,
-      '3d': 72,
-      '7d': 168,
-      '4w': 672
-    }
-    
-    const cutoffDate = subHours(now, timeRangeHours[timeRange])
+      "1d": 24,
+      "3d": 72,
+      "7d": 168,
+      "4w": 672,
+    };
+
+    const cutoffDate = subHours(now, timeRangeHours[timeRange]);
     const filteredNotifications = notifications.notifications.filter(
-      (n: any) => new Date(n.indexedAt) >= cutoffDate
-    )
-    
-    console.log('📊 Analytics filtering:', {
+      (n: any) => new Date(n.indexedAt) >= cutoffDate,
+    );
+
+    console.log("📊 Analytics filtering:", {
       timeRange,
       totalNotifications: notifications.notifications.length,
       filteredCount: filteredNotifications.length,
       cutoffDate,
-      hasExtendedData
-    })
-    
-    
+      hasExtendedData,
+    });
+
     // Don't return null if no data - still show the chart structure
     // if (filteredNotifications.length === 0) return null
-    
+
     // Calculate the actual date range of the filtered data
-    const sortedNotifications = filteredNotifications.length > 0 
-      ? [...filteredNotifications].sort(
-          (a, b) => new Date(a.indexedAt).getTime() - new Date(b.indexedAt).getTime()
-        )
-      : []
-    
-    const oldestDate = sortedNotifications.length > 0 
-      ? new Date(sortedNotifications[0].indexedAt)
-      : cutoffDate
-    const newestDate = sortedNotifications.length > 0 
-      ? new Date(sortedNotifications[sortedNotifications.length - 1].indexedAt)
-      : now
-    
+    const sortedNotifications =
+      filteredNotifications.length > 0
+        ? [...filteredNotifications].sort(
+            (a, b) =>
+              new Date(a.indexedAt).getTime() - new Date(b.indexedAt).getTime(),
+          )
+        : [];
+
+    const oldestDate =
+      sortedNotifications.length > 0
+        ? new Date(sortedNotifications[0].indexedAt)
+        : cutoffDate;
+    const newestDate =
+      sortedNotifications.length > 0
+        ? new Date(
+            sortedNotifications[sortedNotifications.length - 1].indexedAt,
+          )
+        : now;
+
     // Create time buckets based on the selected range
     let buckets: Array<{
-      startDate: Date
-      endDate: Date
-      label: string
-      likes: number
-      reposts: number
-      follows: number
-      replies: number
-      mentions: number
-      total: number
-    }> = []
-    
-    if (timeRange === '1d') {
+      startDate: Date;
+      endDate: Date;
+      label: string;
+      likes: number;
+      reposts: number;
+      follows: number;
+      replies: number;
+      mentions: number;
+      total: number;
+    }> = [];
+
+    if (timeRange === "1d") {
       // Hourly buckets for last 24 hours (group by 2-hour chunks)
       for (let i = 11; i >= 0; i--) {
-        const endDate = subHours(now, i * 2)
-        const startDate = subHours(now, (i + 1) * 2)
-        
+        const endDate = subHours(now, i * 2);
+        const startDate = subHours(now, (i + 1) * 2);
+
         // Check if this bucket is today or yesterday
-        const isToday = endDate.toDateString() === now.toDateString()
-        const yesterday = new Date(now)
-        yesterday.setDate(yesterday.getDate() - 1)
-        const isYesterday = endDate.toDateString() === yesterday.toDateString()
-        
-        let label = format(endDate, 'h a')
+        const isToday = endDate.toDateString() === now.toDateString();
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const isYesterday = endDate.toDateString() === yesterday.toDateString();
+
+        let label = format(endDate, "h a");
         if (!isToday && isYesterday) {
           // Add "Yesterday" prefix for clarity only when it's actually yesterday
-          label = `Yesterday ${format(endDate, 'h a')}`
+          label = `Yesterday ${format(endDate, "h a")}`;
         } else if (i === 0) {
           // Most recent bucket
-          label = 'Now'
+          label = "Now";
         }
-        
+
         buckets.push({
           startDate,
           endDate,
@@ -457,108 +529,125 @@ export const NotificationsAnalytics: React.FC = () => {
           follows: 0,
           replies: 0,
           mentions: 0,
-          total: 0
-        })
+          total: 0,
+        });
       }
-    } else if (timeRange === '3d') {
+    } else if (timeRange === "3d") {
       // 6-hour buckets for 3 days
       for (let i = 11; i >= 0; i--) {
-        const endDate = subHours(now, i * 6)
-        const startDate = subHours(now, (i + 1) * 6)
+        const endDate = subHours(now, i * 6);
+        const startDate = subHours(now, (i + 1) * 6);
         buckets.push({
           startDate,
           endDate,
-          label: i === 0 ? 'Now' : format(endDate, 'EEE h a'),
+          label: i === 0 ? "Now" : format(endDate, "EEE h a"),
           likes: 0,
           reposts: 0,
           follows: 0,
           replies: 0,
           mentions: 0,
-          total: 0
-        })
+          total: 0,
+        });
       }
-    } else if (timeRange === '7d') {
+    } else if (timeRange === "7d") {
       // Daily buckets for 7 days
       for (let i = 6; i >= 0; i--) {
-        const date = startOfDay(subDays(now, i))
-        const nextDate = startOfDay(subDays(now, i - 1))
+        const date = startOfDay(subDays(now, i));
+        const nextDate = startOfDay(subDays(now, i - 1));
         buckets.push({
           startDate: date,
           endDate: i === 0 ? now : nextDate,
-          label: format(date, 'EEE'),
+          label: format(date, "EEE"),
           likes: 0,
           reposts: 0,
           follows: 0,
           replies: 0,
           mentions: 0,
-          total: 0
-        })
+          total: 0,
+        });
       }
     } else {
       // Daily buckets for 4 weeks (28 days)
       for (let i = 27; i >= 0; i--) {
-        const date = startOfDay(subDays(now, i))
-        const nextDate = i === 0 ? now : startOfDay(subDays(now, i - 1))
+        const date = startOfDay(subDays(now, i));
+        const nextDate = i === 0 ? now : startOfDay(subDays(now, i - 1));
         buckets.push({
           startDate: date,
           endDate: nextDate,
-          label: i === 0 ? 'Today' : i === 1 ? 'Yesterday' : format(date, 'MMM d'),
+          label:
+            i === 0 ? "Today" : i === 1 ? "Yesterday" : format(date, "MMM d"),
           likes: 0,
           reposts: 0,
           follows: 0,
           replies: 0,
           mentions: 0,
-          total: 0
-        })
+          total: 0,
+        });
       }
     }
 
     // Count notifications by bucket and type
-    
+
     filteredNotifications.forEach((notification: any) => {
       // Parse the UTC timestamp and it will automatically convert to local timezone
-      const notifDate = new Date(notification.indexedAt)
-      const bucket = buckets.find(b => 
-        notifDate >= b.startDate && notifDate < b.endDate
-      )
-      
+      const notifDate = new Date(notification.indexedAt);
+      const bucket = buckets.find(
+        (b) => notifDate >= b.startDate && notifDate < b.endDate,
+      );
+
       if (bucket) {
-        bucket.total++
+        bucket.total++;
         switch (notification.reason) {
-          case 'like': bucket.likes++; break
-          case 'repost': bucket.reposts++; break
-          case 'follow': bucket.follows++; break
-          case 'reply': bucket.replies++; break
-          case 'mention': bucket.mentions++; break
+          case "like":
+            bucket.likes++;
+            break;
+          case "repost":
+            bucket.reposts++;
+            break;
+          case "follow":
+            bucket.follows++;
+            break;
+          case "reply":
+            bucket.replies++;
+            break;
+          case "mention":
+            bucket.mentions++;
+            break;
         }
       }
-    })
+    });
 
     // Find most active users (use filtered notifications, excluding subscription notifications)
-    const userActivity = new Map<string, number>()
+    const userActivity = new Map<string, number>();
     filteredNotifications.forEach((notification: any) => {
       // Exclude starterpack-joined notifications from "Top Users Engaging"
-      if (notification.reason !== 'starterpack-joined') {
-        const key = notification.author.handle
-        userActivity.set(key, (userActivity.get(key) || 0) + 1)
+      if (notification.reason !== "starterpack-joined") {
+        const key = notification.author.handle;
+        userActivity.set(key, (userActivity.get(key) || 0) + 1);
       }
-    })
+    });
 
     const topUsers = Array.from(userActivity.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([handle, count]) => {
-        const user = filteredNotifications.find((n: any) => n.author.handle === handle)?.author
-        return { handle, count, user }
-      })
+        const user = filteredNotifications.find(
+          (n: any) => n.author.handle === handle,
+        )?.author;
+        return { handle, count, user };
+      });
 
     // Calculate engagement rate
-    const totalEngagement = filteredNotifications.length
-    const uniqueUsers = filteredNotifications.length > 0 
-      ? new Set(filteredNotifications.map((n: any) => n.author.did)).size
-      : 0
-    const hourSpan = Math.max(1, (newestDate.getTime() - oldestDate.getTime()) / (1000 * 60 * 60))
-    const daySpan = Math.max(1, hourSpan / 24)
+    const totalEngagement = filteredNotifications.length;
+    const uniqueUsers =
+      filteredNotifications.length > 0
+        ? new Set(filteredNotifications.map((n: any) => n.author.did)).size
+        : 0;
+    const hourSpan = Math.max(
+      1,
+      (newestDate.getTime() - oldestDate.getTime()) / (1000 * 60 * 60),
+    );
+    const daySpan = Math.max(1, hourSpan / 24);
 
     return {
       buckets,
@@ -570,77 +659,109 @@ export const NotificationsAnalytics: React.FC = () => {
       daySpan,
       oldestDate,
       newestDate,
-      timeRange
-    }
-  }, [notifications, timeRange])
+      timeRange,
+    };
+  }, [notifications, timeRange]);
 
   // Calculate current stats - use analytics data if we have extended data
   const stats = React.useMemo(() => {
     // If we have extended data, calculate stats from the analytics data
     if (hasExtendedData && notifications?.notifications) {
       // Get notifications from the last 24 hours for "recent" stats
-      const oneDayAgo = subDays(new Date(), 1)
+      const oneDayAgo = subDays(new Date(), 1);
       const recentNotifications = notifications.notifications.filter(
-        (n: any) => new Date(n.indexedAt) >= oneDayAgo
-      )
-      
-      
+        (n: any) => new Date(n.indexedAt) >= oneDayAgo,
+      );
+
       const counts = {
         total: recentNotifications.length,
         unread: 0, // Extended data doesn't include read status
-        likes: recentNotifications.filter((n: any) => n.reason === 'like').length,
-        reposts: recentNotifications.filter((n: any) => n.reason === 'repost').length,
-        follows: recentNotifications.filter((n: any) => n.reason === 'follow').length,
-        mentions: recentNotifications.filter((n: any) => n.reason === 'mention').length,
-        replies: recentNotifications.filter((n: any) => n.reason === 'reply').length,
-      }
-      
-      return counts
+        likes: recentNotifications.filter((n: any) => n.reason === "like")
+          .length,
+        reposts: recentNotifications.filter((n: any) => n.reason === "repost")
+          .length,
+        follows: recentNotifications.filter((n: any) => n.reason === "follow")
+          .length,
+        mentions: recentNotifications.filter((n: any) => n.reason === "mention")
+          .length,
+        replies: recentNotifications.filter((n: any) => n.reason === "reply")
+          .length,
+      };
+
+      return counts;
     }
-    
+
     // Otherwise use the current stats query
-    if (!currentStats) return null
+    if (!currentStats) return null;
 
     const counts = {
       total: currentStats.notifications.length,
       unread: currentStats.notifications.filter((n: any) => !n.isRead).length,
-      likes: currentStats.notifications.filter((n: any) => n.reason === 'like').length,
-      reposts: currentStats.notifications.filter((n: any) => n.reason === 'repost').length,
-      follows: currentStats.notifications.filter((n: any) => n.reason === 'follow').length,
-      mentions: currentStats.notifications.filter((n: any) => n.reason === 'mention').length,
-      replies: currentStats.notifications.filter((n: any) => n.reason === 'reply').length,
-    }
+      likes: currentStats.notifications.filter((n: any) => n.reason === "like")
+        .length,
+      reposts: currentStats.notifications.filter(
+        (n: any) => n.reason === "repost",
+      ).length,
+      follows: currentStats.notifications.filter(
+        (n: any) => n.reason === "follow",
+      ).length,
+      mentions: currentStats.notifications.filter(
+        (n: any) => n.reason === "mention",
+      ).length,
+      replies: currentStats.notifications.filter(
+        (n: any) => n.reason === "reply",
+      ).length,
+    };
 
-    return counts
-  }, [currentStats, hasExtendedData, notifications])
+    return counts;
+  }, [currentStats, hasExtendedData, notifications]);
 
   if (!analytics || isLoadingStats) {
     return (
       <div className="p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 rounded w-1/4" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}></div>
-          <div className="h-64 rounded" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}></div>
+          <div
+            className="h-8 w-1/4 rounded"
+            style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+          ></div>
+          <div
+            className="h-64 rounded"
+            style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+          ></div>
         </div>
       </div>
-    )
+    );
   }
 
-  const maxValue = Math.max(1, ...analytics.buckets.map(b => b.total))
-  const maxSentValue = sentActivity ? Math.max(1, ...sentActivity.buckets.map(b => 
-    b.posts + b.replies + b.reposts + b.quotes
-  )) : 1
-  const currentMaxValue = activityView === 'received' ? maxValue : maxSentValue
+  const maxValue = Math.max(1, ...analytics.buckets.map((b) => b.total));
+  const maxSentValue = sentActivity
+    ? Math.max(
+        1,
+        ...sentActivity.buckets.map(
+          (b) => b.posts + b.replies + b.reposts + b.quotes,
+        ),
+      )
+    : 1;
+  const currentMaxValue = activityView === "received" ? maxValue : maxSentValue;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-6">
       {/* Background loader - no UI */}
       <BackgroundNotificationLoader />
-      
+
       {/* Page Header with inline stats */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--bsky-text-primary)' }}>Analytics</h1>
-          <div className="flex items-center gap-4 text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+          <h1
+            className="mb-2 text-2xl font-bold"
+            style={{ color: "var(--bsky-text-primary)" }}
+          >
+            Analytics
+          </h1>
+          <div
+            className="flex items-center gap-4 text-sm"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
             <span className="flex items-center gap-1">
               <Bell size={16} />
               {stats?.total || 0} in last 24h
@@ -655,13 +776,16 @@ export const NotificationsAnalytics: React.FC = () => {
             </span>
           </div>
         </div>
-        
+
         {/* Data source indicator */}
         {hasExtendedData && (
-          <div className="flex items-center gap-2 text-sm px-3 py-1 rounded-lg" style={{
-            backgroundColor: 'var(--bsky-bg-tertiary)',
-            color: 'var(--bsky-text-secondary)'
-          }}>
+          <div
+            className="flex items-center gap-2 rounded-lg px-3 py-1 text-sm"
+            style={{
+              backgroundColor: "var(--bsky-bg-tertiary)",
+              color: "var(--bsky-text-secondary)",
+            }}
+          >
             <Activity size={14} />
             <span>Using extended history</span>
           </div>
@@ -670,432 +794,611 @@ export const NotificationsAnalytics: React.FC = () => {
 
       {/* Activity Chart */}
       <TrackedChart chartName="activity_timeline">
-        <div className="bsky-card p-6" style={{
-          background: 'var(--bsky-bg-secondary)',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          <div className="absolute top-0 right-0 w-64 h-64 opacity-5" style={{
-            background: 'radial-gradient(circle, var(--bsky-primary) 0%, transparent 70%)',
-            transform: 'translate(30%, -30%)'
-          }} />
-          <div className="mb-4" style={{ position: 'relative', zIndex: 10 }}>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Activity className="text-green-500" size={20} />
-              Activity Timeline
-            </h2>
-            {/* Activity Toggle */}
-            <div className="flex items-center gap-2 text-sm">
-              <button
-                onClick={() => setActivityView('received')}
-                className={`px-3 py-1 rounded-lg transition-all ${
-                  activityView === 'received' ? 'font-semibold' : ''
-                }`}
-                style={{
-                  backgroundColor: activityView === 'received' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
-                  color: activityView === 'received' ? 'white' : 'var(--bsky-text-secondary)'
-                }}
-              >
-                Received
-              </button>
-              <button
-                onClick={() => setActivityView('sent')}
-                className={`px-3 py-1 rounded-lg transition-all ${
-                  activityView === 'sent' ? 'font-semibold' : ''
-                }`}
-                style={{
-                  backgroundColor: activityView === 'sent' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
-                  color: activityView === 'sent' ? 'white' : 'var(--bsky-text-secondary)'
-                }}
-              >
-                Sent
-              </button>
-            </div>
-          </div>
-          
-          {/* Time Range Buttons - on their own line */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                handleTimeRangeChange('1d')
-              }}
-              className="px-3 py-1 text-sm rounded-lg transition-all cursor-pointer hover:opacity-80"
-              style={{
-                backgroundColor: timeRange === '1d' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
-                color: timeRange === '1d' ? 'white' : 'var(--bsky-text-secondary)',
-                border: 'none'
-              }}
-              type="button"
-            >
-              24h
-            </button>
-            <button
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                handleTimeRangeChange('3d')
-              }}
-              className="px-3 py-1 text-sm rounded-lg transition-all cursor-pointer hover:opacity-80"
-              style={{
-                backgroundColor: timeRange === '3d' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
-                color: timeRange === '3d' ? 'white' : 'var(--bsky-text-secondary)',
-                border: 'none'
-              }}
-              type="button"
-            >
-              3d
-            </button>
-            <button
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                handleTimeRangeChange('7d')
-              }}
-              className="px-3 py-1 text-sm rounded-lg transition-all cursor-pointer hover:opacity-80"
-              style={{
-                backgroundColor: timeRange === '7d' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
-                color: timeRange === '7d' ? 'white' : 'var(--bsky-text-secondary)',
-                border: 'none'
-              }}
-              type="button"
-            >
-              7d
-            </button>
-            <button
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                handleTimeRangeChange('4w')
-              }}
-              className="px-3 py-1 text-sm rounded-lg transition-all cursor-pointer hover:opacity-80"
-              style={{
-                backgroundColor: timeRange === '4w' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
-                color: timeRange === '4w' ? 'white' : 'var(--bsky-text-secondary)',
-                border: 'none'
-              }}
-              type="button"
-            >
-              4w
-            </button>
-          </div>
-        </div>
-        
-        <div className="relative" style={{ height: '300px', marginTop: '20px' }}>
-          {/* Y-axis labels */}
-          <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-xs" style={{ width: '40px', color: 'var(--bsky-text-secondary)' }}>
-            <span>{currentMaxValue}</span>
-            <span>{Math.round(currentMaxValue * 0.75)}</span>
-            <span>{Math.round(currentMaxValue * 0.5)}</span>
-            <span>{Math.round(currentMaxValue * 0.25)}</span>
-            <span>0</span>
-          </div>
-          
-          {/* Chart area */}
-          <div className="ml-12 h-full relative">
-            {/* Grid lines */}
-            <div className="absolute inset-0">
-              {[0, 0.25, 0.5, 0.75, 1].map((fraction) => (
-                <div
-                  key={fraction}
-                  className="absolute w-full"
+        <div
+          className="bsky-card p-6"
+          style={{
+            background: "var(--bsky-bg-secondary)",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            className="absolute right-0 top-0 h-64 w-64 opacity-5"
+            style={{
+              background:
+                "radial-gradient(circle, var(--bsky-primary) 0%, transparent 70%)",
+              transform: "translate(30%, -30%)",
+            }}
+          />
+          <div className="mb-4" style={{ position: "relative", zIndex: 10 }}>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-lg font-semibold">
+                <Activity className="text-green-500" size={20} />
+                Activity Timeline
+              </h2>
+              {/* Activity Toggle */}
+              <div className="flex items-center gap-2 text-sm">
+                <button
+                  onClick={() => setActivityView("received")}
+                  className={`rounded-lg px-3 py-1 transition-all ${
+                    activityView === "received" ? "font-semibold" : ""
+                  }`}
                   style={{
-                    bottom: `${fraction * 100}%`,
-                    borderBottom: '1px solid',
-                    borderColor: 'var(--bsky-border-secondary)',
-                    opacity: fraction === 0 ? 1 : 0.2
+                    backgroundColor:
+                      activityView === "received"
+                        ? "var(--bsky-primary)"
+                        : "var(--bsky-bg-tertiary)",
+                    color:
+                      activityView === "received"
+                        ? "white"
+                        : "var(--bsky-text-secondary)",
                   }}
-                />
-              ))}
+                >
+                  Received
+                </button>
+                <button
+                  onClick={() => setActivityView("sent")}
+                  className={`rounded-lg px-3 py-1 transition-all ${
+                    activityView === "sent" ? "font-semibold" : ""
+                  }`}
+                  style={{
+                    backgroundColor:
+                      activityView === "sent"
+                        ? "var(--bsky-primary)"
+                        : "var(--bsky-bg-tertiary)",
+                    color:
+                      activityView === "sent"
+                        ? "white"
+                        : "var(--bsky-text-secondary)",
+                  }}
+                >
+                  Sent
+                </button>
+              </div>
             </div>
-            
-            {/* Bars */}
-            <div className="relative h-full flex items-end justify-between" style={{ gap: timeRange === '4w' ? '2px' : '4px', paddingBottom: '30px' }}>
-              {activityView === 'received' ? (
-                // Received view - show notifications
-                analytics.buckets.map((bucket, index) => {
-                const barWidth = timeRange === '4w' 
-                  ? `${100 / analytics.buckets.length}%` 
-                  : `${100 / analytics.buckets.length - 1}%`
-                return (
-                  <div
-                    key={`${bucket.label}-${index}`}
-                    className="relative group"
-                    style={{ 
-                      width: barWidth, 
-                      minWidth: timeRange === '4w' ? '8px' : '20px', 
-                      maxWidth: timeRange === '4w' ? '30px' : '60px' 
-                    }}
-                  >
-                    {/* Stacked bar */}
-                    <div className="absolute bottom-0 left-0 right-0 flex flex-col-reverse rounded-t-lg overflow-hidden transition-all duration-300 hover:opacity-90">
-                      {/* Likes - bottom of stack */}
-                      {bucket.likes > 0 && (
-                        <div
-                          className="w-full transition-all duration-500"
-                          style={{
-                            height: `${(bucket.likes / maxValue) * 270}px`,
-                            background: 'linear-gradient(180deg, #f87171 0%, #ef4444 100%)'
-                          }}
-                          title={`${bucket.likes} likes`}
-                        />
-                      )}
-                      {/* Reposts */}
-                      {bucket.reposts > 0 && (
-                        <div
-                          className="w-full transition-all duration-500"
-                          style={{
-                            height: `${(bucket.reposts / maxValue) * 270}px`,
-                            background: 'linear-gradient(180deg, #93c5fd 0%, #60a5fa 100%)'
-                          }}
-                          title={`${bucket.reposts} reposts`}
-                        />
-                      )}
-                      {/* Follows */}
-                      {bucket.follows > 0 && (
-                        <div
-                          className="w-full transition-all duration-500"
-                          style={{
-                            height: `${(bucket.follows / maxValue) * 270}px`,
-                            background: 'linear-gradient(180deg, #c4b5fd 0%, #a78bfa 100%)'
-                          }}
-                          title={`${bucket.follows} follows`}
-                        />
-                      )}
-                      {/* Replies */}
-                      {bucket.replies > 0 && (
-                        <div
-                          className="w-full transition-all duration-500"
-                          style={{
-                            height: `${(bucket.replies / maxValue) * 270}px`,
-                            background: 'linear-gradient(180deg, #86efac 0%, #4ade80 100%)'
-                          }}
-                          title={`${bucket.replies} replies`}
-                        />
-                      )}
-                      {/* Mentions - top of stack */}
-                      {bucket.mentions > 0 && (
-                        <div
-                          className="w-full transition-all duration-500"
-                          style={{
-                            height: `${(bucket.mentions / maxValue) * 270}px`,
-                            background: 'linear-gradient(180deg, #fda4af 0%, #fb7185 100%)'
-                          }}
-                          title={`${bucket.mentions} mentions`}
-                        />
-                      )}
-                    </div>
-                    
-                    {/* Hover tooltip */}
-                    <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                      <div className="px-3 py-2 rounded-lg text-xs whitespace-nowrap" style={{
-                        backgroundColor: 'var(--bsky-bg-primary)',
-                        color: 'var(--bsky-text-primary)',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                        border: '1px solid var(--bsky-border-primary)'
-                      }}>
-                        <div className="font-bold mb-1">{bucket.total} total</div>
-                        {bucket.likes > 0 && <div style={{ color: '#ef4444' }}>{bucket.likes} likes</div>}
-                        {bucket.reposts > 0 && <div style={{ color: '#60a5fa' }}>{bucket.reposts} reposts</div>}
-                        {bucket.follows > 0 && <div style={{ color: '#a78bfa' }}>{bucket.follows} follows</div>}
-                        {bucket.replies > 0 && <div style={{ color: '#4ade80' }}>{bucket.replies} replies</div>}
-                        {bucket.mentions > 0 && <div style={{ color: '#fb7185' }}>{bucket.mentions} mentions</div>}
-                      </div>
-                    </div>
-                    
-                    {/* X-axis label */}
-                    {(timeRange !== '4w' || index % 4 === 0 || index === analytics.buckets.length - 1) && (
-                      <div className="absolute top-full mt-1 left-0 right-0 text-center">
-                        <span className="text-xs" style={{ 
-                          color: 'var(--bsky-text-secondary)', 
-                          fontSize: timeRange === '4w' ? '9px' : '10px' 
-                        }}>
-                          {bucket.label}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )
-              })
-              ) : sentActivity ? (
-                // Sent view - show user's posts, replies, reposts
-                sentActivity.buckets.map((bucket, index) => {
-                  const barWidth = timeRange === '4w' 
-                    ? `${100 / sentActivity.buckets.length}%` 
-                    : `${100 / sentActivity.buckets.length - 1}%`
-                  const total = bucket.posts + bucket.replies + bucket.reposts + bucket.quotes
-                  
-                  return (
-                    <div
-                      key={`${bucket.label}-${index}`}
-                      className="relative group"
-                      style={{ 
-                        width: barWidth, 
-                        minWidth: timeRange === '4w' ? '8px' : '20px', 
-                        maxWidth: timeRange === '4w' ? '30px' : '60px' 
-                      }}
-                    >
-                      {/* Stacked bar */}
-                      <div className="absolute bottom-0 left-0 right-0 flex flex-col-reverse rounded-t-lg overflow-hidden transition-all duration-300 hover:opacity-90">
-                        {/* Posts - bottom of stack */}
-                        {bucket.posts > 0 && (
-                          <div
-                            className="w-full transition-all duration-500"
-                            style={{
-                              height: `${(bucket.posts / maxSentValue) * 270}px`,
-                              background: 'linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%)'
-                            }}
-                            title={`${bucket.posts} posts`}
-                          />
-                        )}
-                        {/* Replies */}
-                        {bucket.replies > 0 && (
-                          <div
-                            className="w-full transition-all duration-500"
-                            style={{
-                              height: `${(bucket.replies / maxSentValue) * 270}px`,
-                              background: 'linear-gradient(180deg, #86efac 0%, #4ade80 100%)'
-                            }}
-                            title={`${bucket.replies} replies`}
-                          />
-                        )}
-                        {/* Reposts */}
-                        {bucket.reposts > 0 && (
-                          <div
-                            className="w-full transition-all duration-500"
-                            style={{
-                              height: `${(bucket.reposts / maxSentValue) * 270}px`,
-                              background: 'linear-gradient(180deg, #c4b5fd 0%, #a78bfa 100%)'
-                            }}
-                            title={`${bucket.reposts} reposts`}
-                          />
-                        )}
-                        {/* Quotes */}
-                        {bucket.quotes > 0 && (
-                          <div
-                            className="w-full transition-all duration-500"
-                            style={{
-                              height: `${(bucket.quotes / maxSentValue) * 270}px`,
-                              background: 'linear-gradient(180deg, #fda4af 0%, #fb7185 100%)'
-                            }}
-                            title={`${bucket.quotes} quotes`}
-                          />
-                        )}
-                      </div>
-                      
-                      {/* Hover tooltip */}
-                      <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                        <div className="px-3 py-2 rounded-lg text-xs whitespace-nowrap" style={{
-                          backgroundColor: 'var(--bsky-bg-primary)',
-                          color: 'var(--bsky-text-primary)',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                          border: '1px solid var(--bsky-border-primary)'
-                        }}>
-                          <div className="font-bold mb-1">{total} total</div>
-                          {bucket.posts > 0 && <div style={{ color: '#3b82f6' }}>{bucket.posts} posts</div>}
-                          {bucket.replies > 0 && <div style={{ color: '#4ade80' }}>{bucket.replies} replies</div>}
-                          {bucket.reposts > 0 && <div style={{ color: '#a78bfa' }}>{bucket.reposts} reposts</div>}
-                          {bucket.quotes > 0 && <div style={{ color: '#fb7185' }}>{bucket.quotes} quotes</div>}
-                        </div>
-                      </div>
-                      
-                      {/* X-axis label */}
-                      {(timeRange !== '4w' || index % 4 === 0 || index === sentActivity.buckets.length - 1) && (
-                        <div className="absolute top-full mt-1 left-0 right-0 text-center">
-                          <span className="text-xs" style={{ 
-                            color: 'var(--bsky-text-tertiary)',
-                            fontSize: timeRange === '4w' ? '10px' : '12px' 
-                          }}>
-                            {bucket.label}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })
-              ) : null}
+
+            {/* Time Range Buttons - on their own line */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleTimeRangeChange("1d");
+                }}
+                className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
+                style={{
+                  backgroundColor:
+                    timeRange === "1d"
+                      ? "var(--bsky-primary)"
+                      : "var(--bsky-bg-tertiary)",
+                  color:
+                    timeRange === "1d" ? "white" : "var(--bsky-text-secondary)",
+                  border: "none",
+                }}
+                type="button"
+              >
+                24h
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleTimeRangeChange("3d");
+                }}
+                className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
+                style={{
+                  backgroundColor:
+                    timeRange === "3d"
+                      ? "var(--bsky-primary)"
+                      : "var(--bsky-bg-tertiary)",
+                  color:
+                    timeRange === "3d" ? "white" : "var(--bsky-text-secondary)",
+                  border: "none",
+                }}
+                type="button"
+              >
+                3d
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleTimeRangeChange("7d");
+                }}
+                className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
+                style={{
+                  backgroundColor:
+                    timeRange === "7d"
+                      ? "var(--bsky-primary)"
+                      : "var(--bsky-bg-tertiary)",
+                  color:
+                    timeRange === "7d" ? "white" : "var(--bsky-text-secondary)",
+                  border: "none",
+                }}
+                type="button"
+              >
+                7d
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleTimeRangeChange("4w");
+                }}
+                className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
+                style={{
+                  backgroundColor:
+                    timeRange === "4w"
+                      ? "var(--bsky-primary)"
+                      : "var(--bsky-bg-tertiary)",
+                  color:
+                    timeRange === "4w" ? "white" : "var(--bsky-text-secondary)",
+                  border: "none",
+                }}
+                type="button"
+              >
+                4w
+              </button>
             </div>
           </div>
-          
-          <div className="flex flex-wrap gap-3 mt-4 text-xs">
-          {activityView === 'received' ? (
-            <>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }}></div>
-                <span style={{ color: 'var(--bsky-text-secondary)' }}>Likes</span>
+
+          <div
+            className="relative"
+            style={{ height: "300px", marginTop: "20px" }}
+          >
+            {/* Y-axis labels */}
+            <div
+              className="absolute bottom-0 left-0 top-0 flex flex-col justify-between text-xs"
+              style={{ width: "40px", color: "var(--bsky-text-secondary)" }}
+            >
+              <span>{currentMaxValue}</span>
+              <span>{Math.round(currentMaxValue * 0.75)}</span>
+              <span>{Math.round(currentMaxValue * 0.5)}</span>
+              <span>{Math.round(currentMaxValue * 0.25)}</span>
+              <span>0</span>
+            </div>
+
+            {/* Chart area */}
+            <div className="relative ml-12 h-full">
+              {/* Grid lines */}
+              <div className="absolute inset-0">
+                {[0, 0.25, 0.5, 0.75, 1].map((fraction) => (
+                  <div
+                    key={fraction}
+                    className="absolute w-full"
+                    style={{
+                      bottom: `${fraction * 100}%`,
+                      borderBottom: "1px solid",
+                      borderColor: "var(--bsky-border-secondary)",
+                      opacity: fraction === 0 ? 1 : 0.2,
+                    }}
+                  />
+                ))}
               </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#60a5fa' }}></div>
-                <span style={{ color: 'var(--bsky-text-secondary)' }}>Reposts</span>
+
+              {/* Bars */}
+              <div
+                className="relative flex h-full items-end justify-between"
+                style={{
+                  gap: timeRange === "4w" ? "2px" : "4px",
+                  paddingBottom: "30px",
+                }}
+              >
+                {activityView === "received"
+                  ? // Received view - show notifications
+                    analytics.buckets.map((bucket, index) => {
+                      const barWidth =
+                        timeRange === "4w"
+                          ? `${100 / analytics.buckets.length}%`
+                          : `${100 / analytics.buckets.length - 1}%`;
+                      return (
+                        <div
+                          key={`${bucket.label}-${index}`}
+                          className="group relative"
+                          style={{
+                            width: barWidth,
+                            minWidth: timeRange === "4w" ? "8px" : "20px",
+                            maxWidth: timeRange === "4w" ? "30px" : "60px",
+                          }}
+                        >
+                          {/* Stacked bar */}
+                          <div className="absolute bottom-0 left-0 right-0 flex flex-col-reverse overflow-hidden rounded-t-lg transition-all duration-300 hover:opacity-90">
+                            {/* Likes - bottom of stack */}
+                            {bucket.likes > 0 && (
+                              <div
+                                className="w-full transition-all duration-500"
+                                style={{
+                                  height: `${(bucket.likes / maxValue) * 270}px`,
+                                  background:
+                                    "linear-gradient(180deg, #f87171 0%, #ef4444 100%)",
+                                }}
+                                title={`${bucket.likes} likes`}
+                              />
+                            )}
+                            {/* Reposts */}
+                            {bucket.reposts > 0 && (
+                              <div
+                                className="w-full transition-all duration-500"
+                                style={{
+                                  height: `${(bucket.reposts / maxValue) * 270}px`,
+                                  background:
+                                    "linear-gradient(180deg, #93c5fd 0%, #60a5fa 100%)",
+                                }}
+                                title={`${bucket.reposts} reposts`}
+                              />
+                            )}
+                            {/* Follows */}
+                            {bucket.follows > 0 && (
+                              <div
+                                className="w-full transition-all duration-500"
+                                style={{
+                                  height: `${(bucket.follows / maxValue) * 270}px`,
+                                  background:
+                                    "linear-gradient(180deg, #c4b5fd 0%, #a78bfa 100%)",
+                                }}
+                                title={`${bucket.follows} follows`}
+                              />
+                            )}
+                            {/* Replies */}
+                            {bucket.replies > 0 && (
+                              <div
+                                className="w-full transition-all duration-500"
+                                style={{
+                                  height: `${(bucket.replies / maxValue) * 270}px`,
+                                  background:
+                                    "linear-gradient(180deg, #86efac 0%, #4ade80 100%)",
+                                }}
+                                title={`${bucket.replies} replies`}
+                              />
+                            )}
+                            {/* Mentions - top of stack */}
+                            {bucket.mentions > 0 && (
+                              <div
+                                className="w-full transition-all duration-500"
+                                style={{
+                                  height: `${(bucket.mentions / maxValue) * 270}px`,
+                                  background:
+                                    "linear-gradient(180deg, #fda4af 0%, #fb7185 100%)",
+                                }}
+                                title={`${bucket.mentions} mentions`}
+                              />
+                            )}
+                          </div>
+
+                          {/* Hover tooltip */}
+                          <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 transform opacity-0 transition-opacity group-hover:opacity-100">
+                            <div
+                              className="whitespace-nowrap rounded-lg px-3 py-2 text-xs"
+                              style={{
+                                backgroundColor: "var(--bsky-bg-primary)",
+                                color: "var(--bsky-text-primary)",
+                                boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                                border: "1px solid var(--bsky-border-primary)",
+                              }}
+                            >
+                              <div className="mb-1 font-bold">
+                                {bucket.total} total
+                              </div>
+                              {bucket.likes > 0 && (
+                                <div style={{ color: "#ef4444" }}>
+                                  {bucket.likes} likes
+                                </div>
+                              )}
+                              {bucket.reposts > 0 && (
+                                <div style={{ color: "#60a5fa" }}>
+                                  {bucket.reposts} reposts
+                                </div>
+                              )}
+                              {bucket.follows > 0 && (
+                                <div style={{ color: "#a78bfa" }}>
+                                  {bucket.follows} follows
+                                </div>
+                              )}
+                              {bucket.replies > 0 && (
+                                <div style={{ color: "#4ade80" }}>
+                                  {bucket.replies} replies
+                                </div>
+                              )}
+                              {bucket.mentions > 0 && (
+                                <div style={{ color: "#fb7185" }}>
+                                  {bucket.mentions} mentions
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* X-axis label */}
+                          {(timeRange !== "4w" ||
+                            index % 4 === 0 ||
+                            index === analytics.buckets.length - 1) && (
+                            <div className="absolute left-0 right-0 top-full mt-1 text-center">
+                              <span
+                                className="text-xs"
+                                style={{
+                                  color: "var(--bsky-text-secondary)",
+                                  fontSize: timeRange === "4w" ? "9px" : "10px",
+                                }}
+                              >
+                                {bucket.label}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  : sentActivity
+                    ? // Sent view - show user's posts, replies, reposts
+                      sentActivity.buckets.map((bucket, index) => {
+                        const barWidth =
+                          timeRange === "4w"
+                            ? `${100 / sentActivity.buckets.length}%`
+                            : `${100 / sentActivity.buckets.length - 1}%`;
+                        const total =
+                          bucket.posts +
+                          bucket.replies +
+                          bucket.reposts +
+                          bucket.quotes;
+
+                        return (
+                          <div
+                            key={`${bucket.label}-${index}`}
+                            className="group relative"
+                            style={{
+                              width: barWidth,
+                              minWidth: timeRange === "4w" ? "8px" : "20px",
+                              maxWidth: timeRange === "4w" ? "30px" : "60px",
+                            }}
+                          >
+                            {/* Stacked bar */}
+                            <div className="absolute bottom-0 left-0 right-0 flex flex-col-reverse overflow-hidden rounded-t-lg transition-all duration-300 hover:opacity-90">
+                              {/* Posts - bottom of stack */}
+                              {bucket.posts > 0 && (
+                                <div
+                                  className="w-full transition-all duration-500"
+                                  style={{
+                                    height: `${(bucket.posts / maxSentValue) * 270}px`,
+                                    background:
+                                      "linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%)",
+                                  }}
+                                  title={`${bucket.posts} posts`}
+                                />
+                              )}
+                              {/* Replies */}
+                              {bucket.replies > 0 && (
+                                <div
+                                  className="w-full transition-all duration-500"
+                                  style={{
+                                    height: `${(bucket.replies / maxSentValue) * 270}px`,
+                                    background:
+                                      "linear-gradient(180deg, #86efac 0%, #4ade80 100%)",
+                                  }}
+                                  title={`${bucket.replies} replies`}
+                                />
+                              )}
+                              {/* Reposts */}
+                              {bucket.reposts > 0 && (
+                                <div
+                                  className="w-full transition-all duration-500"
+                                  style={{
+                                    height: `${(bucket.reposts / maxSentValue) * 270}px`,
+                                    background:
+                                      "linear-gradient(180deg, #c4b5fd 0%, #a78bfa 100%)",
+                                  }}
+                                  title={`${bucket.reposts} reposts`}
+                                />
+                              )}
+                              {/* Quotes */}
+                              {bucket.quotes > 0 && (
+                                <div
+                                  className="w-full transition-all duration-500"
+                                  style={{
+                                    height: `${(bucket.quotes / maxSentValue) * 270}px`,
+                                    background:
+                                      "linear-gradient(180deg, #fda4af 0%, #fb7185 100%)",
+                                  }}
+                                  title={`${bucket.quotes} quotes`}
+                                />
+                              )}
+                            </div>
+
+                            {/* Hover tooltip */}
+                            <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 transform opacity-0 transition-opacity group-hover:opacity-100">
+                              <div
+                                className="whitespace-nowrap rounded-lg px-3 py-2 text-xs"
+                                style={{
+                                  backgroundColor: "var(--bsky-bg-primary)",
+                                  color: "var(--bsky-text-primary)",
+                                  boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                                  border:
+                                    "1px solid var(--bsky-border-primary)",
+                                }}
+                              >
+                                <div className="mb-1 font-bold">
+                                  {total} total
+                                </div>
+                                {bucket.posts > 0 && (
+                                  <div style={{ color: "#3b82f6" }}>
+                                    {bucket.posts} posts
+                                  </div>
+                                )}
+                                {bucket.replies > 0 && (
+                                  <div style={{ color: "#4ade80" }}>
+                                    {bucket.replies} replies
+                                  </div>
+                                )}
+                                {bucket.reposts > 0 && (
+                                  <div style={{ color: "#a78bfa" }}>
+                                    {bucket.reposts} reposts
+                                  </div>
+                                )}
+                                {bucket.quotes > 0 && (
+                                  <div style={{ color: "#fb7185" }}>
+                                    {bucket.quotes} quotes
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* X-axis label */}
+                            {(timeRange !== "4w" ||
+                              index % 4 === 0 ||
+                              index === sentActivity.buckets.length - 1) && (
+                              <div className="absolute left-0 right-0 top-full mt-1 text-center">
+                                <span
+                                  className="text-xs"
+                                  style={{
+                                    color: "var(--bsky-text-tertiary)",
+                                    fontSize:
+                                      timeRange === "4w" ? "10px" : "12px",
+                                  }}
+                                >
+                                  {bucket.label}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    : null}
               </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#a78bfa' }}></div>
-                <span style={{ color: 'var(--bsky-text-secondary)' }}>Follows</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#4ade80' }}></div>
-                <span style={{ color: 'var(--bsky-text-secondary)' }}>Replies</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#fb7185' }}></div>
-                <span style={{ color: 'var(--bsky-text-secondary)' }}>Mentions</span>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#3b82f6' }}></div>
-                <span style={{ color: 'var(--bsky-text-secondary)' }}>Posts</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#4ade80' }}></div>
-                <span style={{ color: 'var(--bsky-text-secondary)' }}>Replies</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#a78bfa' }}></div>
-                <span style={{ color: 'var(--bsky-text-secondary)' }}>Reposts</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded" style={{ backgroundColor: '#fb7185' }}></div>
-                <span style={{ color: 'var(--bsky-text-secondary)' }}>Quotes</span>
-              </div>
-            </>
-          )}
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-3 text-xs">
+              {activityView === "received" ? (
+                <>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#ef4444" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Likes
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#60a5fa" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Reposts
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#a78bfa" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Follows
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#4ade80" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Replies
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#fb7185" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Mentions
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#3b82f6" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Posts
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#4ade80" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Replies
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#a78bfa" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Reposts
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#fb7185" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Quotes
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
       </TrackedChart>
 
       {/* Top Users */}
       <div className="bsky-card p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Heart style={{ color: 'var(--bsky-like)' }} size={20} />
-            {topUsersView === 'received' ? 'Top Users Engaging With You' : 'Users You Engage With Most'}
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <Heart style={{ color: "var(--bsky-like)" }} size={20} />
+            {topUsersView === "received"
+              ? "Top Users Engaging With You"
+              : "Users You Engage With Most"}
           </h2>
           <div className="flex items-center gap-2 text-sm">
             <button
-              onClick={() => setTopUsersView('received')}
-              className={`px-3 py-1 rounded-lg transition-all ${
-                topUsersView === 'received' ? 'font-semibold' : ''
+              onClick={() => setTopUsersView("received")}
+              className={`rounded-lg px-3 py-1 transition-all ${
+                topUsersView === "received" ? "font-semibold" : ""
               }`}
               style={{
-                backgroundColor: topUsersView === 'received' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
-                color: topUsersView === 'received' ? 'white' : 'var(--bsky-text-secondary)'
+                backgroundColor:
+                  topUsersView === "received"
+                    ? "var(--bsky-primary)"
+                    : "var(--bsky-bg-tertiary)",
+                color:
+                  topUsersView === "received"
+                    ? "white"
+                    : "var(--bsky-text-secondary)",
               }}
             >
               Received
             </button>
             <button
-              onClick={() => setTopUsersView('sent')}
-              className={`px-3 py-1 rounded-lg transition-all ${
-                topUsersView === 'sent' ? 'font-semibold' : ''
+              onClick={() => setTopUsersView("sent")}
+              className={`rounded-lg px-3 py-1 transition-all ${
+                topUsersView === "sent" ? "font-semibold" : ""
               }`}
               style={{
-                backgroundColor: topUsersView === 'sent' ? 'var(--bsky-primary)' : 'var(--bsky-bg-tertiary)',
-                color: topUsersView === 'sent' ? 'white' : 'var(--bsky-text-secondary)'
+                backgroundColor:
+                  topUsersView === "sent"
+                    ? "var(--bsky-primary)"
+                    : "var(--bsky-bg-tertiary)",
+                color:
+                  topUsersView === "sent"
+                    ? "white"
+                    : "var(--bsky-text-secondary)",
               }}
             >
               Sent
@@ -1103,81 +1406,126 @@ export const NotificationsAnalytics: React.FC = () => {
           </div>
         </div>
         <div className="space-y-3">
-          {topUsersView === 'received' ? (
+          {topUsersView === "received" ? (
             analytics.topUsers.map(({ handle, count, user }) => (
               <div key={handle} className="flex items-center gap-3">
                 {user?.avatar ? (
-                  <img 
-                    src={proxifyBskyImage(user.avatar)} 
+                  <img
+                    src={proxifyBskyImage(user.avatar)}
                     alt={handle}
-                    className="w-10 h-10 rounded-full border-2"
-                    style={{ borderColor: 'var(--bsky-border-primary)' }}
+                    className="h-10 w-10 rounded-full border-2"
+                    style={{ borderColor: "var(--bsky-border-primary)" }}
                   />
                 ) : (
-                  <div 
-                    className="w-10 h-10 rounded-full flex items-center justify-center"
-                    style={{ 
-                      backgroundColor: 'var(--bsky-bg-tertiary)',
-                      color: 'var(--bsky-text-secondary)'
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-full"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-tertiary)",
+                      color: "var(--bsky-text-secondary)",
                     }}
                   >
                     {handle.charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div className="flex-1">
-                  <p className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>{user?.displayName || handle}</p>
-                  <p className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>@{handle}</p>
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                  >
+                    {user?.displayName || handle}
+                  </p>
+                  <p
+                    className="text-xs"
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  >
+                    @{handle}
+                  </p>
                 </div>
-                <span className="text-sm" style={{ color: 'var(--bsky-text-primary)' }}>{count} interactions</span>
+                <span
+                  className="text-sm"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  {count} interactions
+                </span>
               </div>
             ))
           ) : topUsersSent ? (
             topUsersSent.map((user) => (
               <div key={user.handle} className="flex items-center gap-3">
                 {user.avatar ? (
-                  <img 
-                    src={proxifyBskyImage(user.avatar)} 
+                  <img
+                    src={proxifyBskyImage(user.avatar)}
                     alt={user.handle}
-                    className="w-10 h-10 rounded-full border-2"
-                    style={{ borderColor: 'var(--bsky-border-primary)' }}
+                    className="h-10 w-10 rounded-full border-2"
+                    style={{ borderColor: "var(--bsky-border-primary)" }}
                   />
                 ) : (
-                  <div 
-                    className="w-10 h-10 rounded-full flex items-center justify-center"
-                    style={{ 
-                      backgroundColor: 'var(--bsky-bg-tertiary)',
-                      color: 'var(--bsky-text-secondary)'
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-full"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-tertiary)",
+                      color: "var(--bsky-text-secondary)",
                     }}
                   >
-                    {user.handle?.charAt(0).toUpperCase() || 'U'}
+                    {user.handle?.charAt(0).toUpperCase() || "U"}
                   </div>
                 )}
                 <div className="flex-1">
-                  <p className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>{user.displayName || user.handle}</p>
-                  <p className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>@{user.handle}</p>
-                  <div className="flex items-center gap-3 mt-1">
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                  >
+                    {user.displayName || user.handle}
+                  </p>
+                  <p
+                    className="text-xs"
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  >
+                    @{user.handle}
+                  </p>
+                  <div className="mt-1 flex items-center gap-3">
                     {user.likes > 0 && (
-                      <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
-                        <span style={{ color: '#ef4444' }}>♥</span> {user.likes}
+                      <span
+                        className="text-xs"
+                        style={{ color: "var(--bsky-text-secondary)" }}
+                      >
+                        <span style={{ color: "#ef4444" }}>♥</span>{" "}
+                        {user.likes}
                       </span>
                     )}
                     {user.replies > 0 && (
-                      <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
-                        <span style={{ color: '#4ade80' }}>↩</span> {user.replies}
+                      <span
+                        className="text-xs"
+                        style={{ color: "var(--bsky-text-secondary)" }}
+                      >
+                        <span style={{ color: "#4ade80" }}>↩</span>{" "}
+                        {user.replies}
                       </span>
                     )}
                     {user.reposts > 0 && (
-                      <span className="text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
-                        <span style={{ color: '#60a5fa' }}>⟲</span> {user.reposts}
+                      <span
+                        className="text-xs"
+                        style={{ color: "var(--bsky-text-secondary)" }}
+                      >
+                        <span style={{ color: "#60a5fa" }}>⟲</span>{" "}
+                        {user.reposts}
                       </span>
                     )}
                   </div>
                 </div>
-                <span className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>{user.total}</span>
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  {user.total}
+                </span>
               </div>
             ))
           ) : (
-            <div className="text-center py-8" style={{ color: 'var(--bsky-text-secondary)' }}>
+            <div
+              className="py-8 text-center"
+              style={{ color: "var(--bsky-text-secondary)" }}
+            >
               <p className="text-sm">Loading...</p>
             </div>
           )}
@@ -1188,76 +1536,133 @@ export const NotificationsAnalytics: React.FC = () => {
       {userActivity && (
         <TrackedChart chartName="your_activity">
           <div className="bsky-card p-4">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--bsky-text-primary)' }}>
+            <h2
+              className="mb-4 flex items-center gap-2 text-lg font-semibold"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
               <Send size={20} className="text-blue-500" />
               Your Activity
             </h2>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
-                <div className="text-2xl font-bold" style={{ color: 'var(--bsky-primary)' }}>
+
+            <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div
+                className="rounded-lg p-3 text-center"
+                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              >
+                <div
+                  className="text-2xl font-bold"
+                  style={{ color: "var(--bsky-primary)" }}
+                >
                   {userActivity.postsCount}
                 </div>
-                <div className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                <div
+                  className="text-sm"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
                   Posts
                 </div>
               </div>
-              
-              <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
+
+              <div
+                className="rounded-lg p-3 text-center"
+                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              >
                 <div className="text-2xl font-bold text-red-500">
                   {userActivity.likesReceived}
                 </div>
-                <div className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                <div
+                  className="text-sm"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
                   Likes Received
                 </div>
               </div>
-              
-              <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
+
+              <div
+                className="rounded-lg p-3 text-center"
+                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              >
                 <div className="text-2xl font-bold text-blue-500">
                   {userActivity.repostsReceived}
                 </div>
-                <div className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                <div
+                  className="text-sm"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
                   Reposts
                 </div>
               </div>
-              
-              <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'var(--bsky-bg-tertiary)' }}>
+
+              <div
+                className="rounded-lg p-3 text-center"
+                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              >
                 <div className="text-2xl font-bold text-green-500">
                   {userActivity.repliesReceived}
                 </div>
-                <div className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+                <div
+                  className="text-sm"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
                   Replies
                 </div>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div className="text-center">
-                <div className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+                <div
+                  className="font-semibold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
                   {userActivity.followersCount}
                 </div>
-                <div style={{ color: 'var(--bsky-text-secondary)' }}>Followers</div>
+                <div style={{ color: "var(--bsky-text-secondary)" }}>
+                  Followers
+                </div>
               </div>
               <div className="text-center">
-                <div className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+                <div
+                  className="font-semibold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
                   {userActivity.followingCount}
                 </div>
-                <div style={{ color: 'var(--bsky-text-secondary)' }}>Following</div>
+                <div style={{ color: "var(--bsky-text-secondary)" }}>
+                  Following
+                </div>
               </div>
               <div className="text-center">
-                <div className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
+                <div
+                  className="font-semibold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
                   {userActivity.postsTotal}
                 </div>
-                <div style={{ color: 'var(--bsky-text-secondary)' }}>Total Posts</div>
+                <div style={{ color: "var(--bsky-text-secondary)" }}>
+                  Total Posts
+                </div>
               </div>
             </div>
-            
+
             {userActivity.postsCount > 0 && (
-              <div className="mt-4 text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
+              <div
+                className="mt-4 text-sm"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
                 <div className="flex items-center justify-between">
                   <span>Engagement Rate</span>
-                  <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-                    {((userActivity.likesReceived + userActivity.repostsReceived + userActivity.repliesReceived) / userActivity.postsCount).toFixed(1)} per post
+                  <span
+                    className="font-semibold"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                  >
+                    {(
+                      (userActivity.likesReceived +
+                        userActivity.repostsReceived +
+                        userActivity.repliesReceived) /
+                      userActivity.postsCount
+                    ).toFixed(1)}{" "}
+                    per post
                   </span>
                 </div>
               </div>
@@ -1268,39 +1673,69 @@ export const NotificationsAnalytics: React.FC = () => {
 
       {/* Engagement Summary */}
       <div className="bsky-card p-4">
-        <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Calendar size={20} className="text-blue-500" />
-            <span className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>
-              {timeRange === '1d' ? 'Last 24 hours' : timeRange === '3d' ? 'Last 3 days' : timeRange === '7d' ? 'Last 7 days' : 'Last 4 weeks'}
+            <span
+              className="text-sm font-medium"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              {timeRange === "1d"
+                ? "Last 24 hours"
+                : timeRange === "3d"
+                  ? "Last 3 days"
+                  : timeRange === "7d"
+                    ? "Last 7 days"
+                    : "Last 4 weeks"}
             </span>
           </div>
           <div className="flex items-center gap-6 text-sm">
             <div>
-              <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>{analytics.totalEngagement}</span>
-              <span style={{ color: 'var(--bsky-text-secondary)' }}> total interactions</span>
+              <span
+                className="font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                {analytics.totalEngagement}
+              </span>
+              <span style={{ color: "var(--bsky-text-secondary)" }}>
+                {" "}
+                total interactions
+              </span>
             </div>
             <div>
-              <span className="font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-                {timeRange === '1d' ? analytics.averagePerHour.toFixed(1) : Math.round(analytics.averagePerDay)}
+              <span
+                className="font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                {timeRange === "1d"
+                  ? analytics.averagePerHour.toFixed(1)
+                  : Math.round(analytics.averagePerDay)}
               </span>
-              <span style={{ color: 'var(--bsky-text-secondary)' }}> {timeRange === '1d' ? 'per hour' : 'per day'}</span>
+              <span style={{ color: "var(--bsky-text-secondary)" }}>
+                {" "}
+                {timeRange === "1d" ? "per hour" : "per day"}
+              </span>
             </div>
           </div>
         </div>
-        <div className="mt-2 text-xs" style={{ color: 'var(--bsky-text-secondary)' }}>
+        <div
+          className="mt-2 text-xs"
+          style={{ color: "var(--bsky-text-secondary)" }}
+        >
           {(() => {
-            const now = new Date()
-            const startDate = timeRange === '1d' ? subHours(now, 24) :
-                             timeRange === '3d' ? subDays(now, 3) :
-                             timeRange === '7d' ? subDays(now, 7) :
-                             subDays(now, 28)
-            return `${format(startDate, 'MMM d, h:mm a')} - ${format(now, 'MMM d, h:mm a')} (${Intl.DateTimeFormat().resolvedOptions().timeZone})`
+            const now = new Date();
+            const startDate =
+              timeRange === "1d"
+                ? subHours(now, 24)
+                : timeRange === "3d"
+                  ? subDays(now, 3)
+                  : timeRange === "7d"
+                    ? subDays(now, 7)
+                    : subDays(now, 28);
+            return `${format(startDate, "MMM d, h:mm a")} - ${format(now, "MMM d, h:mm a")} (${Intl.DateTimeFormat().resolvedOptions().timeZone})`;
           })()}
         </div>
       </div>
-
     </div>
-  )
-}
-
+  );
+};

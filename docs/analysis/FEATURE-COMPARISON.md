@@ -1,6 +1,7 @@
 # Bluesky Client Feature Comparison
 
 ## Overview
+
 This document compares our custom Bluesky client with the official Bluesky web client, identifying missing features and opportunities for enhancement.
 
 Last Updated: 2025-01-06
@@ -8,6 +9,7 @@ Last Updated: 2025-01-06
 ## ✅ Features We Have Implemented
 
 ### Core Functionality
+
 - [x] **Authentication** - Login/logout with session persistence
 - [x] **Timeline Feed** - View home timeline with infinite scroll
 - [x] **Post Display** - Text, images, links, quotes, thread context
@@ -18,6 +20,7 @@ Last Updated: 2025-01-06
 - [x] **Thread Reader Mode** - Distraction-free reading
 
 ### UI/UX
+
 - [x] **Dark Theme** - Modern dark interface
 - [x] **Responsive Design** - Basic responsive layout
 - [x] **Loading States** - Skeleton loaders
@@ -25,6 +28,7 @@ Last Updated: 2025-01-06
 - [x] **Animations** - Smooth transitions and micro-interactions
 
 ### Technical
+
 - [x] **Type Safety** - Full TypeScript implementation
 - [x] **Optimistic Updates** - Instant UI feedback
 - [x] **State Management** - React Query for server state
@@ -33,35 +37,33 @@ Last Updated: 2025-01-06
 ## ❌ Features We're Missing (vs Official Client)
 
 ### Core Social Features
+
 - [ ] **User Profiles**
   - View user profiles
   - See follower/following counts
   - View user's posts
   - Edit own profile (bio, avatar, banner)
-  
 - [ ] **Follow System**
   - Follow/unfollow users
   - View followers/following lists
   - Follow suggestions
-  
 - [ ] **Notifications**
   - Notification feed
   - Like/repost/follow notifications
   - Reply/mention notifications
   - Mark as read
-  
 - [ ] **Search**
   - Search users
   - Search posts
   - Hashtag search
   - Search suggestions
-  
 - [ ] **Direct Messages**
   - Send/receive DMs
   - Conversation list
   - Read receipts
 
 ### Content Management
+
 - [ ] **Delete Posts** - Remove own posts
 - [ ] **Media Upload** - Attach images to posts
 - [ ] **Alt Text** - Accessibility for images
@@ -70,32 +72,32 @@ Last Updated: 2025-01-06
 - [ ] **Drafts** - Save unfinished posts
 
 ### Feed Features
+
 - [ ] **Multiple Feeds**
   - Following feed
   - Discover/For You feed
   - Custom feeds
   - Feed switching
-  
 - [ ] **Lists**
   - Create user lists
   - View list feeds
   - Manage list members
 
 ### Moderation & Safety
+
 - [ ] **Mute/Block**
   - Mute users
   - Block users
   - Mute words/threads
-  
 - [ ] **Content Warnings**
   - Add content warnings
   - Hide sensitive content
-  
 - [ ] **Reporting**
   - Report posts
   - Report users
 
 ### Settings & Preferences
+
 - [ ] **Theme Toggle** - Light/dark mode switch
 - [ ] **Language** - Interface language selection
 - [ ] **Accessibility** - Font size, high contrast
@@ -103,6 +105,7 @@ Last Updated: 2025-01-06
 - [ ] **Account Settings** - Email, password, 2FA
 
 ### Advanced Features
+
 - [ ] **Who Liked/Reposted** - View engagement lists
 - [ ] **Bookmarks** - Save posts for later
 - [ ] **Embed Posts** - Generate embed codes
@@ -111,6 +114,7 @@ Last Updated: 2025-01-06
 ## 🚀 Opportunities for Custom Features ("Bells & Whistles")
 
 ### Productivity Features
+
 1. **Advanced Scheduling**
    - Schedule posts with visual calendar
    - Recurring posts
@@ -130,6 +134,7 @@ Last Updated: 2025-01-06
    - Auto-threading long posts
 
 ### Power User Features
+
 1. **Keyboard Navigation**
    - Vim-style shortcuts
    - Command palette (Cmd+K)
@@ -149,6 +154,7 @@ Last Updated: 2025-01-06
    - Batch operations
 
 ### Content Enhancement
+
 1. **AI Integration**
    - Writing suggestions
    - Auto-generated alt text
@@ -168,6 +174,7 @@ Last Updated: 2025-01-06
    - Collection sharing
 
 ### Data & Integration
+
 1. **Cross-Platform Posting**
    - Post to Twitter/Mastodon
    - Import from other platforms
@@ -187,6 +194,7 @@ Last Updated: 2025-01-06
    - API playground
 
 ### Unique UX Features
+
 1. **Focus Modes**
    - Reading mode (no distractions)
    - Writing mode (compose-focused)
@@ -208,6 +216,7 @@ Last Updated: 2025-01-06
 ## 📋 Implementation Priority
 
 ### Phase 1: Essential Social Features (High Priority)
+
 1. User profiles & follow system
 2. Basic search functionality
 3. Delete posts capability
@@ -215,6 +224,7 @@ Last Updated: 2025-01-06
 5. Notifications feed
 
 ### Phase 2: Enhanced Experience (Medium Priority)
+
 1. Multiple feeds (Following, Discover)
 2. Theme switching
 3. Mobile optimizations
@@ -222,12 +232,14 @@ Last Updated: 2025-01-06
 5. Bookmarks
 
 ### Phase 3: Safety & Moderation (Medium Priority)
+
 1. Mute/block functionality
 2. Content warnings
 3. Report system
 4. Privacy controls
 
 ### Phase 4: Power Features (Lower Priority)
+
 1. Analytics dashboard
 2. Post scheduling
 3. Keyboard shortcuts
@@ -235,6 +247,7 @@ Last Updated: 2025-01-06
 5. Thread composer
 
 ### Phase 5: Innovation (Future)
+
 1. AI-powered features
 2. Custom feed algorithms
 3. Cross-platform integration
@@ -254,6 +267,7 @@ Last Updated: 2025-01-06
 ## 📊 Technical Improvements Needed
 
 ### Performance
+
 - [ ] Virtual scrolling for large feeds
 - [ ] Image lazy loading and optimization
 - [ ] Service worker for offline support
@@ -261,6 +275,7 @@ Last Updated: 2025-01-06
 - [ ] Better caching strategies
 
 ### Architecture
+
 - [ ] Route-based code splitting
 - [ ] Proper error boundaries
 - [ ] State persistence
@@ -268,6 +283,7 @@ Last Updated: 2025-01-06
 - [ ] PWA manifest
 
 ### Developer Experience
+
 - [ ] Comprehensive test suite
 - [ ] Storybook for components
 - [ ] API mocking for development
@@ -277,6 +293,7 @@ Last Updated: 2025-01-06
 ## 🎨 Design System Improvements
 
 ### Components Needed
+
 - [ ] Navigation tabs/sidebar
 - [ ] User avatar with presence
 - [ ] Dropdown menus
@@ -287,6 +304,7 @@ Last Updated: 2025-01-06
 - [ ] Charts/graphs
 
 ### Accessibility
+
 - [ ] ARIA labels
 - [ ] Keyboard navigation
 - [ ] Screen reader announcements

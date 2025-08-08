@@ -21,11 +21,13 @@ BSKY/
 ## 🏃 Get Started in 2 Minutes
 
 1. **Setup** (first time only):
+
    ```bash
    ./setup-local-mac.sh
    ```
 
 2. **Install & Run**:
+
    ```bash
    npm install
    npm run dev
@@ -44,6 +46,7 @@ BSKY/
 ## 🔐 Test Credentials
 
 Create `.env.local`:
+
 ```
 VITE_TEST_IDENTIFIER=your-test-account@email.com
 VITE_TEST_PASSWORD=your-test-password

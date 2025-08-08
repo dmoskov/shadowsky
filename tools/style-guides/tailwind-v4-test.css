@@ -3,6 +3,5 @@
 
 /* Test if we can use utilities */
 .test {
-  @apply p-4 bg-blue-500 text-white;
+  @apply bg-blue-500 p-4 text-white;
 }
-EOF < /dev/null

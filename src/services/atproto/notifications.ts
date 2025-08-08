@@ -1,7 +1,7 @@
-import { AtpAgent } from '@atproto/api'
-import type { Notification } from '@atproto/api/dist/client/types/app/bsky/notification/listNotifications'
-import { mapATProtoError } from '@bsky/shared'
-import { rateLimitedNotificationFetch } from '../rate-limiter'
+import { AtpAgent } from "@atproto/api";
+import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import { mapATProtoError } from "@bsky/shared";
+import { rateLimitedNotificationFetch } from "../rate-limiter";
 
 export class NotificationService {
   constructor(private agent: AtpAgent) {}
@@ -12,26 +12,31 @@ export class NotificationService {
    * @param priority - If true, only show notifications from followed accounts
    * @param limit - Number of notifications to fetch (max 100)
    */
-  async listNotifications(cursor?: string, priority?: boolean, limit: number = 50): Promise<{
-    notifications: Notification[]
-    cursor?: string
+  async listNotifications(
+    cursor?: string,
+    priority?: boolean,
+    limit: number = 50,
+  ): Promise<{
+    notifications: Notification[];
+    cursor?: string;
   }> {
     return rateLimitedNotificationFetch(async () => {
       try {
-        const response = await this.agent.app.bsky.notification.listNotifications({
-          limit: Math.min(limit, 100), // API max is 100
-          cursor,
-          priority
-        })
-        
+        const response =
+          await this.agent.app.bsky.notification.listNotifications({
+            limit: Math.min(limit, 100), // API max is 100
+            cursor,
+            priority,
+          });
+
         return {
           notifications: response.data.notifications,
-          cursor: response.data.cursor
-        }
+          cursor: response.data.cursor,
+        };
       } catch (error) {
-        throw mapATProtoError(error)
+        throw mapATProtoError(error);
       }
-    })
+    });
   }
 
   /**
@@ -40,12 +45,13 @@ export class NotificationService {
   async getUnreadCount(): Promise<number> {
     return rateLimitedNotificationFetch(async () => {
       try {
-        const response = await this.agent.app.bsky.notification.getUnreadCount()
-        return response.data.count
+        const response =
+          await this.agent.app.bsky.notification.getUnreadCount();
+        return response.data.count;
       } catch (error) {
-        throw mapATProtoError(error)
+        throw mapATProtoError(error);
       }
-    })
+    });
   }
 
   /**
@@ -54,15 +60,15 @@ export class NotificationService {
   async updateSeen(seenAt: string): Promise<void> {
     return rateLimitedNotificationFetch(async () => {
       try {
-        await this.agent.app.bsky.notification.updateSeen({ seenAt })
+        await this.agent.app.bsky.notification.updateSeen({ seenAt });
       } catch (error) {
-        throw mapATProtoError(error)
+        throw mapATProtoError(error);
       }
-    })
+    });
   }
 }
 
 // Factory function - create new instance per agent
 export function getNotificationService(agent: AtpAgent): NotificationService {
-  return new NotificationService(agent)
+  return new NotificationService(agent);
 }

@@ -4,13 +4,13 @@
  */
 export function proxifyBskyImage(url: string | undefined): string | undefined {
   if (!url) return url;
-  
+
   // Only use proxy in development mode
-  if (import.meta.env.DEV && url.startsWith('https://cdn.bsky.app/')) {
+  if (import.meta.env.DEV && url.startsWith("https://cdn.bsky.app/")) {
     // Replace with our proxy URL
-    return url.replace('https://cdn.bsky.app/', '/bsky-cdn/');
+    return url.replace("https://cdn.bsky.app/", "/bsky-cdn/");
   }
-  
+
   // In production, return the URL as-is
   return url;
 }
@@ -26,18 +26,18 @@ export const isProxyAvailable = import.meta.env.DEV;
  */
 export function proxifyBskyVideo(url: string | undefined): string | undefined {
   if (!url) return url;
-  
+
   // Only use proxy in development mode
   if (import.meta.env.DEV) {
-    if (url.startsWith('https://video.bsky.app/')) {
+    if (url.startsWith("https://video.bsky.app/")) {
       // Replace with our proxy URL
-      return url.replace('https://video.bsky.app/', '/bsky-video/');
-    } else if (url.startsWith('https://video.cdn.bsky.app/')) {
+      return url.replace("https://video.bsky.app/", "/bsky-video/");
+    } else if (url.startsWith("https://video.cdn.bsky.app/")) {
       // Replace with our proxy URL for CDN
-      return url.replace('https://video.cdn.bsky.app/', '/bsky-video-cdn/');
+      return url.replace("https://video.cdn.bsky.app/", "/bsky-video-cdn/");
     }
   }
-  
+
   // In production, return the URL as-is
   return url;
 }

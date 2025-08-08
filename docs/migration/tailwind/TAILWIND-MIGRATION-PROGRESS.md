@@ -1,6 +1,7 @@
 # Tailwind CSS Migration Progress
 
 ## Overview
+
 This document tracks the progress of migrating the Bluesky client from CSS/inline styles to Tailwind CSS v4.
 
 ## Migration Status
@@ -23,6 +24,7 @@ This document tracks the progress of migrating the Bluesky client from CSS/inlin
 ### 🚧 Pending Components
 
 #### Thread Components
+
 - ThreadView
 - ThreadBranchDiagram
 - ThreadNavigation
@@ -31,6 +33,7 @@ This document tracks the progress of migrating the Bluesky client from CSS/inlin
 - ParentPost
 
 #### UI Components
+
 - Toast
 - Tooltip
 - EmptyStates
@@ -39,20 +42,24 @@ This document tracks the progress of migrating the Bluesky client from CSS/inlin
 - ScrollProgress
 
 #### Mobile Components
+
 - MobileNav
 - MobileMenu
 - MobileTabBar
 
 #### Analytics Components
+
 - Analytics dashboard
 - Various chart components
 
 #### Other Components
+
 - Settings
 - FollowersModal
 - KeyboardShortcutsModal
 
 ### 📁 CSS Files to Remove (After Full Migration)
+
 - `/src/styles/post-card.css`
 - `/src/styles/feed.css`
 - `/src/styles/header.css`
@@ -65,12 +72,14 @@ This document tracks the progress of migrating the Bluesky client from CSS/inlin
 ## Technical Details
 
 ### Tailwind v4 Integration
+
 - Using stable v4.1.8 (not alpha)
 - Separate import file to avoid conflicts
 - PostCSS configuration working correctly
 - Prettier plugin for class sorting
 
 ### Development Tools
+
 - **VS Code IntelliSense**: Configured for conflicting class detection
 - **Prettier**: Automatic class sorting with tailwind plugin
 - **ESLint**: Waiting for v4 compatible plugin

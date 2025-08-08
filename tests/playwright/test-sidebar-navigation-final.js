@@ -1,111 +1,115 @@
-import { chromium } from 'playwright';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs";
+import path from "path";
+import { chromium } from "playwright";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Read test credentials
-const credentialsPath = path.join(__dirname, '.test-credentials');
-const credentials = fs.readFileSync(credentialsPath, 'utf8');
+const credentialsPath = path.join(__dirname, ".test-credentials");
+const credentials = fs.readFileSync(credentialsPath, "utf8");
 const [, username] = credentials.match(/TEST_USER=(.+)/) || [];
 const [, password] = credentials.match(/TEST_PASS=(.+)/) || [];
 
 async function testSidebarNavigation() {
-  const screenshotDir = path.join(__dirname, 'test-screenshots', 'sidebar-final');
-  
+  const screenshotDir = path.join(
+    __dirname,
+    "test-screenshots",
+    "sidebar-final",
+  );
+
   // Ensure directory exists
   if (!fs.existsSync(screenshotDir)) {
     fs.mkdirSync(screenshotDir, { recursive: true });
   }
 
-  const browser = await chromium.launch({ 
-    headless: false
+  const browser = await chromium.launch({
+    headless: false,
   });
 
   try {
-    console.log('🧪 Bluesky Sidebar Navigation Test - Final\n');
+    console.log("🧪 Bluesky Sidebar Navigation Test - Final\n");
 
     // 1. Login
-    console.log('1️⃣  Setting up and logging in...');
+    console.log("1️⃣  Setting up and logging in...");
     const context = await browser.newContext({
-      viewport: { width: 1280, height: 800 }
+      viewport: { width: 1280, height: 800 },
     });
     const page = await context.newPage();
-    
-    await page.goto('http://127.0.0.1:5173/');
+
+    await page.goto("http://127.0.0.1:5173/");
     await page.waitForSelector('input[type="text"]', { timeout: 5000 });
     await page.fill('input[type="text"]', username);
     await page.fill('input[type="password"]', password);
     await page.click('button[type="submit"]');
-    
+
     // Wait for feed to load
-    await page.waitForSelector('.feed-container', { timeout: 10000 });
+    await page.waitForSelector(".feed-container", { timeout: 10000 });
     await page.waitForTimeout(2000);
 
     // 2. Desktop view showing sidebar
-    console.log('\n2️⃣  Testing desktop view with sidebar...');
-    await page.screenshot({ 
-      path: path.join(screenshotDir, '01-desktop-sidebar-home.png'),
-      fullPage: false 
+    console.log("\n2️⃣  Testing desktop view with sidebar...");
+    await page.screenshot({
+      path: path.join(screenshotDir, "01-desktop-sidebar-home.png"),
+      fullPage: false,
     });
-    console.log('   ✅ Desktop view captured');
+    console.log("   ✅ Desktop view captured");
 
     // 3. Test compose button
-    console.log('\n3️⃣  Testing compose functionality...');
-    const composeBtn = await page.$('.sidebar .compose-btn');
+    console.log("\n3️⃣  Testing compose functionality...");
+    const composeBtn = await page.$(".sidebar .compose-btn");
     if (composeBtn) {
       await composeBtn.click();
-      await page.waitForSelector('.compose-modal', { timeout: 5000 });
+      await page.waitForSelector(".compose-modal", { timeout: 5000 });
       await page.waitForTimeout(1000);
-      await page.screenshot({ 
-        path: path.join(screenshotDir, '02-compose-modal-open.png'),
-        fullPage: false 
+      await page.screenshot({
+        path: path.join(screenshotDir, "02-compose-modal-open.png"),
+        fullPage: false,
       });
-      console.log('   ✅ Compose modal captured');
-      
+      console.log("   ✅ Compose modal captured");
+
       // Close modal properly
-      await page.keyboard.press('Escape');
+      await page.keyboard.press("Escape");
       await page.waitForTimeout(1000);
-      
+
       // Verify modal is closed
-      const modalClosed = await page.$('.compose-modal') === null;
+      const modalClosed = (await page.$(".compose-modal")) === null;
       if (!modalClosed) {
         // Try clicking the close button
         const closeBtn = await page.$('[aria-label="Close"]');
         if (closeBtn) await closeBtn.click();
         await page.waitForTimeout(1000);
       }
-      console.log('   ✅ Modal closed');
+      console.log("   ✅ Modal closed");
     }
 
     // 4. Test navigation items
-    console.log('\n4️⃣  Testing navigation items...');
-    
+    console.log("\n4️⃣  Testing navigation items...");
+
     // Search
     const searchLink = await page.$('.nav-item[href="/search"]');
     if (searchLink) {
       await searchLink.click();
       await page.waitForTimeout(1500);
-      await page.screenshot({ 
-        path: path.join(screenshotDir, '03-sidebar-search-page.png'),
-        fullPage: false 
+      await page.screenshot({
+        path: path.join(screenshotDir, "03-sidebar-search-page.png"),
+        fullPage: false,
       });
-      console.log('   ✅ Search navigation working');
+      console.log("   ✅ Search navigation working");
     }
-    
+
     // Notifications
     const notificationsLink = await page.$('.nav-item[href="/notifications"]');
     if (notificationsLink) {
       await notificationsLink.click();
       await page.waitForTimeout(1500);
-      await page.screenshot({ 
-        path: path.join(screenshotDir, '04-sidebar-notifications-page.png'),
-        fullPage: false 
+      await page.screenshot({
+        path: path.join(screenshotDir, "04-sidebar-notifications-page.png"),
+        fullPage: false,
       });
-      console.log('   ✅ Notifications navigation working');
-      
+      console.log("   ✅ Notifications navigation working");
+
       // Check badge
       const badge = await page.$('.nav-item[href="/notifications"] .nav-badge');
       if (badge) {
@@ -115,68 +119,68 @@ async function testSidebarNavigation() {
     }
 
     // 5. Test responsive behavior
-    console.log('\n5️⃣  Testing responsive design...');
-    
+    console.log("\n5️⃣  Testing responsive design...");
+
     // Go back to home for consistent testing
-    await page.goto('http://127.0.0.1:5173/');
-    await page.waitForSelector('.feed-container', { timeout: 5000 });
+    await page.goto("http://127.0.0.1:5173/");
+    await page.waitForSelector(".feed-container", { timeout: 5000 });
     await page.waitForTimeout(1000);
-    
+
     // Desktop XL (1920x1080)
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.waitForTimeout(1000);
-    await page.screenshot({ 
-      path: path.join(screenshotDir, '05-desktop-xl-1920.png'),
-      fullPage: false 
+    await page.screenshot({
+      path: path.join(screenshotDir, "05-desktop-xl-1920.png"),
+      fullPage: false,
     });
-    console.log('   ✅ Desktop XL (1920x1080)');
-    
+    console.log("   ✅ Desktop XL (1920x1080)");
+
     // Desktop (1280x800)
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.waitForTimeout(1000);
-    await page.screenshot({ 
-      path: path.join(screenshotDir, '06-desktop-1280.png'),
-      fullPage: false 
+    await page.screenshot({
+      path: path.join(screenshotDir, "06-desktop-1280.png"),
+      fullPage: false,
     });
-    console.log('   ✅ Desktop (1280x800)');
-    
+    console.log("   ✅ Desktop (1280x800)");
+
     // Tablet (768x1024)
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.waitForTimeout(1000);
-    await page.screenshot({ 
-      path: path.join(screenshotDir, '07-tablet-768.png'),
-      fullPage: false 
+    await page.screenshot({
+      path: path.join(screenshotDir, "07-tablet-768.png"),
+      fullPage: false,
     });
-    console.log('   ✅ Tablet (768x1024)');
-    
+    console.log("   ✅ Tablet (768x1024)");
+
     // Mobile (375x812)
     await page.setViewportSize({ width: 375, height: 812 });
     await page.waitForTimeout(1000);
-    await page.screenshot({ 
-      path: path.join(screenshotDir, '08-mobile-375.png'),
-      fullPage: false 
+    await page.screenshot({
+      path: path.join(screenshotDir, "08-mobile-375.png"),
+      fullPage: false,
     });
-    console.log('   ✅ Mobile (375x812)');
-    
+    console.log("   ✅ Mobile (375x812)");
+
     // Check mobile menu
     const mobileMenuBtn = await page.$('[aria-label="Menu"]');
     if (mobileMenuBtn) {
       await mobileMenuBtn.click();
       await page.waitForTimeout(1000);
-      await page.screenshot({ 
-        path: path.join(screenshotDir, '09-mobile-menu-open.png'),
-        fullPage: false 
+      await page.screenshot({
+        path: path.join(screenshotDir, "09-mobile-menu-open.png"),
+        fullPage: false,
       });
-      console.log('   ✅ Mobile menu captured');
+      console.log("   ✅ Mobile menu captured");
     }
 
     // 6. Final summary
-    console.log('\n✅ All tests completed successfully!');
-    
+    console.log("\n✅ All tests completed successfully!");
+
     const screenshots = fs.readdirSync(screenshotDir).sort();
-    console.log('\n📁 Screenshots saved to:', screenshotDir);
-    console.log('📸 Captured files:');
-    screenshots.forEach(file => {
+    console.log("\n📁 Screenshots saved to:", screenshotDir);
+    console.log("📸 Captured files:");
+    screenshots.forEach((file) => {
       console.log(`   - ${file}`);
     });
 
@@ -249,30 +253,34 @@ async function testSidebarNavigation() {
 </body>
 </html>
     `;
-    
-    fs.writeFileSync(path.join(screenshotDir, 'results.html'), htmlContent.trim());
-    console.log('\n📄 HTML report generated: results.html');
-    console.log('   Open in browser: file://' + path.join(screenshotDir, 'results.html'));
 
+    fs.writeFileSync(
+      path.join(screenshotDir, "results.html"),
+      htmlContent.trim(),
+    );
+    console.log("\n📄 HTML report generated: results.html");
+    console.log(
+      "   Open in browser: file://" + path.join(screenshotDir, "results.html"),
+    );
   } catch (error) {
-    console.error('\n❌ Test failed:', error.message);
-    
+    console.error("\n❌ Test failed:", error.message);
+
     // Try to capture error state
     try {
       const context = browser.contexts()[0];
       if (context) {
         const page = context.pages()[0];
         if (page) {
-          await page.screenshot({ 
-            path: path.join(screenshotDir, 'error-state.png'),
-            fullPage: false 
+          await page.screenshot({
+            path: path.join(screenshotDir, "error-state.png"),
+            fullPage: false,
           });
         }
       }
     } catch (e) {
       // Ignore screenshot errors
     }
-    
+
     throw error;
   } finally {
     await browser.close();
@@ -280,7 +288,7 @@ async function testSidebarNavigation() {
 }
 
 // Run the test
-testSidebarNavigation().catch(error => {
-  console.error('Fatal error:', error);
+testSidebarNavigation().catch((error) => {
+  console.error("Fatal error:", error);
   process.exit(1);
 });

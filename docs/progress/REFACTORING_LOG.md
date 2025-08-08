@@ -1,6 +1,7 @@
 # Refactoring Log - Bluesky Client Project
 
 ## Date: June 7, 2025
+
 ## Purpose: Safe reorganization of project structure
 
 This log tracks every change made during refactoring. If something breaks, use this to trace back.
@@ -8,6 +9,7 @@ This log tracks every change made during refactoring. If something breaks, use t
 ---
 
 ## Pre-Refactoring State
+
 - Commit hash before starting: 852829cac1efa45443993c5a5d452cf526bffd26
 - All features working: Login, Feed, Sidebar, Thread View, Compose
 - Dev server running on port 5173
@@ -15,18 +17,22 @@ This log tracks every change made during refactoring. If something breaks, use t
 ## Changes Made
 
 ### Step 1: Create Refactoring Branch
+
 ```bash
 git checkout -b refactor/organize-project-structure
 ```
+
 - Time: 10:10 AM
 - Status: ✓
 - Tests: N/A
 
 ### Step 2: Initial Commit
+
 ```bash
 git add -A
 git commit -m "Checkpoint: Before refactoring - all features working"
 ```
+
 - Commit hash: 852829cac1efa45443993c5a5d452cf526bffd26
 - Time: 10:10 AM
 - Status: ✓
@@ -36,23 +42,29 @@ git commit -m "Checkpoint: Before refactoring - all features working"
 ## Phase 1: Quick Wins (Zero Risk)
 
 ### Step 3: Create Test Directories
+
 ```bash
 mkdir -p tests/playwright
 mkdir -p tests/screenshots/archive
 ```
+
 - Time: 10:12 AM
 - Status: ✓
 
 ### Step 4: Move Test Files
+
 Files moved:
-- [✓] test-*.js → tests/playwright/ (20 files)
-- [✓] *.mjs → tests/playwright/ (3 files)
+
+- [✓] test-\*.js → tests/playwright/ (20 files)
+- [✓] \*.mjs → tests/playwright/ (3 files)
 - [✓] automated-screenshots.sh → tests/playwright/
 
 ### Step 5: Archive Screenshots
-- [✓] test-screenshots/* → tests/screenshots/archive/ (59 files)
+
+- [✓] test-screenshots/\* → tests/screenshots/archive/ (59 files)
 
 ### Step 6: Test After Cleanup
+
 - [✓] npm run dev still works (server on port 5173)
 - [✓] Application loads correctly
 - [✓] Basic smoke test created
@@ -62,26 +74,31 @@ Files moved:
 ## Phase 2: Component Organization
 
 ### Step 7: Create Component Subdirectories
+
 ```bash
 mkdir -p src/components/{core,feed,thread,modals,profile,ui}
 ```
+
 - Time: 10:14 AM
 - Status: ✓
 
 ### Step 8: Move Components to Subdirectories
 
 **Core components moved:**
+
 - ErrorBoundary.tsx → core/
 - Header.tsx → core/
 - Login.tsx → core/
 - Sidebar.tsx → core/
 
 **Feed components moved:**
+
 - Feed.tsx → feed/
 - PostCard.tsx → feed/
 - CompactPostCard.tsx → feed/
 
 **Thread components moved:**
+
 - ThreadView.tsx → thread/
 - ThreadBranchDiagram.tsx → thread/
 - ThreadBranchDiagramCompact.tsx → thread/
@@ -93,31 +110,39 @@ mkdir -p src/components/{core,feed,thread,modals,profile,ui}
 - ParentPost.tsx → thread/
 
 **Modal components moved:**
+
 - ComposeModal.tsx → modals/
 - FollowersModal.tsx → modals/
 - KeyboardShortcutsModal.tsx → modals/
 
 **Profile components moved:**
+
 - Profile.tsx → profile/
 - Notifications.tsx → profile/
 - Search.tsx → profile/
 
 **UI components moved:**
+
 - EmptyStates.tsx → ui/
 - SkeletonLoaders.tsx → ui/
 - ReplyContext.tsx → ui/
 
 Total: 25 components reorganized
+
 - Time: 10:20 AM
 - Status: ✓
 
 ### Step 9: Create Index File for Backward Compatibility
+
 Created src/components/index.ts with all exports
+
 - Time: 10:25 AM
 - Status: ✓
 
 ### Step 10: Fix Import Paths
+
 Created and ran fix-imports.cjs script:
+
 - Fixed 17 components with updated import paths
 - Changed imports from `../` to `../../` for contexts, hooks, services, lib, types, utils
 - Fixed component-to-component imports based on new locations
@@ -125,7 +150,9 @@ Created and ran fix-imports.cjs script:
 - Status: ✓
 
 ### Step 11: Fix Dynamic Imports
+
 Found and fixed 2 dynamic imports:
+
 - src/components/modals/ComposeModal.tsx line 51
 - src/components/thread/ThreadView.tsx line 45
 - Changed from `await import('../services/atproto')` to `await import('../../services/atproto')`
@@ -133,6 +160,7 @@ Found and fixed 2 dynamic imports:
 - Status: ✓
 
 ### Step 12: Verify and Restart Dev Server
+
 - Killed all Vite processes
 - Restarted dev server fresh
 - Result: Dev server running healthy with no import errors
@@ -142,6 +170,7 @@ Found and fixed 2 dynamic imports:
 ---
 
 ## Rollback Commands
+
 If anything breaks, use these commands:
 
 ```bash
@@ -164,11 +193,13 @@ git checkout main
 ## Testing Checklist After Each Phase
 
 ### After Phase 1 (Test/Screenshot Cleanup):
+
 - [✓] Dev server starts without errors
 - [✓] Login page loads
 - [✓] Basic functionality preserved
 
 ### After Phase 2 (Component Organization):
+
 - [✓] Dev server starts without errors (verified at 10:31 AM)
 - [✓] All imports resolved correctly
 - [✓] Components load from new locations via index.ts
@@ -186,22 +217,27 @@ git checkout main
 ## Notes
 
 ### Phase 1 Complete ✅
+
 Successfully reorganized component structure:
+
 - All 25 components moved to appropriate subdirectories
 - All imports fixed and working
 - Dev server running healthy
 - No functionality changes, only improved organization
 
 ### Benefits Achieved
+
 1. **Better code organization** - Components grouped by feature/purpose
 2. **Easier navigation** - Clear subdirectory structure
 3. **Improved scalability** - Easy to add new components in right place
 4. **Backward compatibility** - index.ts ensures no breaking changes
 
 ### Commit Hash
+
 - Refactoring complete: 480c426
 
 ## Next Phases (TODO)
+
 - Phase 2: Consolidate duplicate functionality
-- Phase 3: Split large components  
+- Phase 3: Split large components
 - Phase 4: Clean up styles
