@@ -68,9 +68,6 @@
       "files": [
         "src/**/*.{ts,tsx}",
         "tsconfig.json"
-      ],
-      "output": [
-        "tsconfig.tsbuildinfo"
       ]
     }
   }
