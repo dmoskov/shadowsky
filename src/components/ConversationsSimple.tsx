@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { MessageCircle, Search, Loader2, X } from 'lucide-react'
+import { Search, Loader2, MessageCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -223,7 +223,7 @@ interface ConversationsSimpleProps {
   onClose?: () => void;
 }
 
-export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocused = true, onClose }) => {
+export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocused = true }) => {
   debug.log('[ConversationsSimple] Component rendering', {
     timestamp: new Date().toISOString(),
     isFocused
@@ -866,28 +866,6 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
       }}>
         {/* Conversations List - Full width */}
         <div className="flex flex-col w-full">
-        {/* Header */}
-        <div className="sticky top-0 z-20 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-          <div className="px-4 py-3 flex items-center justify-between group">
-            <div className="flex items-center gap-2">
-              <MessageCircle size={20} style={{ color: 'var(--bsky-primary)' }} />
-              <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-                Conversations
-              </h2>
-            </div>
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100"
-                style={{ color: 'var(--bsky-text-secondary)' }}
-                aria-label="Close column"
-              >
-                <X size={18} />
-              </button>
-            )}
-          </div>
-        </div>
-        
         {/* Search Header */}
         <div className="py-4 px-4 sm:px-6" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
           <div className="relative">

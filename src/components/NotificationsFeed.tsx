@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, Image, Loader, ChevronUp, Crown, Users, MoreVertical, Bell } from 'lucide-react'
+import { Heart, Repeat2, UserPlus, MessageCircle, AtSign, Quote, Filter, Image, Loader, ChevronUp, Crown, Users, MoreVertical } from 'lucide-react'
 import { useNotifications, useUnreadCount } from '../hooks/useNotifications'
 import { useNotificationPosts, postHasImages } from '../hooks/useNotificationPosts'
 import { useFollowing } from '../hooks/useFollowing'
@@ -9,7 +9,6 @@ import { aggregateNotifications, AggregatedNotificationItem } from './Notificati
 import { TopAccountsView } from './TopAccountsView'
 import { getNotificationUrl } from '../utils/url-helpers'
 import { useLocation } from 'react-router-dom'
-import { NotificationCache } from '../utils/notificationCache'
 import { debug } from '@bsky/shared'
 import { useNotificationTracking, useFeatureTracking } from '../hooks/useAnalytics'
 import { proxifyBskyImage } from '../utils/image-proxy'
@@ -28,7 +27,7 @@ export const NotificationsFeed: React.FC = () => {
   const [minFollowerCount, setMinFollowerCount] = useState(10000)
   const [showConfigModal, setShowConfigModal] = useState(false)
   const [showMoreFilters, setShowMoreFilters] = useState(false)
-  const [isFromCache, setIsFromCache] = useState(false)
+  // Removed isFromCache state - no longer needed without header
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const moreFiltersRef = useRef<HTMLDivElement>(null)
   
@@ -90,32 +89,7 @@ export const NotificationsFeed: React.FC = () => {
     }
   }, [isLoading, data, notifications.length, error, filter, trackNotificationView])
 
-  // Check if data is from cache
-  useEffect(() => {
-    const timestamp = new Date().toLocaleTimeString()
-    const cacheInfo = NotificationCache.getCacheInfo()
-    
-    debug.log(`🎯 [${timestamp}] Cache indicator check:`, {
-      hasAllCache: cacheInfo.hasAllCache,
-      isLoading,
-      notificationsCount: notifications.length,
-      priority: false // This component always uses priority=false
-    })
-    
-    if (cacheInfo.hasAllCache && !isLoading && notifications.length > 0) {
-      debug.log(`✨ [${timestamp}] Showing cache indicator for ${notifications.length} notifications`)
-      setIsFromCache(true)
-      // Hide the indicator after 5 seconds (increased from 3)
-      const timer = setTimeout(() => {
-        debug.log(`🫥 [${timestamp}] Hiding cache indicator`)
-        setIsFromCache(false)
-      }, 5000)
-      return () => clearTimeout(timer)
-    } else {
-      debug.log(`❌ [${timestamp}] Not showing cache indicator - conditions not met`)
-      setIsFromCache(false)
-    }
-  }, [isLoading, notifications.length])
+  // Cache indicator removed - no longer needed without header
 
   // Update page title with unread count
   useEffect(() => {
@@ -324,31 +298,8 @@ export const NotificationsFeed: React.FC = () => {
 
   return (
     <div className="bsky-font">
-      {/* Header */}
-      <div className="sticky top-0 z-20 bsky-glass border-b" style={{ 
-        borderColor: 'var(--bsky-border-primary)',
-        paddingTop: 'env(safe-area-inset-top, 0px)'
-      }}>
-        <div className="px-4 py-3 pr-12 flex items-center gap-2">
-          <Bell size={20} style={{ color: 'var(--bsky-primary)' }} />
-          <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-            Notifications
-          </h2>
-          {isFromCache && (
-            <span className="text-xs px-2 py-1 rounded" style={{ 
-              backgroundColor: 'var(--bsky-bg-secondary)', 
-              color: 'var(--bsky-text-secondary)',
-              border: '1px solid var(--bsky-border-primary)'
-            }}>
-              From cache
-            </span>
-          )}
-        </div>
-      </div>
-      
       {/* Filter tabs */}
-      <div className="sticky bsky-glass z-10" style={{ 
-        top: 'calc(53px + env(safe-area-inset-top, 0px))',
+      <div className="sticky top-0 bsky-glass z-10" style={{ 
         borderBottom: '1px solid var(--bsky-border-primary)' 
       }}>
         <div className="px-3 sm:px-6 py-2">
