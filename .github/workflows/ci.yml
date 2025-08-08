@@ -1,4 +1,4 @@
-name: Test
+name: CI
 on:
   push:
     branches:
@@ -7,7 +7,7 @@ on:
     branches:
       - main
 jobs:
-  ci:
+  CI:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
