@@ -219,7 +219,7 @@ export class StorageManager {
           keysToRemove.push(key);
           removedSize += this.getByteSize(key) + this.getByteSize(value);
         }
-      } catch (e) {
+      } catch {
         // If we can't parse it, consider removing old-looking keys
         if (key.includes("_old") || key.includes("_temp")) {
           keysToRemove.push(key);

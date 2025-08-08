@@ -81,9 +81,7 @@ export default function SkyDeck() {
   const [columns, setColumns] = useState<Column[]>([]);
   const [isDragging, setIsDragging] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
-  const [_draggedElement, setDraggedElement] = useState<HTMLElement | null>(
-    null,
-  );
+  const [_, setDraggedElement] = useState<HTMLElement | null>(null);
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [isNarrowView, setIsNarrowView] = useState(false);
   const [focusedColumnIndex, setFocusedColumnIndex] = useState(0);
@@ -578,6 +576,7 @@ export default function SkyDeck() {
                                 if (uri.includes("bsky.app/starter-pack/")) {
                                   // Extract the handle and rkey from starter pack URL
                                   const match = uri.match(
+                                    // eslint-disable-next-line no-useless-escape
                                     /starter-pack\/([^\/]+)\/([^\/\?]+)/,
                                   );
                                   if (match) {

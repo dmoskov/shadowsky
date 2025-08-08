@@ -1241,6 +1241,7 @@ export function Composer() {
           }
         }
 
+        // eslint-disable-next-line prefer-const
         result = await agent.post(postData);
         lastPost = {
           uri: result.uri,

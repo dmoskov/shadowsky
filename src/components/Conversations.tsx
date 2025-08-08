@@ -139,7 +139,7 @@ interface ThreadNode {
 }
 
 export const Conversations: React.FC = () => {
-  const {} = useAuth();
+  useAuth();
   const [selectedConvo, setSelectedConvo] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const threadContainerRef = useRef<HTMLDivElement>(null);
