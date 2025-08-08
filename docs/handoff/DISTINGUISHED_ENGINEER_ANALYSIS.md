@@ -184,6 +184,7 @@ This analysis evaluates the Bluesky client project from a distinguished engineer
    ```
 
 4. **Secure Session Storage**
+
    ```typescript
    // Use encrypted storage with httpOnly cookies
    class SecureSessionManager {
@@ -349,6 +350,7 @@ This analysis evaluates the Bluesky client project from a distinguished engineer
    ```
 
 4. **E2E Test Strategy**
+
    ```typescript
    // thread-interaction.e2e.ts
    test("user can navigate and interact with threads", async ({ page }) => {
@@ -402,6 +404,7 @@ This analysis evaluates the Bluesky client project from a distinguished engineer
    ```
 
 3. **Custom Metrics**
+
    ```typescript
    class MetricsCollector {
      trackAPICall(endpoint: string, duration: number, status: number) {
