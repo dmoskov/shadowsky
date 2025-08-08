@@ -35,10 +35,12 @@ export function ConversationModal({ rootUri, conversation, allPostsMap, onClose 
     }
     window.addEventListener('keydown', handleEsc)
     document.body.style.overflow = 'hidden'
+    document.body.classList.add('conversation-modal-open')
     
     return () => {
       window.removeEventListener('keydown', handleEsc)
       document.body.style.overflow = ''
+      document.body.classList.remove('conversation-modal-open')
     }
   }, [onClose])
 

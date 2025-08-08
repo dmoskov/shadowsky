@@ -219,6 +219,43 @@
   background: linear-gradient(to top, rgba(0, 0, 0, 0.3), transparent);
 }
 
+/* Fixed scroll shadow overlay */
+.scroll-shadow-overlay::before,
+.scroll-shadow-overlay::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 20px;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.scroll-shadow-overlay::before {
+  top: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), transparent);
+}
+
+.scroll-shadow-overlay::after {
+  bottom: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.1), transparent);
+}
+
+.scroll-shadow-overlay.has-scroll-top::before,
+.scroll-shadow-overlay.has-scroll-bottom::after {
+  opacity: 1;
+}
+
+.dark .scroll-shadow-overlay::before {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), transparent);
+}
+
+.dark .scroll-shadow-overlay::after {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.3), transparent);
+}
+
 /* Drag ripple effect */
 .drag-ripple {
   position: fixed;

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Loader, TrendingUp, Users, Clock, Hash, Star, Plus, ChevronDown, Reply, Heart, Repeat2, MessageCircle, RefreshCw, X } from 'lucide-react'
+import { Loader, TrendingUp, Users, Clock, Hash, Star, Reply, Heart, Repeat2, MessageCircle } from 'lucide-react'
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '../contexts/AuthContext'
@@ -74,9 +74,13 @@ interface HomeProps {
   isFocused?: boolean;
   columnId?: string;
   onClose?: () => void;
+  onFeedChange?: (feed: string, label: string, feedOptions: any[]) => void;
+  onRefreshRequest?: number;
+  showFeedDiscovery?: boolean;
+  onCloseFeedDiscovery?: () => void;
 }
 
-export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, columnId, onClose }) => {
+export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, columnId, onFeedChange, onRefreshRequest, showFeedDiscovery: externalShowFeedDiscovery, onCloseFeedDiscovery }) => {
   const { agent } = useAuth()
   const queryClient = useQueryClient()
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } = useOptimisticPosts()
@@ -97,20 +101,23 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
     const savedFeed = localStorage.getItem('selectedFeed')
     return (savedFeed as FeedType) || 'following'
   })
-  const [showFeedDiscovery, setShowFeedDiscovery] = useState(false)
+  const [internalShowFeedDiscovery, setInternalShowFeedDiscovery] = useState(false)
+  const showFeedDiscovery = externalShowFeedDiscovery !== undefined ? externalShowFeedDiscovery : internalShowFeedDiscovery
   const [galleryImages, setGalleryImages] = useState<Array<{ thumb: string; fullsize: string; alt?: string }> | null>(null)
   const [galleryIndex, setGalleryIndex] = useState(0)
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
   const [showThread, setShowThread] = useState(false)
+  const [openThreadToReply, setOpenThreadToReply] = useState(false)
   const [focusedPostIndex, setFocusedPostIndex] = useState<number>(-1)
   const postsContainerRef = useRef<HTMLDivElement>(null)
   const [feedOrder, setFeedOrder] = useState<string[]>([])
-  const [showFeedDropdown, setShowFeedDropdown] = useState(false)
+  // Removed showFeedDropdown - now handled by parent component
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const scrollPositionRef = useRef<{ [key: string]: number }>({})
   const containerRef = useRef<HTMLDivElement>(null)
   const postRefs = useRef<{ [key: string]: HTMLDivElement }>({})
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  // Removed dropdownRef - now handled by parent component
+  const isKeyboardNavigationRef = useRef(false)
   
   const { trackFeatureAction } = useFeatureTracking('home_feed')
   const { trackClick } = useInteractionTracking()
@@ -219,17 +226,21 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
   
   const currentFeedOption = feedOptions.find(opt => opt.type === selectedFeed)
   
-  // Close dropdown when clicking outside
+  // Notify parent of current feed on mount and feed change
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowFeedDropdown(false)
-      }
+    if (onFeedChange && currentFeedOption) {
+      onFeedChange(selectedFeed, currentFeedOption.label, feedOptions);
     }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [selectedFeed, currentFeedOption, feedOptions, onFeedChange]);
+  
+  // Handle refresh request from parent
+  useEffect(() => {
+    if (onRefreshRequest && onRefreshRequest > 0) {
+      queryClient.invalidateQueries({ queryKey: ['timeline', selectedFeed] });
+    }
+  }, [onRefreshRequest, queryClient, selectedFeed]);
+  
+  // Dropdown is now handled by the parent component
   
   const {
     data,
@@ -245,7 +256,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
       
       let response
       
-      switch (selectedFeed) {
+      try {
+        switch (selectedFeed) {
         case 'following':
         case 'recent':
           response = await agent.getTimeline({
@@ -257,15 +269,18 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         default:
           // Handle custom feed URIs
           if (selectedFeed.startsWith('at://')) {
-            try {
-              response = await agent.app.bsky.feed.getFeed({
-                feed: selectedFeed,
+            // Check if it's a list feed or a regular feed
+            if (selectedFeed.includes('/app.bsky.graph.list/')) {
+              // It's a list feed
+              response = await agent.app.bsky.feed.getListFeed({
+                list: selectedFeed,
                 cursor: pageParam,
                 limit: 30
               })
-            } catch (error) {
-              debug.error(`Failed to fetch feed ${selectedFeed}, falling back to timeline:`, error)
-              response = await agent.getTimeline({
+            } else {
+              // It's a regular feed
+              response = await agent.app.bsky.feed.getFeed({
+                feed: selectedFeed,
                 cursor: pageParam,
                 limit: 30
               })
@@ -274,44 +289,47 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
             // Handle known feed types
             switch (selectedFeed) {
               case 'whats-hot':
-                try {
-                  response = await agent.app.bsky.feed.getFeed({
-                    feed: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot',
-                    cursor: pageParam,
-                    limit: 30
-                  })
-                } catch (error) {
-                  debug.error('Failed to fetch whats-hot feed, falling back to timeline:', error)
-                  response = await agent.getTimeline({
-                    cursor: pageParam,
-                    limit: 30
-                  })
-                }
-                break
-              
-              case 'popular-with-friends':
-                try {
-                  response = await agent.app.bsky.feed.getFeed({
-                    feed: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/with-friends',
-                    cursor: pageParam,
-                    limit: 30
-                  })
-                } catch (error) {
-                  debug.error('Failed to fetch popular-with-friends feed, falling back to timeline:', error)
-                  response = await agent.getTimeline({
-                    cursor: pageParam,
-                    limit: 30
-                  })
-                }
-                break
-              
-              default:
-                response = await agent.getTimeline({
+                response = await agent.app.bsky.feed.getFeed({
+                  feed: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot',
                   cursor: pageParam,
                   limit: 30
                 })
+                break
+              
+              case 'popular-with-friends':
+                response = await agent.app.bsky.feed.getFeed({
+                  feed: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/with-friends',
+                  cursor: pageParam,
+                  limit: 30
+                })
+                break
+              
+              default:
+                throw new Error(`Unknown feed type: ${selectedFeed}`)
             }
           }
+        }
+      } catch (error: any) {
+        debug.error(`Failed to fetch feed ${selectedFeed}:`, error)
+        
+        // Provide more user-friendly error messages
+        if (error?.message?.includes('List not found')) {
+          throw new Error('This list could not be found. It may have been deleted or you may not have access to it.')
+        } else if (error?.message?.includes('Feed not found')) {
+          throw new Error('This feed could not be found. It may have been removed or you may not have access to it.')
+        } else if (error?.message?.includes('must be a valid at-uri')) {
+          throw new Error('Invalid feed URL. Please check the URL and try again.')
+        } else if (error?.status === 400) {
+          throw new Error('Invalid feed request. Please check the feed URL.')
+        } else if (error?.status === 403) {
+          throw new Error('You do not have permission to view this feed.')
+        } else if (error?.status === 404) {
+          throw new Error('Feed not found. It may have been deleted.')
+        } else if (error?.status >= 500) {
+          throw new Error('Server error. Please try again later.')
+        } else {
+          throw new Error(error?.message || 'Failed to load feed. Please try again.')
+        }
       }
       
       debug.log(`${selectedFeed} feed response:`, response)
@@ -355,7 +373,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         aria-selected={isFocused}
         role="article"
         onClick={() => {
-          // Update focused index on click
+          // Update focused index on click (not keyboard navigation)
+          isKeyboardNavigationRef.current = false
           setFocusedPostIndex(index)
         }}
         onKeyDown={(e) => {
@@ -483,8 +502,10 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
             <PostActionBar
               post={post}
               onReply={() => {
-                // Reply functionality
-                console.log('Reply to:', post.uri)
+                // Open thread modal with reply focus
+                setSelectedPost(post)
+                setOpenThreadToReply(true)
+                setShowThread(true)
               }}
               onRepost={() => handleRepost(post)}
               onLike={() => handleLike(post)}
@@ -535,6 +556,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
   const handlePostClick = (post: Post) => {
     trackClick('post', { postUri: post.uri })
     setSelectedPost(post)
+    setOpenThreadToReply(false)  // Reset when clicking on post normally
     setShowThread(true)
   }
   
@@ -593,8 +615,11 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
       // Only handle if this column is focused (for SkyDeck compatibility)
       if (!isFocused) return
       
-      // Don't handle shortcuts if user is typing in an input/textarea
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      // Don't handle shortcuts if user is typing in an input/textarea or modals are open
+      if (e.target instanceof HTMLInputElement || 
+          e.target instanceof HTMLTextAreaElement ||
+          document.body.classList.contains('thread-modal-open') ||
+          document.body.classList.contains('conversation-modal-open')) {
         return
       }
       
@@ -606,6 +631,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'j': // vim-style down
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           if (currentIndex < posts.length - 1) {
             setFocusedPostIndex(currentIndex + 1)
           } else if (currentIndex === -1 && posts.length > 0) {
@@ -618,6 +644,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'k': // vim-style up
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           if (currentIndex > 0) {
             setFocusedPostIndex(currentIndex - 1)
           } else if (currentIndex === -1 && posts.length > 0) {
@@ -641,6 +668,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'Home':
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           if (posts.length > 0) {
             setFocusedPostIndex(0)
           }
@@ -649,6 +677,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'End':
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           if (posts.length > 0) {
             setFocusedPostIndex(posts.length - 1)
           }
@@ -657,6 +686,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'PageUp':
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           // Jump up by 5 items
           setFocusedPostIndex(Math.max(0, currentIndex - 5))
           break
@@ -664,6 +694,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
         case 'PageDown':
           e.preventDefault()
           handled = true
+          isKeyboardNavigationRef.current = true
           // Jump down by 5 items
           setFocusedPostIndex(Math.min(posts.length - 1, currentIndex + 5))
           break
@@ -693,9 +724,9 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
     return () => window.removeEventListener('keydown', handleKeyPress)
   }, [posts, focusedPostIndex, isFocused, handlePostClick])
   
-  // Scroll focused post into view
+  // Scroll focused post into view only for keyboard navigation
   useEffect(() => {
-    if (focusedPostIndex >= 0 && focusedPostIndex < posts.length) {
+    if (focusedPostIndex >= 0 && focusedPostIndex < posts.length && isKeyboardNavigationRef.current) {
       const post = posts[focusedPostIndex]?.post
       if (post) {
         const postKey = `${post.uri}-${focusedPostIndex}`
@@ -708,6 +739,8 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
           postEl.focus()
         }
       }
+      // Reset the flag after scrolling
+      isKeyboardNavigationRef.current = false
     }
   }, [focusedPostIndex, posts])
   
@@ -794,7 +827,7 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
              style={{ borderColor: 'var(--bsky-border-primary)' }}
              onClick={(e) => {
                e.stopPropagation()
-               window.open(embed.external.uri, '_blank')
+               // Removed external link - only open links from ThreadViewer
              }}>
           {embed.external.thumb && (
             <img
@@ -953,141 +986,11 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
     )
   }
   
-  const handleFeedChange = (feed: FeedType) => {
-    debug.log('Feed change clicked:', feed)
-    
-    // Save current scroll position for the current feed
-    if (containerRef.current) {
-      scrollPositionRef.current[selectedFeed] = window.scrollY
-      debug.log(`Saved scroll position for ${selectedFeed}:`, window.scrollY)
-    }
-    
-    setSelectedFeed(feed)
-    // Save to cookies if we have a column ID
-    if (columnId) {
-      columnFeedPrefs.setFeedForColumn(columnId, feed)
-    } else if (!initialFeedUri) {
-      // Only save to localStorage if this is the main home column
-      localStorage.setItem('selectedFeed', feed)
-    }
-    trackFeatureAction('feed_changed', { feed })
-    
-    // Restore scroll position for the new feed after a short delay to allow content to render
-    setTimeout(() => {
-      const savedPosition = scrollPositionRef.current[feed]
-      if (savedPosition !== undefined) {
-        debug.log(`Restoring scroll position for ${feed}:`, savedPosition)
-        window.scrollTo(0, savedPosition)
-      } else {
-        // Scroll to top for new feeds
-        window.scrollTo(0, 0)
-      }
-    }, 100)
-  }
+  // Feed change is now handled by parent component
   
   
   return (
     <div className="w-full" ref={containerRef} tabIndex={-1} style={{ outline: 'none' }}>
-      <div className="sticky top-0 z-20 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-        <div className="px-4 py-3 flex items-center justify-between group">
-          <div className="flex items-center gap-2">
-            {currentFeedOption && <currentFeedOption.icon size={20} style={{ color: 'var(--bsky-primary)' }} />}
-            <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-              {currentFeedOption?.label || 'Feed'}
-            </h2>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => queryClient.invalidateQueries({ queryKey: ['timeline', selectedFeed] })}
-              className="p-2 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-all"
-              style={{ color: 'var(--bsky-text-secondary)' }}
-              aria-label="Refresh feed"
-            >
-              <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
-            </button>
-            
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setShowFeedDropdown(!showFeedDropdown)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-opacity-10 hover:bg-gray-500 transition-all"
-                style={{ color: 'var(--bsky-text-secondary)' }}
-              >
-                <span className="text-sm">Change</span>
-                <ChevronDown size={16} className={`transition-transform ${showFeedDropdown ? 'rotate-180' : ''}`} />
-              </button>
-            
-            {showFeedDropdown && (
-              <div className="absolute right-0 mt-2 w-64 rounded-lg shadow-lg overflow-hidden"
-                style={{ 
-                  backgroundColor: 'var(--bsky-bg-secondary)',
-                  border: '1px solid var(--bsky-border-primary)'
-                }}>
-                <div className="max-h-96 overflow-y-auto">
-                  {feedOptions.map((option) => (
-                    <button
-                      key={option.type}
-                      onClick={() => {
-                        handleFeedChange(option.type)
-                        setShowFeedDropdown(false)
-                      }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-opacity-5 hover:bg-blue-500 transition-colors text-left ${
-                        selectedFeed === option.type ? 'bg-opacity-10 bg-blue-500' : ''
-                      }`}
-                    >
-                      <option.icon size={18} style={{ 
-                        color: selectedFeed === option.type ? 'var(--bsky-primary)' : 'var(--bsky-text-secondary)' 
-                      }} />
-                      <div className="flex-1">
-                        <div className="font-medium text-sm" style={{ color: 'var(--bsky-text-primary)' }}>
-                          {option.label}
-                        </div>
-                        {option.generator?.description && (
-                          <div className="text-xs mt-0.5" style={{ color: 'var(--bsky-text-tertiary)' }}>
-                            {option.generator.description}
-                          </div>
-                        )}
-                      </div>
-                      {option.pinned && <Star size={14} className="text-yellow-500" />}
-                      {selectedFeed === option.type && (
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--bsky-primary)' }} />
-                      )}
-                    </button>
-                  ))}
-                </div>
-                
-                <div className="border-t" style={{ borderColor: 'var(--bsky-border-secondary)' }}>
-                  <button
-                    onClick={() => {
-                      setShowFeedDiscovery(true)
-                      setShowFeedDropdown(false)
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-opacity-5 hover:bg-blue-500 transition-colors"
-                  >
-                    <Plus size={18} style={{ color: 'var(--bsky-text-secondary)' }} />
-                    <span className="text-sm font-medium" style={{ color: 'var(--bsky-text-primary)' }}>
-                      Discover Feeds
-                    </span>
-                  </button>
-                </div>
-              </div>
-            )}
-            </div>
-            
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100"
-                style={{ color: 'var(--bsky-text-secondary)' }}
-                aria-label="Close column"
-              >
-                <X size={18} />
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-      
       <div className="max-w-2xl mx-auto px-3 sm:px-4" ref={postsContainerRef}>
         <div className="divide-y" style={{ borderColor: 'var(--bsky-border-primary)' }} role="feed" aria-label="Posts">
         {posts.map((item: any, index: number) => (
@@ -1106,7 +1009,13 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
       
       <FeedDiscovery 
         isOpen={showFeedDiscovery} 
-        onClose={() => setShowFeedDiscovery(false)} 
+        onClose={() => {
+          if (onCloseFeedDiscovery) {
+            onCloseFeedDiscovery();
+          } else {
+            setInternalShowFeedDiscovery(false);
+          }
+        }} 
       />
       
       {galleryImages && (
@@ -1123,9 +1032,11 @@ export const Home: React.FC<HomeProps> = ({ initialFeedUri, isFocused = true, co
       {showThread && selectedPost && (
         <ThreadModal
           postUri={selectedPost.uri}
+          openToReply={openThreadToReply}
           onClose={() => {
             setShowThread(false)
             setSelectedPost(null)
+            setOpenThreadToReply(false)
           }}
         />
       )}

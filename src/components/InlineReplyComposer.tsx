@@ -11,11 +11,15 @@ interface InlineReplyComposerProps {
       displayName?: string
     }
   }
+  root?: {
+    uri: string
+    cid: string
+  }
   onClose: () => void
   onSuccess?: () => void
 }
 
-export function InlineReplyComposer({ replyTo, onClose, onSuccess }: InlineReplyComposerProps) {
+export function InlineReplyComposer({ replyTo, root, onClose, onSuccess }: InlineReplyComposerProps) {
   const { agent } = useAuth()
   const [text, setText] = useState('')
   const [isPosting, setIsPosting] = useState(false)
@@ -33,19 +37,24 @@ export function InlineReplyComposer({ replyTo, onClose, onSuccess }: InlineReply
     setError(null)
 
     try {
-      await agent.post({
+      // Get the reply structure from the post being replied to
+      const replyRecord = {
         text: text.trim(),
         reply: {
-          root: {
+          // If a root is provided, use it. Otherwise, this post might be the root
+          root: root || {
             uri: replyTo.uri,
             cid: replyTo.cid
           },
+          // Always reply to the specific post clicked
           parent: {
             uri: replyTo.uri,
             cid: replyTo.cid
           }
         }
-      })
+      }
+      
+      await agent.post(replyRecord)
 
       setText('')
       onSuccess?.()
@@ -59,10 +68,17 @@ export function InlineReplyComposer({ replyTo, onClose, onSuccess }: InlineReply
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Always stop propagation to prevent parent handlers
+    e.stopPropagation()
+    
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault()
       handleSubmit()
+    } else if (e.key === 'Enter') {
+      // Prevent plain Enter from bubbling up and triggering navigation
+      e.preventDefault()
     }
+    
     if (e.key === 'Escape') {
       e.preventDefault()
       onClose()
@@ -70,10 +86,14 @@ export function InlineReplyComposer({ replyTo, onClose, onSuccess }: InlineReply
   }
 
   return (
-    <div className="border rounded-lg p-3 mt-2" style={{ 
-      backgroundColor: 'var(--bsky-bg-primary)',
-      borderColor: 'var(--bsky-border-primary)'
-    }}>
+    <div 
+      className="border rounded-lg p-3 mt-2" 
+      style={{ 
+        backgroundColor: 'var(--bsky-bg-primary)',
+        borderColor: 'var(--bsky-border-primary)'
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm" style={{ color: 'var(--bsky-text-secondary)' }}>
           Replying to @{replyTo.author.handle}

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { MessageCircle, Search, Loader2, X } from 'lucide-react'
+import { Search, Loader2, MessageCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -223,7 +223,7 @@ interface ConversationsSimpleProps {
   onClose?: () => void;
 }
 
-export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocused = true, onClose }) => {
+export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocused = true }) => {
   debug.log('[ConversationsSimple] Component rendering', {
     timestamp: new Date().toISOString(),
     isFocused
@@ -830,20 +830,20 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [filteredConversations, focusedIndex, handleSelectConversation, isFocused])
 
-  // Make container focusable for keyboard navigation
+  // Make container focusable for keyboard navigation and handle selection clearing
   React.useEffect(() => {
-    if (containerRef.current && isFocused) {
+    if (isFocused) {
       // Focus container when column becomes focused
       // This ensures keyboard events are captured
-      containerRef.current.focus()
-    }
-    // Clear selection when column loses focus or is not focused initially
-    if (!isFocused) {
-      if (selectedConvo) {
-        handleSelectConversation(null)
+      if (containerRef.current) {
+        containerRef.current.focus()
       }
+    } else {
+      // Clear selection when column loses focus
+      // Using setSelectedConvo directly to avoid circular dependency
+      setSelectedConvo(null)
     }
-  }, [isFocused, selectedConvo, handleSelectConversation])
+  }, [isFocused]) // Only depend on isFocused
 
   // Scroll focused item into view
   React.useEffect(() => {
@@ -866,28 +866,6 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
       }}>
         {/* Conversations List - Full width */}
         <div className="flex flex-col w-full">
-        {/* Header */}
-        <div className="sticky top-0 z-20 bsky-glass border-b" style={{ borderColor: 'var(--bsky-border-primary)' }}>
-          <div className="px-4 py-3 flex items-center justify-between group">
-            <div className="flex items-center gap-2">
-              <MessageCircle size={20} style={{ color: 'var(--bsky-primary)' }} />
-              <h2 className="text-lg font-semibold" style={{ color: 'var(--bsky-text-primary)' }}>
-                Conversations
-              </h2>
-            </div>
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-all opacity-0 group-hover:opacity-100"
-                style={{ color: 'var(--bsky-text-secondary)' }}
-                aria-label="Close column"
-              >
-                <X size={18} />
-              </button>
-            )}
-          </div>
-        </div>
-        
         {/* Search Header */}
         <div className="py-4 px-4 sm:px-6" style={{ borderBottom: '1px solid var(--bsky-border-primary)' }}>
           <div className="relative">
@@ -970,12 +948,14 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({ isFocu
               <ConversationItem
                 key={convo.rootUri}
                 convo={convo}
-                isSelected={selectedConvo === convo.rootUri}
+                isSelected={selectedConvo === convo.rootUri && selectedConvo !== null}
                 isFocused={focusedIndex === index}
                 onClick={() => {
-                  if (isFocused) {
-                    handleSelectConversation(convo.rootUri, convo.totalReplies)
-                  }
+                  // Always handle click, even if column is not focused
+                  // This will allow clicking in unfocused columns
+                  handleSelectConversation(convo.rootUri, convo.totalReplies)
+                  // Also update the focused index when clicking
+                  setFocusedIndex(index)
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && isFocused) {
