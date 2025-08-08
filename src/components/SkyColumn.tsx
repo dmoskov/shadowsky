@@ -71,7 +71,7 @@ export default function SkyColumn({ column, onClose, chromeless = false, isFocus
             initialFeedUri={column.data} 
             isFocused={isFocused} 
             columnId={column.id}
-            onFeedChange={(feed, label, options) => {
+            onFeedChange={(_, label, options) => {
               setCurrentFeedLabel(label);
               setFeedOptions(options);
             }}
@@ -100,7 +100,7 @@ export default function SkyColumn({ column, onClose, chromeless = false, isFocus
           column={column} 
           onRemove={() => onClose()}
           onRefresh={column.type === 'feed' ? () => setRefreshCounter(prev => prev + 1) : undefined}
-          onFeedChange={column.type === 'feed' ? (feed: string) => {
+          onFeedChange={column.type === 'feed' ? () => {
             // Feed change is handled by Home component internally
             // The feed parameter is not used but required by the interface
           } : undefined}

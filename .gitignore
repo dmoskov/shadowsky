@@ -53,3 +53,7 @@ test-screenshots/
 playwright-report/
 test-results/
 .test-credentials
+
+# Build artifacts
+.wireit/
+*.tsbuildinfo
