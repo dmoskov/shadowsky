@@ -29,6 +29,7 @@ A push script is available at `scripts/push.sh` that automatically runs pre-push
 ```
 
 The push script will:
+
 1. Check for uncommitted changes
 2. Run `npm run test:format` to check code formatting
 3. Run `npm run build` to ensure the project builds successfully
