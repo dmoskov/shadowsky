@@ -12,7 +12,7 @@
   }
 
   .bsky-button-secondary {
-    @apply bsky-button bg-bsky-bg-tertiary text-bsky-text-primary border border-bsky-border-primary hover:bg-opacity-80;
+    @apply bsky-button border border-bsky-border-primary bg-bsky-bg-tertiary text-bsky-text-primary hover:bg-opacity-80;
   }
 
   .bsky-button-ghost {
@@ -21,11 +21,11 @@
 
   /* Card styles */
   .bsky-card {
-    @apply bg-bsky-bg-secondary border border-bsky-border-primary rounded-lg shadow-sm;
+    @apply rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary shadow-sm;
   }
 
   .bsky-card-hover {
-    @apply bsky-card transition-all duration-200 hover:border-opacity-60 hover:shadow-md hover:bg-opacity-90;
+    @apply bsky-card transition-all duration-200 hover:border-opacity-60 hover:bg-opacity-90 hover:shadow-md;
   }
 
   /* Avatar styles */
@@ -39,7 +39,7 @@
 
   /* Badge styles */
   .bsky-badge {
-    @apply inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-bsky-bg-tertiary text-bsky-text-secondary border border-bsky-border-primary;
+    @apply inline-flex items-center rounded-md border border-bsky-border-primary bg-bsky-bg-tertiary px-2 py-0.5 text-xs font-medium text-bsky-text-secondary;
   }
 
   /* Notification styles */
@@ -48,21 +48,21 @@
   }
 
   .bsky-notification-unread {
-    @apply border-l-4 border-l-bsky-primary bg-gradient-to-r from-bsky-primary/[0.08] to-transparent;
+    @apply from-bsky-primary/[0.08] border-l-4 border-l-bsky-primary bg-gradient-to-r to-transparent;
   }
 
   /* Conversation unread style */
   .conversation-unread {
-    @apply border-l-4 border-l-bsky-primary bg-gradient-to-r from-bsky-primary/[0.08] to-transparent;
+    @apply from-bsky-primary/[0.08] border-l-4 border-l-bsky-primary bg-gradient-to-r to-transparent;
   }
 
   /* Tab styles */
   .bsky-tab {
-    @apply relative whitespace-nowrap px-3 py-2 text-sm font-medium transition-all duration-200 text-bsky-text-secondary hover:text-bsky-text-primary min-w-fit flex-shrink-0 rounded-md;
+    @apply relative min-w-fit flex-shrink-0 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-bsky-text-secondary transition-all duration-200 hover:text-bsky-text-primary;
   }
 
   .bsky-tab-active {
-    @apply text-bsky-text-primary bg-bsky-bg-secondary;
+    @apply bg-bsky-bg-secondary text-bsky-text-primary;
   }
 
   /* Compact mode for tabs */
@@ -88,7 +88,7 @@
       @apply ml-1 text-xs;
     }
   }
-  
+
   /* Icon-only mode for columns (always active) */
   .bsky-tabs-icon-only-column .bsky-tab-label {
     @apply hidden;
@@ -109,7 +109,7 @@
 
   /* Responsive tabs container */
   .bsky-tabs-container {
-    @apply scrollbar-hide max-w-full flex-shrink-0 relative;
+    @apply scrollbar-hide relative max-w-full flex-shrink-0;
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
@@ -118,7 +118,7 @@
   /* Fade indicators for scrollable tabs */
   .bsky-tabs-container::before,
   .bsky-tabs-container::after {
-    @apply content-[''] absolute top-0 bottom-0 w-5 pointer-events-none z-[1] opacity-0 transition-opacity duration-300;
+    @apply pointer-events-none absolute bottom-0 top-0 z-[1] w-5 opacity-0 transition-opacity duration-300 content-[''];
   }
 
   .bsky-tabs-container::before {
@@ -137,7 +137,7 @@
   /* Hide tab labels on small screens */
   @media (max-width: 768px) {
     .bsky-tab {
-      @apply px-3 py-2 flex-shrink-0;
+      @apply flex-shrink-0 px-3 py-2;
     }
 
     .bsky-tab-label {

@@ -15,27 +15,27 @@
   .bsky-container-padding {
     @apply px-3 py-2.5;
   }
-  
+
   /* Header/toolbar padding */
   .bsky-header-padding {
     @apply px-4 py-2.5;
   }
-  
+
   /* Feed item padding */
   .bsky-feed-item-padding {
     @apply px-3 py-2.5;
   }
-  
+
   /* Card content padding */
   .bsky-card-content {
     @apply p-3;
   }
-  
+
   /* Button sizing consistency */
   .bsky-button-icon {
     @apply p-2;
   }
-  
+
   /* Consistent hover states */
   .bsky-hover-bg {
     @apply hover:bg-bsky-bg-hover;

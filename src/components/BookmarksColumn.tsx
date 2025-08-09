@@ -2,7 +2,7 @@ import type { AppBskyFeedDefs } from "@atproto/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { Bookmark, Search, X } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { bookmarkService } from "../services/bookmark-service";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { ImageGallery } from "./ImageGallery";
@@ -39,7 +39,11 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
     bookmarkService.init();
   }, []);
 
-  const { data: bookmarks, isLoading, refetch } = useQuery({
+  const {
+    data: bookmarks,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["bookmarks", searchQuery],
     queryFn: async () => {
       if (searchQuery) {
@@ -63,11 +67,14 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
     staleTime: 30000,
   });
 
-  const handleUnbookmark = async (postUri: string) => {
-    await bookmarkService.removeBookmark(postUri);
-    queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
-    queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
-  };
+  const handleUnbookmark = useCallback(
+    async (postUri: string) => {
+      await bookmarkService.removeBookmark(postUri);
+      queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+      queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
+    },
+    [queryClient]
+  );
 
   const handlePostClick = (post: AppBskyFeedDefs.PostView) => {
     setSelectedPost(post);
@@ -119,7 +126,7 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isFocused, bookmarks, focusedIndex]);
+  }, [isFocused, bookmarks, focusedIndex, handleUnbookmark]);
 
   // Focus container when column is focused
   useEffect(() => {
@@ -161,11 +168,14 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
           className={`mt-2 grid gap-1 ${embed.images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
         >
           {embed.images.map((img: any, idx: number) => (
-            <div key={idx} className="relative overflow-hidden rounded-lg bg-bsky-bg-tertiary">
+            <div
+              key={idx}
+              className="relative overflow-hidden rounded-lg bg-bsky-bg-tertiary"
+            >
               <img
                 src={proxifyBskyImage(img.thumb)}
                 alt={img.alt || ""}
-                className="h-auto w-full max-h-80 object-contain cursor-pointer hover:opacity-95"
+                className="h-auto max-h-80 w-full cursor-pointer object-contain hover:opacity-95"
                 onClick={(e) => handleImageClick(e, idx)}
               />
             </div>

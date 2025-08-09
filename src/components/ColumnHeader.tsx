@@ -6,6 +6,7 @@ import {
   Settings,
   X,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import React from "react";
 import type { Column } from "./SkyDeck";
 
@@ -16,7 +17,7 @@ interface ColumnHeaderProps {
   onFeedChange?: (feed: string) => void;
   onDiscoverFeeds?: () => void;
   currentFeedLabel?: string;
-  feedOptions?: Array<{ type: string; label: string; icon: any }>;
+  feedOptions?: Array<{ type: string; label: string; icon: LucideIcon }>;
   children?: React.ReactNode;
 }
 

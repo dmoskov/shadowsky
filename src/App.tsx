@@ -31,13 +31,14 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 30 * 60 * 1000, // 30 minutes - increased to prevent frequent refetches
       gcTime: 2 * 60 * 60 * 1000, // 2 hours - keep data in cache much longer
-      retry: (failureCount, error: any) => {
-        if (error?.status === 429) return false; // Don't retry rate limits
-        if (error?.status === 401) return false; // Don't retry auth errors
+      retry: (failureCount, error: unknown) => {
+        const err = error as { status?: number };
+        if (err?.status === 429) return false; // Don't retry rate limits
+        if (err?.status === 401) return false; // Don't retry auth errors
         return failureCount < 3;
       },
       // Keep previous data while fetching new data
-      placeholderData: (previousData: any) => previousData,
+      placeholderData: <T,>(previousData: T) => previousData,
       // Don't refetch on window focus by default
       refetchOnWindowFocus: false,
       // Don't refetch on mount if data exists

@@ -105,12 +105,12 @@ export const DirectMessages: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full bg-bsky-bg-primary overflow-hidden">
+    <div className="flex h-full overflow-hidden bg-bsky-bg-primary">
       {/* Conversations list */}
       <div
-        className={`w-80 min-w-60 max-w-2/5 border-r border-bsky-border-primary flex flex-col h-full ${selectedConversation ? "hidden md:flex" : ""}`}
+        className={`max-w-2/5 flex h-full w-80 min-w-60 flex-col border-r border-bsky-border-primary ${selectedConversation ? "hidden md:flex" : ""}`}
       >
-        <div className="p-4 border-b border-bsky-border-primary">
+        <div className="border-b border-bsky-border-primary p-4">
           <h2
             className="text-xl font-semibold"
             style={{ color: "var(--bsky-text-primary)" }}
@@ -151,17 +151,17 @@ export const DirectMessages: React.FC = () => {
                 <div
                   key={conversation.id}
                   onClick={() => setSelectedConversation(conversation.id)}
-                  className={`p-4 border-b border-bsky-border-primary cursor-pointer transition-colors duration-200 hover:bg-bsky-bg-secondary ${selectedConversation === conversation.id ? "bg-bsky-bg-secondary" : ""}`}
+                  className={`cursor-pointer border-b border-bsky-border-primary p-4 transition-colors duration-200 hover:bg-bsky-bg-secondary ${selectedConversation === conversation.id ? "bg-bsky-bg-secondary" : ""}`}
                 >
                   <div className="flex items-center">
                     {otherMember.avatar ? (
                       <img
                         src={otherMember.avatar}
                         alt={otherMember.handle || otherMember.did}
-                        className="w-10 h-10 rounded-full object-cover"
+                        className="h-10 w-10 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-300">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300">
                         <span className="text-lg text-gray-600">
                           {(otherMember.displayName ||
                             otherMember.handle ||
@@ -169,25 +169,25 @@ export const DirectMessages: React.FC = () => {
                         </span>
                       </div>
                     )}
-                    <div className="flex-1 min-w-0 ml-3">
-                      <div className="font-semibold text-bsky-text-primary whitespace-nowrap overflow-hidden text-ellipsis">
+                    <div className="ml-3 min-w-0 flex-1">
+                      <div className="overflow-hidden text-ellipsis whitespace-nowrap font-semibold text-bsky-text-primary">
                         {otherMember.displayName ||
                           otherMember.handle ||
                           "Unknown User"}
                       </div>
                       {otherMember.handle && (
-                        <div className="text-sm text-bsky-text-secondary whitespace-nowrap overflow-hidden text-ellipsis">
+                        <div className="overflow-hidden text-ellipsis whitespace-nowrap text-sm text-bsky-text-secondary">
                           @{otherMember.handle}
                         </div>
                       )}
                       {conversation.lastMessage && (
-                        <div className="text-sm text-bsky-text-secondary whitespace-nowrap overflow-hidden text-ellipsis mt-1">
+                        <div className="mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-bsky-text-secondary">
                           {conversation.lastMessage.text}
                         </div>
                       )}
                     </div>
                     {conversation.unreadCount > 0 && (
-                      <div className="bg-bsky-primary text-white text-xs rounded-full py-0.5 px-2 min-w-5 text-center">
+                      <div className="min-w-5 rounded-full bg-bsky-primary px-2 py-0.5 text-center text-xs text-white">
                         {conversation.unreadCount}
                       </div>
                     )}
@@ -200,13 +200,13 @@ export const DirectMessages: React.FC = () => {
       </div>
 
       {/* Chat view */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <div className="flex h-full flex-1 flex-col overflow-hidden">
         {selectedConversation && conversationData ? (
           <>
             {/* Chat header */}
-            <div className="p-4 border-b border-bsky-border-primary flex items-center gap-3">
+            <div className="flex items-center gap-3 border-b border-bsky-border-primary p-4">
               <button
-                className="inline-flex items-center gap-2 p-2 mr-4 bg-transparent border-none text-bsky-primary cursor-pointer md:hidden"
+                className="mr-4 inline-flex cursor-pointer items-center gap-2 border-none bg-transparent p-2 text-bsky-primary md:hidden"
                 onClick={() => setSelectedConversation(null)}
               >
                 ← Back
@@ -217,10 +217,10 @@ export const DirectMessages: React.FC = () => {
                   alt={
                     getOtherMember(conversationData.conversation).handle || ""
                   }
-                  className="w-10 h-10 rounded-full object-cover"
+                  className="h-10 w-10 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-300">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300">
                   <span className="text-lg text-gray-600">
                     {(getOtherMember(conversationData.conversation)
                       .displayName ||
@@ -274,9 +274,11 @@ export const DirectMessages: React.FC = () => {
                         key={message.id}
                         className={`mb-4 flex ${isOwnMessage ? "justify-end" : ""}`}
                       >
-                        <div className={`max-w-[70%] rounded-lg p-2 px-4 ${isOwnMessage ? "bg-bsky-primary text-white" : "bg-bsky-bg-secondary text-bsky-text-primary"}`}>
+                        <div
+                          className={`max-w-[70%] rounded-lg p-2 px-4 ${isOwnMessage ? "bg-bsky-primary text-white" : "bg-bsky-bg-secondary text-bsky-text-primary"}`}
+                        >
                           <div>{message.text}</div>
-                          <div className="text-xs mt-1 opacity-70">
+                          <div className="mt-1 text-xs opacity-70">
                             {formatDistanceToNow(new Date(message.sentAt), {
                               addSuffix: true,
                             })}
@@ -291,21 +293,21 @@ export const DirectMessages: React.FC = () => {
             </div>
 
             {/* Message input */}
-            <div className="p-4 border-t border-bsky-border-primary">
+            <div className="border-t border-bsky-border-primary p-4">
               <form onSubmit={handleSendMessage} className="flex gap-2">
                 <input
                   type="text"
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 py-2 px-4 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary text-bsky-text-primary text-base focus:outline-none focus:border-bsky-primary focus:shadow-sm"
+                  className="flex-1 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-4 py-2 text-base text-bsky-text-primary focus:border-bsky-primary focus:shadow-sm focus:outline-none"
                 />
                 <button
                   type="submit"
                   disabled={
                     !messageText.trim() || sendMessageMutation.isPending
                   }
-                  className="py-2 px-6 bg-bsky-primary text-white border-none rounded-lg font-semibold cursor-pointer transition-colors duration-200 hover:bg-bsky-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="cursor-pointer rounded-lg border-none bg-bsky-primary px-6 py-2 font-semibold text-white transition-colors duration-200 hover:bg-bsky-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Send
                 </button>
@@ -313,7 +315,7 @@ export const DirectMessages: React.FC = () => {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-bsky-text-secondary">
+          <div className="flex flex-1 items-center justify-center text-bsky-text-secondary">
             <div className="text-center">
               <h3 className="mb-2 text-xl font-semibold">Your Messages</h3>
               <p>Select a conversation to start messaging</p>

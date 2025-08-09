@@ -2,19 +2,19 @@ import { disableDebug, enableDebug } from "@bsky/shared";
 
 // Export functions to global window object for easy console access
 if (typeof window !== "undefined") {
-  // @ts-ignore
+  // @ts-expect-error - Adding to window for console access
   window.enableDebug = () => {
     enableDebug();
     console.log("✅ Debug mode enabled. Refresh the page to see debug logs.");
   };
 
-  // @ts-ignore
+  // @ts-expect-error - Adding to window for console access
   window.disableDebug = () => {
     disableDebug();
     console.log("❌ Debug mode disabled. Refresh the page to hide debug logs.");
   };
 
-  // @ts-ignore
+  // @ts-expect-error - Adding to window for console access
   window.toggleDebug = () => {
     const currentState = localStorage.getItem("debug") === "true";
     if (currentState) {

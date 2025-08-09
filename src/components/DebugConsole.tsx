@@ -10,7 +10,7 @@ import {
   RefreshCw,
   Trash2,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { NotificationCacheService } from "../services/notification-cache-service";
 import { PostCacheService } from "../services/post-cache-service";
 import { NotificationCache } from "../utils/notificationCache";
@@ -49,7 +49,7 @@ export function DebugConsole() {
   const urlParams = new URLSearchParams(window.location.search);
   const debugMode = urlParams.has("debug");
 
-  const updateMetrics = async () => {
+  const updateMetrics = useCallback(async () => {
     setCacheInfo(NotificationCache.getCacheInfo());
     setNotificationObjectCacheInfo(NotificationObjectCache.getCacheInfo());
     setPostCacheInfo(PostCache.getCacheInfo());
@@ -76,7 +76,7 @@ export function DebugConsole() {
         debug.error("Failed to get Post IndexedDB stats:", error);
       }
     }
-  };
+  }, [indexedDBReady, postIndexedDBReady]);
 
   useEffect(() => {
     // Initialize IndexedDB
@@ -105,7 +105,7 @@ export function DebugConsole() {
       const interval = setInterval(updateMetrics, 5000);
       return () => clearInterval(interval);
     }
-  }, [showDetails, indexedDBReady, postIndexedDBReady]);
+  }, [showDetails, indexedDBReady, postIndexedDBReady, updateMetrics]);
 
   const handleClearCache = (
     type: "priority" | "all" | "posts" | "notifications" | "everything",

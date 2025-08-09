@@ -345,7 +345,7 @@ export const NotificationsFeed: React.FC = () => {
     if (!posts) return new Map();
     const map = new Map(posts.map((post) => [post.uri, post]));
     return map;
-  }, [posts, fetchedPosts]); // Add fetchedPosts to dependencies to ensure map updates
+  }, [posts]); // Remove unnecessary fetchedPosts dependency
 
   const getNotificationIcon = React.useCallback((reason: string) => {
     switch (reason) {
@@ -407,14 +407,12 @@ export const NotificationsFeed: React.FC = () => {
   return (
     <div className="bsky-font">
       {/* Filter tabs */}
-      <div
-        className="bsky-glass sticky top-0 z-10 border-b border-bsky-border-primary"
-      >
-        <div className="px-3 py-2 overflow-hidden">
+      <div className="bsky-glass sticky top-0 z-10 border-b border-bsky-border-primary">
+        <div className="overflow-hidden px-3 py-2">
           {/* Filter tabs */}
           <div className="flex items-center gap-1">
             {/* Primary tabs - always visible */}
-            <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto overflow-y-hidden scrollbar-hide">
+            <div className="scrollbar-hide flex min-w-0 flex-1 gap-1 overflow-x-auto overflow-y-hidden">
               <FilterTab
                 active={filter === "all"}
                 onClick={() => handleFilterChange("all")}
@@ -498,26 +496,24 @@ export const NotificationsFeed: React.FC = () => {
             <div className="relative md:hidden" ref={moreFiltersRef}>
               <button
                 onClick={() => setShowMoreFilters(!showMoreFilters)}
-                className={`flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200
-                  ${showMoreFilters 
-                    ? "bg-bsky-primary text-white" 
-                    : "text-bsky-text-secondary hover:text-bsky-text-primary hover:bg-bsky-bg-secondary"
-                  }`}
+                className={`flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
+                  showMoreFilters
+                    ? "bg-bsky-primary text-white"
+                    : "text-bsky-text-secondary hover:bg-bsky-bg-secondary hover:text-bsky-text-primary"
+                }`}
                 aria-label="More filters"
               >
                 <MoreVertical size={16} />
               </button>
 
               {showMoreFilters && (
-                <div
-                  className="absolute right-0 top-full z-20 mt-1 w-48 rounded-lg p-1 shadow-md bg-bsky-bg-secondary border border-bsky-border-primary"
-                >
+                <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-1 shadow-md">
                   <button
                     onClick={() => {
                       handleFilterChange("follows");
                       setShowMoreFilters(false);
                     }}
-                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm rounded-md hover:bg-bsky-bg-hover ${
+                    className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
                       filter === "follows" ? "text-blue-500" : ""
                     }`}
                   >
@@ -534,7 +530,7 @@ export const NotificationsFeed: React.FC = () => {
                       handleFilterChange("replies");
                       setShowMoreFilters(false);
                     }}
-                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm rounded-md hover:bg-bsky-bg-hover ${
+                    className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
                       filter === "replies" ? "text-blue-500" : ""
                     }`}
                   >
@@ -551,7 +547,7 @@ export const NotificationsFeed: React.FC = () => {
                       handleFilterChange("quotes");
                       setShowMoreFilters(false);
                     }}
-                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm rounded-md hover:bg-bsky-bg-hover ${
+                    className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
                       filter === "quotes" ? "text-blue-500" : ""
                     }`}
                   >
@@ -568,7 +564,7 @@ export const NotificationsFeed: React.FC = () => {
                       handleFilterChange("images");
                       setShowMoreFilters(false);
                     }}
-                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm rounded-md hover:bg-bsky-bg-hover ${
+                    className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
                       filter === "images" ? "text-blue-500" : ""
                     }`}
                   >
@@ -585,7 +581,7 @@ export const NotificationsFeed: React.FC = () => {
                       handleFilterChange("from-following");
                       setShowMoreFilters(false);
                     }}
-                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm rounded-md hover:bg-bsky-bg-hover ${
+                    className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
                       filter === "from-following" ? "text-blue-500" : ""
                     }`}
                     disabled={isLoadingFollowing}
@@ -604,7 +600,7 @@ export const NotificationsFeed: React.FC = () => {
                         handleFilterChange("top-accounts");
                         setShowMoreFilters(false);
                       }}
-                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm rounded-md hover:bg-bsky-bg-hover ${
+                      className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
                         filter === "top-accounts" ? "text-blue-500" : ""
                       }`}
                     >
@@ -745,7 +741,7 @@ export const NotificationsFeed: React.FC = () => {
                             newExpanded.delete(aggregationKey);
                             setExpandedAggregations(newExpanded);
                           }}
-                          className="flex w-full items-center gap-1 px-3 py-2 text-left text-xs rounded-md hover:bg-bsky-bg-hover"
+                          className="flex w-full items-center gap-1 rounded-md px-3 py-2 text-left text-xs hover:bg-bsky-bg-hover"
                           style={{
                             color: "var(--bsky-text-secondary)",
                             paddingLeft: "calc(1rem + 3rem)",
@@ -918,11 +914,11 @@ const FilterTab: React.FC<FilterTabProps> = ({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1 px-2.5 py-1.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap
-        ${active 
-          ? "bg-bsky-primary text-white" 
-          : "text-bsky-text-secondary hover:text-bsky-text-primary hover:bg-bsky-bg-secondary"
-        } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+      className={`flex items-center gap-1 whitespace-nowrap rounded-md px-2.5 py-1.5 text-sm font-medium transition-all duration-200 ${
+        active
+          ? "bg-bsky-primary text-white"
+          : "text-bsky-text-secondary hover:bg-bsky-bg-secondary hover:text-bsky-text-primary"
+      } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
       title={`${label}${count !== undefined && count > 0 ? ` (${count})` : ""}`}
       disabled={disabled}
     >
@@ -1111,13 +1107,9 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
             post.embed.media?.$type === "app.bsky.embed.images#view");
 
         return (
-          <div
-            className="mt-2 rounded-md p-2.5 bg-bsky-bg-secondary border border-bsky-border-primary"
-          >
+          <div className="mt-2 rounded-md border border-bsky-border-primary bg-bsky-bg-secondary p-2.5">
             <div className="mb-1 flex items-center gap-1.5">
-              <span
-                className="text-xs font-medium text-bsky-text-tertiary"
-              >
+              <span className="text-xs font-medium text-bsky-text-tertiary">
                 {notification.reason === "reply"
                   ? "Replying to your post:"
                   : notification.reason === "quote"
@@ -1138,9 +1130,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                   {post.author?.handle?.charAt(0).toUpperCase()}
                 </div>
               )}
-              <span
-                className="text-xs font-medium text-bsky-text-secondary"
-              >
+              <span className="text-xs font-medium text-bsky-text-secondary">
                 {post.author?.displayName || post.author?.handle || "Unknown"}
               </span>
               {hasImages && (
@@ -1154,9 +1144,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
             </div>
 
             {post.record?.text ? (
-              <p
-                className="text-sm leading-relaxed text-bsky-text-primary"
-              >
+              <p className="text-sm leading-relaxed text-bsky-text-primary">
                 {post.record.text}
               </p>
             ) : (
@@ -1228,12 +1216,8 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
         "text" in notification.record
       ) {
         return (
-          <div
-            className="mt-2 rounded-md p-2.5 bg-bsky-bg-secondary border border-bsky-border-primary"
-          >
-            <p
-              className="text-sm leading-relaxed text-bsky-text-primary"
-            >
+          <div className="mt-2 rounded-md border border-bsky-border-primary bg-bsky-bg-secondary p-2.5">
+            <p className="text-sm leading-relaxed text-bsky-text-primary">
               {(notification.record as { text?: string }).text}
             </p>
           </div>
@@ -1252,9 +1236,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
         "text" in notification.record
       ) {
         return (
-          <div
-            className="mt-2 rounded-md p-2.5 bg-bsky-bg-secondary border border-bsky-border-primary"
-          >
+          <div className="mt-2 rounded-md border border-bsky-border-primary bg-bsky-bg-secondary p-2.5">
             <p
               className="text-sm"
               style={{ color: "var(--bsky-text-primary)", lineHeight: "1.5" }}

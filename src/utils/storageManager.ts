@@ -3,8 +3,16 @@
  * Handles compression, size monitoring, and intelligent data management
  */
 
+import type { ProfileViewBasic } from "@atproto/api/dist/client/types/app/bsky/actor/defs";
 import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
 import { debug } from "@bsky/shared";
+
+// Type for notification record which can have text
+interface NotificationRecord {
+  text?: string;
+  $type: string;
+  [key: string]: unknown;
+}
 
 // localStorage limits vary by browser but are typically 5-10MB
 // We'll target 1MB for notification data to leave room for other app data
@@ -116,7 +124,7 @@ export class StorageManager {
       reasonSubject: notification.reasonSubject,
       record: notification.record
         ? {
-            text: (notification.record as any).text,
+            text: (notification.record as NotificationRecord).text,
             $type: notification.record.$type as string,
           }
         : undefined,
@@ -153,7 +161,7 @@ export class StorageManager {
         },
         labels: [],
         createdAt: "",
-      } as any,
+      } as ProfileViewBasic,
     } as Partial<Notification>;
   }
 

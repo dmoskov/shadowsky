@@ -17,7 +17,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import {
   useFeatureTracking,
@@ -462,9 +462,9 @@ export const Home: React.FC<HomeProps> = ({
           }}
           className={`relative px-3 py-2.5 transition-colors duration-150 hover:bg-bsky-bg-hover ${
             item.reply?.parent || post.record?.reply?.parent
-              ? "border-l-4 border-blue-500 bg-gradient-to-r from-blue-500/3 to-transparent"
+              ? "from-blue-500/3 border-l-4 border-blue-500 bg-gradient-to-r to-transparent"
               : ""
-          } ${isFocused ? "outline outline-2 outline-blue-500 outline-offset-[-2px] bg-blue-500/3" : ""}`}
+          } ${isFocused ? "bg-blue-500/3 outline outline-2 outline-offset-[-2px] outline-blue-500" : ""}`}
           data-post-uri={post.uri}
           tabIndex={isFocused ? 0 : -1}
           aria-selected={isFocused}
@@ -497,7 +497,7 @@ export const Home: React.FC<HomeProps> = ({
           {item.reply?.parent && (
             <div className="relative">
               {/* Reply indicator with background */}
-              <div className="mb-3 flex items-center gap-2 rounded-lg px-3 py-2 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 backdrop-blur-sm transition-all duration-300 hover:from-blue-500/15 hover:to-blue-500/8 hover:border-blue-500/30">
+              <div className="hover:to-blue-500/8 mb-3 flex items-center gap-2 rounded-lg border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-blue-500/5 px-3 py-2 backdrop-blur-sm transition-all duration-300 hover:border-blue-500/30 hover:from-blue-500/15">
                 <div className="flex items-center">
                   <div className="flex w-12 justify-center">
                     <div
@@ -554,7 +554,7 @@ export const Home: React.FC<HomeProps> = ({
           {!item.reply?.parent && post.record?.reply?.parent && (
             <div className="relative">
               {/* Reply indicator with background */}
-              <div className="mb-3 flex items-center gap-2 rounded-lg px-3 py-2 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 backdrop-blur-sm transition-all duration-300 hover:from-blue-500/15 hover:to-blue-500/8 hover:border-blue-500/30">
+              <div className="hover:to-blue-500/8 mb-3 flex items-center gap-2 rounded-lg border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-blue-500/5 px-3 py-2 backdrop-blur-sm transition-all duration-300 hover:border-blue-500/30 hover:from-blue-500/15">
                 <div className="flex items-center">
                   <div className="flex w-12 justify-center">
                     <div
@@ -685,21 +685,25 @@ export const Home: React.FC<HomeProps> = ({
 
   // Save scroll position on unmount
   useEffect(() => {
+    const currentFeed = selectedFeed;
     return () => {
       // Save current scroll position when component unmounts
-      if (selectedFeed) {
-        scrollPositionRef.current[selectedFeed] = window.scrollY;
+      if (currentFeed) {
+        scrollPositionRef.current[currentFeed] = window.scrollY;
       }
     };
   }, [selectedFeed]);
 
   // Handler functions (must be defined before keyboard navigation useEffect)
-  const handlePostClick = (post: Post) => {
-    trackClick("post", { postUri: post.uri });
-    setSelectedPost(post);
-    setOpenThreadToReply(false); // Reset when clicking on post normally
-    setShowThread(true);
-  };
+  const handlePostClick = useCallback(
+    (post: Post) => {
+      trackClick("post", { postUri: post.uri });
+      setSelectedPost(post);
+      setOpenThreadToReply(false); // Reset when clicking on post normally
+      setShowThread(true);
+    },
+    [trackClick]
+  );
 
   // Mutations are handled by useOptimisticPosts hook
 

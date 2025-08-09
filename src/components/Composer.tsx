@@ -350,7 +350,7 @@ export function Composer() {
         setPostOrder(splitPosts.map((_, index) => index));
       }
     }
-  }, [text, numberingFormat, isReorderingPosts]);
+  }, [text, numberingFormat, isReorderingPosts, postOrder]);
 
   const applyNumbering = useCallback(
     (posts: string[], order?: number[]): string[] => {
@@ -680,7 +680,7 @@ export function Composer() {
         fileInputRef.current.value = "";
       }
     },
-    [media, autoGenerateAltText],
+    [media, autoGenerateAltText, isDev],
   );
 
   const removeMedia = useCallback((id: string) => {
@@ -1566,7 +1566,7 @@ export function Composer() {
     return () => {
       media.forEach((m) => URL.revokeObjectURL(m.preview));
     };
-  }, []);
+  }, [media]);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 md:px-6">

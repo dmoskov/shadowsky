@@ -117,31 +117,35 @@ export const Bookmarks: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-bsky-bg-primary">
-      <div className="sticky top-0 z-10 bg-bsky-bg-primary border-b border-bsky-border-primary p-4">
-        <div className="flex items-center gap-2 mb-4">
+    <div className="flex h-full flex-col bg-bsky-bg-primary">
+      <div className="sticky top-0 z-10 border-b border-bsky-border-primary bg-bsky-bg-primary p-4">
+        <div className="mb-4 flex items-center gap-2">
           <Bookmark className="h-5 w-5" />
-          <h2 className="text-xl font-semibold text-bsky-text-primary m-0">Bookmarks</h2>
+          <h2 className="m-0 text-xl font-semibold text-bsky-text-primary">
+            Bookmarks
+          </h2>
           {bookmarkCount !== undefined && (
-            <span className="bg-bsky-bg-secondary text-bsky-text-secondary py-0.5 px-2 rounded-full text-sm">{bookmarkCount}</span>
+            <span className="rounded-full bg-bsky-bg-secondary px-2 py-0.5 text-sm text-bsky-text-secondary">
+              {bookmarkCount}
+            </span>
           )}
         </div>
 
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-bsky-text-tertiary" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-bsky-text-tertiary" />
             <input
               type="text"
               placeholder="Search bookmarks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full py-2 px-3 pl-10 bg-bsky-bg-secondary border border-bsky-border-primary rounded-full text-bsky-text-primary text-sm transition-all duration-200 focus:outline-none focus:border-bsky-accent-primary"
+              className="focus:border-bsky-accent-primary w-full rounded-full border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-2 pl-10 text-sm text-bsky-text-primary transition-all duration-200 focus:outline-none"
             />
           </div>
 
           <button
             onClick={() => setShowExportModal(true)}
-            className="p-2 bg-transparent border-none text-bsky-text-secondary cursor-pointer rounded-md transition-all duration-200 hover:bg-bsky-bg-secondary hover:text-bsky-text-primary"
+            className="cursor-pointer rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-200 hover:bg-bsky-bg-secondary hover:text-bsky-text-primary"
             title="Export/Import"
           >
             <MoreVertical className="h-4 w-4" />
@@ -150,8 +154,8 @@ export const Bookmarks: React.FC = () => {
       </div>
 
       {isLoading && (
-        <div className="flex flex-col items-center justify-center py-16 px-8">
-          <div className="w-8 h-8 border-2 border-bsky-border-primary border-t-bsky-accent-primary rounded-full animate-spin" />
+        <div className="flex flex-col items-center justify-center px-8 py-16">
+          <div className="border-t-bsky-accent-primary h-8 w-8 animate-spin rounded-full border-2 border-bsky-border-primary" />
           <p>Loading bookmarks...</p>
         </div>
       )}
@@ -165,40 +169,45 @@ export const Bookmarks: React.FC = () => {
       )}
 
       {!isLoading && !error && bookmarks?.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
+        <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
           <Bookmark className="h-12 w-12 text-gray-400" />
-          <p className="text-bsky-text-primary text-base font-medium mt-4 mb-2">
+          <p className="mb-2 mt-4 text-base font-medium text-bsky-text-primary">
             {searchQuery
               ? "No bookmarks found matching your search"
               : "No bookmarks yet"}
           </p>
-          <p className="text-bsky-text-secondary text-sm">Save posts to view them here later</p>
+          <p className="text-sm text-bsky-text-secondary">
+            Save posts to view them here later
+          </p>
         </div>
       )}
 
       <div className="flex-1 overflow-y-auto p-4">
         {bookmarks?.map((bookmark) => (
-          <div key={bookmark.id} className="group border-b border-bsky-border-primary transition-colors duration-200 -mx-4 px-4 hover:bg-bsky-bg-hover">
-            <div className="flex items-center gap-3 py-3 px-4">
+          <div
+            key={bookmark.id}
+            className="group -mx-4 border-b border-bsky-border-primary px-4 transition-colors duration-200 hover:bg-bsky-bg-hover"
+          >
+            <div className="flex items-center gap-3 px-4 py-3">
               <img
                 src={
                   proxifyBskyImage(bookmark.author.avatar) ||
                   "/default-avatar.png"
                 }
                 alt={bookmark.author?.handle || "unknown"}
-                className="w-10 h-10 rounded-full object-cover"
+                className="h-10 w-10 rounded-full object-cover"
               />
-              <div className="flex-1 min-w-0">
-                <span className="block font-semibold text-bsky-text-primary overflow-hidden text-ellipsis whitespace-nowrap">
+              <div className="min-w-0 flex-1">
+                <span className="block overflow-hidden text-ellipsis whitespace-nowrap font-semibold text-bsky-text-primary">
                   {bookmark.author?.displayName ||
                     bookmark.author?.handle ||
                     "Unknown"}
                 </span>
-                <span className="block text-sm text-bsky-text-secondary overflow-hidden text-ellipsis whitespace-nowrap">
+                <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-sm text-bsky-text-secondary">
                   @{bookmark.author?.handle || "unknown"}
                 </span>
               </div>
-              <span className="text-xs text-bsky-text-tertiary whitespace-nowrap">
+              <span className="whitespace-nowrap text-xs text-bsky-text-tertiary">
                 {formatDistanceToNow(new Date(bookmark.savedAt), {
                   addSuffix: true,
                 })}
@@ -208,7 +217,7 @@ export const Bookmarks: React.FC = () => {
                   e.stopPropagation();
                   handleDeleteBookmark(bookmark.postUri);
                 }}
-                className="p-2 bg-transparent border-none text-bsky-text-tertiary cursor-pointer rounded-md transition-all duration-200 opacity-0 group-hover:opacity-100 hover:bg-bsky-bg-secondary hover:text-red-600"
+                className="cursor-pointer rounded-md border-none bg-transparent p-2 text-bsky-text-tertiary opacity-0 transition-all duration-200 hover:bg-bsky-bg-secondary hover:text-red-600 group-hover:opacity-100"
                 title="Delete bookmark"
               >
                 <Trash2 className="h-4 w-4" />
@@ -229,8 +238,12 @@ export const Bookmarks: React.FC = () => {
               </div>
             ) : (
               <div className="py-2 pb-4 pl-12">
-                <p className="text-bsky-text-primary leading-6 mb-2">{bookmark.text}</p>
-                <p className="text-sm text-bsky-text-tertiary italic">Post no longer available</p>
+                <p className="mb-2 leading-6 text-bsky-text-primary">
+                  {bookmark.text}
+                </p>
+                <p className="text-sm italic text-bsky-text-tertiary">
+                  Post no longer available
+                </p>
               </div>
             )}
           </div>
@@ -241,29 +254,37 @@ export const Bookmarks: React.FC = () => {
 
       {showExportModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
           onClick={() => setShowExportModal(false)}
         >
-          <div className="bg-bsky-bg-primary rounded-xl w-11/12 max-w-sm shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-6 border-b border-bsky-border-primary">
-              <h3 className="text-lg font-semibold text-bsky-text-primary m-0">Manage Bookmarks</h3>
+          <div
+            className="w-11/12 max-w-sm rounded-xl bg-bsky-bg-primary shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-bsky-border-primary p-6">
+              <h3 className="m-0 text-lg font-semibold text-bsky-text-primary">
+                Manage Bookmarks
+              </h3>
               <button
                 onClick={() => setShowExportModal(false)}
-                className="p-2 bg-transparent border-none text-bsky-text-secondary cursor-pointer rounded-md transition-all duration-200 hover:bg-bsky-bg-secondary"
+                className="cursor-pointer rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-200 hover:bg-bsky-bg-secondary"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="p-6 flex flex-col gap-3">
-              <button onClick={handleExport} className="flex items-center gap-2 py-3 px-4 bg-bsky-bg-secondary border border-bsky-border-primary rounded-lg text-bsky-text-primary text-sm font-medium cursor-pointer transition-all duration-200 hover:bg-bsky-bg-hover">
+            <div className="flex flex-col gap-3 p-6">
+              <button
+                onClick={handleExport}
+                className="flex cursor-pointer items-center gap-2 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-4 py-3 text-sm font-medium text-bsky-text-primary transition-all duration-200 hover:bg-bsky-bg-hover"
+              >
                 <Download className="h-4 w-4" />
                 Export Bookmarks
               </button>
 
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 py-3 px-4 bg-bsky-bg-secondary border border-bsky-border-primary rounded-lg text-bsky-text-primary text-sm font-medium cursor-pointer transition-all duration-200 hover:bg-bsky-bg-hover"
+                className="flex cursor-pointer items-center gap-2 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-4 py-3 text-sm font-medium text-bsky-text-primary transition-all duration-200 hover:bg-bsky-bg-hover"
               >
                 <Upload className="h-4 w-4" />
                 Import Bookmarks
@@ -271,7 +292,7 @@ export const Bookmarks: React.FC = () => {
 
               <button
                 onClick={handleClearAll}
-                className="flex items-center gap-2 py-3 px-4 bg-bsky-bg-secondary border border-red-600 rounded-lg text-red-600 text-sm font-medium cursor-pointer transition-all duration-200 hover:bg-red-50"
+                className="flex cursor-pointer items-center gap-2 rounded-lg border border-red-600 bg-bsky-bg-secondary px-4 py-3 text-sm font-medium text-red-600 transition-all duration-200 hover:bg-red-50"
               >
                 <Trash2 className="h-4 w-4" />
                 Clear All Bookmarks

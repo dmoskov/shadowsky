@@ -158,7 +158,7 @@ export default function SkyColumnFeed({
       // Update the index to match the new position
       setFocusedPostIndex(newIndex);
     }
-  }, [allPosts]); // Only depend on allPosts changing
+  }, [allPosts, focusedPostIndex, hasUserInteracted]); // Add missing dependencies
 
   // Restore scroll position after data changes
   useEffect(() => {
@@ -364,15 +364,20 @@ export default function SkyColumnFeed({
 
               {/* Simplified embed rendering */}
               {post.embed?.images && Array.isArray(post.embed.images) && (
-                <div className={`mt-2 grid gap-2 ${post.embed.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                <div
+                  className={`mt-2 grid gap-2 ${post.embed.images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
+                >
                   {post.embed.images.map((image: any, idx: number) => (
-                    <div key={idx} className="relative overflow-hidden rounded-lg bg-bsky-bg-tertiary">
+                    <div
+                      key={idx}
+                      className="relative overflow-hidden rounded-lg bg-bsky-bg-tertiary"
+                    >
                       <img
                         src={proxifyBskyImage(
                           image.thumb || image.fullsize || "",
                         )}
                         alt={image.alt || ""}
-                        className="h-auto w-full max-h-80 object-contain"
+                        className="h-auto max-h-80 w-full object-contain"
                       />
                     </div>
                   ))}
@@ -459,10 +464,7 @@ export default function SkyColumnFeed({
         </div>
       </div>
 
-      <div
-        ref={containerRef}
-        className="bsky-scrollbar h-full overflow-y-auto"
-      >
+      <div ref={containerRef} className="bsky-scrollbar h-full overflow-y-auto">
         {allPosts.map((post: any, index: number) => {
           const actualPost = post?.post || post;
           const postUri = actualPost?.uri;

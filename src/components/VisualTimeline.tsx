@@ -940,9 +940,9 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
           <div key={dayGroup.label}>
             {/* Sticky day label */}
             <div
-              className="sticky top-0 z-30 backdrop-blur-md mb-2 px-4 py-1.5 sm:px-6"
+              className="sticky top-0 z-30 mb-2 px-4 py-1.5 backdrop-blur-md sm:px-6"
               style={{
-                // @ts-ignore - WebKit prefix for sticky positioning
+                // @ts-expect-error - WebKit prefix for sticky positioning
                 WebkitPosition: "-webkit-sticky",
                 top: "0px", // Position at the top of the container
                 zIndex: 30, // Higher than 20 but lower than main header's 40
@@ -1016,10 +1016,10 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                   }}
                 >
                   {/* Time and event */}
-                  <div className="animate-fade-in-up flex items-start gap-2 sm:gap-4 px-4 sm:px-6">
+                  <div className="flex animate-fade-in-up items-start gap-2 px-4 sm:gap-4 sm:px-6">
                     {/* Time - hide text on mobile, show only on desktop */}
                     <div
-                      className={`${hideTimeLabels ? "w-3" : "w-3 sm:w-20"} pt-2 text-right text-xs sm:text-sm font-mono tracking-wider`}
+                      className={`${hideTimeLabels ? "w-3" : "w-3 sm:w-20"} pt-2 text-right font-mono text-xs tracking-wider sm:text-sm`}
                     >
                       {!hideTimeLabels && (
                         <span
@@ -1057,19 +1057,20 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
 
                     {/* Event card */}
                     <div
-                      className={`flex-1 rounded-lg p-3 transition-all duration-200 ease-out cursor-pointer ${
+                      className={`flex-1 cursor-pointer rounded-lg p-3 transition-all duration-200 ease-out ${
                         event.notifications.length > 1
                           ? "bg-bsky-bg-secondary"
                           : ""
                       } ${
                         event.aggregationType === "follow"
                           ? "border-l-[3px] border-l-bsky-follow pl-3"
-                          : event.aggregationType === "post" || event.aggregationType === "post-burst"
+                          : event.aggregationType === "post" ||
+                              event.aggregationType === "post-burst"
                             ? "border-l-[3px] border-l-bsky-primary pl-3"
                             : event.aggregationType === "user-activity"
-                              ? "bg-bsky-bg-secondary relative overflow-hidden"
+                              ? "relative overflow-hidden bg-bsky-bg-secondary"
                               : ""
-                      } ${isSelected ? "transform translate-x-1 relative before:content-[''] before:absolute before:-left-1 before:top-0 before:bottom-0 before:w-[3px] before:bg-bsky-primary before:rounded-r-[3px] before:opacity-80" : ""} hover:transform hover:translate-x-0.5 hover:shadow-lg`}
+                      } ${isSelected ? "relative translate-x-1 transform before:absolute before:-left-1 before:bottom-0 before:top-0 before:w-[3px] before:rounded-r-[3px] before:bg-bsky-primary before:opacity-80 before:content-['']" : ""} hover:translate-x-0.5 hover:transform hover:shadow-lg`}
                       style={{
                         backgroundColor: getTimeOfDayColor(event.time)
                           .backgroundColor,
@@ -1224,7 +1225,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                     href={postUrl || "#"}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="relative overflow-hidden ml-11 mt-2 block rounded p-3 transition-all duration-200 ease-out hover:opacity-90 hover:-translate-y-0.5 hover:shadow-md before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-bsky-primary before:opacity-50"
+                                    className="relative ml-11 mt-2 block overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
                                     style={{
                                       backgroundColor:
                                         "var(--bsky-bg-tertiary)",
@@ -1273,7 +1274,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
 
                               return (
                                 <div
-                                  className="relative overflow-hidden ml-11 mt-2 rounded p-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-bsky-primary before:opacity-50"
+                                  className="relative ml-11 mt-2 overflow-hidden rounded p-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-['']"
                                   style={{
                                     backgroundColor: "var(--bsky-bg-tertiary)",
                                     border:
@@ -1706,7 +1707,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                             // Regular aggregated layout
                             <div className="flex items-center gap-3">
                               {/* Actor avatars */}
-                              <div className="flex items-center flex-shrink-0 -space-x-2">
+                              <div className="flex flex-shrink-0 items-center -space-x-2">
                                 {event.notifications
                                   .slice(0, 5)
                                   .map((notif, i) => (
@@ -1717,7 +1718,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                       )}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="transition-all duration-200 ease-out hover:z-10 hover:scale-110 hover:-translate-y-0.5"
+                                      className="transition-all duration-200 ease-out hover:z-10 hover:-translate-y-0.5 hover:scale-110"
                                     >
                                       <img
                                         src={proxifyBskyImage(
@@ -1847,7 +1848,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                     href={postUrl || "#"}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="relative overflow-hidden mt-3 block rounded p-3 transition-all duration-200 ease-out hover:opacity-90 hover:-translate-y-0.5 hover:shadow-md before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-bsky-primary before:opacity-50"
+                                    className="relative mt-3 block overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
                                     style={{
                                       backgroundColor:
                                         "var(--bsky-bg-tertiary)",
@@ -1931,7 +1932,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
 
                               return (
                                 <div
-                                  className="relative overflow-hidden mt-3 rounded p-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-bsky-primary before:opacity-50"
+                                  className="relative mt-3 overflow-hidden rounded p-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-['']"
                                   style={{
                                     backgroundColor: "var(--bsky-bg-tertiary)",
                                     border:
@@ -2005,7 +2006,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                   {previousEvent &&
                     differenceInHours(previousEvent.time, event.time) >= 12 && (
                       <div
-                        className="relative absolute -top-3 left-[5rem] text-xs sm:left-[7.5rem] px-1.5 py-0.5 bg-bsky-bg-secondary rounded-[10px] whitespace-nowrap before:content-[''] before:absolute before:left-1/2 before:-translate-x-1/2 before:w-px before:h-2 before:bg-bsky-border-color before:opacity-30 before:-top-3 after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:w-px after:h-2 after:bg-bsky-border-color after:opacity-30 after:-bottom-3"
+                        className="before:bg-bsky-border-color after:bg-bsky-border-color absolute relative -top-3 left-[5rem] whitespace-nowrap rounded-[10px] bg-bsky-bg-secondary px-1.5 py-0.5 text-xs before:absolute before:-top-3 before:left-1/2 before:h-2 before:w-px before:-translate-x-1/2 before:opacity-30 before:content-[''] after:absolute after:-bottom-3 after:left-1/2 after:h-2 after:w-px after:-translate-x-1/2 after:opacity-30 after:content-[''] sm:left-[7.5rem]"
                         style={{
                           color: "var(--bsky-text-tertiary)",
                           transform: "translateX(-50%)",

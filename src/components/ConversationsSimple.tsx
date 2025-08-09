@@ -4,7 +4,7 @@ import { debug } from "@bsky/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2, MessageCircle, Search } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import {
   useConversationTracking,
@@ -105,7 +105,7 @@ const ConversationItem = React.memo(
           isSelected ? "bg-blue-500/10" : ""
         } ${unreadCount > 0 ? "bg-bsky-bg-tertiary" : ""} ${
           isFocused ? "ring-2 ring-inset ring-blue-500" : ""
-        } ${isSelected ? "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-bsky-primary" : ""}`}
+        } ${isSelected ? "before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-bsky-primary" : ""}`}
         style={{ borderBottom: "1px solid var(--bsky-border-primary)" }}
         tabIndex={isFocused ? 0 : -1}
       >
@@ -292,22 +292,22 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({
   const { trackFeatureAction } = useFeatureTracking("conversations");
 
   // Wrap setSelectedConvo to track analytics
-  const handleSelectConversation = (
-    rootUri: string | null,
-    messageCount?: number,
-  ) => {
-    debug.log("[ConversationsSimple] Selecting conversation:", {
-      rootUri,
-      messageCount,
-      previousSelected: selectedConvo,
-      timestamp: new Date().toISOString(),
-    });
-    setSelectedConvo(rootUri);
-    if (rootUri) {
-      trackConversationView(rootUri, messageCount || 0);
-      trackConversationAction("select");
-    }
-  };
+  const handleSelectConversation = useCallback(
+    (rootUri: string | null, messageCount?: number) => {
+      debug.log("[ConversationsSimple] Selecting conversation:", {
+        rootUri,
+        messageCount,
+        previousSelected: selectedConvo,
+        timestamp: new Date().toISOString(),
+      });
+      setSelectedConvo(rootUri);
+      if (rootUri) {
+        trackConversationView(rootUri, messageCount || 0);
+        trackConversationAction("select");
+      }
+    },
+    [selectedConvo, trackConversationView, trackConversationAction]
+  );
 
   // Use state to store notifications data with persistence
   const [extendedData, setExtendedData] = useState(() => {
@@ -997,7 +997,7 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({
   return (
     <div
       ref={containerRef}
-      className="w-full h-[calc(100vh-4rem)] overflow-hidden relative max-w-full"
+      className="relative h-[calc(100vh-4rem)] w-full max-w-full overflow-hidden"
       style={{ position: "relative", outline: "none" }}
       tabIndex={-1}
     >

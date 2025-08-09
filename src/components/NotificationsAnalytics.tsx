@@ -661,7 +661,7 @@ export const NotificationsAnalytics: React.FC = () => {
       newestDate,
       timeRange,
     };
-  }, [notifications, timeRange]);
+  }, [notifications, timeRange, hasExtendedData]);
 
   // Calculate current stats - use analytics data if we have extended data
   const stats = React.useMemo(() => {
@@ -802,7 +802,7 @@ export const NotificationsAnalytics: React.FC = () => {
           }}
         >
           <div
-            className="absolute right-0 top-0 h-64 w-64 opacity-5 pointer-events-none"
+            className="pointer-events-none absolute right-0 top-0 h-64 w-64 opacity-5"
             style={{
               background:
                 "radial-gradient(circle, var(--bsky-primary) 0%, transparent 70%)",
@@ -1263,7 +1263,7 @@ export const NotificationsAnalytics: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-3 text-xs pb-2">
+            <div className="mt-4 flex flex-wrap gap-3 pb-2 text-xs">
               {activityView === "received" ? (
                 <>
                   <div className="flex items-center gap-1">

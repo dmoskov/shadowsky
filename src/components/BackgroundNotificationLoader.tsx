@@ -244,7 +244,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
     };
 
     loadCachedData();
-  }, [session, hasCachedData, isIndexedDBReady, queryClient, cacheService]);
+  }, [session, hasCachedData, isIndexedDBReady, queryClient, cacheService, isCachedDataStale, trackNotificationLoad]);
 
   // Auto-fetch 4 weeks if no data exists or data is stale
   useEffect(() => {
@@ -435,6 +435,8 @@ export const BackgroundNotificationLoader: React.FC = () => {
     fetchNextPage,
     queryClient,
     cacheService,
+    isCachedDataStale,
+    trackNotificationLoad,
   ]);
 
   // Save new notifications to IndexedDB when data changes (from polling)

@@ -230,7 +230,9 @@ export function useNotificationPosts(
     postUris.length,
     queryClient,
     queryKey,
-  ]); // Removed fetchedCount from dependencies
+    fetchedCount,
+    postUris,
+  ]); // Add missing dependencies
 
   // Calculate actual fetched count based on current data
   const actualFetchedCount = queryResult.data?.length || 0;

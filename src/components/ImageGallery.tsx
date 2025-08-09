@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 interface ImageGalleryProps {
   images: Array<{
@@ -19,6 +19,16 @@ export function ImageGallery({
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [imageLoading, setImageLoading] = useState(true);
 
+  const handlePrevious = useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+    setImageLoading(true);
+  }, [images.length]);
+
+  const handleNext = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+    setImageLoading(true);
+  }, [images.length]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -37,17 +47,7 @@ export function ImageGallery({
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
-  }, [currentIndex, images.length, onClose]);
-
-  const handlePrevious = () => {
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-    setImageLoading(true);
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % images.length);
-    setImageLoading(true);
-  };
+  }, [currentIndex, images.length, onClose, handleNext, handlePrevious]);
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {

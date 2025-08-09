@@ -34,9 +34,9 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     "notifications-extended",
   ]) as any;
   const hasCachedData = cachedData?.pages?.length > 0;
-  const cachedNotifications =
-    cachedData?.pages?.flatMap((page: any) => page.notifications) || [];
   const cachedStats = React.useMemo(() => {
+    const cachedNotifications =
+      cachedData?.pages?.flatMap((page: any) => page.notifications) || [];
     if (!hasCachedData || cachedNotifications.length === 0) return null;
 
     const oldestNotification =
@@ -52,7 +52,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       oldestDate,
       newestDate: new Date(cachedNotifications[0].indexedAt),
     };
-  }, [hasCachedData, cachedNotifications]);
+  }, [hasCachedData, cachedData?.pages]);
 
   // Check for recent extended fetch metadata
   const fetchInfo = ExtendedFetchCache.getFetchInfo();
@@ -86,7 +86,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       }
     };
     initCache();
-  }, []);
+  }, [cacheService]);
 
   // Load persisted data from IndexedDB or localStorage on mount
   useEffect(() => {
@@ -179,61 +179,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     };
 
     loadCachedData();
-  }, [session, hasCachedData, isIndexedDBReady]);
-
-  // Auto-fetch missing notifications if we have recent 4-week data
-  useEffect(() => {
-    if (
-      !session ||
-      autoFetchTriggered ||
-      hasCachedData ||
-      fetchingStatus !== "idle"
-    )
-      return;
-
-    if (fetchInfo.shouldAutoFetch && fetchInfo.metadata) {
-      debug.log(
-        "🔄 Auto-fetching missing notifications due to recent 4-week fetch",
-      );
-      setAutoFetchTriggered(true);
-      handleFetchMissing();
-    }
-  }, [
-    session,
-    autoFetchTriggered,
-    hasCachedData,
-    fetchingStatus,
-    fetchInfo.shouldAutoFetch,
-  ]);
-
-  // Auto-fetch 4 weeks of data on mount if no cached data exists
-  useEffect(() => {
-    if (
-      !session ||
-      !isIndexedDBReady ||
-      initialFetchStarted ||
-      hasCachedData ||
-      loadedFromStorage ||
-      fetchingStatus !== "idle"
-    )
-      return;
-
-    // Small delay to ensure component is fully mounted
-    const timer = setTimeout(() => {
-      debug.log("🚀 Starting automatic 4-week fetch on mount");
-      setInitialFetchStarted(true);
-      handleFetch4Weeks();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [
-    session,
-    isIndexedDBReady,
-    initialFetchStarted,
-    hasCachedData,
-    loadedFromStorage,
-    fetchingStatus,
-  ]);
+  }, [session, hasCachedData, isIndexedDBReady, queryClient, cacheService]);
 
   const handleFetch4Weeks = async () => {
     setFetchingStatus("fetching");
@@ -568,6 +514,67 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
       });
     }
   };
+
+  // Auto-fetch missing notifications if we have recent 4-week data
+  useEffect(() => {
+    if (
+      !session ||
+      autoFetchTriggered ||
+      hasCachedData ||
+      fetchingStatus !== "idle"
+    )
+      return;
+
+    if (fetchInfo.shouldAutoFetch && fetchInfo.metadata) {
+      debug.log(
+        "🔄 Auto-fetching missing notifications due to recent 4-week fetch",
+      );
+      setAutoFetchTriggered(true);
+      handleFetchMissing();
+    }
+  }, [
+    session,
+    autoFetchTriggered,
+    hasCachedData,
+    fetchingStatus,
+    fetchInfo.shouldAutoFetch,
+    fetchInfo.metadata,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    handleFetchMissing,
+  ]);
+
+  // Auto-fetch 4 weeks of data on mount if no cached data exists
+  useEffect(() => {
+    if (
+      !session ||
+      !isIndexedDBReady ||
+      initialFetchStarted ||
+      hasCachedData ||
+      loadedFromStorage ||
+      fetchingStatus !== "idle"
+    )
+      return;
+
+    // Small delay to ensure component is fully mounted
+    const timer = setTimeout(() => {
+      debug.log("🚀 Starting automatic 4-week fetch on mount");
+      setInitialFetchStarted(true);
+      handleFetch4Weeks();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [
+    session,
+    isIndexedDBReady,
+    initialFetchStarted,
+    hasCachedData,
+    loadedFromStorage,
+    fetchingStatus,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    handleFetch4Weeks,
+  ]);
+
+
 
   const allNotifications =
     data?.pages.flatMap((page) => page.notifications) || [];

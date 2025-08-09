@@ -1,6 +1,7 @@
 import { Mail, Shield, Smartphone } from "lucide-react";
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { ATProtoError } from "../types/errors";
 import butterflyIcon from "/butterfly-icon.svg";
 
 export const Login: React.FC = () => {
@@ -26,16 +27,17 @@ export const Login: React.FC = () => {
         pdsUrl,
         showEmailCode ? emailCode : undefined,
       );
-    } catch (err: any) {
+    } catch (err) {
       // Check if this is an email auth factor error
-      console.log("Login error:", err);
-      console.log("Error message:", err.message);
-      console.log("Error status:", err.status);
+      const error = err as ATProtoError;
+      console.log("Login error:", error);
+      console.log("Error message:", error.message);
+      console.log("Error status:", error.status);
 
       if (
-        err.message?.includes("sign in code has been sent") ||
-        err.message?.includes("AuthFactorTokenRequired") ||
-        err.status === "AuthFactorTokenRequired"
+        error.message?.includes("sign in code has been sent") ||
+        error.message?.includes("AuthFactorTokenRequired") ||
+        error.status === "AuthFactorTokenRequired"
       ) {
         console.log("Setting showEmailCode to true");
         setShowEmailCode(true);
@@ -43,7 +45,7 @@ export const Login: React.FC = () => {
           "A sign in code has been sent to your email address. Please check your email and enter the code below.",
         );
       } else {
-        setError(err.message || "Failed to login");
+        setError(error.message || "Failed to login");
       }
     } finally {
       setIsLoading(false);

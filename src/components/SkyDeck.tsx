@@ -182,8 +182,7 @@ export default function SkyDeck() {
         const columnElements =
           columnsContainerRef.current?.querySelectorAll(".column-wrapper");
         const focusedColumn = columnElements?.[focusedColumnIndex];
-        const scrollContainer =
-          focusedColumn?.querySelector(".bsky-scrollbar");
+        const scrollContainer = focusedColumn?.querySelector(".bsky-scrollbar");
         if (scrollContainer) {
           scrollContainer.scrollBy({
             top: scrollContainer.clientHeight * 0.8,
@@ -377,21 +376,22 @@ export default function SkyDeck() {
   return (
     <div className="flex h-full flex-col overflow-hidden dark:bg-gray-900">
       <div className="skydeck-columns-scrollbar flex-1 overflow-x-auto overflow-y-hidden p-3">
-        <div
-          ref={columnsContainerRef}
-          className="flex h-full min-w-min gap-3"
-        >
+        <div ref={columnsContainerRef} className="flex h-full min-w-min gap-3">
           {columns.map((column, index) => (
             <div
               key={column.id}
-              className={`h-full w-[400px] bg-white dark:bg-gray-900 rounded-lg shadow-md transition-all duration-300 ease-out border border-gray-200 dark:border-gray-700 ${
-                isDragging === column.id ? "opacity-50 scale-[0.98] cursor-grabbing" : "cursor-grab"
+              className={`h-full w-[400px] rounded-lg border border-gray-200 bg-white shadow-md transition-all duration-300 ease-out dark:border-gray-700 dark:bg-gray-900 ${
+                isDragging === column.id
+                  ? "scale-[0.98] cursor-grabbing opacity-50"
+                  : "cursor-grab"
               } ${
                 dragOverId === column.id && isDragging !== column.id
-                  ? "relative before:absolute before:left-[-2px] before:top-0 before:bottom-0 before:w-1 before:bg-blue-500 before:rounded-sm before:animate-pulse"
+                  ? "relative before:absolute before:bottom-0 before:left-[-2px] before:top-0 before:w-1 before:animate-pulse before:rounded-sm before:bg-blue-500"
                   : ""
               } ${
-                focusedColumnIndex === index ? "ring-2 ring-blue-500/30 shadow-xl" : "hover:shadow-lg dark:hover:shadow-black/30"
+                focusedColumnIndex === index
+                  ? "shadow-xl ring-2 ring-blue-500/30"
+                  : "hover:shadow-lg dark:hover:shadow-black/30"
               }`}
               draggable
               onDragStart={(e) => handleDragStart(e, column.id)}
@@ -424,7 +424,7 @@ export default function SkyDeck() {
 
           <div className="h-full w-[400px]">
             {isAddingColumn ? (
-              <div className="animate-fade-in flex h-full flex-col rounded-lg bg-white border border-gray-200 dark:border-gray-700 shadow-md dark:bg-gray-800">
+              <div className="flex h-full animate-fade-in flex-col rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
                 <div className="flex-1 overflow-y-auto p-3">
                   <div className="grid gap-2">
                     {columnOptions.map((option) => {
@@ -722,7 +722,7 @@ export default function SkyDeck() {
             ) : (
               <button
                 onClick={() => setIsAddingColumn(true)}
-                className="group flex h-full w-full items-center justify-center rounded-lg shadow-md transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-900/50 bg-white dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg relative overflow-hidden"
+                className="group relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-white shadow-md transition-all duration-300 hover:border-blue-400 hover:bg-gray-50 hover:shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:hover:border-blue-500 dark:hover:bg-gray-900/50"
               >
                 <Plus className="h-12 w-12 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
               </button>

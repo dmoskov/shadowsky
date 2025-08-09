@@ -303,9 +303,7 @@ export function BaseComposer({
   const isInline = layout === "inline";
 
   return (
-    <div
-      className="w-full"
-    >
+    <div className="w-full">
       {/* Reply context */}
       {replyTo && (
         <div

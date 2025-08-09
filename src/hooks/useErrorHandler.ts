@@ -17,6 +17,7 @@ import {
   isSessionExpiredError,
   trackError,
 } from "@bsky/shared";
+import { RateLimitErrorWithReset } from "../types/errors";
 import { useCallback } from "react";
 
 interface ErrorHandlerOptions {
@@ -45,10 +46,10 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
       // Handle rate limit errors
       if (isRateLimitError(error)) {
         if (options.onRateLimit) {
-          options.onRateLimit((error as any).resetAt);
+          options.onRateLimit((error as unknown as RateLimitErrorWithReset).resetAt);
         } else {
           const minutesUntilReset = Math.ceil(
-            ((error as any).resetAt.getTime() - Date.now()) / 60000,
+            ((error as unknown as RateLimitErrorWithReset).resetAt.getTime() - Date.now()) / 60000,
           );
           const message = `Rate limited. Please try again in ${minutesUntilReset} minute(s).`;
           if (options.silent) {

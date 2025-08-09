@@ -1,4 +1,5 @@
 import { Activity, BarChart3, Clock, Database, Users, Zap } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 interface AnalyticsEvent {
@@ -97,7 +98,7 @@ export const AnalyticsDashboard: React.FC = () => {
   }, []);
 
   const MetricCard: React.FC<{
-    icon: any;
+    icon: LucideIcon;
     label: string;
     value: string | number;
     color: string;

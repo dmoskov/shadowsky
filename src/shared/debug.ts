@@ -16,25 +16,25 @@ const config: DebugConfig = {
 };
 
 export const debug = {
-  log: (...args: any[]) => {
+  log: (...args: unknown[]) => {
     if (config.enabled) {
       console.log(config.prefix, ...args);
     }
   },
 
-  error: (...args: any[]) => {
+  error: (...args: unknown[]) => {
     if (config.enabled) {
       console.error(config.prefix, ...args);
     }
   },
 
-  warn: (...args: any[]) => {
+  warn: (...args: unknown[]) => {
     if (config.enabled) {
       console.warn(config.prefix, ...args);
     }
   },
 
-  info: (...args: any[]) => {
+  info: (...args: unknown[]) => {
     if (config.enabled) {
       console.info(config.prefix, ...args);
     }

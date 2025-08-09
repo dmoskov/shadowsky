@@ -1,4 +1,5 @@
 import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyFeedDefs } from "@atproto/api";
 import { formatDistanceToNow } from "date-fns";
 import { Heart, Quote, Repeat2, UserPlus } from "lucide-react";
 import React from "react";
@@ -162,7 +163,7 @@ export function aggregateNotifications(
 interface AggregatedNotificationItemProps {
   item: AggregatedNotification;
   onExpand?: () => void;
-  postMap?: Map<string, any>;
+  postMap?: Map<string, AppBskyFeedDefs.PostView>;
   showTypeLabel?: boolean;
   isFetchingMore?: boolean;
   fetchedPosts?: number;
@@ -448,12 +449,13 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
 
                 if (post) {
                   // We have full post data with author info
-                  const postText = post.record?.text || "";
+                  const postText = (post.record as any)?.text || "";
                   const postAuthor = post.author;
                   const hasImages =
                     post.embed?.$type === "app.bsky.embed.images#view" ||
                     (post.embed?.$type ===
                       "app.bsky.embed.recordWithMedia#view" &&
+                      'media' in post.embed &&
                       post.embed.media?.$type === "app.bsky.embed.images#view");
 
                   // Extract images if present
@@ -465,14 +467,17 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                   if (post.embed) {
                     if (
                       post.embed.$type === "app.bsky.embed.images#view" &&
+                      'images' in post.embed &&
                       post.embed.images
                     ) {
                       images = post.embed.images;
                     } else if (
                       post.embed.$type ===
                         "app.bsky.embed.recordWithMedia#view" &&
+                      'media' in post.embed &&
                       post.embed.media?.$type ===
                         "app.bsky.embed.images#view" &&
+                      'images' in post.embed.media &&
                       post.embed.media.images
                     ) {
                       images = post.embed.media.images;

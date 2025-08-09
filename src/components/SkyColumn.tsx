@@ -28,16 +28,18 @@ export default function SkyColumn({
   const [feedOptions, setFeedOptions] = useState<any[]>([]);
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [showFeedDiscovery, setShowFeedDiscovery] = useState(false);
-  const [selectedFeedUri, setSelectedFeedUri] = useState<string | undefined>(() => {
-    // For feed columns, check sessionStorage first
-    if (column.type === "feed") {
-      const sessionFeed = sessionStorage.getItem("selectedFeed");
-      if (sessionFeed) {
-        return sessionFeed;
+  const [selectedFeedUri, setSelectedFeedUri] = useState<string | undefined>(
+    () => {
+      // For feed columns, check sessionStorage first
+      if (column.type === "feed") {
+        const sessionFeed = sessionStorage.getItem("selectedFeed");
+        if (sessionFeed) {
+          return sessionFeed;
+        }
       }
-    }
-    return column.data;
-  });
+      return column.data;
+    },
+  );
 
   useEffect(() => {
     const checkScroll = () => {
