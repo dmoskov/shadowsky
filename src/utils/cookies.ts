@@ -4,26 +4,43 @@
 export const setCookie = (
   name: string,
   value: string,
-  options?: { secure?: boolean; sameSite?: string } | number,
+  options?: { secure?: boolean; sameSite?: string; domain?: string } | number,
 ) => {
   let days = 365;
   let secure = false;
   let sameSite = "Lax";
+  let domain: string | undefined;
 
   if (typeof options === "number") {
     days = options;
   } else if (options) {
     secure = options.secure || false;
     sameSite = options.sameSite || "Lax";
+    domain = options.domain;
+  }
+
+  // Auto-detect production domain
+  if (!domain && typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    if (hostname.includes("shadowsky.io")) {
+      // Set domain to work across all shadowsky.io subdomains
+      domain = ".shadowsky.io";
+    }
   }
 
   const expires = new Date();
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
 
   let cookieString = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=${sameSite}`;
+  
+  if (domain) {
+    cookieString += `;Domain=${domain}`;
+  }
+  
   if (secure) {
     cookieString += ";Secure";
   }
+  
   document.cookie = cookieString;
 };
 
@@ -41,14 +58,21 @@ export const getCookie = (name: string): string | null => {
 };
 
 export const deleteCookie = (name: string) => {
+  // Delete cookie without domain (for local)
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+  
+  // Also delete with production domain if applicable
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    if (hostname.includes("shadowsky.io")) {
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;Domain=.shadowsky.io;`;
+    }
+  }
 };
 
 export const cookies = {
   set(name: string, value: string, days: number = 365) {
-    const expires = new Date();
-    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-    document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+    setCookie(name, value, days);
   },
 
   get(name: string): string | null {
@@ -65,7 +89,7 @@ export const cookies = {
   },
 
   delete(name: string) {
-    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+    deleteCookie(name);
   },
 };
 

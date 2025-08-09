@@ -107,7 +107,7 @@ export class ATProtoClient {
       // Use cookies for cross-subdomain access
       setCookie(this.sessionKey, JSON.stringify(session), {
         secure: true,
-        sameSite: "lax",
+        sameSite: "Lax",
       });
       // Also save to localStorage for backward compatibility
       localStorage.setItem(this.sessionKey, JSON.stringify(session));
