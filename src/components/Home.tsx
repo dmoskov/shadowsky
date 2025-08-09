@@ -115,8 +115,8 @@ export const Home: React.FC<HomeProps> = ({
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
     useOptimisticPosts();
   // Removed hoveredPost state to prevent re-renders - using CSS hover instead
-  // Use initialFeedUri if provided, otherwise get from session/local storage
-  const selectedFeed = React.useMemo<FeedType>(() => {
+  // Use initialFeedUri if provided, otherwise get from column preferences
+  const [selectedFeed, setSelectedFeed] = React.useState<FeedType>(() => {
     if (initialFeedUri) {
       return initialFeedUri as FeedType;
     }
@@ -127,22 +127,20 @@ export const Home: React.FC<HomeProps> = ({
         return savedFeed as FeedType;
       }
     }
-    // Check sessionStorage for current session
-    const sessionFeed = sessionStorage.getItem("selectedFeed");
-    if (sessionFeed) {
-      return sessionFeed as FeedType;
-    }
-    // Fall back to localStorage for backwards compatibility
-    const savedFeed = localStorage.getItem("selectedFeed");
-    return (savedFeed as FeedType) || "following";
-  }, [initialFeedUri, columnId]);
+    // Default to following feed
+    return "following";
+  });
 
-  // Save selected feed to sessionStorage when it changes
+  // Update selectedFeed when initialFeedUri changes from parent
   React.useEffect(() => {
-    if (selectedFeed) {
-      sessionStorage.setItem("selectedFeed", selectedFeed);
+    if (initialFeedUri && initialFeedUri !== selectedFeed) {
+      setSelectedFeed(initialFeedUri as FeedType);
+      // Also save to column preferences
+      if (columnId) {
+        columnFeedPrefs.setFeedForColumn(columnId, initialFeedUri);
+      }
     }
-  }, [selectedFeed]);
+  }, [initialFeedUri, columnId]);
   const [internalShowFeedDiscovery, setInternalShowFeedDiscovery] =
     useState(false);
   const showFeedDiscovery =

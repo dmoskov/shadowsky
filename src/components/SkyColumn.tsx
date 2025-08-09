@@ -30,13 +30,7 @@ export default function SkyColumn({
   const [showFeedDiscovery, setShowFeedDiscovery] = useState(false);
   const [selectedFeedUri, setSelectedFeedUri] = useState<string | undefined>(
     () => {
-      // For feed columns, check sessionStorage first
-      if (column.type === "feed") {
-        const sessionFeed = sessionStorage.getItem("selectedFeed");
-        if (sessionFeed) {
-          return sessionFeed;
-        }
-      }
+      // For feed columns, use the column's data
       return column.data;
     },
   );
@@ -132,7 +126,12 @@ export default function SkyColumn({
             column.type === "feed"
               ? (feedUri: string) => {
                   setSelectedFeedUri(feedUri);
-                  sessionStorage.setItem("selectedFeed", feedUri);
+                  // Save to column-specific preferences if columnId exists
+                  if (column.id) {
+                    import("../utils/cookies").then(({ columnFeedPrefs }) => {
+                      columnFeedPrefs.setFeedForColumn(column.id, feedUri);
+                    });
+                  }
                   setRefreshCounter((prev) => prev + 1);
                 }
               : undefined
