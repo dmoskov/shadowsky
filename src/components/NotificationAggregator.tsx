@@ -1,5 +1,5 @@
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
 import type { AppBskyFeedDefs } from "@atproto/api";
+import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { Heart, Quote, Repeat2, UserPlus } from "lucide-react";
 import React from "react";
@@ -455,7 +455,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                     post.embed?.$type === "app.bsky.embed.images#view" ||
                     (post.embed?.$type ===
                       "app.bsky.embed.recordWithMedia#view" &&
-                      'media' in post.embed &&
+                      "media" in post.embed &&
                       post.embed.media?.$type === "app.bsky.embed.images#view");
 
                   // Extract images if present
@@ -467,17 +467,17 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                   if (post.embed) {
                     if (
                       post.embed.$type === "app.bsky.embed.images#view" &&
-                      'images' in post.embed &&
+                      "images" in post.embed &&
                       post.embed.images
                     ) {
                       images = post.embed.images;
                     } else if (
                       post.embed.$type ===
                         "app.bsky.embed.recordWithMedia#view" &&
-                      'media' in post.embed &&
+                      "media" in post.embed &&
                       post.embed.media?.$type ===
                         "app.bsky.embed.images#view" &&
-                      'images' in post.embed.media &&
+                      "images" in post.embed.media &&
                       post.embed.media.images
                     ) {
                       images = post.embed.media.images;

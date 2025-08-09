@@ -306,7 +306,7 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({
         trackConversationAction("select");
       }
     },
-    [selectedConvo, trackConversationView, trackConversationAction]
+    [selectedConvo, trackConversationView, trackConversationAction],
   );
 
   // Use state to store notifications data with persistence

@@ -244,7 +244,15 @@ export const BackgroundNotificationLoader: React.FC = () => {
     };
 
     loadCachedData();
-  }, [session, hasCachedData, isIndexedDBReady, queryClient, cacheService, isCachedDataStale, trackNotificationLoad]);
+  }, [
+    session,
+    hasCachedData,
+    isIndexedDBReady,
+    queryClient,
+    cacheService,
+    isCachedDataStale,
+    trackNotificationLoad,
+  ]);
 
   // Auto-fetch 4 weeks if no data exists or data is stale
   useEffect(() => {

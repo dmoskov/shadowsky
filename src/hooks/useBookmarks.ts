@@ -53,12 +53,9 @@ export function useBookmarks() {
   const queryClient = useQueryClient();
 
   // Check if a post is bookmarked
-  const isBookmarked = useCallback(
-    (postUri: string) => {
-      return bookmarkStore.isBookmarked(postUri);
-    },
-    [],
-  ); // No dependencies needed - bookmarkStore.isBookmarked is stable
+  const isBookmarked = useCallback((postUri: string) => {
+    return bookmarkStore.isBookmarked(postUri);
+  }, []); // No dependencies needed - bookmarkStore.isBookmarked is stable
 
   // Toggle bookmark mutation
   const toggleBookmarkMutation = useMutation({

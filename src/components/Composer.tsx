@@ -249,7 +249,7 @@ export function Composer() {
         clearTimeout(sendTimeout.current);
       }
       // Remove any body overflow styles
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, []);
 

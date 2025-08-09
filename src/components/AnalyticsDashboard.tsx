@@ -1,5 +1,5 @@
-import { Activity, BarChart3, Clock, Database, Users, Zap } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { Activity, BarChart3, Clock, Database, Users, Zap } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 interface AnalyticsEvent {

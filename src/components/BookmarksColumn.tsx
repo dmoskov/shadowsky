@@ -73,7 +73,7 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
       queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
       queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
     },
-    [queryClient]
+    [queryClient],
   );
 
   const handlePostClick = (post: AppBskyFeedDefs.PostView) => {

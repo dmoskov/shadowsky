@@ -574,8 +574,6 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     handleFetch4Weeks,
   ]);
 
-
-
   const allNotifications =
     data?.pages.flatMap((page) => page.notifications) || [];
 

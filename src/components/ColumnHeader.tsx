@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import {
   ChevronDown,
   MoreVertical,
@@ -6,7 +7,6 @@ import {
   Settings,
   X,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import React from "react";
 import type { Column } from "./SkyDeck";
 

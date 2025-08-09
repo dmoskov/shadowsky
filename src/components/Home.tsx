@@ -702,7 +702,7 @@ export const Home: React.FC<HomeProps> = ({
       setOpenThreadToReply(false); // Reset when clicking on post normally
       setShowThread(true);
     },
-    [trackClick]
+    [trackClick],
   );
 
   // Mutations are handled by useOptimisticPosts hook
