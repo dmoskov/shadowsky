@@ -4,7 +4,9 @@
 export const setCookie = (
   name: string,
   value: string,
-  options?: { secure?: boolean; sameSite?: string; domain?: string } | number,
+  options?:
+    | { secure?: boolean; sameSite?: string; domain?: string; days?: number }
+    | number,
 ) => {
   let days = 365;
   let secure = false;
@@ -14,6 +16,7 @@ export const setCookie = (
   if (typeof options === "number") {
     days = options;
   } else if (options) {
+    days = options.days || 365;
     secure = options.secure || false;
     sameSite = options.sameSite || "Lax";
     domain = options.domain;
@@ -102,7 +105,11 @@ export const deleteCookie = (name: string) => {
 
 export const cookies = {
   set(name: string, value: string, days: number = 365) {
-    setCookie(name, value, days);
+    setCookie(name, value, {
+      secure:
+        typeof window !== "undefined" && window.location.protocol === "https:",
+      sameSite: "Lax",
+    });
   },
 
   get(name: string): string | null {
@@ -128,12 +135,35 @@ export const columnFeedPrefs = {
   setFeedForColumn(columnId: string, feedUri: string) {
     const prefs = this.getAll();
     prefs[columnId] = feedUri;
-    cookies.set("columnFeedPrefs", JSON.stringify(prefs));
+    const prefsJson = JSON.stringify(prefs);
+
+    // Debug logging in development
+    if (process.env.NODE_ENV === "development") {
+      console.log("Setting column feed preference:", {
+        columnId,
+        feedUri,
+        allPrefs: prefs,
+        cookieValue: prefsJson.length,
+      });
+    }
+
+    cookies.set("columnFeedPrefs", prefsJson);
   },
 
   getFeedForColumn(columnId: string): string | null {
     const prefs = this.getAll();
-    return prefs[columnId] || null;
+    const result = prefs[columnId] || null;
+
+    // Debug logging in development
+    if (process.env.NODE_ENV === "development") {
+      console.log("Getting column feed preference:", {
+        columnId,
+        result,
+        allPrefs: prefs,
+      });
+    }
+
+    return result;
   },
 
   getAll(): Record<string, string> {

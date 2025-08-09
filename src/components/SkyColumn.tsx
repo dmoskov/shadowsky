@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { columnFeedPrefs } from "../utils/cookies";
 import { BookmarksColumn } from "./BookmarksColumn";
 import { ColumnHeader } from "./ColumnHeader";
 import { ConversationsSimple as Conversations } from "./ConversationsSimple";
@@ -30,7 +31,14 @@ export default function SkyColumn({
   const [showFeedDiscovery, setShowFeedDiscovery] = useState(false);
   const [selectedFeedUri, setSelectedFeedUri] = useState<string | undefined>(
     () => {
-      // For feed columns, use the column's data
+      // For feed columns, check saved preferences first
+      if (column.type === "feed" && column.id) {
+        const savedFeed = columnFeedPrefs.getFeedForColumn(column.id);
+        if (savedFeed) {
+          return savedFeed;
+        }
+      }
+      // Fall back to column's data
       return column.data;
     },
   );
@@ -128,9 +136,7 @@ export default function SkyColumn({
                   setSelectedFeedUri(feedUri);
                   // Save to column-specific preferences if columnId exists
                   if (column.id) {
-                    import("../utils/cookies").then(({ columnFeedPrefs }) => {
-                      columnFeedPrefs.setFeedForColumn(column.id, feedUri);
-                    });
+                    columnFeedPrefs.setFeedForColumn(column.id, feedUri);
                   }
                   setRefreshCounter((prev) => prev + 1);
                 }
