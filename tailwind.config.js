@@ -196,8 +196,10 @@ export default {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-        "bsky-gradient": "linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)",
-        "bsky-gradient-text": "linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)",
+        "bsky-gradient":
+          "linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)",
+        "bsky-gradient-text":
+          "linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)",
         "shimmer-gradient":
           "linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)",
       },
@@ -238,13 +240,13 @@ export default {
         128: "32rem",
       },
       width: {
-        'column': '400px', // Standard column width
+        column: "400px", // Standard column width
       },
     },
   },
   plugins: [
     // Custom component classes plugin
-    function ({ addComponents, theme }) {
+    function ({ addComponents }) {
       addComponents({
         // Glass morphism effect
         ".bsky-glass": {
@@ -282,7 +284,8 @@ export default {
         },
         // Gradient text utility
         ".bsky-gradient-text": {
-          background: "linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)",
+          background:
+            "linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)",
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
           backgroundClip: "text",

@@ -32,15 +32,15 @@ export const setCookie = (
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
 
   let cookieString = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=${sameSite}`;
-  
+
   if (domain) {
     cookieString += `;Domain=${domain}`;
   }
-  
+
   if (secure) {
     cookieString += ";Secure";
   }
-  
+
   document.cookie = cookieString;
 };
 
@@ -60,7 +60,7 @@ export const getCookie = (name: string): string | null => {
 export const deleteCookie = (name: string) => {
   // Delete cookie without domain (for local)
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
-  
+
   // Also delete with production domain if applicable
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
