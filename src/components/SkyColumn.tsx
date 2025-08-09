@@ -28,7 +28,16 @@ export default function SkyColumn({
   const [feedOptions, setFeedOptions] = useState<any[]>([]);
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [showFeedDiscovery, setShowFeedDiscovery] = useState(false);
-  const [selectedFeedUri, setSelectedFeedUri] = useState<string | undefined>(column.data);
+  const [selectedFeedUri, setSelectedFeedUri] = useState<string | undefined>(() => {
+    // For feed columns, check sessionStorage first
+    if (column.type === "feed") {
+      const sessionFeed = sessionStorage.getItem("selectedFeed");
+      if (sessionFeed) {
+        return sessionFeed;
+      }
+    }
+    return column.data;
+  });
 
   useEffect(() => {
     const checkScroll = () => {
@@ -81,7 +90,6 @@ export default function SkyColumn({
         // Use the Home component for all feed columns
         return (
           <Home
-            key={selectedFeedUri || column.data}
             initialFeedUri={selectedFeedUri || column.data}
             isFocused={isFocused}
             columnId={column.id}
@@ -122,6 +130,7 @@ export default function SkyColumn({
             column.type === "feed"
               ? (feedUri: string) => {
                   setSelectedFeedUri(feedUri);
+                  sessionStorage.setItem("selectedFeed", feedUri);
                   setRefreshCounter((prev) => prev + 1);
                 }
               : undefined

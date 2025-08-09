@@ -74,10 +74,10 @@
   --bsky-text-tertiary: #d1d5db;
   --bsky-text-link: var(--bsky-primary-light);
 
-  /* Border colors - better visibility in dark theme */
-  --bsky-border-primary: #374151;
-  --bsky-border-secondary: #4b5563;
-  --bsky-border-light: #1f2937;
+  /* Border colors - very subtle in dark theme */
+  --bsky-border-primary: #151b28;
+  --bsky-border-secondary: #1a2332;
+  --bsky-border-light: #0f1419;
 
   /* Notification type colors - adjusted for dark mode */
   --bsky-like: #f472b6;

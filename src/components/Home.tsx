@@ -115,22 +115,34 @@ export const Home: React.FC<HomeProps> = ({
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
     useOptimisticPosts();
   // Removed hoveredPost state to prevent re-renders - using CSS hover instead
-  const [selectedFeed] = useState<FeedType>(() => {
-    // Use initialFeedUri if provided
+  // Use initialFeedUri if provided, otherwise get from session/local storage
+  const selectedFeed = React.useMemo<FeedType>(() => {
     if (initialFeedUri) {
       return initialFeedUri as FeedType;
     }
-    // Otherwise check cookie for this column
+    // Check cookie for this column
     if (columnId) {
       const savedFeed = columnFeedPrefs.getFeedForColumn(columnId);
       if (savedFeed) {
         return savedFeed as FeedType;
       }
     }
+    // Check sessionStorage for current session
+    const sessionFeed = sessionStorage.getItem("selectedFeed");
+    if (sessionFeed) {
+      return sessionFeed as FeedType;
+    }
     // Fall back to localStorage for backwards compatibility
     const savedFeed = localStorage.getItem("selectedFeed");
     return (savedFeed as FeedType) || "following";
-  });
+  }, [initialFeedUri, columnId]);
+
+  // Save selected feed to sessionStorage when it changes
+  React.useEffect(() => {
+    if (selectedFeed) {
+      sessionStorage.setItem("selectedFeed", selectedFeed);
+    }
+  }, [selectedFeed]);
   const [internalShowFeedDiscovery, setInternalShowFeedDiscovery] =
     useState(false);
   const showFeedDiscovery =
@@ -1212,8 +1224,7 @@ export const Home: React.FC<HomeProps> = ({
     >
       <div className="mx-auto max-w-2xl px-3 sm:px-4" ref={postsContainerRef}>
         <div
-          className="divide-y"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          className="divide-y divide-gray-100 dark:divide-gray-950"
           role="feed"
           aria-label="Posts"
         >

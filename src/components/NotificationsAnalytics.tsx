@@ -799,15 +799,15 @@ export const NotificationsAnalytics: React.FC = () => {
           style={{
             background: "var(--bsky-bg-secondary)",
             position: "relative",
-            overflow: "hidden",
           }}
         >
           <div
-            className="absolute right-0 top-0 h-64 w-64 opacity-5"
+            className="absolute right-0 top-0 h-64 w-64 opacity-5 pointer-events-none"
             style={{
               background:
                 "radial-gradient(circle, var(--bsky-primary) 0%, transparent 70%)",
               transform: "translate(30%, -30%)",
+              overflow: "hidden",
             }}
           />
           <div className="mb-4" style={{ position: "relative", zIndex: 10 }}>
@@ -1263,7 +1263,7 @@ export const NotificationsAnalytics: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-3 text-xs">
+            <div className="mt-4 flex flex-wrap gap-3 text-xs pb-2">
               {activityView === "received" ? (
                 <>
                   <div className="flex items-center gap-1">
