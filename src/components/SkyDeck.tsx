@@ -357,7 +357,7 @@ export default function SkyDeck() {
     setDragOverId(null);
   };
 
-  // In narrow view, show only the home column without chrome
+  // In narrow view, show only the home column
   if (isNarrowView && columns.length > 0) {
     // Ensure we're showing the home column
     const homeColumn = columns.find((col) => col.id === "home") || columns[0];
@@ -366,7 +366,7 @@ export default function SkyDeck() {
         <SkyColumn
           column={homeColumn}
           onClose={() => handleRemoveColumn(homeColumn.id)}
-          chromeless={true}
+          chromeless={false}
         />
       </div>
     );
