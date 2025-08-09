@@ -248,6 +248,8 @@ export function Composer() {
       if (sendTimeout.current) {
         clearTimeout(sendTimeout.current);
       }
+      // Remove any body overflow styles
+      document.body.style.overflow = '';
     };
   }, []);
 
@@ -350,7 +352,7 @@ export function Composer() {
         setPostOrder(splitPosts.map((_, index) => index));
       }
     }
-  }, [text, numberingFormat, isReorderingPosts, postOrder]);
+  }, [text, numberingFormat, isReorderingPosts]);
 
   const applyNumbering = useCallback(
     (posts: string[], order?: number[]): string[] => {
@@ -2548,6 +2550,7 @@ export function Composer() {
       {showToneOptions && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
           onClick={() => setShowToneOptions(false)}
         >
           <div
