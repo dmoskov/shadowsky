@@ -109,6 +109,7 @@ export const cookies = {
       secure:
         typeof window !== "undefined" && window.location.protocol === "https:",
       sameSite: "Lax",
+      days: days,
     });
   },
 
