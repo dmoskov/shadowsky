@@ -192,7 +192,7 @@ export const Bookmarks: React.FC = () => {
               <img
                 src={
                   proxifyBskyImage(bookmark.author.avatar) ||
-                  "/default-avatar.png"
+                  "/default-avatar.svg"
                 }
                 alt={bookmark.author?.handle || "unknown"}
                 className="h-10 w-10 rounded-full object-cover"

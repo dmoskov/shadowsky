@@ -48,12 +48,14 @@
   }
 
   .bsky-notification-unread {
-    @apply from-bsky-primary/[0.08] border-l-4 border-l-bsky-primary bg-gradient-to-r to-transparent;
+    @apply border-l-4 border-l-bsky-primary;
+    background: linear-gradient(to right, var(--bsky-primary-10), transparent);
   }
 
   /* Conversation unread style */
   .conversation-unread {
-    @apply from-bsky-primary/[0.08] border-l-4 border-l-bsky-primary bg-gradient-to-r to-transparent;
+    @apply border-l-4 border-l-bsky-primary;
+    background: linear-gradient(to right, var(--bsky-primary-10), transparent);
   }
 
   /* Tab styles */
