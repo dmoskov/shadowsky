@@ -9,7 +9,7 @@ frontend:
         # Debug: Check if environment variables are available
         - echo "Checking for VITE_ environment variables:"
         - env | grep VITE_ || echo "No VITE_ variables found"
-        - npm run build:skip-tsc
+        - npm run build
     postBuild:
       commands:
         # Create a 404.html that redirects to index.html for client-side routing
