@@ -76,9 +76,9 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between border-b bg-white p-3 dark:border-gray-700 dark:bg-gray-950">
+    <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-2.5 dark:border-gray-700 dark:bg-gray-950">
       <div className="flex items-center gap-2">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
           {column.type === "feed" && currentFeedLabel
             ? currentFeedLabel
             : getDisplayTitle()}
@@ -93,10 +93,10 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
         {onRefresh && (
           <button
             onClick={onRefresh}
-            className="rounded-md p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="rounded-md p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
             title="Refresh"
           >
-            <RefreshCw className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            <RefreshCw className="h-4 w-4 text-gray-500 dark:text-gray-400" />
           </button>
         )}
 
@@ -105,7 +105,7 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowFeedDropdown(!showFeedDropdown)}
-              className="flex items-center gap-1 rounded-md px-2 py-1 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
               title="Change feed"
             >
               <span className="text-gray-600 dark:text-gray-400">Change</span>
@@ -159,10 +159,10 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
         {canRemove() && (
           <button
             onClick={() => onRemove(column.id)}
-            className="rounded-md p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="rounded-md p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
             title="Remove column"
           >
-            <X className="h-4 w-4 text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400" />
+            <X className="h-4 w-4 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400" />
           </button>
         )}
 
@@ -170,10 +170,10 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="rounded-md p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="rounded-md p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
             title="More options"
           >
-            <MoreVertical className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            <MoreVertical className="h-4 w-4 text-gray-500 dark:text-gray-400" />
           </button>
 
           {showMenu && (

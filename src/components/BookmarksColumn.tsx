@@ -39,7 +39,7 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
     bookmarkService.init();
   }, []);
 
-  const { data: bookmarks, isLoading } = useQuery({
+  const { data: bookmarks, isLoading, refetch } = useQuery({
     queryKey: ["bookmarks", searchQuery],
     queryFn: async () => {
       if (searchQuery) {
@@ -49,6 +49,13 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
     },
     staleTime: 30000,
   });
+
+  // Refetch bookmarks when the column becomes focused
+  useEffect(() => {
+    if (isFocused) {
+      refetch();
+    }
+  }, [isFocused, refetch]);
 
   const { data: bookmarkCount } = useQuery({
     queryKey: ["bookmarkCount"],
@@ -154,13 +161,14 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
           className={`mt-2 grid gap-1 ${embed.images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
         >
           {embed.images.map((img: any, idx: number) => (
-            <img
-              key={idx}
-              src={proxifyBskyImage(img.thumb)}
-              alt={img.alt || ""}
-              className="h-auto w-full cursor-pointer rounded-lg hover:opacity-95"
-              onClick={(e) => handleImageClick(e, idx)}
-            />
+            <div key={idx} className="relative overflow-hidden rounded-lg bg-bsky-bg-tertiary">
+              <img
+                src={proxifyBskyImage(img.thumb)}
+                alt={img.alt || ""}
+                className="h-auto w-full max-h-80 object-contain cursor-pointer hover:opacity-95"
+                onClick={(e) => handleImageClick(e, idx)}
+              />
+            </div>
           ))}
         </div>
       );
@@ -199,7 +207,7 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
         className="bsky-glass sticky top-0 z-20 border-b"
         style={{ borderColor: "var(--bsky-border-primary)" }}
       >
-        <div className="group flex items-center justify-between px-4 py-3">
+        <div className="group flex items-center justify-between px-4 py-2.5">
           <div className="flex items-center gap-2">
             <Bookmark size={20} style={{ color: "var(--bsky-primary)" }} />
             <h2

@@ -4,7 +4,6 @@ import { formatDistanceToNow } from "date-fns";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { dmService, type DmConversation } from "../services/dm-service";
-import "../styles/direct-messages.css";
 
 export const DirectMessages: React.FC = () => {
   const { session } = useAuth();
@@ -106,12 +105,12 @@ export const DirectMessages: React.FC = () => {
   };
 
   return (
-    <div className="dm-container h-full">
+    <div className="flex h-full bg-bsky-bg-primary overflow-hidden">
       {/* Conversations list */}
       <div
-        className={`dm-conversations-list ${selectedConversation ? "has-selection" : ""}`}
+        className={`w-80 min-w-60 max-w-2/5 border-r border-bsky-border-primary flex flex-col h-full ${selectedConversation ? "hidden md:flex" : ""}`}
       >
-        <div className="dm-conversations-header">
+        <div className="p-4 border-b border-bsky-border-primary">
           <h2
             className="text-xl font-semibold"
             style={{ color: "var(--bsky-text-primary)" }}
@@ -120,7 +119,7 @@ export const DirectMessages: React.FC = () => {
           </h2>
         </div>
 
-        <div className="dm-conversations-scroll">
+        <div className="flex-1 overflow-y-auto">
           {chatError ? (
             <div className="p-4">
               <div
@@ -152,17 +151,17 @@ export const DirectMessages: React.FC = () => {
                 <div
                   key={conversation.id}
                   onClick={() => setSelectedConversation(conversation.id)}
-                  className={`dm-conversation-item ${selectedConversation === conversation.id ? "active" : ""}`}
+                  className={`p-4 border-b border-bsky-border-primary cursor-pointer transition-colors duration-200 hover:bg-bsky-bg-secondary ${selectedConversation === conversation.id ? "bg-bsky-bg-secondary" : ""}`}
                 >
                   <div className="flex items-center">
                     {otherMember.avatar ? (
                       <img
                         src={otherMember.avatar}
                         alt={otherMember.handle || otherMember.did}
-                        className="dm-conversation-avatar"
+                        className="w-10 h-10 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="dm-conversation-avatar flex items-center justify-center bg-gray-300">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-300">
                         <span className="text-lg text-gray-600">
                           {(otherMember.displayName ||
                             otherMember.handle ||
@@ -170,25 +169,25 @@ export const DirectMessages: React.FC = () => {
                         </span>
                       </div>
                     )}
-                    <div className="dm-conversation-info">
-                      <div className="dm-conversation-name">
+                    <div className="flex-1 min-w-0 ml-3">
+                      <div className="font-semibold text-bsky-text-primary whitespace-nowrap overflow-hidden text-ellipsis">
                         {otherMember.displayName ||
                           otherMember.handle ||
                           "Unknown User"}
                       </div>
                       {otherMember.handle && (
-                        <div className="dm-conversation-handle">
+                        <div className="text-sm text-bsky-text-secondary whitespace-nowrap overflow-hidden text-ellipsis">
                           @{otherMember.handle}
                         </div>
                       )}
                       {conversation.lastMessage && (
-                        <div className="dm-conversation-preview">
+                        <div className="text-sm text-bsky-text-secondary whitespace-nowrap overflow-hidden text-ellipsis mt-1">
                           {conversation.lastMessage.text}
                         </div>
                       )}
                     </div>
                     {conversation.unreadCount > 0 && (
-                      <div className="dm-unread-badge">
+                      <div className="bg-bsky-primary text-white text-xs rounded-full py-0.5 px-2 min-w-5 text-center">
                         {conversation.unreadCount}
                       </div>
                     )}
@@ -201,13 +200,13 @@ export const DirectMessages: React.FC = () => {
       </div>
 
       {/* Chat view */}
-      <div className="dm-chat-container">
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
         {selectedConversation && conversationData ? (
           <>
             {/* Chat header */}
-            <div className="dm-chat-header">
+            <div className="p-4 border-b border-bsky-border-primary flex items-center gap-3">
               <button
-                className="dm-back-button md:hidden"
+                className="inline-flex items-center gap-2 p-2 mr-4 bg-transparent border-none text-bsky-primary cursor-pointer md:hidden"
                 onClick={() => setSelectedConversation(null)}
               >
                 ← Back
@@ -218,10 +217,10 @@ export const DirectMessages: React.FC = () => {
                   alt={
                     getOtherMember(conversationData.conversation).handle || ""
                   }
-                  className="dm-conversation-avatar"
+                  className="w-10 h-10 rounded-full object-cover"
                 />
               ) : (
-                <div className="dm-conversation-avatar flex items-center justify-center bg-gray-300">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-300">
                   <span className="text-lg text-gray-600">
                     {(getOtherMember(conversationData.conversation)
                       .displayName ||
@@ -251,7 +250,7 @@ export const DirectMessages: React.FC = () => {
             </div>
 
             {/* Messages */}
-            <div className="dm-messages-container">
+            <div className="flex-1 overflow-y-auto p-4">
               {loadingMessages ? (
                 <div
                   className="text-center"
@@ -273,11 +272,11 @@ export const DirectMessages: React.FC = () => {
                     return (
                       <div
                         key={message.id}
-                        className={`dm-message ${isOwnMessage ? "own" : ""}`}
+                        className={`mb-4 flex ${isOwnMessage ? "justify-end" : ""}`}
                       >
-                        <div className="dm-message-bubble">
+                        <div className={`max-w-[70%] rounded-lg p-2 px-4 ${isOwnMessage ? "bg-bsky-primary text-white" : "bg-bsky-bg-secondary text-bsky-text-primary"}`}>
                           <div>{message.text}</div>
-                          <div className="dm-message-time">
+                          <div className="text-xs mt-1 opacity-70">
                             {formatDistanceToNow(new Date(message.sentAt), {
                               addSuffix: true,
                             })}
@@ -292,21 +291,21 @@ export const DirectMessages: React.FC = () => {
             </div>
 
             {/* Message input */}
-            <div className="dm-input-container">
-              <form onSubmit={handleSendMessage} className="dm-input-form">
+            <div className="p-4 border-t border-bsky-border-primary">
+              <form onSubmit={handleSendMessage} className="flex gap-2">
                 <input
                   type="text"
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
                   placeholder="Type a message..."
-                  className="dm-input"
+                  className="flex-1 py-2 px-4 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary text-bsky-text-primary text-base focus:outline-none focus:border-bsky-primary focus:shadow-sm"
                 />
                 <button
                   type="submit"
                   disabled={
                     !messageText.trim() || sendMessageMutation.isPending
                   }
-                  className="dm-send-button"
+                  className="py-2 px-6 bg-bsky-primary text-white border-none rounded-lg font-semibold cursor-pointer transition-colors duration-200 hover:bg-bsky-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Send
                 </button>
@@ -314,7 +313,7 @@ export const DirectMessages: React.FC = () => {
             </div>
           </>
         ) : (
-          <div className="dm-empty-state">
+          <div className="flex-1 flex items-center justify-center text-bsky-text-secondary">
             <div className="text-center">
               <h3 className="mb-2 text-xl font-semibold">Your Messages</h3>
               <p>Select a conversation to start messaging</p>

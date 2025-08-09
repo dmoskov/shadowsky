@@ -408,16 +408,13 @@ export const NotificationsFeed: React.FC = () => {
     <div className="bsky-font">
       {/* Filter tabs */}
       <div
-        className="bsky-glass sticky top-0 z-10"
-        style={{
-          borderBottom: "1px solid var(--bsky-border-primary)",
-        }}
+        className="bsky-glass sticky top-0 z-10 border-b border-bsky-border-primary"
       >
-        <div className="px-3 py-2 sm:px-6">
+        <div className="px-3 py-2 overflow-hidden">
           {/* Filter tabs */}
           <div className="flex items-center gap-1">
             {/* Primary tabs - always visible */}
-            <div className="bsky-tabs-container bsky-tabs-icon-only-desktop flex min-w-0 flex-1 gap-1 overflow-x-auto">
+            <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto overflow-y-hidden scrollbar-hide">
               <FilterTab
                 active={filter === "all"}
                 onClick={() => handleFilterChange("all")}
@@ -501,7 +498,11 @@ export const NotificationsFeed: React.FC = () => {
             <div className="relative md:hidden" ref={moreFiltersRef}>
               <button
                 onClick={() => setShowMoreFilters(!showMoreFilters)}
-                className={`bsky-tab ${showMoreFilters ? "bsky-tab-active" : ""}`}
+                className={`flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200
+                  ${showMoreFilters 
+                    ? "bg-bsky-primary text-white" 
+                    : "text-bsky-text-secondary hover:text-bsky-text-primary hover:bg-bsky-bg-secondary"
+                  }`}
                 aria-label="More filters"
               >
                 <MoreVertical size={16} />
@@ -509,18 +510,14 @@ export const NotificationsFeed: React.FC = () => {
 
               {showMoreFilters && (
                 <div
-                  className="absolute right-0 top-full z-20 mt-1 w-48 rounded-lg py-1 shadow-lg"
-                  style={{
-                    backgroundColor: "var(--bsky-bg-secondary)",
-                    border: "1px solid var(--bsky-border-primary)",
-                  }}
+                  className="absolute right-0 top-full z-20 mt-1 w-48 rounded-lg p-1 shadow-md bg-bsky-bg-secondary border border-bsky-border-primary"
                 >
                   <button
                     onClick={() => {
                       handleFilterChange("follows");
                       setShowMoreFilters(false);
                     }}
-                    className={`flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-blue-500 hover:bg-opacity-10 ${
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm rounded-md hover:bg-bsky-bg-hover ${
                       filter === "follows" ? "text-blue-500" : ""
                     }`}
                   >
@@ -537,7 +534,7 @@ export const NotificationsFeed: React.FC = () => {
                       handleFilterChange("replies");
                       setShowMoreFilters(false);
                     }}
-                    className={`flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-blue-500 hover:bg-opacity-10 ${
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm rounded-md hover:bg-bsky-bg-hover ${
                       filter === "replies" ? "text-blue-500" : ""
                     }`}
                   >
@@ -554,7 +551,7 @@ export const NotificationsFeed: React.FC = () => {
                       handleFilterChange("quotes");
                       setShowMoreFilters(false);
                     }}
-                    className={`flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-blue-500 hover:bg-opacity-10 ${
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm rounded-md hover:bg-bsky-bg-hover ${
                       filter === "quotes" ? "text-blue-500" : ""
                     }`}
                   >
@@ -571,7 +568,7 @@ export const NotificationsFeed: React.FC = () => {
                       handleFilterChange("images");
                       setShowMoreFilters(false);
                     }}
-                    className={`flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-blue-500 hover:bg-opacity-10 ${
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm rounded-md hover:bg-bsky-bg-hover ${
                       filter === "images" ? "text-blue-500" : ""
                     }`}
                   >
@@ -588,7 +585,7 @@ export const NotificationsFeed: React.FC = () => {
                       handleFilterChange("from-following");
                       setShowMoreFilters(false);
                     }}
-                    className={`flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-blue-500 hover:bg-opacity-10 ${
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm rounded-md hover:bg-bsky-bg-hover ${
                       filter === "from-following" ? "text-blue-500" : ""
                     }`}
                     disabled={isLoadingFollowing}
@@ -607,7 +604,7 @@ export const NotificationsFeed: React.FC = () => {
                         handleFilterChange("top-accounts");
                         setShowMoreFilters(false);
                       }}
-                      className={`flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-blue-500 hover:bg-opacity-10 ${
+                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm rounded-md hover:bg-bsky-bg-hover ${
                         filter === "top-accounts" ? "text-blue-500" : ""
                       }`}
                     >
@@ -748,7 +745,7 @@ export const NotificationsFeed: React.FC = () => {
                             newExpanded.delete(aggregationKey);
                             setExpandedAggregations(newExpanded);
                           }}
-                          className="flex w-full items-center gap-1 px-4 py-2 text-left text-xs hover:opacity-80 sm:px-6"
+                          className="flex w-full items-center gap-1 px-3 py-2 text-left text-xs rounded-md hover:bg-bsky-bg-hover"
                           style={{
                             color: "var(--bsky-text-secondary)",
                             paddingLeft: "calc(1rem + 3rem)",
@@ -921,19 +918,20 @@ const FilterTab: React.FC<FilterTabProps> = ({
   return (
     <button
       onClick={onClick}
-      className={`bsky-tab flex items-center gap-1.5 ${active ? "bsky-tab-active" : ""} ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+      className={`flex items-center gap-1 px-2.5 py-1.5 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap
+        ${active 
+          ? "bg-bsky-primary text-white" 
+          : "text-bsky-text-secondary hover:text-bsky-text-primary hover:bg-bsky-bg-secondary"
+        } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
       title={`${label}${count !== undefined && count > 0 ? ` (${count})` : ""}`}
       disabled={disabled}
     >
-      <span style={{ opacity: active ? 1 : 0.7 }}>{icon}</span>
-      <span className="bsky-tab-label">{label}</span>
+      <span>{icon}</span>
       {count !== undefined && count > 0 && (
         <span
-          className="bsky-tab-count text-xs font-medium"
-          style={{
-            opacity: active ? 1 : 0.7,
-            color: active ? "inherit" : "var(--bsky-text-secondary)",
-          }}
+          className={`text-xs font-bold ${
+            active ? "text-white/90" : "text-bsky-text-tertiary"
+          }`}
         >
           {count}
         </span>
@@ -1114,17 +1112,11 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
 
         return (
           <div
-            className="mt-3 rounded-lg p-4"
-            style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            }}
+            className="mt-2 rounded-md p-2.5 bg-bsky-bg-secondary border border-bsky-border-primary"
           >
-            <div className="mb-2 flex items-center gap-2">
+            <div className="mb-1 flex items-center gap-1.5">
               <span
-                className="text-xs font-medium"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                className="text-xs font-medium text-bsky-text-tertiary"
               >
                 {notification.reason === "reply"
                   ? "Replying to your post:"
@@ -1147,8 +1139,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                 </div>
               )}
               <span
-                className="text-xs font-medium"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                className="text-xs font-medium text-bsky-text-secondary"
               >
                 {post.author?.displayName || post.author?.handle || "Unknown"}
               </span>
@@ -1164,8 +1155,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
 
             {post.record?.text ? (
               <p
-                className="text-sm"
-                style={{ color: "var(--bsky-text-primary)", lineHeight: "1.5" }}
+                className="text-sm leading-relaxed text-bsky-text-primary"
               >
                 {post.record.text}
               </p>
@@ -1239,44 +1229,10 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
       ) {
         return (
           <div
-            className="mt-3 rounded-lg p-4"
-            style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            }}
+            className="mt-2 rounded-md p-2.5 bg-bsky-bg-secondary border border-bsky-border-primary"
           >
-            <div className="mb-2 flex items-center gap-2">
-              <span
-                className="text-xs font-medium"
-                style={{ color: "var(--bsky-text-tertiary)" }}
-              >
-                Mentioned you in:
-              </span>
-              {notification.author.avatar ? (
-                <img
-                  src={proxifyBskyImage(notification.author.avatar)}
-                  alt={notification.author.handle}
-                  className="bsky-avatar h-5 w-5"
-                />
-              ) : (
-                <div
-                  className="bsky-avatar flex h-5 w-5 items-center justify-center text-xs"
-                  style={{ background: "var(--bsky-bg-tertiary)" }}
-                >
-                  {notification.author?.handle?.charAt(0).toUpperCase() || "U"}
-                </div>
-              )}
-              <span
-                className="text-xs font-medium"
-                style={{ color: "var(--bsky-text-secondary)" }}
-              >
-                {notification.author.displayName || notification.author.handle}
-              </span>
-            </div>
             <p
-              className="text-sm"
-              style={{ color: "var(--bsky-text-primary)", lineHeight: "1.5" }}
+              className="text-sm leading-relaxed text-bsky-text-primary"
             >
               {(notification.record as { text?: string }).text}
             </p>
@@ -1297,12 +1253,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
       ) {
         return (
           <div
-            className="mt-3 rounded-lg p-4"
-            style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-            }}
+            className="mt-2 rounded-md p-2.5 bg-bsky-bg-secondary border border-bsky-border-primary"
           >
             <p
               className="text-sm"
@@ -1322,7 +1273,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
         href={notificationUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className={`bsky-notification flex cursor-pointer gap-3 px-4 py-4 no-underline sm:px-6 ${
+        className={`bsky-notification flex cursor-pointer gap-2 px-3 py-2 no-underline ${
           !notification.isRead ? "bsky-notification-unread" : ""
         }`}
         style={{ textDecoration: "none", color: "inherit", display: "flex" }}

@@ -305,9 +305,9 @@ export default function SkyColumnFeed({
     return (
       <div
         key={post.uri}
-        className={`post-item cursor-pointer border-b transition-colors hover:bg-blue-500 hover:bg-opacity-5 ${
+        className={`relative cursor-pointer border-b transition-colors duration-150 hover:bg-blue-500/5 ${
           isFocusedPost
-            ? "border-l-4 border-l-blue-500 bg-blue-500 bg-opacity-10 pl-3"
+            ? "border-l-4 border-l-blue-500 bg-blue-500/10 pl-3"
             : ""
         }`}
         style={{ borderColor: "var(--bsky-border-primary)" }}
@@ -364,16 +364,17 @@ export default function SkyColumnFeed({
 
               {/* Simplified embed rendering */}
               {post.embed?.images && Array.isArray(post.embed.images) && (
-                <div className="mt-2 grid grid-cols-2 gap-2">
+                <div className={`mt-2 grid gap-2 ${post.embed.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                   {post.embed.images.map((image: any, idx: number) => (
-                    <img
-                      key={idx}
-                      src={proxifyBskyImage(
-                        image.thumb || image.fullsize || "",
-                      )}
-                      alt={image.alt || ""}
-                      className="h-auto w-full rounded-lg"
-                    />
+                    <div key={idx} className="relative overflow-hidden rounded-lg bg-bsky-bg-tertiary">
+                      <img
+                        src={proxifyBskyImage(
+                          image.thumb || image.fullsize || "",
+                        )}
+                        alt={image.alt || ""}
+                        className="h-auto w-full max-h-80 object-contain"
+                      />
+                    </div>
                   ))}
                 </div>
               )}
@@ -460,7 +461,7 @@ export default function SkyColumnFeed({
 
       <div
         ref={containerRef}
-        className="skydeck-scrollbar h-full overflow-y-auto"
+        className="bsky-scrollbar h-full overflow-y-auto"
       >
         {allPosts.map((post: any, index: number) => {
           const actualPost = post?.post || post;

@@ -1,12 +1,46 @@
 /* Import our Bluesky-inspired theme */
 @import "./styles/bluesky-theme.css";
-@import "./styles/composer.css";
+/* Keep complex animations and styles */
 @import "./styles/skydeck.css";
-@import "./styles/bookmarks.css";
+@import "./styles/conversations.css";
 
 @tailwind base;
 @tailwind components;
+@import "./styles/tailwind-components.css";
 @tailwind utilities;
+
+/* Consistent spacing system */
+@layer utilities {
+  /* Standard container padding */
+  .bsky-container-padding {
+    @apply px-3 py-2.5;
+  }
+  
+  /* Header/toolbar padding */
+  .bsky-header-padding {
+    @apply px-4 py-2.5;
+  }
+  
+  /* Feed item padding */
+  .bsky-feed-item-padding {
+    @apply px-3 py-2.5;
+  }
+  
+  /* Card content padding */
+  .bsky-card-content {
+    @apply p-3;
+  }
+  
+  /* Button sizing consistency */
+  .bsky-button-icon {
+    @apply p-2;
+  }
+  
+  /* Consistent hover states */
+  .bsky-hover-bg {
+    @apply hover:bg-bsky-bg-hover;
+  }
+}
 
 :root {
   font-family:

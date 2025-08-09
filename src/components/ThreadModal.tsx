@@ -228,7 +228,7 @@ export function ThreadModal({
 
         {/* Scrollable content */}
         <div
-          className="skydeck-scrollbar flex-1 overflow-y-auto"
+          className="bsky-scrollbar flex-1 overflow-y-auto"
           style={{ minHeight: 0 }}
         >
           <div className="p-4">

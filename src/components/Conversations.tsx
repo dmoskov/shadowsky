@@ -17,7 +17,6 @@ import { useAuth } from "../contexts/AuthContext";
 import { useNotificationPosts } from "../hooks/useNotificationPosts";
 import { usePostsByUris } from "../hooks/usePostsByUris";
 import { useReplyNotificationsFromCache } from "../hooks/useReplyNotificationsFromCache";
-import "../styles/conversations.css";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { atUriToBskyUrl, getNotificationUrl } from "../utils/url-helpers";
 

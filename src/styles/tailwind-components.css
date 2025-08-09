@@ -1,0 +1,158 @@
+/* Tailwind Component Classes */
+/* These reusable component classes replace the ones from bluesky-theme.css */
+
+@layer components {
+  /* Button styles */
+  .bsky-button {
+    @apply rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 hover:shadow-sm active:scale-[0.98];
+  }
+
+  .bsky-button-primary {
+    @apply bsky-button bg-gradient-to-r from-bsky-primary to-bsky-accent text-white hover:opacity-90;
+  }
+
+  .bsky-button-secondary {
+    @apply bsky-button bg-bsky-bg-tertiary text-bsky-text-primary border border-bsky-border-primary hover:bg-opacity-80;
+  }
+
+  .bsky-button-ghost {
+    @apply bsky-button bg-transparent text-bsky-text-secondary hover:bg-white/10;
+  }
+
+  /* Card styles */
+  .bsky-card {
+    @apply bg-bsky-bg-secondary border border-bsky-border-primary rounded-lg shadow-sm;
+  }
+
+  .bsky-card-hover {
+    @apply bsky-card transition-all duration-200 hover:border-opacity-60 hover:shadow-md hover:bg-opacity-90;
+  }
+
+  /* Avatar styles */
+  .bsky-avatar {
+    @apply rounded-full border-2 border-bsky-bg-primary shadow-sm;
+  }
+
+  .bsky-avatar-glow {
+    @apply bsky-avatar shadow-bsky-glow;
+  }
+
+  /* Badge styles */
+  .bsky-badge {
+    @apply inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-bsky-bg-tertiary text-bsky-text-secondary border border-bsky-border-primary;
+  }
+
+  /* Notification styles */
+  .bsky-notification {
+    @apply relative overflow-hidden border-b border-bsky-border-light transition-all duration-200 hover:bg-bsky-bg-hover;
+  }
+
+  .bsky-notification-unread {
+    @apply border-l-4 border-l-bsky-primary bg-gradient-to-r from-bsky-primary/[0.08] to-transparent;
+  }
+
+  /* Conversation unread style */
+  .conversation-unread {
+    @apply border-l-4 border-l-bsky-primary bg-gradient-to-r from-bsky-primary/[0.08] to-transparent;
+  }
+
+  /* Tab styles */
+  .bsky-tab {
+    @apply relative whitespace-nowrap px-3 py-2 text-sm font-medium transition-all duration-200 text-bsky-text-secondary hover:text-bsky-text-primary min-w-fit flex-shrink-0 rounded-md;
+  }
+
+  .bsky-tab-active {
+    @apply text-bsky-text-primary bg-bsky-bg-secondary;
+  }
+
+  /* Compact mode for tabs */
+  .bsky-tabs-compact .bsky-tab {
+    @apply px-2 py-1.5;
+  }
+
+  .bsky-tabs-compact .bsky-tab-label {
+    @apply text-xs;
+  }
+
+  /* Icon-only mode for desktop */
+  @media (min-width: 769px) {
+    .bsky-tabs-icon-only-desktop .bsky-tab-label {
+      @apply hidden;
+    }
+
+    .bsky-tabs-icon-only-desktop .bsky-tab {
+      @apply px-3;
+    }
+
+    .bsky-tabs-icon-only-desktop .bsky-tab-count {
+      @apply ml-1 text-xs;
+    }
+  }
+  
+  /* Icon-only mode for columns (always active) */
+  .bsky-tabs-icon-only-column .bsky-tab-label {
+    @apply hidden;
+  }
+
+  .bsky-tabs-icon-only-column .bsky-tab {
+    @apply px-3;
+  }
+
+  .bsky-tabs-icon-only-column .bsky-tab-count {
+    @apply ml-1 text-xs;
+  }
+
+  /* Loading animation */
+  .bsky-loading {
+    @apply animate-pulse;
+  }
+
+  /* Responsive tabs container */
+  .bsky-tabs-container {
+    @apply scrollbar-hide max-w-full flex-shrink-0 relative;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Fade indicators for scrollable tabs */
+  .bsky-tabs-container::before,
+  .bsky-tabs-container::after {
+    @apply content-[''] absolute top-0 bottom-0 w-5 pointer-events-none z-[1] opacity-0 transition-opacity duration-300;
+  }
+
+  .bsky-tabs-container::before {
+    @apply left-0 bg-gradient-to-r from-bsky-bg-primary to-transparent;
+  }
+
+  .bsky-tabs-container::after {
+    @apply right-0 bg-gradient-to-l from-bsky-bg-primary to-transparent;
+  }
+
+  .bsky-tabs-container.has-scroll::before,
+  .bsky-tabs-container.has-scroll::after {
+    @apply opacity-100;
+  }
+
+  /* Hide tab labels on small screens */
+  @media (max-width: 768px) {
+    .bsky-tab {
+      @apply px-3 py-2 flex-shrink-0;
+    }
+
+    .bsky-tab-label {
+      @apply hidden;
+    }
+
+    .bsky-tab span:first-child {
+      @apply m-0;
+    }
+  }
+
+  /* Show labels on larger screens */
+  @media (min-width: 769px) {
+    .bsky-tab-label {
+      @apply inline;
+    }
+  }
+}

@@ -183,7 +183,7 @@ export default function SkyDeck() {
           columnsContainerRef.current?.querySelectorAll(".column-wrapper");
         const focusedColumn = columnElements?.[focusedColumnIndex];
         const scrollContainer =
-          focusedColumn?.querySelector(".skydeck-scrollbar");
+          focusedColumn?.querySelector(".bsky-scrollbar");
         if (scrollContainer) {
           scrollContainer.scrollBy({
             top: scrollContainer.clientHeight * 0.8,
@@ -376,22 +376,22 @@ export default function SkyDeck() {
   // Full multi-column view for wider screens
   return (
     <div className="flex h-full flex-col overflow-hidden dark:bg-gray-900">
-      <div className="skydeck-columns-scrollbar flex-1 overflow-x-auto overflow-y-hidden p-4">
+      <div className="skydeck-columns-scrollbar flex-1 overflow-x-auto overflow-y-hidden p-3">
         <div
           ref={columnsContainerRef}
-          className="flex h-full min-w-min gap-4 px-2"
+          className="flex h-full min-w-min gap-3"
         >
           {columns.map((column, index) => (
             <div
               key={column.id}
-              className={`column-wrapper h-full w-96 ${
-                isDragging === column.id ? "column-dragging" : ""
+              className={`h-full w-[400px] bg-white dark:bg-gray-900 rounded-lg shadow-md transition-all duration-300 ease-out border border-gray-200 dark:border-gray-700 ${
+                isDragging === column.id ? "opacity-50 scale-[0.98] cursor-grabbing" : "cursor-grab"
               } ${
                 dragOverId === column.id && isDragging !== column.id
-                  ? "column-drag-over"
+                  ? "relative before:absolute before:left-[-2px] before:top-0 before:bottom-0 before:w-1 before:bg-blue-500 before:rounded-sm before:animate-pulse"
                   : ""
               } ${
-                focusedColumnIndex === index ? "column-focused rounded-lg" : ""
+                focusedColumnIndex === index ? "ring-2 ring-blue-500/30 shadow-xl" : "hover:shadow-lg dark:hover:shadow-black/30"
               }`}
               draggable
               onDragStart={(e) => handleDragStart(e, column.id)}
@@ -422,10 +422,10 @@ export default function SkyDeck() {
             </div>
           ))}
 
-          <div className="h-full w-96">
+          <div className="h-full w-[400px]">
             {isAddingColumn ? (
-              <div className="animate-fade-in flex h-full flex-col rounded-lg p-4 shadow-lg dark:bg-gray-800">
-                <div className="flex-1 overflow-y-auto">
+              <div className="animate-fade-in flex h-full flex-col rounded-lg bg-white border border-gray-200 dark:border-gray-700 shadow-md dark:bg-gray-800">
+                <div className="flex-1 overflow-y-auto p-3">
                   <div className="grid gap-2">
                     {columnOptions.map((option) => {
                       const Icon = option.icon;
@@ -433,7 +433,7 @@ export default function SkyDeck() {
                         <button
                           key={option.type}
                           onClick={() => handleAddColumn(option.type)}
-                          className="flex min-h-[4rem] items-start gap-3 rounded-lg border border-gray-200 p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900/50"
+                          className="flex min-h-[4rem] items-start gap-3 rounded-md border border-gray-200 p-3 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900/50"
                         >
                           <Icon className="mt-0.5 h-5 w-5 text-blue-500" />
                           <div className="flex-1">
@@ -722,7 +722,7 @@ export default function SkyDeck() {
             ) : (
               <button
                 onClick={() => setIsAddingColumn(true)}
-                className="add-column-button group flex h-full w-full items-center justify-center rounded-lg shadow-lg transition-all duration-300 hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-900/50"
+                className="group flex h-full w-full items-center justify-center rounded-lg shadow-md transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-900/50 bg-white dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg relative overflow-hidden"
               >
                 <Plus className="h-12 w-12 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
               </button>

@@ -244,7 +244,7 @@ export function ConversationModal({
 
         {/* Thread Content */}
         <div
-          className="skydeck-scrollbar flex-1 overflow-y-auto p-4"
+          className="bsky-scrollbar flex-1 overflow-y-auto p-4"
           ref={scrollContainerRef}
         >
           {isLoading && threadPosts.length === 0 && (

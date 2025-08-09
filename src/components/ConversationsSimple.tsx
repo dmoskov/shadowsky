@@ -11,7 +11,6 @@ import {
   useFeatureTracking,
 } from "../hooks/useAnalytics";
 import { useNotificationPosts } from "../hooks/useNotificationPosts";
-import "../styles/conversations.css";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { ThreadModal } from "./ThreadModal";
 
@@ -102,11 +101,11 @@ const ConversationItem = React.memo(
       <button
         onClick={onClick}
         onKeyDown={onKeyDown}
-        className={`conversation-item w-full px-4 py-4 text-left transition-all hover:bg-blue-500 hover:bg-opacity-10 sm:px-6 ${
-          isSelected ? "bg-blue-500 bg-opacity-10" : ""
-        } ${unreadCount > 0 ? "conversation-unread" : ""} ${
+        className={`relative w-full px-3 py-2.5 text-left transition-all duration-200 hover:bg-bsky-bg-hover ${
+          isSelected ? "bg-blue-500/10" : ""
+        } ${unreadCount > 0 ? "bg-bsky-bg-tertiary" : ""} ${
           isFocused ? "ring-2 ring-inset ring-blue-500" : ""
-        }`}
+        } ${isSelected ? "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-bsky-primary" : ""}`}
         style={{ borderBottom: "1px solid var(--bsky-border-primary)" }}
         tabIndex={isFocused ? 0 : -1}
       >
@@ -998,7 +997,7 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({
   return (
     <div
       ref={containerRef}
-      className="conversations-container h-[calc(100vh-4rem)] w-full overflow-hidden"
+      className="w-full h-[calc(100vh-4rem)] overflow-hidden relative max-w-full"
       style={{ position: "relative", outline: "none" }}
       tabIndex={-1}
     >
@@ -1056,7 +1055,7 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({
           {/* Removed loading indicator for posts */}
 
           {/* Conversations List */}
-          <div className="skydeck-scrollbar flex-1 overflow-y-auto">
+          <div className="bsky-scrollbar flex-1 overflow-y-auto">
             {filteredConversations.length === 0 ? (
               <div className="p-8 text-center">
                 {!extendedData || percentageFetched < 100 ? (

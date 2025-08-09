@@ -24,7 +24,6 @@ import {
   useInteractionTracking,
 } from "../hooks/useAnalytics";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
-import "../styles/feed-context.css";
 import { columnFeedPrefs } from "../utils/cookies";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { FeedDiscovery } from "./FeedDiscovery";
@@ -449,11 +448,11 @@ export const Home: React.FC<HomeProps> = ({
           ref={(el) => {
             if (el) postRefs.current[`${post.uri}-${index}`] = el;
           }}
-          className={`post-item relative px-4 py-3 ${
+          className={`relative px-3 py-2.5 transition-colors duration-150 hover:bg-bsky-bg-hover ${
             item.reply?.parent || post.record?.reply?.parent
-              ? "post-is-reply"
+              ? "border-l-4 border-blue-500 bg-gradient-to-r from-blue-500/3 to-transparent"
               : ""
-          } ${isFocused ? "post-focused" : ""}`}
+          } ${isFocused ? "outline outline-2 outline-blue-500 outline-offset-[-2px] bg-blue-500/3" : ""}`}
           data-post-uri={post.uri}
           tabIndex={isFocused ? 0 : -1}
           aria-selected={isFocused}
@@ -486,7 +485,7 @@ export const Home: React.FC<HomeProps> = ({
           {item.reply?.parent && (
             <div className="relative">
               {/* Reply indicator with background */}
-              <div className="reply-indicator mb-3 flex items-center gap-2 rounded-lg px-3 py-2">
+              <div className="mb-3 flex items-center gap-2 rounded-lg px-3 py-2 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 backdrop-blur-sm transition-all duration-300 hover:from-blue-500/15 hover:to-blue-500/8 hover:border-blue-500/30">
                 <div className="flex items-center">
                   <div className="flex w-12 justify-center">
                     <div
@@ -543,7 +542,7 @@ export const Home: React.FC<HomeProps> = ({
           {!item.reply?.parent && post.record?.reply?.parent && (
             <div className="relative">
               {/* Reply indicator with background */}
-              <div className="reply-indicator mb-3 flex items-center gap-2 rounded-lg px-3 py-2">
+              <div className="mb-3 flex items-center gap-2 rounded-lg px-3 py-2 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 backdrop-blur-sm transition-all duration-300 hover:from-blue-500/15 hover:to-blue-500/8 hover:border-blue-500/30">
                 <div className="flex items-center">
                   <div className="flex w-12 justify-center">
                     <div

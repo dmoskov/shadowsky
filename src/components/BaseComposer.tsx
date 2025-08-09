@@ -3,7 +3,6 @@ import React, { useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { generateAltText } from "../services/anthropic";
 import { debug } from "../shared/debug";
-import "../styles/base-composer.css";
 import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
@@ -305,7 +304,7 @@ export function BaseComposer({
 
   return (
     <div
-      className={`base-composer ${isInline ? "base-composer-inline" : "base-composer-full"}`}
+      className="w-full"
     >
       {/* Reply context */}
       {replyTo && (
@@ -368,7 +367,7 @@ export function BaseComposer({
                   {/* Remove button */}
                   <button
                     onClick={() => removeMedia(item.id)}
-                    className="absolute right-1 top-1 rounded-full bg-black/50 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                    className="absolute right-1 top-1 rounded-full bg-black/50 p-1 text-white opacity-0 transition-all duration-200 ease-in-out group-hover:opacity-100"
                   >
                     <X size={16} />
                   </button>
@@ -381,7 +380,7 @@ export function BaseComposer({
                         value={item.alt}
                         onChange={(e) => updateAltText(item.id, e.target.value)}
                         placeholder="Alt text"
-                        className="flex-1 rounded border px-2 py-1 text-xs"
+                        className="flex-1 rounded border px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                         style={{
                           backgroundColor: "var(--bsky-bg-secondary)",
                           borderColor: "var(--bsky-border-primary)",
@@ -392,7 +391,7 @@ export function BaseComposer({
                         <button
                           onClick={() => handleGenerateAlt(item.id)}
                           disabled={generatingAlt === item.id}
-                          className="rounded border px-2 py-1 text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
+                          className="rounded border px-2 py-1 text-xs transition-all duration-200 ease-in-out hover:bg-gray-100 dark:hover:bg-gray-800"
                           style={{ borderColor: "var(--bsky-border-primary)" }}
                         >
                           {generatingAlt === item.id ? (
@@ -450,7 +449,7 @@ export function BaseComposer({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isSubmitting}
-                className={`rounded-full p-2 transition-all hover:scale-110 ${
+                className={`relative z-10 rounded-full p-2 transition-all duration-100 ease-in-out hover:scale-110 hover:bg-opacity-80 ${
                   isInline ? "h-8 w-8" : ""
                 }`}
                 style={{
@@ -465,11 +464,11 @@ export function BaseComposer({
           )}
 
           {features.emoji && (
-            <div className="relative">
+            <div className="relative z-10">
               <button
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                 disabled={isSubmitting}
-                className={`rounded-full p-2 transition-all hover:scale-110 ${
+                className={`relative z-10 rounded-full p-2 transition-all duration-100 ease-in-out hover:scale-110 hover:bg-opacity-80 ${
                   isInline ? "h-8 w-8" : ""
                 }`}
                 style={{
@@ -544,7 +543,7 @@ export function BaseComposer({
               <h3 className="text-lg font-semibold">Search GIFs</h3>
               <button
                 onClick={() => setShowGifSearch(false)}
-                className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="rounded-full p-2 transition-all duration-200 ease-in-out hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 <X size={20} />
               </button>

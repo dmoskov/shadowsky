@@ -28,6 +28,7 @@ export default function SkyColumn({
   const [feedOptions, setFeedOptions] = useState<any[]>([]);
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [showFeedDiscovery, setShowFeedDiscovery] = useState(false);
+  const [selectedFeedUri, setSelectedFeedUri] = useState<string | undefined>(column.data);
 
   useEffect(() => {
     const checkScroll = () => {
@@ -80,7 +81,8 @@ export default function SkyColumn({
         // Use the Home component for all feed columns
         return (
           <Home
-            initialFeedUri={column.data}
+            key={selectedFeedUri || column.data}
+            initialFeedUri={selectedFeedUri || column.data}
             isFocused={isFocused}
             columnId={column.id}
             onFeedChange={(_, label, options) => {
@@ -118,9 +120,9 @@ export default function SkyColumn({
           }
           onFeedChange={
             column.type === "feed"
-              ? () => {
-                  // Feed change is handled by Home component internally
-                  // The feed parameter is not used but required by the interface
+              ? (feedUri: string) => {
+                  setSelectedFeedUri(feedUri);
+                  setRefreshCounter((prev) => prev + 1);
                 }
               : undefined
           }
@@ -137,7 +139,7 @@ export default function SkyColumn({
         <div className="relative flex-1 overflow-hidden">
           <div
             ref={scrollContainerRef}
-            className="skydeck-scrollbar h-full overflow-y-auto"
+            className="bsky-scrollbar h-full overflow-y-auto"
           >
             {renderContent()}
           </div>
@@ -167,7 +169,7 @@ export default function SkyColumn({
 
   return (
     <div
-      className="relative flex h-full flex-col overflow-hidden rounded-lg shadow-lg"
+      className="relative flex h-full flex-col overflow-hidden"
       data-theme={
         document.documentElement.classList.contains("dark") ? "dark" : "light"
       }
