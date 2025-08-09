@@ -1197,10 +1197,10 @@ export const Conversations: React.FC = () => {
                               block: "center",
                             });
                             // Add highlight effect
-                            mostRecentElement.classList.add("highlight-recent");
+                            mostRecentElement.classList.add("animate-highlight-flash", "relative", "z-[5]");
                             setTimeout(() => {
                               mostRecentElement.classList.remove(
-                                "highlight-recent",
+                                "animate-highlight-flash", "relative", "z-[5]",
                               );
                             }, 2000);
                           }

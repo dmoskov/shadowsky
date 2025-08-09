@@ -74,6 +74,7 @@ export default {
         "tone-pulse": "tonePulse 1s ease-in-out infinite",
         // Conversation animations
         highlight: "highlight 2s ease-out",
+        "highlight-flash": "highlightFlash 1s ease-out 2",
       },
       keyframes: {
         fadeIn: {
@@ -189,6 +190,20 @@ export default {
           },
           "100%": {
             backgroundColor: "transparent",
+          },
+        },
+        highlightFlash: {
+          "0%": {
+            boxShadow: "0 0 0 0 rgba(0, 133, 255, 0.8)",
+            transform: "scale(1)",
+          },
+          "50%": {
+            boxShadow: "0 0 20px 10px rgba(0, 133, 255, 0.3)",
+            transform: "scale(1.01)",
+          },
+          "100%": {
+            boxShadow: "0 0 0 0 rgba(0, 133, 255, 0)",
+            transform: "scale(1)",
           },
         },
       },
