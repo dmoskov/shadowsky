@@ -104,13 +104,24 @@ export class ATProtoClient {
 
   private saveSession(session: Session) {
     if (typeof window !== "undefined") {
+      const sessionData = JSON.stringify(session);
+
+      // Debug logging in development
+      if (process.env.NODE_ENV === "development") {
+        debug.log("Saving session:", {
+          key: this.sessionKey,
+          domain: window.location.hostname,
+          secure: window.location.protocol === "https:",
+        });
+      }
+
       // Use cookies for cross-subdomain access
-      setCookie(this.sessionKey, JSON.stringify(session), {
-        secure: true,
+      setCookie(this.sessionKey, sessionData, {
+        secure: window.location.protocol === "https:",
         sameSite: "Lax",
       });
       // Also save to localStorage for backward compatibility
-      localStorage.setItem(this.sessionKey, JSON.stringify(session));
+      localStorage.setItem(this.sessionKey, sessionData);
     }
   }
 
@@ -127,6 +138,17 @@ export class ATProtoClient {
 
     try {
       const sessionKey = `${prefix}bsky_session`;
+
+      // Debug logging
+      if (process.env.NODE_ENV === "development") {
+        debug.log("Loading session:", {
+          key: sessionKey,
+          domain: window.location.hostname,
+          protocol: window.location.protocol,
+          cookies: document.cookie.length > 0 ? "present" : "empty",
+        });
+      }
+
       // Try to load from cookie first (for cross-subdomain access)
       let saved = getCookie(sessionKey);
 
@@ -136,8 +158,8 @@ export class ATProtoClient {
         // If found in localStorage, migrate to cookie
         if (saved) {
           setCookie(sessionKey, saved, {
-            secure: true,
-            sameSite: "lax",
+            secure: window.location.protocol === "https:",
+            sameSite: "Lax",
           });
         }
       }

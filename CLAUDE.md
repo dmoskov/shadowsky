@@ -8,6 +8,7 @@ This is the CLAUDE.md file for your project. Add project-specific instructions h
 
 - **NO automatic commits or pushes**: Never run `git commit` or `git push` automatically. Always wait for explicit user approval before committing or pushing changes.
 - Show the user what changes would be committed and let them decide when to commit and push.
+- **ALWAYS run formatting checks before pushing**: Before pushing to any branch, run `npm run test:format` to check for formatting issues. If there are issues, run `npm run fix:format` to fix them automatically.
 
 ## UI Design Preferences
 

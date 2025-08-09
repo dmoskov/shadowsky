@@ -22,9 +22,33 @@ export const setCookie = (
   // Auto-detect production domain
   if (!domain && typeof window !== "undefined") {
     const hostname = window.location.hostname;
-    if (hostname.includes("shadowsky.io")) {
-      // Set domain to work across all shadowsky.io subdomains
+
+    // Don't set domain for localhost/development
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      domain = undefined;
+    }
+    // Handle shadowsky.io domains
+    else if (hostname.includes("shadowsky.io")) {
       domain = ".shadowsky.io";
+    }
+    // Handle AWS Amplify domains
+    else if (hostname.includes("amplifyapp.com")) {
+      // For Amplify, use the full subdomain
+      const parts = hostname.split(".");
+      if (parts.length >= 3) {
+        // Keep the app-specific subdomain
+        domain = hostname;
+      }
+    }
+    // For any other production domain, don't set domain attribute
+    // This allows the cookie to work on the current domain
+    else if (
+      hostname !== "localhost" &&
+      !hostname.startsWith("192.168") &&
+      !hostname.startsWith("10.")
+    ) {
+      // Don't set domain - cookie will be available on current domain only
+      domain = undefined;
     }
   }
 
@@ -58,14 +82,20 @@ export const getCookie = (name: string): string | null => {
 };
 
 export const deleteCookie = (name: string) => {
-  // Delete cookie without domain (for local)
+  // Delete cookie without domain (for local and current domain)
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
 
-  // Also delete with production domain if applicable
+  // Also delete with specific domains if applicable
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
+
+    // Delete for shadowsky.io
     if (hostname.includes("shadowsky.io")) {
       document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;Domain=.shadowsky.io;`;
+    }
+    // Delete for Amplify domains
+    else if (hostname.includes("amplifyapp.com")) {
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;Domain=${hostname};`;
     }
   }
 };
