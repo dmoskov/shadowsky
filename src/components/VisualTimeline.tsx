@@ -83,7 +83,6 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
   hideTimeLabels = false,
   isInSkyDeck = false,
   isFocused = true,
-  onClose,
 }) => {
   const { agent } = useAuth();
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -92,9 +91,6 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
   const [selectedPostUri, setSelectedPostUri] = React.useState<string | null>(
     null,
   );
-  const [visibleEventColors, setVisibleEventColors] = React.useState<
-    Map<string, string>
-  >(new Map());
   const [dayGroupColors, setDayGroupColors] = React.useState<
     Map<string, { color: string; position: number }>
   >(new Map());
