@@ -100,8 +100,11 @@ export const PostMenu: React.FC<PostMenuProps> = ({
           // Add to local blocked users immediately for instant UI update
           blockUser(post.author.did);
 
+          if (!agent.session?.did) {
+            throw new Error("No session available");
+          }
           const { uri } = await agent.app.bsky.graph.block.create(
-            { repo: agent.session?.did! },
+            { repo: agent.session.did },
             {
               subject: post.author.did,
               createdAt: new Date().toISOString(),
