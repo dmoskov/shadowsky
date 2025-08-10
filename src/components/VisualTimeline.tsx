@@ -8,14 +8,12 @@ import {
   isYesterday,
 } from "date-fns";
 import {
-  Clock,
   ExternalLink,
   Heart,
   MessageCircle,
   Quote,
   Repeat2,
   UserPlus,
-  X,
 } from "lucide-react";
 import React from "react";
 import { useAuth } from "../contexts/AuthContext";
@@ -94,8 +92,12 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
   const [selectedPostUri, setSelectedPostUri] = React.useState<string | null>(
     null,
   );
-  const [visibleEventColors, setVisibleEventColors] = React.useState<Map<string, string>>(new Map());
-  const [dayGroupColors, setDayGroupColors] = React.useState<Map<string, { color: string; position: number }>>(new Map());
+  const [visibleEventColors, setVisibleEventColors] = React.useState<
+    Map<string, string>
+  >(new Map());
+  const [dayGroupColors, setDayGroupColors] = React.useState<
+    Map<string, { color: string; position: number }>
+  >(new Map());
   // Removed expandedItems state - cards are always expanded
 
   const { data, isLoading } = useQuery({
@@ -822,43 +824,52 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
   // Track visible events for dynamic dot color with smooth transitions
   React.useEffect(() => {
     const updateDayColors = () => {
-      const newDayColors = new Map<string, { color: string; position: number }>();
+      const newDayColors = new Map<
+        string,
+        { color: string; position: number }
+      >();
       const viewportHeight = window.innerHeight;
       const viewportCenter = viewportHeight / 2;
-      
+
       // Get all day groups
-      const dayGroups = document.querySelectorAll('[data-day-group]');
-      
+      const dayGroups = document.querySelectorAll("[data-day-group]");
+
       dayGroups.forEach((dayGroup) => {
-        const dayLabel = dayGroup.getAttribute('data-day-group');
+        const dayLabel = dayGroup.getAttribute("data-day-group");
         if (!dayLabel) return;
-        
-        const events = dayGroup.querySelectorAll('[data-event-time]');
-        let closestEvent: { element: Element; distance: number; time: string } | null = null;
+
+        const events = dayGroup.querySelectorAll("[data-event-time]");
+        let closestEvent: {
+          element: Element;
+          distance: number;
+          time: string;
+        } | null = null;
         let totalWeight = 0;
         let weightedR = 0;
         let weightedG = 0;
         let weightedB = 0;
         let weightedA = 0;
-        
+
         // Find events near the viewport center and blend their colors
         events.forEach((event) => {
           const rect = event.getBoundingClientRect();
           const eventCenter = rect.top + rect.height / 2;
           const distance = Math.abs(eventCenter - viewportCenter);
-          
+
           // Only consider events within viewport or slightly outside
           if (rect.bottom > -100 && rect.top < viewportHeight + 100) {
-            const eventTime = event.getAttribute('data-event-time');
+            const eventTime = event.getAttribute("data-event-time");
             if (eventTime) {
               // Calculate weight based on distance from viewport center
               const maxDistance = viewportHeight / 2;
-              const weight = Math.max(0, 1 - (distance / maxDistance));
-              
+              const weight = Math.max(0, 1 - distance / maxDistance);
+
               if (weight > 0) {
                 const colors = getTimeOfDayColor(new Date(eventTime));
-                const colorMatch = colors.borderColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
-                
+                const colorMatch = colors.borderColor.match(
+                  /rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/,
+                );
+
                 if (colorMatch) {
                   totalWeight += weight;
                   weightedR += parseInt(colorMatch[1]) * weight;
@@ -866,7 +877,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                   weightedB += parseInt(colorMatch[3]) * weight;
                   weightedA += parseFloat(colorMatch[4]) * weight;
                 }
-                
+
                 if (!closestEvent || distance < closestEvent.distance) {
                   closestEvent = { element: event, distance, time: eventTime };
                 }
@@ -874,28 +885,31 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
             }
           }
         });
-        
+
         if (totalWeight > 0) {
           // Calculate weighted average color
           const avgR = Math.round(weightedR / totalWeight);
           const avgG = Math.round(weightedG / totalWeight);
           const avgB = Math.round(weightedB / totalWeight);
           const avgA = weightedA / totalWeight;
-          
+
           const blendedColor = `rgba(${avgR}, ${avgG}, ${avgB}, ${avgA})`;
-          
+
           // Get the position of the day banner for smooth scrolling effect
-          const dayBanner = dayGroup.querySelector('.timeline-sticky-banner');
+          const dayBanner = dayGroup.querySelector(".timeline-sticky-banner");
           const bannerRect = dayBanner?.getBoundingClientRect();
           const bannerPosition = bannerRect ? bannerRect.top : 0;
-          
-          newDayColors.set(dayLabel, { color: blendedColor, position: bannerPosition });
+
+          newDayColors.set(dayLabel, {
+            color: blendedColor,
+            position: bannerPosition,
+          });
         }
       });
-      
+
       setDayGroupColors(newDayColors);
     };
-    
+
     // Update colors on scroll with throttling
     let ticking = false;
     const handleScroll = () => {
@@ -907,17 +921,21 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
         ticking = true;
       }
     };
-    
+
     // Initial update
     updateDayColors();
-    
+
     // Listen to scroll events
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    document.querySelector('main')?.addEventListener('scroll', handleScroll, { passive: true });
-    
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    document
+      .querySelector("main")
+      ?.addEventListener("scroll", handleScroll, { passive: true });
+
     return () => {
-      window.removeEventListener('scroll', handleScroll);
-      document.querySelector('main')?.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
+      document
+        .querySelector("main")
+        ?.removeEventListener("scroll", handleScroll);
     };
   }, [allEvents]);
 
@@ -1008,14 +1026,16 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
             <div key={dayGroup.label} data-day-group={dayGroup.label}>
               {/* Sticky day label */}
               <div
-                className={`mb-2 px-4 py-1.5 backdrop-blur-md sm:px-6 ${!isInSkyDeck ? 'timeline-sticky-banner' : 'sticky'}`}
+                className={`mb-2 px-4 py-1.5 backdrop-blur-md sm:px-6 ${!isInSkyDeck ? "timeline-sticky-banner" : "sticky"}`}
                 style={{
-                  ...(isInSkyDeck ? {
-                    position: "sticky",
-                    WebkitPosition: "-webkit-sticky",
-                    top: "0",
-                    zIndex: 30,
-                  } : {}),
+                  ...(isInSkyDeck
+                    ? {
+                        position: "sticky",
+                        WebkitPosition: "-webkit-sticky",
+                        top: "0",
+                        zIndex: 30,
+                      }
+                    : {}),
                   backgroundColor: "var(--bsky-bg-primary)",
                   borderBottom: "1px solid var(--bsky-border-color)",
                   backdropFilter: "blur(10px)",
@@ -1031,7 +1051,9 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                     className="h-2 w-2 rounded-full transition-all duration-700 ease-out"
                     style={{
                       backgroundColor: dayGroupColors.get(dayGroup.label)?.color
-                        ? dayGroupColors.get(dayGroup.label)!.color.replace(/[\d.]+\)$/, "1)")
+                        ? dayGroupColors
+                            .get(dayGroup.label)!
+                            .color.replace(/[\d.]+\)$/, "1)")
                         : dayGroup.events.length > 0
                           ? getTimeOfDayColor(
                               dayGroup.events[0].time,
@@ -1039,8 +1061,8 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                           : "var(--bsky-primary)",
                       boxShadow: dayGroupColors.get(dayGroup.label)?.color
                         ? `0 0 8px ${dayGroupColors.get(dayGroup.label)!.color.replace(/[\d.]+\)$/, "0.4)")}`
-                        : 'none',
-                      transform: 'scale(1)',
+                        : "none",
+                      transform: "scale(1)",
                     }}
                   />
                   <h2
