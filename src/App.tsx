@@ -18,6 +18,8 @@ import { Sidebar } from "./components/Sidebar";
 import SkyDeck from "./components/SkyDeck";
 import { VisualTimeline } from "./components/VisualTimeline";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { HiddenPostsProvider } from "./contexts/HiddenPostsContext";
+import { ModerationProvider } from "./contexts/ModerationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { useErrorTracking, usePageTracking } from "./hooks/useAnalytics";
 import { analytics } from "./services/analytics";
@@ -159,7 +161,11 @@ function App() {
       >
         <ThemeProvider>
           <AuthProvider>
-            <AppContent />
+            <HiddenPostsProvider>
+              <ModerationProvider>
+                <AppContent />
+              </ModerationProvider>
+            </HiddenPostsProvider>
           </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>

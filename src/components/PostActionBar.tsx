@@ -2,6 +2,7 @@ import type { AppBskyFeedDefs } from "@atproto/api";
 import { Bookmark, Heart, MessageCircle, Repeat2, Share } from "lucide-react";
 import React, { memo } from "react";
 import { useBookmarks } from "../hooks/useBookmarks";
+import { PostMenu } from "./PostMenu";
 
 interface PostActionBarProps {
   post: AppBskyFeedDefs.PostView;
@@ -132,6 +133,9 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
             <Share size={iconSize} />
           </button>
         )}
+
+        {/* More Options Menu */}
+        <PostMenu post={post} className="ml-2" />
       </div>
     );
   },

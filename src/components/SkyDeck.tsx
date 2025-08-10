@@ -407,11 +407,27 @@ export default function SkyDeck() {
                   setDragOverId(null);
                 }
               }}
-              onClick={() => setFocusedColumnIndex(index)}
-              onClickCapture={() => {
-                // Also handle clicks in capture phase to ensure column gets focused
-                // even if child elements stop propagation
-                setFocusedColumnIndex(index);
+              onClick={(e) => {
+                // Don't focus column if clicking on menu button or menu dropdown
+                const target = e.target as HTMLElement;
+                const isMenuButton = target.closest(
+                  'button[aria-label="More options"]',
+                );
+                const isMenuDropdown = target.closest(".absolute.z-50"); // Menu dropdown has these classes
+                if (!isMenuButton && !isMenuDropdown) {
+                  setFocusedColumnIndex(index);
+                }
+              }}
+              onClickCapture={(e) => {
+                // Don't focus column if clicking on menu button or menu dropdown
+                const target = e.target as HTMLElement;
+                const isMenuButton = target.closest(
+                  'button[aria-label="More options"]',
+                );
+                const isMenuDropdown = target.closest(".absolute.z-50"); // Menu dropdown has these classes
+                if (!isMenuButton && !isMenuDropdown) {
+                  setFocusedColumnIndex(index);
+                }
               }}
             >
               <SkyColumn

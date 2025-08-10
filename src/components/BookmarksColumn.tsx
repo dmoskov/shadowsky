@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { Bookmark, Search, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useHiddenPosts } from "../contexts/HiddenPostsContext";
+import { useModeration } from "../contexts/ModerationContext";
 import { bookmarkService } from "../services/bookmark-service";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { ImageGallery } from "./ImageGallery";
@@ -20,6 +22,8 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
   onClose,
 }) => {
   const queryClient = useQueryClient();
+  const { isPostHidden } = useHiddenPosts();
+  const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
   const [searchQuery, setSearchQuery] = useState("");
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [selectedPost, setSelectedPost] =
@@ -301,96 +305,105 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
           </div>
         )}
 
-        {bookmarks?.map((bookmark, index) => {
-          const post = bookmark.post;
-          if (!post) return null;
+        {bookmarks
+          ?.filter(
+            (bookmark) =>
+              bookmark.post &&
+              !isPostHidden(bookmark.post.uri) &&
+              !isUserMuted(bookmark.post.author.did) &&
+              !isUserBlocked(bookmark.post.author.did) &&
+              !isThreadMuted(bookmark.post.uri),
+          )
+          .map((bookmark, index) => {
+            const post = bookmark.post;
+            if (!post) return null;
 
-          const isFocused = focusedIndex === index;
+            const isFocused = focusedIndex === index;
 
-          return (
-            <div
-              key={bookmark.postUri}
-              ref={(el) => {
-                if (el) itemRefs.current.set(bookmark.postUri, el);
-              }}
-              className={`group cursor-pointer border-b transition-colors hover:bg-blue-500 hover:bg-opacity-5 ${
-                isFocused
-                  ? "border-l-4 border-l-blue-500 bg-blue-500 bg-opacity-10 pl-3"
-                  : ""
-              }`}
-              style={{ borderColor: "var(--bsky-border-primary)" }}
-              onClick={() => handlePostClick(post)}
-            >
-              <div className="p-4">
-                <div className="flex items-start gap-3">
-                  {post.author?.avatar && (
-                    <img
-                      src={proxifyBskyImage(post.author.avatar)}
-                      alt={post.author.handle || ""}
-                      className="h-10 w-10 rounded-full"
-                    />
-                  )}
+            return (
+              <div
+                key={bookmark.postUri}
+                ref={(el) => {
+                  if (el) itemRefs.current.set(bookmark.postUri, el);
+                }}
+                className={`group cursor-pointer border-b transition-colors hover:bg-blue-500 hover:bg-opacity-5 ${
+                  isFocused
+                    ? "border-l-4 border-l-blue-500 bg-blue-500 bg-opacity-10 pl-3"
+                    : ""
+                }`}
+                style={{ borderColor: "var(--bsky-border-primary)" }}
+                onClick={() => handlePostClick(post)}
+              >
+                <div className="p-4">
+                  <div className="flex items-start gap-3">
+                    {post.author?.avatar && (
+                      <img
+                        src={proxifyBskyImage(post.author.avatar)}
+                        alt={post.author.handle || ""}
+                        className="h-10 w-10 rounded-full"
+                      />
+                    )}
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline gap-2">
-                      <span
-                        className="font-semibold"
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline gap-2">
+                        <span
+                          className="font-semibold"
+                          style={{ color: "var(--bsky-text-primary)" }}
+                        >
+                          {post.author?.displayName ||
+                            post.author?.handle ||
+                            "Unknown"}
+                        </span>
+                        <span
+                          className="text-sm"
+                          style={{ color: "var(--bsky-text-secondary)" }}
+                        >
+                          @{post.author?.handle || "unknown"}
+                        </span>
+                        <span
+                          className="text-xs"
+                          style={{ color: "var(--bsky-text-tertiary)" }}
+                        >
+                          {formatDistanceToNow(new Date(bookmark.savedAt), {
+                            addSuffix: true,
+                          })}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUnbookmark(bookmark.postUri);
+                          }}
+                          className="ml-auto rounded p-1 opacity-50 transition-colors hover:bg-yellow-100 group-hover:opacity-100 dark:hover:bg-yellow-900/20"
+                          style={{ color: "#ffad1f" }}
+                          title="Remove bookmark"
+                        >
+                          <Bookmark size={16} fill="currentColor" />
+                        </button>
+                      </div>
+
+                      <div
+                        className="mt-2 whitespace-pre-wrap break-words"
                         style={{ color: "var(--bsky-text-primary)" }}
                       >
-                        {post.author?.displayName ||
-                          post.author?.handle ||
-                          "Unknown"}
-                      </span>
-                      <span
-                        className="text-sm"
-                        style={{ color: "var(--bsky-text-secondary)" }}
-                      >
-                        @{post.author?.handle || "unknown"}
-                      </span>
-                      <span
-                        className="text-xs"
-                        style={{ color: "var(--bsky-text-tertiary)" }}
-                      >
-                        {formatDistanceToNow(new Date(bookmark.savedAt), {
-                          addSuffix: true,
-                        })}
-                      </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleUnbookmark(bookmark.postUri);
-                        }}
-                        className="ml-auto rounded p-1 opacity-50 transition-colors hover:bg-yellow-100 group-hover:opacity-100 dark:hover:bg-yellow-900/20"
-                        style={{ color: "#ffad1f" }}
-                        title="Remove bookmark"
-                      >
-                        <Bookmark size={16} fill="currentColor" />
-                      </button>
+                        {(post.record as any)?.text || ""}
+                      </div>
+
+                      {post.embed && renderEmbed(post.embed)}
+
+                      <PostActionBar
+                        post={post}
+                        onReply={() => {}}
+                        onLike={() => {}}
+                        onRepost={() => {}}
+                        showCounts={true}
+                        size="small"
+                      />
                     </div>
-
-                    <div
-                      className="mt-2 whitespace-pre-wrap break-words"
-                      style={{ color: "var(--bsky-text-primary)" }}
-                    >
-                      {(post.record as any)?.text || ""}
-                    </div>
-
-                    {post.embed && renderEmbed(post.embed)}
-
-                    <PostActionBar
-                      post={post}
-                      onReply={() => {}}
-                      onLike={() => {}}
-                      onRepost={() => {}}
-                      showCounts={true}
-                      size="small"
-                    />
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
 
       {/* Thread Modal */}

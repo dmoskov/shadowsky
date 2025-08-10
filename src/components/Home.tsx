@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useHiddenPosts } from "../contexts/HiddenPostsContext";
+import { useModeration } from "../contexts/ModerationContext";
 import {
   useFeatureTracking,
   useInteractionTracking,
@@ -114,6 +116,8 @@ export const Home: React.FC<HomeProps> = ({
   const queryClient = useQueryClient();
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
     useOptimisticPosts();
+  const { isPostHidden } = useHiddenPosts();
+  const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
   // Removed hoveredPost state to prevent re-renders - using CSS hover instead
   // Use initialFeedUri if provided, otherwise get from column preferences
   const [selectedFeed, setSelectedFeed] = React.useState<FeedType>(() => {
@@ -438,13 +442,26 @@ export const Home: React.FC<HomeProps> = ({
   const posts = React.useMemo(() => {
     if (!data?.pages) return [];
     return data.pages.flatMap((page, pageIndex) =>
-      page.feed.map((item: any, itemIndex: number) => ({
-        ...item,
-        _pageIndex: pageIndex,
-        _itemIndex: itemIndex,
-      })),
+      page.feed
+        .filter((item: any) => {
+          const post = item.post;
+          // Filter out hidden posts
+          if (isPostHidden(post.uri)) return false;
+          // Filter out posts from muted users
+          if (isUserMuted(post.author.did)) return false;
+          // Filter out posts from blocked users
+          if (isUserBlocked(post.author.did)) return false;
+          // Filter out muted threads
+          if (isThreadMuted(post.uri)) return false;
+          return true;
+        })
+        .map((item: any, itemIndex: number) => ({
+          ...item,
+          _pageIndex: pageIndex,
+          _itemIndex: itemIndex,
+        })),
     );
-  }, [data]);
+  }, [data, isPostHidden, isUserMuted, isUserBlocked, isThreadMuted]);
 
   // Memoize post rendering to prevent unnecessary re-renders
   const PostItem = React.memo(

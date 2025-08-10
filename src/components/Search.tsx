@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useHiddenPosts } from "../contexts/HiddenPostsContext";
+import { useModeration } from "../contexts/ModerationContext";
 import { useDebounce } from "../hooks/useDebounce";
 import { useFollowing } from "../hooks/useFollowing";
 import { atProtoClient } from "../services/atproto";
@@ -165,6 +167,8 @@ const buildSearchQuery = (searchFilters: SearchFilters) => {
 
 export const Search: React.FC = () => {
   useAuth();
+  const { isPostHidden } = useHiddenPosts();
+  const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [activeSearchQuery, setActiveSearchQuery] = useState("");
   const [filters, setFilters] = useState<SearchFilters>({
@@ -1858,116 +1862,136 @@ export const Search: React.FC = () => {
                     className="text-sm"
                     style={{ color: "var(--bsky-text-secondary)" }}
                   >
-                    {searchResults.posts.length} results
+                    {
+                      searchResults.posts.filter(
+                        (post) =>
+                          !isPostHidden(post.uri) &&
+                          !isUserMuted(post.author.did) &&
+                          !isUserBlocked(post.author.did) &&
+                          !isThreadMuted(post.uri),
+                      ).length
+                    }{" "}
+                    results
                   </p>
                 </div>
 
-                {searchResults.posts.map((post) => (
-                  <div
-                    key={post.uri}
-                    className="bsky-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
-                    onClick={() => handlePostClick(post)}
-                  >
-                    <div className="flex items-start gap-2.5">
-                      <img
-                        src={proxifyBskyImage(post.author.avatar)}
-                        alt={post.author.displayName}
-                        className="h-9 w-9 flex-shrink-0 rounded-full"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                          <span
-                            className="truncate text-sm font-medium"
+                {searchResults.posts
+                  .filter(
+                    (post) =>
+                      !isPostHidden(post.uri) &&
+                      !isUserMuted(post.author.did) &&
+                      !isUserBlocked(post.author.did) &&
+                      !isThreadMuted(post.uri),
+                  )
+                  .map((post) => (
+                    <div
+                      key={post.uri}
+                      className="bsky-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
+                      onClick={() => handlePostClick(post)}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <img
+                          src={proxifyBskyImage(post.author.avatar)}
+                          alt={post.author.displayName}
+                          className="h-9 w-9 flex-shrink-0 rounded-full"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                            <span
+                              className="truncate text-sm font-medium"
+                              style={{ color: "var(--bsky-text-primary)" }}
+                            >
+                              {post.author.displayName}
+                            </span>
+                            <span
+                              className="truncate text-xs"
+                              style={{ color: "var(--bsky-text-secondary)" }}
+                            >
+                              @{post.author?.handle || "unknown"}
+                            </span>
+                            <span
+                              className="whitespace-nowrap text-xs"
+                              style={{ color: "var(--bsky-text-tertiary)" }}
+                            >
+                              · {formatDistanceToNow(new Date(post.indexedAt))}{" "}
+                              ago
+                            </span>
+                          </div>
+                          <div
+                            className="break-words text-sm"
                             style={{ color: "var(--bsky-text-primary)" }}
                           >
-                            {post.author.displayName}
-                          </span>
-                          <span
-                            className="truncate text-xs"
-                            style={{ color: "var(--bsky-text-secondary)" }}
-                          >
-                            @{post.author?.handle || "unknown"}
-                          </span>
-                          <span
-                            className="whitespace-nowrap text-xs"
-                            style={{ color: "var(--bsky-text-tertiary)" }}
-                          >
-                            · {formatDistanceToNow(new Date(post.indexedAt))}{" "}
-                            ago
-                          </span>
-                        </div>
-                        <div
-                          className="break-words text-sm"
-                          style={{ color: "var(--bsky-text-primary)" }}
-                        >
-                          {(post.record as any).text}
-                        </div>
+                            {(post.record as any).text}
+                          </div>
 
-                        {/* Display images if present */}
-                        {(() => {
-                          const images = getPostImages(post);
-                          if (images.length === 0) return null;
+                          {/* Display images if present */}
+                          {(() => {
+                            const images = getPostImages(post);
+                            if (images.length === 0) return null;
 
-                          return (
-                            <div className="mt-3">
-                              <div
-                                className={`grid gap-2 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
-                              >
-                                {images.slice(0, 4).map((img, idx) => (
-                                  <img
-                                    key={idx}
-                                    src={proxifyBskyImage(img.thumb)}
-                                    alt={img.alt || ""}
-                                    className="w-full cursor-pointer rounded-lg border object-cover transition-opacity hover:opacity-90"
-                                    style={{
-                                      borderColor: "var(--bsky-border-primary)",
-                                      height:
-                                        images.length === 1 ? "200px" : "120px",
-                                      maxHeight: "300px",
-                                    }}
-                                    loading="lazy"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      window.open(
-                                        img.fullsize,
-                                        "_blank",
-                                        "noopener,noreferrer",
-                                      );
-                                    }}
-                                  />
-                                ))}
+                            return (
+                              <div className="mt-3">
+                                <div
+                                  className={`grid gap-2 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
+                                >
+                                  {images.slice(0, 4).map((img, idx) => (
+                                    <img
+                                      key={idx}
+                                      src={proxifyBskyImage(img.thumb)}
+                                      alt={img.alt || ""}
+                                      className="w-full cursor-pointer rounded-lg border object-cover transition-opacity hover:opacity-90"
+                                      style={{
+                                        borderColor:
+                                          "var(--bsky-border-primary)",
+                                        height:
+                                          images.length === 1
+                                            ? "200px"
+                                            : "120px",
+                                        maxHeight: "300px",
+                                      }}
+                                      loading="lazy"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(
+                                          img.fullsize,
+                                          "_blank",
+                                          "noopener,noreferrer",
+                                        );
+                                      }}
+                                    />
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })()}
+                            );
+                          })()}
 
-                        <div className="mt-2 flex items-center gap-3">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.open(
-                                `https://bsky.app/profile/${post.author?.handle || "unknown"}/post/${post.uri.split("/").pop()}`,
-                                "_blank",
-                                "noopener,noreferrer",
-                              );
-                            }}
-                            className="flex items-center gap-1 text-xs hover:underline"
-                            style={{ color: "var(--bsky-primary)" }}
-                          >
-                            View on Bluesky
-                            <ExternalLink size={12} />
-                          </button>
-                          <span
-                            className="text-xs"
-                            style={{ color: "var(--bsky-text-tertiary)" }}
-                          >
-                            Click to view thread
-                          </span>
+                          <div className="mt-2 flex items-center gap-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(
+                                  `https://bsky.app/profile/${post.author?.handle || "unknown"}/post/${post.uri.split("/").pop()}`,
+                                  "_blank",
+                                  "noopener,noreferrer",
+                                );
+                              }}
+                              className="flex items-center gap-1 text-xs hover:underline"
+                              style={{ color: "var(--bsky-primary)" }}
+                            >
+                              View on Bluesky
+                              <ExternalLink size={12} />
+                            </button>
+                            <span
+                              className="text-xs"
+                              style={{ color: "var(--bsky-text-tertiary)" }}
+                            >
+                              Click to view thread
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </>
             )}
           </div>
