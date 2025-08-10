@@ -2,10 +2,10 @@
 @import "./styles/bluesky-theme.css";
 /* Keep complex animations and styles */
 @import "./styles/skydeck.css";
+@import "./styles/tailwind-components.css";
 
 @tailwind base;
 @tailwind components;
-@import "./styles/tailwind-components.css";
 @tailwind utilities;
 
 /* Consistent spacing system */

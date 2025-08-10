@@ -95,7 +95,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
                   src={
                     proxifyBskyImage(
                       (post.embed as any).record?.author?.avatar,
-                    ) || "/default-avatar.png"
+                    ) || "/default-avatar.svg"
                   }
                   alt=""
                   className="quote-avatar h-5 w-5 rounded-full"

@@ -118,18 +118,11 @@ function AppContent() {
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
         />
-        <main className="mt-16 min-h-[calc(100vh-4rem)] flex-1 overflow-y-auto lg:ml-64 lg:h-[calc(100vh-4rem)]">
+        <main className="mt-16 min-h-[calc(100vh-4rem)] flex-1 lg:ml-64 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto">
           <Routes>
             <Route path="/home" element={<SkyDeck />} />
             <Route path="/" element={<SkyDeck />} />
-            <Route
-              path="/timeline"
-              element={
-                <div className="h-full overflow-y-auto">
-                  <VisualTimeline />
-                </div>
-              }
-            />
+            <Route path="/timeline" element={<VisualTimeline />} />
             <Route path="/analytics" element={<NotificationsAnalytics />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/conversations" element={<Conversations />} />
