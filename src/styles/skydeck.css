@@ -1,5 +1,173 @@
 /* SkyDeck Custom Styles - Minimal version with only used styles */
 
+/* Image Grid and Lightbox Styles */
+.image-grid-container {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.image-grid-item {
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: var(--bsky-bg-tertiary);
+  transition: opacity 0.2s ease;
+}
+
+.image-grid-item:hover {
+  opacity: 0.95;
+}
+
+.image-grid-aspect {
+  position: relative;
+  width: 100%;
+}
+
+.image-grid-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+.image-grid-loading {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  animation: pulse 2s ease-in-out infinite;
+  z-index: -1;
+  filter: blur(20px);
+}
+
+.dark .image-grid-loading {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+}
+
+.image-grid-alt {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 6px;
+  font-size: 12px;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.image-grid-item:hover .image-grid-alt {
+  opacity: 1;
+}
+
+/* Lightbox styles */
+.lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
+.lightbox-image {
+  max-height: 90vh;
+  max-width: 90vw;
+  object-fit: contain;
+}
+
+.lightbox-button {
+  position: absolute;
+  z-index: 50;
+  padding: 8px;
+  border-radius: 9999px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  transition: background-color 0.2s ease;
+}
+
+.lightbox-button:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.lightbox-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lightbox-close {
+  top: 16px;
+  right: 16px;
+}
+
+.lightbox-prev {
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.lightbox-next {
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.lightbox-counter {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background-color: rgba(0, 0, 0, 0.5);
+  font-size: 14px;
+  color: white;
+}
+
+.lightbox-thumbnails {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+
+.lightbox-thumbnail {
+  height: 8px;
+  width: 32px;
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+.lightbox-thumbnail-inactive {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.lightbox-thumbnail-active {
+  background-color: white;
+}
+
+.lightbox-alt-text {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 16px;
+  color: white;
+}
+
+.lightbox-alt-text p {
+  font-size: 14px;
+}
+
 /* Horizontal scrollbar for columns container */
 .skydeck-columns-scrollbar::-webkit-scrollbar {
   height: 12px;
@@ -62,4 +230,19 @@
 
 .dark .scroll-shadow-overlay::after {
   background: linear-gradient(to top, rgba(0, 0, 0, 0.3), transparent);
+}
+
+/* Fix for sticky positioning */
+.timeline-sticky-banner {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 64px; /* Stick below the fixed header */
+  z-index: 40; /* Below header's z-index of 50 but above content */
+}
+
+/* On desktop, the main container handles scrolling differently */
+@media (min-width: 1024px) {
+  .timeline-sticky-banner {
+    top: 0; /* Reset to 0 for desktop where scrolling is within main */
+  }
 }

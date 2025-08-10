@@ -94,6 +94,8 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
   const [selectedPostUri, setSelectedPostUri] = React.useState<string | null>(
     null,
   );
+  const [visibleEventColors, setVisibleEventColors] = React.useState<Map<string, string>>(new Map());
+  const [dayGroupColors, setDayGroupColors] = React.useState<Map<string, { color: string; position: number }>>(new Map());
   // Removed expandedItems state - cards are always expanded
 
   const { data, isLoading } = useQuery({
@@ -817,6 +819,108 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedItemIndex, allEvents, getEventKey, isInSkyDeck, isFocused]);
 
+  // Track visible events for dynamic dot color with smooth transitions
+  React.useEffect(() => {
+    const updateDayColors = () => {
+      const newDayColors = new Map<string, { color: string; position: number }>();
+      const viewportHeight = window.innerHeight;
+      const viewportCenter = viewportHeight / 2;
+      
+      // Get all day groups
+      const dayGroups = document.querySelectorAll('[data-day-group]');
+      
+      dayGroups.forEach((dayGroup) => {
+        const dayLabel = dayGroup.getAttribute('data-day-group');
+        if (!dayLabel) return;
+        
+        const events = dayGroup.querySelectorAll('[data-event-time]');
+        let closestEvent: { element: Element; distance: number; time: string } | null = null;
+        let totalWeight = 0;
+        let weightedR = 0;
+        let weightedG = 0;
+        let weightedB = 0;
+        let weightedA = 0;
+        
+        // Find events near the viewport center and blend their colors
+        events.forEach((event) => {
+          const rect = event.getBoundingClientRect();
+          const eventCenter = rect.top + rect.height / 2;
+          const distance = Math.abs(eventCenter - viewportCenter);
+          
+          // Only consider events within viewport or slightly outside
+          if (rect.bottom > -100 && rect.top < viewportHeight + 100) {
+            const eventTime = event.getAttribute('data-event-time');
+            if (eventTime) {
+              // Calculate weight based on distance from viewport center
+              const maxDistance = viewportHeight / 2;
+              const weight = Math.max(0, 1 - (distance / maxDistance));
+              
+              if (weight > 0) {
+                const colors = getTimeOfDayColor(new Date(eventTime));
+                const colorMatch = colors.borderColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+                
+                if (colorMatch) {
+                  totalWeight += weight;
+                  weightedR += parseInt(colorMatch[1]) * weight;
+                  weightedG += parseInt(colorMatch[2]) * weight;
+                  weightedB += parseInt(colorMatch[3]) * weight;
+                  weightedA += parseFloat(colorMatch[4]) * weight;
+                }
+                
+                if (!closestEvent || distance < closestEvent.distance) {
+                  closestEvent = { element: event, distance, time: eventTime };
+                }
+              }
+            }
+          }
+        });
+        
+        if (totalWeight > 0) {
+          // Calculate weighted average color
+          const avgR = Math.round(weightedR / totalWeight);
+          const avgG = Math.round(weightedG / totalWeight);
+          const avgB = Math.round(weightedB / totalWeight);
+          const avgA = weightedA / totalWeight;
+          
+          const blendedColor = `rgba(${avgR}, ${avgG}, ${avgB}, ${avgA})`;
+          
+          // Get the position of the day banner for smooth scrolling effect
+          const dayBanner = dayGroup.querySelector('.timeline-sticky-banner');
+          const bannerRect = dayBanner?.getBoundingClientRect();
+          const bannerPosition = bannerRect ? bannerRect.top : 0;
+          
+          newDayColors.set(dayLabel, { color: blendedColor, position: bannerPosition });
+        }
+      });
+      
+      setDayGroupColors(newDayColors);
+    };
+    
+    // Update colors on scroll with throttling
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateDayColors();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    
+    // Initial update
+    updateDayColors();
+    
+    // Listen to scroll events
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    document.querySelector('main')?.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.querySelector('main')?.removeEventListener('scroll', handleScroll);
+    };
+  }, [allEvents]);
+
   // Make container focusable for keyboard navigation in SkyDeck
   React.useEffect(() => {
     if (containerRef.current && isInSkyDeck && isFocused) {
@@ -882,238 +986,183 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
 
   return (
     <div
-      className="mx-auto max-w-4xl"
+      className={isInSkyDeck ? "flex h-full flex-col" : "mx-auto max-w-4xl"}
       ref={containerRef}
       tabIndex={-1}
       style={{ outline: "none" }}
     >
-      {/* Header - only show when not in SkyDeck */}
-      {!isInSkyDeck && (
-        <div
-          className="bsky-glass sticky top-0 z-40 border-b"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
-        >
-          <div className="group flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-2">
-              <Clock size={20} style={{ color: "var(--bsky-primary)" }} />
-              <h2
-                className="text-lg font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
-              >
-                Visual Timeline
-              </h2>
-              <span
-                className="ml-auto text-xs"
-                style={{ color: "var(--bsky-text-secondary)" }}
-              >
-                {selectedItemIndex === -1
-                  ? "Press ↓ or j to start"
-                  : "Arrow keys/hjkl to navigate"}
-              </span>
-            </div>
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="rounded-full p-1.5 opacity-0 transition-all hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
-                style={{ color: "var(--bsky-text-secondary)" }}
-                aria-label="Close column"
-              >
-                <X size={18} />
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Scrollable content wrapper */}
+      <div className={isInSkyDeck ? "flex-1 overflow-y-auto" : ""}>
+        <div className="relative">
+          {/* Timeline line */}
+          <div
+            className="absolute bottom-0 left-[1.5rem] top-0 w-0.5 sm:left-[6.5rem]"
+            style={{
+              background:
+                "linear-gradient(to bottom, var(--bsky-border-color) 0%, var(--bsky-border-color) 100%)",
+              position: "relative",
+            }}
+          />
 
-      <div className="relative">
-        {/* Timeline line */}
-        <div
-          className="absolute bottom-0 left-[1.5rem] top-0 w-0.5 sm:left-[6.5rem]"
-          style={{
-            background:
-              "linear-gradient(to bottom, var(--bsky-border-color) 0%, var(--bsky-border-color) 100%)",
-            position: "relative",
-          }}
-        />
-
-        {eventsByDay.map((dayGroup, dayIndex) => (
-          <div key={dayGroup.label}>
-            {/* Sticky day label */}
-            <div
-              className="sticky top-0 z-30 mb-2 px-4 py-1.5 backdrop-blur-md sm:px-6"
-              style={{
-                // @ts-expect-error - WebKit prefix for sticky positioning
-                WebkitPosition: "-webkit-sticky",
-                top: "0px", // Position at the top of the container
-                zIndex: 30, // Higher than 20 but lower than main header's 40
-                backgroundColor: "var(--bsky-bg-primary)",
-                borderBottom: "1px solid var(--bsky-border-color)",
-                backdropFilter: "blur(10px)",
-                WebkitBackdropFilter: "blur(10px)",
-                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                // iOS Safari fixes
-                transform: "translateZ(0)",
-                willChange: "transform",
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <div
-                  className="h-2 w-2 rounded-full"
-                  style={{
-                    backgroundColor:
-                      dayGroup.events.length > 0
-                        ? getTimeOfDayColor(
-                            dayGroup.events[0].time,
-                          ).borderColor.replace(/[\d.]+\)$/, "1)")
-                        : "var(--bsky-primary)",
-                  }}
-                />
-                <h2
-                  className="text-sm font-semibold uppercase tracking-wide"
-                  style={{ color: "var(--bsky-text-secondary)" }}
-                >
-                  {dayGroup.label}
-                </h2>
+          {eventsByDay.map((dayGroup, dayIndex) => (
+            <div key={dayGroup.label} data-day-group={dayGroup.label}>
+              {/* Sticky day label */}
+              <div
+                className={`mb-2 px-4 py-1.5 backdrop-blur-md sm:px-6 ${!isInSkyDeck ? 'timeline-sticky-banner' : 'sticky'}`}
+                style={{
+                  ...(isInSkyDeck ? {
+                    position: "sticky",
+                    WebkitPosition: "-webkit-sticky",
+                    top: "0",
+                    zIndex: 30,
+                  } : {}),
+                  backgroundColor: "var(--bsky-bg-primary)",
+                  borderBottom: "1px solid var(--bsky-border-color)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                  // iOS Safari fixes
+                  transform: "translateZ(0)",
+                  willChange: "transform",
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <div
+                    className="h-2 w-2 rounded-full transition-all duration-700 ease-out"
+                    style={{
+                      backgroundColor: dayGroupColors.get(dayGroup.label)?.color
+                        ? dayGroupColors.get(dayGroup.label)!.color.replace(/[\d.]+\)$/, "1)")
+                        : dayGroup.events.length > 0
+                          ? getTimeOfDayColor(
+                              dayGroup.events[0].time,
+                            ).borderColor.replace(/[\d.]+\)$/, "1)")
+                          : "var(--bsky-primary)",
+                      boxShadow: dayGroupColors.get(dayGroup.label)?.color
+                        ? `0 0 8px ${dayGroupColors.get(dayGroup.label)!.color.replace(/[\d.]+\)$/, "0.4)")}`
+                        : 'none',
+                      transform: 'scale(1)',
+                    }}
+                  />
+                  <h2
+                    className="text-sm font-semibold uppercase tracking-wide"
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  >
+                    {dayGroup.label}
+                  </h2>
+                </div>
               </div>
-            </div>
 
-            {/* Events for this day */}
-            {dayGroup.events.map((event, eventIndex) => {
-              const previousEvent =
-                eventIndex > 0
-                  ? dayGroup.events[eventIndex - 1]
-                  : dayIndex > 0
-                    ? eventsByDay[dayIndex - 1].events[
-                        eventsByDay[dayIndex - 1].events.length - 1
-                      ]
-                    : null;
-              const spacingClass = getSpacingClass(
-                event.time,
-                previousEvent?.time,
-              );
+              {/* Events for this day */}
+              {dayGroup.events.map((event, eventIndex) => {
+                const previousEvent =
+                  eventIndex > 0
+                    ? dayGroup.events[eventIndex - 1]
+                    : dayIndex > 0
+                      ? eventsByDay[dayIndex - 1].events[
+                          eventsByDay[dayIndex - 1].events.length - 1
+                        ]
+                      : null;
+                const spacingClass = getSpacingClass(
+                  event.time,
+                  previousEvent?.time,
+                );
 
-              // Calculate the global index for this event
-              let globalIndex = 0;
-              for (let i = 0; i < dayIndex; i++) {
-                globalIndex += eventsByDay[i].events.length;
-              }
-              globalIndex += eventIndex;
+                // Calculate the global index for this event
+                let globalIndex = 0;
+                for (let i = 0; i < dayIndex; i++) {
+                  globalIndex += eventsByDay[i].events.length;
+                }
+                globalIndex += eventIndex;
 
-              const eventKey = getEventKey(event, globalIndex);
-              const isSelected = selectedItemIndex === globalIndex;
-              const isExpanded = true; // Cards are always expanded
+                const eventKey = getEventKey(event, globalIndex);
+                const isSelected = selectedItemIndex === globalIndex;
+                const isExpanded = true; // Cards are always expanded
 
-              return (
-                <div
-                  key={eventKey}
-                  className={`relative ${spacingClass} transition-transform duration-200 ease-out ${isSelected ? "z-10" : ""}`}
-                  ref={(el) => {
-                    if (el) {
-                      timelineItemsRef.current.set(eventKey, el);
-                    } else {
-                      timelineItemsRef.current.delete(eventKey);
-                    }
-                  }}
-                >
-                  {/* Time and event */}
-                  <div className="flex animate-fade-in-up items-start gap-2 px-4 sm:gap-4 sm:px-6">
-                    {/* Time - hide text on mobile, show only on desktop */}
-                    <div
-                      className={`${hideTimeLabels ? "w-3" : "w-3 sm:w-20"} pt-2 text-right font-mono text-xs tracking-wider sm:text-sm`}
-                    >
-                      {!hideTimeLabels && (
-                        <span
-                          className="hidden font-medium sm:inline"
-                          style={{
-                            color: isDayTime(event.time)
-                              ? "#d97706"
-                              : "#6366f1",
-                            opacity: 0.8,
-                          }}
-                        >
-                          {getTimeOfDay(event.time)}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Timeline dot */}
-                    <div
-                      className="relative flex-shrink-0 px-1 sm:px-0"
-                      style={{ paddingTop: "14px" }}
-                    >
+                return (
+                  <div
+                    key={eventKey}
+                    className={`relative ${spacingClass} transition-transform duration-200 ease-out ${isSelected ? "z-10" : ""}`}
+                    data-day-label={dayGroup.label}
+                    data-event-time={event.time.toISOString()}
+                    ref={(el) => {
+                      if (el) {
+                        timelineItemsRef.current.set(eventKey, el);
+                      } else {
+                        timelineItemsRef.current.delete(eventKey);
+                      }
+                    }}
+                  >
+                    {/* Time and event */}
+                    <div className="flex animate-fade-in-up items-start gap-2 px-4 sm:gap-4 sm:px-6">
+                      {/* Time - hide text on mobile, show only on desktop */}
                       <div
-                        className={`${event.aggregationType === "post-burst" ? "h-3 w-3" : "h-2 w-2"} rounded-full`}
-                        style={{
-                          backgroundColor: getTimeOfDayColor(
-                            event.time,
-                          ).borderColor.replace(/[\d.]+\)$/, "1)"), // Use solid color for dot
-                          opacity:
-                            event.aggregationType === "post-burst"
-                              ? "0.9"
-                              : "0.7",
-                        }}
-                      />
-                    </div>
+                        className={`${hideTimeLabels ? "w-3" : "w-3 sm:w-20"} pt-2 text-right font-mono text-xs tracking-wider sm:text-sm`}
+                      >
+                        {!hideTimeLabels && (
+                          <span
+                            className="hidden font-medium sm:inline"
+                            style={{
+                              color: isDayTime(event.time)
+                                ? "#d97706"
+                                : "#6366f1",
+                              opacity: 0.8,
+                            }}
+                          >
+                            {getTimeOfDay(event.time)}
+                          </span>
+                        )}
+                      </div>
 
-                    {/* Event card */}
-                    <div
-                      className={`flex-1 cursor-pointer rounded-lg p-3 transition-all duration-200 ease-out ${
-                        event.notifications.length > 1
-                          ? "bg-bsky-bg-secondary"
-                          : ""
-                      } ${
-                        event.aggregationType === "follow"
-                          ? "border-l-[3px] border-l-bsky-follow pl-3"
-                          : event.aggregationType === "post" ||
+                      {/* Timeline dot */}
+                      <div
+                        className="relative flex-shrink-0 px-1 sm:px-0"
+                        style={{ paddingTop: "14px" }}
+                      >
+                        <div
+                          className={`${event.aggregationType === "post-burst" ? "h-3 w-3" : "h-2 w-2"} rounded-full`}
+                          style={{
+                            backgroundColor: getTimeOfDayColor(
+                              event.time,
+                            ).borderColor.replace(/[\d.]+\)$/, "1)"), // Use solid color for dot
+                            opacity:
                               event.aggregationType === "post-burst"
-                            ? "border-l-[3px] border-l-bsky-primary pl-3"
-                            : event.aggregationType === "user-activity"
-                              ? "relative overflow-hidden bg-bsky-bg-secondary"
-                              : ""
-                      } ${isSelected ? "relative translate-x-1 transform before:absolute before:-left-1 before:bottom-0 before:top-0 before:w-[3px] before:rounded-r-[3px] before:bg-bsky-primary before:opacity-80 before:content-['']" : ""} hover:translate-x-0.5 hover:transform hover:shadow-lg`}
-                      style={{
-                        backgroundColor: getTimeOfDayColor(event.time)
-                          .backgroundColor,
-                        border: `1px solid ${isSelected ? "var(--bsky-primary)" : getTimeOfDayColor(event.time).borderColor}`,
-                        borderRadius: "8px",
-                        boxShadow: isSelected
-                          ? `0 0 0 2px var(--bsky-primary), 0 1px 3px ${getTimeOfDayColor(event.time).shadowColor}`
-                          : `0 1px 3px ${getTimeOfDayColor(event.time).shadowColor}`,
-                      }}
-                      tabIndex={isSelected ? 0 : -1}
-                      aria-selected={isSelected}
-                      aria-expanded={isExpanded}
-                      role="button"
-                      onClick={() => {
-                        setSelectedItemIndex(globalIndex);
-                        // Open thread viewer for post notifications
-                        let postUriToOpen: string | null = null;
+                                ? "0.9"
+                                : "0.7",
+                          }}
+                        />
+                      </div>
 
-                        // For post bursts and post aggregations, use the postUri
-                        if (event.postUri) {
-                          postUriToOpen = event.postUri;
-                        } else if (
-                          event.notifications.length > 0 &&
-                          event.notifications[0].reason !== "follow"
-                        ) {
-                          // For single notifications or other aggregations
-                          const notification = event.notifications[0];
-                          postUriToOpen =
-                            (notification.reason === "repost" ||
-                              notification.reason === "like") &&
-                            notification.reasonSubject
-                              ? notification.reasonSubject
-                              : notification.uri;
-                        }
-
-                        if (postUriToOpen) {
-                          setSelectedPostUri(postUriToOpen);
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        // Handle Enter/Space on the element itself
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
+                      {/* Event card */}
+                      <div
+                        className={`flex-1 cursor-pointer rounded-lg p-3 transition-all duration-200 ease-out ${
+                          event.notifications.length > 1
+                            ? "bg-bsky-bg-secondary"
+                            : ""
+                        } ${
+                          event.aggregationType === "follow"
+                            ? "border-l-[3px] border-l-bsky-follow pl-3"
+                            : event.aggregationType === "post" ||
+                                event.aggregationType === "post-burst"
+                              ? "border-l-[3px] border-l-bsky-primary pl-3"
+                              : event.aggregationType === "user-activity"
+                                ? "relative overflow-hidden bg-bsky-bg-secondary"
+                                : ""
+                        } ${isSelected ? "relative translate-x-1 transform before:absolute before:-left-1 before:bottom-0 before:top-0 before:w-[3px] before:rounded-r-[3px] before:bg-bsky-primary before:opacity-80 before:content-['']" : ""} hover:translate-x-0.5 hover:transform hover:shadow-lg`}
+                        style={{
+                          backgroundColor: getTimeOfDayColor(event.time)
+                            .backgroundColor,
+                          border: `1px solid ${isSelected ? "var(--bsky-primary)" : getTimeOfDayColor(event.time).borderColor}`,
+                          borderRadius: "8px",
+                          boxShadow: isSelected
+                            ? `0 0 0 2px var(--bsky-primary), 0 1px 3px ${getTimeOfDayColor(event.time).shadowColor}`
+                            : `0 1px 3px ${getTimeOfDayColor(event.time).shadowColor}`,
+                        }}
+                        tabIndex={isSelected ? 0 : -1}
+                        aria-selected={isSelected}
+                        aria-expanded={isExpanded}
+                        role="button"
+                        onClick={() => {
+                          setSelectedItemIndex(globalIndex);
                           // Open thread viewer for post notifications
                           let postUriToOpen: string | null = null;
 
@@ -1137,115 +1186,191 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                           if (postUriToOpen) {
                             setSelectedPostUri(postUriToOpen);
                           }
-                        }
-                      }}
-                    >
-                      {/* Single notification */}
-                      {event.notifications.length === 1 ? (
-                        <div>
-                          <div className="flex items-center gap-3">
-                            {/* Removed expand/collapse indicator - cards are always expanded */}
-                            <a
-                              href={getProfileUrl(
-                                event.notifications[0].author?.handle ||
-                                  "unknown",
-                              )}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex-shrink-0 transition-all duration-200 ease-out hover:opacity-80"
-                            >
-                              <img
-                                src={proxifyBskyImage(
-                                  event.notifications[0].author.avatar,
-                                )}
-                                alt={
-                                  event.notifications[0].author?.handle ||
-                                  "unknown"
-                                }
-                                className="h-8 w-8 rounded-full"
-                              />
-                            </a>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                {getReasonIcon(event.notifications[0].reason)}
-                                <a
-                                  href={getProfileUrl(
-                                    event.notifications[0].author?.handle ||
-                                      "unknown",
-                                  )}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-sm font-medium hover:underline"
-                                  style={{ color: "var(--bsky-primary)" }}
-                                >
-                                  {event.notifications[0].author?.displayName ||
-                                    event.notifications[0].author?.handle ||
-                                    "Unknown"}
-                                </a>
-                              </div>
-                              <div
-                                className="mt-0.5 text-xs sm:text-sm"
-                                style={{ color: "var(--bsky-text-secondary)" }}
-                              >
-                                {getActionText(event.notifications[0].reason)}
-                              </div>
-                            </div>
-                          </div>
-                          {/* Show post preview for single notifications too */}
-                          {event.notifications[0].reason !== "follow" &&
-                            isExpanded &&
-                            (() => {
-                              const notification = event.notifications[0];
+                        }}
+                        onKeyDown={(e) => {
+                          // Handle Enter/Space on the element itself
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            // Open thread viewer for post notifications
+                            let postUriToOpen: string | null = null;
 
-                              // Try to get full post data first
-                              // For reposts and likes, use reasonSubject which contains the original post URI
-                              const postUri =
+                            // For post bursts and post aggregations, use the postUri
+                            if (event.postUri) {
+                              postUriToOpen = event.postUri;
+                            } else if (
+                              event.notifications.length > 0 &&
+                              event.notifications[0].reason !== "follow"
+                            ) {
+                              // For single notifications or other aggregations
+                              const notification = event.notifications[0];
+                              postUriToOpen =
                                 (notification.reason === "repost" ||
                                   notification.reason === "like") &&
                                 notification.reasonSubject
                                   ? notification.reasonSubject
                                   : notification.uri;
-                              const post = [
-                                "like",
-                                "repost",
-                                "reply",
-                                "quote",
-                              ].includes(notification.reason)
-                                ? postMap.get(postUri)
-                                : undefined;
+                            }
 
-                              if (post) {
-                                // We have full post data
-                                const postUrl = getPostUrl(
-                                  postUri,
-                                  post.author?.handle,
-                                );
-                                return (
+                            if (postUriToOpen) {
+                              setSelectedPostUri(postUriToOpen);
+                            }
+                          }
+                        }}
+                      >
+                        {/* Single notification */}
+                        {event.notifications.length === 1 ? (
+                          <div>
+                            <div className="flex items-center gap-3">
+                              {/* Removed expand/collapse indicator - cards are always expanded */}
+                              <a
+                                href={getProfileUrl(
+                                  event.notifications[0].author?.handle ||
+                                    "unknown",
+                                )}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-shrink-0 transition-all duration-200 ease-out hover:opacity-80"
+                              >
+                                <img
+                                  src={proxifyBskyImage(
+                                    event.notifications[0].author.avatar,
+                                  )}
+                                  alt={
+                                    event.notifications[0].author?.handle ||
+                                    "unknown"
+                                  }
+                                  className="h-8 w-8 rounded-full"
+                                />
+                              </a>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  {getReasonIcon(event.notifications[0].reason)}
                                   <a
-                                    href={postUrl || "#"}
+                                    href={getProfileUrl(
+                                      event.notifications[0].author?.handle ||
+                                        "unknown",
+                                    )}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="relative ml-11 mt-2 block overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
+                                    className="text-sm font-medium hover:underline"
+                                    style={{ color: "var(--bsky-primary)" }}
+                                  >
+                                    {event.notifications[0].author
+                                      ?.displayName ||
+                                      event.notifications[0].author?.handle ||
+                                      "Unknown"}
+                                  </a>
+                                </div>
+                                <div
+                                  className="mt-0.5 text-xs sm:text-sm"
+                                  style={{
+                                    color: "var(--bsky-text-secondary)",
+                                  }}
+                                >
+                                  {getActionText(event.notifications[0].reason)}
+                                </div>
+                              </div>
+                            </div>
+                            {/* Show post preview for single notifications too */}
+                            {event.notifications[0].reason !== "follow" &&
+                              isExpanded &&
+                              (() => {
+                                const notification = event.notifications[0];
+
+                                // Try to get full post data first
+                                // For reposts and likes, use reasonSubject which contains the original post URI
+                                const postUri =
+                                  (notification.reason === "repost" ||
+                                    notification.reason === "like") &&
+                                  notification.reasonSubject
+                                    ? notification.reasonSubject
+                                    : notification.uri;
+                                const post = [
+                                  "like",
+                                  "repost",
+                                  "reply",
+                                  "quote",
+                                ].includes(notification.reason)
+                                  ? postMap.get(postUri)
+                                  : undefined;
+
+                                if (post) {
+                                  // We have full post data
+                                  const postUrl = getPostUrl(
+                                    postUri,
+                                    post.author?.handle,
+                                  );
+                                  return (
+                                    <a
+                                      href={postUrl || "#"}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="relative ml-11 mt-2 block overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
+                                      style={{
+                                        backgroundColor:
+                                          "var(--bsky-bg-tertiary)",
+                                        border:
+                                          "1px solid var(--bsky-border-primary)",
+                                        textDecoration: "none",
+                                      }}
+                                    >
+                                      <p
+                                        className="mb-1 flex items-center gap-1 text-xs font-medium"
+                                        style={{
+                                          color: "var(--bsky-text-tertiary)",
+                                        }}
+                                      >
+                                        {notification.reason === "reply"
+                                          ? "Replying to your post:"
+                                          : notification.reason === "quote"
+                                            ? "Quoting your post:"
+                                            : "Your post:"}
+                                        <ExternalLink size={10} />
+                                      </p>
+                                      <p
+                                        className="line-clamp-2 text-xs"
+                                        style={{
+                                          color: "var(--bsky-text-primary)",
+                                        }}
+                                      >
+                                        {post.record?.text ||
+                                          "[Post with no text]"}
+                                      </p>
+                                    </a>
+                                  );
+                                }
+
+                                // Fallback for mentions or when post data isn't available
+                                const postText =
+                                  notification.record?.text ||
+                                  (notification.record &&
+                                  typeof notification.record === "object" &&
+                                  "text" in notification.record
+                                    ? (notification.record as { text?: string })
+                                        .text
+                                    : null);
+
+                                if (!postText) return null;
+
+                                return (
+                                  <div
+                                    className="relative ml-11 mt-2 overflow-hidden rounded p-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-['']"
                                     style={{
                                       backgroundColor:
                                         "var(--bsky-bg-tertiary)",
                                       border:
                                         "1px solid var(--bsky-border-primary)",
-                                      textDecoration: "none",
                                     }}
                                   >
                                     <p
-                                      className="mb-1 flex items-center gap-1 text-xs font-medium"
+                                      className="mb-1 text-xs font-medium"
                                       style={{
                                         color: "var(--bsky-text-tertiary)",
                                       }}
                                     >
-                                      {notification.reason === "reply"
-                                        ? "Replying to your post:"
-                                        : notification.reason === "quote"
-                                          ? "Quoting your post:"
-                                          : "Your post:"}
-                                      <ExternalLink size={10} />
+                                      {notification.reason === "mention"
+                                        ? "Mentioned you in:"
+                                        : "Post:"}
                                     </p>
                                     <p
                                       className="line-clamp-2 text-xs"
@@ -1253,415 +1378,422 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                         color: "var(--bsky-text-primary)",
                                       }}
                                     >
-                                      {post.record?.text ||
-                                        "[Post with no text]"}
+                                      {postText}
                                     </p>
-                                  </a>
+                                  </div>
                                 );
-                              }
-
-                              // Fallback for mentions or when post data isn't available
-                              const postText =
-                                notification.record?.text ||
-                                (notification.record &&
-                                typeof notification.record === "object" &&
-                                "text" in notification.record
-                                  ? (notification.record as { text?: string })
-                                      .text
-                                  : null);
-
-                              if (!postText) return null;
-
-                              return (
-                                <div
-                                  className="relative ml-11 mt-2 overflow-hidden rounded p-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-['']"
-                                  style={{
-                                    backgroundColor: "var(--bsky-bg-tertiary)",
-                                    border:
-                                      "1px solid var(--bsky-border-primary)",
-                                  }}
-                                >
-                                  <p
-                                    className="mb-1 text-xs font-medium"
-                                    style={{
-                                      color: "var(--bsky-text-tertiary)",
-                                    }}
-                                  >
-                                    {notification.reason === "mention"
-                                      ? "Mentioned you in:"
-                                      : "Post:"}
-                                  </p>
-                                  <p
-                                    className="line-clamp-2 text-xs"
-                                    style={{
-                                      color: "var(--bsky-text-primary)",
-                                    }}
-                                  >
-                                    {postText}
-                                  </p>
-                                </div>
-                              );
-                            })()}
-                        </div>
-                      ) : (
-                        /* Aggregated notifications */
-                        <div>
-                          {/* Removed expand/collapse indicator - cards are always expanded */}
-                          {event.aggregationType === "user-activity" ? (
-                            // Special layout for user activity bursts
-                            <div>
-                              <div className="mb-3 flex items-start gap-3">
-                                <a
-                                  href={getProfileUrl(
-                                    event.primaryActor!.handle,
-                                  )}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex-shrink-0 transition-all duration-200 ease-out hover:opacity-80"
-                                >
-                                  <img
-                                    src={proxifyBskyImage(
-                                      event.primaryActor!.avatar,
+                              })()}
+                          </div>
+                        ) : (
+                          /* Aggregated notifications */
+                          <div>
+                            {/* Removed expand/collapse indicator - cards are always expanded */}
+                            {event.aggregationType === "user-activity" ? (
+                              // Special layout for user activity bursts
+                              <div>
+                                <div className="mb-3 flex items-start gap-3">
+                                  <a
+                                    href={getProfileUrl(
+                                      event.primaryActor!.handle,
                                     )}
-                                    alt={event.primaryActor!.handle}
-                                    className="h-10 w-10 rounded-full"
-                                    style={{
-                                      border:
-                                        "1px solid var(--bsky-border-color)",
-                                    }}
-                                  />
-                                </a>
-                                <div className="flex-1">
-                                  <div className="mb-1 flex items-center gap-2">
-                                    <a
-                                      href={getProfileUrl(
-                                        event.primaryActor!.handle,
-                                      )}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-base font-bold hover:underline"
-                                      style={{ color: "var(--bsky-primary)" }}
-                                    >
-                                      {event.primaryActor!.displayName ||
-                                        event.primaryActor!.handle}
-                                    </a>
-                                    <span
-                                      className="text-xs"
-                                      style={{
-                                        color: "var(--bsky-text-tertiary)",
-                                      }}
-                                    >
-                                      • active
-                                    </span>
-                                  </div>
-                                  <p
-                                    className="text-sm"
-                                    style={{
-                                      color: "var(--bsky-text-secondary)",
-                                    }}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-shrink-0 transition-all duration-200 ease-out hover:opacity-80"
                                   >
-                                    {event.notifications.length} interactions
-                                    over{" "}
-                                    {event.earliestTime && event.latestTime
-                                      ? formatDistanceToNow(
-                                          event.earliestTime,
-                                          { addSuffix: false },
-                                        )
-                                      : "time"}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Engagement breakdown */}
-                              <div
-                                className="mb-3 flex flex-wrap gap-3 text-sm"
-                                style={{ color: "var(--bsky-text-secondary)" }}
-                              >
-                                {event.notifications.filter(
-                                  (n) => n.reason === "like",
-                                ).length > 0 && (
-                                  <span>
-                                    {
-                                      event.notifications.filter(
-                                        (n) => n.reason === "like",
-                                      ).length
-                                    }{" "}
-                                    likes
-                                  </span>
-                                )}
-                                {event.notifications.filter(
-                                  (n) => n.reason === "repost",
-                                ).length > 0 && (
-                                  <span>
-                                    {
-                                      event.notifications.filter(
-                                        (n) => n.reason === "repost",
-                                      ).length
-                                    }{" "}
-                                    reposts
-                                  </span>
-                                )}
-                                {event.notifications.filter(
-                                  (n) => n.reason === "reply",
-                                ).length > 0 && (
-                                  <span>
-                                    {
-                                      event.notifications.filter(
-                                        (n) => n.reason === "reply",
-                                      ).length
-                                    }{" "}
-                                    replies
-                                  </span>
-                                )}
-                                {event.notifications.filter(
-                                  (n) => n.reason === "quote",
-                                ).length > 0 && (
-                                  <span>
-                                    {
-                                      event.notifications.filter(
-                                        (n) => n.reason === "quote",
-                                      ).length
-                                    }{" "}
-                                    quotes
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Affected posts */}
-                              {event.affectedPosts &&
-                                event.affectedPosts.length > 0 &&
-                                isExpanded && (
-                                  <div className="space-y-2">
-                                    <p
-                                      className="text-xs font-medium"
-                                      style={{
-                                        color: "var(--bsky-text-tertiary)",
-                                      }}
-                                    >
-                                      Posts they interacted with:
-                                    </p>
-                                    <div className="space-y-1.5">
-                                      {event.affectedPosts
-                                        .slice(0, 3)
-                                        .map((post, i) => {
-                                          // Get the post from postMap to find its author
-                                          const fullPost = postMap.get(
-                                            post.uri,
-                                          );
-                                          const postUrl = fullPost
-                                            ? getPostUrl(
-                                                post.uri,
-                                                fullPost.author?.handle,
-                                              )
-                                            : null;
-                                          return (
-                                            <a
-                                              key={`${post.uri}-${i}`}
-                                              href={postUrl || "#"}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="line-clamp-2 block rounded p-2 text-xs transition-all duration-200 ease-out hover:opacity-90"
-                                              style={{
-                                                backgroundColor:
-                                                  "var(--bsky-bg-tertiary)",
-                                                border:
-                                                  "1px solid var(--bsky-border-primary)",
-                                                textDecoration: "none",
-                                                color:
-                                                  "var(--bsky-text-primary)",
-                                              }}
-                                            >
-                                              {post.text ||
-                                                "[Post with no text]"}
-                                            </a>
-                                          );
-                                        })}
-                                      {event.affectedPosts.length > 3 && (
-                                        <p
-                                          className="text-xs"
-                                          style={{
-                                            color: "var(--bsky-text-tertiary)",
-                                          }}
-                                        >
-                                          ...and{" "}
-                                          {event.affectedPosts.length - 3} more
-                                          posts
-                                        </p>
+                                    <img
+                                      src={proxifyBskyImage(
+                                        event.primaryActor!.avatar,
                                       )}
-                                    </div>
-                                  </div>
-                                )}
-                            </div>
-                          ) : event.aggregationType === "post-burst" ? (
-                            // Special layout for post bursts
-                            <div>
-                              <div className="mb-3 flex items-start gap-3">
-                                <div className="flex-shrink-0">
-                                  <div
-                                    className="flex h-10 w-10 items-center justify-center rounded-full"
-                                    style={{
-                                      backgroundColor:
-                                        "var(--bsky-bg-tertiary)",
-                                      border:
-                                        "1px solid var(--bsky-border-color)",
-                                    }}
-                                  >
-                                    <MessageCircle
-                                      size={20}
+                                      alt={event.primaryActor!.handle}
+                                      className="h-10 w-10 rounded-full"
                                       style={{
-                                        color: "var(--bsky-text-secondary)",
+                                        border:
+                                          "1px solid var(--bsky-border-color)",
                                       }}
                                     />
-                                  </div>
-                                </div>
-                                <div className="flex-1">
-                                  <div className="mb-1 flex items-center gap-2">
-                                    <span
-                                      className="text-sm font-medium"
-                                      style={{
-                                        color: "var(--bsky-text-primary)",
-                                      }}
-                                    >
-                                      Popular Post
-                                    </span>
-                                    {event.notifications.length >= 10 && (
+                                  </a>
+                                  <div className="flex-1">
+                                    <div className="mb-1 flex items-center gap-2">
+                                      <a
+                                        href={getProfileUrl(
+                                          event.primaryActor!.handle,
+                                        )}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-base font-bold hover:underline"
+                                        style={{ color: "var(--bsky-primary)" }}
+                                      >
+                                        {event.primaryActor!.displayName ||
+                                          event.primaryActor!.handle}
+                                      </a>
                                       <span
-                                        className="rounded-full px-2 py-0.5 text-xs font-medium"
+                                        className="text-xs"
                                         style={{
-                                          backgroundColor:
-                                            "var(--bsky-bg-tertiary)",
-                                          color: "var(--bsky-text-secondary)",
-                                          border:
-                                            "1px solid var(--bsky-border-color)",
+                                          color: "var(--bsky-text-tertiary)",
                                         }}
                                       >
-                                        {event.notifications.length}+
-                                        interactions
+                                        • active
                                       </span>
-                                    )}
-                                  </div>
-                                  <p
-                                    className="text-sm"
-                                    style={{
-                                      color: "var(--bsky-text-secondary)",
-                                    }}
-                                  >
-                                    {event.actors.size}{" "}
-                                    {event.actors.size === 1
-                                      ? "person"
-                                      : "people"}{" "}
-                                    engaged over{" "}
-                                    {event.earliestTime && event.latestTime
-                                      ? formatDistanceToNow(
-                                          event.earliestTime,
-                                          { addSuffix: false },
-                                        )
-                                      : "time"}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Engagement breakdown */}
-                              <div className="mb-3 flex flex-wrap gap-3">
-                                {event.notifications.filter(
-                                  (n) => n.reason === "like",
-                                ).length > 0 && (
-                                  <div className="flex items-center gap-1 text-sm">
-                                    <Heart
-                                      size={16}
-                                      style={{
-                                        color: "var(--bsky-text-secondary)",
-                                      }}
-                                    />
-                                    <span
+                                    </div>
+                                    <p
+                                      className="text-sm"
                                       style={{
                                         color: "var(--bsky-text-secondary)",
                                       }}
                                     >
+                                      {event.notifications.length} interactions
+                                      over{" "}
+                                      {event.earliestTime && event.latestTime
+                                        ? formatDistanceToNow(
+                                            event.earliestTime,
+                                            { addSuffix: false },
+                                          )
+                                        : "time"}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Engagement breakdown */}
+                                <div
+                                  className="mb-3 flex flex-wrap gap-3 text-sm"
+                                  style={{
+                                    color: "var(--bsky-text-secondary)",
+                                  }}
+                                >
+                                  {event.notifications.filter(
+                                    (n) => n.reason === "like",
+                                  ).length > 0 && (
+                                    <span>
                                       {
                                         event.notifications.filter(
                                           (n) => n.reason === "like",
                                         ).length
-                                      }
+                                      }{" "}
+                                      likes
                                     </span>
-                                  </div>
-                                )}
-                                {event.notifications.filter(
-                                  (n) => n.reason === "repost",
-                                ).length > 0 && (
-                                  <div className="flex items-center gap-1 text-sm">
-                                    <Repeat2
-                                      size={16}
-                                      style={{
-                                        color: "var(--bsky-text-secondary)",
-                                      }}
-                                    />
-                                    <span
-                                      style={{
-                                        color: "var(--bsky-text-secondary)",
-                                      }}
-                                    >
+                                  )}
+                                  {event.notifications.filter(
+                                    (n) => n.reason === "repost",
+                                  ).length > 0 && (
+                                    <span>
                                       {
                                         event.notifications.filter(
                                           (n) => n.reason === "repost",
                                         ).length
-                                      }
+                                      }{" "}
+                                      reposts
                                     </span>
-                                  </div>
-                                )}
-                                {event.notifications.filter(
-                                  (n) => n.reason === "reply",
-                                ).length > 0 && (
-                                  <div className="flex items-center gap-1 text-sm">
-                                    <MessageCircle
-                                      size={16}
-                                      style={{
-                                        color: "var(--bsky-text-secondary)",
-                                      }}
-                                    />
-                                    <span
-                                      style={{
-                                        color: "var(--bsky-text-secondary)",
-                                      }}
-                                    >
+                                  )}
+                                  {event.notifications.filter(
+                                    (n) => n.reason === "reply",
+                                  ).length > 0 && (
+                                    <span>
                                       {
                                         event.notifications.filter(
                                           (n) => n.reason === "reply",
                                         ).length
-                                      }
+                                      }{" "}
+                                      replies
                                     </span>
-                                  </div>
-                                )}
-                                {event.notifications.filter(
-                                  (n) => n.reason === "quote",
-                                ).length > 0 && (
-                                  <div className="flex items-center gap-1 text-sm">
-                                    <Quote
-                                      size={16}
-                                      style={{
-                                        color: "var(--bsky-text-secondary)",
-                                      }}
-                                    />
-                                    <span
-                                      style={{
-                                        color: "var(--bsky-text-secondary)",
-                                      }}
-                                    >
+                                  )}
+                                  {event.notifications.filter(
+                                    (n) => n.reason === "quote",
+                                  ).length > 0 && (
+                                    <span>
                                       {
                                         event.notifications.filter(
                                           (n) => n.reason === "quote",
                                         ).length
-                                      }
+                                      }{" "}
+                                      quotes
                                     </span>
-                                  </div>
-                                )}
-                              </div>
+                                  )}
+                                </div>
 
-                              {/* Actor avatars in a grid for bursts */}
-                              <div className="mb-3">
-                                <div className="flex flex-wrap gap-1">
+                                {/* Affected posts */}
+                                {event.affectedPosts &&
+                                  event.affectedPosts.length > 0 &&
+                                  isExpanded && (
+                                    <div className="space-y-2">
+                                      <p
+                                        className="text-xs font-medium"
+                                        style={{
+                                          color: "var(--bsky-text-tertiary)",
+                                        }}
+                                      >
+                                        Posts they interacted with:
+                                      </p>
+                                      <div className="space-y-1.5">
+                                        {event.affectedPosts
+                                          .slice(0, 3)
+                                          .map((post, i) => {
+                                            // Get the post from postMap to find its author
+                                            const fullPost = postMap.get(
+                                              post.uri,
+                                            );
+                                            const postUrl = fullPost
+                                              ? getPostUrl(
+                                                  post.uri,
+                                                  fullPost.author?.handle,
+                                                )
+                                              : null;
+                                            return (
+                                              <a
+                                                key={`${post.uri}-${i}`}
+                                                href={postUrl || "#"}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="line-clamp-2 block rounded p-2 text-xs transition-all duration-200 ease-out hover:opacity-90"
+                                                style={{
+                                                  backgroundColor:
+                                                    "var(--bsky-bg-tertiary)",
+                                                  border:
+                                                    "1px solid var(--bsky-border-primary)",
+                                                  textDecoration: "none",
+                                                  color:
+                                                    "var(--bsky-text-primary)",
+                                                }}
+                                              >
+                                                {post.text ||
+                                                  "[Post with no text]"}
+                                              </a>
+                                            );
+                                          })}
+                                        {event.affectedPosts.length > 3 && (
+                                          <p
+                                            className="text-xs"
+                                            style={{
+                                              color:
+                                                "var(--bsky-text-tertiary)",
+                                            }}
+                                          >
+                                            ...and{" "}
+                                            {event.affectedPosts.length - 3}{" "}
+                                            more posts
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                              </div>
+                            ) : event.aggregationType === "post-burst" ? (
+                              // Special layout for post bursts
+                              <div>
+                                <div className="mb-3 flex items-start gap-3">
+                                  <div className="flex-shrink-0">
+                                    <div
+                                      className="flex h-10 w-10 items-center justify-center rounded-full"
+                                      style={{
+                                        backgroundColor:
+                                          "var(--bsky-bg-tertiary)",
+                                        border:
+                                          "1px solid var(--bsky-border-color)",
+                                      }}
+                                    >
+                                      <MessageCircle
+                                        size={20}
+                                        style={{
+                                          color: "var(--bsky-text-secondary)",
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="mb-1 flex items-center gap-2">
+                                      <span
+                                        className="text-sm font-medium"
+                                        style={{
+                                          color: "var(--bsky-text-primary)",
+                                        }}
+                                      >
+                                        Popular Post
+                                      </span>
+                                      {event.notifications.length >= 10 && (
+                                        <span
+                                          className="rounded-full px-2 py-0.5 text-xs font-medium"
+                                          style={{
+                                            backgroundColor:
+                                              "var(--bsky-bg-tertiary)",
+                                            color: "var(--bsky-text-secondary)",
+                                            border:
+                                              "1px solid var(--bsky-border-color)",
+                                          }}
+                                        >
+                                          {event.notifications.length}+
+                                          interactions
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p
+                                      className="text-sm"
+                                      style={{
+                                        color: "var(--bsky-text-secondary)",
+                                      }}
+                                    >
+                                      {event.actors.size}{" "}
+                                      {event.actors.size === 1
+                                        ? "person"
+                                        : "people"}{" "}
+                                      engaged over{" "}
+                                      {event.earliestTime && event.latestTime
+                                        ? formatDistanceToNow(
+                                            event.earliestTime,
+                                            { addSuffix: false },
+                                          )
+                                        : "time"}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Engagement breakdown */}
+                                <div className="mb-3 flex flex-wrap gap-3">
+                                  {event.notifications.filter(
+                                    (n) => n.reason === "like",
+                                  ).length > 0 && (
+                                    <div className="flex items-center gap-1 text-sm">
+                                      <Heart
+                                        size={16}
+                                        style={{
+                                          color: "var(--bsky-text-secondary)",
+                                        }}
+                                      />
+                                      <span
+                                        style={{
+                                          color: "var(--bsky-text-secondary)",
+                                        }}
+                                      >
+                                        {
+                                          event.notifications.filter(
+                                            (n) => n.reason === "like",
+                                          ).length
+                                        }
+                                      </span>
+                                    </div>
+                                  )}
+                                  {event.notifications.filter(
+                                    (n) => n.reason === "repost",
+                                  ).length > 0 && (
+                                    <div className="flex items-center gap-1 text-sm">
+                                      <Repeat2
+                                        size={16}
+                                        style={{
+                                          color: "var(--bsky-text-secondary)",
+                                        }}
+                                      />
+                                      <span
+                                        style={{
+                                          color: "var(--bsky-text-secondary)",
+                                        }}
+                                      >
+                                        {
+                                          event.notifications.filter(
+                                            (n) => n.reason === "repost",
+                                          ).length
+                                        }
+                                      </span>
+                                    </div>
+                                  )}
+                                  {event.notifications.filter(
+                                    (n) => n.reason === "reply",
+                                  ).length > 0 && (
+                                    <div className="flex items-center gap-1 text-sm">
+                                      <MessageCircle
+                                        size={16}
+                                        style={{
+                                          color: "var(--bsky-text-secondary)",
+                                        }}
+                                      />
+                                      <span
+                                        style={{
+                                          color: "var(--bsky-text-secondary)",
+                                        }}
+                                      >
+                                        {
+                                          event.notifications.filter(
+                                            (n) => n.reason === "reply",
+                                          ).length
+                                        }
+                                      </span>
+                                    </div>
+                                  )}
+                                  {event.notifications.filter(
+                                    (n) => n.reason === "quote",
+                                  ).length > 0 && (
+                                    <div className="flex items-center gap-1 text-sm">
+                                      <Quote
+                                        size={16}
+                                        style={{
+                                          color: "var(--bsky-text-secondary)",
+                                        }}
+                                      />
+                                      <span
+                                        style={{
+                                          color: "var(--bsky-text-secondary)",
+                                        }}
+                                      >
+                                        {
+                                          event.notifications.filter(
+                                            (n) => n.reason === "quote",
+                                          ).length
+                                        }
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Actor avatars in a grid for bursts */}
+                                <div className="mb-3">
+                                  <div className="flex flex-wrap gap-1">
+                                    {event.notifications
+                                      .slice(0, 12)
+                                      .map((notif, i) => (
+                                        <a
+                                          key={`${notif.uri}-${i}`}
+                                          href={getProfileUrl(
+                                            notif.author?.handle || "unknown",
+                                          )}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="transition-all duration-200 ease-out hover:opacity-80"
+                                        >
+                                          <img
+                                            src={proxifyBskyImage(
+                                              notif.author.avatar,
+                                            )}
+                                            alt={
+                                              notif.author?.handle || "unknown"
+                                            }
+                                            className="h-8 w-8 rounded-full"
+                                            title={
+                                              notif.author?.displayName ||
+                                              notif.author?.handle ||
+                                              "Unknown"
+                                            }
+                                          />
+                                        </a>
+                                      ))}
+                                    {event.notifications.length > 12 && (
+                                      <div
+                                        className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold"
+                                        style={{
+                                          backgroundColor:
+                                            "var(--bsky-bg-tertiary)",
+                                          color: "var(--bsky-text-primary)",
+                                        }}
+                                      >
+                                        +{event.notifications.length - 12}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              // Regular aggregated layout
+                              <div className="flex items-center gap-3">
+                                {/* Actor avatars */}
+                                <div className="flex flex-shrink-0 items-center -space-x-2">
                                   {event.notifications
-                                    .slice(0, 12)
+                                    .slice(0, 5)
                                     .map((notif, i) => (
                                       <a
                                         key={`${notif.uri}-${i}`}
@@ -1670,7 +1802,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                         )}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="transition-all duration-200 ease-out hover:opacity-80"
+                                        className="transition-all duration-200 ease-out hover:z-10 hover:-translate-y-0.5 hover:scale-110"
                                       >
                                         <img
                                           src={proxifyBskyImage(
@@ -1679,7 +1811,11 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                           alt={
                                             notif.author?.handle || "unknown"
                                           }
-                                          className="h-8 w-8 rounded-full"
+                                          className="h-6 w-6 rounded-full border-2"
+                                          style={{
+                                            borderColor:
+                                              "var(--bsky-bg-secondary)",
+                                          }}
                                           title={
                                             notif.author?.displayName ||
                                             notif.author?.handle ||
@@ -1688,183 +1824,215 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                         />
                                       </a>
                                     ))}
-                                  {event.notifications.length > 12 && (
+                                  {event.notifications.length > 5 && (
                                     <div
-                                      className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold"
+                                      className="flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-medium"
                                       style={{
                                         backgroundColor:
                                           "var(--bsky-bg-tertiary)",
-                                        color: "var(--bsky-text-primary)",
+                                        borderColor: "var(--bsky-bg-secondary)",
+                                        fontSize: "10px",
                                       }}
                                     >
-                                      +{event.notifications.length - 12}
+                                      +{event.notifications.length - 5}
                                     </div>
                                   )}
                                 </div>
-                              </div>
-                            </div>
-                          ) : (
-                            // Regular aggregated layout
-                            <div className="flex items-center gap-3">
-                              {/* Actor avatars */}
-                              <div className="flex flex-shrink-0 items-center -space-x-2">
-                                {event.notifications
-                                  .slice(0, 5)
-                                  .map((notif, i) => (
-                                    <a
-                                      key={`${notif.uri}-${i}`}
-                                      href={getProfileUrl(
-                                        notif.author?.handle || "unknown",
-                                      )}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="transition-all duration-200 ease-out hover:z-10 hover:-translate-y-0.5 hover:scale-110"
-                                    >
-                                      <img
-                                        src={proxifyBskyImage(
-                                          notif.author.avatar,
-                                        )}
-                                        alt={notif.author?.handle || "unknown"}
-                                        className="h-6 w-6 rounded-full border-2"
-                                        style={{
-                                          borderColor:
-                                            "var(--bsky-bg-secondary)",
-                                        }}
-                                        title={
-                                          notif.author?.displayName ||
-                                          notif.author?.handle ||
-                                          "Unknown"
-                                        }
-                                      />
-                                    </a>
-                                  ))}
-                                {event.notifications.length > 5 && (
-                                  <div
-                                    className="flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-medium"
-                                    style={{
-                                      backgroundColor:
-                                        "var(--bsky-bg-tertiary)",
-                                      borderColor: "var(--bsky-bg-secondary)",
-                                      fontSize: "10px",
-                                    }}
-                                  >
-                                    +{event.notifications.length - 5}
-                                  </div>
-                                )}
-                              </div>
 
-                              {/* Compact summary */}
-                              <div className="flex-1">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  {event.aggregationType === "follow" ? (
-                                    <>
-                                      <span className="text-sm font-medium">
-                                        {event.actors.size} new{" "}
-                                        {event.actors.size === 1
-                                          ? "follower"
-                                          : "followers"}
-                                      </span>
-                                      {getReasonIcon("follow")}
-                                    </>
-                                  ) : (
-                                    <>
-                                      <span className="text-sm font-medium">
-                                        {event.actors.size}{" "}
-                                        {event.actors.size === 1
-                                          ? "person"
-                                          : "people"}
-                                      </span>
-                                      <span
-                                        className="text-sm"
-                                        style={{
-                                          color: "var(--bsky-text-secondary)",
-                                        }}
-                                      >
-                                        •
-                                      </span>
-                                      {Array.from(event.types).map(
-                                        (type, i) => (
-                                          <span
-                                            key={type}
-                                            className="flex items-center gap-1 text-sm"
-                                          >
-                                            {getReasonIcon(type)}
+                                {/* Compact summary */}
+                                <div className="flex-1">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    {event.aggregationType === "follow" ? (
+                                      <>
+                                        <span className="text-sm font-medium">
+                                          {event.actors.size} new{" "}
+                                          {event.actors.size === 1
+                                            ? "follower"
+                                            : "followers"}
+                                        </span>
+                                        {getReasonIcon("follow")}
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span className="text-sm font-medium">
+                                          {event.actors.size}{" "}
+                                          {event.actors.size === 1
+                                            ? "person"
+                                            : "people"}
+                                        </span>
+                                        <span
+                                          className="text-sm"
+                                          style={{
+                                            color: "var(--bsky-text-secondary)",
+                                          }}
+                                        >
+                                          •
+                                        </span>
+                                        {Array.from(event.types).map(
+                                          (type, i) => (
                                             <span
-                                              style={{
-                                                color:
-                                                  "var(--bsky-text-secondary)",
-                                              }}
+                                              key={type}
+                                              className="flex items-center gap-1 text-sm"
                                             >
-                                              {getActionCount(
-                                                event.notifications,
-                                                type,
-                                              )}
-                                            </span>
-                                            {i < event.types.size - 1 && (
+                                              {getReasonIcon(type)}
                                               <span
                                                 style={{
                                                   color:
                                                     "var(--bsky-text-secondary)",
                                                 }}
                                               >
-                                                •
+                                                {getActionCount(
+                                                  event.notifications,
+                                                  type,
+                                                )}
                                               </span>
-                                            )}
-                                          </span>
-                                        ),
-                                      )}
-                                    </>
-                                  )}
+                                              {i < event.types.size - 1 && (
+                                                <span
+                                                  style={{
+                                                    color:
+                                                      "var(--bsky-text-secondary)",
+                                                  }}
+                                                >
+                                                  •
+                                                </span>
+                                              )}
+                                            </span>
+                                          ),
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
-                          {/* Post preview for aggregated post notifications */}
-                          {(event.aggregationType === "post" ||
-                            event.aggregationType === "post-burst") &&
-                            isExpanded &&
-                            (() => {
-                              const notification = event.notifications[0];
+                            {/* Post preview for aggregated post notifications */}
+                            {(event.aggregationType === "post" ||
+                              event.aggregationType === "post-burst") &&
+                              isExpanded &&
+                              (() => {
+                                const notification = event.notifications[0];
 
-                              // Try to get full post data
-                              // For reposts and likes, use reasonSubject which contains the original post URI
-                              const postUri =
-                                (notification.reason === "repost" ||
-                                  notification.reason === "like") &&
-                                notification.reasonSubject
-                                  ? notification.reasonSubject
-                                  : notification.uri;
-                              const post = postMap.get(postUri);
+                                // Try to get full post data
+                                // For reposts and likes, use reasonSubject which contains the original post URI
+                                const postUri =
+                                  (notification.reason === "repost" ||
+                                    notification.reason === "like") &&
+                                  notification.reasonSubject
+                                    ? notification.reasonSubject
+                                    : notification.uri;
+                                const post = postMap.get(postUri);
 
-                              if (post) {
-                                // We have full post data
-                                const postUrl = getPostUrl(
-                                  postUri,
-                                  post.author?.handle,
-                                );
+                                if (post) {
+                                  // We have full post data
+                                  const postUrl = getPostUrl(
+                                    postUri,
+                                    post.author?.handle,
+                                  );
+                                  return (
+                                    <a
+                                      href={postUrl || "#"}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="relative mt-3 block overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
+                                      style={{
+                                        backgroundColor:
+                                          "var(--bsky-bg-tertiary)",
+                                        border:
+                                          "1px solid var(--bsky-border-primary)",
+                                        textDecoration: "none",
+                                      }}
+                                    >
+                                      <p
+                                        className="mb-1 flex items-center gap-1 text-xs font-medium"
+                                        style={{
+                                          color: "var(--bsky-text-tertiary)",
+                                        }}
+                                      >
+                                        Your post:
+                                        <ExternalLink size={10} />
+                                      </p>
+                                      <p
+                                        className="line-clamp-3 text-sm"
+                                        style={{
+                                          color: "var(--bsky-text-primary)",
+                                        }}
+                                      >
+                                        {post.record?.text ||
+                                          "[Post with no text]"}
+                                      </p>
+                                      <div
+                                        className="mt-2 flex items-center gap-2 text-xs"
+                                        style={{
+                                          color: "var(--bsky-text-tertiary)",
+                                        }}
+                                      >
+                                        <span>
+                                          {
+                                            event.notifications.filter(
+                                              (n) => n.reason === "like",
+                                            ).length
+                                          }{" "}
+                                          likes
+                                        </span>
+                                        <span>•</span>
+                                        <span>
+                                          {
+                                            event.notifications.filter(
+                                              (n) => n.reason === "repost",
+                                            ).length
+                                          }{" "}
+                                          reposts
+                                        </span>
+                                        {event.notifications.some(
+                                          (n) => n.reason === "quote",
+                                        ) && (
+                                          <>
+                                            <span>•</span>
+                                            <span>
+                                              {
+                                                event.notifications.filter(
+                                                  (n) => n.reason === "quote",
+                                                ).length
+                                              }{" "}
+                                              quotes
+                                            </span>
+                                          </>
+                                        )}
+                                      </div>
+                                    </a>
+                                  );
+                                }
+
+                                // Fallback when post data isn't available
+                                const postText =
+                                  notification.record?.text ||
+                                  (notification.record &&
+                                  typeof notification.record === "object" &&
+                                  "text" in notification.record
+                                    ? (notification.record as { text?: string })
+                                        .text
+                                    : null);
+
+                                if (!postText) return null;
+
                                 return (
-                                  <a
-                                    href={postUrl || "#"}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="relative mt-3 block overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
+                                  <div
+                                    className="relative mt-3 overflow-hidden rounded p-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-['']"
                                     style={{
                                       backgroundColor:
                                         "var(--bsky-bg-tertiary)",
                                       border:
                                         "1px solid var(--bsky-border-primary)",
-                                      textDecoration: "none",
                                     }}
                                   >
                                     <p
-                                      className="mb-1 flex items-center gap-1 text-xs font-medium"
+                                      className="mb-1 text-xs font-medium"
                                       style={{
                                         color: "var(--bsky-text-tertiary)",
                                       }}
                                     >
                                       Your post:
-                                      <ExternalLink size={10} />
                                     </p>
                                     <p
                                       className="line-clamp-3 text-sm"
@@ -1872,8 +2040,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                         color: "var(--bsky-text-primary)",
                                       }}
                                     >
-                                      {post.record?.text ||
-                                        "[Post with no text]"}
+                                      {postText}
                                     </p>
                                     <div
                                       className="mt-2 flex items-center gap-2 text-xs"
@@ -1914,142 +2081,65 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                         </>
                                       )}
                                     </div>
-                                  </a>
-                                );
-                              }
-
-                              // Fallback when post data isn't available
-                              const postText =
-                                notification.record?.text ||
-                                (notification.record &&
-                                typeof notification.record === "object" &&
-                                "text" in notification.record
-                                  ? (notification.record as { text?: string })
-                                      .text
-                                  : null);
-
-                              if (!postText) return null;
-
-                              return (
-                                <div
-                                  className="relative mt-3 overflow-hidden rounded p-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-['']"
-                                  style={{
-                                    backgroundColor: "var(--bsky-bg-tertiary)",
-                                    border:
-                                      "1px solid var(--bsky-border-primary)",
-                                  }}
-                                >
-                                  <p
-                                    className="mb-1 text-xs font-medium"
-                                    style={{
-                                      color: "var(--bsky-text-tertiary)",
-                                    }}
-                                  >
-                                    Your post:
-                                  </p>
-                                  <p
-                                    className="line-clamp-3 text-sm"
-                                    style={{
-                                      color: "var(--bsky-text-primary)",
-                                    }}
-                                  >
-                                    {postText}
-                                  </p>
-                                  <div
-                                    className="mt-2 flex items-center gap-2 text-xs"
-                                    style={{
-                                      color: "var(--bsky-text-tertiary)",
-                                    }}
-                                  >
-                                    <span>
-                                      {
-                                        event.notifications.filter(
-                                          (n) => n.reason === "like",
-                                        ).length
-                                      }{" "}
-                                      likes
-                                    </span>
-                                    <span>•</span>
-                                    <span>
-                                      {
-                                        event.notifications.filter(
-                                          (n) => n.reason === "repost",
-                                        ).length
-                                      }{" "}
-                                      reposts
-                                    </span>
-                                    {event.notifications.some(
-                                      (n) => n.reason === "quote",
-                                    ) && (
-                                      <>
-                                        <span>•</span>
-                                        <span>
-                                          {
-                                            event.notifications.filter(
-                                              (n) => n.reason === "quote",
-                                            ).length
-                                          }{" "}
-                                          quotes
-                                        </span>
-                                      </>
-                                    )}
                                   </div>
-                                </div>
-                              );
-                            })()}
+                                );
+                              })()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Visual gap indicator for large time gaps */}
+                    {previousEvent &&
+                      differenceInHours(previousEvent.time, event.time) >=
+                        12 && (
+                        <div
+                          className="before:bg-bsky-border-color after:bg-bsky-border-color absolute relative -top-3 left-[5rem] whitespace-nowrap rounded-[10px] bg-bsky-bg-secondary px-1.5 py-0.5 text-xs before:absolute before:-top-3 before:left-1/2 before:h-2 before:w-px before:-translate-x-1/2 before:opacity-30 before:content-[''] after:absolute after:-bottom-3 after:left-1/2 after:h-2 after:w-px after:-translate-x-1/2 after:opacity-30 after:content-[''] sm:left-[7.5rem]"
+                          style={{
+                            color: "var(--bsky-text-tertiary)",
+                            transform: "translateX(-50%)",
+                            fontSize: "10px",
+                          }}
+                        >
+                          {Math.floor(
+                            differenceInHours(previousEvent.time, event.time),
+                          )}
+                          h
                         </div>
                       )}
-                    </div>
                   </div>
+                );
+              })}
+            </div>
+          ))}
 
-                  {/* Visual gap indicator for large time gaps */}
-                  {previousEvent &&
-                    differenceInHours(previousEvent.time, event.time) >= 12 && (
-                      <div
-                        className="before:bg-bsky-border-color after:bg-bsky-border-color absolute relative -top-3 left-[5rem] whitespace-nowrap rounded-[10px] bg-bsky-bg-secondary px-1.5 py-0.5 text-xs before:absolute before:-top-3 before:left-1/2 before:h-2 before:w-px before:-translate-x-1/2 before:opacity-30 before:content-[''] after:absolute after:-bottom-3 after:left-1/2 after:h-2 after:w-px after:-translate-x-1/2 after:opacity-30 after:content-[''] sm:left-[7.5rem]"
-                        style={{
-                          color: "var(--bsky-text-tertiary)",
-                          transform: "translateX(-50%)",
-                          fontSize: "10px",
-                        }}
-                      >
-                        {Math.floor(
-                          differenceInHours(previousEvent.time, event.time),
-                        )}
-                        h
-                      </div>
-                    )}
-                </div>
-              );
-            })}
+          {/* End of timeline */}
+          <div className="relative mt-8 flex items-center gap-3">
+            <div className="w-24" />
+            <div
+              className="h-3 w-3 rounded-full"
+              style={{ backgroundColor: "var(--bsky-border-color)" }}
+            />
+            <span
+              className="text-sm"
+              style={{ color: "var(--bsky-text-secondary)" }}
+            >
+              {notifications.length === 0
+                ? "No notifications yet"
+                : `${notifications.length} recent notifications`}
+            </span>
           </div>
-        ))}
-
-        {/* End of timeline */}
-        <div className="relative mt-8 flex items-center gap-3">
-          <div className="w-24" />
-          <div
-            className="h-3 w-3 rounded-full"
-            style={{ backgroundColor: "var(--bsky-border-color)" }}
-          />
-          <span
-            className="text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
-          >
-            {notifications.length === 0
-              ? "No notifications yet"
-              : `${notifications.length} recent notifications`}
-          </span>
         </div>
-      </div>
 
-      {/* Thread Modal */}
-      {selectedPostUri && (
-        <ThreadModal
-          postUri={selectedPostUri}
-          onClose={() => setSelectedPostUri(null)}
-        />
-      )}
+        {/* Thread Modal */}
+        {selectedPostUri && (
+          <ThreadModal
+            postUri={selectedPostUri}
+            onClose={() => setSelectedPostUri(null)}
+          />
+        )}
+      </div>{" "}
+      {/* End scrollable wrapper */}
     </div>
   );
 };
