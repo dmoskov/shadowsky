@@ -79,10 +79,8 @@ export function InlineReplyComposer({
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       handleSubmit();
-    } else if (e.key === "Enter") {
-      // Prevent plain Enter from bubbling up and triggering navigation
-      e.preventDefault();
     }
+    // Allow plain Enter to work normally for creating new lines
 
     if (e.key === "Escape") {
       e.preventDefault();
