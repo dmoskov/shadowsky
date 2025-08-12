@@ -17,12 +17,12 @@ import React, {
   useState,
 } from "react";
 import { analytics } from "../services/analytics";
+import { appPreferencesService } from "../services/app-preferences-service";
 import { atProtoClient, ATProtoClient } from "../services/atproto";
 import {
   bookmarkService,
   initializeBookmarkService,
 } from "../services/bookmark-service-wrapper";
-import { appPreferencesService } from "../services/app-preferences-service";
 import { dmService } from "../services/dm-service";
 
 interface AuthContextType {

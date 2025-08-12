@@ -38,7 +38,8 @@ export class AppPreferencesService {
         rkey: PREFERENCES_RKEY,
       });
 
-      this.preferencesCache = response.data.value as unknown as AppPreferencesRecord;
+      this.preferencesCache = response.data
+        .value as unknown as AppPreferencesRecord;
       return this.preferencesCache;
     } catch (error: any) {
       if (error?.status === 400 && error?.error === "RecordNotFound") {
@@ -86,7 +87,10 @@ export class AppPreferencesService {
 
       // Also update localStorage for immediate effect
       if (updates.bookmarkStorageType) {
-        localStorage.setItem("bookmarkStorageType", updates.bookmarkStorageType);
+        localStorage.setItem(
+          "bookmarkStorageType",
+          updates.bookmarkStorageType,
+        );
       }
 
       return updatedPrefs;
@@ -101,7 +105,7 @@ export class AppPreferencesService {
 
     // Check localStorage for existing preference
     const localStorageType = localStorage.getItem("bookmarkStorageType");
-    const bookmarkStorageType = 
+    const bookmarkStorageType =
       localStorageType === "custom" ? "custom" : "local";
 
     const defaultPrefs: AppPreferencesRecord = {
@@ -130,8 +134,9 @@ export class AppPreferencesService {
 
   private getLocalStorageFallback(): AppPreferencesRecord {
     const now = new Date().toISOString();
-    const bookmarkStorageType = 
-      (localStorage.getItem("bookmarkStorageType") as "local" | "custom") || "local";
+    const bookmarkStorageType =
+      (localStorage.getItem("bookmarkStorageType") as "local" | "custom") ||
+      "local";
 
     return {
       $type: PREFERENCES_COLLECTION,

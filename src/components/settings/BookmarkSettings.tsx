@@ -259,8 +259,20 @@ export const BookmarkSettings: React.FC = () => {
                     style={{ color: "var(--bsky-primary)" }}
                   >
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <circle cx="8" cy="8" r="8" fill="currentColor" opacity="0.2"/>
-                      <path d="M12 5L6.5 10.5L4 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <circle
+                        cx="8"
+                        cy="8"
+                        r="8"
+                        fill="currentColor"
+                        opacity="0.2"
+                      />
+                      <path
+                        d="M12 5L6.5 10.5L4 8"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                     Active
                   </div>

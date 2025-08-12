@@ -9,7 +9,7 @@ export async function initializeBookmarkService(agent: BskyAgent) {
   try {
     // Set agent for preferences service
     appPreferencesService.setAgent(agent);
-    
+
     // Get storage type from PDS record (with localStorage fallback)
     const preferences = await appPreferencesService.getPreferences();
     const storageType = preferences?.bookmarkStorageType || "local";
