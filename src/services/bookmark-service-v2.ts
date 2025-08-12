@@ -2,7 +2,6 @@ import { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
 import { CustomRecordBackend } from "./bookmark-backends/CustomRecordBackend";
 import { LocalStorageBackend } from "./bookmark-backends/LocalStorageBackend";
 import { Bookmark, BookmarkStorageBackend } from "./bookmark-backends/types";
-import { bookmarkStorage } from "./bookmark-storage-db";
 import { PostCacheService } from "./post-cache-service";
 
 export type BookmarkPost = Bookmark & {
@@ -61,7 +60,7 @@ class BookmarkServiceV2 {
   }
 
   async migrateStorage(
-    fromType: "local" | "custom",
+    _fromType: "local" | "custom",
     toType: "local" | "custom",
   ) {
     if (!this.agent && toType !== "local") {
@@ -138,7 +137,7 @@ class BookmarkServiceV2 {
 
       bookmarkPosts.push({
         ...bookmark,
-        post,
+        post: post || undefined,
       });
     }
 
@@ -166,7 +165,7 @@ class BookmarkServiceV2 {
       const post = await this.postCacheService.getPost(bookmark.postUri);
       bookmarkPosts.push({
         ...bookmark,
-        post,
+        post: post || undefined,
       });
     }
 
@@ -194,11 +193,6 @@ class BookmarkServiceV2 {
 
   getStorageType() {
     return this.storageType;
-  }
-
-  // Backwards compatibility method
-  getBookmarkCount() {
-    return bookmarkStorage.getBookmarkCount();
   }
 }
 

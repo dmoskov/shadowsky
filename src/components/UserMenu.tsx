@@ -94,7 +94,7 @@ export const UserMenu: React.FC = () => {
               className="font-medium"
               style={{ color: "var(--bsky-text-primary)" }}
             >
-              {session?.displayName || session?.handle}
+              {session?.handle}
             </p>
             <p
               className="text-sm"

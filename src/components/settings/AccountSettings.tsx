@@ -75,8 +75,8 @@ export const AccountSettings: React.FC = () => {
     setMessage(null);
 
     try {
-      let avatarBlob;
-      let bannerBlob;
+      let avatarBlob: { blob: any } | undefined;
+      let bannerBlob: { blob: any } | undefined;
 
       // Upload new avatar if changed
       if (avatarFile) {

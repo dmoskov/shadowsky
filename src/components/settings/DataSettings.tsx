@@ -2,7 +2,7 @@ import { HardDrive, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 
 export const DataSettings: React.FC = () => {
-  const [message, setMessage] = useState<{
+  const [_message, _setMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);

@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { AccountSettings } from "../components/settings/AccountSettings";
 import { AppearanceSettings } from "../components/settings/AppearanceSettings";
 import { BookmarkSettings } from "../components/settings/BookmarkSettings";
@@ -9,7 +9,6 @@ import { SettingsLayout } from "../components/settings/SettingsLayout";
 
 export const Settings = () => {
   const { section } = useParams<{ section?: string }>();
-  const navigate = useNavigate();
 
   const renderSection = () => {
     switch (section) {

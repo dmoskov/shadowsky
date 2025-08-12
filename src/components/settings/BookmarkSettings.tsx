@@ -18,12 +18,12 @@ export const BookmarkSettings: React.FC = () => {
   } | null>(null);
 
   // Get current storage type from preferences
-  const { data: preferences } = useQuery({
+  const { data: _preferences } = useQuery({
     queryKey: ["preferences"],
     queryFn: async () => {
       if (!agent) return null;
-      const { data } = await agent.getPreferences();
-      return data.preferences;
+      const response = await agent.getPreferences();
+      return response;
     },
     enabled: !!agent,
   });
@@ -88,14 +88,14 @@ export const BookmarkSettings: React.FC = () => {
       let currentPrefs;
       try {
         const response = await agent.getPreferences();
-        currentPrefs = response?.data;
+        currentPrefs = response;
       } catch (error) {
         console.warn("Failed to fetch preferences, using empty preferences");
         currentPrefs = { preferences: [] };
       }
 
-      if (!currentPrefs || !currentPrefs.preferences) {
-        currentPrefs = { preferences: [] };
+      if (!currentPrefs || !Array.isArray(currentPrefs)) {
+        currentPrefs = [];
       }
 
       // Store preference in localStorage since custom preferences
@@ -203,7 +203,6 @@ export const BookmarkSettings: React.FC = () => {
                     ? "var(--bsky-primary)"
                     : "var(--bsky-border-primary)"
                 }`,
-                ringColor: isSelected ? "var(--bsky-primary)" : undefined,
               }}
             >
               <div className="flex items-start gap-4">

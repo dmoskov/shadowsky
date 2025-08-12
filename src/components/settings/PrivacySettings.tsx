@@ -23,8 +23,8 @@ export const PrivacySettings: React.FC = () => {
     queryKey: ["preferences"],
     queryFn: async () => {
       if (!agent) return null;
-      const { data } = await agent.getPreferences();
-      return data.preferences;
+      const response = await agent.getPreferences();
+      return response;
     },
     enabled: !!agent,
   });
@@ -33,8 +33,8 @@ export const PrivacySettings: React.FC = () => {
   useEffect(() => {
     if (preferences) {
       // Check for content filtering preferences
-      const adultContentPref = preferences.find(
-        (p) => p.$type === "app.bsky.actor.defs#adultContentPref",
+      const adultContentPref = (preferences as any).find(
+        (p: any) => p.$type === "app.bsky.actor.defs#adultContentPref",
       );
       if (adultContentPref) {
         setPrivacy((prev) => ({
@@ -53,11 +53,11 @@ export const PrivacySettings: React.FC = () => {
 
     try {
       // Get current preferences and update
-      const { data: currentPrefs } = await agent.getPreferences();
+      const currentPrefs = await agent.getPreferences();
 
       // Filter out old adult content preferences
-      const otherPrefs = currentPrefs.preferences.filter(
-        (p) => p.$type !== "app.bsky.actor.defs#adultContentPref",
+      const otherPrefs = (currentPrefs as any).filter(
+        (p: any) => p.$type !== "app.bsky.actor.defs#adultContentPref",
       );
 
       // Add updated adult content preference (inverse of filterContent)

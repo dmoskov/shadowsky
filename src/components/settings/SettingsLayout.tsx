@@ -9,7 +9,7 @@ interface SettingsLayoutProps {
 
 export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
   children,
-  activeSection,
+  activeSection: _activeSection,
 }) => {
   const sections = [
     { id: "account", label: "Account", icon: User, path: "/settings/account" },
