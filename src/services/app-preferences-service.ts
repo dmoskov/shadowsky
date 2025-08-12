@@ -22,8 +22,8 @@ export class AppPreferencesService {
 
   async getPreferences(): Promise<AppPreferencesRecord | null> {
     if (!this.agent) {
-      console.log("No agent available, using localStorage fallback");
-      return this.getLocalStorageFallback();
+      console.log("No agent available, cannot fetch preferences");
+      return null;
     }
 
     // Return cached preferences if available
@@ -48,7 +48,7 @@ export class AppPreferencesService {
         return defaultPrefs;
       }
       console.error("Failed to fetch app preferences:", error);
-      return this.getLocalStorageFallback();
+      return null;
     }
   }
 
@@ -56,8 +56,8 @@ export class AppPreferencesService {
     updates: Partial<Omit<AppPreferencesRecord, "$type" | "createdAt">>,
   ): Promise<AppPreferencesRecord | null> {
     if (!this.agent) {
-      console.log("No agent available, updating localStorage only");
-      return this.updateLocalStorageFallback(updates);
+      console.log("No agent available, cannot update preferences");
+      return null;
     }
 
     try {
@@ -85,32 +85,19 @@ export class AppPreferencesService {
       // Update cache
       this.preferencesCache = updatedPrefs;
 
-      // Also update localStorage for immediate effect
-      if (updates.bookmarkStorageType) {
-        localStorage.setItem(
-          "bookmarkStorageType",
-          updates.bookmarkStorageType,
-        );
-      }
-
       return updatedPrefs;
     } catch (error) {
       console.error("Failed to update app preferences:", error);
-      return this.updateLocalStorageFallback(updates);
+      return null;
     }
   }
 
   private async createDefaultPreferences(): Promise<AppPreferencesRecord> {
     const now = new Date().toISOString();
 
-    // Check localStorage for existing preference
-    const localStorageType = localStorage.getItem("bookmarkStorageType");
-    const bookmarkStorageType =
-      localStorageType === "custom" ? "custom" : "local";
-
     const defaultPrefs: AppPreferencesRecord = {
       $type: PREFERENCES_COLLECTION,
-      bookmarkStorageType,
+      bookmarkStorageType: "local", // Default to local storage
       createdAt: now,
       updatedAt: now,
     };
@@ -130,37 +117,6 @@ export class AppPreferencesService {
     }
 
     return defaultPrefs;
-  }
-
-  private getLocalStorageFallback(): AppPreferencesRecord {
-    const now = new Date().toISOString();
-    const bookmarkStorageType =
-      (localStorage.getItem("bookmarkStorageType") as "local" | "custom") ||
-      "local";
-
-    return {
-      $type: PREFERENCES_COLLECTION,
-      bookmarkStorageType,
-      createdAt: now,
-      updatedAt: now,
-    };
-  }
-
-  private updateLocalStorageFallback(
-    updates: Partial<Omit<AppPreferencesRecord, "$type" | "createdAt">>,
-  ): AppPreferencesRecord {
-    const current = this.getLocalStorageFallback();
-    const updated = {
-      ...current,
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    };
-
-    if (updates.bookmarkStorageType) {
-      localStorage.setItem("bookmarkStorageType", updates.bookmarkStorageType);
-    }
-
-    return updated;
   }
 
   clearCache() {

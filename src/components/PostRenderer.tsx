@@ -145,9 +145,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
                 {quotedPost.author?.displayName || quotedPost.author?.handle}
               </span>
             </div>
-            <p className="quote-text text-sm">
-              {quotedPost.value?.text || ""}
-            </p>
+            <p className="quote-text text-sm">{quotedPost.value?.text || ""}</p>
           </div>
         </div>
       );
