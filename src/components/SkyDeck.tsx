@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useColumnSwipe } from "../hooks/useColumnSwipe";
 import { useModal } from "../contexts/ModalContext";
+import { useColumnSwipe } from "../hooks/useColumnSwipe";
 import { columnFeedPrefs } from "../utils/cookies";
 import SkyColumn from "./SkyColumn";
 
@@ -373,10 +373,10 @@ export default function SkyDeck() {
   // In narrow view, show columns with swipe navigation
   if (isNarrowView && columns.length > 0) {
     const currentColumn = columns[mobileColumnIndex] || columns[0];
-    
+
     return (
       <div className="h-full overflow-hidden dark:bg-gray-900">
-        <div 
+        <div
           ref={mobileContainerRef}
           {...swipeHandlers}
           className="relative h-full"
@@ -388,15 +388,15 @@ export default function SkyDeck() {
           />
           {/* Column dots indicator */}
           {columns.length > 1 && (
-            <div className="absolute bottom-20 left-0 right-0 flex justify-center gap-1.5 pb-2 pointer-events-none">
-              <div className="flex gap-1.5 rounded-full bg-black/20 dark:bg-white/20 px-3 py-2 pointer-events-auto">
+            <div className="pointer-events-none absolute bottom-20 left-0 right-0 flex justify-center gap-1.5 pb-2">
+              <div className="pointer-events-auto flex gap-1.5 rounded-full bg-black/20 px-3 py-2 dark:bg-white/20">
                 {columns.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setMobileColumnIndex(index)}
                     className={`h-2 w-2 rounded-full transition-all ${
                       index === mobileColumnIndex
-                        ? "bg-blue-500 w-6"
+                        ? "w-6 bg-blue-500"
                         : "bg-gray-400 dark:bg-gray-500"
                     }`}
                     aria-label={`Go to column ${index + 1}`}

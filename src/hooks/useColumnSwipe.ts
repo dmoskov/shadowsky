@@ -1,5 +1,5 @@
-import { useSwipeable } from "react-swipeable";
 import { useEffect, useRef } from "react";
+import { useSwipeable } from "react-swipeable";
 
 interface UseColumnSwipeOptions {
   totalColumns: number;
@@ -18,11 +18,11 @@ export const useColumnSwipe = ({
 
   const scrollToColumn = (index: number) => {
     if (!containerRef.current) return;
-    
+
     const container = containerRef.current;
     const columnWidth = container.clientWidth;
     const scrollPosition = index * columnWidth;
-    
+
     container.scrollTo({
       left: scrollPosition,
       behavior: "smooth",

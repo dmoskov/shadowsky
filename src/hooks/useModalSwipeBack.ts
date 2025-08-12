@@ -5,7 +5,10 @@ interface UseModalSwipeBackOptions {
   enabled?: boolean;
 }
 
-export const useModalSwipeBack = ({ onClose, enabled = true }: UseModalSwipeBackOptions) => {
+export const useModalSwipeBack = ({
+  onClose,
+  enabled = true,
+}: UseModalSwipeBackOptions) => {
   const swipeHandlers = useSwipeable({
     onSwipedRight: () => {
       if (enabled) {

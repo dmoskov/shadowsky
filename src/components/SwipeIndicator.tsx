@@ -36,8 +36,8 @@ export const SwipeIndicator: React.FC = () => {
 
   // Only show on mobile and not on home route
   if (
-    window.innerWidth >= 1024 || 
-    location.pathname === "/" || 
+    window.innerWidth >= 1024 ||
+    location.pathname === "/" ||
     location.pathname === "/home"
   ) {
     return null;

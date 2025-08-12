@@ -49,8 +49,10 @@ export const useSwipeNavigation = () => {
 
   // Disable on desktop or when on home route (which has its own column swiping)
   if (
-    typeof window !== "undefined" && 
-    (window.innerWidth >= 1024 || location.pathname === "/" || location.pathname === "/home")
+    typeof window !== "undefined" &&
+    (window.innerWidth >= 1024 ||
+      location.pathname === "/" ||
+      location.pathname === "/home")
   ) {
     return {};
   }
