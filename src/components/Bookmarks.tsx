@@ -10,10 +10,10 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useModal } from "../contexts/ModalContext";
-import { bookmarkService } from "../services/bookmark-service";
+import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { PostRenderer } from "./PostRenderer";
 
@@ -26,10 +26,7 @@ export const Bookmarks: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Initialize bookmark service
-  useEffect(() => {
-    bookmarkService.init();
-  }, []);
+  // Note: bookmarkServiceV2 is initialized in AuthContext
 
   const {
     data: bookmarks,
@@ -40,11 +37,11 @@ export const Bookmarks: React.FC = () => {
     queryFn: async () => {
       console.log("Fetching bookmarks...");
       if (searchQuery) {
-        const results = await bookmarkService.searchBookmarks(searchQuery);
+        const results = await bookmarkServiceV2.searchBookmarks(searchQuery);
         console.log("Search results:", results);
         return results;
       }
-      const bookmarks = await bookmarkService.getBookmarkedPosts();
+      const bookmarks = await bookmarkServiceV2.getBookmarkedPosts();
       console.log("Bookmarks loaded:", bookmarks);
       return bookmarks;
     },
@@ -53,24 +50,24 @@ export const Bookmarks: React.FC = () => {
 
   const { data: bookmarkCount } = useQuery({
     queryKey: ["bookmarkCount"],
-    queryFn: () => bookmarkService.getBookmarkCount(),
+    queryFn: () => bookmarkServiceV2.getBookmarkCount(),
     staleTime: 30000,
   });
 
   const handleBookmarkToggle = async (post: AppBskyFeedDefs.PostView) => {
-    await bookmarkService.toggleBookmark(post);
+    await bookmarkServiceV2.toggleBookmark(post);
     queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
     queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
   };
 
   const handleDeleteBookmark = async (postUri: string) => {
-    await bookmarkService.removeBookmark(postUri);
+    await bookmarkServiceV2.removeBookmark(postUri);
     queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
     queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
   };
 
   const handleExport = async () => {
-    const bookmarks = await bookmarkService.exportBookmarks();
+    const bookmarks = await bookmarkServiceV2.exportBookmarks();
     const blob = new Blob([JSON.stringify(bookmarks, null, 2)], {
       type: "application/json",
     });
@@ -90,7 +87,7 @@ export const Bookmarks: React.FC = () => {
     try {
       const text = await file.text();
       const bookmarks = JSON.parse(text);
-      await bookmarkService.importBookmarks(bookmarks);
+      await bookmarkServiceV2.importBookmarks(bookmarks);
       queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
       queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
     } catch (error) {
@@ -106,7 +103,7 @@ export const Bookmarks: React.FC = () => {
     await showConfirm(
       "Are you sure you want to clear all bookmarks? This cannot be undone.",
       async () => {
-        await bookmarkService.clearAllBookmarks();
+        await bookmarkServiceV2.clearAllBookmarks();
         queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
         queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
       },

@@ -5,7 +5,7 @@ import { Bookmark, Search, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModeration } from "../contexts/ModerationContext";
-import { bookmarkService } from "../services/bookmark-service";
+import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
@@ -38,10 +38,7 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  // Initialize bookmark service
-  useEffect(() => {
-    bookmarkService.init();
-  }, []);
+  // Note: bookmarkServiceV2 is initialized in AuthContext
 
   const {
     data: bookmarks,
@@ -51,9 +48,9 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
     queryKey: ["bookmarks", searchQuery],
     queryFn: async () => {
       if (searchQuery) {
-        return await bookmarkService.searchBookmarks(searchQuery);
+        return await bookmarkServiceV2.searchBookmarks(searchQuery);
       }
-      return await bookmarkService.getBookmarkedPosts();
+      return await bookmarkServiceV2.getBookmarkedPosts();
     },
     staleTime: 30000,
   });
@@ -67,13 +64,13 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
 
   const { data: bookmarkCount } = useQuery({
     queryKey: ["bookmarkCount"],
-    queryFn: () => bookmarkService.getBookmarkCount(),
+    queryFn: () => bookmarkServiceV2.getBookmarkCount(),
     staleTime: 30000,
   });
 
   const handleUnbookmark = useCallback(
     async (postUri: string) => {
-      await bookmarkService.removeBookmark(postUri);
+      await bookmarkServiceV2.removeBookmark(postUri);
       queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
       queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
     },

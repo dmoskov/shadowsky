@@ -1,7 +1,7 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { bookmarkService } from "../services/bookmark-service";
+import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
 
 // Global bookmark state store
 class BookmarkStore {
@@ -12,8 +12,8 @@ class BookmarkStore {
   async init() {
     if (this.initialized) return;
 
-    await bookmarkService.init();
-    const bookmarks = await bookmarkService.getBookmarkedPosts();
+    // bookmarkServiceV2 is initialized in AuthContext
+    const bookmarks = await bookmarkServiceV2.getBookmarkedPosts();
     bookmarks.forEach((b) => this.bookmarks.set(b.postUri, true));
     this.initialized = true;
     this.notify();
@@ -60,7 +60,7 @@ export function useBookmarks() {
   // Toggle bookmark mutation
   const toggleBookmarkMutation = useMutation({
     mutationFn: async (post: AppBskyFeedDefs.PostView) => {
-      return await bookmarkService.toggleBookmark(post);
+      return await bookmarkServiceV2.toggleBookmark(post);
     },
     onMutate: async (post: AppBskyFeedDefs.PostView) => {
       // Optimistic update
