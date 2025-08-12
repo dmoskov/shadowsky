@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import { useAuth } from "../contexts/AuthContext";
@@ -7,9 +6,6 @@ export const useSwipeNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { session } = useAuth();
-  const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(
-    null,
-  );
 
   // Define the navigation order for swiping
   const navigationOrder = [
@@ -28,15 +24,9 @@ export const useSwipeNavigation = () => {
     (path) => path === location.pathname,
   );
 
-  // Clear swipe direction after navigation
-  useEffect(() => {
-    setSwipeDirection(null);
-  }, [location.pathname]);
-
   const handleSwipeLeft = () => {
     // Swipe left goes to next page
     if (currentIndex < navigationOrder.length - 1) {
-      setSwipeDirection("left");
       navigate(navigationOrder[currentIndex + 1]);
     }
   };
@@ -44,7 +34,6 @@ export const useSwipeNavigation = () => {
   const handleSwipeRight = () => {
     // Swipe right goes to previous page
     if (currentIndex > 0) {
-      setSwipeDirection("right");
       navigate(navigationOrder[currentIndex - 1]);
     }
   };
