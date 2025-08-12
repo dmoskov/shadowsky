@@ -34,8 +34,14 @@ export const SwipeIndicator: React.FC = () => {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
-  // Only show on mobile
-  if (window.innerWidth >= 1024) return null;
+  // Only show on mobile and not on home route
+  if (
+    window.innerWidth >= 1024 || 
+    location.pathname === "/" || 
+    location.pathname === "/home"
+  ) {
+    return null;
+  }
 
   const hasNext = currentIndex < navigationOrder.length - 1;
   const hasPrev = currentIndex > 0;

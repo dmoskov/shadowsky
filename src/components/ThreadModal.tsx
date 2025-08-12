@@ -5,6 +5,7 @@ import { Loader, X } from "lucide-react";
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useModalSwipeBack } from "../hooks/useModalSwipeBack";
 import { VideoUploadService } from "../services/atproto/video-upload";
 import { BaseComposer } from "./BaseComposer";
 import { ThreadViewer } from "./ThreadViewer";
@@ -23,6 +24,7 @@ export function ThreadModal({
   openToReply = false,
 }: ThreadModalProps) {
   const { agent } = useAuth();
+  const swipeHandlers = useModalSwipeBack({ onClose });
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -195,6 +197,7 @@ export function ThreadModal({
       <div className="fixed inset-0 z-[100] bg-black/50" onClick={onClose} />
 
       <div
+        {...swipeHandlers}
         className="thread-modal-container fixed inset-y-0 right-0 z-[101] flex w-full max-w-3xl flex-col shadow-xl"
         style={{ backgroundColor: "var(--bsky-bg-primary)" }}
       >

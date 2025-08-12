@@ -47,8 +47,11 @@ export const useSwipeNavigation = () => {
     swipeDuration: 500, // Maximum time for a swipe
   });
 
-  // Only enable on mobile devices
-  if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+  // Disable on desktop or when on home route (which has its own column swiping)
+  if (
+    typeof window !== "undefined" && 
+    (window.innerWidth >= 1024 || location.pathname === "/" || location.pathname === "/home")
+  ) {
     return {};
   }
 

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useColumnSwipe } from "../hooks/useColumnSwipe";
 import { useModal } from "../contexts/ModalContext";
 import { columnFeedPrefs } from "../utils/cookies";
 import SkyColumn from "./SkyColumn";
@@ -87,6 +88,7 @@ export default function SkyDeck() {
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [isNarrowView, setIsNarrowView] = useState(false);
   const [focusedColumnIndex, setFocusedColumnIndex] = useState(0);
+  const [mobileColumnIndex, setMobileColumnIndex] = useState(0);
   const [customFeedUri, setCustomFeedUri] = useState("");
   const [isLoadingCustomFeed, setIsLoadingCustomFeed] = useState(false);
   const columnsContainerRef = useRef<HTMLDivElement>(null);
@@ -359,17 +361,51 @@ export default function SkyDeck() {
     setDragOverId(null);
   };
 
-  // In narrow view, show only the home column
+  // Mobile swipe handlers
+  const mobileContainerRef = useRef<HTMLDivElement>(null);
+  const { swipeHandlers } = useColumnSwipe({
+    totalColumns: columns.length,
+    currentIndex: mobileColumnIndex,
+    onIndexChange: setMobileColumnIndex,
+    containerRef: mobileContainerRef,
+  });
+
+  // In narrow view, show columns with swipe navigation
   if (isNarrowView && columns.length > 0) {
-    // Ensure we're showing the home column
-    const homeColumn = columns.find((col) => col.id === "home") || columns[0];
+    const currentColumn = columns[mobileColumnIndex] || columns[0];
+    
     return (
       <div className="h-full overflow-hidden dark:bg-gray-900">
-        <SkyColumn
-          column={homeColumn}
-          onClose={() => handleRemoveColumn(homeColumn.id)}
-          chromeless={false}
-        />
+        <div 
+          ref={mobileContainerRef}
+          {...swipeHandlers}
+          className="relative h-full"
+        >
+          <SkyColumn
+            column={currentColumn}
+            onClose={() => handleRemoveColumn(currentColumn.id)}
+            chromeless={false}
+          />
+          {/* Column dots indicator */}
+          {columns.length > 1 && (
+            <div className="absolute bottom-20 left-0 right-0 flex justify-center gap-1.5 pb-2 pointer-events-none">
+              <div className="flex gap-1.5 rounded-full bg-black/20 dark:bg-white/20 px-3 py-2 pointer-events-auto">
+                {columns.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setMobileColumnIndex(index)}
+                    className={`h-2 w-2 rounded-full transition-all ${
+                      index === mobileColumnIndex
+                        ? "bg-blue-500 w-6"
+                        : "bg-gray-400 dark:bg-gray-500"
+                    }`}
+                    aria-label={`Go to column ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
