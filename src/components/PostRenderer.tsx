@@ -72,6 +72,50 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
           </div>
         )}
 
+        {/* Render external link if any */}
+        {post.embed &&
+          "external" in post.embed &&
+          (post.embed as any).external && (
+            <div
+              className="mt-2 cursor-pointer rounded-lg border p-2.5 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
+              style={{ borderColor: "var(--bsky-border-primary)" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if ((post.embed as any).external.uri) {
+                  window.open(
+                    (post.embed as any).external.uri,
+                    "_blank",
+                    "noopener,noreferrer",
+                  );
+                }
+              }}
+            >
+              {(post.embed as any).external.thumb && (
+                <img
+                  src={proxifyBskyImage((post.embed as any).external.thumb)}
+                  alt=""
+                  className="mb-2 h-auto w-full rounded object-cover"
+                  style={{
+                    maxHeight: "200px",
+                    backgroundColor: "var(--bsky-bg-tertiary)",
+                  }}
+                />
+              )}
+              <div
+                className="text-sm font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                {(post.embed as any).external.title}
+              </div>
+              <div
+                className="mt-1 text-xs"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                {(post.embed as any).external.description}
+              </div>
+            </div>
+          )}
+
         {/* Render quoted post if any */}
         {post.embed && "record" in post.embed && (
           <div

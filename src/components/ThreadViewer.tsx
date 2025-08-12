@@ -342,7 +342,9 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
           style={{ borderColor: "var(--bsky-border-primary)" }}
           onClick={(e) => {
             e.stopPropagation();
-            // Removed external link - only the link icon opens external links
+            if (embed.external.uri) {
+              window.open(embed.external.uri, "_blank", "noopener,noreferrer");
+            }
           }}
         >
           {embed.external.thumb && (
