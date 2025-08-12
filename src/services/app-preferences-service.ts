@@ -41,8 +41,11 @@ export class AppPreferencesService {
       this.preferencesCache = response.data
         .value as unknown as AppPreferencesRecord;
       return this.preferencesCache;
-    } catch (error: any) {
-      if (error?.status === 400 && error?.error === "RecordNotFound") {
+    } catch (error) {
+      if (
+        (error as any)?.status === 400 &&
+        (error as any)?.error === "RecordNotFound"
+      ) {
         // Record doesn't exist yet, create default preferences
         const defaultPrefs = await this.createDefaultPreferences();
         return defaultPrefs;

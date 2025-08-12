@@ -539,7 +539,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     fetchingStatus,
     fetchInfo.shouldAutoFetch,
     fetchInfo.metadata,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     handleFetchMissing,
   ]);
 
@@ -570,7 +570,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     hasCachedData,
     loadedFromStorage,
     fetchingStatus,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     handleFetch4Weeks,
   ]);
 

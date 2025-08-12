@@ -137,7 +137,6 @@ export default function ProfilePage() {
       setPostsLoading(true);
       const profileService = getProfileService(agent);
 
-      let response;
       const filter =
         activeTab === "replies"
           ? "posts_with_replies"
@@ -145,7 +144,7 @@ export default function ProfilePage() {
             ? "posts_with_media"
             : "posts_no_replies";
 
-      response = await profileService.getAuthorFeed(
+      const response = await profileService.getAuthorFeed(
         handle,
         30,
         initial ? undefined : cursor,
