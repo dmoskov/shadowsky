@@ -141,7 +141,7 @@ export const BookmarkSettings: React.FC = () => {
       icon: Cloud,
       description:
         "Store bookmarks as AT Protocol records. WARNING: These are publicly visible to anyone!",
-      pros: ["Cross-device sync", "Full metadata support"],
+      pros: ["Cross-device sync"],
       cons: [
         "PUBLIC - Anyone can see your bookmarks!",
         "Experimental",
@@ -178,13 +178,11 @@ export const BookmarkSettings: React.FC = () => {
               onClick={() => handleStorageChange(option.type)}
               disabled={isLoading || isSelected}
               className={`w-full rounded-lg p-4 text-left transition-all ${
-                isSelected ? "ring-2" : "hover:bg-opacity-50"
-              } disabled:opacity-50`}
+                isSelected ? "ring-2 ring-offset-2" : "hover:brightness-110"
+              } ${isLoading ? "opacity-50" : ""}`}
               style={{
-                backgroundColor: isSelected
-                  ? "var(--bsky-bg-tertiary)"
-                  : "var(--bsky-bg-secondary)",
-                border: `1px solid ${
+                backgroundColor: "var(--bsky-bg-secondary)",
+                border: `2px solid ${
                   isSelected
                     ? "var(--bsky-primary)"
                     : "var(--bsky-border-primary)"
@@ -257,9 +255,13 @@ export const BookmarkSettings: React.FC = () => {
 
                 {isSelected && (
                   <div
-                    className="text-sm font-medium"
+                    className="flex items-center gap-1 text-sm font-semibold"
                     style={{ color: "var(--bsky-primary)" }}
                   >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="8" fill="currentColor" opacity="0.2"/>
+                      <path d="M12 5L6.5 10.5L4 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                     Active
                   </div>
                 )}
