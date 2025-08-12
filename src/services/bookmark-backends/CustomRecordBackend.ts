@@ -14,23 +14,32 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
   }
 
   async init(): Promise<void> {
+    console.log("[CustomRecordBackend] Initializing...");
+    console.log("[CustomRecordBackend] Agent session:", this.agent.session);
     // Load existing bookmarks into cache
     await this.loadBookmarksFromRepo();
   }
 
   private async loadBookmarksFromRepo(): Promise<void> {
     this.bookmarkCache.clear();
+    console.log("[CustomRecordBackend] Loading bookmarks from repo...");
+    console.log("[CustomRecordBackend] Collection:", BOOKMARK_COLLECTION);
+    console.log("[CustomRecordBackend] Repo DID:", this.agent.session?.did);
 
     try {
       let cursor: string | undefined;
 
+      let totalLoaded = 0;
+
       do {
+        console.log("[CustomRecordBackend] Fetching records...", { cursor });
         const { data } = await this.agent.com.atproto.repo.listRecords({
           repo: this.agent.session!.did,
           collection: BOOKMARK_COLLECTION,
           cursor,
           limit: 100,
         });
+        console.log("[CustomRecordBackend] Fetched records:", data.records.length);
 
         for (const record of data.records) {
           const bookmarkRecord = record.value as any;
@@ -50,9 +59,18 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
           });
         }
 
+        totalLoaded += data.records.length;
         cursor = data.cursor;
       } while (cursor);
+      
+      console.log("[CustomRecordBackend] Total bookmarks loaded:", totalLoaded);
     } catch (error: any) {
+      console.error("[CustomRecordBackend] Failed to load bookmarks from repo:", error);
+      console.error("[CustomRecordBackend] Error details:", {
+        status: error?.status,
+        message: error?.message,
+        error: error?.error,
+      });
       // Collection might not exist yet, that's okay
       if (error?.status !== 400) {
         throw error;
@@ -79,10 +97,20 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
       notes,
     };
 
+    // Generate a stable rkey from the post URI
+    const rkey = this.generateRkey(bookmark.postUri);
+    
     // Create the record
+    console.log("[CustomRecordBackend] Creating bookmark record:", {
+      postUri: bookmark.postUri,
+      collection: BOOKMARK_COLLECTION,
+      repo: this.agent.session?.did,
+      rkey,
+    });
     const result = await this.agent.com.atproto.repo.createRecord({
       repo: this.agent.session!.did,
       collection: BOOKMARK_COLLECTION,
+      rkey,
       record: {
         $type: BOOKMARK_COLLECTION,
         postUri: bookmark.postUri,
@@ -107,8 +135,9 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
     const cached = this.bookmarkCache.get(postUri);
     if (!cached) return;
 
-    // Extract rkey from URI
-    const [, , rkey] = cached.uri.split("/").slice(-3);
+    // Use the same rkey generation method
+    const rkey = this.generateRkey(postUri);
+    console.log("[CustomRecordBackend] Removing bookmark:", { postUri, rkey });
 
     await this.agent.com.atproto.repo.deleteRecord({
       repo: this.agent.session!.did,
@@ -125,9 +154,11 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
   }
 
   async getAllBookmarks(): Promise<Bookmark[]> {
-    return Array.from(this.bookmarkCache.values()).map(
+    const bookmarks = Array.from(this.bookmarkCache.values()).map(
       ({ bookmark }) => bookmark,
     );
+    console.log("[CustomRecordBackend] getAllBookmarks returning:", bookmarks.length, "bookmarks");
+    return bookmarks;
   }
 
   async isBookmarked(postUri: string): Promise<boolean> {
@@ -191,5 +222,15 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
       lastSynced: new Date(),
       isSyncing: false,
     };
+  }
+
+  private generateRkey(postUri: string): string {
+    // Create a stable rkey from the post URI
+    // Extract the last part of the URI which is unique per post
+    const parts = postUri.split("/");
+    const postId = parts[parts.length - 1];
+    
+    // Use a prefix to avoid collisions with other record types
+    return `bookmark-${postId}`;
   }
 }
