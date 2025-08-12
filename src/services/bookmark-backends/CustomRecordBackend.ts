@@ -96,7 +96,10 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
       },
     });
 
-    this.bookmarkCache.set(bookmark.postUri, { uri: (result as any).uri, bookmark });
+    this.bookmarkCache.set(bookmark.postUri, {
+      uri: (result as any).uri,
+      bookmark,
+    });
     return bookmark;
   }
 
@@ -168,7 +171,10 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
         },
       });
 
-      this.bookmarkCache.set(bookmark.postUri, { uri: (result as any).uri, bookmark });
+      this.bookmarkCache.set(bookmark.postUri, {
+        uri: (result as any).uri,
+        bookmark,
+      });
     }
   }
 
