@@ -17,7 +17,10 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
     console.log("[CustomRecordBackend] Initializing...");
     console.log("[CustomRecordBackend] Agent session:", this.agent.session);
     console.log("[CustomRecordBackend] Agent DID:", this.agent.session?.did);
-    console.log("[CustomRecordBackend] Agent handle:", this.agent.session?.handle);
+    console.log(
+      "[CustomRecordBackend] Agent handle:",
+      this.agent.session?.handle,
+    );
     // Load existing bookmarks into cache
     await this.loadBookmarksFromRepo();
   }
@@ -205,7 +208,7 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
     for (const bookmark of bookmarks) {
       // Use stable rkey for imports too
       const rkey = this.generateRkey(bookmark.postUri);
-      
+
       const result = await this.agent.com.atproto.repo.createRecord({
         repo: this.agent.session!.did,
         collection: BOOKMARK_COLLECTION,

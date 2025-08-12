@@ -47,11 +47,14 @@ export async function initializeBookmarkService(agent: BskyAgent) {
 export const bookmarkService = {
   setAgent(agent: BskyAgent | null) {
     bookmarkServiceV2.setAgent(agent);
-    
+
     // If agent is null (logout), reset to local storage
     if (!agent) {
-      bookmarkServiceV2.setStorageType("local").catch(error => {
-        console.error("[BookmarkService] Failed to reset to local storage on logout:", error);
+      bookmarkServiceV2.setStorageType("local").catch((error) => {
+        console.error(
+          "[BookmarkService] Failed to reset to local storage on logout:",
+          error,
+        );
       });
     }
   },
