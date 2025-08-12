@@ -83,6 +83,27 @@ export function useOptimisticPosts() {
 
       return updateThread(oldData);
     });
+
+    // Update in author feed queries (profile pages)
+    queryClient.setQueriesData({ queryKey: ["authorFeed"] }, (oldData: any) => {
+      if (!oldData?.pages) return oldData;
+
+      return {
+        ...oldData,
+        pages: oldData.pages.map((page: any) => ({
+          ...page,
+          feed: page.feed.map((item: any) => {
+            if (item.post?.uri === postUri) {
+              return {
+                ...item,
+                post: updater(item.post),
+              };
+            }
+            return item;
+          }),
+        })),
+      };
+    });
   };
 
   const likeMutation = useMutation({
@@ -94,6 +115,7 @@ export function useOptimisticPosts() {
       // Cancel any outgoing refetches to prevent overwriting optimistic update
       await queryClient.cancelQueries({ queryKey: ["timeline"] });
       await queryClient.cancelQueries({ queryKey: ["columnFeed"] });
+      await queryClient.cancelQueries({ queryKey: ["authorFeed"] });
 
       // Optimistically update the post
       updatePostInCaches(uri, (post) => ({
@@ -136,6 +158,7 @@ export function useOptimisticPosts() {
     onMutate: async ({ postUri }) => {
       await queryClient.cancelQueries({ queryKey: ["timeline"] });
       await queryClient.cancelQueries({ queryKey: ["columnFeed"] });
+      await queryClient.cancelQueries({ queryKey: ["authorFeed"] });
 
       updatePostInCaches(postUri, (post) => ({
         ...post,
@@ -200,6 +223,7 @@ export function useOptimisticPosts() {
     onMutate: async ({ postUri }) => {
       await queryClient.cancelQueries({ queryKey: ["timeline"] });
       await queryClient.cancelQueries({ queryKey: ["columnFeed"] });
+      await queryClient.cancelQueries({ queryKey: ["authorFeed"] });
 
       updatePostInCaches(postUri, (post) => ({
         ...post,

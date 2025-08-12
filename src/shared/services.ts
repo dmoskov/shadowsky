@@ -208,6 +208,101 @@ export class ProfileService {
       throw error;
     }
   }
+
+  async getAuthorFeed(
+    actor: string,
+    limit?: number,
+    cursor?: string,
+    filter?: string,
+  ) {
+    try {
+      const agent = "agent" in this.client ? this.client.agent : this.client;
+      const response = await agent.getAuthorFeed({
+        actor,
+        limit: limit || 30,
+        cursor,
+        filter,
+      });
+      return response.data;
+    } catch (error) {
+      debug.error("Failed to fetch author feed:", error);
+      throw error;
+    }
+  }
+
+  async follow(did: string) {
+    try {
+      const agent = "agent" in this.client ? this.client.agent : this.client;
+      const response = await agent.follow(did);
+      return response.uri;
+    } catch (error) {
+      debug.error("Failed to follow user:", error);
+      throw error;
+    }
+  }
+
+  async unfollow(followUri: string) {
+    try {
+      const agent = "agent" in this.client ? this.client.agent : this.client;
+      await agent.deleteFollow(followUri);
+    } catch (error) {
+      debug.error("Failed to unfollow user:", error);
+      throw error;
+    }
+  }
+
+  async block(did: string) {
+    try {
+      const agent = "agent" in this.client ? this.client.agent : this.client;
+      const response = await agent.com.atproto.repo.createRecord({
+        repo: agent.session?.did || "",
+        collection: "app.bsky.graph.block",
+        record: {
+          subject: did,
+          createdAt: new Date().toISOString(),
+        },
+      });
+      return response.data.uri;
+    } catch (error) {
+      debug.error("Failed to block user:", error);
+      throw error;
+    }
+  }
+
+  async unblock(blockUri: string) {
+    try {
+      const agent = "agent" in this.client ? this.client.agent : this.client;
+      const [repo, collection, rkey] = blockUri.replace("at://", "").split("/");
+      await agent.com.atproto.repo.deleteRecord({
+        repo,
+        collection,
+        rkey,
+      });
+    } catch (error) {
+      debug.error("Failed to unblock user:", error);
+      throw error;
+    }
+  }
+
+  async mute(did: string) {
+    try {
+      const agent = "agent" in this.client ? this.client.agent : this.client;
+      await agent.mute(did);
+    } catch (error) {
+      debug.error("Failed to mute user:", error);
+      throw error;
+    }
+  }
+
+  async unmute(did: string) {
+    try {
+      const agent = "agent" in this.client ? this.client.agent : this.client;
+      await agent.unmute(did);
+    } catch (error) {
+      debug.error("Failed to unmute user:", error);
+      throw error;
+    }
+  }
 }
 
 // Service factory functions

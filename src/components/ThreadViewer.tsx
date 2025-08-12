@@ -3,6 +3,7 @@ import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notif
 import { formatDistanceToNow } from "date-fns";
 import { CornerDownRight, ExternalLink, Loader2 } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { atUriToBskyUrl, getNotificationUrl } from "../utils/url-helpers";
@@ -42,6 +43,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   className = "",
   onReplySuccess,
 }) => {
+  const navigate = useNavigate();
   const [galleryImages, setGalleryImages] = useState<Array<{
     thumb: string;
     fullsize: string;
@@ -636,12 +638,24 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     <img
                       src={proxifyBskyImage(author.avatar)}
                       alt={author.handle}
-                      className={`${maxThreadDepth > 15 ? "h-6 w-6" : maxThreadDepth > 10 ? "h-8 w-8" : "h-10 w-10"} rounded-full object-cover`}
+                      className={`${maxThreadDepth > 15 ? "h-6 w-6" : maxThreadDepth > 10 ? "h-8 w-8" : "h-10 w-10"} cursor-pointer rounded-full object-cover transition-opacity hover:opacity-80`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (author.handle) {
+                          navigate(`/profile/${author.handle}`);
+                        }
+                      }}
                     />
                   ) : (
                     <div
-                      className={`${maxThreadDepth > 15 ? "h-6 w-6" : maxThreadDepth > 10 ? "h-8 w-8" : "h-10 w-10"} flex items-center justify-center rounded-full`}
+                      className={`${maxThreadDepth > 15 ? "h-6 w-6" : maxThreadDepth > 10 ? "h-8 w-8" : "h-10 w-10"} flex cursor-pointer items-center justify-center rounded-full transition-opacity hover:opacity-80`}
                       style={{ background: "var(--bsky-bg-tertiary)" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (author?.handle) {
+                          navigate(`/profile/${author.handle}`);
+                        }
+                      }}
                     >
                       <span
                         className={`${maxThreadDepth > 15 ? "text-xs" : "text-sm"} font-semibold`}

@@ -18,6 +18,7 @@ import {
   Users,
 } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModeration } from "../contexts/ModerationContext";
@@ -113,6 +114,7 @@ export const Home: React.FC<HomeProps> = ({
   onCloseFeedDiscovery,
 }) => {
   const { agent } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
     useOptimisticPosts();
@@ -604,7 +606,11 @@ export const Home: React.FC<HomeProps> = ({
                 proxifyBskyImage(post.author.avatar) || "/default-avatar.svg"
               }
               alt={post.author.handle}
-              className="h-12 w-12 rounded-full"
+              className="h-12 w-12 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/profile/${post.author.handle}`);
+              }}
             />
 
             <div className="min-w-0 flex-1">
@@ -615,8 +621,12 @@ export const Home: React.FC<HomeProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     <span
-                      className="font-semibold"
+                      className="cursor-pointer font-semibold hover:underline"
                       style={{ color: "var(--bsky-text-primary)" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/profile/${post.author.handle}`);
+                      }}
                     >
                       {post.author.displayName || post.author.handle}
                     </span>
@@ -636,7 +646,16 @@ export const Home: React.FC<HomeProps> = ({
                     className="text-sm"
                     style={{ color: "var(--bsky-text-secondary)" }}
                   >
-                    @{post.author.handle} ·{" "}
+                    <span
+                      className="cursor-pointer hover:underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/profile/${post.author.handle}`);
+                      }}
+                    >
+                      @{post.author.handle}
+                    </span>{" "}
+                    ·{" "}
                     {formatDistanceToNow(new Date(post.record.createdAt), {
                       addSuffix: true,
                     })}

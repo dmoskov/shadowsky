@@ -18,7 +18,10 @@ import React, {
 } from "react";
 import { analytics } from "../services/analytics";
 import { atProtoClient, ATProtoClient } from "../services/atproto";
-import { bookmarkService } from "../services/bookmark-service";
+import {
+  bookmarkService,
+  initializeBookmarkService,
+} from "../services/bookmark-service-wrapper";
 import { dmService } from "../services/dm-service";
 
 interface AuthContextType {
@@ -113,8 +116,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setIsAuthenticated(true);
             setSession(resumedSession);
             initAttempts.current = 0; // Reset on success
-            // Set agent in bookmark service and DM service
-            bookmarkService.setAgent(atProtoClient.agent);
+            // Initialize bookmark service with user preferences
+            await initializeBookmarkService(atProtoClient.agent);
             dmService.setAgent(atProtoClient.agent);
           } catch (error) {
             debug.error("Failed to resume session:", error);
@@ -185,8 +188,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticated(true);
         setSession(newSession);
 
-        // Set agent in bookmark service and DM service
-        bookmarkService.setAgent(atProtoClient.agent);
+        // Initialize bookmark service with user preferences
+        await initializeBookmarkService(atProtoClient.agent);
         dmService.setAgent(atProtoClient.agent);
 
         // Track successful login

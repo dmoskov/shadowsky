@@ -17,7 +17,7 @@ import {
   Users,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   useFeatureTracking,
   useNotificationTracking,
@@ -977,6 +977,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
     totalPosts = 0,
     percentageFetched = 100,
   }) => {
+    const navigate = useNavigate();
     // Get the post for all notification types that reference posts
     // For reposts and likes, use reasonSubject which contains the original post URI
     const postUri =
@@ -1120,12 +1121,20 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                 <img
                   src={proxifyBskyImage(post.author.avatar)}
                   alt={post.author.handle}
-                  className="bsky-avatar h-5 w-5"
+                  className="bsky-avatar h-5 w-5 cursor-pointer transition-opacity hover:opacity-80"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/profile/${post.author.handle}`);
+                  }}
                 />
               ) : (
                 <div
-                  className="bsky-avatar flex h-5 w-5 items-center justify-center text-xs"
+                  className="bsky-avatar flex h-5 w-5 cursor-pointer items-center justify-center text-xs transition-opacity hover:opacity-80"
                   style={{ background: "var(--bsky-bg-tertiary)" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/profile/${post.author.handle}`);
+                  }}
                 >
                   {post.author?.handle?.charAt(0).toUpperCase()}
                 </div>
@@ -1269,7 +1278,12 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
             <img
               src={proxifyBskyImage(notification.author.avatar)}
               alt={notification.author.handle}
-              className="bsky-avatar h-10 w-10"
+              className="bsky-avatar h-10 w-10 cursor-pointer transition-opacity hover:opacity-80"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigate(`/profile/${notification.author.handle}`);
+              }}
             />
           ) : (
             <div

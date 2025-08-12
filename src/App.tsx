@@ -10,6 +10,7 @@ import { ConversationsSimple as Conversations } from "./components/Conversations
 import { DebugConsole } from "./components/DebugConsole";
 import { Header } from "./components/Header";
 import { LandingPage } from "./components/LandingPage";
+import { MobileTabBar } from "./components/MobileTabBar";
 import { Notifications } from "./components/Notifications";
 import { NotificationsAnalytics } from "./components/NotificationsAnalytics";
 import { RateLimitStatus } from "./components/RateLimitStatus";
@@ -22,6 +23,8 @@ import { HiddenPostsProvider } from "./contexts/HiddenPostsContext";
 import { ModerationProvider } from "./contexts/ModerationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { useErrorTracking, usePageTracking } from "./hooks/useAnalytics";
+import ProfilePage from "./pages/ProfilePage";
+import { Settings } from "./pages/Settings";
 import { analytics } from "./services/analytics";
 import { bookmarkStorage } from "./services/bookmark-storage-db";
 import { NotificationStorageDB } from "./services/notification-storage-db";
@@ -120,7 +123,7 @@ function AppContent() {
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
         />
-        <main className="mt-16 min-h-[calc(100vh-4rem)] flex-1 lg:ml-64 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto">
+        <main className="mt-16 min-h-[calc(100vh-4rem)] flex-1 pb-16 lg:ml-64 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto lg:pb-0">
           <Routes>
             <Route path="/home" element={<SkyDeck />} />
             <Route path="/" element={<SkyDeck />} />
@@ -131,11 +134,15 @@ function AppContent() {
             <Route path="/bookmarks" element={<Bookmarks />} />
             <Route path="/compose" element={<Composer />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/profile/:handle" element={<ProfilePage />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/settings/:section" element={<Settings />} />
             <Route path="/compression-test" element={<CompressionTest />} />
             <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>
         </main>
       </div>
+      <MobileTabBar />
       <RateLimitStatus />
       <DebugConsole />
     </div>

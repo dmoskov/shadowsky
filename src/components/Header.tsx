@@ -1,7 +1,6 @@
-import { LogOut, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import React from "react";
-import { useAuth } from "../contexts/AuthContext";
-import { ThemeToggle } from "./ThemeToggle";
+import { UserMenu } from "./UserMenu";
 import butterflyIcon from "/butterfly-icon.svg";
 
 interface HeaderProps {
@@ -9,8 +8,6 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
-  const { session, logout } = useAuth();
-
   return (
     <header
       className="bsky-glass fixed left-0 right-0 top-0 z-50 h-16"
@@ -38,24 +35,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="hidden items-center gap-2 sm:flex">
-            <span
-              className="text-sm font-medium"
-              style={{ color: "var(--bsky-text-secondary)" }}
-            >
-              @{session?.handle || "user"}
-            </span>
-          </div>
-          <ThemeToggle />
-          <button
-            onClick={logout}
-            className="bsky-button-ghost flex items-center gap-1.5 text-sm"
-          >
-            <LogOut size={16} />
-            <span className="hidden sm:inline">Logout</span>
-          </button>
-        </div>
+        <UserMenu />
       </div>
     </header>
   );

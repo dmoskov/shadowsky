@@ -7,10 +7,20 @@ export interface CachedProfile {
   handle: string;
   displayName?: string;
   avatar?: string;
+  banner?: string;
   followersCount: number;
   followingCount: number;
+  followsCount?: number; // Alternative to followingCount
   postsCount: number;
   description?: string;
+  viewer?: {
+    following?: string;
+    followedBy?: string;
+    muted?: boolean;
+    blockedBy?: boolean;
+    blocking?: string;
+  };
+  createdAt?: string;
 
   // Cache metadata
   lastFetched: Date;
