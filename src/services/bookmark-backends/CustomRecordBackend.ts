@@ -39,7 +39,10 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
           cursor,
           limit: 100,
         });
-        console.log("[CustomRecordBackend] Fetched records:", data.records.length);
+        console.log(
+          "[CustomRecordBackend] Fetched records:",
+          data.records.length,
+        );
 
         for (const record of data.records) {
           const bookmarkRecord = record.value as any;
@@ -62,10 +65,13 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
         totalLoaded += data.records.length;
         cursor = data.cursor;
       } while (cursor);
-      
+
       console.log("[CustomRecordBackend] Total bookmarks loaded:", totalLoaded);
     } catch (error: any) {
-      console.error("[CustomRecordBackend] Failed to load bookmarks from repo:", error);
+      console.error(
+        "[CustomRecordBackend] Failed to load bookmarks from repo:",
+        error,
+      );
       console.error("[CustomRecordBackend] Error details:", {
         status: error?.status,
         message: error?.message,
@@ -99,7 +105,7 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
 
     // Generate a stable rkey from the post URI
     const rkey = this.generateRkey(bookmark.postUri);
-    
+
     // Create the record
     console.log("[CustomRecordBackend] Creating bookmark record:", {
       postUri: bookmark.postUri,
@@ -157,7 +163,11 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
     const bookmarks = Array.from(this.bookmarkCache.values()).map(
       ({ bookmark }) => bookmark,
     );
-    console.log("[CustomRecordBackend] getAllBookmarks returning:", bookmarks.length, "bookmarks");
+    console.log(
+      "[CustomRecordBackend] getAllBookmarks returning:",
+      bookmarks.length,
+      "bookmarks",
+    );
     return bookmarks;
   }
 
@@ -229,7 +239,7 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
     // Extract the last part of the URI which is unique per post
     const parts = postUri.split("/");
     const postId = parts[parts.length - 1];
-    
+
     // Use a prefix to avoid collisions with other record types
     return `bookmark-${postId}`;
   }
