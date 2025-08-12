@@ -1037,7 +1037,9 @@ export const Home: React.FC<HomeProps> = ({
           style={{ borderColor: "var(--bsky-border-primary)" }}
           onClick={(e) => {
             e.stopPropagation();
-            // Removed external link - only open links from ThreadViewer
+            if (embed.external.uri) {
+              window.open(embed.external.uri, "_blank", "noopener,noreferrer");
+            }
           }}
         >
           {embed.external.thumb && (

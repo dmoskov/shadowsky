@@ -1,8 +1,8 @@
 import { AppBskyFeedDefs } from "@atproto/api";
-import { bookmarkStorage } from "../bookmark-storage-db";
-import { Bookmark, BookmarkStorageBackend } from "./types";
+import { bookmarkStorage, Bookmark } from "../bookmark-storage-db";
+// import { Bookmark, BookmarkStorageBackend } from "./types"; // TODO: Fix missing types file
 
-export class LocalStorageBackend implements BookmarkStorageBackend {
+export class LocalStorageBackend { // implements BookmarkStorageBackend {
   type = "local" as const;
 
   async init(): Promise<void> {

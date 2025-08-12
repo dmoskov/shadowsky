@@ -117,37 +117,35 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
       const quotedPost = embed.record;
       return (
         <div
-          className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+          className="mt-2 overflow-hidden rounded-lg border"
           style={{ borderColor: "var(--bsky-border-primary)" }}
-          onClick={(e) => {
-            e.stopPropagation();
-            // Navigate to quoted post
-          }}
         >
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 text-xs"
+            style={{
+              backgroundColor: "var(--bsky-bg-tertiary)",
+              borderBottom: "1px solid var(--bsky-border-primary)",
+              color: "var(--bsky-text-secondary)",
+            }}
+          >
+            <MessageCircle size={12} />
+            <span>Quoted post</span>
+          </div>
           <div className="p-3">
-            <div className="mb-2 flex items-center gap-2">
+            <div className="quote-author mb-2 flex items-center gap-2">
               <img
                 src={
                   proxifyBskyImage(quotedPost.author?.avatar) ||
                   "/default-avatar.svg"
                 }
                 alt=""
-                className="h-5 w-5 rounded-full"
+                className="quote-avatar h-5 w-5 rounded-full"
               />
-              <span className="text-sm font-medium">
+              <span className="quote-author-name text-sm">
                 {quotedPost.author?.displayName || quotedPost.author?.handle}
               </span>
-              <span
-                className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
-              >
-                @{quotedPost.author?.handle}
-              </span>
             </div>
-            <p
-              className="text-sm"
-              style={{ color: "var(--bsky-text-primary)" }}
-            >
+            <p className="quote-text text-sm">
               {quotedPost.value?.text || ""}
             </p>
           </div>
@@ -159,30 +157,37 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
     if (embed.external) {
       return (
         <div
-          className="mt-2 overflow-hidden rounded-lg border"
+          className="mt-2 cursor-pointer rounded-lg border p-2.5 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
           style={{ borderColor: "var(--bsky-border-primary)" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (embed.external.uri) {
+              window.open(embed.external.uri, "_blank", "noopener,noreferrer");
+            }
+          }}
         >
           {embed.external.thumb && (
             <img
               src={proxifyBskyImage(embed.external.thumb)}
               alt=""
-              className="h-48 w-full object-cover"
+              className="mb-2 h-auto w-full rounded object-cover"
+              style={{
+                maxHeight: "200px",
+                backgroundColor: "var(--bsky-bg-tertiary)",
+              }}
             />
           )}
-          <div className="p-3">
-            <h3 className="font-semibold">{embed.external.title}</h3>
-            <p
-              className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
-            >
-              {embed.external.description}
-            </p>
-            <p
-              className="mt-1 text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
-            >
-              {embed.external.uri}
-            </p>
+          <div
+            className="text-sm font-semibold"
+            style={{ color: "var(--bsky-text-primary)" }}
+          >
+            {embed.external.title}
+          </div>
+          <div
+            className="mt-1 text-xs"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
+            {embed.external.description}
           </div>
         </div>
       );
