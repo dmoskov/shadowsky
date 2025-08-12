@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BookmarkIcon, Cloud, Database } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
+import { appPreferencesService } from "../../services/app-preferences-service";
 import { bookmarkServiceV2 } from "../../services/bookmark-service-v2";
 
 type BookmarkStorageType = "local" | "custom";
@@ -17,26 +18,23 @@ export const BookmarkSettings: React.FC = () => {
     text: string;
   } | null>(null);
 
-  // Get current storage type from preferences
-  const { data: _preferences } = useQuery({
-    queryKey: ["preferences"],
+  // Get current storage type from app preferences
+  const { data: appPreferences } = useQuery({
+    queryKey: ["appPreferences"],
     queryFn: async () => {
       if (!agent) return null;
-      const response = await agent.getPreferences();
-      return response;
+      appPreferencesService.setAgent(agent);
+      return await appPreferencesService.getPreferences();
     },
     enabled: !!agent,
   });
 
-  // Load storage type from localStorage on mount
+  // Load storage type from preferences
   useEffect(() => {
-    // For now, we'll store the preference in localStorage since
-    // custom preferences outside app.bsky namespace aren't supported
-    const savedType = localStorage.getItem("bookmarkStorageType");
-    if (savedType) {
-      setStorageType(savedType as BookmarkStorageType);
+    if (appPreferences) {
+      setStorageType(appPreferences.bookmarkStorageType);
     }
-  }, []); // Empty dependency array - only run on mount
+  }, [appPreferences]);
 
   // Load bookmark count
   useEffect(() => {
@@ -84,23 +82,11 @@ export const BookmarkSettings: React.FC = () => {
       // First, migrate existing bookmarks to new storage
       await bookmarkServiceV2.migrateStorage(storageType, newType);
 
-      // Update preferences
-      let currentPrefs;
-      try {
-        const response = await agent.getPreferences();
-        currentPrefs = response;
-      } catch (error) {
-        console.warn("Failed to fetch preferences, using empty preferences");
-        currentPrefs = { preferences: [] };
-      }
-
-      if (!currentPrefs || !Array.isArray(currentPrefs)) {
-        currentPrefs = [];
-      }
-
-      // Store preference in localStorage since custom preferences
-      // outside app.bsky namespace aren't supported
-      localStorage.setItem("bookmarkStorageType", newType);
+      // Update app preferences in PDS
+      appPreferencesService.setAgent(agent);
+      await appPreferencesService.updatePreferences({
+        bookmarkStorageType: newType,
+      });
 
       setStorageType(newType);
       setMessage({
@@ -109,7 +95,7 @@ export const BookmarkSettings: React.FC = () => {
       });
 
       // Refresh preferences and bookmarks
-      await queryClient.invalidateQueries({ queryKey: ["preferences"] });
+      await queryClient.invalidateQueries({ queryKey: ["appPreferences"] });
       await queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
 
       // Update bookmark count

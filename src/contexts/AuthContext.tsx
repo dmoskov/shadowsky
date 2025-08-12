@@ -22,6 +22,7 @@ import {
   bookmarkService,
   initializeBookmarkService,
 } from "../services/bookmark-service-wrapper";
+import { appPreferencesService } from "../services/app-preferences-service";
 import { dmService } from "../services/dm-service";
 
 interface AuthContextType {
@@ -70,9 +71,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsAuthenticated(false);
     setSession(null);
 
-    // Clear agent from bookmark service and DM service
+    // Clear agent from services
     bookmarkService.setAgent(null);
     dmService.setAgent(null);
+    appPreferencesService.setAgent(null);
 
     // Clear React Query cache
     queryClient.clear();

@@ -1,5 +1,6 @@
 import { Menu } from "lucide-react";
 import React from "react";
+import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import butterflyIcon from "/butterfly-icon.svg";
 
@@ -35,7 +36,10 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           </div>
         </div>
 
-        <UserMenu />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <UserMenu />
+        </div>
       </div>
     </header>
   );

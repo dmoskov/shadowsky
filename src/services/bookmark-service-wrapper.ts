@@ -1,4 +1,5 @@
 import { BskyAgent } from "@atproto/api";
+import { appPreferencesService } from "./app-preferences-service";
 import { bookmarkServiceV2 } from "./bookmark-service-v2";
 
 /**
@@ -6,11 +7,12 @@ import { bookmarkServiceV2 } from "./bookmark-service-v2";
  */
 export async function initializeBookmarkService(agent: BskyAgent) {
   try {
-    // Get storage type from localStorage since custom preferences
-    // outside app.bsky namespace aren't supported
-    const storageType =
-      (localStorage.getItem("bookmarkStorageType") as "local" | "custom") ||
-      "local";
+    // Set agent for preferences service
+    appPreferencesService.setAgent(agent);
+    
+    // Get storage type from PDS record (with localStorage fallback)
+    const preferences = await appPreferencesService.getPreferences();
+    const storageType = preferences?.bookmarkStorageType || "local";
 
     console.log(
       `Attempting to initialize bookmark service with ${storageType} storage`,
@@ -29,8 +31,10 @@ export async function initializeBookmarkService(agent: BskyAgent) {
     );
     console.error("Falling back to local storage");
 
-    // Reset to local storage if custom storage fails
-    localStorage.setItem("bookmarkStorageType", "local");
+    // Update preferences to local storage if custom storage fails
+    await appPreferencesService.updatePreferences({
+      bookmarkStorageType: "local",
+    });
 
     // Fall back to local storage
     await bookmarkServiceV2.init(agent, "local");
