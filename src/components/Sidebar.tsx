@@ -25,12 +25,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const navItems = [
     { path: "/", label: "Home", icon: Home },
-    { path: "/search", label: "Search", icon: Search, hideOnMobile: true },
+    { path: "/search", label: "Search", icon: Search },
     {
       path: "/notifications",
       label: "Notifications",
       icon: Bell,
-      hideOnMobile: true,
     },
     { path: "/timeline", label: "Timeline", icon: Clock },
     { path: "/bookmarks", label: "Bookmarks", icon: Bookmark },
@@ -40,7 +39,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       path: `/profile/${session?.handle || ""}`,
       label: "Profile",
       icon: User,
-      hideOnMobile: true,
     },
     { path: "/analytics", label: "Analytics", icon: BarChart3 },
   ];
@@ -73,10 +71,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         <nav className="space-y-1 px-4 pt-4">
           {navItems.map((item) => {
-            // Hide certain items on mobile since they're in the tab bar
-            const shouldHide = item.hideOnMobile && window.innerWidth < 1024;
-            if (shouldHide) return null;
-
             return (
               <NavLink
                 key={item.path}

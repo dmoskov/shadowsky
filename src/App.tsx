@@ -17,6 +17,7 @@ import { RateLimitStatus } from "./components/RateLimitStatus";
 import { Search } from "./components/Search";
 import { Sidebar } from "./components/Sidebar";
 import SkyDeck from "./components/SkyDeck";
+import { SwipeIndicator } from "./components/SwipeIndicator";
 import { VisualTimeline } from "./components/VisualTimeline";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { HiddenPostsProvider } from "./contexts/HiddenPostsContext";
@@ -24,6 +25,7 @@ import { ModalProvider } from "./contexts/ModalContext";
 import { ModerationProvider } from "./contexts/ModerationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { useErrorTracking, usePageTracking } from "./hooks/useAnalytics";
+import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
 import ProfilePage from "./pages/ProfilePage";
 import { Settings } from "./pages/Settings";
 import { analytics } from "./services/analytics";
@@ -59,6 +61,9 @@ function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Initialize swipe navigation for mobile
+  const swipeHandlers = useSwipeNavigation();
 
   // Initialize analytics tracking
   usePageTracking();
@@ -116,6 +121,7 @@ function AppContent() {
     <div
       className="bsky-font min-h-screen"
       style={{ background: "var(--bsky-bg-primary)" }}
+      {...swipeHandlers}
     >
       <BackgroundNotificationLoader />
       <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
@@ -144,6 +150,7 @@ function AppContent() {
         </main>
       </div>
       <MobileTabBar />
+      <SwipeIndicator />
       <RateLimitStatus />
       <DebugConsole />
     </div>
