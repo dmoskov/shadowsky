@@ -156,6 +156,7 @@ class BookmarkStorageDB {
     if (!this.db) throw new Error("Failed to initialize database");
 
     await this.db.clear("bookmarks");
+    await this.syncToLocalStorage();
   }
 
   async exportBookmarks(): Promise<Bookmark[]> {
