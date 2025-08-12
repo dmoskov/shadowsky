@@ -1,21 +1,28 @@
 import { HardDrive, Trash2 } from "lucide-react";
 import React, { useState } from "react";
+import { useModal } from "../../contexts/ModalContext";
 
 export const DataSettings: React.FC = () => {
+  const { showConfirm } = useModal();
   const [_message, _setMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
 
-  const handleClearCache = () => {
-    if (
-      confirm(
-        "Are you sure you want to clear all cached data? This will log you out.",
-      )
-    ) {
-      localStorage.clear();
-      window.location.reload();
-    }
+  const handleClearCache = async () => {
+    await showConfirm(
+      "Are you sure you want to clear all cached data? This will log you out.",
+      () => {
+        localStorage.clear();
+        window.location.reload();
+      },
+      {
+        variant: "warning",
+        title: "Clear Cache",
+        confirmText: "Clear & Log Out",
+        cancelText: "Cancel",
+      },
+    );
   };
 
   return (

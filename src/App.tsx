@@ -20,6 +20,7 @@ import SkyDeck from "./components/SkyDeck";
 import { VisualTimeline } from "./components/VisualTimeline";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { HiddenPostsProvider } from "./contexts/HiddenPostsContext";
+import { ModalProvider } from "./contexts/ModalContext";
 import { ModerationProvider } from "./contexts/ModerationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { useErrorTracking, usePageTracking } from "./hooks/useAnalytics";
@@ -168,11 +169,13 @@ function App() {
       >
         <ThemeProvider>
           <AuthProvider>
-            <HiddenPostsProvider>
-              <ModerationProvider>
-                <AppContent />
-              </ModerationProvider>
-            </HiddenPostsProvider>
+            <ModalProvider>
+              <HiddenPostsProvider>
+                <ModerationProvider>
+                  <AppContent />
+                </ModerationProvider>
+              </HiddenPostsProvider>
+            </ModalProvider>
           </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>

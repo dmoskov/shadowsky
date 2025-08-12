@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BookmarkIcon, Cloud, Database } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useModal } from "../../contexts/ModalContext";
 import { appPreferencesService } from "../../services/app-preferences-service";
 import { bookmarkServiceV2 } from "../../services/bookmark-service-v2";
 
@@ -10,6 +11,7 @@ type BookmarkStorageType = "local" | "custom";
 
 export const BookmarkSettings: React.FC = () => {
   const { agent } = useAuth();
+  const { showConfirm } = useModal();
   const [storageType, setStorageType] = useState<BookmarkStorageType>("local");
   const [isLoading, setIsLoading] = useState(false);
   const [bookmarkCount, setBookmarkCount] = useState(0);
@@ -60,17 +62,31 @@ export const BookmarkSettings: React.FC = () => {
 
     // Show warning for custom records
     if (newType === "custom") {
-      const confirmed = window.confirm(
+      await showConfirm(
         "⚠️ WARNING: Custom records are PUBLIC!\n\n" +
           "Anyone can view your bookmarks if you use this storage method. " +
           "Your bookmarks will be visible to anyone who knows how to query AT Protocol records.\n\n" +
           "Are you sure you want to make your bookmarks public?",
+        async () => {
+          // User confirmed - proceed with storage change
+          await performStorageChange(newType);
+        },
+        {
+          variant: "warning",
+          title: "Public Bookmark Storage",
+          confirmText: "Make Public",
+          cancelText: "Cancel",
+        },
       );
-
-      if (!confirmed) {
-        return;
-      }
+      return;
     }
+
+    // For non-custom storage, proceed directly
+    await performStorageChange(newType);
+  };
+
+  const performStorageChange = async (newType: BookmarkStorageType) => {
+    if (!agent) return;
 
     setIsLoading(true);
     setMessage(null);

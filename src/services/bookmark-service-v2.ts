@@ -31,12 +31,26 @@ class BookmarkServiceV2 {
     if (storageType) {
       await this.setStorageType(storageType);
     } else {
+      // If we already have a backend but agent changed, re-create it
+      if (this.backend && this.storageType === "custom" && agent) {
+        this.backend = new CustomRecordBackend(agent);
+      }
       await this.backend.init();
     }
   }
 
   setAgent(agent: BskyAgent | null) {
     this.agent = agent;
+    
+    // If we're using custom storage and the agent changed, we need to update the backend
+    if (this.storageType === "custom" && this.backend && agent) {
+      // Re-initialize the backend with the new agent
+      this.backend = new CustomRecordBackend(agent);
+      // Don't await here to avoid making setAgent async, but log any errors
+      this.backend.init().catch(error => {
+        console.error("[BookmarkServiceV2] Failed to re-initialize backend after agent change:", error);
+      });
+    }
   }
 
   async setStorageType(type: "local" | "custom") {

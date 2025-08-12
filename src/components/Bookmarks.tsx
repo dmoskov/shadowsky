@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useModal } from "../contexts/ModalContext";
 import { bookmarkService } from "../services/bookmark-service";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { PostRenderer } from "./PostRenderer";
@@ -19,6 +20,7 @@ import { PostRenderer } from "./PostRenderer";
 export const Bookmarks: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { showAlert, showConfirm } = useModal();
   const [searchQuery, setSearchQuery] = useState("");
   const [showExportModal, setShowExportModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -93,20 +95,28 @@ export const Bookmarks: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
     } catch (error) {
       console.error("Failed to import bookmarks:", error);
-      alert("Failed to import bookmarks. Please check the file format.");
+      showAlert("Failed to import bookmarks. Please check the file format.", {
+        variant: "error",
+        title: "Import Failed",
+      });
     }
   };
 
   const handleClearAll = async () => {
-    if (
-      confirm(
-        "Are you sure you want to clear all bookmarks? This cannot be undone.",
-      )
-    ) {
-      await bookmarkService.clearAllBookmarks();
-      queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
-      queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
-    }
+    await showConfirm(
+      "Are you sure you want to clear all bookmarks? This cannot be undone.",
+      async () => {
+        await bookmarkService.clearAllBookmarks();
+        queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+        queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
+      },
+      {
+        variant: "warning",
+        title: "Clear All Bookmarks",
+        confirmText: "Clear All",
+        cancelText: "Cancel",
+      },
+    );
   };
 
   const openPostThread = (post: AppBskyFeedDefs.PostView) => {

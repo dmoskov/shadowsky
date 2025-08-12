@@ -18,6 +18,7 @@ import {
   trackError,
 } from "@bsky/shared";
 import { useCallback } from "react";
+import { useModal } from "../contexts/ModalContext";
 import { RateLimitErrorWithReset } from "../types/errors";
 
 interface ErrorHandlerOptions {
@@ -30,6 +31,8 @@ interface ErrorHandlerOptions {
 }
 
 export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
+  const { showAlert } = useModal();
+
   const handleError = useCallback(
     (error: Error | unknown, action?: string) => {
       // Determine error category for tracking
@@ -59,7 +62,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
           if (options.silent) {
             debug.warn(message);
           } else {
-            alert(message);
+            showAlert(message, { variant: "warning", title: "Rate Limited" });
           }
         }
         return;
@@ -72,13 +75,20 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
         } else if (options.logout) {
           options.logout();
           if (!options.silent)
-            alert("Authentication failed. Please log in again.");
+            showAlert("Authentication failed. Please log in again.", {
+              variant: "error",
+              title: "Authentication Error",
+            });
           else debug.warn("Authentication failed. Session cleared.");
         } else {
           const message =
             "Authentication failed. Please refresh and log in again.";
           if (options.silent) debug.warn(message);
-          else alert(message);
+          else
+            showAlert(message, {
+              variant: "error",
+              title: "Authentication Error",
+            });
         }
         return;
       }
@@ -90,13 +100,20 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
         } else if (options.logout) {
           options.logout();
           if (!options.silent)
-            alert("Your session has expired. Please log in again.");
+            showAlert("Your session has expired. Please log in again.", {
+              variant: "warning",
+              title: "Session Expired",
+            });
           else debug.warn("Session expired. Session cleared.");
         } else {
           const message =
             "Your session has expired. Please refresh and log in again.";
           if (options.silent) debug.warn(message);
-          else alert(message);
+          else
+            showAlert(message, {
+              variant: "warning",
+              title: "Session Expired",
+            });
         }
         return;
       }
@@ -106,7 +123,10 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
         if (options.silent) {
           debug.error(`AT Protocol Error: ${error.message}`);
         } else {
-          alert(`Error: ${error.message}`);
+          showAlert(`Error: ${error.message}`, {
+            variant: "error",
+            title: "AT Protocol Error",
+          });
         }
         return;
       }
@@ -118,11 +138,14 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
         if (options.silent) {
           debug.error("Unexpected error:", error);
         } else {
-          alert("An unexpected error occurred. Please try again.");
+          showAlert("An unexpected error occurred. Please try again.", {
+            variant: "error",
+            title: "Error",
+          });
         }
       }
     },
-    [options],
+    [options, showAlert],
   );
 
   return { handleError };

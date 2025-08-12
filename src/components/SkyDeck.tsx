@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useModal } from "../contexts/ModalContext";
 import { columnFeedPrefs } from "../utils/cookies";
 import SkyColumn from "./SkyColumn";
 
@@ -78,6 +79,7 @@ const columnOptions = [
 
 export default function SkyDeck() {
   const { agent } = useAuth();
+  const { showAlert } = useModal();
   const [columns, setColumns] = useState<Column[]>([]);
   const [isDragging, setIsDragging] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -706,8 +708,12 @@ export default function SkyDeck() {
                                   error,
                                 );
                                 // Show error to user instead of adding invalid feed
-                                alert(
+                                showAlert(
                                   `Failed to add feed: ${error?.message || "Invalid feed URL"}`,
+                                  {
+                                    variant: "error",
+                                    title: "Failed to Add Feed",
+                                  },
                                 );
                               } finally {
                                 setIsLoadingCustomFeed(false);

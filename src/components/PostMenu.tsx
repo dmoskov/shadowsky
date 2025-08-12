@@ -15,6 +15,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
+import { useModal } from "../contexts/ModalContext";
 import { useModeration } from "../contexts/ModerationContext";
 
 interface PostMenuProps {
@@ -40,6 +41,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
   const { session, agent } = useAuth();
   const { hidePost } = useHiddenPosts();
   const { muteUser, muteThread, blockUser } = useModeration();
+  const { showConfirm } = useModal();
 
   const isOwnPost = session?.did === post.author.did;
   const postRecord = post.record as any;
@@ -90,33 +92,39 @@ export const PostMenu: React.FC<PostMenuProps> = ({
       onBlock();
     } else {
       // Default implementation
-      try {
-        if (
-          agent &&
-          window.confirm(
-            `Block @${post.author.handle}? They won't be able to see your posts or interact with you.`,
-          )
-        ) {
-          // Add to local blocked users immediately for instant UI update
-          blockUser(post.author.did);
+      if (agent) {
+        await showConfirm(
+          `Block @${post.author.handle}? They won't be able to see your posts or interact with you.`,
+          async () => {
+            try {
+              // Add to local blocked users immediately for instant UI update
+              blockUser(post.author.did);
 
-          if (!agent.session?.did) {
-            throw new Error("No session available");
-          }
-          const { uri } = await agent.app.bsky.graph.block.create(
-            { repo: agent.session.did },
-            {
-              subject: post.author.did,
-              createdAt: new Date().toISOString(),
-            },
-          );
-          // Store the block URI if needed for unblocking later
-          console.log("Blocked user:", uri);
-        }
-      } catch (error) {
-        console.error("Failed to block user:", error);
-        // Rollback on error
-        // Note: would need unblockUser method for this
+              if (!agent.session?.did) {
+                throw new Error("No session available");
+              }
+              const { uri } = await agent.app.bsky.graph.block.create(
+                { repo: agent.session.did },
+                {
+                  subject: post.author.did,
+                  createdAt: new Date().toISOString(),
+                },
+              );
+              // Store the block URI if needed for unblocking later
+              console.log("Blocked user:", uri);
+            } catch (error) {
+              console.error("Failed to block user:", error);
+              // Rollback on error
+              // Note: would need unblockUser method for this
+            }
+          },
+          {
+            variant: "warning",
+            title: "Block User",
+            confirmText: "Block",
+            cancelText: "Cancel",
+          },
+        );
       }
     }
   };
@@ -127,16 +135,25 @@ export const PostMenu: React.FC<PostMenuProps> = ({
       onDelete();
     } else {
       // Default implementation
-      if (window.confirm("Delete this post? This action cannot be undone.")) {
-        try {
-          if (agent) {
-            await agent.deletePost(post.uri);
-            // You might want to trigger a refresh or update the UI
+      await showConfirm(
+        "Delete this post? This action cannot be undone.",
+        async () => {
+          try {
+            if (agent) {
+              await agent.deletePost(post.uri);
+              // You might want to trigger a refresh or update the UI
+            }
+          } catch (error) {
+            console.error("Failed to delete post:", error);
           }
-        } catch (error) {
-          console.error("Failed to delete post:", error);
-        }
-      }
+        },
+        {
+          variant: "warning",
+          title: "Delete Post",
+          confirmText: "Delete",
+          cancelText: "Cancel",
+        },
+      );
     }
   };
 
