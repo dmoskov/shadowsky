@@ -16,7 +16,11 @@ export const DirectMessages: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch conversations list
-  const { data: conversations, isLoading: loadingConversations } = useQuery({
+  const {
+    data: conversations,
+    isLoading: loadingConversations,
+    error: conversationsError,
+  } = useQuery({
     queryKey: ["dm-conversations"],
     queryFn: () => dmService.listConversations(),
     refetchInterval: 30000, // Refresh every 30 seconds
@@ -26,12 +30,18 @@ export const DirectMessages: React.FC = () => {
 
   // Handle errors
   useEffect(() => {
-    if (conversations === undefined && !loadingConversations) {
+    if (conversationsError) {
       setChatError(
-        'Your app password needs chat permissions. Please create a new app password with "Direct Messages" access enabled.',
+        `Error loading conversations: ${conversationsError.message || "Unknown error"}. This usually means your app password needs chat permissions.`,
       );
+    } else if (conversations === undefined && !loadingConversations) {
+      setChatError(
+        'Direct Messages require an app password with chat permissions. To use DMs: 1) Go to Settings > App Passwords on Bluesky, 2) Create a new app password with "Direct Messages" enabled, 3) Log out of shadowsky and log back in with your handle and the new app password.',
+      );
+    } else {
+      setChatError(null);
     }
-  }, [conversations, loadingConversations]);
+  }, [conversations, loadingConversations, conversationsError]);
 
   // Fetch messages for selected conversation
   const {
@@ -84,7 +94,7 @@ export const DirectMessages: React.FC = () => {
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
   }, [conversationData?.messages]);
 
   const handleSendMessage = (e: React.FormEvent) => {
@@ -105,10 +115,10 @@ export const DirectMessages: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full overflow-hidden bg-bsky-bg-primary">
+    <div className="flex h-[calc(100vh-8rem)] overflow-hidden bg-bsky-bg-primary lg:h-[calc(100vh-4rem)]">
       {/* Conversations list */}
       <div
-        className={`max-w-2/5 flex h-full w-80 min-w-60 flex-col border-r border-bsky-border-primary ${selectedConversation ? "hidden md:flex" : ""}`}
+        className={`md:max-w-2/5 flex h-full w-full flex-col border-r border-bsky-border-primary md:w-80 md:min-w-60 ${selectedConversation ? "hidden md:flex" : "flex"}`}
       >
         <div className="border-b border-bsky-border-primary p-4">
           <h2
@@ -123,11 +133,46 @@ export const DirectMessages: React.FC = () => {
           {chatError ? (
             <div className="p-4">
               <div
-                className="relative rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700 dark:border-red-700 dark:bg-red-900 dark:text-red-200"
+                className="relative rounded-lg border border-amber-400 bg-amber-50 p-4 text-amber-900 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200"
                 role="alert"
               >
-                <strong className="font-bold">Chat Access Required</strong>
-                <span className="block sm:inline"> {chatError}</span>
+                <h3 className="mb-2 font-bold">
+                  App Password Required for DMs
+                </h3>
+                <p className="mb-3 text-sm">
+                  Direct Messages require an app password with chat permissions.
+                </p>
+                <div className="space-y-2 text-sm">
+                  <p className="font-semibold">To enable DMs:</p>
+                  <ol className="ml-4 list-decimal space-y-1">
+                    <li>
+                      Go to{" "}
+                      <a
+                        href="https://bsky.app/settings/app-passwords"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline hover:opacity-80"
+                      >
+                        Settings → App Passwords
+                      </a>{" "}
+                      on Bluesky
+                    </li>
+                    <li>
+                      Create a new app password with "Direct Messages" enabled
+                    </li>
+                    <li>
+                      Log out of shadowsky (click your profile → Settings → Log
+                      out)
+                    </li>
+                    <li>
+                      Log back in using your handle and the new app password
+                    </li>
+                  </ol>
+                  <p className="mt-3 text-xs opacity-75">
+                    Note: Regular passwords don't have access to the chat API
+                    for security reasons.
+                  </p>
+                </div>
               </div>
             </div>
           ) : loadingConversations ? (
@@ -267,7 +312,7 @@ export const DirectMessages: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  {conversationData.messages.map((message) => {
+                  {[...conversationData.messages].reverse().map((message) => {
                     const isOwnMessage = message.sender.did === session?.did;
                     return (
                       <div

@@ -5,6 +5,7 @@ import {
   Clock,
   ExternalLink,
   Home,
+  Mail,
   MessageSquare,
   PenSquare,
   Search,
@@ -33,6 +34,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     },
     { path: "/timeline", label: "Timeline", icon: Clock },
     { path: "/bookmarks", label: "Bookmarks", icon: Bookmark },
+    { path: "/messages", label: "Direct Messages", icon: Mail },
     { path: "/conversations", label: "Conversations", icon: MessageSquare },
     { path: "/compose", label: "Compose", icon: PenSquare },
     {

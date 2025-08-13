@@ -35,20 +35,9 @@ export interface DmMessage {
 
 class DmService {
   private agent: BskyAgent | null = null;
-  private chatProxy: any = null;
 
   setAgent(agent: BskyAgent | null) {
     this.agent = agent;
-    if (agent) {
-      // The chat proxy is accessed through withProxy method on the agent
-      // This requires the app password to have chat access permissions
-      this.chatProxy =
-        (agent as any).withProxy("chat_proxy", "did:web:api.bsky.chat") ||
-        (agent as any).api?.chat?.bsky ||
-        null;
-    } else {
-      this.chatProxy = null;
-    }
   }
 
   private async getAuthHeaders(): Promise<Record<string, string>> {
@@ -68,44 +57,32 @@ class DmService {
   }
 
   async listConversations(): Promise<DmConversation[]> {
-    if (!this.agent || !this.chatProxy) {
-      throw new Error(
-        "Chat API not available. Make sure your app password has chat permissions.",
-      );
+    if (!this.agent) {
+      throw new Error("Not authenticated");
     }
 
     try {
-      // Try different methods to access the chat API
-      let response;
+      // Always use direct HTTP request to the chat API
+      // The chat API is separate from the user's PDS
+      const headers = await this.getAuthHeaders();
 
-      // Method 1: Direct chat proxy access
-      if (this.chatProxy.convo?.listConvos) {
-        response = await this.chatProxy.convo.listConvos();
-      }
-      // Method 2: Through API namespace
-      else if ((this.agent as any).api?.chat?.bsky?.convo?.listConvos) {
-        response = await (this.agent as any).api.chat.bsky.convo.listConvos();
-      }
-      // Method 3: HTTP request fallback
-      else {
-        const headers = await this.getAuthHeaders();
-        const apiResponse = await fetch(
-          "https://api.bsky.chat/xrpc/chat.bsky.convo.listConvos",
-          {
-            headers,
-          },
+      const apiResponse = await fetch(
+        "https://api.bsky.chat/xrpc/chat.bsky.convo.listConvos",
+        {
+          headers,
+        },
+      );
+
+      if (!apiResponse.ok) {
+        const errorText = await apiResponse.text();
+        throw new Error(
+          `Failed to list conversations: ${apiResponse.status} ${apiResponse.statusText}. ${errorText}`,
         );
-
-        if (!apiResponse.ok) {
-          throw new Error(
-            `Failed to list conversations: ${apiResponse.statusText}`,
-          );
-        }
-
-        response = { data: await apiResponse.json() };
       }
 
-      return response.data.convos.map((convo: any) => ({
+      const response = await apiResponse.json();
+
+      return response.convos.map((convo: any) => ({
         id: convo.id,
         rev: convo.rev,
         members: convo.members.map((member: any) => ({
@@ -143,41 +120,63 @@ class DmService {
 
     try {
       const headers = await this.getAuthHeaders();
-      const response = await fetch(
+
+      // First get the conversation details
+      const convoResponse = await fetch(
         `https://api.bsky.chat/xrpc/chat.bsky.convo.getConvo?convoId=${encodeURIComponent(conversationId)}`,
         {
           headers,
         },
       );
 
-      if (!response.ok) {
-        throw new Error(`Failed to get conversation: ${response.statusText}`);
+      if (!convoResponse.ok) {
+        throw new Error(
+          `Failed to get conversation: ${convoResponse.statusText}`,
+        );
       }
 
-      const data = await response.json();
+      const convoData = await convoResponse.json();
+
+      // Then get the messages
+      const messagesResponse = await fetch(
+        `https://api.bsky.chat/xrpc/chat.bsky.convo.getMessages?convoId=${encodeURIComponent(conversationId)}`,
+        {
+          headers,
+        },
+      );
+
+      if (!messagesResponse.ok) {
+        throw new Error(
+          `Failed to get messages: ${messagesResponse.statusText}`,
+        );
+      }
+
+      const messagesData = await messagesResponse.json();
 
       const conversation: DmConversation = {
-        id: data.convo.id,
-        rev: data.convo.rev,
-        members: data.convo.members.map((member: any) => ({
+        id: convoData.convo.id,
+        rev: convoData.convo.rev,
+        members: convoData.convo.members.map((member: any) => ({
           did: member.did,
           handle: member.handle,
           displayName: member.displayName,
           avatar: member.avatar,
         })),
-        muted: data.convo.muted || false,
-        unreadCount: data.convo.unreadCount || 0,
+        muted: convoData.convo.muted || false,
+        unreadCount: convoData.convo.unreadCount || 0,
       };
 
-      const messages: DmMessage[] = data.messages.map((msg: any) => ({
-        id: msg.id,
-        rev: msg.rev,
-        text: msg.text,
-        sentAt: msg.sentAt,
-        sender: {
-          did: msg.sender.did,
-        },
-      }));
+      const messages: DmMessage[] = (messagesData.messages || []).map(
+        (msg: any) => ({
+          id: msg.id,
+          rev: msg.rev,
+          text: msg.text,
+          sentAt: msg.sentAt,
+          sender: {
+            did: msg.sender.did,
+          },
+        }),
+      );
 
       return { conversation, messages };
     } catch (error) {

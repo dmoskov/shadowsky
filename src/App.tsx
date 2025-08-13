@@ -8,6 +8,7 @@ import { Composer } from "./components/Composer";
 import { CompressionTest } from "./components/CompressionTest";
 import { ConversationsSimple as Conversations } from "./components/ConversationsSimple";
 import { DebugConsole } from "./components/DebugConsole";
+import { DirectMessages } from "./components/DirectMessages";
 import { Header } from "./components/Header";
 import { LandingPage } from "./components/LandingPage";
 import { MobileTabBar } from "./components/MobileTabBar";
@@ -138,6 +139,7 @@ function AppContent() {
             <Route path="/analytics" element={<NotificationsAnalytics />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/conversations" element={<Conversations />} />
+            <Route path="/messages" element={<DirectMessages />} />
             <Route path="/bookmarks" element={<Bookmarks />} />
             <Route path="/compose" element={<Composer />} />
             <Route path="/search" element={<Search />} />

@@ -1,4 +1,4 @@
-import { Bell, Home, Search, User } from "lucide-react";
+import { Bell, Home, Mail, Search, User } from "lucide-react";
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -9,7 +9,8 @@ export const MobileTabBar: React.FC = () => {
   const tabs = [
     { path: "/", label: "Home", icon: Home },
     { path: "/search", label: "Search", icon: Search },
-    { path: "/notifications", label: "Notifications", icon: Bell },
+    { path: "/notifications", label: "Notifs", icon: Bell },
+    { path: "/messages", label: "DMs", icon: Mail },
     { path: `/profile/${session?.handle || ""}`, label: "Profile", icon: User },
   ];
 
