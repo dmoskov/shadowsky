@@ -231,7 +231,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
-        className="rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+        className="rounded-full p-2 transition-opacity hover:opacity-70"
         aria-label="More options"
       >
         <MoreHorizontal className="h-5 w-5 text-gray-500 dark:text-gray-400" />
@@ -246,7 +246,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
             {/* Always visible options */}
             <button
               onClick={handleCopyLink}
-              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
             >
               <Link className="h-4 w-4" />
               Copy link to post
@@ -254,7 +254,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
 
             <button
               onClick={handleEmbed}
-              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
             >
               <Code className="h-4 w-4" />
               Embed post
@@ -267,7 +267,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
               <>
                 <button
                   onClick={handleMuteThread}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
                 >
                   <BellOff className="h-4 w-4" />
                   Mute thread
@@ -281,7 +281,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
               <>
                 <button
                   onClick={handleHidePost}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
                 >
                   <EyeOff className="h-4 w-4" />
                   Hide this post
@@ -289,7 +289,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
 
                 <button
                   onClick={handleMute}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
                   title={`Mute @${post.author.handle}`}
                 >
                   <VolumeX className="h-4 w-4 flex-shrink-0" />
@@ -298,7 +298,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
 
                 <button
                   onClick={handleBlock}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
                   title={`Block @${post.author.handle}`}
                 >
                   <UserX className="h-4 w-4 flex-shrink-0" />
@@ -308,7 +308,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
                 {!showReportMenu ? (
                   <button
                     onClick={() => setShowReportMenu(true)}
-                    className="flex w-full items-center justify-between gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                    className="flex w-full items-center justify-between gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
                   >
                     <span className="flex items-center gap-3">
                       <Flag className="h-4 w-4" />
@@ -320,28 +320,28 @@ export const PostMenu: React.FC<PostMenuProps> = ({
                   <div className="bg-gray-50 dark:bg-gray-800">
                     <button
                       onClick={() => handleReport("spam")}
-                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
                     >
                       <AlertTriangle className="h-4 w-4" />
                       Spam
                     </button>
                     <button
                       onClick={() => handleReport("abuse")}
-                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
                     >
                       <AlertTriangle className="h-4 w-4" />
                       Abuse & Harassment
                     </button>
                     <button
                       onClick={() => handleReport("misleading")}
-                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
                     >
                       <AlertTriangle className="h-4 w-4" />
                       Misleading
                     </button>
                     <button
                       onClick={() => handleReport("other")}
-                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
                     >
                       <AlertTriangle className="h-4 w-4" />
                       Other violation

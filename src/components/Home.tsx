@@ -475,7 +475,7 @@ export const Home: React.FC<HomeProps> = ({
           ref={(el) => {
             if (el) postRefs.current[`${post.uri}-${index}`] = el;
           }}
-          className={`relative px-3 py-2.5 transition-colors duration-150 hover:bg-bsky-bg-hover ${
+          className={`relative px-3 py-2.5 ${
             item.reply?.parent || post.record?.reply?.parent
               ? "from-blue-500/3 border-l-4 border-blue-500 bg-gradient-to-r to-transparent"
               : ""
@@ -512,7 +512,7 @@ export const Home: React.FC<HomeProps> = ({
           {item.reply?.parent && (
             <div className="relative">
               {/* Reply indicator with background */}
-              <div className="hover:to-blue-500/8 mb-3 flex items-center gap-2 rounded-lg border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-blue-500/5 px-3 py-2 backdrop-blur-sm transition-all duration-300 hover:border-blue-500/30 hover:from-blue-500/15">
+              <div className="mb-3 flex items-center gap-2 rounded-lg border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-blue-500/5 px-3 py-2 backdrop-blur-sm">
                 <div className="flex items-center">
                   <div className="flex w-12 justify-center">
                     <div
@@ -569,7 +569,7 @@ export const Home: React.FC<HomeProps> = ({
           {!item.reply?.parent && post.record?.reply?.parent && (
             <div className="relative">
               {/* Reply indicator with background */}
-              <div className="hover:to-blue-500/8 mb-3 flex items-center gap-2 rounded-lg border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-blue-500/5 px-3 py-2 backdrop-blur-sm transition-all duration-300 hover:border-blue-500/30 hover:from-blue-500/15">
+              <div className="mb-3 flex items-center gap-2 rounded-lg border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-blue-500/5 px-3 py-2 backdrop-blur-sm">
                 <div className="flex items-center">
                   <div className="flex w-12 justify-center">
                     <div
@@ -969,7 +969,7 @@ export const Home: React.FC<HomeProps> = ({
             return (
               <div
                 key={idx}
-                className={`relative cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-95 ${colSpan}`}
+                className={`relative cursor-pointer overflow-hidden rounded-lg ${colSpan}`}
                 onClick={(e) => handleImageClick(e, idx)}
                 style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
               >
@@ -1014,7 +1014,7 @@ export const Home: React.FC<HomeProps> = ({
     if (embed.$type === "app.bsky.embed.external#view") {
       return (
         <div
-          className="mt-2 cursor-pointer rounded-lg border p-2.5 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
+          className="mt-2 cursor-pointer rounded-lg border p-2.5 transition-opacity hover:opacity-90"
           style={{ borderColor: "var(--bsky-border-primary)" }}
           onClick={(e) => {
             e.stopPropagation();
@@ -1092,7 +1092,7 @@ export const Home: React.FC<HomeProps> = ({
 
             {/* Quote post content */}
             <div
-              className="cursor-pointer p-3 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
+              className="cursor-pointer p-3"
               onClick={(e) => {
                 e.stopPropagation();
                 if ("author" in quotedPost && "record" in quotedPost) {

@@ -94,7 +94,7 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
         {onRefresh && (
           <button
             onClick={onRefresh}
-            className="rounded-md p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="rounded-md p-2 transition-opacity hover:opacity-70"
             title="Refresh"
           >
             <RefreshCw className="h-4 w-4 text-gray-500 dark:text-gray-400" />
@@ -160,7 +160,7 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
         {canRemove() && (
           <button
             onClick={() => onRemove(column.id)}
-            className="rounded-md p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="rounded-md p-2 transition-opacity hover:opacity-70"
             title="Remove column"
           >
             <X className="h-4 w-4 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400" />
@@ -171,7 +171,7 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="rounded-md p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="rounded-md p-2 transition-opacity hover:opacity-70"
             title="More options"
           >
             <MoreVertical className="h-4 w-4 text-gray-500 dark:text-gray-400" />
