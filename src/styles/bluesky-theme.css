@@ -13,7 +13,12 @@
   --bsky-bg-primary: #f8fafc;
   --bsky-bg-secondary: #ffffff;
   --bsky-bg-tertiary: #f1f5f9;
-  --bsky-bg-hover: #e2e8f0;
+  --bsky-bg-hover: rgba(
+    226,
+    232,
+    240,
+    0.5
+  ); /* Reduced opacity for subtler hover */
   --bsky-bg-active: #cbd5e1;
 
   /* Text colors - dark for light background */
@@ -65,7 +70,12 @@
   --bsky-bg-primary: #0a0f1b;
   --bsky-bg-secondary: #111827;
   --bsky-bg-tertiary: #1f2937;
-  --bsky-bg-hover: #374151;
+  --bsky-bg-hover: rgba(
+    55,
+    65,
+    81,
+    0.3
+  ); /* Reduced opacity for subtler hover */
   --bsky-bg-active: #4b5563;
 
   /* Text colors - improved contrast for better readability */

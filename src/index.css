@@ -8,6 +8,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global hover state adjustments for a more grounded UI */
+@layer utilities {
+  /* Reduce all transition durations for snappier feel */
+  .transition-all {
+    transition-duration: 150ms !important;
+  }
+
+  .transition-colors {
+    transition-duration: 150ms !important;
+  }
+
+  /* Remove active scale effects globally */
+  .active\:scale-95 {
+    transform: none !important;
+  }
+}
+
 /* Consistent spacing system */
 @layer utilities {
   /* Standard container padding */

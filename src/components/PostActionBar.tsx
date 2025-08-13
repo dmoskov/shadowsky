@@ -59,7 +59,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
       >
         {/* Reply */}
         <button
-          className={`flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-200 ease-out hover:bg-blue-500/10 hover:text-blue-500 active:scale-95 ${
+          className={`flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-colors duration-150 hover:text-blue-600 ${
             isReplying ? "text-blue-500" : ""
           }`}
           onClick={(e) => handleAction(e, onReply)}
@@ -78,7 +78,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
 
         {/* Repost */}
         <button
-          className={`flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-200 ease-out hover:bg-green-500/10 hover:text-green-500 active:scale-95 ${
+          className={`flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-colors duration-150 hover:text-green-600 ${
             isReposted ? "text-green-500" : ""
           }`}
           onClick={(e) => handleAction(e, onRepost)}
@@ -94,7 +94,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
 
         {/* Like */}
         <button
-          className={`flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-200 ease-out hover:bg-red-500/10 hover:text-red-500 active:scale-95 ${
+          className={`flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-colors duration-150 hover:text-red-600 ${
             isLiked ? "text-red-500" : ""
           }`}
           onClick={(e) => handleAction(e, onLike)}
@@ -110,7 +110,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
 
         {/* Bookmark */}
         <button
-          className={`flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-200 ease-out hover:bg-amber-500/10 hover:text-amber-500 active:scale-95 ${
+          className={`flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-colors duration-150 hover:text-amber-600 ${
             bookmarked ? "text-amber-500" : ""
           }`}
           onClick={handleBookmark}
@@ -126,7 +126,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
         {/* Share */}
         {onShare && (
           <button
-            className="flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-200 ease-out hover:bg-blue-500/10 hover:text-blue-500 active:scale-95"
+            className="flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-colors duration-150 hover:text-blue-600"
             onClick={(e) => handleAction(e, onShare)}
             aria-label="Share"
           >
