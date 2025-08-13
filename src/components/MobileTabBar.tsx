@@ -21,14 +21,14 @@ export const MobileTabBar: React.FC = () => {
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
-      <div className="flex h-16 items-center justify-around">
+      <div className="flex h-12 items-center justify-around">
         {tabs.map((tab) => (
           <NavLink
             key={tab.path}
             to={tab.path}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 px-3 py-2 transition-all ${
-                isActive ? "scale-110" : "opacity-70 hover:opacity-100"
+              `flex flex-col items-center gap-0.5 px-3 py-1.5 transition-all ${
+                isActive ? "scale-105" : "opacity-70 hover:opacity-100"
               }`
             }
             style={({ isActive }) => ({
@@ -37,8 +37,8 @@ export const MobileTabBar: React.FC = () => {
                 : "var(--bsky-text-secondary)",
             })}
           >
-            <tab.icon size={24} />
-            <span className="text-xs font-medium">{tab.label}</span>
+            <tab.icon size={20} />
+            <span className="text-[10px] font-medium">{tab.label}</span>
           </NavLink>
         ))}
       </div>

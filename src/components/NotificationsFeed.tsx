@@ -441,6 +441,23 @@ export const NotificationsFeed: React.FC = () => {
                 label="Mentions"
                 count={filterCounts["mentions"]}
               />
+              {/* Mobile-only additional tabs */}
+              <div className="flex gap-1 md:hidden">
+                <FilterTab
+                  active={filter === "replies"}
+                  onClick={() => handleFilterChange("replies")}
+                  icon={<MessageCircle size={16} />}
+                  label="Replies"
+                  count={filterCounts["replies"]}
+                />
+                <FilterTab
+                  active={filter === "follows"}
+                  onClick={() => handleFilterChange("follows")}
+                  icon={<UserPlus size={16} />}
+                  label="Follows"
+                  count={filterCounts["follows"]}
+                />
+              </div>
 
               {/* Desktop-only tabs */}
               <div className="hidden gap-1 md:flex">
@@ -508,40 +525,6 @@ export const NotificationsFeed: React.FC = () => {
 
               {showMoreFilters && (
                 <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-1 shadow-md">
-                  <button
-                    onClick={() => {
-                      handleFilterChange("follows");
-                      setShowMoreFilters(false);
-                    }}
-                    className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
-                      filter === "follows" ? "text-blue-500" : ""
-                    }`}
-                  >
-                    <UserPlus size={16} />
-                    <span>Follows</span>
-                    {filterCounts["follows"] > 0 && (
-                      <span className="ml-auto text-xs">
-                        ({filterCounts["follows"]})
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleFilterChange("replies");
-                      setShowMoreFilters(false);
-                    }}
-                    className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
-                      filter === "replies" ? "text-blue-500" : ""
-                    }`}
-                  >
-                    <MessageCircle size={16} />
-                    <span>Replies</span>
-                    {filterCounts["replies"] > 0 && (
-                      <span className="ml-auto text-xs">
-                        ({filterCounts["replies"]})
-                      </span>
-                    )}
-                  </button>
                   <button
                     onClick={() => {
                       handleFilterChange("quotes");
@@ -914,7 +897,7 @@ const FilterTab: React.FC<FilterTabProps> = ({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1 whitespace-nowrap rounded-md px-2.5 py-1.5 text-sm font-medium transition-all duration-200 ${
+      className={`flex items-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-1 text-xs font-medium transition-all duration-200 sm:gap-1 sm:px-2 sm:py-1.5 sm:text-sm md:px-2.5 ${
         active
           ? "bg-bsky-primary text-white"
           : "text-bsky-text-secondary hover:bg-bsky-bg-secondary hover:text-bsky-text-primary"
@@ -922,10 +905,11 @@ const FilterTab: React.FC<FilterTabProps> = ({
       title={`${label}${count !== undefined && count > 0 ? ` (${count})` : ""}`}
       disabled={disabled}
     >
-      <span>{icon}</span>
+      <span className="flex-shrink-0">{icon}</span>
+      <span className="hidden sm:inline">{label}</span>
       {count !== undefined && count > 0 && (
         <span
-          className={`text-xs font-bold ${
+          className={`text-[10px] font-bold sm:text-xs ${
             active ? "text-white/90" : "text-bsky-text-tertiary"
           }`}
         >
