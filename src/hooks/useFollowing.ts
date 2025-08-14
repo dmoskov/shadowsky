@@ -1,6 +1,6 @@
-import { useMemo } from "react";
 import { debug } from "@bsky/shared";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
 export function useFollowing() {
@@ -51,7 +51,7 @@ export function useFollowing() {
   // Create a stable reference for the Set to prevent unnecessary re-renders
   const stableFollowingSet = useMemo(() => {
     if (!query.data) return undefined;
-    
+
     // Convert Set to array, sort it for consistent ordering, then back to Set
     // This ensures the same content always produces the same reference
     const sortedDids = Array.from(query.data).sort();

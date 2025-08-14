@@ -70,7 +70,7 @@ export class ProfileCacheService {
                 ...cachedProfile,
                 fromCache: false,
               });
-              
+
               // Save to cache immediately to prevent race conditions
               await db.saveProfile(cachedProfile);
             }
@@ -136,7 +136,7 @@ export class ProfileCacheService {
             if (response.data) {
               const cachedProfile = profileToCached(response.data);
               profileMap.set(did, { ...cachedProfile, fromCache: false });
-              
+
               // Save to cache immediately to prevent race conditions
               await db.saveProfile(cachedProfile);
             }
@@ -144,7 +144,6 @@ export class ProfileCacheService {
             debug.error(`Error fetching profile for ${did}:`, error);
           }
         }
-
       } catch (error) {
         debug.error("Error fetching profiles by DID:", error);
         // Fall back to stale cache
