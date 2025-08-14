@@ -1,10 +1,11 @@
 import type { LucideIcon } from "lucide-react";
 import {
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   MoreVertical,
   Plus,
   RefreshCw,
-  Settings,
   X,
 } from "lucide-react";
 import React from "react";
@@ -16,6 +17,8 @@ interface ColumnHeaderProps {
   onRefresh?: () => void;
   onFeedChange?: (feed: string) => void;
   onDiscoverFeeds?: () => void;
+  onMoveLeft?: () => void;
+  onMoveRight?: () => void;
   currentFeedLabel?: string;
   feedOptions?: Array<{ type: string; label: string; icon: LucideIcon }>;
   children?: React.ReactNode;
@@ -27,6 +30,8 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
   onRefresh,
   onFeedChange,
   onDiscoverFeeds,
+  onMoveLeft,
+  onMoveRight,
   currentFeedLabel,
   feedOptions,
   children,
@@ -185,16 +190,28 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
               />
               <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-md border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
                 <div className="py-1">
-                  {column.type === "feed" && (
+                  {onMoveLeft && (
                     <button
                       onClick={() => {
-                        // TODO: Implement settings
+                        onMoveLeft();
                         setShowMenu(false);
                       }}
                       className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
-                      <Settings className="h-4 w-4" />
-                      Feed Settings
+                      <ChevronLeft className="h-4 w-4" />
+                      Move Left
+                    </button>
+                  )}
+                  {onMoveRight && (
+                    <button
+                      onClick={() => {
+                        onMoveRight();
+                        setShowMenu(false);
+                      }}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                      Move Right
                     </button>
                   )}
                 </div>

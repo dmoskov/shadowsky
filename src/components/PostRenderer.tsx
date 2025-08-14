@@ -26,6 +26,7 @@ interface PostRendererProps {
   compact?: boolean;
   showActions?: boolean;
   onClick?: () => void;
+  onQuoteClick?: (uri: string) => void;
 }
 
 export const PostRenderer: React.FC<PostRendererProps> = ({
@@ -40,6 +41,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
   compact = false,
   showActions = true,
   onClick,
+  onQuoteClick,
 }) => {
   const navigate = useNavigate();
   const record = post.record as any;
@@ -117,8 +119,14 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
       const quotedPost = embed.record;
       return (
         <div
-          className="mt-2 overflow-hidden rounded-lg border"
+          className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
           style={{ borderColor: "var(--bsky-border-primary)" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onQuoteClick && quotedPost.uri) {
+              onQuoteClick(quotedPost.uri);
+            }
+          }}
         >
           <div
             className="flex items-center gap-2 px-3 py-1.5 text-xs"

@@ -100,7 +100,7 @@ export function useNotifications(priority: boolean = false) {
     staleTime: cachedData ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000, // If we have cache, treat as fresh for 24h, otherwise 5min
     refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
     refetchOnWindowFocus: false, // Don't refetch on window focus
-    refetchOnMount: "always", // Always fetch fresh data on mount
+    refetchOnMount: cachedData ? false : "always", // Only fetch on mount if no cached data
     // Use cached data as initial data if available
     initialData: cachedData
       ? {

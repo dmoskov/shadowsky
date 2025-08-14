@@ -105,7 +105,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
     },
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnMount: "always", // Always fetch fresh data on mount
+    refetchOnMount: false, // Don't refetch on mount - use stale time instead
     refetchInterval: 60 * 1000, // Poll every 60 seconds after initial load
     enabled: !!agent, // Only run when agent is available
   });

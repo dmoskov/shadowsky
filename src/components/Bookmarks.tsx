@@ -241,6 +241,12 @@ export const Bookmarks: React.FC = () => {
                   onBookmark={() => handleBookmarkToggle(bookmark.post!)}
                   isBookmarked={true}
                   compact
+                  onQuoteClick={(uri) => {
+                    const parts = uri.split("/");
+                    const handle = parts[2];
+                    const postId = parts[parts.length - 1];
+                    navigate(`/thread/${handle}/${postId}`);
+                  }}
                 />
               </div>
             ) : (

@@ -431,7 +431,7 @@ export const NotificationsAnalytics: React.FC = () => {
     staleTime: hasExtendedData ? 5 * 60 * 1000 : 2 * 60 * 1000, // Longer stale time if using cached data
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
-    refetchOnMount: "always", // Always fetch fresh data on mount
+    refetchOnMount: false, // Don't refetch on mount - use stale time instead
     refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 

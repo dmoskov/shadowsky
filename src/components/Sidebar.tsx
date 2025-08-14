@@ -15,14 +15,21 @@ import {
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useUnreadNotificationCount } from "../hooks/useNotifications";
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  isCollapsed?: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  isOpen,
+  onClose,
+  isCollapsed = false,
+}) => {
   const { session } = useAuth();
+  const { data: unreadCount } = useUnreadNotificationCount();
 
   const navItems = [
     { path: "/", label: "Home", icon: Home },
@@ -58,7 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
       {/* Sidebar */}
       <aside
-        className={`bsky-glass fixed bottom-0 left-0 top-16 z-40 w-64 max-w-[80vw] transform transition-transform duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
+        className={`bsky-glass fixed bottom-0 left-0 top-16 z-40 ${isCollapsed ? "w-16" : "w-64"} max-w-[80vw] transform transition-all duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
         style={{ borderRight: "1px solid var(--bsky-border-primary)" }}
       >
         <div className="flex items-center justify-between p-4 lg:hidden">
@@ -71,7 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        <nav className="space-y-1 px-4 pt-4">
+        <nav className={`space-y-1 ${isCollapsed ? "px-2" : "px-4"} pt-4`}>
           {navItems.map((item) => {
             return (
               <NavLink
@@ -79,7 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 to={item.path}
                 onClick={() => onClose()}
                 className={({ isActive }) =>
-                  `group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 ${
+                  `group relative flex items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 ${
                     isActive ? "text-white shadow-md" : "hover:bg-blue-50"
                   } `
                 }
@@ -89,14 +96,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     ? "var(--bsky-primary)"
                     : "transparent",
                 })}
+                title={isCollapsed ? item.label : undefined}
               >
-                <item.icon
-                  size={20}
-                  className="transition-transform group-hover:scale-110"
-                />
-                <span className="font-medium transition-colors">
-                  {item.label}
-                </span>
+                <div className="relative">
+                  <item.icon
+                    size={20}
+                    className={`transition-transform group-hover:scale-110 ${isCollapsed ? "mx-0" : ""}`}
+                  />
+                  {item.path === "/notifications" &&
+                    unreadCount !== undefined &&
+                    unreadCount > 0 && (
+                      <span
+                        className="absolute -right-1 -top-1 h-2 w-2 rounded-full"
+                        style={{
+                          backgroundColor: "var(--bsky-accent)",
+                        }}
+                      />
+                    )}
+                </div>
+                {!isCollapsed && (
+                  <span className="font-medium transition-colors">
+                    {item.label}
+                  </span>
+                )}
               </NavLink>
             );
           })}
@@ -109,34 +131,41 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         ></div>
 
         {/* External Links */}
-        <div className="space-y-1 px-4">
+        <div className={`space-y-1 ${isCollapsed ? "px-2" : "px-4"}`}>
           <a
             href="https://bsky.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 hover:bg-blue-500 hover:bg-opacity-10"
+            className={`group flex items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 hover:bg-blue-500 hover:bg-opacity-10`}
             style={{ color: "var(--bsky-text-secondary)" }}
+            title={isCollapsed ? "Open Bluesky" : undefined}
           >
             <ExternalLink
               size={20}
-              className="transition-transform group-hover:scale-110"
+              className={`transition-transform group-hover:scale-110 ${isCollapsed ? "mx-0" : ""}`}
             />
-            <span className="font-medium transition-colors">Open Bluesky</span>
+            {!isCollapsed && (
+              <span className="font-medium transition-colors">
+                Open Bluesky
+              </span>
+            )}
           </a>
         </div>
 
-        <div
-          className="absolute bottom-0 left-0 right-0 border-t p-4"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
-        >
+        {!isCollapsed && (
           <div
-            className="text-center text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            className="absolute bottom-0 left-0 right-0 border-t p-4"
+            style={{ borderColor: "var(--bsky-border-primary)" }}
           >
-            <div className="bsky-gradient-text mb-1 font-bold">ShadowSky</div>
-            <div>Version 0.5.0</div>
+            <div
+              className="text-center text-xs"
+              style={{ color: "var(--bsky-text-tertiary)" }}
+            >
+              <div className="bsky-gradient-text mb-1 font-bold">ShadowSky</div>
+              <div>Version 0.5.0</div>
+            </div>
           </div>
-        </div>
+        )}
       </aside>
     </>
   );

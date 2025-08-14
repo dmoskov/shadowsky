@@ -216,7 +216,21 @@ export function BaseComposer({
 
     setGeneratingAlt(id);
     try {
-      const alt = await generateAltText(item.preview);
+      // Convert File to data URL for alt text generation
+      const reader = new FileReader();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => {
+          if (reader.result && typeof reader.result === "string") {
+            resolve(reader.result);
+          } else {
+            reject(new Error("Failed to read file"));
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(item.file);
+      });
+
+      const alt = await generateAltText(dataUrl);
       updateAltText(id, alt);
     } catch (error) {
       debug.error("Failed to generate alt text:", error);

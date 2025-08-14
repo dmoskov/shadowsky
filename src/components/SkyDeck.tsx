@@ -10,12 +10,15 @@ import {
   Star,
   Users,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
 import { useColumnSwipe } from "../hooks/useColumnSwipe";
 import { columnFeedPrefs } from "../utils/cookies";
+import { createLogger } from "../utils/logger";
 import SkyColumn from "./SkyColumn";
+
+const logger = createLogger("SkyDeck");
 
 export type ColumnType =
   | "notifications"
@@ -82,9 +85,6 @@ export default function SkyDeck() {
   const { agent } = useAuth();
   const { showAlert } = useModal();
   const [columns, setColumns] = useState<Column[]>([]);
-  const [isDragging, setIsDragging] = useState<string | null>(null);
-  const [dragOverId, setDragOverId] = useState<string | null>(null);
-  const [_, setDraggedElement] = useState<HTMLElement | null>(null);
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [isNarrowView, setIsNarrowView] = useState(false);
   const [focusedColumnIndex, setFocusedColumnIndex] = useState(0);
@@ -124,7 +124,7 @@ export default function SkyDeck() {
         });
         return response.data.feeds;
       } catch (error) {
-        console.error("Failed to fetch feed generators:", error);
+        logger.error("Failed to fetch feed generators:", error);
         return [];
       }
     },
@@ -319,46 +319,28 @@ export default function SkyDeck() {
     setColumns(columns.filter((col) => col.id !== id));
   };
 
-  const handleDragStart = (e: React.DragEvent, id: string) => {
-    setIsDragging(id);
-    setDraggedElement(e.currentTarget as HTMLElement);
-    e.dataTransfer.effectAllowed = "move";
-
-    // Create a custom drag image
-    const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
-    dragImage.style.opacity = "0.8";
-    dragImage.style.transform = "rotate(2deg)";
-    document.body.appendChild(dragImage);
-    e.dataTransfer.setDragImage(
-      dragImage,
-      e.clientX - e.currentTarget.getBoundingClientRect().left,
-      20,
-    );
-    setTimeout(() => document.body.removeChild(dragImage), 0);
-  };
-
-  const handleDragOver = (e: React.DragEvent, id: string) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    setDragOverId(id);
-  };
-
-  const handleDrop = (e: React.DragEvent, dropId: string) => {
-    e.preventDefault();
-
-    if (isDragging && isDragging !== dropId) {
-      const dragIndex = columns.findIndex((col) => col.id === isDragging);
-      const dropIndex = columns.findIndex((col) => col.id === dropId);
-
+  const handleMoveLeft = (columnId: string) => {
+    const currentIndex = columns.findIndex((col) => col.id === columnId);
+    if (currentIndex > 0) {
       const newColumns = [...columns];
-      const [draggedColumn] = newColumns.splice(dragIndex, 1);
-      newColumns.splice(dropIndex, 0, draggedColumn);
-
+      [newColumns[currentIndex - 1], newColumns[currentIndex]] = [
+        newColumns[currentIndex],
+        newColumns[currentIndex - 1],
+      ];
       setColumns(newColumns);
     }
+  };
 
-    setIsDragging(null);
-    setDragOverId(null);
+  const handleMoveRight = (columnId: string) => {
+    const currentIndex = columns.findIndex((col) => col.id === columnId);
+    if (currentIndex < columns.length - 1) {
+      const newColumns = [...columns];
+      [newColumns[currentIndex], newColumns[currentIndex + 1]] = [
+        newColumns[currentIndex + 1],
+        newColumns[currentIndex],
+      ];
+      setColumns(newColumns);
+    }
   };
 
   // Mobile swipe handlers
@@ -384,6 +366,16 @@ export default function SkyDeck() {
           <SkyColumn
             column={currentColumn}
             onClose={() => handleRemoveColumn(currentColumn.id)}
+            onMoveLeft={
+              mobileColumnIndex > 0
+                ? () => setMobileColumnIndex(mobileColumnIndex - 1)
+                : undefined
+            }
+            onMoveRight={
+              mobileColumnIndex < columns.length - 1
+                ? () => setMobileColumnIndex(mobileColumnIndex + 1)
+                : undefined
+            }
             chromeless={false}
           />
           {/* Column dots indicator */}
@@ -418,52 +410,36 @@ export default function SkyDeck() {
           {columns.map((column, index) => (
             <div
               key={column.id}
-              className={`h-full w-[400px] rounded-lg border border-gray-200 bg-white shadow-md transition-all duration-300 ease-out dark:border-gray-700 dark:bg-gray-900 ${
-                isDragging === column.id
-                  ? "scale-[0.98] cursor-grabbing opacity-50"
-                  : "cursor-grab"
-              } ${
-                dragOverId === column.id && isDragging !== column.id
-                  ? "relative before:absolute before:bottom-0 before:left-[-2px] before:top-0 before:w-1 before:animate-pulse before:rounded-sm before:bg-blue-500"
-                  : ""
-              } ${
+              className={`h-full w-[320px] rounded-lg border border-gray-200 bg-white shadow-md transition-all duration-300 ease-out dark:border-gray-700 dark:bg-gray-900 ${
                 focusedColumnIndex === index
                   ? "shadow-xl ring-2 ring-blue-500/30"
                   : "hover:shadow-lg dark:hover:shadow-black/30"
               }`}
-              draggable
-              onDragStart={(e) => handleDragStart(e, column.id)}
-              onDragOver={(e) => handleDragOver(e, column.id)}
-              onDrop={(e) => handleDrop(e, column.id)}
-              onDragEnd={() => {
-                setIsDragging(null);
-                setDragOverId(null);
-                setDraggedElement(null);
-              }}
-              onDragLeave={() => {
-                if (dragOverId === column.id) {
-                  setDragOverId(null);
-                }
-              }}
               onClick={(e) => {
-                // Don't focus column if clicking on menu button or menu dropdown
+                // Don't focus column if clicking on menu button, menu dropdown, or remove button
                 const target = e.target as HTMLElement;
                 const isMenuButton = target.closest(
                   'button[aria-label="More options"]',
                 );
                 const isMenuDropdown = target.closest(".absolute.z-50"); // Menu dropdown has these classes
-                if (!isMenuButton && !isMenuDropdown) {
+                const isRemoveButton = target.closest(
+                  'button[title="Remove column"]',
+                );
+                if (!isMenuButton && !isMenuDropdown && !isRemoveButton) {
                   setFocusedColumnIndex(index);
                 }
               }}
               onClickCapture={(e) => {
-                // Don't focus column if clicking on menu button or menu dropdown
+                // Don't focus column if clicking on menu button, menu dropdown, or remove button
                 const target = e.target as HTMLElement;
                 const isMenuButton = target.closest(
                   'button[aria-label="More options"]',
                 );
                 const isMenuDropdown = target.closest(".absolute.z-50"); // Menu dropdown has these classes
-                if (!isMenuButton && !isMenuDropdown) {
+                const isRemoveButton = target.closest(
+                  'button[title="Remove column"]',
+                );
+                if (!isMenuButton && !isMenuDropdown && !isRemoveButton) {
                   setFocusedColumnIndex(index);
                 }
               }}
@@ -471,12 +447,23 @@ export default function SkyDeck() {
               <SkyColumn
                 column={column}
                 onClose={() => handleRemoveColumn(column.id)}
+                onMoveLeft={
+                  columns.findIndex((col) => col.id === column.id) > 0
+                    ? () => handleMoveLeft(column.id)
+                    : undefined
+                }
+                onMoveRight={
+                  columns.findIndex((col) => col.id === column.id) <
+                  columns.length - 1
+                    ? () => handleMoveRight(column.id)
+                    : undefined
+                }
                 isFocused={focusedColumnIndex === index}
               />
             </div>
           ))}
 
-          <div className="h-full w-[400px]">
+          <div className="h-full w-[320px]">
             {isAddingColumn ? (
               <div className="flex h-full animate-fade-in flex-col rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
                 <div className="flex-1 overflow-y-auto p-3">
@@ -668,12 +655,12 @@ export default function SkyDeck() {
                                             typeof listData === "string"
                                               ? listData
                                               : listData.uri;
-                                          console.log(
+                                          logger.log(
                                             "Extracted list URI from starter pack:",
                                             uri,
                                           );
                                         } else {
-                                          console.error(
+                                          logger.error(
                                             "Starter pack does not contain a list",
                                           );
                                           throw new Error(
@@ -682,7 +669,7 @@ export default function SkyDeck() {
                                         }
                                       }
                                     } catch (error) {
-                                      console.error(
+                                      logger.error(
                                         "Failed to resolve starter pack:",
                                         error,
                                       );
@@ -739,7 +726,7 @@ export default function SkyDeck() {
                                   }
                                 }
                               } catch (error: any) {
-                                console.error(
+                                logger.error(
                                   "Error fetching feed/list:",
                                   error,
                                 );

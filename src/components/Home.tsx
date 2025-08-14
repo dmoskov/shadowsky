@@ -1114,8 +1114,12 @@ export const Home: React.FC<HomeProps> = ({
               className="cursor-pointer p-3"
               onClick={(e) => {
                 e.stopPropagation();
-                if ("author" in quotedPost && "record" in quotedPost) {
-                  handlePostClick(quotedPost as Post);
+                if (quotedPost.uri && quotedPost.author) {
+                  // Navigate to the quoted post's thread
+                  const parts = quotedPost.uri.split("/");
+                  const handle = parts[2];
+                  const postId = parts[parts.length - 1];
+                  navigate(`/thread/${handle}/${postId}`);
                 }
               }}
             >

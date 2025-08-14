@@ -12,11 +12,17 @@ class BookmarkStore {
   async init() {
     if (this.initialized) return;
 
-    // bookmarkServiceV2 is initialized in AuthContext
-    const bookmarks = await bookmarkServiceV2.getBookmarkedPosts();
-    bookmarks.forEach((b) => this.bookmarks.set(b.postUri, true));
-    this.initialized = true;
-    this.notify();
+    try {
+      // bookmarkServiceV2 is initialized in AuthContext
+      const bookmarks = await bookmarkServiceV2.getBookmarkedPosts();
+      bookmarks.forEach((b) => this.bookmarks.set(b.postUri, true));
+      this.initialized = true;
+      this.notify();
+    } catch (error) {
+      // If PostCacheService is not initialized yet, we'll try again later
+      console.debug("BookmarkStore init deferred - service not ready yet");
+      this.initialized = false;
+    }
   }
 
   subscribe(listener: () => void) {
@@ -29,10 +35,22 @@ class BookmarkStore {
   }
 
   isBookmarked(postUri: string) {
+    // Lazy initialization attempt if not initialized
+    if (!this.initialized) {
+      this.init().catch(() => {
+        // Ignore errors - we'll return false for now
+      });
+    }
     return this.bookmarks.get(postUri) || false;
   }
 
   setBookmarked(postUri: string, isBookmarked: boolean) {
+    // Ensure we're initialized before modifying
+    if (!this.initialized) {
+      this.init().catch(() => {
+        // Continue with the operation even if init fails
+      });
+    }
     if (isBookmarked) {
       this.bookmarks.set(postUri, true);
     } else {
@@ -47,7 +65,11 @@ class BookmarkStore {
 }
 
 const bookmarkStore = new BookmarkStore();
-bookmarkStore.init();
+
+// Export initialization function for use after service is ready
+export async function initializeBookmarkStore() {
+  return bookmarkStore.init();
+}
 
 export function useBookmarks() {
   const queryClient = useQueryClient();

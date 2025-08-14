@@ -39,8 +39,11 @@ import {
 import { debug } from "../shared/debug";
 import { isGifFile } from "../utils/gif-to-video";
 import { compressImage, isCompressibleImage } from "../utils/image-compression";
+import { createLogger } from "../utils/logger";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
+
+const logger = createLogger("Composer");
 
 interface NumberingFormat {
   id: string;
@@ -428,7 +431,7 @@ export function Composer() {
             file = await compressImage(file);
             setPostStatus(null);
           } catch (error) {
-            console.error("Failed to compress image:", error);
+            logger.error("Failed to compress image:", error);
             setPostStatus({
               type: "error",
               message: "Failed to compress image",
@@ -579,7 +582,7 @@ export function Composer() {
               file.name.replace(".gif", ".mp4"),
               { type: "video/mp4" },
             );
-            console.log(
+            logger.log(
               "Created video file from GIF:",
               videoFile.name,
               "size:",
@@ -595,7 +598,7 @@ export function Composer() {
               alt: "",
               type: "video",
             };
-            console.log("Created media object with type:", newMedia.type);
+            logger.log("Created media object with type:", newMedia.type);
 
             setMedia((prev) => [...prev, newMedia]);
             setPostStatus({
@@ -604,7 +607,7 @@ export function Composer() {
             });
             setTimeout(() => setPostStatus({ type: "idle" }), 2000);
           } catch (error) {
-            console.error("GIF conversion failed:", error);
+            logger.error("GIF conversion failed:", error);
             setPostStatus({
               type: "error",
               message: "Failed to convert GIF. Using static image.",
@@ -618,7 +621,7 @@ export function Composer() {
               try {
                 processedFile = await compressImage(file);
               } catch (error) {
-                console.error("Failed to compress GIF fallback:", error);
+                logger.error("Failed to compress GIF fallback:", error);
               }
             }
 
@@ -650,7 +653,7 @@ export function Composer() {
               setPostStatus({ type: "success", message: "Image compressed!" });
               setTimeout(() => setPostStatus(null), 2000);
             } catch (error) {
-              console.error("Failed to compress image:", error);
+              logger.error("Failed to compress image:", error);
               // Continue with original file if compression fails
             }
           }
@@ -715,7 +718,7 @@ export function Composer() {
           altTextLength: altText.length,
         });
       } catch (error) {
-        console.error("Failed to generate alt text:", error);
+        logger.error("Failed to generate alt text:", error);
         debug.error("Alt text generation failed", {
           error: error instanceof Error ? error.message : "Unknown error",
           mediaId,
@@ -1097,7 +1100,7 @@ export function Composer() {
     mediaToSend?: UploadedMedia[],
   ) => {
     if (!agent) {
-      console.error("No agent available");
+      logger.error("No agent available");
       setPostStatus({ type: "error", message: "Not logged in" });
       setIsPosting(false);
       return;
@@ -1108,7 +1111,7 @@ export function Composer() {
     const originalMedia = mediaToSend || pendingPost?.media || [];
 
     if (originalPosts.length === 0) {
-      console.error("No posts to send");
+      logger.error("No posts to send");
       setPostStatus({ type: "error", message: "No content to post" });
       setIsPosting(false);
       return;
@@ -1187,14 +1190,14 @@ export function Composer() {
 
         // Add media if available for this post
         if (postMedia.length > 0) {
-          console.log(
+          logger.log(
             "Post media:",
             postMedia.map((m) => ({ type: m.type, mimeType: m.mimeType })),
           );
           const videoMedia = postMedia.find((m) => m.type === "video");
 
           if (videoMedia) {
-            console.log("Found video media, uploading as video");
+            logger.log("Found video media, uploading as video");
             // Upload video
             setPostStatus({
               type: "posting",
@@ -1222,7 +1225,7 @@ export function Composer() {
               aspectRatio: videoBlob.aspectRatio,
             };
           } else {
-            console.log("No video found, uploading as images");
+            logger.log("No video found, uploading as images");
             // Upload images
             const images = await Promise.all(
               postMedia.map(async (img) => {
@@ -1281,7 +1284,7 @@ export function Composer() {
         setPostStatus({ type: "idle" });
       }, 3000);
     } catch (error) {
-      console.error("Error posting thread:", error);
+      logger.error("Error posting thread:", error);
       setPostStatus({
         type: "error",
         message:
@@ -1362,7 +1365,7 @@ export function Composer() {
       }
 
       const videoBlob = await response.blob();
-      console.log(
+      logger.log(
         "Received converted video, size:",
         videoBlob.size,
         "type:",
@@ -1404,7 +1407,7 @@ export function Composer() {
       });
       setTimeout(() => setPostStatus({ type: "idle" }), 2000);
     } catch (error) {
-      console.error("Error adding GIF:", error);
+      logger.error("Error adding GIF:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       setPostStatus({
@@ -1511,7 +1514,7 @@ export function Composer() {
           },
         });
       } catch (error) {
-        console.error("Failed to adjust tone:", error);
+        logger.error("Failed to adjust tone:", error);
         const errorMessage =
           error instanceof Error ? error.message : "Failed to adjust tone";
         setPostStatus({ type: "error", message: errorMessage });

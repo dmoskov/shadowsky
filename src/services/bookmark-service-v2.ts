@@ -1,4 +1,5 @@
 import { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
+import { createLogger } from "../utils/logger";
 import { CustomRecordBackend } from "./bookmark-backends/CustomRecordBackend";
 import { LocalStorageBackend } from "./bookmark-backends/LocalStorageBackend";
 import { Bookmark, BookmarkStorageBackend } from "./bookmark-backends/types";
@@ -7,6 +8,8 @@ import { PostCacheService } from "./post-cache-service";
 export type BookmarkPost = Bookmark & {
   post?: AppBskyFeedDefs.PostView;
 };
+
+const logger = createLogger("BookmarkServiceV2");
 
 class BookmarkServiceV2 {
   private backend: BookmarkStorageBackend;
@@ -48,8 +51,8 @@ class BookmarkServiceV2 {
       this.backend = new CustomRecordBackend(agent);
       // Don't await here to avoid making setAgent async, but log any errors
       this.backend.init().catch((error) => {
-        console.error(
-          "[BookmarkServiceV2] Failed to re-initialize backend after agent change:",
+        logger.error(
+          "Failed to re-initialize backend after agent change:",
           error,
         );
       });
@@ -148,7 +151,7 @@ class BookmarkServiceV2 {
             await this.postCacheService.cachePosts([post]);
           }
         } catch (error) {
-          console.error("Failed to fetch bookmarked post:", error);
+          logger.error("Failed to fetch bookmarked post:", error);
         }
       }
 

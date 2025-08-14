@@ -1,7 +1,10 @@
 import { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
+import { createLogger } from "../../utils/logger";
 import { Bookmark, BookmarkStorageBackend } from "./types";
 
 const BOOKMARK_COLLECTION = "com.shadowsky.bookmark";
+
+const logger = createLogger("CustomRecordBackend");
 
 export class CustomRecordBackend implements BookmarkStorageBackend {
   type = "custom" as const;
@@ -14,22 +17,19 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
   }
 
   async init(): Promise<void> {
-    console.log("[CustomRecordBackend] Initializing...");
-    console.log("[CustomRecordBackend] Agent session:", this.agent.session);
-    console.log("[CustomRecordBackend] Agent DID:", this.agent.session?.did);
-    console.log(
-      "[CustomRecordBackend] Agent handle:",
-      this.agent.session?.handle,
-    );
+    logger.log("Initializing...");
+    logger.log("Agent session:", this.agent.session);
+    logger.log("Agent DID:", this.agent.session?.did);
+    logger.log("Agent handle:", this.agent.session?.handle);
     // Load existing bookmarks into cache
     await this.loadBookmarksFromRepo();
   }
 
   private async loadBookmarksFromRepo(): Promise<void> {
     this.bookmarkCache.clear();
-    console.log("[CustomRecordBackend] Loading bookmarks from repo...");
-    console.log("[CustomRecordBackend] Collection:", BOOKMARK_COLLECTION);
-    console.log("[CustomRecordBackend] Repo DID:", this.agent.session?.did);
+    logger.log("Loading bookmarks from repo...");
+    logger.log("Collection:", BOOKMARK_COLLECTION);
+    logger.log("Repo DID:", this.agent.session?.did);
 
     try {
       let cursor: string | undefined;
@@ -37,21 +37,18 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
       let totalLoaded = 0;
 
       do {
-        console.log("[CustomRecordBackend] Fetching records...", { cursor });
+        logger.log("Fetching records...", { cursor });
         const { data } = await this.agent.com.atproto.repo.listRecords({
           repo: this.agent.session!.did,
           collection: BOOKMARK_COLLECTION,
           cursor,
           limit: 100,
         });
-        console.log(
-          "[CustomRecordBackend] Fetched records:",
-          data.records.length,
-        );
+        logger.log("Fetched records:", data.records.length);
 
         for (const record of data.records) {
           const bookmarkRecord = record.value as any;
-          console.log("[CustomRecordBackend] Processing record:", {
+          logger.log("Processing record:", {
             uri: record.uri,
             postUri: bookmarkRecord.postUri,
             savedAt: bookmarkRecord.savedAt,
@@ -76,13 +73,10 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
         cursor = data.cursor;
       } while (cursor);
 
-      console.log("[CustomRecordBackend] Total bookmarks loaded:", totalLoaded);
+      logger.log("Total bookmarks loaded:", totalLoaded);
     } catch (error: any) {
-      console.error(
-        "[CustomRecordBackend] Failed to load bookmarks from repo:",
-        error,
-      );
-      console.error("[CustomRecordBackend] Error details:", {
+      logger.error("Failed to load bookmarks from repo:", error);
+      logger.error("Error details:", {
         status: error?.status,
         message: error?.message,
         error: error?.error,
@@ -117,7 +111,7 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
     const rkey = this.generateRkey(bookmark.postUri);
 
     // Create the record
-    console.log("[CustomRecordBackend] Creating bookmark record:", {
+    logger.log("Creating bookmark record:", {
       postUri: bookmark.postUri,
       collection: BOOKMARK_COLLECTION,
       repo: this.agent.session?.did,
@@ -153,7 +147,7 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
 
     // Use the same rkey generation method
     const rkey = this.generateRkey(postUri);
-    console.log("[CustomRecordBackend] Removing bookmark:", { postUri, rkey });
+    logger.log("Removing bookmark:", { postUri, rkey });
 
     await this.agent.com.atproto.repo.deleteRecord({
       repo: this.agent.session!.did,
@@ -173,11 +167,7 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
     const bookmarks = Array.from(this.bookmarkCache.values()).map(
       ({ bookmark }) => bookmark,
     );
-    console.log(
-      "[CustomRecordBackend] getAllBookmarks returning:",
-      bookmarks.length,
-      "bookmarks",
-    );
+    logger.log("getAllBookmarks returning:", bookmarks.length, "bookmarks");
     return bookmarks;
   }
 

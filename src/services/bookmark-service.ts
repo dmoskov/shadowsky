@@ -1,10 +1,13 @@
 import { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
+import { createLogger } from "../utils/logger";
 import {
   bookmarkStorage,
   type Bookmark,
   type BookmarkPost,
 } from "./bookmark-storage-db";
 import { PostCacheService } from "./post-cache-service";
+
+const logger = createLogger("BookmarkService");
 
 class BookmarkService {
   private agent: BskyAgent | null = null;
@@ -69,7 +72,7 @@ class BookmarkService {
             await this.postCacheService.cachePosts([post]);
           }
         } catch (error) {
-          console.error("Failed to fetch bookmarked post:", error);
+          logger.error("Failed to fetch bookmarked post:", error);
         }
       }
 

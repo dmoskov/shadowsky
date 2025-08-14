@@ -4,6 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { dmService, type DmConversation } from "../services/dm-service";
+import { MessageReactions } from "./MessageReactions";
 
 export const DirectMessages: React.FC = () => {
   const { session } = useAuth();
@@ -319,15 +320,23 @@ export const DirectMessages: React.FC = () => {
                         key={message.id}
                         className={`mb-4 flex ${isOwnMessage ? "justify-end" : ""}`}
                       >
-                        <div
-                          className={`max-w-[70%] rounded-lg p-2 px-4 ${isOwnMessage ? "bg-bsky-primary text-white" : "bg-bsky-bg-secondary text-bsky-text-primary"}`}
-                        >
-                          <div>{message.text}</div>
-                          <div className="mt-1 text-xs opacity-70">
-                            {formatDistanceToNow(new Date(message.sentAt), {
-                              addSuffix: true,
-                            })}
+                        <div className="max-w-[70%]">
+                          <div
+                            className={`rounded-lg p-2 px-4 ${isOwnMessage ? "bg-bsky-primary text-white" : "bg-bsky-bg-secondary text-bsky-text-primary"}`}
+                          >
+                            <div>{message.text}</div>
+                            <div className="mt-1 text-xs opacity-70">
+                              {formatDistanceToNow(new Date(message.sentAt), {
+                                addSuffix: true,
+                              })}
+                            </div>
                           </div>
+                          <MessageReactions
+                            conversationId={selectedConversation}
+                            messageId={message.id}
+                            reactions={message.reactions}
+                            isOwnMessage={isOwnMessage}
+                          />
                         </div>
                       </div>
                     );

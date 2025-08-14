@@ -44,7 +44,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
     const newestNotification = cachedData.pages[0].notifications[0];
     const dataAge =
       Date.now() - new Date(newestNotification.indexedAt).getTime();
-    const isStale = dataAge > 5 * 60 * 1000; // 5 minutes
+    const isStale = dataAge > 30 * 60 * 1000; // 30 minutes
 
     debug.log("[BackgroundNotificationLoader] Cache staleness check:", {
       hasCachedData,
@@ -303,8 +303,8 @@ export const BackgroundNotificationLoader: React.FC = () => {
       let currentPage = 1;
       let totalNotifications = 0;
 
-      // Continue fetching until we reach 4 weeks
-      while (shouldContinue && currentPage < 100) {
+      // Continue fetching until we reach 4 weeks or 10 pages (whichever comes first)
+      while (shouldContinue && currentPage < 10) {
         debug.log("[BackgroundNotificationLoader] Fetching page:", {
           currentPage,
           timestamp: new Date().toISOString(),

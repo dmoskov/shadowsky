@@ -1,4 +1,5 @@
 import { IDBPDatabase, openDB } from "idb";
+import { createLogger } from "../utils/logger";
 
 export interface Bookmark {
   id: string;
@@ -20,6 +21,8 @@ export interface BookmarkPost extends Bookmark {
   post?: any; // Full post data if available
 }
 
+const logger = createLogger("BookmarkStorageDB");
+
 class BookmarkStorageDB {
   private dbName = "bsky_bookmarks_db";
   private dbVersion = 1;
@@ -40,7 +43,7 @@ class BookmarkStorageDB {
         },
       });
     } catch (error) {
-      console.error("Failed to initialize bookmark storage DB:", error);
+      logger.error("Failed to initialize bookmark storage DB:", error);
     }
   }
 
@@ -51,7 +54,7 @@ class BookmarkStorageDB {
       const uris = bookmarks.map((b) => b.postUri);
       localStorage.setItem(this.localStorageKey, JSON.stringify(uris));
     } catch (error) {
-      console.error("Failed to sync bookmarks to localStorage:", error);
+      logger.error("Failed to sync bookmarks to localStorage:", error);
     }
   }
 
