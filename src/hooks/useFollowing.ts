@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { debug } from "@bsky/shared";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
@@ -5,7 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 export function useFollowing() {
   const { session } = useAuth();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ["following", session?.did],
     queryFn: async () => {
       if (!session?.did) throw new Error("No user DID");
@@ -46,4 +47,19 @@ export function useFollowing() {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
+
+  // Create a stable reference for the Set to prevent unnecessary re-renders
+  const stableFollowingSet = useMemo(() => {
+    if (!query.data) return undefined;
+    
+    // Convert Set to array, sort it for consistent ordering, then back to Set
+    // This ensures the same content always produces the same reference
+    const sortedDids = Array.from(query.data).sort();
+    return new Set(sortedDids);
+  }, [query.data]);
+
+  return {
+    ...query,
+    data: stableFollowingSet,
+  };
 }

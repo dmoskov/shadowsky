@@ -59,7 +59,6 @@ export class ProfileCacheService {
         const freshProfiles = await rateLimitedProfileFetch(async () =>
           this.profileService.getProfiles(handlesToFetch),
         );
-        const profilesToCache: CachedProfile[] = [];
 
         // Convert and store fresh profiles
         if (freshProfiles && "profiles" in freshProfiles) {
@@ -71,14 +70,11 @@ export class ProfileCacheService {
                 ...cachedProfile,
                 fromCache: false,
               });
-              profilesToCache.push(cachedProfile);
+              
+              // Save to cache immediately to prevent race conditions
+              await db.saveProfile(cachedProfile);
             }
           }
-        }
-
-        // Save to cache
-        if (profilesToCache.length > 0) {
-          await db.saveProfiles(profilesToCache);
         }
       } catch (error) {
         debug.error("Error fetching profiles from API:", error);
@@ -131,8 +127,6 @@ export class ProfileCacheService {
 
       try {
         // Note: This requires fetching profiles one by one since the API doesn't support batch by DID
-        const profilesToCache: CachedProfile[] = [];
-
         for (const did of didsToFetch) {
           try {
             // Rate limit individual profile fetches
@@ -142,17 +136,15 @@ export class ProfileCacheService {
             if (response.data) {
               const cachedProfile = profileToCached(response.data);
               profileMap.set(did, { ...cachedProfile, fromCache: false });
-              profilesToCache.push(cachedProfile);
+              
+              // Save to cache immediately to prevent race conditions
+              await db.saveProfile(cachedProfile);
             }
           } catch (error) {
             debug.error(`Error fetching profile for ${did}:`, error);
           }
         }
 
-        // Save to cache
-        if (profilesToCache.length > 0) {
-          await db.saveProfiles(profilesToCache);
-        }
       } catch (error) {
         debug.error("Error fetching profiles by DID:", error);
         // Fall back to stale cache
