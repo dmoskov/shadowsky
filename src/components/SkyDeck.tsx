@@ -446,24 +446,30 @@ export default function SkyDeck() {
                 }
               }}
               onClick={(e) => {
-                // Don't focus column if clicking on menu button or menu dropdown
+                // Don't focus column if clicking on menu button, menu dropdown, or remove button
                 const target = e.target as HTMLElement;
                 const isMenuButton = target.closest(
                   'button[aria-label="More options"]',
                 );
                 const isMenuDropdown = target.closest(".absolute.z-50"); // Menu dropdown has these classes
-                if (!isMenuButton && !isMenuDropdown) {
+                const isRemoveButton = target.closest(
+                  'button[title="Remove column"]',
+                );
+                if (!isMenuButton && !isMenuDropdown && !isRemoveButton) {
                   setFocusedColumnIndex(index);
                 }
               }}
               onClickCapture={(e) => {
-                // Don't focus column if clicking on menu button or menu dropdown
+                // Don't focus column if clicking on menu button, menu dropdown, or remove button
                 const target = e.target as HTMLElement;
                 const isMenuButton = target.closest(
                   'button[aria-label="More options"]',
                 );
                 const isMenuDropdown = target.closest(".absolute.z-50"); // Menu dropdown has these classes
-                if (!isMenuButton && !isMenuDropdown) {
+                const isRemoveButton = target.closest(
+                  'button[title="Remove column"]',
+                );
+                if (!isMenuButton && !isMenuDropdown && !isRemoveButton) {
                   setFocusedColumnIndex(index);
                 }
               }}
