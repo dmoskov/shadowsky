@@ -62,6 +62,7 @@ function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Initialize swipe navigation for mobile
   const swipeHandlers = useSwipeNavigation();
@@ -69,6 +70,21 @@ function AppContent() {
   // Initialize analytics tracking
   usePageTracking();
   useErrorTracking();
+
+  // Auto-collapse sidebar when viewport is too narrow for 3 columns
+  useEffect(() => {
+    const checkViewportWidth = () => {
+      // Sidebar: 256px, 3 columns: 3*400px + 2*12px gap + 24px padding = 1248px
+      // Total needed: 1504px
+      const shouldCollapse =
+        window.innerWidth < 1504 && window.innerWidth >= 1024; // Only on desktop
+      setIsSidebarCollapsed(shouldCollapse);
+    };
+
+    checkViewportWidth();
+    window.addEventListener("resize", checkViewportWidth);
+    return () => window.removeEventListener("resize", checkViewportWidth);
+  }, []);
 
   // Run one-time migration on app load
   useEffect(() => {
@@ -130,8 +146,11 @@ function AppContent() {
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
+          isCollapsed={isSidebarCollapsed}
         />
-        <main className="mt-16 min-h-[calc(100vh-4rem)] flex-1 pb-16 lg:ml-64 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto lg:pb-0">
+        <main
+          className={`mt-16 min-h-[calc(100vh-4rem)] flex-1 pb-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto lg:pb-0 ${isSidebarCollapsed ? "lg:ml-16" : "lg:ml-64"}`}
+        >
           <Routes>
             <Route path="/home" element={<SkyDeck />} />
             <Route path="/" element={<SkyDeck />} />

@@ -18,6 +18,7 @@ export function VideoPlayer({
   aspectRatio,
   alt,
 }: VideoPlayerProps) {
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true); // Start muted for autoplay
   const [showControls, setShowControls] = useState(true);
@@ -26,7 +27,7 @@ export function VideoPlayer({
   const [duration, setDuration] = useState(0);
   const [buffered, setBuffered] = useState(0);
   const [volume, setVolume] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -35,12 +36,21 @@ export function VideoPlayer({
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const formatTime = (seconds: number) => {
+    if (!seconds || isNaN(seconds)) return "0:00";
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handlePlayPause = async () => {
+  const handleLoadVideo = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsVideoLoaded(true);
+    // Video will auto-play after loading
+    setIsPlaying(true);
+  };
+
+  const handlePlayPause = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (videoRef.current && !hasError) {
       try {
         if (isPlaying) {
@@ -68,7 +78,7 @@ export function VideoPlayer({
   };
 
   useEffect(() => {
-    if (!src || !videoRef.current) return;
+    if (!src || !videoRef.current || !isVideoLoaded) return;
 
     // Check if this is an HLS stream
     if (src.endsWith(".m3u8")) {
@@ -106,10 +116,28 @@ export function VideoPlayer({
       // Regular video file
       videoRef.current.src = src;
     }
-  }, [src]);
+  }, [src, isVideoLoaded]);
+
+  // Auto-play video after it's loaded on user click
+  useEffect(() => {
+    if (isVideoLoaded && videoRef.current && isPlaying) {
+      const playVideo = async () => {
+        try {
+          await videoRef.current?.play();
+        } catch (error) {
+          console.error("Failed to auto-play video:", error);
+          setIsPlaying(false);
+        }
+      };
+
+      // Small delay to ensure video is ready
+      const timer = setTimeout(playVideo, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isVideoLoaded, isPlaying]);
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!progressBarRef.current || !videoRef.current) return;
+    if (!progressBarRef.current || !videoRef.current || duration === 0) return;
 
     const rect = progressBarRef.current.getBoundingClientRect();
     const pos = (e.clientX - rect.left) / rect.width;
@@ -182,7 +210,7 @@ export function VideoPlayer({
   // Update time and buffer progress
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !isVideoLoaded) return;
 
     const updateTime = () => {
       setCurrentTime(video.currentTime);
@@ -196,6 +224,7 @@ export function VideoPlayer({
     };
 
     const handleLoadedMetadata = () => {
+      console.log("Video metadata loaded, duration:", video.duration);
       setDuration(video.duration);
       setIsLoading(false);
     };
@@ -208,23 +237,63 @@ export function VideoPlayer({
     video.addEventListener("waiting", handleWaiting);
     video.addEventListener("canplay", handleCanPlay);
 
+    // Also check if metadata is already loaded
+    if (video.readyState >= 1) {
+      handleLoadedMetadata();
+    }
+
     return () => {
       video.removeEventListener("timeupdate", updateTime);
       video.removeEventListener("loadedmetadata", handleLoadedMetadata);
       video.removeEventListener("waiting", handleWaiting);
       video.removeEventListener("canplay", handleCanPlay);
     };
-  }, []);
+  }, [isVideoLoaded]);
 
   const paddingBottom = aspectRatio
     ? `${(aspectRatio.height / aspectRatio.width) * 100}%`
     : "56.25%"; // Default to 16:9
+
+  // Show thumbnail with play button if video hasn't been loaded yet
+  if (!isVideoLoaded) {
+    return (
+      <div
+        className="relative cursor-pointer overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
+        style={{ paddingBottom }}
+        onClick={handleLoadVideo}
+        onMouseDown={(e) => e.stopPropagation()}
+        onDragStart={(e) => e.preventDefault()}
+        draggable={false}
+      >
+        {thumbnail ? (
+          <img
+            src={thumbnail}
+            alt={alt}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700">
+            <span className="text-gray-500 dark:text-gray-400">Video</span>
+          </div>
+        )}
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 transition-opacity hover:bg-opacity-40">
+          <div className="rounded-full bg-black bg-opacity-60 p-4 transition-transform hover:scale-110">
+            <Play className="h-12 w-12 fill-white text-white" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
       ref={containerRef}
       className="relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
       style={{ paddingBottom }}
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+      onDragStart={(e) => e.preventDefault()}
+      draggable={false}
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(!isPlaying)}
       onMouseMove={() => {
@@ -263,8 +332,18 @@ export function VideoPlayer({
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
           onError={handleVideoError}
+          onLoadedMetadata={(e) => {
+            const video = e.currentTarget;
+            console.log("onLoadedMetadata event, duration:", video.duration);
+            setDuration(video.duration);
+          }}
+          onTimeUpdate={(e) => {
+            const video = e.currentTarget;
+            setCurrentTime(video.currentTime);
+          }}
           muted={isMuted}
           playsInline
+          autoPlay={isVideoLoaded}
           aria-label={alt}
         />
       )}
@@ -292,7 +371,12 @@ export function VideoPlayer({
 
       {/* Control bar */}
       {showControls && !hasError && (
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+        <div
+          className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"
+          onMouseDown={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
           {/* Progress bar */}
           <div className="px-4 pb-2">
             <div
@@ -311,13 +395,17 @@ export function VideoPlayer({
               {/* Played progress */}
               <div
                 className="absolute h-full rounded-full bg-blue-500 transition-all group-hover:h-1.5"
-                style={{ width: `${(currentTime / duration) * 100}%` }}
+                style={{
+                  width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
+                }}
               />
 
               {/* Scrubber handle */}
               <div
                 className="absolute -top-1 h-3 w-3 -translate-x-1/2 transform rounded-full bg-white opacity-0 transition-opacity group-hover:opacity-100"
-                style={{ left: `${(currentTime / duration) * 100}%` }}
+                style={{
+                  left: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
+                }}
               />
             </div>
           </div>
@@ -338,7 +426,7 @@ export function VideoPlayer({
               </button>
 
               {/* Volume controls */}
-              <div className="group flex items-center space-x-2">
+              <div className="group relative flex items-center">
                 <button
                   onClick={handleMuteToggle}
                   className="text-white transition-colors hover:text-gray-300"
@@ -351,8 +439,13 @@ export function VideoPlayer({
                   )}
                 </button>
 
-                {/* Volume slider */}
-                <div className="w-0 overflow-hidden transition-all duration-200 group-hover:w-20">
+                {/* Volume slider - positioned absolutely to prevent layout shift */}
+                <div
+                  className="absolute left-full ml-2 w-20 origin-left scale-x-0 opacity-0 transition-all duration-200 group-hover:scale-x-100 group-hover:opacity-100"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                >
                   <input
                     type="range"
                     min="0"
@@ -361,6 +454,10 @@ export function VideoPlayer({
                     value={isMuted ? 0 : volume}
                     onChange={handleVolumeChange}
                     className="h-1 w-full cursor-pointer appearance-none rounded-full bg-white/20 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
                   />
                 </div>
               </div>
