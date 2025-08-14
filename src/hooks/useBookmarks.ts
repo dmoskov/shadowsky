@@ -18,7 +18,7 @@ class BookmarkStore {
       bookmarks.forEach((b) => this.bookmarks.set(b.postUri, true));
       this.initialized = true;
       this.notify();
-    } catch (error) {
+    } catch (_error) {
       // If PostCacheService is not initialized yet, we'll try again later
       console.debug("BookmarkStore init deferred - service not ready yet");
       this.initialized = false;

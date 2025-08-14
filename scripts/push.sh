@@ -21,6 +21,15 @@ if ! npm run test:format; then
     exit 1
 fi
 
+# Run linter
+echo "🔍 Running linter..."
+if ! npm run test:lint; then
+    echo "❌ Linting issues detected!"
+    echo "💡 Run 'npm run fix:lint' to fix some issues automatically"
+    echo "💡 Note: Some issues may require manual fixes"
+    exit 1
+fi
+
 # Run build
 echo "🔨 Testing build..."
 if ! npm run build; then
