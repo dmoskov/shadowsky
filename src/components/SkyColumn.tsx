@@ -12,6 +12,8 @@ import { VisualTimeline } from "./VisualTimeline";
 interface SkyColumnProps {
   column: Column;
   onClose: () => void;
+  onMoveLeft?: () => void;
+  onMoveRight?: () => void;
   chromeless?: boolean;
   isFocused?: boolean;
 }
@@ -19,6 +21,8 @@ interface SkyColumnProps {
 export default function SkyColumn({
   column,
   onClose,
+  onMoveLeft,
+  onMoveRight,
   chromeless = false,
   isFocused = false,
 }: SkyColumnProps) {
@@ -125,6 +129,8 @@ export default function SkyColumn({
         <ColumnHeader
           column={column}
           onRemove={() => onClose()}
+          onMoveLeft={onMoveLeft}
+          onMoveRight={onMoveRight}
           onRefresh={
             column.type === "feed"
               ? () => setRefreshCounter((prev) => prev + 1)

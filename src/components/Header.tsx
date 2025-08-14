@@ -1,5 +1,7 @@
-import { Menu } from "lucide-react";
+import { Bell, Menu } from "lucide-react";
 import React from "react";
+import { Link } from "react-router-dom";
+import { useUnreadNotificationCount } from "../hooks/useNotifications";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import butterflyIcon from "/butterfly-icon.svg";
@@ -9,6 +11,8 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
+  const { data: unreadCount } = useUnreadNotificationCount();
+
   return (
     <header
       className="bsky-glass fixed left-0 right-0 top-0 z-50 h-16"
@@ -37,6 +41,20 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
         </div>
 
         <div className="flex items-center gap-2">
+          <Link
+            to="/notifications"
+            className="relative rounded-lg p-2 transition-all hover:bg-white hover:bg-opacity-10"
+          >
+            <Bell size={20} style={{ color: "var(--bsky-text-primary)" }} />
+            {unreadCount !== undefined && unreadCount > 0 && (
+              <span
+                className="absolute right-1 top-1 h-2 w-2 rounded-full"
+                style={{
+                  backgroundColor: "var(--bsky-accent)",
+                }}
+              />
+            )}
+          </Link>
           <ThemeToggle />
           <UserMenu />
         </div>

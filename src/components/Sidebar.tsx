@@ -15,6 +15,7 @@ import {
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useUnreadNotificationCount } from "../hooks/useNotifications";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed = false,
 }) => {
   const { session } = useAuth();
+  const { data: unreadCount } = useUnreadNotificationCount();
 
   const navItems = [
     { path: "/", label: "Home", icon: Home },
@@ -84,7 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 to={item.path}
                 onClick={() => onClose()}
                 className={({ isActive }) =>
-                  `group flex items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 ${
+                  `group relative flex items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 ${
                     isActive ? "text-white shadow-md" : "hover:bg-blue-50"
                   } `
                 }
@@ -96,10 +98,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 })}
                 title={isCollapsed ? item.label : undefined}
               >
-                <item.icon
-                  size={20}
-                  className={`transition-transform group-hover:scale-110 ${isCollapsed ? "mx-0" : ""}`}
-                />
+                <div className="relative">
+                  <item.icon
+                    size={20}
+                    className={`transition-transform group-hover:scale-110 ${isCollapsed ? "mx-0" : ""}`}
+                  />
+                  {item.path === "/notifications" &&
+                    unreadCount !== undefined &&
+                    unreadCount > 0 && (
+                      <span
+                        className="absolute -right-1 -top-1 h-2 w-2 rounded-full"
+                        style={{
+                          backgroundColor: "var(--bsky-accent)",
+                        }}
+                      />
+                    )}
+                </div>
                 {!isCollapsed && (
                   <span className="font-medium transition-colors">
                     {item.label}

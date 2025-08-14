@@ -1,4 +1,5 @@
 import { BskyAgent } from "@atproto/api";
+import { createLogger } from "../utils/logger";
 
 // Define the app preferences record type
 export interface AppPreferencesRecord {
@@ -11,6 +12,8 @@ export interface AppPreferencesRecord {
 const PREFERENCES_RKEY = "self";
 const PREFERENCES_COLLECTION = "app.shadowsky.preferences";
 
+const logger = createLogger("AppPreferencesService");
+
 export class AppPreferencesService {
   private agent: BskyAgent | null = null;
   private preferencesCache: AppPreferencesRecord | null = null;
@@ -22,7 +25,7 @@ export class AppPreferencesService {
 
   async getPreferences(): Promise<AppPreferencesRecord | null> {
     if (!this.agent) {
-      console.log("No agent available, cannot fetch preferences");
+      logger.log("No agent available, cannot fetch preferences");
       return null;
     }
 
@@ -50,7 +53,7 @@ export class AppPreferencesService {
         const defaultPrefs = await this.createDefaultPreferences();
         return defaultPrefs;
       }
-      console.error("Failed to fetch app preferences:", error);
+      logger.error("Failed to fetch app preferences:", error);
       return null;
     }
   }
@@ -59,7 +62,7 @@ export class AppPreferencesService {
     updates: Partial<Omit<AppPreferencesRecord, "$type" | "createdAt">>,
   ): Promise<AppPreferencesRecord | null> {
     if (!this.agent) {
-      console.log("No agent available, cannot update preferences");
+      logger.log("No agent available, cannot update preferences");
       return null;
     }
 
@@ -90,7 +93,7 @@ export class AppPreferencesService {
 
       return updatedPrefs;
     } catch (error) {
-      console.error("Failed to update app preferences:", error);
+      logger.error("Failed to update app preferences:", error);
       return null;
     }
   }
@@ -115,7 +118,7 @@ export class AppPreferencesService {
         });
         this.preferencesCache = defaultPrefs;
       } catch (error) {
-        console.error("Failed to create default preferences:", error);
+        logger.error("Failed to create default preferences:", error);
       }
     }
 

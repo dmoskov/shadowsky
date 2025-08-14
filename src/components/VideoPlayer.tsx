@@ -1,6 +1,9 @@
 import Hls from "hls.js";
 import { Maximize, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import { createLogger } from "../utils/logger";
+
+const logger = createLogger("VideoPlayer");
 
 interface VideoPlayerProps {
   src: string;
@@ -60,7 +63,7 @@ export function VideoPlayer({
         }
         setIsPlaying(!isPlaying);
       } catch (error) {
-        console.error("Video playback error:", error);
+        logger.error("Video playback error:", error);
         setHasError(true);
       }
     }
@@ -68,7 +71,7 @@ export function VideoPlayer({
 
   const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement>) => {
     const video = e.currentTarget;
-    console.error("Video error:", {
+    logger.error("Video error:", {
       error: video.error,
       src: video.src,
       readyState: video.readyState,
@@ -94,7 +97,7 @@ export function VideoPlayer({
         hls.attachMedia(videoRef.current);
 
         hls.on(Hls.Events.ERROR, (event, data) => {
-          console.error("HLS error:", event, data);
+          logger.error("HLS error:", event, data);
           if (data.fatal) {
             setHasError(true);
           }
@@ -109,7 +112,7 @@ export function VideoPlayer({
         // Native HLS support (Safari)
         videoRef.current.src = src;
       } else {
-        console.error("HLS is not supported in this browser");
+        logger.error("HLS is not supported in this browser");
         setHasError(true);
       }
     } else {
@@ -125,7 +128,7 @@ export function VideoPlayer({
         try {
           await videoRef.current?.play();
         } catch (error) {
-          console.error("Failed to auto-play video:", error);
+          logger.error("Failed to auto-play video:", error);
           setIsPlaying(false);
         }
       };
@@ -224,7 +227,7 @@ export function VideoPlayer({
     };
 
     const handleLoadedMetadata = () => {
-      console.log("Video metadata loaded, duration:", video.duration);
+      logger.log("Video metadata loaded, duration:", video.duration);
       setDuration(video.duration);
       setIsLoading(false);
     };
@@ -334,7 +337,7 @@ export function VideoPlayer({
           onError={handleVideoError}
           onLoadedMetadata={(e) => {
             const video = e.currentTarget;
-            console.log("onLoadedMetadata event, duration:", video.duration);
+            logger.log("onLoadedMetadata event, duration:", video.duration);
             setDuration(video.duration);
           }}
           onTimeUpdate={(e) => {

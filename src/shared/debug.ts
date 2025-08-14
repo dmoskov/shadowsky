@@ -1,5 +1,10 @@
 /**
  * Debug utilities for development
+ *
+ * Usage:
+ * - Logging is disabled by default in all environments
+ * - Enable debug mode: localStorage.setItem('debug', 'true') or add ?debug=true to URL
+ * - Disable debug mode: localStorage.setItem('debug', 'false')
  */
 
 interface DebugConfig {
@@ -15,39 +20,45 @@ const config: DebugConfig = {
   prefix: "[BSKY]",
 };
 
+// Helper to check if we should log
+const shouldLog = (): boolean => {
+  // Only log if debug is explicitly enabled
+  return config.enabled;
+};
+
 export const debug = {
   log: (...args: unknown[]) => {
-    if (config.enabled) {
+    if (shouldLog()) {
       console.log(config.prefix, ...args);
     }
   },
 
   error: (...args: unknown[]) => {
-    if (config.enabled) {
+    if (shouldLog()) {
       console.error(config.prefix, ...args);
     }
   },
 
   warn: (...args: unknown[]) => {
-    if (config.enabled) {
+    if (shouldLog()) {
       console.warn(config.prefix, ...args);
     }
   },
 
   info: (...args: unknown[]) => {
-    if (config.enabled) {
+    if (shouldLog()) {
       console.info(config.prefix, ...args);
     }
   },
 
   time: (label: string) => {
-    if (config.enabled) {
+    if (shouldLog()) {
       console.time(`${config.prefix} ${label}`);
     }
   },
 
   timeEnd: (label: string) => {
-    if (config.enabled) {
+    if (shouldLog()) {
       console.timeEnd(`${config.prefix} ${label}`);
     }
   },

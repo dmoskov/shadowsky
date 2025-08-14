@@ -1,10 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { createLogger } from "../utils/logger";
 import { analytics } from "./analytics";
 
 const anthropic = new Anthropic({
   apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY || "",
   dangerouslyAllowBrowser: true,
 });
+
+const logger = createLogger("AnthropicService");
 
 export type ToneOption =
   | "professional"
@@ -64,7 +67,7 @@ Provide only the rewritten text without any explanation or prefixes.`,
 
     throw new Error("Unexpected response format");
   } catch (error) {
-    console.error("Error adjusting tone:", error);
+    logger.error("Error adjusting tone:", error);
 
     // Track error for analytics
     analytics.trackError(error as Error, "tone_adjustment");
@@ -164,7 +167,7 @@ export async function generateAltText(imageDataUrl: string): Promise<string> {
 
     return "";
   } catch (error) {
-    console.error("Error generating alt text:", error);
+    logger.error("Error generating alt text:", error);
 
     // Track error for analytics
     analytics.trackError(error as Error, "alt_text_generation");

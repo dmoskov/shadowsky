@@ -1,4 +1,5 @@
 import { BskyAgent } from "@atproto/api";
+import { createLogger } from "../../utils/logger";
 
 export interface VideoUploadResult {
   blob: {
@@ -11,6 +12,8 @@ export interface VideoUploadResult {
     height: number;
   };
 }
+
+const logger = createLogger("VideoUploadService");
 
 export class VideoUploadService {
   private agent: BskyAgent;
@@ -84,7 +87,7 @@ export class VideoUploadService {
 
       throw new Error("Video processing timeout");
     } catch (error) {
-      console.error("Video upload error:", error);
+      logger.error("Video upload error:", error);
       throw error;
     }
   }

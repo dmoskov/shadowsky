@@ -1,6 +1,9 @@
 import { BskyAgent } from "@atproto/api";
+import { createLogger } from "../utils/logger";
 import { appPreferencesService } from "./app-preferences-service";
 import { bookmarkServiceV2 } from "./bookmark-service-v2";
+
+const logger = createLogger("BookmarkServiceWrapper");
 
 /**
  * Initialize the bookmark service with the correct storage type based on user preferences
@@ -14,22 +17,31 @@ export async function initializeBookmarkService(agent: BskyAgent) {
     const preferences = await appPreferencesService.getPreferences();
     const storageType = preferences?.bookmarkStorageType || "local";
 
-    console.log(
+    logger.log(
       `Attempting to initialize bookmark service with ${storageType} storage`,
     );
 
     // Initialize the bookmark service with the correct storage type
     await bookmarkServiceV2.init(agent, storageType);
 
-    console.log(
+    logger.log(
       `Bookmark service successfully initialized with ${storageType} storage`,
     );
+
+    // Initialize the bookmark store now that the service is ready
+    // This is imported from useBookmarks hook where the store is defined
+    try {
+      const { initializeBookmarkStore } = await import("../hooks/useBookmarks");
+      await initializeBookmarkStore();
+    } catch (error) {
+      logger.log("Failed to initialize bookmark store:", error);
+    }
   } catch (error) {
-    console.error(
+    logger.error(
       "Failed to initialize bookmark service with saved storage type:",
       error,
     );
-    console.error("Falling back to local storage");
+    logger.error("Falling back to local storage");
 
     // Update preferences to local storage if custom storage fails
     await appPreferencesService.updatePreferences({
@@ -51,10 +63,7 @@ export const bookmarkService = {
     // If agent is null (logout), reset to local storage
     if (!agent) {
       bookmarkServiceV2.setStorageType("local").catch((error) => {
-        console.error(
-          "[BookmarkService] Failed to reset to local storage on logout:",
-          error,
-        );
+        logger.error("Failed to reset to local storage on logout:", error);
       });
     }
   },

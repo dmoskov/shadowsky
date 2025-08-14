@@ -506,6 +506,18 @@ export default function ProfilePage() {
               post={post.post}
               reason={post.reason}
               showActions={false}
+              onClick={() => {
+                const parts = post.post.uri.split("/");
+                const handle = parts[2];
+                const postId = parts[parts.length - 1];
+                navigate(`/thread/${handle}/${postId}`);
+              }}
+              onQuoteClick={(uri) => {
+                const parts = uri.split("/");
+                const handle = parts[2];
+                const postId = parts[parts.length - 1];
+                navigate(`/thread/${handle}/${postId}`);
+              }}
             />
             <div className="px-4 pb-3">
               <PostActionBar

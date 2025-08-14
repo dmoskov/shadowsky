@@ -31,6 +31,12 @@ export interface DmMessage {
   sender: {
     did: string;
   };
+  reactions?: {
+    [emoji: string]: {
+      count: number;
+      users: string[];
+    };
+  };
 }
 
 class DmService {
@@ -167,15 +173,37 @@ class DmService {
       };
 
       const messages: DmMessage[] = (messagesData.messages || []).map(
-        (msg: any) => ({
-          id: msg.id,
-          rev: msg.rev,
-          text: msg.text,
-          sentAt: msg.sentAt,
-          sender: {
-            did: msg.sender.did,
-          },
-        }),
+        (msg: any) => {
+          const message: DmMessage = {
+            id: msg.id,
+            rev: msg.rev,
+            text: msg.text,
+            sentAt: msg.sentAt,
+            sender: {
+              did: msg.sender.did,
+            },
+          };
+
+          // Parse reactions if present
+          if (msg.reactions && Array.isArray(msg.reactions)) {
+            message.reactions = {};
+            msg.reactions.forEach((reaction: any) => {
+              const emoji = reaction.value || reaction.emoji;
+              if (!emoji) return;
+
+              if (!message.reactions![emoji]) {
+                message.reactions![emoji] = {
+                  count: 0,
+                  users: [],
+                };
+              }
+              message.reactions![emoji].count++;
+              message.reactions![emoji].users.push(reaction.sender.did);
+            });
+          }
+
+          return message;
+        },
       );
 
       return { conversation, messages };
@@ -402,6 +430,84 @@ class DmService {
       }
     } catch (error) {
       debug.error("Failed to leave conversation:", error);
+      throw error;
+    }
+  }
+
+  async addReaction(
+    conversationId: string,
+    messageId: string,
+    emoji: string,
+  ): Promise<void> {
+    if (!this.agent) {
+      throw new Error("Not authenticated");
+    }
+
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(
+        "https://api.bsky.chat/xrpc/chat.bsky.convo.addReaction",
+        {
+          method: "POST",
+          headers: {
+            ...headers,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            convoId: conversationId,
+            messageId: messageId,
+            value: emoji,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to add reaction: ${response.status} ${response.statusText}. ${errorText}`,
+        );
+      }
+    } catch (error) {
+      debug.error("Failed to add reaction:", error);
+      throw error;
+    }
+  }
+
+  async removeReaction(
+    conversationId: string,
+    messageId: string,
+    emoji: string,
+  ): Promise<void> {
+    if (!this.agent) {
+      throw new Error("Not authenticated");
+    }
+
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(
+        "https://api.bsky.chat/xrpc/chat.bsky.convo.removeReaction",
+        {
+          method: "POST",
+          headers: {
+            ...headers,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            convoId: conversationId,
+            messageId: messageId,
+            value: emoji,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to remove reaction: ${response.status} ${response.statusText}. ${errorText}`,
+        );
+      }
+    } catch (error) {
+      debug.error("Failed to remove reaction:", error);
       throw error;
     }
   }
