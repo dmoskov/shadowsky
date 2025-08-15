@@ -46,26 +46,6 @@ interface AggregatedEvent {
   }>;
 }
 
-// Helper function to extract handle and rkey from AT URI
-const parseAtUri = (uri: string) => {
-  const match = uri.match(/at:\/\/(.+?)\/(.+?)\/(.+)/);
-  if (!match) return null;
-  return {
-    did: match[1],
-    collection: match[2],
-    rkey: match[3],
-  };
-};
-
-// Helper function to generate internal app URL for a post
-const getPostUrl = (uri: string, authorHandle?: string) => {
-  const parsed = parseAtUri(uri);
-  if (!parsed || !authorHandle) return null;
-
-  // Internal post URLs follow the pattern: /thread/{handle}/{rkey}
-  return `/thread/${authorHandle}/${parsed.rkey}`;
-};
-
 // Helper function to generate internal app URL for a profile
 const getProfileUrl = (handle: string) => {
   // Remove @ if present
@@ -1329,16 +1309,12 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
 
                                 if (post) {
                                   // We have full post data
-                                  const postUrl = getPostUrl(
-                                    postUri,
-                                    post.author?.handle,
-                                  );
                                   return (
                                     <div
-                                      onClick={(e) =>
-                                        postUrl &&
-                                        handleInternalNavigation(e, postUrl)
-                                      }
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedPostUri(postUri);
+                                      }}
                                       className="relative ml-11 mt-2 block cursor-pointer overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
                                       style={{
                                         backgroundColor:
@@ -1567,26 +1543,13 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                         {event.affectedPosts
                                           .slice(0, 3)
                                           .map((post, i) => {
-                                            // Get the post from postMap to find its author
-                                            const fullPost = postMap.get(
-                                              post.uri,
-                                            );
-                                            const postUrl = fullPost
-                                              ? getPostUrl(
-                                                  post.uri,
-                                                  fullPost.author?.handle,
-                                                )
-                                              : null;
                                             return (
                                               <div
                                                 key={`${post.uri}-${i}`}
-                                                onClick={(e) =>
-                                                  postUrl &&
-                                                  handleInternalNavigation(
-                                                    e,
-                                                    postUrl,
-                                                  )
-                                                }
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setSelectedPostUri(post.uri);
+                                                }}
                                                 className="line-clamp-2 block cursor-pointer rounded p-2 text-xs transition-all duration-200 ease-out hover:opacity-90"
                                                 style={{
                                                   backgroundColor:
@@ -1976,16 +1939,12 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
 
                                 if (post) {
                                   // We have full post data
-                                  const postUrl = getPostUrl(
-                                    postUri,
-                                    post.author?.handle,
-                                  );
                                   return (
                                     <div
-                                      onClick={(e) =>
-                                        postUrl &&
-                                        handleInternalNavigation(e, postUrl)
-                                      }
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedPostUri(postUri);
+                                      }}
                                       className="relative mt-3 block cursor-pointer overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
                                       style={{
                                         backgroundColor:

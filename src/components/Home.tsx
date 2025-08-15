@@ -1115,11 +1115,10 @@ export const Home: React.FC<HomeProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 if (quotedPost.uri && quotedPost.author) {
-                  // Navigate to the quoted post's thread
-                  const parts = quotedPost.uri.split("/");
-                  const handle = parts[2];
-                  const postId = parts[parts.length - 1];
-                  navigate(`/thread/${handle}/${postId}`);
+                  // Open the quoted post in thread modal
+                  setSelectedPost({ uri: quotedPost.uri } as Post);
+                  setOpenThreadToReply(false);
+                  setShowThread(true);
                 }
               }}
             >
