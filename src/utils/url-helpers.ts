@@ -118,11 +118,12 @@ export function getNotificationUrl(
 
     case "reply":
     case "mention":
-    case "quote":
+    case "quote": {
       // For replies/mentions/quotes, the URI is the new post by the author
       // This should link to the reply/mention/quote post, not the author's profile
       const postUrl = atUriToBskyUrl(uri, author?.handle || "");
       return postUrl || getBskyProfileUrl(author?.handle || "");
+    }
 
     default:
       // Default to author's profile
