@@ -163,6 +163,7 @@ export function aggregateNotifications(
 interface AggregatedNotificationItemProps {
   item: AggregatedNotification;
   onExpand?: () => void;
+  onNavigate?: (url: string) => void;
   postMap?: Map<string, AppBskyFeedDefs.PostView>;
   showTypeLabel?: boolean;
   isFetchingMore?: boolean;
@@ -176,6 +177,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
     ({
       item,
       onExpand,
+      onNavigate,
       postMap,
       showTypeLabel = false,
       isFetchingMore = false,
@@ -295,13 +297,31 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
       );
 
       const handleClick = (e: React.MouseEvent) => {
-        // If clicking with modifier keys (Cmd/Ctrl), open in new tab and don't expand
+        // Prevent default behavior
+        e.preventDefault();
+
+        // If clicking with modifier keys (Cmd/Ctrl), open in new tab
         if (e.metaKey || e.ctrlKey) {
           window.open(primaryUrl, "_blank");
-          e.preventDefault();
+          return;
+        }
+
+        // For likes, reposts, quotes on posts, pass the thread URL to parent
+        if (["like", "repost", "quote"].includes(item.reason)) {
+          if (onNavigate) {
+            // Pass the thread URL - parent will handle opening the modal
+            onNavigate(primaryUrl);
+          }
+        } else if (item.reason === "follow") {
+          // For follows, expand to show all followers
+          if (onExpand) {
+            onExpand();
+          }
         } else {
-          // Otherwise, expand the aggregated view
-          if (onExpand) onExpand();
+          // For other cases, navigate if we have a valid URL
+          if (onNavigate && primaryUrl.startsWith("/")) {
+            onNavigate(primaryUrl);
+          }
         }
       };
 
@@ -323,6 +343,13 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                   <div
                     key={user.did}
                     style={{ zIndex: displayUsers.length - idx }}
+                    className="cursor-pointer transition-opacity hover:opacity-80"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onNavigate) {
+                        onNavigate(`/profile/${user.handle}`);
+                      }
+                    }}
                   >
                     {user.avatar ? (
                       <img
@@ -403,7 +430,17 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
             >
               {displayUsers.map((user, idx) => (
                 <span key={user.did}>
-                  {user.displayName || user.handle}
+                  <span
+                    className="cursor-pointer hover:underline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onNavigate) {
+                        onNavigate(`/profile/${user.handle}`);
+                      }
+                    }}
+                  >
+                    {user.displayName || user.handle}
+                  </span>
                   {idx < displayUsers.length - 1 && ", "}
                 </span>
               ))}

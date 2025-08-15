@@ -34,6 +34,7 @@ import {
   AggregatedNotificationItem,
   aggregateNotifications,
 } from "./NotificationAggregator";
+import { ThreadModal } from "./ThreadModal";
 import { TopAccountsView } from "./TopAccountsView";
 
 type NotificationFilter =
@@ -49,6 +50,7 @@ type NotificationFilter =
   | "from-following";
 
 export const NotificationsFeed: React.FC = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const showTopAccounts = searchParams.get("top") === "1";
@@ -62,6 +64,7 @@ export const NotificationsFeed: React.FC = () => {
   const [minFollowerCount, setMinFollowerCount] = useState(10000);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [selectedPostUri, setSelectedPostUri] = useState<string | null>(null);
   // Removed isFromCache state - no longer needed without header
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const moreFiltersRef = useRef<HTMLDivElement>(null);
@@ -685,6 +688,28 @@ export const NotificationsFeed: React.FC = () => {
                       fetchedPosts={fetchedPosts}
                       totalPosts={totalPosts}
                       percentageFetched={percentageFetched}
+                      onNavigate={(url) => {
+                        // Check if this is a thread URL
+                        if (url.startsWith("/thread/")) {
+                          // Extract the post URI from the URL path
+                          // URL format: /thread/handle/postId
+                          // For thread URLs, we need to use the correct URI based on notification type
+                          const firstNotification = item.notifications[0];
+                          const postUri =
+                            (item.reason === "repost" ||
+                              item.reason === "like") &&
+                            firstNotification.reasonSubject
+                              ? firstNotification.reasonSubject
+                              : firstNotification.uri;
+                          setSelectedPostUri(postUri);
+                        } else if (url.startsWith("/profile/")) {
+                          // Navigate to profile
+                          navigate(url);
+                        } else {
+                          // Default navigation
+                          navigate(url);
+                        }
+                      }}
                       onExpand={() => {
                         const newExpanded = new Set(expandedAggregations);
                         if (isExpanded) {
@@ -716,6 +741,7 @@ export const NotificationsFeed: React.FC = () => {
                             fetchedPosts={fetchedPosts}
                             totalPosts={totalPosts}
                             percentageFetched={percentageFetched}
+                            setSelectedPostUri={setSelectedPostUri}
                           />
                         ))}
                         <button
@@ -749,6 +775,7 @@ export const NotificationsFeed: React.FC = () => {
                     fetchedPosts={fetchedPosts}
                     totalPosts={totalPosts}
                     percentageFetched={percentageFetched}
+                    setSelectedPostUri={setSelectedPostUri}
                   />
                 );
               }
@@ -767,6 +794,7 @@ export const NotificationsFeed: React.FC = () => {
               fetchedPosts={fetchedPosts}
               totalPosts={totalPosts}
               percentageFetched={percentageFetched}
+              setSelectedPostUri={setSelectedPostUri}
             />
           ))
         )}
@@ -873,6 +901,14 @@ export const NotificationsFeed: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Thread Modal */}
+      {selectedPostUri && (
+        <ThreadModal
+          postUri={selectedPostUri}
+          onClose={() => setSelectedPostUri(null)}
+        />
+      )}
     </div>
   );
 };
@@ -948,6 +984,7 @@ interface NotificationItemProps {
   fetchedPosts?: number;
   totalPosts?: number;
   percentageFetched?: number;
+  setSelectedPostUri: (uri: string | null) => void;
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = React.memo(
@@ -960,6 +997,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
     fetchedPosts = 0,
     totalPosts = 0,
     percentageFetched = 100,
+    setSelectedPostUri,
   }) => {
     const navigate = useNavigate();
     // Get the post for all notification types that reference posts
@@ -1106,19 +1144,13 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                   src={proxifyBskyImage(post.author.avatar)}
                   alt={post.author.handle}
                   className="bsky-avatar h-5 w-5 cursor-pointer transition-opacity hover:opacity-80"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/profile/${post.author.handle}`);
-                  }}
+                  onClick={handleAuthorClick}
                 />
               ) : (
                 <div
                   className="bsky-avatar flex h-5 w-5 cursor-pointer items-center justify-center text-xs transition-opacity hover:opacity-80"
                   style={{ background: "var(--bsky-bg-tertiary)" }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/profile/${post.author.handle}`);
-                  }}
+                  onClick={handleAuthorClick}
                 >
                   {post.author?.handle?.charAt(0).toUpperCase()}
                 </div>
@@ -1243,15 +1275,42 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
       return null;
     };
 
+    const handleNotificationClick = (e: React.MouseEvent) => {
+      // Prevent default behavior
+      e.preventDefault();
+
+      // For likes, reposts, replies, mentions, and quotes - open thread modal
+      if (
+        ["like", "repost", "reply", "mention", "quote"].includes(
+          notification.reason,
+        )
+      ) {
+        // Use the postUri we calculated above which handles reasonSubject correctly
+        setSelectedPostUri(postUri);
+      } else if (notification.reason === "follow") {
+        // For follows, navigate to the follower's profile
+        navigate(`/profile/${notification.author.handle}`);
+      } else {
+        // Fallback - navigate if we have a URL
+        if (notificationUrl.startsWith("/")) {
+          navigate(notificationUrl);
+        } else {
+          window.open(notificationUrl, "_blank");
+        }
+      }
+    };
+
+    const handleAuthorClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      navigate(`/profile/${notification.author.handle}`);
+    };
+
     return (
-      <a
-        href={notificationUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`bsky-notification flex cursor-pointer gap-2 px-3 py-2 no-underline ${
+      <div
+        className={`bsky-notification flex cursor-pointer gap-2 px-3 py-2 ${
           !notification.isRead ? "bsky-notification-unread" : ""
         }`}
-        style={{ textDecoration: "none", color: "inherit", display: "flex" }}
+        onClick={handleNotificationClick}
       >
         <div className="w-6 flex-shrink-0 pt-1">
           {getNotificationIcon(notification.reason)}
@@ -1263,16 +1322,13 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
               src={proxifyBskyImage(notification.author.avatar)}
               alt={notification.author.handle}
               className="bsky-avatar h-10 w-10 cursor-pointer transition-opacity hover:opacity-80"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                navigate(`/profile/${notification.author.handle}`);
-              }}
+              onClick={handleAuthorClick}
             />
           ) : (
             <div
-              className="bsky-avatar flex h-10 w-10 items-center justify-center"
+              className="bsky-avatar flex h-10 w-10 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
               style={{ background: "var(--bsky-bg-tertiary)" }}
+              onClick={handleAuthorClick}
             >
               <span className="text-sm font-semibold">
                 {notification.author?.handle?.charAt(0).toUpperCase() || "U"}
@@ -1320,7 +1376,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
             })}
           </time>
         </div>
-      </a>
+      </div>
     );
   },
 );

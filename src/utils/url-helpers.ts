@@ -8,13 +8,13 @@
 export function getBskyProfileUrl(handle: string): string {
   // Remove @ if present
   const cleanHandle = handle.startsWith("@") ? handle.slice(1) : handle;
-  return `https://bsky.app/profile/${cleanHandle}`;
+  return `/profile/${cleanHandle}`;
 }
 
 /**
- * Convert an AT URI to a Bluesky app URL
+ * Convert an AT URI to an internal app URL
  * AT URI format: at://did:plc:xxx/app.bsky.feed.post/3kfzxr5s2wt2x
- * Bluesky URL format: https://bsky.app/profile/handle/post/3kfzxr5s2wt2x
+ * Internal URL format: /profile/handle/post/3kfzxr5s2wt2x
  */
 export function atUriToBskyUrl(uri: string, handle: string): string | null {
   if (!uri || !handle) return null;
@@ -29,17 +29,17 @@ export function atUriToBskyUrl(uri: string, handle: string): string | null {
 
   // Handle different collection types
   if (collection === "app.bsky.feed.post") {
-    return `https://bsky.app/profile/${cleanHandle}/post/${rkey}`;
+    return `/thread/${cleanHandle}/${rkey}`;
   } else if (collection === "app.bsky.feed.repost") {
     // Reposts don't have their own page, link to the profile
-    return `https://bsky.app/profile/${cleanHandle}`;
+    return `/profile/${cleanHandle}`;
   } else if (collection === "app.bsky.feed.like") {
     // Likes don't have their own page, link to the profile
-    return `https://bsky.app/profile/${cleanHandle}`;
+    return `/profile/${cleanHandle}`;
   }
 
   // Default to profile for unknown collection types
-  return `https://bsky.app/profile/${cleanHandle}`;
+  return `/profile/${cleanHandle}`;
 }
 
 /**
@@ -108,24 +108,21 @@ export function getNotificationUrl(
     case "like":
     case "repost":
       // For likes/reposts, the URI is the post being liked/reposted
-      // If we have the post author's handle, we can construct the proper URL
+      // If we have the post author's handle, we can construct the proper URL to the post
       if (uri && postAuthorHandle) {
-        return (
-          atUriToBskyUrl(uri, postAuthorHandle) ||
-          getBskyProfileUrl(author?.handle || "")
-        );
+        const postUrl = atUriToBskyUrl(uri, postAuthorHandle);
+        return postUrl || getBskyProfileUrl(author?.handle || "");
       }
-      // Otherwise, fall back to the liker/reposter's profile
+      // Otherwise, fall back to the notification author's profile
       return getBskyProfileUrl(author?.handle || "");
 
     case "reply":
     case "mention":
     case "quote":
       // For replies/mentions/quotes, the URI is the new post by the author
-      return (
-        atUriToBskyUrl(uri, author?.handle || "") ||
-        getBskyProfileUrl(author?.handle || "")
-      );
+      // This should link to the reply/mention/quote post, not the author's profile
+      const postUrl = atUriToBskyUrl(uri, author?.handle || "");
+      return postUrl || getBskyProfileUrl(author?.handle || "");
 
     default:
       // Default to author's profile

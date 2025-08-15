@@ -11,6 +11,7 @@ import {
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
+import { parseBskyUrl } from "../utils/url-helpers";
 import { ImageGallery } from "./ImageGallery";
 import { VideoPlayer } from "./VideoPlayer";
 
@@ -168,7 +169,19 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
           onClick={(e) => {
             e.stopPropagation();
             if (embed.external.uri) {
-              window.open(embed.external.uri, "_blank", "noopener,noreferrer");
+              // Check if it's a Bluesky URL
+              const parsed = parseBskyUrl(embed.external.uri);
+              if (parsed && parsed.postId && parsed.handle) {
+                // Navigate internally to the thread view
+                navigate(`/thread/${parsed.handle}/${parsed.postId}`);
+              } else {
+                // Open external links in a new tab
+                window.open(
+                  embed.external.uri,
+                  "_blank",
+                  "noopener,noreferrer",
+                );
+              }
             }
           }}
         >

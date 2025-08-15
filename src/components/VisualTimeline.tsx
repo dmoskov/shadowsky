@@ -16,6 +16,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useNotificationPosts } from "../hooks/useNotificationPosts";
 import { proxifyBskyImage } from "../utils/image-proxy";
@@ -56,20 +57,20 @@ const parseAtUri = (uri: string) => {
   };
 };
 
-// Helper function to generate Bluesky app URL for a post
+// Helper function to generate internal app URL for a post
 const getPostUrl = (uri: string, authorHandle?: string) => {
   const parsed = parseAtUri(uri);
   if (!parsed || !authorHandle) return null;
 
-  // Bluesky post URLs follow the pattern: https://bsky.app/profile/{handle}/post/{rkey}
-  return `https://bsky.app/profile/${authorHandle}/post/${parsed.rkey}`;
+  // Internal post URLs follow the pattern: /thread/{handle}/{rkey}
+  return `/thread/${authorHandle}/${parsed.rkey}`;
 };
 
-// Helper function to generate Bluesky app URL for a profile
+// Helper function to generate internal app URL for a profile
 const getProfileUrl = (handle: string) => {
   // Remove @ if present
   const cleanHandle = handle.startsWith("@") ? handle.slice(1) : handle;
-  return `https://bsky.app/profile/${cleanHandle}`;
+  return `/profile/${cleanHandle}`;
 };
 
 interface VisualTimelineProps {
@@ -85,6 +86,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
   isFocused = true,
 }) => {
   const { agent } = useAuth();
+  const navigate = useNavigate();
   const containerRef = React.useRef<HTMLDivElement>(null);
   const timelineItemsRef = React.useRef<Map<string, HTMLDivElement>>(new Map());
   const [selectedItemIndex, setSelectedItemIndex] = React.useState<number>(-1);
@@ -95,6 +97,13 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
     Map<string, { color: string; position: number }>
   >(new Map());
   // Removed expandedItems state - cards are always expanded
+
+  // Helper function to handle internal navigation
+  const handleInternalNavigation = (e: React.MouseEvent, url: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(url);
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ["notifications-visual-timeline"],
@@ -1240,14 +1249,17 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                           <div>
                             <div className="flex items-center gap-3">
                               {/* Removed expand/collapse indicator - cards are always expanded */}
-                              <a
-                                href={getProfileUrl(
-                                  event.notifications[0].author?.handle ||
-                                    "unknown",
-                                )}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-shrink-0 transition-all duration-200 ease-out hover:opacity-80"
+                              <div
+                                onClick={(e) =>
+                                  handleInternalNavigation(
+                                    e,
+                                    getProfileUrl(
+                                      event.notifications[0].author?.handle ||
+                                        "unknown",
+                                    ),
+                                  )
+                                }
+                                className="flex-shrink-0 cursor-pointer transition-all duration-200 ease-out hover:opacity-80"
                               >
                                 <img
                                   src={proxifyBskyImage(
@@ -1259,25 +1271,28 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                   }
                                   className="h-8 w-8 rounded-full"
                                 />
-                              </a>
+                              </div>
                               <div className="flex-1">
                                 <div className="flex items-center gap-2">
                                   {getReasonIcon(event.notifications[0].reason)}
-                                  <a
-                                    href={getProfileUrl(
-                                      event.notifications[0].author?.handle ||
-                                        "unknown",
-                                    )}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-sm font-medium hover:underline"
+                                  <span
+                                    onClick={(e) =>
+                                      handleInternalNavigation(
+                                        e,
+                                        getProfileUrl(
+                                          event.notifications[0].author
+                                            ?.handle || "unknown",
+                                        ),
+                                      )
+                                    }
+                                    className="cursor-pointer text-sm font-medium hover:underline"
                                     style={{ color: "var(--bsky-primary)" }}
                                   >
                                     {event.notifications[0].author
                                       ?.displayName ||
                                       event.notifications[0].author?.handle ||
                                       "Unknown"}
-                                  </a>
+                                  </span>
                                 </div>
                                 <div
                                   className="mt-0.5 text-xs sm:text-sm"
@@ -1319,11 +1334,12 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                     post.author?.handle,
                                   );
                                   return (
-                                    <a
-                                      href={postUrl || "#"}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="relative ml-11 mt-2 block overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
+                                    <div
+                                      onClick={(e) =>
+                                        postUrl &&
+                                        handleInternalNavigation(e, postUrl)
+                                      }
+                                      className="relative ml-11 mt-2 block cursor-pointer overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
                                       style={{
                                         backgroundColor:
                                           "var(--bsky-bg-tertiary)",
@@ -1354,7 +1370,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                         {post.record?.text ||
                                           "[Post with no text]"}
                                       </p>
-                                    </a>
+                                    </div>
                                   );
                                 }
 
@@ -1410,13 +1426,16 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                               // Special layout for user activity bursts
                               <div>
                                 <div className="mb-3 flex items-start gap-3">
-                                  <a
-                                    href={getProfileUrl(
-                                      event.primaryActor!.handle,
-                                    )}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex-shrink-0 transition-all duration-200 ease-out hover:opacity-80"
+                                  <div
+                                    onClick={(e) =>
+                                      handleInternalNavigation(
+                                        e,
+                                        getProfileUrl(
+                                          event.primaryActor!.handle,
+                                        ),
+                                      )
+                                    }
+                                    className="flex-shrink-0 cursor-pointer transition-all duration-200 ease-out hover:opacity-80"
                                   >
                                     <img
                                       src={proxifyBskyImage(
@@ -1429,21 +1448,24 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                           "1px solid var(--bsky-border-color)",
                                       }}
                                     />
-                                  </a>
+                                  </div>
                                   <div className="flex-1">
                                     <div className="mb-1 flex items-center gap-2">
-                                      <a
-                                        href={getProfileUrl(
-                                          event.primaryActor!.handle,
-                                        )}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-base font-bold hover:underline"
+                                      <span
+                                        onClick={(e) =>
+                                          handleInternalNavigation(
+                                            e,
+                                            getProfileUrl(
+                                              event.primaryActor!.handle,
+                                            ),
+                                          )
+                                        }
+                                        className="cursor-pointer text-base font-bold hover:underline"
                                         style={{ color: "var(--bsky-primary)" }}
                                       >
                                         {event.primaryActor!.displayName ||
                                           event.primaryActor!.handle}
-                                      </a>
+                                      </span>
                                       <span
                                         className="text-xs"
                                         style={{
@@ -1556,12 +1578,16 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                                 )
                                               : null;
                                             return (
-                                              <a
+                                              <div
                                                 key={`${post.uri}-${i}`}
-                                                href={postUrl || "#"}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="line-clamp-2 block rounded p-2 text-xs transition-all duration-200 ease-out hover:opacity-90"
+                                                onClick={(e) =>
+                                                  postUrl &&
+                                                  handleInternalNavigation(
+                                                    e,
+                                                    postUrl,
+                                                  )
+                                                }
+                                                className="line-clamp-2 block cursor-pointer rounded p-2 text-xs transition-all duration-200 ease-out hover:opacity-90"
                                                 style={{
                                                   backgroundColor:
                                                     "var(--bsky-bg-tertiary)",
@@ -1574,7 +1600,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                               >
                                                 {post.text ||
                                                   "[Post with no text]"}
-                                              </a>
+                                              </div>
                                             );
                                           })}
                                         {event.affectedPosts.length > 3 && (
@@ -1765,14 +1791,18 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                     {event.notifications
                                       .slice(0, 12)
                                       .map((notif, i) => (
-                                        <a
+                                        <div
                                           key={`${notif.uri}-${i}`}
-                                          href={getProfileUrl(
-                                            notif.author?.handle || "unknown",
-                                          )}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="transition-all duration-200 ease-out hover:opacity-80"
+                                          onClick={(e) =>
+                                            handleInternalNavigation(
+                                              e,
+                                              getProfileUrl(
+                                                notif.author?.handle ||
+                                                  "unknown",
+                                              ),
+                                            )
+                                          }
+                                          className="cursor-pointer transition-all duration-200 ease-out hover:opacity-80"
                                         >
                                           <img
                                             src={proxifyBskyImage(
@@ -1788,7 +1818,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                               "Unknown"
                                             }
                                           />
-                                        </a>
+                                        </div>
                                       ))}
                                     {event.notifications.length > 12 && (
                                       <div
@@ -1813,14 +1843,17 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                   {event.notifications
                                     .slice(0, 5)
                                     .map((notif, i) => (
-                                      <a
+                                      <div
                                         key={`${notif.uri}-${i}`}
-                                        href={getProfileUrl(
-                                          notif.author?.handle || "unknown",
-                                        )}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="transition-all duration-200 ease-out hover:z-10 hover:-translate-y-0.5 hover:scale-110"
+                                        onClick={(e) =>
+                                          handleInternalNavigation(
+                                            e,
+                                            getProfileUrl(
+                                              notif.author?.handle || "unknown",
+                                            ),
+                                          )
+                                        }
+                                        className="cursor-pointer transition-all duration-200 ease-out hover:z-10 hover:-translate-y-0.5 hover:scale-110"
                                       >
                                         <img
                                           src={proxifyBskyImage(
@@ -1840,7 +1873,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                             "Unknown"
                                           }
                                         />
-                                      </a>
+                                      </div>
                                     ))}
                                   {event.notifications.length > 5 && (
                                     <div
@@ -1948,11 +1981,12 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                     post.author?.handle,
                                   );
                                   return (
-                                    <a
-                                      href={postUrl || "#"}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="relative mt-3 block overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
+                                    <div
+                                      onClick={(e) =>
+                                        postUrl &&
+                                        handleInternalNavigation(e, postUrl)
+                                      }
+                                      className="relative mt-3 block cursor-pointer overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
                                       style={{
                                         backgroundColor:
                                           "var(--bsky-bg-tertiary)",
@@ -2018,7 +2052,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                           </>
                                         )}
                                       </div>
-                                    </a>
+                                    </div>
                                   );
                                 }
 
