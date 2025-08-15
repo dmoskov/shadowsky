@@ -139,8 +139,12 @@ export class FollowerCacheDB {
     }
     const tx = this.db.transaction(["profiles"], "readonly");
     const request = tx.objectStore("profiles").get(did);
-    const result = await request;
-    return result as unknown as CachedProfile | undefined;
+    return new Promise<CachedProfile | undefined>((resolve, reject) => {
+      request.onsuccess = () => {
+        resolve(request.result as CachedProfile | undefined);
+      };
+      request.onerror = () => reject(request.error);
+    });
   }
 
   async getProfileByHandle(handle: string): Promise<CachedProfile | undefined> {
