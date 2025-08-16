@@ -37,7 +37,11 @@ export const NotificationSettings: React.FC = () => {
       const notifPrefs = preferences.find(
         (p: any) => p.$type === "app.bsky.actor.defs#notificationsPref",
       );
-      if (notifPrefs && 'priority' in notifPrefs && Array.isArray(notifPrefs.priority)) {
+      if (
+        notifPrefs &&
+        "priority" in notifPrefs &&
+        Array.isArray(notifPrefs.priority)
+      ) {
         // Map server preferences to our local state
         setNotifications({
           mentions: notifPrefs.priority.includes("mentions"),
