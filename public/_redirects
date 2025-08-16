@@ -1,1 +1,5 @@
+# Remove trailing slashes
+/*/  /:splat  301!
+
+# SPA fallback
 /*    /index.html   200

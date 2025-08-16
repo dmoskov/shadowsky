@@ -34,6 +34,7 @@ import { bookmarkStorage } from "./services/bookmark-storage-db";
 import { NotificationStorageDB } from "./services/notification-storage-db";
 import { cleanupLocalStorage } from "./utils/cleanupLocalStorage";
 import "./utils/debug-control"; // Initialize debug controls
+import { removeTrailingSlash } from "./utils/removeTrailingSlash";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -179,6 +180,11 @@ function AppContent() {
 }
 
 function App() {
+  // Remove trailing slashes on initial load
+  useEffect(() => {
+    removeTrailingSlash();
+  }, []);
+
   // Initialize Google Analytics
   useEffect(() => {
     const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
