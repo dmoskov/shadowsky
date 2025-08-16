@@ -5,6 +5,8 @@ import { createLogger } from "../utils/logger";
 export interface AppPreferencesRecord {
   $type: "app.shadowsky.preferences";
   bookmarkStorageType: "local" | "custom";
+  columnStorageType: "local" | "custom";
+  draftStorageType: "local" | "custom";
   createdAt: string;
   updatedAt: string;
 }
@@ -104,6 +106,8 @@ export class AppPreferencesService {
     const defaultPrefs: AppPreferencesRecord = {
       $type: PREFERENCES_COLLECTION,
       bookmarkStorageType: "local", // Default to local storage
+      columnStorageType: "local", // Default to local storage
+      draftStorageType: "local", // Default to local storage
       createdAt: now,
       updatedAt: now,
     };

@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
 import { useColumnSwipe } from "../hooks/useColumnSwipe";
+import { columnService } from "../services/column-service";
 import { columnFeedPrefs } from "../utils/cookies";
 import { createLogger } from "../utils/logger";
 import SkyColumn from "./SkyColumn";
@@ -316,7 +317,16 @@ export default function SkyDeck() {
   const handleRemoveColumn = (id: string) => {
     // Don't allow removing the home column
     if (id === "home") return;
+
+    const columnToRemove = columns.find((col) => col.id === id);
     setColumns(columns.filter((col) => col.id !== id));
+
+    // Delete the column from the service
+    if (columnToRemove) {
+      columnService.deleteColumn(columnToRemove.id).catch((error) => {
+        logger.error("Failed to delete column:", error);
+      });
+    }
   };
 
   const handleMoveLeft = (columnId: string) => {

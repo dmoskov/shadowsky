@@ -23,7 +23,10 @@ import {
   bookmarkService,
   initializeBookmarkService,
 } from "../services/bookmark-service-wrapper";
+import { columnService } from "../services/column-service";
+import { initializeDataServices } from "../services/data-services-initializer";
 import { dmService } from "../services/dm-service";
+import { draftService } from "../services/draft-service";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -75,6 +78,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     bookmarkService.setAgent(null);
     dmService.setAgent(null);
     appPreferencesService.setAgent(null);
+    columnService.setAgent(null);
+    draftService.setAgent(null);
 
     // Clear React Query cache
     queryClient.clear();
@@ -118,8 +123,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setIsAuthenticated(true);
             setSession(resumedSession);
             initAttempts.current = 0; // Reset on success
-            // Initialize bookmark service with user preferences
+            // Initialize services with user preferences
             await initializeBookmarkService(atProtoClient.agent);
+            await initializeDataServices(atProtoClient.agent);
             dmService.setAgent(atProtoClient.agent);
           } catch (error) {
             debug.error("Failed to resume session:", error);
@@ -190,8 +196,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticated(true);
         setSession(newSession);
 
-        // Initialize bookmark service with user preferences
+        // Initialize services with user preferences
         await initializeBookmarkService(atProtoClient.agent);
+        await initializeDataServices(atProtoClient.agent);
         dmService.setAgent(atProtoClient.agent);
 
         // Track successful login
