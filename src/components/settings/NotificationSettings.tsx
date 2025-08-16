@@ -25,16 +25,16 @@ export const NotificationSettings: React.FC = () => {
     queryFn: async () => {
       if (!agent) return null;
       const response = await agent.getPreferences();
-      return response;
+      return response.preferences; // Extract preferences array from response
     },
     enabled: !!agent,
   });
 
   // Update local state when preferences load
   useEffect(() => {
-    if (preferences) {
+    if (preferences && Array.isArray(preferences)) {
       // Find the notification preferences
-      const notifPrefs = (preferences as any).find(
+      const notifPrefs = preferences.find(
         (p: any) => p.$type === "app.bsky.actor.defs#notificationsPref",
       );
       if (notifPrefs && notifPrefs.priority) {
@@ -68,12 +68,15 @@ export const NotificationSettings: React.FC = () => {
         .map(([key]) => key);
 
       // Get current preferences and update
-      const currentPrefs = await agent.getPreferences();
+      const currentPrefsResponse = await agent.getPreferences();
+      const currentPrefs = currentPrefsResponse.preferences;
 
       // Filter out old notification preferences
-      const otherPrefs = (currentPrefs as any).filter(
-        (p: any) => p.$type !== "app.bsky.actor.defs#notificationsPref",
-      );
+      const otherPrefs = Array.isArray(currentPrefs)
+        ? currentPrefs.filter(
+            (p: any) => p.$type !== "app.bsky.actor.defs#notificationsPref",
+          )
+        : [];
 
       // Add updated notification preferences
       const updatedPrefs = [

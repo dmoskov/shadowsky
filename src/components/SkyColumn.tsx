@@ -70,6 +70,21 @@ export default function SkyColumn({
     };
   }, []);
 
+  // Listen for refresh feed events (from mobile tab bar double tap)
+  useEffect(() => {
+    const handleRefreshFeed = () => {
+      // Only refresh if this is a feed column and it's focused (on mobile, there's only one visible column)
+      if (column.type === "feed") {
+        setRefreshCounter((prev) => prev + 1);
+      }
+    };
+
+    window.addEventListener("refreshFeed", handleRefreshFeed);
+    return () => {
+      window.removeEventListener("refreshFeed", handleRefreshFeed);
+    };
+  }, [column.type]);
+
   // Render different components based on column type
   const renderContent = () => {
     switch (column.type) {

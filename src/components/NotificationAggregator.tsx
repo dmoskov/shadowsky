@@ -170,6 +170,7 @@ interface AggregatedNotificationItemProps {
   fetchedPosts?: number;
   totalPosts?: number;
   percentageFetched?: number;
+  markAsRead?: () => void;
 }
 
 export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProps> =
@@ -184,6 +185,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
       fetchedPosts = 0,
       totalPosts = 0,
       percentageFetched = 100,
+      markAsRead,
     }) => {
       const getIcon = () => {
         switch (item.reason) {
@@ -300,6 +302,11 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
         // Prevent default behavior
         e.preventDefault();
 
+        // Mark notifications as read when clicked
+        if (hasUnread && markAsRead) {
+          markAsRead();
+        }
+
         // If clicking with modifier keys (Cmd/Ctrl), open in new tab
         if (e.metaKey || e.ctrlKey) {
           window.open(primaryUrl, "_blank");
@@ -327,17 +334,17 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
 
       return (
         <div
-          className={`bsky-notification flex cursor-pointer gap-3 px-4 py-4 sm:px-6 ${
+          className={`bsky-notification cursor-pointer px-3 py-3 ${
             hasUnread ? "bsky-notification-unread" : ""
           }`}
           onClick={handleClick}
           title="Cmd/Ctrl+Click to open in Bluesky"
         >
-          <div className="w-6 flex-shrink-0 pt-1">{getIcon()}</div>
-
-          <div className="flex-1">
-            {/* Avatar stack */}
-            <div className="mb-2 flex items-center gap-2">
+          <div className="flex items-start gap-2">
+            {/* Icon and Avatar stack section */}
+            <div className="flex flex-shrink-0 items-center gap-2">
+              <div className="w-5">{getIcon()}</div>
+              {/* Avatar stack */}
               <div className="flex -space-x-2">
                 {displayUsers.map((user, idx) => (
                   <div
@@ -388,80 +395,270 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Notification info and timestamp */}
+            <div className="min-w-0 flex-1">
+              {/* Notification type label */}
+              {showTypeLabel && (
+                <div className="mb-0.5 flex items-center gap-2">
+                  <span
+                    className="rounded-full px-2 py-0.5 text-xs font-medium"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-secondary)",
+                      color: "var(--bsky-text-secondary)",
+                      border: "1px solid var(--bsky-border-primary)",
+                    }}
+                  >
+                    {getNotificationTypeLabel(item.reason)}
+                  </span>
+                </div>
+              )}
+
+              {/* Aggregated text with timestamp */}
+              <p className="text-sm">
+                <span
+                  className="font-bold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  {item.count} {getActionText()}
+                </span>
+                <span
+                  className="ml-1 text-xs"
+                  style={{ color: "var(--bsky-text-tertiary)" }}
+                >
+                  ·{" "}
+                  {formatDistanceToNow(new Date(item.latestTimestamp), {
+                    addSuffix: true,
+                  })}
+                </span>
+              </p>
+
+              {/* User names preview */}
+              <p
+                className="mt-0.5 text-xs"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                {displayUsers.map((user, idx) => (
+                  <span key={user.did}>
+                    <span
+                      className="cursor-pointer hover:underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onNavigate) {
+                          onNavigate(`/profile/${user.handle}`);
+                        }
+                      }}
+                    >
+                      {user.displayName || user.handle}
+                    </span>
+                    {idx < displayUsers.length - 1 && ", "}
+                  </span>
+                ))}
+                {remainingCount > 0 && ` and ${remainingCount} others`}
+              </p>
 
               {hasUnread && (
                 <div
-                  className="h-2 w-2 animate-pulse rounded-full"
+                  className="mt-1 h-2 w-2 animate-pulse rounded-full"
                   style={{ backgroundColor: "var(--bsky-primary)" }}
                 ></div>
               )}
             </div>
+          </div>
 
-            {/* Notification type label */}
-            {showTypeLabel && (
-              <div className="mb-1 flex items-center gap-2">
-                <span
-                  className="rounded-full px-2 py-0.5 text-xs font-medium"
-                  style={{
-                    backgroundColor: "var(--bsky-bg-secondary)",
-                    color: "var(--bsky-text-secondary)",
-                    border: "1px solid var(--bsky-border-primary)",
-                  }}
-                >
-                  {getNotificationTypeLabel(item.reason)}
-                </span>
-              </div>
-            )}
+          {/* Post preview below, with left margin to align with content */}
+          {item.reason !== "follow" &&
+            (() => {
+              // Try to get the post from postMap first for richer content
+              // For reposts and likes, use reasonSubject which contains the original post URI
+              const notification = item.notifications[0];
+              const postUri =
+                (item.reason === "repost" || item.reason === "like") &&
+                notification.reasonSubject
+                  ? notification.reasonSubject
+                  : notification.uri;
+              const post = postMap?.get(postUri);
 
-            {/* Aggregated text */}
-            <p className="text-sm">
-              <span
-                className="font-bold"
-                style={{ color: "var(--bsky-text-primary)" }}
-              >
-                {item.count} {getActionText()}
-              </span>
-            </p>
-
-            {/* User names preview */}
-            <p
-              className="mt-1 text-xs"
-              style={{ color: "var(--bsky-text-secondary)" }}
-            >
-              {displayUsers.map((user, idx) => (
-                <span key={user.did}>
-                  <span
-                    className="cursor-pointer hover:underline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onNavigate) {
-                        onNavigate(`/profile/${user.handle}`);
-                      }
+              // Show loading indicator if posts are still being fetched
+              if (!post && postMap && postMap.size === 0) {
+                return (
+                  <div
+                    className="mt-3 rounded-lg p-4"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-secondary)",
+                      border: "1px solid var(--bsky-border-primary)",
+                      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                     }}
                   >
-                    {user.displayName || user.handle}
-                  </span>
-                  {idx < displayUsers.length - 1 && ", "}
-                </span>
-              ))}
-              {remainingCount > 0 && ` and ${remainingCount} others`}
-            </p>
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500"></div>
+                      <span
+                        className="text-sm"
+                        style={{ color: "var(--bsky-text-secondary)" }}
+                      >
+                        Loading post content...
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
 
-            {/* Post preview if applicable */}
-            {item.reason !== "follow" &&
-              (() => {
-                // Try to get the post from postMap first for richer content
-                // For reposts and likes, use reasonSubject which contains the original post URI
-                const notification = item.notifications[0];
-                const postUri =
-                  (item.reason === "repost" || item.reason === "like") &&
-                  notification.reasonSubject
-                    ? notification.reasonSubject
-                    : notification.uri;
-                const post = postMap?.get(postUri);
+              if (post) {
+                // We have full post data with author info
+                const postText = (post.record as any)?.text || "";
+                const postAuthor = post.author;
+                const hasImages =
+                  post.embed?.$type === "app.bsky.embed.images#view" ||
+                  (post.embed?.$type ===
+                    "app.bsky.embed.recordWithMedia#view" &&
+                    "media" in post.embed &&
+                    post.embed.media?.$type === "app.bsky.embed.images#view");
 
-                // Show loading indicator if posts are still being fetched
-                if (!post && postMap && postMap.size === 0) {
+                // Extract images if present
+                let images: Array<{
+                  thumb: string;
+                  fullsize: string;
+                  alt?: string;
+                }> = [];
+                if (post.embed) {
+                  if (
+                    post.embed.$type === "app.bsky.embed.images#view" &&
+                    "images" in post.embed &&
+                    post.embed.images
+                  ) {
+                    images = post.embed.images;
+                  } else if (
+                    post.embed.$type ===
+                      "app.bsky.embed.recordWithMedia#view" &&
+                    "media" in post.embed &&
+                    post.embed.media?.$type === "app.bsky.embed.images#view" &&
+                    "images" in post.embed.media &&
+                    post.embed.media.images
+                  ) {
+                    images = post.embed.media.images;
+                  }
+                }
+
+                return (
+                  <div
+                    className="mt-3 rounded-lg p-4"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-secondary)",
+                      border: "1px solid var(--bsky-border-primary)",
+                      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                    }}
+                  >
+                    <div className="mb-2 flex items-center gap-2">
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: "var(--bsky-text-tertiary)" }}
+                      >
+                        {item.reason === "quote"
+                          ? "Quoting your post:"
+                          : "Your post:"}
+                      </span>
+                      {postAuthor?.avatar ? (
+                        <img
+                          src={proxifyBskyImage(postAuthor.avatar)}
+                          alt={postAuthor.handle}
+                          className="bsky-avatar h-5 w-5"
+                        />
+                      ) : (
+                        <div
+                          className="bsky-avatar flex h-5 w-5 items-center justify-center text-xs"
+                          style={{ background: "var(--bsky-bg-tertiary)" }}
+                        >
+                          {postAuthor?.handle?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: "var(--bsky-text-secondary)" }}
+                      >
+                        {postAuthor?.displayName || postAuthor?.handle || "You"}
+                      </span>
+                      {hasImages && (
+                        <span
+                          className="flex items-center gap-1 text-xs"
+                          style={{ color: "var(--bsky-text-tertiary)" }}
+                        >
+                          · 📷
+                        </span>
+                      )}
+                    </div>
+                    {postText ? (
+                      <p
+                        className="text-sm"
+                        style={{
+                          color: "var(--bsky-text-primary)",
+                          lineHeight: "1.5",
+                        }}
+                      >
+                        {postText}
+                      </p>
+                    ) : (
+                      <p
+                        className="text-sm italic"
+                        style={{ color: "var(--bsky-text-tertiary)" }}
+                      >
+                        [Post with no text]
+                      </p>
+                    )}
+
+                    {/* Display images if present */}
+                    {images.length > 0 && (
+                      <div className="mt-3">
+                        <div
+                          className={`grid gap-2 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
+                        >
+                          {images.slice(0, 4).map((img, idx) => (
+                            <img
+                              key={idx}
+                              src={proxifyBskyImage(img.thumb)}
+                              alt={img.alt || ""}
+                              className="w-full rounded-lg border object-cover"
+                              style={{
+                                borderColor: "var(--bsky-border-primary)",
+                                height: images.length === 1 ? "160px" : "100px",
+                              }}
+                              loading="lazy"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              } else if (
+                item.notifications[0].record &&
+                typeof item.notifications[0].record === "object" &&
+                "text" in item.notifications[0].record
+              ) {
+                // Fallback to record text
+                return (
+                  <div
+                    className="mt-3 rounded-lg p-4"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-secondary)",
+                      border: "1px solid var(--bsky-border-primary)",
+                      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                    }}
+                  >
+                    <p
+                      className="text-sm"
+                      style={{
+                        color: "var(--bsky-text-primary)",
+                        lineHeight: "1.5",
+                      }}
+                    >
+                      {(item.notifications[0].record as { text?: string }).text}
+                    </p>
+                  </div>
+                );
+              } else if (!post && postMap && postMap.size > 0) {
+                // Check if we're still fetching more posts
+                if (isFetchingMore && fetchedPosts < totalPosts) {
                   return (
                     <div
                       className="mt-3 rounded-lg p-4"
@@ -472,183 +669,55 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500"></div>
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500" />
                         <span
                           className="text-sm"
                           style={{ color: "var(--bsky-text-secondary)" }}
                         >
-                          Loading post content...
+                          Loading post content... ({percentageFetched}% loaded)
                         </span>
                       </div>
                     </div>
                   );
                 }
 
-                if (post) {
-                  // We have full post data with author info
-                  const postText = (post.record as any)?.text || "";
-                  const postAuthor = post.author;
-                  const hasImages =
-                    post.embed?.$type === "app.bsky.embed.images#view" ||
-                    (post.embed?.$type ===
-                      "app.bsky.embed.recordWithMedia#view" &&
-                      "media" in post.embed &&
-                      post.embed.media?.$type === "app.bsky.embed.images#view");
-
-                  // Extract images if present
-                  let images: Array<{
-                    thumb: string;
-                    fullsize: string;
-                    alt?: string;
-                  }> = [];
-                  if (post.embed) {
-                    if (
-                      post.embed.$type === "app.bsky.embed.images#view" &&
-                      "images" in post.embed &&
-                      post.embed.images
-                    ) {
-                      images = post.embed.images;
-                    } else if (
-                      post.embed.$type ===
-                        "app.bsky.embed.recordWithMedia#view" &&
-                      "media" in post.embed &&
-                      post.embed.media?.$type ===
-                        "app.bsky.embed.images#view" &&
-                      "images" in post.embed.media &&
-                      post.embed.media.images
-                    ) {
-                      images = post.embed.media.images;
-                    }
-                  }
-
-                  return (
-                    <div
-                      className="mt-3 rounded-lg p-4"
-                      style={{
-                        backgroundColor: "var(--bsky-bg-secondary)",
-                        border: "1px solid var(--bsky-border-primary)",
-                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                      }}
+                // Post couldn't be loaded or doesn't exist
+                return (
+                  <div
+                    className="mt-3 rounded-lg p-4"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-secondary)",
+                      border: "1px solid var(--bsky-border-primary)",
+                      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                    }}
+                  >
+                    <p
+                      className="text-sm italic"
+                      style={{ color: "var(--bsky-text-tertiary)" }}
                     >
-                      <div className="mb-2 flex items-center gap-2">
-                        <span
-                          className="text-xs font-medium"
-                          style={{ color: "var(--bsky-text-tertiary)" }}
-                        >
-                          {item.reason === "quote"
-                            ? "Quoting your post:"
-                            : "Your post:"}
-                        </span>
-                        {postAuthor?.avatar ? (
-                          <img
-                            src={proxifyBskyImage(postAuthor.avatar)}
-                            alt={postAuthor.handle}
-                            className="bsky-avatar h-5 w-5"
-                          />
-                        ) : (
-                          <div
-                            className="bsky-avatar flex h-5 w-5 items-center justify-center text-xs"
-                            style={{ background: "var(--bsky-bg-tertiary)" }}
-                          >
-                            {postAuthor?.handle?.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <span
-                          className="text-xs font-medium"
-                          style={{ color: "var(--bsky-text-secondary)" }}
-                        >
-                          {postAuthor?.displayName ||
-                            postAuthor?.handle ||
-                            "You"}
-                        </span>
-                        {hasImages && (
-                          <span
-                            className="flex items-center gap-1 text-xs"
-                            style={{ color: "var(--bsky-text-tertiary)" }}
-                          >
-                            · 📷
-                          </span>
-                        )}
-                      </div>
-                      {postText ? (
-                        <p
-                          className="text-sm"
-                          style={{
-                            color: "var(--bsky-text-primary)",
-                            lineHeight: "1.5",
-                          }}
-                        >
-                          {postText}
-                        </p>
-                      ) : (
-                        <p
-                          className="text-sm italic"
-                          style={{ color: "var(--bsky-text-tertiary)" }}
-                        >
-                          [Post with no text]
-                        </p>
-                      )}
+                      [Unable to load post content]
+                    </p>
+                  </div>
+                );
+              }
 
-                      {/* Display images if present */}
-                      {images.length > 0 && (
-                        <div className="mt-3">
-                          <div
-                            className={`grid gap-2 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
-                          >
-                            {images.slice(0, 4).map((img, idx) => (
-                              <img
-                                key={idx}
-                                src={proxifyBskyImage(img.thumb)}
-                                alt={img.alt || ""}
-                                className="w-full rounded-lg border object-cover"
-                                style={{
-                                  borderColor: "var(--bsky-border-primary)",
-                                  height:
-                                    images.length === 1 ? "160px" : "100px",
-                                }}
-                                loading="lazy"
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                } else if (
-                  item.notifications[0].record &&
-                  typeof item.notifications[0].record === "object" &&
-                  "text" in item.notifications[0].record
-                ) {
-                  // Fallback to record text
-                  return (
-                    <div
-                      className="mt-3 rounded-lg p-4"
-                      style={{
-                        backgroundColor: "var(--bsky-bg-secondary)",
-                        border: "1px solid var(--bsky-border-primary)",
-                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                      }}
-                    >
-                      <p
-                        className="text-sm"
-                        style={{
-                          color: "var(--bsky-text-primary)",
-                          lineHeight: "1.5",
-                        }}
-                      >
-                        {
-                          (item.notifications[0].record as { text?: string })
-                            .text
-                        }
-                      </p>
-                    </div>
-                  );
-                } else if (!post && postMap && postMap.size > 0) {
-                  // Check if we're still fetching more posts
-                  if (isFetchingMore && fetchedPosts < totalPosts) {
+              return null;
+            })() && (
+              <div className="ml-[1.75rem] mt-2">
+                {(() => {
+                  // Same logic as above for post preview
+                  const notification = item.notifications[0];
+                  const postUri =
+                    (item.reason === "repost" || item.reason === "like") &&
+                    notification.reasonSubject
+                      ? notification.reasonSubject
+                      : notification.uri;
+                  const post = postMap?.get(postUri);
+
+                  if (!post && postMap && postMap.size === 0) {
                     return (
                       <div
-                        className="mt-3 rounded-lg p-4"
+                        className="rounded-lg p-4"
                         style={{
                           backgroundColor: "var(--bsky-bg-secondary)",
                           border: "1px solid var(--bsky-border-primary)",
@@ -656,23 +725,176 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                         }}
                       >
                         <div className="flex items-center gap-2">
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500" />
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500"></div>
                           <span
                             className="text-sm"
                             style={{ color: "var(--bsky-text-secondary)" }}
                           >
-                            Loading post content... ({percentageFetched}%
-                            loaded)
+                            Loading post content...
                           </span>
                         </div>
                       </div>
                     );
                   }
 
-                  // Post couldn't be loaded or doesn't exist
+                  if (post) {
+                    const postText = (post.record as any)?.text || "";
+                    const postAuthor = post.author;
+                    const hasImages =
+                      post.embed?.$type === "app.bsky.embed.images#view" ||
+                      (post.embed?.$type ===
+                        "app.bsky.embed.recordWithMedia#view" &&
+                        "media" in post.embed &&
+                        post.embed.media?.$type ===
+                          "app.bsky.embed.images#view");
+
+                    let images: Array<{
+                      thumb: string;
+                      fullsize: string;
+                      alt?: string;
+                    }> = [];
+                    if (post.embed) {
+                      if (
+                        post.embed.$type === "app.bsky.embed.images#view" &&
+                        "images" in post.embed &&
+                        post.embed.images
+                      ) {
+                        images = post.embed.images;
+                      } else if (
+                        post.embed.$type ===
+                          "app.bsky.embed.recordWithMedia#view" &&
+                        "media" in post.embed &&
+                        post.embed.media?.$type ===
+                          "app.bsky.embed.images#view" &&
+                        "images" in post.embed.media &&
+                        post.embed.media.images
+                      ) {
+                        images = post.embed.media.images;
+                      }
+                    }
+
+                    return (
+                      <div
+                        className="rounded-lg p-4"
+                        style={{
+                          backgroundColor: "var(--bsky-bg-secondary)",
+                          border: "1px solid var(--bsky-border-primary)",
+                          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                        }}
+                      >
+                        <div className="mb-2 flex items-center gap-2">
+                          <span
+                            className="text-xs font-medium"
+                            style={{ color: "var(--bsky-text-tertiary)" }}
+                          >
+                            {item.reason === "quote"
+                              ? "Quoting your post:"
+                              : "Your post:"}
+                          </span>
+                          {postAuthor?.avatar ? (
+                            <img
+                              src={proxifyBskyImage(postAuthor.avatar)}
+                              alt={postAuthor.handle}
+                              className="bsky-avatar h-5 w-5"
+                            />
+                          ) : (
+                            <div
+                              className="bsky-avatar flex h-5 w-5 items-center justify-center text-xs"
+                              style={{ background: "var(--bsky-bg-tertiary)" }}
+                            >
+                              {postAuthor?.handle?.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <span
+                            className="text-xs font-medium"
+                            style={{ color: "var(--bsky-text-secondary)" }}
+                          >
+                            {postAuthor?.displayName ||
+                              postAuthor?.handle ||
+                              "You"}
+                          </span>
+                          {hasImages && (
+                            <span
+                              className="flex items-center gap-1 text-xs"
+                              style={{ color: "var(--bsky-text-tertiary)" }}
+                            >
+                              · 📷
+                            </span>
+                          )}
+                        </div>
+                        {postText ? (
+                          <p
+                            className="text-sm"
+                            style={{
+                              color: "var(--bsky-text-primary)",
+                              lineHeight: "1.5",
+                            }}
+                          >
+                            {postText}
+                          </p>
+                        ) : (
+                          <p
+                            className="text-sm italic"
+                            style={{ color: "var(--bsky-text-tertiary)" }}
+                          >
+                            [Post with no text]
+                          </p>
+                        )}
+
+                        {images.length > 0 && (
+                          <div className="mt-3">
+                            <div
+                              className={`grid gap-2 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
+                            >
+                              {images.slice(0, 4).map((img, idx) => (
+                                <img
+                                  key={idx}
+                                  src={proxifyBskyImage(img.thumb)}
+                                  alt={img.alt || ""}
+                                  className="w-full rounded-lg border object-cover"
+                                  style={{
+                                    borderColor: "var(--bsky-border-primary)",
+                                    height:
+                                      images.length === 1 ? "200px" : "120px",
+                                  }}
+                                  loading="lazy"
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  if (
+                    notification.record &&
+                    typeof notification.record === "object" &&
+                    "text" in notification.record
+                  ) {
+                    return (
+                      <div
+                        className="rounded-lg p-4"
+                        style={{
+                          backgroundColor: "var(--bsky-bg-secondary)",
+                          border: "1px solid var(--bsky-border-primary)",
+                          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                        }}
+                      >
+                        <p
+                          className="text-sm italic"
+                          style={{ color: "var(--bsky-text-tertiary)" }}
+                        >
+                          {(notification.record as { text?: string }).text ||
+                            "[Unable to load post content]"}
+                        </p>
+                      </div>
+                    );
+                  }
+
                   return (
                     <div
-                      className="mt-3 rounded-lg p-4"
+                      className="rounded-lg p-4"
                       style={{
                         backgroundColor: "var(--bsky-bg-secondary)",
                         border: "1px solid var(--bsky-border-primary)",
@@ -687,20 +909,9 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                       </p>
                     </div>
                   );
-                }
-
-                return null;
-              })()}
-
-            <time
-              className="mt-1 block text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
-            >
-              {formatDistanceToNow(new Date(item.latestTimestamp), {
-                addSuffix: true,
-              })}
-            </time>
-          </div>
+                })()}
+              </div>
+            )}
         </div>
       );
     },

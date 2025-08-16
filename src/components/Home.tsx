@@ -600,71 +600,70 @@ export const Home: React.FC<HomeProps> = ({
             </div>
           )}
 
-          <div className="flex gap-3">
-            <img
-              src={
-                proxifyBskyImage(post.author.avatar) || "/default-avatar.svg"
-              }
-              alt={post.author.handle}
-              className="h-12 w-12 cursor-pointer rounded-full transition-opacity hover:opacity-80"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/profile/${post.author.handle}`);
-              }}
-            />
+          <div>
+            {/* Avatar and user info row */}
+            <div className="flex items-start gap-3">
+              <img
+                src={
+                  proxifyBskyImage(post.author.avatar) || "/default-avatar.svg"
+                }
+                alt={post.author.handle}
+                className="h-12 w-12 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/profile/${post.author.handle}`);
+                }}
+              />
 
-            <div className="min-w-0 flex-1">
-              <div className="flex items-start justify-between">
-                <div
-                  className="cursor-pointer"
-                  onClick={() => handlePostClick(post)}
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="cursor-pointer font-semibold hover:underline"
-                      style={{ color: "var(--bsky-text-primary)" }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/profile/${post.author.handle}`);
-                      }}
-                    >
-                      {post.author.displayName || post.author.handle}
-                    </span>
-                    {(item.reply?.parent || post.record?.reply?.parent) && (
-                      <span
-                        className="rounded-full px-2 py-0.5 text-xs font-medium"
-                        style={{
-                          backgroundColor: "rgb(29, 155, 240)",
-                          color: "white",
-                        }}
-                      >
-                        REPLY
-                      </span>
-                    )}
-                  </div>
-                  <div
-                    className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="cursor-pointer font-semibold hover:underline"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/profile/${post.author.handle}`);
+                    }}
                   >
+                    {post.author.displayName || post.author.handle}
+                  </span>
+                  {(item.reply?.parent || post.record?.reply?.parent) && (
                     <span
-                      className="cursor-pointer hover:underline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/profile/${post.author.handle}`);
+                      className="rounded-full px-2 py-0.5 text-xs font-medium"
+                      style={{
+                        backgroundColor: "rgb(29, 155, 240)",
+                        color: "white",
                       }}
                     >
-                      @{post.author.handle}
-                    </span>{" "}
-                    ·{" "}
-                    {formatDistanceToNow(new Date(post.record.createdAt), {
-                      addSuffix: true,
-                    })}
-                  </div>
+                      REPLY
+                    </span>
+                  )}
+                </div>
+                <div
+                  className="text-sm"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  <span
+                    className="cursor-pointer hover:underline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/profile/${post.author.handle}`);
+                    }}
+                  >
+                    @{post.author.handle}
+                  </span>{" "}
+                  ·{" "}
+                  {formatDistanceToNow(new Date(post.record.createdAt), {
+                    addSuffix: true,
+                  })}
                 </div>
               </div>
+            </div>
 
+            {/* Post content below, aligned with avatar */}
+            <div className="mt-2">
               <div
-                className="mt-1 cursor-pointer whitespace-pre-wrap"
+                className="cursor-pointer whitespace-pre-wrap"
                 style={{ color: "var(--bsky-text-primary)" }}
                 onClick={() => handlePostClick(post)}
               >

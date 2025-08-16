@@ -956,7 +956,6 @@ export const Conversations: React.FC = () => {
             const previewText =
               rootRecord?.text || "[Loading original post...]";
             const isGroup = convo.participants.size > 2;
-            const unreadCount = convo.replies.filter((r) => !r.isRead).length;
 
             return (
               <button
@@ -1004,15 +1003,6 @@ export const Conversations: React.FC = () => {
                           </div>
                         )}
                       </>
-                    )}
-                    {/* Unread indicator dot */}
-                    {unreadCount > 0 && (
-                      <div
-                        className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium text-white"
-                        style={{ background: "var(--bsky-primary)" }}
-                      >
-                        {unreadCount}
-                      </div>
                     )}
                   </div>
 

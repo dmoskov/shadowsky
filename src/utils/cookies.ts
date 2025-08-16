@@ -155,15 +155,6 @@ export const columnFeedPrefs = {
     const prefs = this.getAll();
     const result = prefs[columnId] || null;
 
-    // Debug logging in development
-    if (process.env.NODE_ENV === "development") {
-      console.log("Getting column feed preference:", {
-        columnId,
-        result,
-        allPrefs: prefs,
-      });
-    }
-
     return result;
   },
 

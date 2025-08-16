@@ -27,7 +27,11 @@ import {
   postHasImages,
   useNotificationPosts,
 } from "../hooks/useNotificationPosts";
-import { useNotifications, useUnreadCount } from "../hooks/useNotifications";
+import {
+  useMarkNotificationsRead,
+  useNotifications,
+  useUnreadCount,
+} from "../hooks/useNotifications";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { getNotificationUrl } from "../utils/url-helpers";
 import {
@@ -95,9 +99,21 @@ export const NotificationsFeed: React.FC = () => {
     isFetchingNextPage,
   } = useNotifications();
   const { data: unreadCount } = useUnreadCount();
-  // Removed mark as read functionality
-  // const { mutate: markAllAsRead, isPending: isMarkingAsRead } = useMarkNotificationsRead()
+  const { mutate: markAsRead } = useMarkNotificationsRead();
   const { data: followingSet, isLoading: isLoadingFollowing } = useFollowing();
+
+  // Clear unread indicator when component mounts (user navigates to notifications)
+  useEffect(() => {
+    // Only mark as read if we have unread notifications
+    if (unreadCount && unreadCount > 0) {
+      // Small delay to ensure the user has seen the page
+      const timer = setTimeout(() => {
+        markAsRead();
+      }, 1500); // 1.5 second delay - enough time for page to load
+
+      return () => clearTimeout(timer);
+    }
+  }, []); // Only run once on mount
 
   const notifications = React.useMemo(() => {
     const timestamp = new Date().toLocaleTimeString();
@@ -412,196 +428,221 @@ export const NotificationsFeed: React.FC = () => {
       {/* Filter tabs */}
       <div className="bsky-glass sticky top-0 z-10 border-b border-bsky-border-primary">
         <div className="overflow-hidden px-3 py-2">
-          {/* Filter tabs */}
-          <div className="flex items-center gap-1">
-            {/* Primary tabs - always visible */}
-            <div className="scrollbar-hide flex min-w-0 flex-1 gap-1 overflow-x-auto overflow-y-hidden">
-              <FilterTab
-                active={filter === "all"}
-                onClick={() => handleFilterChange("all")}
-                icon={<Filter size={16} />}
-                label="All"
-                count={filterCounts["all"]}
-              />
-              <FilterTab
-                active={filter === "likes"}
-                onClick={() => handleFilterChange("likes")}
-                icon={<Heart size={16} />}
-                label="Likes"
-                count={filterCounts["likes"]}
-              />
-              <FilterTab
-                active={filter === "reposts"}
-                onClick={() => handleFilterChange("reposts")}
-                icon={<Repeat2 size={16} />}
-                label="Reposts"
-                count={filterCounts["reposts"]}
-              />
-              <FilterTab
-                active={filter === "mentions"}
-                onClick={() => handleFilterChange("mentions")}
-                icon={<AtSign size={16} />}
-                label="Mentions"
-                count={filterCounts["mentions"]}
-              />
-              {/* Mobile-only additional tabs */}
-              <div className="flex gap-1 md:hidden">
+          {/* Filter tabs and actions */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1">
+              {/* Primary tabs - always visible */}
+              <div className="scrollbar-hide flex min-w-0 flex-1 gap-1 overflow-x-auto overflow-y-hidden">
                 <FilterTab
-                  active={filter === "replies"}
-                  onClick={() => handleFilterChange("replies")}
-                  icon={<MessageCircle size={16} />}
-                  label="Replies"
-                  count={filterCounts["replies"]}
+                  active={filter === "all"}
+                  onClick={() => handleFilterChange("all")}
+                  icon={<Filter size={16} />}
+                  label="All"
+                  count={filterCounts["all"]}
                 />
                 <FilterTab
-                  active={filter === "follows"}
-                  onClick={() => handleFilterChange("follows")}
-                  icon={<UserPlus size={16} />}
-                  label="Follows"
-                  count={filterCounts["follows"]}
+                  active={filter === "likes"}
+                  onClick={() => handleFilterChange("likes")}
+                  icon={<Heart size={16} />}
+                  label="Likes"
+                  count={filterCounts["likes"]}
                 />
+                <FilterTab
+                  active={filter === "reposts"}
+                  onClick={() => handleFilterChange("reposts")}
+                  icon={<Repeat2 size={16} />}
+                  label="Reposts"
+                  count={filterCounts["reposts"]}
+                />
+                <FilterTab
+                  active={filter === "mentions"}
+                  onClick={() => handleFilterChange("mentions")}
+                  icon={<AtSign size={16} />}
+                  label="Mentions"
+                  count={filterCounts["mentions"]}
+                />
+                {/* Mobile-only additional tabs */}
+                <div className="flex gap-1 md:hidden">
+                  <FilterTab
+                    active={filter === "replies"}
+                    onClick={() => handleFilterChange("replies")}
+                    icon={<MessageCircle size={16} />}
+                    label="Replies"
+                    count={filterCounts["replies"]}
+                  />
+                  <FilterTab
+                    active={filter === "follows"}
+                    onClick={() => handleFilterChange("follows")}
+                    icon={<UserPlus size={16} />}
+                    label="Follows"
+                    count={filterCounts["follows"]}
+                  />
+                </div>
+
+                {/* Desktop-only tabs */}
+                <div className="hidden gap-1 md:flex">
+                  <FilterTab
+                    active={filter === "follows"}
+                    onClick={() => handleFilterChange("follows")}
+                    icon={<UserPlus size={16} />}
+                    label="Follows"
+                    count={filterCounts["follows"]}
+                  />
+                  <FilterTab
+                    active={filter === "replies"}
+                    onClick={() => handleFilterChange("replies")}
+                    icon={<MessageCircle size={16} />}
+                    label="Replies"
+                    count={filterCounts["replies"]}
+                  />
+                  <FilterTab
+                    active={filter === "quotes"}
+                    onClick={() => handleFilterChange("quotes")}
+                    icon={<Quote size={16} />}
+                    label="Quotes"
+                    count={filterCounts["quotes"]}
+                  />
+                  <FilterTab
+                    active={filter === "images"}
+                    onClick={() => handleFilterChange("images")}
+                    icon={<Image size={16} />}
+                    label="Images"
+                    count={filterCounts["images"]}
+                  />
+                  <FilterTab
+                    active={filter === "from-following"}
+                    onClick={() => handleFilterChange("from-following")}
+                    icon={<Users size={16} />}
+                    label="Following"
+                    count={filterCounts["from-following"]}
+                    disabled={isLoadingFollowing}
+                  />
+                  {showTopAccounts && (
+                    <FilterTab
+                      active={filter === "top-accounts"}
+                      onClick={() => handleFilterChange("top-accounts")}
+                      icon={<Crown size={16} />}
+                      label="Top Accounts"
+                      count={filterCounts["top-accounts"]}
+                    />
+                  )}
+                </div>
               </div>
 
-              {/* Desktop-only tabs */}
-              <div className="hidden gap-1 md:flex">
-                <FilterTab
-                  active={filter === "follows"}
-                  onClick={() => handleFilterChange("follows")}
-                  icon={<UserPlus size={16} />}
-                  label="Follows"
-                  count={filterCounts["follows"]}
-                />
-                <FilterTab
-                  active={filter === "replies"}
-                  onClick={() => handleFilterChange("replies")}
-                  icon={<MessageCircle size={16} />}
-                  label="Replies"
-                  count={filterCounts["replies"]}
-                />
-                <FilterTab
-                  active={filter === "quotes"}
-                  onClick={() => handleFilterChange("quotes")}
-                  icon={<Quote size={16} />}
-                  label="Quotes"
-                  count={filterCounts["quotes"]}
-                />
-                <FilterTab
-                  active={filter === "images"}
-                  onClick={() => handleFilterChange("images")}
-                  icon={<Image size={16} />}
-                  label="Images"
-                  count={filterCounts["images"]}
-                />
-                <FilterTab
-                  active={filter === "from-following"}
-                  onClick={() => handleFilterChange("from-following")}
-                  icon={<Users size={16} />}
-                  label="Following"
-                  count={filterCounts["from-following"]}
-                  disabled={isLoadingFollowing}
-                />
-                {showTopAccounts && (
-                  <FilterTab
-                    active={filter === "top-accounts"}
-                    onClick={() => handleFilterChange("top-accounts")}
-                    icon={<Crown size={16} />}
-                    label="Top Accounts"
-                    count={filterCounts["top-accounts"]}
-                  />
+              {/* More menu for mobile */}
+              <div className="relative md:hidden" ref={moreFiltersRef}>
+                <button
+                  onClick={() => setShowMoreFilters(!showMoreFilters)}
+                  className={`flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
+                    showMoreFilters
+                      ? "bg-bsky-primary text-white"
+                      : "text-bsky-text-secondary hover:bg-bsky-bg-secondary hover:text-bsky-text-primary"
+                  }`}
+                  aria-label="More filters"
+                >
+                  <MoreVertical size={16} />
+                </button>
+
+                {showMoreFilters && (
+                  <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-1 shadow-md">
+                    <button
+                      onClick={() => {
+                        handleFilterChange("quotes");
+                        setShowMoreFilters(false);
+                      }}
+                      className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
+                        filter === "quotes" ? "text-blue-500" : ""
+                      }`}
+                    >
+                      <Quote size={16} />
+                      <span>Quotes</span>
+                      {filterCounts["quotes"] > 0 && (
+                        <span className="ml-auto text-xs">
+                          ({filterCounts["quotes"]})
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleFilterChange("images");
+                        setShowMoreFilters(false);
+                      }}
+                      className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
+                        filter === "images" ? "text-blue-500" : ""
+                      }`}
+                    >
+                      <Image size={16} />
+                      <span>Images</span>
+                      {filterCounts["images"] > 0 && (
+                        <span className="ml-auto text-xs">
+                          ({filterCounts["images"]})
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleFilterChange("from-following");
+                        setShowMoreFilters(false);
+                      }}
+                      className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
+                        filter === "from-following" ? "text-blue-500" : ""
+                      }`}
+                      disabled={isLoadingFollowing}
+                    >
+                      <Users size={16} />
+                      <span>Following</span>
+                      {filterCounts["from-following"] > 0 && (
+                        <span className="ml-auto text-xs">
+                          ({filterCounts["from-following"]})
+                        </span>
+                      )}
+                    </button>
+                    {showTopAccounts && (
+                      <button
+                        onClick={() => {
+                          handleFilterChange("top-accounts");
+                          setShowMoreFilters(false);
+                        }}
+                        className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
+                          filter === "top-accounts" ? "text-blue-500" : ""
+                        }`}
+                      >
+                        <Crown size={16} />
+                        <span>Top Accounts</span>
+                        {filterCounts["top-accounts"] > 0 && (
+                          <span className="ml-auto text-xs">
+                            ({filterCounts["top-accounts"]})
+                          </span>
+                        )}
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* More menu for mobile */}
-            <div className="relative md:hidden" ref={moreFiltersRef}>
+            {/* Mark all as read button */}
+            {unreadCount > 0 && (
               <button
-                onClick={() => setShowMoreFilters(!showMoreFilters)}
-                className={`flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
-                  showMoreFilters
-                    ? "bg-bsky-primary text-white"
-                    : "text-bsky-text-secondary hover:bg-bsky-bg-secondary hover:text-bsky-text-primary"
-                }`}
-                aria-label="More filters"
+                onClick={() => markAsRead()}
+                className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-bsky-primary transition-all hover:bg-bsky-bg-secondary"
+                title="Mark all notifications as read"
               >
-                <MoreVertical size={16} />
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="flex-shrink-0"
+                >
+                  <polyline points="9 11 12 14 22 4" />
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                </svg>
+                <span className="hidden sm:inline">Mark all read</span>
               </button>
-
-              {showMoreFilters && (
-                <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-1 shadow-md">
-                  <button
-                    onClick={() => {
-                      handleFilterChange("quotes");
-                      setShowMoreFilters(false);
-                    }}
-                    className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
-                      filter === "quotes" ? "text-blue-500" : ""
-                    }`}
-                  >
-                    <Quote size={16} />
-                    <span>Quotes</span>
-                    {filterCounts["quotes"] > 0 && (
-                      <span className="ml-auto text-xs">
-                        ({filterCounts["quotes"]})
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleFilterChange("images");
-                      setShowMoreFilters(false);
-                    }}
-                    className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
-                      filter === "images" ? "text-blue-500" : ""
-                    }`}
-                  >
-                    <Image size={16} />
-                    <span>Images</span>
-                    {filterCounts["images"] > 0 && (
-                      <span className="ml-auto text-xs">
-                        ({filterCounts["images"]})
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleFilterChange("from-following");
-                      setShowMoreFilters(false);
-                    }}
-                    className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
-                      filter === "from-following" ? "text-blue-500" : ""
-                    }`}
-                    disabled={isLoadingFollowing}
-                  >
-                    <Users size={16} />
-                    <span>Following</span>
-                    {filterCounts["from-following"] > 0 && (
-                      <span className="ml-auto text-xs">
-                        ({filterCounts["from-following"]})
-                      </span>
-                    )}
-                  </button>
-                  {showTopAccounts && (
-                    <button
-                      onClick={() => {
-                        handleFilterChange("top-accounts");
-                        setShowMoreFilters(false);
-                      }}
-                      className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
-                        filter === "top-accounts" ? "text-blue-500" : ""
-                      }`}
-                    >
-                      <Crown size={16} />
-                      <span>Top Accounts</span>
-                      {filterCounts["top-accounts"] > 0 && (
-                        <span className="ml-auto text-xs">
-                          ({filterCounts["top-accounts"]})
-                        </span>
-                      )}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -688,6 +729,7 @@ export const NotificationsFeed: React.FC = () => {
                       fetchedPosts={fetchedPosts}
                       totalPosts={totalPosts}
                       percentageFetched={percentageFetched}
+                      markAsRead={markAsRead}
                       onNavigate={(url) => {
                         // Check if this is a thread URL
                         if (url.startsWith("/thread/")) {
@@ -742,6 +784,7 @@ export const NotificationsFeed: React.FC = () => {
                             totalPosts={totalPosts}
                             percentageFetched={percentageFetched}
                             setSelectedPostUri={setSelectedPostUri}
+                            markAsRead={markAsRead}
                           />
                         ))}
                         <button
@@ -776,6 +819,7 @@ export const NotificationsFeed: React.FC = () => {
                     totalPosts={totalPosts}
                     percentageFetched={percentageFetched}
                     setSelectedPostUri={setSelectedPostUri}
+                    markAsRead={markAsRead}
                   />
                 );
               }
@@ -795,6 +839,7 @@ export const NotificationsFeed: React.FC = () => {
               totalPosts={totalPosts}
               percentageFetched={percentageFetched}
               setSelectedPostUri={setSelectedPostUri}
+              markAsRead={markAsRead}
             />
           ))
         )}
@@ -985,6 +1030,7 @@ interface NotificationItemProps {
   totalPosts?: number;
   percentageFetched?: number;
   setSelectedPostUri: (uri: string | null) => void;
+  markAsRead: () => void;
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = React.memo(
@@ -998,6 +1044,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
     totalPosts = 0,
     percentageFetched = 100,
     setSelectedPostUri,
+    markAsRead,
   }) => {
     const navigate = useNavigate();
     // Get the post for all notification types that reference posts
@@ -1279,6 +1326,11 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
       // Prevent default behavior
       e.preventDefault();
 
+      // Mark notification as read when clicked
+      if (!notification.isRead) {
+        markAsRead();
+      }
+
       // For likes, reposts, replies, mentions, and quotes - open thread modal
       if (
         ["like", "repost", "reply", "mention", "quote"].includes(
@@ -1307,75 +1359,80 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
 
     return (
       <div
-        className={`bsky-notification flex cursor-pointer gap-2 px-3 py-2 ${
+        className={`bsky-notification cursor-pointer px-3 py-2 ${
           !notification.isRead ? "bsky-notification-unread" : ""
         }`}
         onClick={handleNotificationClick}
       >
-        <div className="w-6 flex-shrink-0 pt-1">
-          {getNotificationIcon(notification.reason)}
-        </div>
-
-        <div className="flex-shrink-0">
-          {notification.author.avatar ? (
-            <img
-              src={proxifyBskyImage(notification.author.avatar)}
-              alt={notification.author.handle}
-              className="bsky-avatar h-10 w-10 cursor-pointer transition-opacity hover:opacity-80"
-              onClick={handleAuthorClick}
-            />
-          ) : (
-            <div
-              className="bsky-avatar flex h-10 w-10 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
-              style={{ background: "var(--bsky-bg-tertiary)" }}
-              onClick={handleAuthorClick}
-            >
-              <span className="text-sm font-semibold">
-                {notification.author?.handle?.charAt(0).toUpperCase() || "U"}
-              </span>
+        <div className="flex items-start gap-2">
+          {/* Icon and Avatar section */}
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <div className="w-5">
+              {getNotificationIcon(notification.reason)}
             </div>
-          )}
-        </div>
-
-        <div className="min-w-0 flex-1">
-          {showTypeLabel && (
-            <div className="mb-0.5 flex items-center gap-2">
-              <span
-                className="rounded-full px-2 py-0.5 text-xs font-medium"
-                style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  color: "var(--bsky-text-secondary)",
-                  border: "1px solid var(--bsky-border-primary)",
-                }}
+            {notification.author.avatar ? (
+              <img
+                src={proxifyBskyImage(notification.author.avatar)}
+                alt={notification.author.handle}
+                className="bsky-avatar h-10 w-10 cursor-pointer transition-opacity hover:opacity-80"
+                onClick={handleAuthorClick}
+              />
+            ) : (
+              <div
+                className="bsky-avatar flex h-10 w-10 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
+                style={{ background: "var(--bsky-bg-tertiary)" }}
+                onClick={handleAuthorClick}
               >
-                {getNotificationTypeLabel(notification.reason)}
+                <span className="text-sm font-semibold">
+                  {notification.author?.handle?.charAt(0).toUpperCase() || "U"}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* User info and timestamp */}
+          <div className="min-w-0 flex-1">
+            {showTypeLabel && (
+              <div className="mb-0.5 flex items-center gap-2">
+                <span
+                  className="rounded-full px-2 py-0.5 text-xs font-medium"
+                  style={{
+                    backgroundColor: "var(--bsky-bg-secondary)",
+                    color: "var(--bsky-text-secondary)",
+                    border: "1px solid var(--bsky-border-primary)",
+                  }}
+                >
+                  {getNotificationTypeLabel(notification.reason)}
+                </span>
+              </div>
+            )}
+            <p className="text-sm">
+              <span
+                className="font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                {notification.author.displayName || notification.author.handle}
+              </span>{" "}
+              <span style={{ color: "var(--bsky-text-secondary)" }}>
+                {getNotificationText(notification.reason)}
               </span>
-            </div>
-          )}
-          <p className="text-sm">
-            <span
-              className="font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
-            >
-              {notification.author.displayName || notification.author.handle}
-            </span>{" "}
-            <span style={{ color: "var(--bsky-text-secondary)" }}>
-              {getNotificationText(notification.reason)}
-            </span>
-          </p>
-
-          {/* Show the referenced post content */}
-          {renderPostContent()}
-
-          <time
-            className="mt-2 block text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
-          >
-            {formatDistanceToNow(new Date(notification.indexedAt), {
-              addSuffix: true,
-            })}
-          </time>
+              <span
+                className="ml-1 text-xs"
+                style={{ color: "var(--bsky-text-tertiary)" }}
+              >
+                ·{" "}
+                {formatDistanceToNow(new Date(notification.indexedAt), {
+                  addSuffix: true,
+                })}
+              </span>
+            </p>
+          </div>
         </div>
+
+        {/* Show the referenced post content below, with left margin to align with profile picture */}
+        {renderPostContent() && (
+          <div className="ml-[1.75rem] mt-2">{renderPostContent()}</div>
+        )}
       </div>
     );
   },
