@@ -24,8 +24,8 @@ export const NotificationSettings: React.FC = () => {
     queryKey: ["preferences"],
     queryFn: async () => {
       if (!agent) return null;
-      const response = await agent.getPreferences();
-      return response.preferences; // Extract preferences array from response
+      const response = await agent.app.bsky.actor.getPreferences();
+      return response.data.preferences; // Extract preferences array from API response
     },
     enabled: !!agent,
   });
@@ -68,8 +68,8 @@ export const NotificationSettings: React.FC = () => {
         .map(([key]) => key);
 
       // Get current preferences and update
-      const currentPrefsResponse = await agent.getPreferences();
-      const currentPrefs = currentPrefsResponse.preferences;
+      const currentPrefsResponse = await agent.app.bsky.actor.getPreferences();
+      const currentPrefs = currentPrefsResponse.data.preferences;
 
       // Filter out old notification preferences
       const otherPrefs = Array.isArray(currentPrefs)

@@ -622,7 +622,7 @@ export const NotificationsFeed: React.FC = () => {
             </div>
 
             {/* Mark all as read button */}
-            {unreadCount > 0 && (
+            {unreadCount && unreadCount > 0 && (
               <button
                 onClick={() => markAsRead()}
                 className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-bsky-primary transition-all hover:bg-bsky-bg-secondary"
