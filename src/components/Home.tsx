@@ -948,6 +948,13 @@ export const Home: React.FC<HomeProps> = ({
     }
   }, [isFocused]);
 
+  // Clear focused post when column loses focus
+  useEffect(() => {
+    if (!isFocused) {
+      setFocusedPostIndex(-1);
+    }
+  }, [isFocused]);
+
   const renderEmbed = (embed: any) => {
     if (!embed) return null;
 
