@@ -176,7 +176,7 @@ export default function SkyColumn({
         <div className="relative flex-1 overflow-hidden">
           <div
             ref={scrollContainerRef}
-            className="bsky-scrollbar h-full overflow-y-auto"
+            className="bsky-scrollbar h-full overflow-y-auto overflow-x-hidden"
           >
             {renderContent()}
           </div>

@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useModal } from "../contexts/ModalContext";
 import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
 import { proxifyBskyImage } from "../utils/image-proxy";

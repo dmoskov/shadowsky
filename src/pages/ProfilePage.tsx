@@ -2,7 +2,7 @@ import { AppBskyFeedDefs } from "@atproto/api";
 import { getProfileService } from "@bsky/shared";
 import { Edit, MoreHorizontal, Share2, UserX, VolumeX } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { InlineReplyComposer } from "../components/InlineReplyComposer";
 import { PostActionBar } from "../components/PostActionBar";
 import { PostRenderer } from "../components/PostRenderer";

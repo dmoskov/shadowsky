@@ -16,7 +16,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useNotificationPosts } from "../hooks/useNotificationPosts";
 import { proxifyBskyImage } from "../utils/image-proxy";

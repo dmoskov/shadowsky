@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router";
 import { useSwipeable } from "react-swipeable";
 import { useAuth } from "../contexts/AuthContext";
 

@@ -9,7 +9,7 @@ import {
   Reply,
 } from "lucide-react";
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { parseBskyUrl } from "../utils/url-helpers";
 import { ImageGallery } from "./ImageGallery";

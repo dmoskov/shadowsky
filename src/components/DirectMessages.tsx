@@ -116,10 +116,10 @@ export const DirectMessages: React.FC = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] overflow-hidden bg-bsky-bg-primary lg:h-[calc(100vh-4rem)]">
+    <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden bg-bsky-bg-primary lg:h-[calc(100vh-4rem)]">
       {/* Conversations list */}
       <div
-        className={`md:max-w-2/5 flex h-full w-full flex-col border-r border-bsky-border-primary md:w-80 md:min-w-60 ${selectedConversation ? "hidden md:flex" : "flex"}`}
+        className={`flex h-full w-full flex-col overflow-hidden border-r border-bsky-border-primary md:w-80 md:max-w-sm ${selectedConversation ? "hidden md:flex" : "flex"}`}
       >
         <div className="border-b border-bsky-border-primary p-4">
           <h2
@@ -130,7 +130,7 @@ export const DirectMessages: React.FC = () => {
           </h2>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
           {chatError ? (
             <div className="p-4">
               <div
@@ -197,43 +197,45 @@ export const DirectMessages: React.FC = () => {
                 <div
                   key={conversation.id}
                   onClick={() => setSelectedConversation(conversation.id)}
-                  className={`cursor-pointer border-b border-bsky-border-primary p-4 transition-colors duration-200 hover:bg-bsky-bg-secondary ${selectedConversation === conversation.id ? "bg-bsky-bg-secondary" : ""}`}
+                  className={`cursor-pointer overflow-hidden border-b border-bsky-border-primary p-4 transition-colors duration-200 hover:bg-bsky-bg-secondary ${selectedConversation === conversation.id ? "bg-bsky-bg-secondary" : ""}`}
                 >
-                  <div className="flex items-center">
-                    {otherMember.avatar ? (
-                      <img
-                        src={otherMember.avatar}
-                        alt={otherMember.handle || otherMember.did}
-                        className="h-10 w-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300">
-                        <span className="text-lg text-gray-600">
-                          {(otherMember.displayName ||
-                            otherMember.handle ||
-                            "U")[0].toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    <div className="ml-3 min-w-0 flex-1">
-                      <div className="overflow-hidden text-ellipsis whitespace-nowrap font-semibold text-bsky-text-primary">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="flex-shrink-0">
+                      {otherMember.avatar ? (
+                        <img
+                          src={otherMember.avatar}
+                          alt={otherMember.handle || otherMember.did}
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300">
+                          <span className="text-lg text-gray-600">
+                            {(otherMember.displayName ||
+                              otherMember.handle ||
+                              "U")[0].toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="line-clamp-1 break-words font-semibold text-bsky-text-primary">
                         {otherMember.displayName ||
                           otherMember.handle ||
                           "Unknown User"}
                       </div>
                       {otherMember.handle && (
-                        <div className="overflow-hidden text-ellipsis whitespace-nowrap text-sm text-bsky-text-secondary">
+                        <div className="line-clamp-1 break-words text-sm text-bsky-text-secondary">
                           @{otherMember.handle}
                         </div>
                       )}
                       {conversation.lastMessage && (
-                        <div className="mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-bsky-text-secondary">
+                        <div className="mt-1 line-clamp-1 break-words text-sm text-bsky-text-secondary">
                           {conversation.lastMessage.text}
                         </div>
                       )}
                     </div>
                     {conversation.unreadCount > 0 && (
-                      <div className="min-w-5 rounded-full bg-bsky-primary px-2 py-0.5 text-center text-xs text-white">
+                      <div className="flex-shrink-0 rounded-full bg-bsky-primary px-2 py-0.5 text-center text-xs text-white">
                         {conversation.unreadCount}
                       </div>
                     )}

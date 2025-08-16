@@ -3,7 +3,7 @@ import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notif
 import { formatDistanceToNow } from "date-fns";
 import { CornerDownRight, ExternalLink, Loader2 } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { atUriToBskyUrl, getNotificationUrl } from "../utils/url-helpers";

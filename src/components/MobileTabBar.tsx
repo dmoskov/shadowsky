@@ -1,6 +1,6 @@
 import { Bell, Home, Mail, Search, User } from "lucide-react";
 import React, { useRef } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useUnreadNotificationCount } from "../hooks/useNotifications";
 

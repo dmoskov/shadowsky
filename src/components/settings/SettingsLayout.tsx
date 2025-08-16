@@ -1,6 +1,6 @@
 import { Bell, Bookmark, Database, Palette, Shield, User } from "lucide-react";
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink } from "react-router";
 
 interface SettingsLayoutProps {
   children: React.ReactNode;

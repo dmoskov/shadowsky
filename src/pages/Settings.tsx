@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { AccountSettings } from "../components/settings/AccountSettings";
 import { AppearanceSettings } from "../components/settings/AppearanceSettings";
 import { BookmarkSettings } from "../components/settings/BookmarkSettings";

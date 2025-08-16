@@ -1,7 +1,7 @@
 import { AppBskyActorDefs } from "@atproto/api";
 import { X } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { proxifyBskyImage } from "../utils/image-proxy";
 
