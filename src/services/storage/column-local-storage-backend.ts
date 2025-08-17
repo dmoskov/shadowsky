@@ -1,55 +1,71 @@
 import { AtpAgent } from "@atproto/api";
-import { Column } from "../../components/SkyDeck";
 import { ColumnStorageBackend } from "./column-storage-backend";
+import { Column, StoredColumn } from "./types";
 
-export class ColumnLocalStorageBackend extends ColumnStorageBackend {
-  private readonly STORAGE_KEY = "skyDeckColumns";
+const STORAGE_KEY = "shadowsky_columns";
 
-  async initialize(agent?: AtpAgent): Promise<void> {
-    this.agent = agent;
-    // Local storage doesn't need initialization
+export class ColumnLocalStorageBackend implements ColumnStorageBackend {
+  setAgent(_agent: AtpAgent | null): void {
+    // Local storage doesn't need agent
   }
 
-  async getAll(): Promise<Column[]> {
+  async saveColumns(columns: Column[]): Promise<void> {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      if (!stored) return [];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(columns));
+    } catch (error) {
+      console.error("Failed to save columns to localStorage:", error);
+      throw error;
+    }
+  }
 
-      const columns = JSON.parse(stored);
-      return Array.isArray(columns) ? columns : [];
+  async loadColumns(): Promise<Column[]> {
+    try {
+      const data = localStorage.getItem(STORAGE_KEY);
+      return data ? JSON.parse(data) : [];
     } catch (error) {
       console.error("Failed to load columns from localStorage:", error);
       return [];
     }
   }
 
-  async get(id: string): Promise<Column | undefined> {
-    const columns = await this.getAll();
-    return columns.find((col) => col.id === id);
-  }
+  async addColumn(column: Column): Promise<void> {
+    const columns = await this.loadColumns();
+    const exists = columns.some((c) => c.id === column.id);
 
-  async create(column: Column): Promise<void> {
-    const columns = await this.getAll();
-    columns.push(column);
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(columns));
-  }
-
-  async update(id: string, column: Column): Promise<void> {
-    const columns = await this.getAll();
-    const index = columns.findIndex((col) => col.id === id);
-    if (index !== -1) {
-      columns[index] = { ...column, id }; // Ensure ID doesn't change
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(columns));
+    if (!exists) {
+      columns.push(column);
+      await this.saveColumns(columns);
     }
   }
 
-  async delete(id: string): Promise<void> {
-    const columns = await this.getAll();
-    const filtered = columns.filter((col) => col.id !== id);
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(filtered));
+  async updateColumn(
+    columnId: string,
+    updates: Partial<Column>,
+  ): Promise<void> {
+    const columns = await this.loadColumns();
+    const index = columns.findIndex((c) => c.id === columnId);
+
+    if (index !== -1) {
+      columns[index] = {
+        ...columns[index],
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      } as StoredColumn;
+      await this.saveColumns(columns);
+    }
   }
 
-  async clear(): Promise<void> {
-    localStorage.removeItem(this.STORAGE_KEY);
+  async deleteColumn(columnId: string): Promise<void> {
+    const columns = await this.loadColumns();
+    const filtered = columns.filter((c) => c.id !== columnId);
+
+    if (filtered.length !== columns.length) {
+      await this.saveColumns(filtered);
+    }
+  }
+
+  async migrateFrom(sourceBackend: ColumnStorageBackend): Promise<void> {
+    const columns = await sourceBackend.loadColumns();
+    await this.saveColumns(columns);
   }
 }

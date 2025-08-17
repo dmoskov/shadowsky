@@ -1,4 +1,4 @@
-import { Bell, Bookmark, Database, Palette, Shield, User } from "lucide-react";
+import { Bell, Database, Palette, Shield, User } from "lucide-react";
 import React from "react";
 import { NavLink } from "react-router";
 
@@ -30,12 +30,6 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
       label: "Privacy & Safety",
       icon: Shield,
       path: "/settings/privacy",
-    },
-    {
-      id: "bookmarks",
-      label: "Bookmarks",
-      icon: Bookmark,
-      path: "/settings/bookmarks",
     },
     {
       id: "data",

@@ -1,6 +1,16 @@
 import { AtpAgent } from "@atproto/api";
+import type { Column } from "../../components/SkyDeck";
 
 export type StorageType = "local" | "custom";
+
+// Re-export Column type for other storage modules
+export type { Column };
+
+// Extended Column type for storage with timestamps
+export interface StoredColumn extends Column {
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export interface StorageBackend<T> {
   initialize(agent?: AtpAgent): Promise<void>;

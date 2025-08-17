@@ -1,7 +1,6 @@
 import { useParams } from "react-router";
 import { AccountSettings } from "../components/settings/AccountSettings";
 import { AppearanceSettings } from "../components/settings/AppearanceSettings";
-import { BookmarkSettings } from "../components/settings/BookmarkSettings";
 import { DataSettings } from "../components/settings/DataSettings";
 import { NotificationSettings } from "../components/settings/NotificationSettings";
 import { PrivacySettings } from "../components/settings/PrivacySettings";
@@ -20,8 +19,6 @@ export const Settings = () => {
         return <NotificationSettings />;
       case "privacy":
         return <PrivacySettings />;
-      case "bookmarks":
-        return <BookmarkSettings />;
       case "data":
         return <DataSettings />;
       default:

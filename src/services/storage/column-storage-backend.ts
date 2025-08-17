@@ -1,29 +1,12 @@
 import { AtpAgent } from "@atproto/api";
-import { Column } from "../../components/SkyDeck";
-import { StorageBackend } from "./types";
+import { Column } from "./types";
 
-export abstract class ColumnStorageBackend implements StorageBackend<Column> {
-  protected agent?: AtpAgent;
-
-  abstract initialize(agent?: AtpAgent): Promise<void>;
-  abstract getAll(): Promise<Column[]>;
-  abstract get(id: string): Promise<Column | undefined>;
-  abstract create(column: Column): Promise<void>;
-  abstract update(id: string, column: Column): Promise<void>;
-  abstract delete(id: string): Promise<void>;
-  abstract clear(): Promise<void>;
-
-  async export(): Promise<Column[]> {
-    return this.getAll();
-  }
-
-  async import(columns: Column[]): Promise<void> {
-    // Clear existing columns
-    await this.clear();
-
-    // Import new columns
-    for (const column of columns) {
-      await this.create(column);
-    }
-  }
+export interface ColumnStorageBackend {
+  setAgent(agent: AtpAgent | null): void;
+  saveColumns(columns: Column[]): Promise<void>;
+  loadColumns(): Promise<Column[]>;
+  addColumn(column: Column): Promise<void>;
+  updateColumn(columnId: string, updates: Partial<Column>): Promise<void>;
+  deleteColumn(columnId: string): Promise<void>;
+  migrateFrom(sourceBackend: ColumnStorageBackend): Promise<void>;
 }

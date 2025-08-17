@@ -1,6 +1,6 @@
 import { AtpAgent } from "@atproto/api";
 import { Column } from "../components/SkyDeck";
-import { ColumnCustomRecordBackend } from "./storage/column-custom-record-backend";
+import { ColumnAtProtoBackend } from "./storage/column-atproto-backend";
 import { ColumnLocalStorageBackend } from "./storage/column-local-storage-backend";
 import { ColumnStorageBackend } from "./storage/column-storage-backend";
 import { StorageType } from "./storage/types";
@@ -21,12 +21,11 @@ export class ColumnService {
 
     // Initialize the appropriate backend
     if (storageType === "custom") {
-      this.backend = new ColumnCustomRecordBackend();
+      this.backend = new ColumnAtProtoBackend();
+      this.backend.setAgent(agent);
     } else {
       this.backend = new ColumnLocalStorageBackend();
     }
-
-    await this.backend.initialize(agent);
   }
 
   setAgent(agent: AtpAgent | null) {
@@ -38,36 +37,37 @@ export class ColumnService {
   }
 
   async getColumns(): Promise<Column[]> {
-    return this.backend.getAll();
+    return this.backend.loadColumns();
   }
 
   async getColumn(id: string): Promise<Column | undefined> {
-    return this.backend.get(id);
+    const columns = await this.backend.loadColumns();
+    return columns.find((c) => c.id === id);
   }
 
   async createColumn(column: Column): Promise<void> {
-    return this.backend.create(column);
+    return this.backend.addColumn(column);
   }
 
-  async updateColumn(id: string, column: Column): Promise<void> {
-    return this.backend.update(id, column);
+  async updateColumn(id: string, column: Partial<Column>): Promise<void> {
+    return this.backend.updateColumn(id, column as Column);
   }
 
   async deleteColumn(id: string): Promise<void> {
-    return this.backend.delete(id);
+    return this.backend.deleteColumn(id);
   }
 
   async getColumnCount(): Promise<number> {
-    const columns = await this.backend.getAll();
+    const columns = await this.backend.loadColumns();
     return columns.length;
   }
 
   async exportAllColumns(): Promise<Column[]> {
-    return this.backend.export();
+    return this.backend.loadColumns();
   }
 
   async importColumns(columns: Column[]): Promise<number> {
-    await this.backend.import(columns);
+    await this.backend.saveColumns(columns);
     return columns.length;
   }
 
@@ -78,18 +78,21 @@ export class ColumnService {
     if (fromType === toType) return;
 
     // Export from current backend
-    const columns = await this.backend.export();
+    await this.backend.loadColumns();
 
     // Initialize new backend
-    const newBackend =
-      toType === "custom"
-        ? new ColumnCustomRecordBackend()
-        : new ColumnLocalStorageBackend();
+    let newBackend: ColumnStorageBackend;
+    if (toType === "custom") {
+      newBackend = new ColumnAtProtoBackend();
+      if (this.agent) {
+        newBackend.setAgent(this.agent);
+      }
+    } else {
+      newBackend = new ColumnLocalStorageBackend();
+    }
 
-    await newBackend.initialize(this.agent || undefined);
-
-    // Import to new backend
-    await newBackend.import(columns);
+    // Migrate data
+    await newBackend.migrateFrom(this.backend);
 
     // Switch to new backend
     this.backend = newBackend;
@@ -97,7 +100,7 @@ export class ColumnService {
   }
 
   async clearAllColumns(): Promise<void> {
-    return this.backend.clear();
+    return this.backend.saveColumns([]);
   }
 }
 
