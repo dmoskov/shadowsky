@@ -1,8 +1,7 @@
 import { AtpAgent } from "@atproto/api";
 import { ColumnStorageBackend } from "./column-storage-backend";
 import { Column, StoredColumn } from "./types";
-
-const STORAGE_KEY = "shadowsky_columns";
+import { LOCAL_STORAGE_KEYS } from "./storage-constants";
 
 export class ColumnLocalStorageBackend implements ColumnStorageBackend {
   setAgent(_agent: AtpAgent | null): void {
@@ -11,7 +10,9 @@ export class ColumnLocalStorageBackend implements ColumnStorageBackend {
 
   async saveColumns(columns: Column[]): Promise<void> {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(columns));
+      localStorage.setItem(LOCAL_STORAGE_KEYS.COLUMNS, JSON.stringify(columns));
+      // Also update the legacy key to maintain compatibility with SkyDeck
+      localStorage.setItem(LOCAL_STORAGE_KEYS.COLUMNS_LEGACY, JSON.stringify(columns));
     } catch (error) {
       console.error("Failed to save columns to localStorage:", error);
       throw error;
@@ -20,7 +21,33 @@ export class ColumnLocalStorageBackend implements ColumnStorageBackend {
 
   async loadColumns(): Promise<Column[]> {
     try {
-      const data = localStorage.getItem(STORAGE_KEY);
+      // Check if we've already migrated
+      const migrated = localStorage.getItem(LOCAL_STORAGE_KEYS.COLUMNS_MIGRATED);
+      
+      // First try to load from new key
+      let data = localStorage.getItem(LOCAL_STORAGE_KEYS.COLUMNS);
+      
+      // If no data in new key and haven't migrated yet, check legacy key
+      if (!data && !migrated) {
+        const legacyData = localStorage.getItem(LOCAL_STORAGE_KEYS.COLUMNS_LEGACY);
+        if (legacyData) {
+          console.log("Migrating columns from legacy storage key");
+          // Parse and validate legacy data
+          try {
+            const legacyColumns = JSON.parse(legacyData);
+            if (Array.isArray(legacyColumns) && legacyColumns.length > 0) {
+              // Save to new key
+              await this.saveColumns(legacyColumns);
+              // Mark as migrated
+              localStorage.setItem(LOCAL_STORAGE_KEYS.COLUMNS_MIGRATED, "true");
+              return legacyColumns;
+            }
+          } catch (e) {
+            console.error("Failed to parse legacy columns:", e);
+          }
+        }
+      }
+      
       return data ? JSON.parse(data) : [];
     } catch (error) {
       console.error("Failed to load columns from localStorage:", error);

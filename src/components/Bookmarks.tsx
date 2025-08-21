@@ -36,6 +36,9 @@ export const Bookmarks: React.FC = () => {
     queryKey: ["bookmarks", searchQuery],
     queryFn: async () => {
       console.log("Fetching bookmarks...");
+      // Refresh cache from remote storage before fetching
+      await bookmarkServiceV2.refreshCache();
+      
       if (searchQuery) {
         const results = await bookmarkServiceV2.searchBookmarks(searchQuery);
         console.log("Search results:", results);
@@ -45,13 +48,16 @@ export const Bookmarks: React.FC = () => {
       console.log("Bookmarks loaded:", bookmarks);
       return bookmarks;
     },
-    staleTime: 30000,
+    staleTime: 0, // Always refetch when component mounts
   });
 
   const { data: bookmarkCount } = useQuery({
     queryKey: ["bookmarkCount"],
-    queryFn: () => bookmarkServiceV2.getBookmarkCount(),
-    staleTime: 30000,
+    queryFn: async () => {
+      // Refresh cache is already called in the main bookmarks query
+      return bookmarkServiceV2.getBookmarkCount();
+    },
+    staleTime: 0, // Always refetch when component mounts
   });
 
   const handleBookmarkToggle = async (post: AppBskyFeedDefs.PostView) => {

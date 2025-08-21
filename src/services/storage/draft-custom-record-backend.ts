@@ -24,6 +24,7 @@ interface DraftRecord {
 export class DraftCustomRecordBackend extends DraftStorageBackend {
   private readonly COLLECTION = "com.shadowsky.draft";
   private initialized = false;
+  private errorCallback?: (error: Error, action: string) => void;
 
   async initialize(agent?: AtpAgent): Promise<void> {
     if (!agent) {
@@ -31,6 +32,18 @@ export class DraftCustomRecordBackend extends DraftStorageBackend {
     }
     this.agent = agent;
     this.initialized = true;
+  }
+
+  setErrorCallback(callback: (error: Error, action: string) => void) {
+    this.errorCallback = callback;
+  }
+
+  private handleError(error: any, action: string): void {
+    if (this.errorCallback) {
+      this.errorCallback(error, action);
+    } else {
+      console.error(`Failed to ${action}:`, error);
+    }
   }
 
   private ensureInitialized() {
@@ -101,7 +114,7 @@ export class DraftCustomRecordBackend extends DraftStorageBackend {
           );
         });
     } catch (error) {
-      console.error("Failed to fetch draft records:", error);
+      this.handleError(error, "fetch draft records");
       return [];
     }
   }
@@ -121,7 +134,7 @@ export class DraftCustomRecordBackend extends DraftStorageBackend {
 
       return this.recordToDraft(response.data.value as DraftRecord);
     } catch (error) {
-      console.error(`Failed to fetch draft ${id}:`, error);
+      this.handleError(error, `fetch draft ${id}`);
       return undefined;
     }
   }
@@ -142,7 +155,7 @@ export class DraftCustomRecordBackend extends DraftStorageBackend {
         record,
       });
     } catch (error) {
-      console.error("Failed to create draft record:", error);
+      this.handleError(error, "create draft record");
       throw error;
     }
   }
@@ -163,7 +176,7 @@ export class DraftCustomRecordBackend extends DraftStorageBackend {
         record,
       });
     } catch (error) {
-      console.error("Failed to update draft record:", error);
+      this.handleError(error, "update draft record");
       throw error;
     }
   }
@@ -181,7 +194,7 @@ export class DraftCustomRecordBackend extends DraftStorageBackend {
         rkey: this.getRecordKey(id),
       });
     } catch (error) {
-      console.error("Failed to delete draft record:", error);
+      this.handleError(error, "delete draft record");
       throw error;
     }
   }
@@ -195,7 +208,7 @@ export class DraftCustomRecordBackend extends DraftStorageBackend {
         await this.delete(draft.id);
       }
     } catch (error) {
-      console.error("Failed to clear draft records:", error);
+      this.handleError(error, "clear draft records");
       throw error;
     }
   }

@@ -1,14 +1,17 @@
 import { BskyAgent } from "@atproto/api";
 import { createLogger } from "../utils/logger";
+import { AT_PROTO_COLLECTIONS } from "./storage/storage-constants";
 
-// Define the app preferences stored in AT Protocol preferences API
+// Define the app preferences stored as custom record
 export interface ShadowSkyPreferences {
-  $type: "com.shadowsky.prefs";
+  $type: "com.shadowsky.preferences";
   bookmarkStorageType: "local" | "custom";
   columnStorageType: "local" | "atproto";
-  appSettingsVersion: number;
+  draftStorageType: "local" | "custom";
+  appSettingsVersion?: number;
   createdAt: string;
   updatedAt: string;
+  version: number;
 }
 
 // Column data stored in preferences
@@ -21,6 +24,56 @@ export interface ShadowSkyColumns {
     data?: string;
     createdAt: string;
     updatedAt: string;
+    // Feed preferences for feed-type columns
+    selectedFeedUri?: string;
+  }>;
+  version: number;
+}
+
+// Bookmark data stored as singleton
+export interface ShadowSkyBookmarks {
+  $type: "com.shadowsky.bookmarks";
+  bookmarks: Array<{
+    uri: string;
+    cid: string;
+    author: {
+      did: string;
+      handle: string;
+      displayName?: string;
+      avatar?: string;
+    };
+    text: string;
+    createdAt: string;
+    bookmarkedAt: string;
+  }>;
+  version: number;
+}
+
+// Draft data stored as singleton
+export interface ShadowSkyDrafts {
+  $type: "com.shadowsky.drafts";
+  drafts: Array<{
+    id: string;
+    text: string;
+    createdAt: string;
+    updatedAt: string;
+    replyTo?: {
+      uri: string;
+      cid: string;
+      author: {
+        did: string;
+        handle: string;
+      };
+    };
+    quote?: {
+      uri: string;
+      cid: string;
+    };
+    images?: Array<{
+      alt: string;
+      data?: string; // base64
+      url?: string;
+    }>;
   }>;
   version: number;
 }
@@ -33,10 +86,14 @@ export interface AppPreferencesRecord {
   draftStorageType: "local" | "custom";
   createdAt: string;
   updatedAt: string;
+  // Track if preferences are stored in AT Protocol
+  isStoredInAtProto?: boolean;
 }
 
-const PREFERENCES_KEY = "com.shadowsky.prefs";
-const COLUMNS_KEY = "com.shadowsky.columns";
+const PREFERENCES_COLLECTION = "com.shadowsky.preferences";
+const PREFERENCES_RKEY = "self";
+const COLUMNS_COLLECTION = "com.shadowsky.columns";
+const COLUMNS_RKEY = "self";
 const logger = createLogger("AppPreferencesService");
 
 export class AppPreferencesService {
@@ -57,43 +114,62 @@ export class AppPreferencesService {
 
     // Return cached preferences if available
     if (this.preferencesCache) {
+      logger.log("Returning cached preferences:", this.preferencesCache);
       return this.preferencesCache;
     }
 
     try {
-      // Try to get preferences from AT Protocol preferences API
-      const response = await this.agent.api.app.bsky.actor.getPreferences();
+      // Try to get preferences from AT Protocol custom record
+      const response = await this.agent.api.com.atproto.repo.getRecord({
+        repo: this.agent.session?.did || "",
+        collection: PREFERENCES_COLLECTION,
+        rkey: PREFERENCES_RKEY,
+      });
 
-      // Look for our preferences in the response
-      const shadowSkyPref = response.data.preferences.find(
-        (pref: any) => pref.$type === PREFERENCES_KEY,
-      ) as ShadowSkyPreferences | undefined;
-
-      if (shadowSkyPref) {
+      if (response.data.value) {
+        const shadowSkyPref = response.data
+          .value as unknown as ShadowSkyPreferences;
+        logger.log("Loaded from AT Protocol:", shadowSkyPref);
         // Convert from new format to legacy format
         const prefs: AppPreferencesRecord = {
           $type: "app.shadowsky.preferences",
-          bookmarkStorageType: shadowSkyPref.bookmarkStorageType,
+          bookmarkStorageType: shadowSkyPref.bookmarkStorageType || "local",
           columnStorageType:
-            shadowSkyPref.columnStorageType === "atproto" ? "custom" : "local",
-          draftStorageType: "local", // Always local
+            shadowSkyPref.columnStorageType === "atproto" ? "custom" : (shadowSkyPref.columnStorageType || "local"),
+          draftStorageType: shadowSkyPref.draftStorageType || "local",
           createdAt: shadowSkyPref.createdAt,
           updatedAt: shadowSkyPref.updatedAt,
         };
+        // Mark that we loaded from AT Protocol
+        (prefs as any).isStoredInAtProto = true;
+        logger.log("Converted preferences:", prefs);
         this.preferencesCache = prefs;
         return prefs;
       }
-    } catch (error) {
-      logger.log("Failed to fetch preferences from AT Protocol:", error);
+    } catch (error: any) {
+      // 400 error means record doesn't exist yet, which is normal
+      if (error?.status !== 400) {
+        logger.log("Failed to fetch preferences from AT Protocol:", error);
+      }
     }
 
     // Try to load from localStorage as fallback
     const localPrefs = this.loadFromLocalStorage();
     if (localPrefs) {
-      this.preferencesCache = localPrefs;
-      // Migrate to AT Protocol preferences
-      await this.migrateToAtProtoPrefs(localPrefs);
-      return localPrefs;
+      // Ensure all required fields are present
+      const validatedPrefs: AppPreferencesRecord = {
+        $type: "app.shadowsky.preferences",
+        bookmarkStorageType: localPrefs.bookmarkStorageType || "local",
+        columnStorageType: localPrefs.columnStorageType || "local",
+        draftStorageType: localPrefs.draftStorageType || "local",
+        createdAt: localPrefs.createdAt || new Date().toISOString(),
+        updatedAt: localPrefs.updatedAt || new Date().toISOString(),
+      };
+      // Mark that we loaded from localStorage
+      (validatedPrefs as any).isStoredInAtProto = false;
+      this.preferencesCache = validatedPrefs;
+      // Don't migrate automatically - wait for user action
+      return validatedPrefs;
     }
 
     // Create default preferences
@@ -123,30 +199,51 @@ export class AppPreferencesService {
         updatedAt: new Date().toISOString(),
       };
 
-      // Save to AT Protocol preferences API
+      logger.log("Updating preferences:", { currentPrefs, updates, updatedPrefs });
+
+      // Clear cache immediately to ensure fresh data on next read
+      this.preferencesCache = null;
+
+      // Save to AT Protocol as custom record
       const shadowSkyPref: ShadowSkyPreferences = {
-        $type: PREFERENCES_KEY,
-        bookmarkStorageType: updatedPrefs.bookmarkStorageType,
+        $type: PREFERENCES_COLLECTION,
+        bookmarkStorageType: updatedPrefs.bookmarkStorageType || "local",
         columnStorageType:
-          updatedPrefs.columnStorageType === "custom" ? "atproto" : "local",
+          updatedPrefs.columnStorageType === "custom" ? "atproto" : (updatedPrefs.columnStorageType || "local"),
+        draftStorageType: updatedPrefs.draftStorageType || "local",
         appSettingsVersion: 1,
-        createdAt: updatedPrefs.createdAt,
-        updatedAt: updatedPrefs.updatedAt,
+        createdAt: updatedPrefs.createdAt || new Date().toISOString(),
+        updatedAt: updatedPrefs.updatedAt || new Date().toISOString(),
+        version: 1,
       };
 
+      logger.log("Saving to AT Protocol:", shadowSkyPref);
+
       try {
-        // Get current preferences from API
-        const response = await this.agent.api.app.bsky.actor.getPreferences();
+        const did = this.agent.session?.did;
+        if (!did) throw new Error("No DID available");
 
-        // Filter out our preference type and add the updated one
-        const otherPrefs = response.data.preferences.filter(
-          (pref: any) => pref.$type !== PREFERENCES_KEY,
-        );
-
-        // Update preferences
-        await this.agent.api.app.bsky.actor.putPreferences({
-          preferences: [...otherPrefs, shadowSkyPref],
-        });
+        // Try to update existing record
+        try {
+          await this.agent.api.com.atproto.repo.putRecord({
+            repo: did,
+            collection: PREFERENCES_COLLECTION,
+            rkey: PREFERENCES_RKEY,
+            record: shadowSkyPref as any,
+          });
+        } catch (putError: any) {
+          // If record doesn't exist, create it
+          if (putError?.status === 400) {
+            await this.agent.api.com.atproto.repo.createRecord({
+              repo: did,
+              collection: PREFERENCES_COLLECTION,
+              rkey: PREFERENCES_RKEY,
+              record: shadowSkyPref as any,
+            });
+          } else {
+            throw putError;
+          }
+        }
 
         logger.log("Successfully saved preferences to AT Protocol");
       } catch (atProtoError) {
@@ -181,14 +278,35 @@ export class AppPreferencesService {
       draftStorageType: "local", // Always local storage
       createdAt: now,
       updatedAt: now,
+      isStoredInAtProto: false,
     };
 
     // Try to save to AT Protocol
     if (this.agent) {
-      await this.updatePreferences({
-        bookmarkStorageType: defaultPrefs.bookmarkStorageType,
-        columnStorageType: defaultPrefs.columnStorageType,
-      });
+      try {
+        const shadowSkyPref: ShadowSkyPreferences = {
+          $type: AT_PROTO_COLLECTIONS.PREFERENCES,
+          bookmarkStorageType: defaultPrefs.bookmarkStorageType,
+          columnStorageType: defaultPrefs.columnStorageType === "custom" ? "atproto" : defaultPrefs.columnStorageType,
+          draftStorageType: defaultPrefs.draftStorageType,
+          createdAt: defaultPrefs.createdAt,
+          updatedAt: defaultPrefs.updatedAt,
+          version: 1,
+        };
+        
+        await this.agent.api.com.atproto.repo.createRecord({
+          repo: this.agent.session?.did || "",
+          collection: PREFERENCES_COLLECTION,
+          rkey: PREFERENCES_RKEY,
+          record: shadowSkyPref as any,
+        });
+        
+        (defaultPrefs as any).isStoredInAtProto = true;
+        logger.log("Created default preferences in AT Protocol");
+      } catch (error) {
+        logger.log("Failed to create preferences in AT Protocol, saving to localStorage:", error);
+        this.saveToLocalStorage(defaultPrefs);
+      }
     } else {
       // Save to localStorage
       this.saveToLocalStorage(defaultPrefs);
@@ -196,22 +314,6 @@ export class AppPreferencesService {
 
     this.preferencesCache = defaultPrefs;
     return defaultPrefs;
-  }
-
-  private async migrateToAtProtoPrefs(
-    localPrefs: AppPreferencesRecord,
-  ): Promise<void> {
-    if (!this.agent) return;
-
-    try {
-      await this.updatePreferences({
-        bookmarkStorageType: localPrefs.bookmarkStorageType,
-        columnStorageType: localPrefs.columnStorageType,
-      });
-      logger.log("Successfully migrated preferences to AT Protocol");
-    } catch (error) {
-      logger.error("Failed to migrate preferences to AT Protocol:", error);
-    }
   }
 
   private loadFromLocalStorage(): AppPreferencesRecord | null {
@@ -246,22 +348,25 @@ export class AppPreferencesService {
     }
 
     try {
-      const response = await this.agent.api.app.bsky.actor.getPreferences();
+      const response = await this.agent.api.com.atproto.repo.getRecord({
+        repo: this.agent.session?.did || "",
+        collection: COLUMNS_COLLECTION,
+        rkey: COLUMNS_RKEY,
+      });
 
-      const columnsPref = response.data.preferences.find(
-        (pref: any) => pref.$type === COLUMNS_KEY,
-      ) as ShadowSkyColumns | undefined;
-
-      if (columnsPref) {
-        return columnsPref;
+      if (response.data.value) {
+        return response.data.value as unknown as ShadowSkyColumns;
       }
-    } catch (error) {
-      logger.log("Failed to fetch columns from AT Protocol:", error);
+    } catch (error: any) {
+      // 400 error means record doesn't exist yet
+      if (error?.status !== 400) {
+        logger.log("Failed to fetch columns from AT Protocol:", error);
+      }
     }
 
     // Return default empty columns
     return {
-      $type: COLUMNS_KEY,
+      $type: COLUMNS_COLLECTION,
       columns: [],
       version: 1,
     };
@@ -275,25 +380,37 @@ export class AppPreferencesService {
 
     try {
       const columnsPref: ShadowSkyColumns = {
-        $type: COLUMNS_KEY,
+        $type: COLUMNS_COLLECTION,
         columns: columns,
         version: 1,
       };
 
-      // Get current preferences from API
-      const response = await this.agent.api.app.bsky.actor.getPreferences();
+      const did = this.agent.session?.did;
+      if (!did) throw new Error("No DID available");
 
-      // Filter out our columns preference type and add the updated one
-      const otherPrefs = response.data.preferences.filter(
-        (pref: any) => pref.$type !== COLUMNS_KEY,
-      );
+      // Try to update existing record
+      try {
+        await this.agent.api.com.atproto.repo.putRecord({
+          repo: did,
+          collection: COLUMNS_COLLECTION,
+          rkey: COLUMNS_RKEY,
+          record: columnsPref as any,
+        });
+      } catch (putError: any) {
+        // If record doesn't exist, create it
+        if (putError?.status === 400) {
+          await this.agent.api.com.atproto.repo.createRecord({
+            repo: did,
+            collection: COLUMNS_COLLECTION,
+            rkey: COLUMNS_RKEY,
+            record: columnsPref as any,
+          });
+        } else {
+          throw putError;
+        }
+      }
 
-      // Update preferences
-      await this.agent.api.app.bsky.actor.putPreferences({
-        preferences: [...otherPrefs, columnsPref],
-      });
-
-      logger.log("Successfully saved columns to AT Protocol preferences");
+      logger.log("Successfully saved columns to AT Protocol");
       return true;
     } catch (error) {
       logger.error("Failed to save columns to AT Protocol:", error);

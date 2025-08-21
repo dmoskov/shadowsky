@@ -1,6 +1,6 @@
 import { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
 import { createLogger } from "../utils/logger";
-import { CustomRecordBackend } from "./bookmark-backends/CustomRecordBackend";
+import { SingletonCustomRecordBackend } from "./bookmark-backends/SingletonCustomRecordBackend";
 import { LocalStorageBackend } from "./bookmark-backends/LocalStorageBackend";
 import { Bookmark, BookmarkStorageBackend } from "./bookmark-backends/types";
 import { PostCacheService } from "./post-cache-service";
@@ -36,7 +36,11 @@ class BookmarkServiceV2 {
     } else {
       // If we already have a backend but agent changed, re-create it
       if (this.backend && this.storageType === "custom" && agent) {
-        this.backend = new CustomRecordBackend(agent);
+        const customBackend = new SingletonCustomRecordBackend(agent);
+        customBackend.setErrorCallback((error: Error, action: string) => {
+          logger.error(`SingletonCustomRecordBackend error during ${action}:`, error);
+        });
+        this.backend = customBackend;
       }
       await this.backend.init();
     }
@@ -48,7 +52,11 @@ class BookmarkServiceV2 {
     // If we're using custom storage and the agent changed, we need to update the backend
     if (this.storageType === "custom" && this.backend && agent) {
       // Re-initialize the backend with the new agent
-      this.backend = new CustomRecordBackend(agent);
+      const customBackend = new SingletonCustomRecordBackend(agent);
+      customBackend.setErrorCallback((error: Error, action: string) => {
+        logger.error(`SingletonCustomRecordBackend error during ${action}:`, error);
+      });
+      this.backend = customBackend;
       // Don't await here to avoid making setAgent async, but log any errors
       this.backend.init().catch((error) => {
         logger.error(
@@ -72,7 +80,12 @@ class BookmarkServiceV2 {
         this.backend = new LocalStorageBackend();
         break;
       case "custom":
-        this.backend = new CustomRecordBackend(this.agent!);
+        const customBackend = new SingletonCustomRecordBackend(this.agent!);
+        // Set up error callback to log any issues
+        customBackend.setErrorCallback((error: Error, action: string) => {
+          logger.error(`SingletonCustomRecordBackend error during ${action}:`, error);
+        });
+        this.backend = customBackend;
         break;
     }
 
@@ -213,6 +226,19 @@ class BookmarkServiceV2 {
 
   getStorageType() {
     return this.storageType;
+  }
+
+  async refreshCache(): Promise<void> {
+    if (this.backend.refreshCache) {
+      await this.backend.refreshCache();
+    }
+  }
+
+  setErrorCallback(callback: (error: Error, action: string) => void) {
+    // Set error callback if backend supports it
+    if (this.backend instanceof SingletonCustomRecordBackend) {
+      this.backend.setErrorCallback(callback);
+    }
   }
 }
 

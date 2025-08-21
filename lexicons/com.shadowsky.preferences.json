@@ -1,0 +1,47 @@
+{
+  "lexicon": 1,
+  "id": "com.shadowsky.preferences",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Application preferences for ShadowSky",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "required": ["bookmarkStorageType", "columnStorageType", "draftStorageType", "createdAt", "updatedAt"],
+        "properties": {
+          "bookmarkStorageType": {
+            "type": "string",
+            "enum": ["local", "custom"],
+            "description": "Storage type for bookmarks"
+          },
+          "columnStorageType": {
+            "type": "string", 
+            "enum": ["local", "atproto"],
+            "description": "Storage type for columns"
+          },
+          "draftStorageType": {
+            "type": "string",
+            "enum": ["local", "custom"],
+            "description": "Storage type for drafts"
+          },
+          "appSettingsVersion": {
+            "type": "integer",
+            "description": "Version number for app settings schema",
+            "default": 1
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When the preferences were created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When the preferences were last updated"
+          }
+        }
+      }
+    }
+  }
+}

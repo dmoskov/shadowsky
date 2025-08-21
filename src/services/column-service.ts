@@ -15,9 +15,9 @@ export class ColumnService {
     this.backend = new ColumnLocalStorageBackend();
   }
 
-  async initialize(agent: AtpAgent, storageType: StorageType) {
+  async initialize(agent: AtpAgent, storageType: StorageType | string) {
     this.agent = agent;
-    this.storageType = storageType;
+    this.storageType = storageType as StorageType;
 
     // Initialize the appropriate backend
     if (storageType === "custom") {
@@ -101,6 +101,23 @@ export class ColumnService {
 
   async clearAllColumns(): Promise<void> {
     return this.backend.saveColumns([]);
+  }
+
+  async updateColumnFeedPreference(
+    columnId: string,
+    feedUri: string,
+  ): Promise<void> {
+    // Only update if using AT Protocol backend
+    if (
+      this.storageType === "custom" &&
+      this.backend instanceof ColumnAtProtoBackend
+    ) {
+      await this.backend.updateColumnFeedPreference(columnId, feedUri);
+    } else {
+      // For local storage, just update the cookie
+      const { columnFeedPrefs } = await import("../utils/cookies");
+      columnFeedPrefs.setFeedForColumn(columnId, feedUri);
+    }
   }
 }
 

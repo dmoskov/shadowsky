@@ -27,6 +27,7 @@ import {
   useInteractionTracking,
 } from "../hooks/useAnalytics";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
+import { columnService } from "../services/column-service";
 import { columnFeedPrefs } from "../utils/cookies";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { FeedDiscovery } from "./FeedDiscovery";
@@ -143,7 +144,7 @@ export const Home: React.FC<HomeProps> = ({
       setSelectedFeed(initialFeedUri as FeedType);
       // Also save to column preferences
       if (columnId) {
-        columnFeedPrefs.setFeedForColumn(columnId, initialFeedUri);
+        columnService.updateColumnFeedPreference(columnId, initialFeedUri);
       }
     }
   }, [initialFeedUri, columnId]);

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { columnService } from "../services/column-service";
 import { columnFeedPrefs } from "../utils/cookies";
 import { BookmarksColumn } from "./BookmarksColumn";
 import { ColumnHeader } from "./ColumnHeader";
@@ -157,7 +158,10 @@ export default function SkyColumn({
                   setSelectedFeedUri(feedUri);
                   // Save to column-specific preferences if columnId exists
                   if (column.id) {
-                    columnFeedPrefs.setFeedForColumn(column.id, feedUri);
+                    columnService.updateColumnFeedPreference(
+                      column.id,
+                      feedUri,
+                    );
                   }
                   setRefreshCounter((prev) => prev + 1);
                 }

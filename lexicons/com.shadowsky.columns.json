@@ -1,0 +1,62 @@
+{
+  "lexicon": 1,
+  "id": "com.shadowsky.columns",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Column configuration for ShadowSky",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "required": ["columns", "version"],
+        "properties": {
+          "columns": {
+            "type": "array",
+            "description": "List of columns",
+            "items": {
+              "type": "object",
+              "required": ["id", "type", "createdAt", "updatedAt"],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Unique identifier for the column"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type of column (e.g., feed, notifications)"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Display title for the column"
+                },
+                "data": {
+                  "type": "string",
+                  "description": "Column-specific data (e.g., feed URI)"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "datetime",
+                  "description": "When the column was created"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "datetime",
+                  "description": "When the column was last updated"
+                },
+                "selectedFeedUri": {
+                  "type": "string",
+                  "format": "at-uri",
+                  "description": "Currently selected feed URI for feed-type columns"
+                }
+              }
+            }
+          },
+          "version": {
+            "type": "integer",
+            "description": "Schema version number"
+          }
+        }
+      }
+    }
+  }
+}

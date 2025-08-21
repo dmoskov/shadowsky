@@ -4,6 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Bookmark, Search, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
+import { useModal } from "../contexts/ModalContext";
 import { useModeration } from "../contexts/ModerationContext";
 import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
@@ -24,6 +25,7 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
   const queryClient = useQueryClient();
   const { isPostHidden } = useHiddenPosts();
   const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
+  const { showAlert } = useModal();
   const [searchQuery, setSearchQuery] = useState("");
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [selectedPost, setSelectedPost] =
@@ -70,11 +72,18 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
 
   const handleUnbookmark = useCallback(
     async (postUri: string) => {
-      await bookmarkServiceV2.removeBookmark(postUri);
-      queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
-      queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
+      try {
+        await bookmarkServiceV2.removeBookmark(postUri);
+        queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+        queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
+      } catch {
+        showAlert("Failed to remove bookmark. Please try again.", {
+          variant: "error",
+          title: "Error",
+        });
+      }
     },
-    [queryClient],
+    [queryClient, showAlert],
   );
 
   const handlePostClick = (post: AppBskyFeedDefs.PostView) => {

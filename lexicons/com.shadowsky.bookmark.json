@@ -1,0 +1,75 @@
+{
+  "lexicon": 1,
+  "id": "com.shadowsky.bookmark",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A bookmarked post saved by the user",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["postUri", "postCid", "savedAt", "author", "createdAt"],
+        "properties": {
+          "postUri": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "URI of the bookmarked post"
+          },
+          "postCid": {
+            "type": "string",
+            "description": "CID of the bookmarked post"
+          },
+          "savedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When the bookmark was saved"
+          },
+          "author": {
+            "type": "object",
+            "description": "Author information",
+            "required": ["did", "handle"],
+            "properties": {
+              "did": {
+                "type": "string",
+                "format": "did",
+                "description": "DID of the post author"
+              },
+              "handle": {
+                "type": "string",
+                "description": "Handle of the post author"
+              },
+              "displayName": {
+                "type": "string",
+                "description": "Display name of the post author"
+              },
+              "avatar": {
+                "type": "string",
+                "description": "Avatar URL of the post author"
+              }
+            }
+          },
+          "text": {
+            "type": "string",
+            "description": "Text content of the bookmarked post"
+          },
+          "tags": {
+            "type": "array",
+            "description": "User-defined tags for organizing bookmarks",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "string",
+            "description": "User notes about the bookmark"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When the bookmark record was created"
+          }
+        }
+      }
+    }
+  }
+}

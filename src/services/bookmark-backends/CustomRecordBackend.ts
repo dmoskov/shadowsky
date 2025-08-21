@@ -11,9 +11,22 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
   private agent: BskyAgent;
   private bookmarkCache: Map<string, { uri: string; bookmark: Bookmark }> =
     new Map();
+  private errorCallback?: (error: Error, action: string) => void;
 
   constructor(agent: BskyAgent) {
     this.agent = agent;
+  }
+
+  setErrorCallback(callback: (error: Error, action: string) => void) {
+    this.errorCallback = callback;
+  }
+
+  private handleError(error: any, action: string): void {
+    if (this.errorCallback) {
+      this.errorCallback(error, action);
+    } else {
+      logger.error(`Failed to ${action}:`, error);
+    }
   }
 
   async init(): Promise<void> {
@@ -75,7 +88,7 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
 
       logger.log("Total bookmarks loaded:", totalLoaded);
     } catch (error: any) {
-      logger.error("Failed to load bookmarks from repo:", error);
+      this.handleError(error, "load bookmarks from repo");
       logger.error("Error details:", {
         status: error?.status,
         message: error?.message,

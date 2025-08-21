@@ -23,20 +23,20 @@ export const PrivacySettings: React.FC = () => {
     queryKey: ["preferences"],
     queryFn: async () => {
       if (!agent) return null;
-      const response = await agent.getPreferences();
-      return response;
+      const response = await agent.app.bsky.actor.getPreferences();
+      return response.data.preferences; // Extract preferences array from API response
     },
     enabled: !!agent,
   });
 
   // Update local state when preferences load
   useEffect(() => {
-    if (preferences) {
+    if (preferences && Array.isArray(preferences)) {
       // Check for content filtering preferences
-      const adultContentPref = (preferences as any).find(
+      const adultContentPref = preferences.find(
         (p: any) => p.$type === "app.bsky.actor.defs#adultContentPref",
       );
-      if (adultContentPref) {
+      if (adultContentPref && 'enabled' in adultContentPref) {
         setPrivacy((prev) => ({
           ...prev,
           filterContent: !adultContentPref.enabled,

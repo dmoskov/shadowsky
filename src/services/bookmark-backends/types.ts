@@ -46,4 +46,7 @@ export interface BookmarkStorageBackend {
     isSyncing: boolean;
     error?: string;
   }>;
+
+  // Refresh cache from remote storage
+  refreshCache?(): Promise<void>;
 }

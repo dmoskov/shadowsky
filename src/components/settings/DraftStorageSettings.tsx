@@ -14,7 +14,7 @@ import {
 
 export const DraftStorageSettings: React.FC = () => {
   const { agent } = useAuth();
-  const { showConfirm } = useModal();
+  const { showConfirm, showAlert } = useModal();
   const [storageType, setStorageType] = useState<StorageType>("local");
   const [isLoading, setIsLoading] = useState(false);
   const [draftCount, setDraftCount] = useState(0);
@@ -48,6 +48,7 @@ export const DraftStorageSettings: React.FC = () => {
         const count = await draftService.getDraftCount();
         setDraftCount(count);
       } catch (error) {
+        // Don't show alert for count loading errors - not critical
         console.error("Failed to load draft count:", error);
       }
     };
@@ -126,9 +127,22 @@ export const DraftStorageSettings: React.FC = () => {
       }, 1500);
     } catch (error) {
       console.error("Failed to change draft storage:", error);
+
+      // Show more specific error message
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to migrate drafts. Please try again.";
+
       setMessage({
         type: "error",
-        text: "Failed to migrate drafts. Please try again.",
+        text: errorMessage,
+      });
+
+      // Also show alert for critical errors
+      showAlert(errorMessage, {
+        variant: "error",
+        title: "Storage Migration Failed",
       });
     } finally {
       setIsLoading(false);

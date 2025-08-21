@@ -101,10 +101,9 @@ export function useBookmarks() {
       // Update with actual result
       bookmarkStore.setBookmarked(post.uri, isNowBookmarked);
 
-      // Only invalidate bookmarks query, not the entire feed
+      // Invalidate all bookmark queries (including those with search params)
       queryClient.invalidateQueries({
         queryKey: ["bookmarks"],
-        exact: true,
       });
       queryClient.invalidateQueries({
         queryKey: ["bookmarkCount"],

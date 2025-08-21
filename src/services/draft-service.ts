@@ -1,6 +1,6 @@
 import { AtpAgent } from "@atproto/api";
 import { ThreadDraft } from "./drafts";
-import { DraftCustomRecordBackend } from "./storage/draft-custom-record-backend";
+import { DraftSingletonBackend } from "./storage/draft-singleton-backend";
 import { DraftLocalStorageBackend } from "./storage/draft-local-storage-backend";
 import { DraftStorageBackend } from "./storage/draft-storage-backend";
 import { StorageType } from "./storage/types";
@@ -21,7 +21,7 @@ export class DraftService {
 
     // Initialize the appropriate backend
     if (storageType === "custom") {
-      this.backend = new DraftCustomRecordBackend();
+      this.backend = new DraftSingletonBackend();
     } else {
       this.backend = new DraftLocalStorageBackend();
     }
@@ -83,7 +83,7 @@ export class DraftService {
     // Initialize new backend
     const newBackend =
       toType === "custom"
-        ? new DraftCustomRecordBackend()
+        ? new DraftSingletonBackend()
         : new DraftLocalStorageBackend();
 
     await newBackend.initialize(this.agent || undefined);
@@ -98,6 +98,13 @@ export class DraftService {
 
   async clearAllDrafts(): Promise<void> {
     return this.backend.clear();
+  }
+
+  setErrorCallback(callback: (error: Error, action: string) => void) {
+    // Set error callback if backend supports it
+    if (this.backend instanceof DraftSingletonBackend) {
+      this.backend.setErrorCallback(callback);
+    }
   }
 }
 

@@ -1,9 +1,10 @@
 import { AtpAgent } from "@atproto/api";
 import { ThreadDraft } from "../../services/drafts";
 import { DraftStorageBackend } from "./draft-storage-backend";
+import { LOCAL_STORAGE_KEYS } from "./storage-constants";
 
 export class DraftLocalStorageBackend extends DraftStorageBackend {
-  private readonly STORAGE_KEY = "bsky_thread_drafts";
+  private readonly STORAGE_KEY = LOCAL_STORAGE_KEYS.DRAFTS_LEGACY;
 
   async initialize(agent?: AtpAgent): Promise<void> {
     this.agent = agent;

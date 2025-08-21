@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
 import { useColumnSwipe } from "../hooks/useColumnSwipe";
+import { appPreferencesService } from "../services/app-preferences-service";
 import { columnService } from "../services/column-service";
 import { columnFeedPrefs } from "../utils/cookies";
 import { createLogger } from "../utils/logger";
@@ -86,6 +87,7 @@ export default function SkyDeck() {
   const { agent } = useAuth();
   const { showAlert } = useModal();
   const [columns, setColumns] = useState<Column[]>([]);
+  const [columnsLoaded, setColumnsLoaded] = useState(false);
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [isNarrowView, setIsNarrowView] = useState(false);
   const [focusedColumnIndex, setFocusedColumnIndex] = useState(0);
@@ -226,15 +228,25 @@ export default function SkyDeck() {
       data: "following", // Default to following feed
     };
 
-    const savedColumns = localStorage.getItem("skyDeckColumns");
-    if (savedColumns) {
-      try {
-        const parsed = JSON.parse(savedColumns);
+    // Initialize column service and load columns
+    const loadColumns = async () => {
+      if (!agent) return;
+      
+      // Initialize column service with the current storage type from preferences
+      appPreferencesService.setAgent(agent);
+      const appPreferences = await appPreferencesService.getPreferences();
+      const storageType = appPreferences?.columnStorageType || "local";
+      await columnService.initialize(agent, storageType);
+      
+      // Load columns from service
+      const savedColumns = await columnService.getColumns();
+      
+      if (savedColumns && savedColumns.length > 0) {
         // Ensure the first column is always Home
-        if (parsed.length === 0 || parsed[0].id !== "home") {
+        if (savedColumns[0].id !== "home") {
           const restoredColumns = [
             homeColumn,
-            ...parsed.filter((col: Column) => col.id !== "home"),
+            ...savedColumns.filter((col: Column) => col.id !== "home"),
           ].map((col: Column) => {
             if (col.type === "feed" && col.id) {
               const savedFeed = columnFeedPrefs.getFeedForColumn(col.id);
@@ -247,7 +259,7 @@ export default function SkyDeck() {
           setColumns(restoredColumns);
         } else {
           // Restore feed preferences from cookies
-          const restoredColumns = parsed.map((col: Column) => {
+          const restoredColumns = savedColumns.map((col: Column) => {
             if (col.type === "feed" && col.id) {
               const savedFeed = columnFeedPrefs.getFeedForColumn(col.id);
               if (savedFeed) {
@@ -258,21 +270,25 @@ export default function SkyDeck() {
           });
           setColumns(restoredColumns);
         }
-      } catch {
-        // If parsing fails, start with just home column
+      } else {
+        // First time - just home column
         setColumns([homeColumn]);
       }
-    } else {
-      // First time - just home column
-      setColumns([homeColumn]);
-    }
-  }, []);
+      // Mark columns as loaded
+      setColumnsLoaded(true);
+    };
+    
+    loadColumns();
+  }, [agent]);
 
+  // Save columns using column service - only after initial load
   useEffect(() => {
-    if (columns.length > 0) {
-      localStorage.setItem("skyDeckColumns", JSON.stringify(columns));
+    if (columns.length > 0 && agent && columnsLoaded) {
+      columnService.importColumns(columns).catch(error => {
+        console.error("Failed to save columns:", error);
+      });
     }
-  }, [columns]);
+  }, [columns, agent, columnsLoaded]);
 
   const handleAddColumn = (
     type: ColumnType,

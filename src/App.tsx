@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { BackgroundNotificationLoader } from "./components/BackgroundNotificationLoader";
 import { Bookmarks } from "./components/Bookmarks";
+import { ColumnMigrationNotice } from "./components/ColumnMigrationNotice";
 import { Composer } from "./components/Composer";
 import { CompressionTest } from "./components/CompressionTest";
 import { ConversationsSimple as Conversations } from "./components/ConversationsSimple";
@@ -14,6 +15,7 @@ import { LandingPage } from "./components/LandingPage";
 import { MobileTabBar } from "./components/MobileTabBar";
 import { Notifications } from "./components/Notifications";
 import { NotificationsAnalytics } from "./components/NotificationsAnalytics";
+import { StorageErrorProvider } from "./components/providers/StorageErrorProvider";
 import { RateLimitStatus } from "./components/RateLimitStatus";
 import { Search } from "./components/Search";
 import { Sidebar } from "./components/Sidebar";
@@ -175,6 +177,7 @@ function AppContent() {
       <SwipeIndicator />
       <RateLimitStatus />
       <DebugConsole />
+      <ColumnMigrationNotice />
     </div>
   );
 }
@@ -204,7 +207,9 @@ function App() {
             <ModalProvider>
               <HiddenPostsProvider>
                 <ModerationProvider>
-                  <AppContent />
+                  <StorageErrorProvider>
+                    <AppContent />
+                  </StorageErrorProvider>
                 </ModerationProvider>
               </HiddenPostsProvider>
             </ModalProvider>

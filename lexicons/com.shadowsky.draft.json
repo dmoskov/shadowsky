@@ -1,0 +1,85 @@
+{
+  "lexicon": 1,
+  "id": "com.shadowsky.draft",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A draft post or thread stored for later editing or scheduling",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["id", "title", "content", "createdAt", "updatedAt"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the draft"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title or subject of the draft"
+          },
+          "content": {
+            "type": "string",
+            "description": "Main content of the draft"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When the draft was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When the draft was last updated"
+          },
+          "scheduledFor": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Optional scheduled time for posting"
+          },
+          "posts": {
+            "type": "array",
+            "description": "Array of post contents for threads",
+            "items": {
+              "type": "string"
+            }
+          },
+          "postOrder": {
+            "type": "array",
+            "description": "Order of posts in the thread",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "media": {
+            "type": "array",
+            "description": "Attached media items",
+            "items": {
+              "type": "object",
+              "required": ["file", "alt", "type"],
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "description": "File path or URL"
+                },
+                "alt": {
+                  "type": "string",
+                  "description": "Alt text for accessibility"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": ["image", "video"],
+                  "description": "Media type"
+                },
+                "postIndex": {
+                  "type": "integer",
+                  "description": "Index of the post this media belongs to"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
