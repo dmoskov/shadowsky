@@ -10,10 +10,11 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useModal } from "../contexts/ModalContext";
 import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
+import { reinitializeBookmarkService } from "../services/bookmark-service-wrapper";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { PostRenderer } from "./PostRenderer";
 
@@ -26,6 +27,15 @@ export const Bookmarks: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
+  // Reinitialize bookmark service when component mounts to check for storage changes
+  useEffect(() => {
+    reinitializeBookmarkService().then(() => {
+      // Invalidate queries to refetch with the correct storage
+      queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+      queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
+    });
+  }, [queryClient]);
+
   // Note: bookmarkServiceV2 is initialized in AuthContext
 
   const {
@@ -35,17 +45,11 @@ export const Bookmarks: React.FC = () => {
   } = useQuery({
     queryKey: ["bookmarks", searchQuery],
     queryFn: async () => {
-      console.log("Fetching bookmarks...");
-      // Refresh cache from remote storage before fetching
-      await bookmarkServiceV2.refreshCache();
-      
       if (searchQuery) {
         const results = await bookmarkServiceV2.searchBookmarks(searchQuery);
-        console.log("Search results:", results);
         return results;
       }
       const bookmarks = await bookmarkServiceV2.getBookmarkedPosts();
-      console.log("Bookmarks loaded:", bookmarks);
       return bookmarks;
     },
     staleTime: 0, // Always refetch when component mounts

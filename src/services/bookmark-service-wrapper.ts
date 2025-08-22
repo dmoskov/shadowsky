@@ -54,6 +54,49 @@ export async function initializeBookmarkService(agent: BskyAgent) {
 }
 
 /**
+ * Re-initialize the bookmark service to check for storage preference changes
+ */
+export async function reinitializeBookmarkService() {
+  const agent = bookmarkServiceV2.agent;
+  
+  if (!agent) {
+    logger.log("No agent available, skipping reinitialization");
+    return;
+  }
+
+  try {
+    // Get current preferences - this will check localStorage first for forceLocalStorage flag
+    const preferences = await appPreferencesService.getPreferences();
+    const storageType = preferences?.bookmarkStorageType || "local";
+    const currentStorageType = bookmarkServiceV2.getStorageType();
+
+    logger.log(`Reinitializing bookmark service...`);
+    logger.log(`Current storage: ${currentStorageType}, Preferred storage: ${storageType}`);
+    logger.log(`Preferences:`, preferences);
+
+    // Only reinitialize if storage type has changed
+    if (currentStorageType !== storageType) {
+      logger.log(`Storage type changed from ${currentStorageType} to ${storageType}, reinitializing...`);
+      await bookmarkServiceV2.init(agent, storageType);
+      
+      // Refresh the cache to ensure we have the latest data
+      await bookmarkServiceV2.refreshCache();
+      logger.log(`Reinitialization complete`);
+    } else {
+      // Even if storage type hasn't changed, refresh the cache
+      logger.log(`Storage type unchanged, refreshing cache...`);
+      await bookmarkServiceV2.refreshCache();
+    }
+
+    // Log bookmark count after refresh
+    const count = await bookmarkServiceV2.getBookmarkCount();
+    logger.log(`Bookmark count after refresh: ${count}`);
+  } catch (error) {
+    logger.error("Failed to reinitialize bookmark service:", error);
+  }
+}
+
+/**
  * Re-export the service for backward compatibility
  */
 export const bookmarkService = {

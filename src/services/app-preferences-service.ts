@@ -106,6 +106,10 @@ export class AppPreferencesService {
     this.preferencesCache = null; // Clear cache when agent changes
   }
 
+  clearCache() {
+    this.preferencesCache = null;
+  }
+
   async getPreferences(): Promise<AppPreferencesRecord | null> {
     if (!this.agent) {
       logger.log("No agent available, cannot fetch preferences");
@@ -117,6 +121,7 @@ export class AppPreferencesService {
       logger.log("Returning cached preferences:", this.preferencesCache);
       return this.preferencesCache;
     }
+
 
     try {
       // Try to get preferences from AT Protocol custom record
@@ -334,10 +339,6 @@ export class AppPreferencesService {
     } catch (error) {
       logger.error("Failed to save preferences to localStorage:", error);
     }
-  }
-
-  clearCache() {
-    this.preferencesCache = null;
   }
 
   // Column data methods

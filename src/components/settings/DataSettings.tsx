@@ -52,17 +52,11 @@ export const DataSettings: React.FC = () => {
       if (!agent) return null;
       appPreferencesService.setAgent(agent);
       const prefs = await appPreferencesService.getPreferences();
-      console.log("Loaded preferences:", prefs);
       return prefs;
     },
     enabled: !!agent,
   });
 
-  // Debug log preferences changes
-  React.useEffect(() => {
-    console.log("appPreferences changed:", appPreferences);
-    console.log("Column storage type:", appPreferences?.columnStorageType);
-  }, [appPreferences]);
 
   // Fetch record counts for AT Protocol storage
   useQuery({
@@ -117,12 +111,11 @@ export const DataSettings: React.FC = () => {
             const columnsData = await appPreferencesService.getColumns();
             counts.columns = columnsData?.columns?.length || 0;
             // Check if the record actually exists
-            const response = await agent.api.com.atproto.repo.getRecord({
+            await agent.api.com.atproto.repo.getRecord({
               repo: agent.session?.did || "",
               collection: "com.shadowsky.columns",
               rkey: "self",
             });
-            console.log("Columns record exists:", response.data);
             setMissingRecords(prev => ({ ...prev, columns: false }));
             
             // Check local storage for comparison
@@ -289,7 +282,7 @@ export const DataSettings: React.FC = () => {
           // Force save to AT Protocol by updating preferences
           await appPreferencesService.updatePreferences({});
         } else {
-          // Can't switch back to local only
+          // Can't switch back to local storage for settings
           throw new Error("Cannot disable AT Protocol sync once enabled");
         }
       } else {
@@ -311,17 +304,7 @@ export const DataSettings: React.FC = () => {
           [prefKey]: newType,
         };
         
-        console.log("Force switching storage:", { dataType, newType, prefKey, updateData });
-        
         await appPreferencesService.updatePreferences(updateData);
-        
-        // Log the update for debugging
-        console.log(`Force switched ${dataType} storage to ${newType}`, {
-          prefKey,
-          newType,
-          currentPrefs,
-          updates: { [prefKey]: newType }
-        });
       }
 
       setMessage({
@@ -764,30 +747,29 @@ export const DataSettings: React.FC = () => {
                       )}
                       {isEnabled && (
                         <p className="mt-1 text-xs text-yellow-600 dark:text-yellow-500">
-                          ⚠️ Once enabled, AT Protocol sync cannot be disabled
+                          ⚠️ Disabling AT Protocol sync will make remote data temporarily unavailable
                         </p>
                       )}
-                      {/* Force switch button - only show when not enabled (can't switch back) */}
-                      {!isEnabled && (
-                        <button
-                          onClick={() => {
-                            showConfirm(
-                              `Force switch ${item.name} to AT Protocol without migrating data? This is useful for fixing broken states during development.`,
-                              () => handleForceSwitch("settings", "custom"),
-                              {
-                                variant: "info",
-                                title: `Force Switch ${item.name}`,
-                                confirmText: "Force Switch",
-                                cancelText: "Cancel",
-                              }
-                            );
-                          }}
-                          disabled={loadingStates[`force_settings`]}
-                          className="mt-2 flex items-center gap-2 rounded-md bg-orange-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-orange-700 transition-colors disabled:opacity-50"
-                        >
-                          {loadingStates[`force_settings`] ? "Switching..." : "Force Switch to AT Protocol"}
-                        </button>
-                      )}
+                      {/* Force switch button - show for both directions for QA testing */}
+                      <button
+                        onClick={() => {
+                          const targetType = isEnabled ? "local" : "custom";
+                          showConfirm(
+                            `Force switch ${item.name} to ${targetType === 'custom' ? 'AT Protocol' : 'Local'} without migrating data? This is useful for QA testing and fixing broken states.`,
+                            () => handleForceSwitch("settings", targetType),
+                            {
+                              variant: "info",
+                              title: `Force Switch ${item.name}`,
+                              confirmText: "Force Switch",
+                              cancelText: "Cancel",
+                            }
+                          );
+                        }}
+                        disabled={loadingStates[`force_settings`]}
+                        className="mt-2 flex items-center gap-2 rounded-md bg-orange-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-orange-700 transition-colors disabled:opacity-50"
+                      >
+                        {loadingStates[`force_settings`] ? "Switching..." : `Force Switch to ${isEnabled ? 'Local' : 'AT Protocol'}`}
+                      </button>
                     </>
                   ) : (
                     <>

@@ -41,3 +41,40 @@ If formatting issues are found, the script will suggest running `npm run fix:for
 
 - **No headers in feed views**: Don't add title/description headers at the top of feed components. The user prefers a clean, header-free interface.
 - Feed views should start directly with the content or feed selection controls.
+
+## Development Best Practices
+
+### Debug Logging
+
+- **Clean up debug logging at the end of sessions**: If you add any `console.log`, `console.error`, or verbose `logger.log` statements for debugging during development, please remove them before completing the session.
+- Keep only essential error logging that helps with production debugging.
+- The codebase uses a logger utility that respects debug mode (`window.enableDebug()`), so use `logger.log()` instead of `console.log()` for development logging that should remain in the codebase.
+
+### Code Quality
+
+- **Run build before considering work complete**: Always run `npm run build` to ensure there are no TypeScript errors or build issues.
+- **Fix unused variables and imports**: Remove any unused imports or variables that TypeScript flags.
+- **Use existing patterns**: When adding new features, look for existing patterns in the codebase and follow them for consistency.
+
+### Storage and State Management
+
+- **Test storage migrations carefully**: When working with storage backends (localStorage, AT Protocol), always test migrations in both directions.
+- **Clear caches appropriately**: When switching storage types or debugging data issues, remember to clear/refresh caches.
+
+### Error Handling
+
+- **Use the storage error manager**: For storage-related errors, use the existing StorageErrorManager to provide consistent user feedback.
+- **Preserve error context**: When catching and re-throwing errors, preserve the original error information for debugging.
+- **Handle 400 errors gracefully**: A 400 error when fetching AT Protocol records often means the record doesn't exist yet, which is normal for new users.
+
+### Testing and QA
+
+- **Enable debug mode for troubleshooting**: Use `window.enableDebug()` in the browser console to see detailed logging.
+- **Test with both storage types**: When modifying storage-related code, test with both local storage and AT Protocol storage.
+- **Check for infinite loops**: Be careful with functions that might call each other (like preference loading/saving) to avoid infinite loops.
+
+### AT Protocol Integration
+
+- **Use singleton records for user data**: Bookmarks, drafts, and preferences use singleton records with "self" as the rkey.
+- **Follow the collection naming convention**: Use `com.shadowsky.*` for AT Protocol collections.
+- **Handle missing records**: Always handle the case where an AT Protocol record doesn't exist yet.

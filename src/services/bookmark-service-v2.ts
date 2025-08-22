@@ -14,7 +14,7 @@ const logger = createLogger("BookmarkServiceV2");
 class BookmarkServiceV2 {
   private backend: BookmarkStorageBackend;
   private storageType: "local" | "custom" = "local";
-  private agent: BskyAgent | null = null;
+  public agent: BskyAgent | null = null;
   private postCacheService = PostCacheService.getInstance();
 
   constructor() {
@@ -233,6 +233,7 @@ class BookmarkServiceV2 {
       await this.backend.refreshCache();
     }
   }
+
 
   setErrorCallback(callback: (error: Error, action: string) => void) {
     // Set error callback if backend supports it

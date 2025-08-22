@@ -48,6 +48,7 @@ export class SingletonCustomRecordBackend implements BookmarkStorageBackend {
         throw new Error("No DID available");
       }
 
+
       // Try to get the singleton bookmarks record
       const response = await this.agent.api.com.atproto.repo.getRecord({
         repo: did,
@@ -77,7 +78,7 @@ export class SingletonCustomRecordBackend implements BookmarkStorageBackend {
     } catch (error: any) {
       if (error?.status === 400) {
         // Record doesn't exist yet, which is normal for new users
-        logger.log("No bookmarks record found, will create on first save");
+        logger.log("No bookmarks record found (400 error), will create on first save");
       } else {
         this.handleError(error, "load bookmarks");
       }
