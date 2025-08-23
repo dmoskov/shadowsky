@@ -1,9 +1,9 @@
 import { AtpAgent } from "@atproto/api";
+import { createLogger } from "../../utils/logger";
+import { ShadowSkyDrafts } from "../app-preferences-service";
 import { ThreadDraft } from "../drafts";
 import { DraftStorageBackend } from "./draft-storage-backend";
-import { ShadowSkyDrafts } from "../app-preferences-service";
 import { AT_PROTO_COLLECTIONS, AT_PROTO_RKEYS } from "./storage-constants";
-import { createLogger } from "../../utils/logger";
 
 const logger = createLogger("DraftSingletonBackend");
 
@@ -34,7 +34,7 @@ export class DraftSingletonBackend extends DraftStorageBackend {
 
   private async loadDraftsFromRepo(): Promise<void> {
     this.draftsCache.clear();
-    
+
     try {
       const did = this.agent?.session?.did;
       if (!did) {
@@ -51,9 +51,9 @@ export class DraftSingletonBackend extends DraftStorageBackend {
       if (response.data.value) {
         const draftsData = response.data.value as unknown as ShadowSkyDrafts;
         this.recordUri = response.data.uri;
-        
+
         // Convert to ThreadDraft format and load into cache
-        draftsData.drafts.forEach(draft => {
+        draftsData.drafts.forEach((draft) => {
           const threadDraft: ThreadDraft = {
             id: draft.id,
             title: draft.text.substring(0, 50), // Use first 50 chars as title
@@ -61,15 +61,17 @@ export class DraftSingletonBackend extends DraftStorageBackend {
             createdAt: draft.createdAt,
             updatedAt: draft.updatedAt,
             // Convert images format if present
-            images: draft.images?.map(img => ({
-              file: img.data || img.url || '', // Handle both base64 and URL
+            images: draft.images?.map((img) => ({
+              file: img.data || img.url || "", // Handle both base64 and URL
               alt: img.alt,
             })),
           };
           this.draftsCache.set(draft.id, threadDraft);
         });
-        
-        logger.log(`Loaded ${draftsData.drafts.length} drafts from AT Protocol`);
+
+        logger.log(
+          `Loaded ${draftsData.drafts.length} drafts from AT Protocol`,
+        );
       }
     } catch (error: any) {
       if (error?.status === 400) {
@@ -82,8 +84,9 @@ export class DraftSingletonBackend extends DraftStorageBackend {
   }
 
   async getAll(): Promise<ThreadDraft[]> {
-    return Array.from(this.draftsCache.values()).sort((a, b) => 
-      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    return Array.from(this.draftsCache.values()).sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
     );
   }
 
@@ -100,7 +103,11 @@ export class DraftSingletonBackend extends DraftStorageBackend {
     if (!this.draftsCache.has(id)) {
       throw new Error(`Draft ${id} not found`);
     }
-    this.draftsCache.set(id, { ...draft, id, updatedAt: new Date().toISOString() });
+    this.draftsCache.set(id, {
+      ...draft,
+      id,
+      updatedAt: new Date().toISOString(),
+    });
     await this.saveDrafts();
   }
 
@@ -121,7 +128,7 @@ export class DraftSingletonBackend extends DraftStorageBackend {
   async import(drafts: ThreadDraft[]): Promise<void> {
     // Clear existing and import new
     this.draftsCache.clear();
-    drafts.forEach(draft => {
+    drafts.forEach((draft) => {
       this.draftsCache.set(draft.id, draft);
     });
     await this.saveDrafts();
@@ -136,13 +143,13 @@ export class DraftSingletonBackend extends DraftStorageBackend {
 
       const draftsData: ShadowSkyDrafts = {
         $type: AT_PROTO_COLLECTIONS.DRAFTS,
-        drafts: Array.from(this.draftsCache.values()).map(draft => ({
+        drafts: Array.from(this.draftsCache.values()).map((draft) => ({
           id: draft.id,
           text: draft.content, // Map content to text
           createdAt: draft.createdAt,
           updatedAt: draft.updatedAt,
           // Convert images format if present
-          images: draft.images?.map(img => ({
+          images: draft.images?.map((img) => ({
             alt: img.alt,
             data: img.file, // Assume file is base64 data
           })),

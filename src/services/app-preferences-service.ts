@@ -122,7 +122,6 @@ export class AppPreferencesService {
       return this.preferencesCache;
     }
 
-
     try {
       // Try to get preferences from AT Protocol custom record
       const response = await this.agent.api.com.atproto.repo.getRecord({
@@ -140,7 +139,9 @@ export class AppPreferencesService {
           $type: "app.shadowsky.preferences",
           bookmarkStorageType: shadowSkyPref.bookmarkStorageType || "local",
           columnStorageType:
-            shadowSkyPref.columnStorageType === "atproto" ? "custom" : (shadowSkyPref.columnStorageType || "local"),
+            shadowSkyPref.columnStorageType === "atproto"
+              ? "custom"
+              : shadowSkyPref.columnStorageType || "local",
           draftStorageType: shadowSkyPref.draftStorageType || "local",
           createdAt: shadowSkyPref.createdAt,
           updatedAt: shadowSkyPref.updatedAt,
@@ -204,7 +205,11 @@ export class AppPreferencesService {
         updatedAt: new Date().toISOString(),
       };
 
-      logger.log("Updating preferences:", { currentPrefs, updates, updatedPrefs });
+      logger.log("Updating preferences:", {
+        currentPrefs,
+        updates,
+        updatedPrefs,
+      });
 
       // Clear cache immediately to ensure fresh data on next read
       this.preferencesCache = null;
@@ -214,7 +219,9 @@ export class AppPreferencesService {
         $type: PREFERENCES_COLLECTION,
         bookmarkStorageType: updatedPrefs.bookmarkStorageType || "local",
         columnStorageType:
-          updatedPrefs.columnStorageType === "custom" ? "atproto" : (updatedPrefs.columnStorageType || "local"),
+          updatedPrefs.columnStorageType === "custom"
+            ? "atproto"
+            : updatedPrefs.columnStorageType || "local",
         draftStorageType: updatedPrefs.draftStorageType || "local",
         appSettingsVersion: 1,
         createdAt: updatedPrefs.createdAt || new Date().toISOString(),
@@ -292,24 +299,30 @@ export class AppPreferencesService {
         const shadowSkyPref: ShadowSkyPreferences = {
           $type: AT_PROTO_COLLECTIONS.PREFERENCES,
           bookmarkStorageType: defaultPrefs.bookmarkStorageType,
-          columnStorageType: defaultPrefs.columnStorageType === "custom" ? "atproto" : defaultPrefs.columnStorageType,
+          columnStorageType:
+            defaultPrefs.columnStorageType === "custom"
+              ? "atproto"
+              : defaultPrefs.columnStorageType,
           draftStorageType: defaultPrefs.draftStorageType,
           createdAt: defaultPrefs.createdAt,
           updatedAt: defaultPrefs.updatedAt,
           version: 1,
         };
-        
+
         await this.agent.api.com.atproto.repo.createRecord({
           repo: this.agent.session?.did || "",
           collection: PREFERENCES_COLLECTION,
           rkey: PREFERENCES_RKEY,
           record: shadowSkyPref as any,
         });
-        
+
         (defaultPrefs as any).isStoredInAtProto = true;
         logger.log("Created default preferences in AT Protocol");
       } catch (error) {
-        logger.log("Failed to create preferences in AT Protocol, saving to localStorage:", error);
+        logger.log(
+          "Failed to create preferences in AT Protocol, saving to localStorage:",
+          error,
+        );
         this.saveToLocalStorage(defaultPrefs);
       }
     } else {

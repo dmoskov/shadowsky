@@ -1,7 +1,7 @@
 import { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
 import { createLogger } from "../utils/logger";
-import { SingletonCustomRecordBackend } from "./bookmark-backends/SingletonCustomRecordBackend";
 import { LocalStorageBackend } from "./bookmark-backends/LocalStorageBackend";
+import { SingletonCustomRecordBackend } from "./bookmark-backends/SingletonCustomRecordBackend";
 import { Bookmark, BookmarkStorageBackend } from "./bookmark-backends/types";
 import { PostCacheService } from "./post-cache-service";
 
@@ -38,7 +38,10 @@ class BookmarkServiceV2 {
       if (this.backend && this.storageType === "custom" && agent) {
         const customBackend = new SingletonCustomRecordBackend(agent);
         customBackend.setErrorCallback((error: Error, action: string) => {
-          logger.error(`SingletonCustomRecordBackend error during ${action}:`, error);
+          logger.error(
+            `SingletonCustomRecordBackend error during ${action}:`,
+            error,
+          );
         });
         this.backend = customBackend;
       }
@@ -54,7 +57,10 @@ class BookmarkServiceV2 {
       // Re-initialize the backend with the new agent
       const customBackend = new SingletonCustomRecordBackend(agent);
       customBackend.setErrorCallback((error: Error, action: string) => {
-        logger.error(`SingletonCustomRecordBackend error during ${action}:`, error);
+        logger.error(
+          `SingletonCustomRecordBackend error during ${action}:`,
+          error,
+        );
       });
       this.backend = customBackend;
       // Don't await here to avoid making setAgent async, but log any errors
@@ -83,7 +89,10 @@ class BookmarkServiceV2 {
         const customBackend = new SingletonCustomRecordBackend(this.agent!);
         // Set up error callback to log any issues
         customBackend.setErrorCallback((error: Error, action: string) => {
-          logger.error(`SingletonCustomRecordBackend error during ${action}:`, error);
+          logger.error(
+            `SingletonCustomRecordBackend error during ${action}:`,
+            error,
+          );
         });
         this.backend = customBackend;
         break;
@@ -233,7 +242,6 @@ class BookmarkServiceV2 {
       await this.backend.refreshCache();
     }
   }
-
 
   setErrorCallback(callback: (error: Error, action: string) => void) {
     // Set error callback if backend supports it

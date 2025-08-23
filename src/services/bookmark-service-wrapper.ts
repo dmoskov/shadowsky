@@ -58,7 +58,7 @@ export async function initializeBookmarkService(agent: BskyAgent) {
  */
 export async function reinitializeBookmarkService() {
   const agent = bookmarkServiceV2.agent;
-  
+
   if (!agent) {
     logger.log("No agent available, skipping reinitialization");
     return;
@@ -71,14 +71,18 @@ export async function reinitializeBookmarkService() {
     const currentStorageType = bookmarkServiceV2.getStorageType();
 
     logger.log(`Reinitializing bookmark service...`);
-    logger.log(`Current storage: ${currentStorageType}, Preferred storage: ${storageType}`);
+    logger.log(
+      `Current storage: ${currentStorageType}, Preferred storage: ${storageType}`,
+    );
     logger.log(`Preferences:`, preferences);
 
     // Only reinitialize if storage type has changed
     if (currentStorageType !== storageType) {
-      logger.log(`Storage type changed from ${currentStorageType} to ${storageType}, reinitializing...`);
+      logger.log(
+        `Storage type changed from ${currentStorageType} to ${storageType}, reinitializing...`,
+      );
       await bookmarkServiceV2.init(agent, storageType);
-      
+
       // Refresh the cache to ensure we have the latest data
       await bookmarkServiceV2.refreshCache();
       logger.log(`Reinitialization complete`);

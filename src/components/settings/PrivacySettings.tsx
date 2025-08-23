@@ -36,7 +36,7 @@ export const PrivacySettings: React.FC = () => {
       const adultContentPref = preferences.find(
         (p: any) => p.$type === "app.bsky.actor.defs#adultContentPref",
       );
-      if (adultContentPref && 'enabled' in adultContentPref) {
+      if (adultContentPref && "enabled" in adultContentPref) {
         setPrivacy((prev) => ({
           ...prev,
           filterContent: !adultContentPref.enabled,

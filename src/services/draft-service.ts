@@ -1,7 +1,7 @@
 import { AtpAgent } from "@atproto/api";
 import { ThreadDraft } from "./drafts";
-import { DraftSingletonBackend } from "./storage/draft-singleton-backend";
 import { DraftLocalStorageBackend } from "./storage/draft-local-storage-backend";
+import { DraftSingletonBackend } from "./storage/draft-singleton-backend";
 import { DraftStorageBackend } from "./storage/draft-storage-backend";
 import { StorageType } from "./storage/types";
 

@@ -231,16 +231,16 @@ export default function SkyDeck() {
     // Initialize column service and load columns
     const loadColumns = async () => {
       if (!agent) return;
-      
+
       // Initialize column service with the current storage type from preferences
       appPreferencesService.setAgent(agent);
       const appPreferences = await appPreferencesService.getPreferences();
       const storageType = appPreferences?.columnStorageType || "local";
       await columnService.initialize(agent, storageType);
-      
+
       // Load columns from service
       const savedColumns = await columnService.getColumns();
-      
+
       if (savedColumns && savedColumns.length > 0) {
         // Ensure the first column is always Home
         if (savedColumns[0].id !== "home") {
@@ -277,14 +277,14 @@ export default function SkyDeck() {
       // Mark columns as loaded
       setColumnsLoaded(true);
     };
-    
+
     loadColumns();
   }, [agent]);
 
   // Save columns using column service - only after initial load
   useEffect(() => {
     if (columns.length > 0 && agent && columnsLoaded) {
-      columnService.importColumns(columns).catch(error => {
+      columnService.importColumns(columns).catch((error) => {
         console.error("Failed to save columns:", error);
       });
     }

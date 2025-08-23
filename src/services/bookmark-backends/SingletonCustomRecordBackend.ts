@@ -1,8 +1,11 @@
 import { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
 import { createLogger } from "../../utils/logger";
-import { Bookmark, BookmarkStorageBackend } from "./types";
 import { ShadowSkyBookmarks } from "../app-preferences-service";
-import { AT_PROTO_COLLECTIONS, AT_PROTO_RKEYS } from "../storage/storage-constants";
+import {
+  AT_PROTO_COLLECTIONS,
+  AT_PROTO_RKEYS,
+} from "../storage/storage-constants";
+import { Bookmark, BookmarkStorageBackend } from "./types";
 
 const logger = createLogger("SingletonCustomRecordBackend");
 
@@ -41,13 +44,12 @@ export class SingletonCustomRecordBackend implements BookmarkStorageBackend {
 
   private async loadBookmarksFromRepo(): Promise<void> {
     this.bookmarkCache.clear();
-    
+
     try {
       const did = this.agent.session?.did;
       if (!did) {
         throw new Error("No DID available");
       }
-
 
       // Try to get the singleton bookmarks record
       const response = await this.agent.api.com.atproto.repo.getRecord({
@@ -57,9 +59,10 @@ export class SingletonCustomRecordBackend implements BookmarkStorageBackend {
       });
 
       if (response.data.value) {
-        const bookmarksData = response.data.value as unknown as ShadowSkyBookmarks;
+        const bookmarksData = response.data
+          .value as unknown as ShadowSkyBookmarks;
         this.recordUri = response.data.uri;
-        
+
         // Load all bookmarks into cache, converting from storage format to Bookmark interface
         bookmarksData.bookmarks.forEach((storedBookmark, index) => {
           const bookmark: Bookmark = {
@@ -72,13 +75,17 @@ export class SingletonCustomRecordBackend implements BookmarkStorageBackend {
           };
           this.bookmarkCache.set(bookmark.postUri, bookmark);
         });
-        
-        logger.log(`Loaded ${bookmarksData.bookmarks.length} bookmarks from AT Protocol`);
+
+        logger.log(
+          `Loaded ${bookmarksData.bookmarks.length} bookmarks from AT Protocol`,
+        );
       }
     } catch (error: any) {
       if (error?.status === 400) {
         // Record doesn't exist yet, which is normal for new users
-        logger.log("No bookmarks record found (400 error), will create on first save");
+        logger.log(
+          "No bookmarks record found (400 error), will create on first save",
+        );
       } else {
         this.handleError(error, "load bookmarks");
       }
@@ -86,8 +93,8 @@ export class SingletonCustomRecordBackend implements BookmarkStorageBackend {
   }
 
   async getAllBookmarks(): Promise<Bookmark[]> {
-    return Array.from(this.bookmarkCache.values()).sort((a, b) => 
-      new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime()
+    return Array.from(this.bookmarkCache.values()).sort(
+      (a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime(),
     );
   }
 
@@ -96,7 +103,10 @@ export class SingletonCustomRecordBackend implements BookmarkStorageBackend {
     return bookmark || null;
   }
 
-  async addBookmark(post: AppBskyFeedDefs.PostView, notes?: string): Promise<Bookmark> {
+  async addBookmark(
+    post: AppBskyFeedDefs.PostView,
+    notes?: string,
+  ): Promise<Bookmark> {
     const bookmark: Bookmark = {
       id: `${post.uri}-${Date.now()}`, // Generate unique ID
       postUri: post.uri,
@@ -114,17 +124,17 @@ export class SingletonCustomRecordBackend implements BookmarkStorageBackend {
 
     // Add to cache
     this.bookmarkCache.set(post.uri, bookmark);
-    
+
     // Save to AT Protocol
     await this.saveBookmarks();
-    
+
     return bookmark;
   }
 
   async removeBookmark(postUri: string): Promise<void> {
     // Remove from cache
     this.bookmarkCache.delete(postUri);
-    
+
     // Save to AT Protocol
     await this.saveBookmarks();
   }
@@ -149,10 +159,10 @@ export class SingletonCustomRecordBackend implements BookmarkStorageBackend {
   async importBookmarks(bookmarks: Bookmark[]): Promise<void> {
     // Clear existing and import new
     this.bookmarkCache.clear();
-    bookmarks.forEach(bookmark => {
+    bookmarks.forEach((bookmark) => {
       this.bookmarkCache.set(bookmark.postUri, bookmark);
     });
-    
+
     await this.saveBookmarks();
   }
 
@@ -165,7 +175,7 @@ export class SingletonCustomRecordBackend implements BookmarkStorageBackend {
 
       const bookmarksData: ShadowSkyBookmarks = {
         $type: AT_PROTO_COLLECTIONS.BOOKMARKS,
-        bookmarks: Array.from(this.bookmarkCache.values()).map(bookmark => ({
+        bookmarks: Array.from(this.bookmarkCache.values()).map((bookmark) => ({
           uri: bookmark.postUri,
           cid: bookmark.postCid,
           author: bookmark.author,

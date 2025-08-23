@@ -18,7 +18,8 @@ export async function initializeColumnService(agent: BskyAgent) {
     const preferences = await appPreferencesService.getPreferences();
     // Normalize "atproto" to "custom" for column service
     const rawStorageType = preferences?.columnStorageType || "local";
-    const storageType = (rawStorageType as string) === "atproto" ? "custom" : rawStorageType;
+    const storageType =
+      (rawStorageType as string) === "atproto" ? "custom" : rawStorageType;
 
     logger.log(
       `Attempting to initialize column service with ${storageType} storage`,
@@ -41,8 +42,9 @@ export async function initializeColumnService(agent: BskyAgent) {
     // Check if the preference was just updated (within last 5 seconds)
     const prefs = await appPreferencesService.getPreferences();
     const lastUpdate = prefs?.updatedAt ? new Date(prefs.updatedAt) : null;
-    const recentlyUpdated = lastUpdate && (Date.now() - lastUpdate.getTime()) < 5000;
-    
+    const recentlyUpdated =
+      lastUpdate && Date.now() - lastUpdate.getTime() < 5000;
+
     if (!recentlyUpdated) {
       // Update preferences to local storage if custom storage fails
       await appPreferencesService.updatePreferences({

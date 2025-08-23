@@ -96,7 +96,6 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
       setMutedUsers(new Set());
       setMutedThreads(new Set());
       setBlockedUsers(new Set());
-      console.log("All moderation data has been cleared");
     };
   }, [mutedUsers, mutedThreads, blockedUsers]);
 
