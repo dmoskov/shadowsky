@@ -1001,7 +1001,7 @@ export const Home: React.FC<HomeProps> = ({
         ...prev,
         [postKey]: { ...prev[postKey], [index]: true },
       }));
-    } catch (error) {
+    } catch (_error) {
       // Error is already handled by generateAltText with user-friendly messages
     } finally {
       setGeneratingAltText((prev) => ({

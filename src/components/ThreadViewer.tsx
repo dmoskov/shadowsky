@@ -337,7 +337,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
         ...prev,
         [postKey]: { ...prev[postKey], [index]: true },
       }));
-    } catch (error) {
+    } catch (_error) {
       // Error is already handled by generateAltText with user-friendly messages
     } finally {
       setGeneratingAltText((prev) => ({

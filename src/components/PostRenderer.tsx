@@ -106,7 +106,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
 
       setGeneratedAltTexts((prev) => ({ ...prev, [index]: altText }));
       setShowAltText((prev) => ({ ...prev, [index]: true }));
-    } catch (error) {
+    } catch (_error) {
       // Error is already handled by generateAltText with user-friendly messages
     } finally {
       setGeneratingAltText((prev) => ({ ...prev, [index]: false }));

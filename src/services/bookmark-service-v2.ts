@@ -102,7 +102,7 @@ class BookmarkServiceV2 {
       case "local":
         this.backend = new LocalStorageBackend();
         break;
-      case "custom":
+      case "custom": {
         const customBackend = new SingletonCustomRecordBackend(this.agent!);
         // Set up error callback to log any issues
         customBackend.setErrorCallback((error: Error, action: string) => {
@@ -113,13 +113,15 @@ class BookmarkServiceV2 {
         });
         this.backend = customBackend;
         break;
-      case "official":
+      }
+      case "official": {
         const officialBackend = new OfficialBookmarksBackend();
         if (this.agent) {
           officialBackend.setAgent(this.agent);
         }
         this.backend = officialBackend;
         break;
+      }
     }
 
     await this.backend.init();

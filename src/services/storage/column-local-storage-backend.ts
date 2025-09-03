@@ -30,7 +30,7 @@ export class ColumnLocalStorageBackend implements ColumnStorageBackend {
       );
 
       // First try to load from new key
-      let data = localStorage.getItem(LOCAL_STORAGE_KEYS.COLUMNS);
+      const data = localStorage.getItem(LOCAL_STORAGE_KEYS.COLUMNS);
 
       // If no data in new key and haven't migrated yet, check legacy key
       if (!data && !migrated) {
