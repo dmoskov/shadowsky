@@ -5,6 +5,7 @@ A full-featured Bluesky client with TweetDeck-style multi-column interface, adva
 ## 🏗️ Architecture Overview
 
 ### Core Technologies
+
 - **Frontend**: React 18 + TypeScript
 - **Styling**: Tailwind CSS
 - **State Management**: React Query + Context API
@@ -13,6 +14,7 @@ A full-featured Bluesky client with TweetDeck-style multi-column interface, adva
 - **Build**: Vite + Wireit
 
 ### Key Design Principles
+
 - **Progressive Enhancement**: Works offline with cached data
 - **Privacy First**: User controls where data is stored
 - **Performance Optimized**: Smart caching and prefetching
@@ -39,6 +41,7 @@ src/
 ## 🔐 Authentication & Session Management
 
 The app uses AT Protocol authentication with support for:
+
 - Standard login with identifier (handle/email) and password
 - App passwords for enhanced security
 - 2FA support via auth factor tokens
@@ -46,6 +49,7 @@ The app uses AT Protocol authentication with support for:
 - Cross-subdomain authentication
 
 ### Auth Flow
+
 1. User logs in via `AuthContext`
 2. Session stored in localStorage
 3. Auto-refresh on 401 errors
@@ -58,12 +62,14 @@ ShadowSky features a sophisticated dual storage system that lets users choose wh
 ### Storage Types
 
 #### Local Storage
+
 - **Speed**: Instant access, no network calls
 - **Privacy**: Data never leaves your device
 - **Offline**: Full functionality without internet
 - **Limitations**: Device-specific, no sync
 
 #### AT Protocol Storage
+
 - **Sync**: Access data from any device
 - **Backup**: Data stored on your PDS
 - **Social**: Some data can be public (bookmarks)
@@ -71,12 +77,12 @@ ShadowSky features a sophisticated dual storage system that lets users choose wh
 
 ### Data Types & Storage
 
-| Data Type | Local Storage Key | AT Protocol Collection | Storage Options |
-|-----------|-------------------|------------------------|-----------------|
-| Bookmarks | `shadowsky-bookmarks-{uri}` | `com.shadowsky.bookmarks` | Local or AT Protocol |
-| Columns | `skyDeckColumns` / `shadowsky_columns` | `com.shadowsky.columns` | Local or AT Protocol |
-| Drafts | `bsky_thread_drafts` | `com.shadowsky.drafts` | Local or AT Protocol |
-| Preferences | `shadowsky_app_preferences` | `com.shadowsky.preferences` | AT Protocol (primary) |
+| Data Type   | Local Storage Key                      | AT Protocol Collection      | Storage Options       |
+| ----------- | -------------------------------------- | --------------------------- | --------------------- |
+| Bookmarks   | `shadowsky-bookmarks-{uri}`            | `com.shadowsky.bookmarks`   | Local or AT Protocol  |
+| Columns     | `skyDeckColumns` / `shadowsky_columns` | `com.shadowsky.columns`     | Local or AT Protocol  |
+| Drafts      | `bsky_thread_drafts`                   | `com.shadowsky.drafts`      | Local or AT Protocol  |
+| Preferences | `shadowsky_app_preferences`            | `com.shadowsky.preferences` | AT Protocol (primary) |
 
 ### Storage Architecture
 
@@ -109,6 +115,7 @@ ShadowSky features a sophisticated dual storage system that lets users choose wh
 ### Storage Preferences
 
 User preferences are stored in AT Protocol as `com.shadowsky.preferences`:
+
 ```typescript
 {
   bookmarkStorageType: "local" | "custom",
@@ -122,6 +129,7 @@ User preferences are stored in AT Protocol as `com.shadowsky.preferences`:
 ### Data Migration
 
 The app handles seamless migration between storage types:
+
 1. User changes storage preference in Settings
 2. Service detects change and migrates existing data
 3. Old storage is cleared after successful migration
@@ -135,7 +143,7 @@ The flagship feature providing a TweetDeck-like experience:
 
 - **Column Types**: Notifications, Timeline, Messages, Feeds, Bookmarks, Conversations
 - **Customization**: Add, remove, reorder columns via drag-and-drop
-- **Navigation**: 
+- **Navigation**:
   - Desktop: Arrow keys, h/l for column switching
   - Mobile: Swipe gestures, single column view
 - **Feed Integration**: Add any Bluesky feed as a column
@@ -198,13 +206,15 @@ VITE_ANTHROPIC_API_KEY=your-anthropic-key
 ### Debug Mode
 
 Enable detailed logging in browser console:
+
 ```javascript
-window.enableDebug()
+window.enableDebug();
 ```
 
 ### Settings Storage
 
 Settings are stored in a hierarchical system:
+
 1. **AT Protocol** (primary): User preferences synced across devices
 2. **LocalStorage** (fallback): When AT Protocol unavailable
 3. **Memory** (temporary): Session-specific overrides
@@ -273,6 +283,7 @@ The project includes a push script at `scripts/push.sh` that runs pre-push check
 ### Custom PDS Support
 
 Users can connect to custom PDS instances:
+
 1. Enter PDS URL during login
 2. App validates and stores PDS preference
 3. All API calls routed to custom PDS
@@ -280,6 +291,7 @@ Users can connect to custom PDS instances:
 ### Moderation
 
 Integrated moderation features:
+
 - Muted words and tags
 - Hidden posts (local only)
 - Bluesky moderation lists
@@ -288,6 +300,7 @@ Integrated moderation features:
 ### Performance Tuning
 
 The app uses several optimization strategies:
+
 - **IndexedDB**: For large data sets (notifications, posts)
 - **React Query**: Smart caching and background updates
 - **Virtualization**: Efficient rendering of long lists
@@ -323,6 +336,7 @@ The app uses several optimization strategies:
 ## 📝 Contributing
 
 While this project is maintained by a small team, we welcome:
+
 - Bug reports and feature requests
 - Documentation improvements
 - Community forks and adaptations

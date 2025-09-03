@@ -67,34 +67,30 @@ export const DataSettings: React.FC = () => {
       try {
         // Count bookmarks if using AT Protocol
         if (appPreferences.bookmarkStorageType === "custom") {
-          const bookmarkResponse = await agent.api.com.atproto.repo.listRecords(
-            {
-              repo: agent.session?.did || "",
-              collection: "com.shadowsky.bookmark",
-              limit: 1,
-            },
-          );
-          counts.bookmarks = bookmarkResponse.data.records.length;
+          try {
+            // Bookmarks are stored in a singleton record, not individual records
+            const bookmarkResponse = await agent.api.com.atproto.repo.getRecord(
+              {
+                repo: agent.session?.did || "",
+                collection: "com.shadowsky.bookmarks",
+                rkey: "self",
+              },
+            );
 
-          // If there are more records, get the actual count
-          if (bookmarkResponse.data.cursor) {
-            let totalCount = bookmarkResponse.data.records.length;
-            let cursor: string | undefined = bookmarkResponse.data.cursor;
-
-            while (cursor && totalCount < 1000) {
-              // Limit to prevent infinite loops
-              const nextResponse = await agent.api.com.atproto.repo.listRecords(
-                {
-                  repo: agent.session?.did || "",
-                  collection: "com.shadowsky.bookmark",
-                  cursor,
-                  limit: 100,
-                },
-              );
-              totalCount += nextResponse.data.records.length;
-              cursor = nextResponse.data.cursor;
+            if (bookmarkResponse.data.value) {
+              const bookmarksData = bookmarkResponse.data.value as any;
+              counts.bookmarks = bookmarksData.bookmarks?.length || 0;
+              setMissingRecords((prev) => ({ ...prev, bookmarks: false }));
             }
-            counts.bookmarks = totalCount;
+          } catch (error: any) {
+            if (error?.status === 400) {
+              // Record doesn't exist yet
+              setMissingRecords((prev) => ({ ...prev, bookmarks: true }));
+              counts.bookmarks = 0;
+            } else {
+              console.error("Failed to fetch bookmark count:", error);
+              counts.bookmarks = 0;
+            }
           }
         }
 
@@ -222,6 +218,29 @@ export const DataSettings: React.FC = () => {
         });
         // Refetch counts
         queryClient.invalidateQueries({ queryKey: ["atProtocolRecordCounts"] });
+      } else if (dataType === "bookmarks") {
+        // Create empty bookmarks record
+        const bookmarksData = {
+          $type: "com.shadowsky.bookmarks",
+          bookmarks: [],
+          version: 1,
+        };
+
+        await agent.api.com.atproto.repo.createRecord({
+          repo: agent.session?.did || "",
+          collection: "com.shadowsky.bookmarks",
+          rkey: "self",
+          record: bookmarksData,
+        });
+
+        setMissingRecords((prev) => ({ ...prev, bookmarks: false }));
+        setMessage({
+          type: "success",
+          text: "Bookmarks record created successfully",
+        });
+        // Refetch counts and invalidate bookmarks queries
+        queryClient.invalidateQueries({ queryKey: ["atProtocolRecordCounts"] });
+        queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
       }
     } catch (error) {
       console.error(`Failed to create ${dataType} record:`, error);
@@ -306,7 +325,10 @@ export const DataSettings: React.FC = () => {
       switch (dataType) {
         case "bookmarks":
           bookmarkServiceV2.setAgent(agent);
-          await bookmarkServiceV2.migrateStorage(currentType, newType);
+          await bookmarkServiceV2.migrateStorage(
+            currentType as "local" | "custom" | "official",
+            newType as "local" | "custom" | "official",
+          );
           break;
         case "columns":
           columnService.setAgent(agent);
@@ -415,7 +437,7 @@ export const DataSettings: React.FC = () => {
       onToggle: (enabled) => handleStorageToggle("bookmarks", enabled),
       isLoading: loadingStates.bookmarks,
       localKey: "shadowsky-bookmarks-*",
-      atProtoKey: "com.shadowsky.bookmark",
+      atProtoKey: "com.shadowsky.bookmarks",
     },
     {
       id: "columns",
@@ -611,12 +633,6 @@ export const DataSettings: React.FC = () => {
                           Migrating...
                         </p>
                       )}
-                      {isEnabled && (
-                        <p className="mt-1 text-xs text-yellow-600 dark:text-yellow-500">
-                          ⚠️ Disabling AT Protocol sync will make remote data
-                          temporarily unavailable
-                        </p>
-                      )}
                     </>
                   ) : (
                     <>
@@ -717,6 +733,58 @@ export const DataSettings: React.FC = () => {
                             </div>
                           </div>
                         )}
+                      {/* Show create record button for bookmarks if missing */}
+                      {item.id === "bookmarks" &&
+                        missingRecords.bookmarks &&
+                        isEnabled && (
+                          <div className="mt-2">
+                            <button
+                              onClick={() =>
+                                handleCreateMissingRecord("bookmarks")
+                              }
+                              disabled={loadingStates[`create_bookmarks`]}
+                              className="flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                            >
+                              {loadingStates[`create_bookmarks`] ? (
+                                <>Creating...</>
+                              ) : (
+                                <>Create Missing Record</>
+                              )}
+                            </button>
+                            <p className="mt-1 text-xs text-yellow-600 dark:text-yellow-500">
+                              ⚠️ Bookmarks record not found. Click to create it.
+                            </p>
+                          </div>
+                        )}
+                      {/* Show info when bookmarks record exists */}
+                      {item.id === "bookmarks" &&
+                        !missingRecords.bookmarks &&
+                        isEnabled &&
+                        recordCounts.bookmarks !== undefined && (
+                          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            ✓ Bookmarks record exists
+                            {recordCounts.bookmarks === 0
+                              ? ". Add bookmarks to see them here."
+                              : "."}
+                          </p>
+                        )}
+                      {/* Coming soon message for private bookmarks */}
+                      {item.id === "bookmarks" && (
+                        <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 p-2 dark:border-blue-800 dark:bg-blue-900/20">
+                          <p className="text-xs text-blue-700 dark:text-blue-300">
+                            <strong>Coming soon:</strong> Private bookmark
+                            storage is being developed.{" "}
+                            <a
+                              href="https://github.com/bluesky-social/atproto/pull/4163"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline hover:no-underline"
+                            >
+                              Track progress on GitHub →
+                            </a>
+                          </p>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>

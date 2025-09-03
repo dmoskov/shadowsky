@@ -3,16 +3,21 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
   Bookmark,
+  Cloud,
+  Database,
   Download,
   MoreVertical,
   Search,
+  Settings,
   Trash2,
   Upload,
   X,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
+import { appPreferencesService } from "../services/app-preferences-service";
 import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
 import { reinitializeBookmarkService } from "../services/bookmark-service-wrapper";
 import { proxifyBskyImage } from "../utils/image-proxy";
@@ -21,9 +26,13 @@ import { PostRenderer } from "./PostRenderer";
 export const Bookmarks: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { agent } = useAuth();
   const { showAlert, showConfirm } = useModal();
   const [searchQuery, setSearchQuery] = useState("");
   const [showExportModal, setShowExportModal] = useState(false);
+  const [storageType, setStorageType] = useState<
+    "local" | "custom" | "official"
+  >("local");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +44,22 @@ export const Bookmarks: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
     });
   }, [queryClient]);
+
+  // Fetch current storage type
+  useEffect(() => {
+    const fetchStorageType = async () => {
+      if (agent) {
+        appPreferencesService.setAgent(agent);
+        const prefs = await appPreferencesService.getPreferences();
+        if (prefs) {
+          setStorageType(
+            prefs.bookmarkStorageType as "local" | "custom" | "official",
+          );
+        }
+      }
+    };
+    fetchStorageType();
+  }, [agent]);
 
   // Note: bookmarkServiceV2 is initialized in AuthContext
 
@@ -68,12 +93,14 @@ export const Bookmarks: React.FC = () => {
     await bookmarkServiceV2.toggleBookmark(post);
     queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
     queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
+    queryClient.invalidateQueries({ queryKey: ["atProtocolRecordCounts"] });
   };
 
   const handleDeleteBookmark = async (postUri: string) => {
     await bookmarkServiceV2.removeBookmark(postUri);
     queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
     queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
+    queryClient.invalidateQueries({ queryKey: ["atProtocolRecordCounts"] });
   };
 
   const handleExport = async () => {
@@ -136,16 +163,46 @@ export const Bookmarks: React.FC = () => {
   return (
     <div className="flex h-full flex-col bg-bsky-bg-primary">
       <div className="sticky top-0 z-10 border-b border-bsky-border-primary bg-bsky-bg-primary p-4">
-        <div className="mb-4 flex items-center gap-2">
-          <Bookmark className="h-5 w-5" />
-          <h2 className="m-0 text-xl font-semibold text-bsky-text-primary">
-            Bookmarks
-          </h2>
-          {bookmarkCount !== undefined && (
-            <span className="rounded-full bg-bsky-bg-secondary px-2 py-0.5 text-sm text-bsky-text-secondary">
-              {bookmarkCount}
-            </span>
-          )}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Bookmark className="h-5 w-5" />
+            <h2 className="m-0 text-xl font-semibold text-bsky-text-primary">
+              Bookmarks
+            </h2>
+            {bookmarkCount !== undefined && (
+              <span className="rounded-full bg-bsky-bg-secondary px-2 py-0.5 text-sm text-bsky-text-secondary">
+                {bookmarkCount}
+              </span>
+            )}
+          </div>
+
+          <button
+            onClick={() => navigate("/settings/data")}
+            className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-all duration-200 hover:bg-bsky-bg-secondary"
+            title="Data storage settings"
+          >
+            {storageType === "local" && (
+              <>
+                <Database className="h-4 w-4 text-bsky-text-secondary" />
+                <span className="text-bsky-text-secondary">Local Storage</span>
+              </>
+            )}
+            {storageType === "custom" && (
+              <>
+                <Cloud className="h-4 w-4 text-orange-500" />
+                <span className="text-orange-500">Public Records</span>
+              </>
+            )}
+            {storageType === "official" && (
+              <>
+                <Cloud className="h-4 w-4 text-bsky-text-secondary" />
+                <span className="text-bsky-text-secondary">
+                  Official (Soon)
+                </span>
+              </>
+            )}
+            <Settings className="h-3 w-3 text-bsky-text-tertiary" />
+          </button>
         </div>
 
         <div className="flex items-center gap-2">
