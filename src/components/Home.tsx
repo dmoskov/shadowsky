@@ -13,6 +13,7 @@ import {
   MessageCircle,
   Repeat2,
   Reply,
+  Sparkles,
   Star,
   TrendingUp,
   Users,
@@ -27,6 +28,7 @@ import {
   useInteractionTracking,
 } from "../hooks/useAnalytics";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
+import { generateAltText } from "../services/anthropic";
 import { columnService } from "../services/column-service";
 import { columnFeedPrefs } from "../utils/cookies";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
@@ -164,6 +166,15 @@ export const Home: React.FC<HomeProps> = ({
   const [showThread, setShowThread] = useState(false);
   const [openThreadToReply, setOpenThreadToReply] = useState(false);
   const [focusedPostIndex, setFocusedPostIndex] = useState<number>(-1);
+  const [generatedAltTexts, setGeneratedAltTexts] = useState<
+    Record<string, Record<number, string>>
+  >({});
+  const [generatingAltText, setGeneratingAltText] = useState<
+    Record<string, Record<number, boolean>>
+  >({});
+  const [showAltText, setShowAltText] = useState<
+    Record<string, Record<number, boolean>>
+  >({});
   const postsContainerRef = useRef<HTMLDivElement>(null);
   const [feedOrder, setFeedOrder] = useState<string[]>([]);
   // Removed showFeedDropdown - now handled by parent component
@@ -671,7 +682,7 @@ export const Home: React.FC<HomeProps> = ({
                 {post.record.text}
               </div>
 
-              {renderEmbed(post.embed)}
+              {renderEmbed(post.embed, post.uri)}
 
               {/* Post Action Bar */}
               <PostActionBar
@@ -956,7 +967,51 @@ export const Home: React.FC<HomeProps> = ({
     }
   }, [isFocused]);
 
-  const renderEmbed = (embed: any) => {
+  const handleGenerateAltText = async (
+    imageUrl: string,
+    postUri: string,
+    index: number,
+  ) => {
+    const postKey = postUri;
+    setGeneratingAltText((prev) => ({
+      ...prev,
+      [postKey]: { ...prev[postKey], [index]: true },
+    }));
+    try {
+      // Convert HTTP URL to blob URL for the generateAltText function
+      let blobUrl = imageUrl;
+      if (imageUrl.startsWith("http") || imageUrl.startsWith("/")) {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        blobUrl = URL.createObjectURL(blob);
+      }
+
+      const altText = await generateAltText(blobUrl);
+
+      // Clean up blob URL
+      if (blobUrl !== imageUrl) {
+        URL.revokeObjectURL(blobUrl);
+      }
+
+      setGeneratedAltTexts((prev) => ({
+        ...prev,
+        [postKey]: { ...prev[postKey], [index]: altText },
+      }));
+      setShowAltText((prev) => ({
+        ...prev,
+        [postKey]: { ...prev[postKey], [index]: true },
+      }));
+    } catch (error) {
+      // Error is already handled by generateAltText with user-friendly messages
+    } finally {
+      setGeneratingAltText((prev) => ({
+        ...prev,
+        [postKey]: { ...prev[postKey], [index]: false },
+      }));
+    }
+  };
+
+  const renderEmbed = (embed: any, postUri?: string) => {
     if (!embed) return null;
 
     if (embed.$type === "app.bsky.embed.images#view") {
@@ -992,10 +1047,16 @@ export const Home: React.FC<HomeProps> = ({
             const colSpan =
               isThreeImageLayout && idx === 0 ? "col-span-2 row-span-2" : "";
 
+            const postKey = postUri || "";
+            const currentAltText = generatedAltTexts[postKey]?.[idx] || img.alt;
+            const hasAltText = currentAltText && currentAltText.length > 0;
+            const isGenerating = generatingAltText[postKey]?.[idx];
+            const shouldShowAlt = showAltText[postKey]?.[idx];
+
             return (
               <div
                 key={idx}
-                className={`relative cursor-pointer overflow-hidden rounded-lg ${colSpan}`}
+                className={`group relative cursor-pointer overflow-hidden rounded-lg ${colSpan}`}
                 onClick={(e) => handleImageClick(e, idx)}
                 style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
               >
@@ -1009,7 +1070,7 @@ export const Home: React.FC<HomeProps> = ({
                 >
                   <img
                     src={proxifyBskyImage(img.thumb)}
-                    alt={img.alt || ""}
+                    alt={currentAltText || ""}
                     className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
                     loading="lazy"
                     onLoad={(e) => {
@@ -1025,10 +1086,50 @@ export const Home: React.FC<HomeProps> = ({
                     style={{ zIndex: -1, filter: "blur(20px)" }}
                   />
                 </div>
-                {img.alt && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-1.5 text-xs text-white opacity-0 transition-opacity hover:opacity-100">
-                    ALT
+
+                {/* Alt text overlay */}
+                {hasAltText && shouldShowAlt && (
+                  <div className="absolute bottom-0 left-0 right-0 rounded-b-lg bg-black bg-opacity-70 p-2 text-xs text-white">
+                    {currentAltText}
                   </div>
+                )}
+
+                {/* Alt text generation button */}
+                {postUri && (
+                  <button
+                    className="absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+
+                      if (hasAltText && !generatedAltTexts[postKey]?.[idx]) {
+                        // Toggle showing existing alt text
+                        setShowAltText((prev) => ({
+                          ...prev,
+                          [postKey]: {
+                            ...prev[postKey],
+                            [idx]: !shouldShowAlt,
+                          },
+                        }));
+                      } else if (!hasAltText) {
+                        // Generate new alt text
+                        handleGenerateAltText(
+                          proxifyBskyImage(img.fullsize) ||
+                            proxifyBskyImage(img.thumb) ||
+                            "",
+                          postUri,
+                          idx,
+                        );
+                      }
+                    }}
+                    disabled={isGenerating}
+                    title={hasAltText ? "Toggle alt text" : "Generate alt text"}
+                  >
+                    {isGenerating ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <Sparkles size={16} />
+                    )}
+                  </button>
                 )}
               </div>
             );
@@ -1158,7 +1259,8 @@ export const Home: React.FC<HomeProps> = ({
               >
                 {quotedPost.value.text}
               </div>
-              {quotedPost.embeds?.[0] && renderEmbed(quotedPost.embeds[0])}
+              {quotedPost.embeds?.[0] &&
+                renderEmbed(quotedPost.embeds[0], postUri)}
             </div>
           </div>
         );
@@ -1226,8 +1328,8 @@ export const Home: React.FC<HomeProps> = ({
     if (embed.$type === "app.bsky.embed.recordWithMedia#view") {
       return (
         <div className="mt-3">
-          {embed.media && renderEmbed(embed.media)}
-          {embed.record && renderEmbed(embed.record)}
+          {embed.media && renderEmbed(embed.media, postUri)}
+          {embed.record && renderEmbed(embed.record, postUri)}
         </div>
       );
     }

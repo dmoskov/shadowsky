@@ -1,7 +1,7 @@
 import { LucideIcon } from "lucide-react";
 import React from "react";
 
-export type StorageType = "local" | "custom";
+export type StorageType = "local" | "custom" | "official";
 
 export interface StorageOption {
   type: StorageType;
@@ -11,6 +11,7 @@ export interface StorageOption {
   pros: string[];
   cons: string[];
   warning?: string;
+  info?: string;
 }
 
 interface StorageOptionSelectorProps {
@@ -92,6 +93,19 @@ export const StorageOptionSelector: React.FC<StorageOptionSelectorProps> = ({
                     }}
                   >
                     ⚠️ {option.warning}
+                  </div>
+                )}
+
+                {option.info && (
+                  <div
+                    className="mt-2 rounded p-2 text-sm"
+                    style={{
+                      backgroundColor: "rgba(59, 130, 246, 0.1)",
+                      color: "#3b82f6",
+                      border: "1px solid rgba(59, 130, 246, 0.3)",
+                    }}
+                  >
+                    ℹ️ {option.info}
                   </div>
                 )}
 

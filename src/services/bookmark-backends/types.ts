@@ -17,7 +17,7 @@ export interface Bookmark {
 }
 
 export interface BookmarkStorageBackend {
-  type: "local" | "custom";
+  type: "local" | "custom" | "official";
 
   // Initialize the backend
   init(): Promise<void>;

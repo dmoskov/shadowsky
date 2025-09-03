@@ -1,10 +1,11 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
 import { formatDistanceToNow } from "date-fns";
-import { CornerDownRight, ExternalLink, Loader2 } from "lucide-react";
+import { CornerDownRight, ExternalLink, Loader2, Sparkles } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
+import { generateAltText } from "../services/anthropic";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { atUriToBskyUrl, getNotificationUrl } from "../utils/url-helpers";
 import { ImageGallery } from "./ImageGallery";
@@ -54,6 +55,15 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   const [hasShownInitialHighlight, setHasShownInitialHighlight] =
     useState(false);
   const [hasScrolledToHighlight, setHasScrolledToHighlight] = useState(false);
+  const [generatedAltTexts, setGeneratedAltTexts] = useState<
+    Record<string, Record<number, string>>
+  >({});
+  const [generatingAltText, setGeneratingAltText] = useState<
+    Record<string, Record<number, boolean>>
+  >({});
+  const [showAltText, setShowAltText] = useState<
+    Record<string, Record<number, boolean>>
+  >({});
 
   // Get optimistic post mutations
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
@@ -293,8 +303,52 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     }
   }, [highlightUri, hasShownInitialHighlight]);
 
+  const handleGenerateAltText = async (
+    imageUrl: string,
+    postUri: string,
+    index: number,
+  ) => {
+    const postKey = postUri;
+    setGeneratingAltText((prev) => ({
+      ...prev,
+      [postKey]: { ...prev[postKey], [index]: true },
+    }));
+    try {
+      // Convert HTTP URL to blob URL for the generateAltText function
+      let blobUrl = imageUrl;
+      if (imageUrl.startsWith("http") || imageUrl.startsWith("/")) {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        blobUrl = URL.createObjectURL(blob);
+      }
+
+      const altText = await generateAltText(blobUrl);
+
+      // Clean up blob URL
+      if (blobUrl !== imageUrl) {
+        URL.revokeObjectURL(blobUrl);
+      }
+
+      setGeneratedAltTexts((prev) => ({
+        ...prev,
+        [postKey]: { ...prev[postKey], [index]: altText },
+      }));
+      setShowAltText((prev) => ({
+        ...prev,
+        [postKey]: { ...prev[postKey], [index]: true },
+      }));
+    } catch (error) {
+      // Error is already handled by generateAltText with user-friendly messages
+    } finally {
+      setGeneratingAltText((prev) => ({
+        ...prev,
+        [postKey]: { ...prev[postKey], [index]: false },
+      }));
+    }
+  };
+
   // Render embeds (images, videos, quotes, etc)
-  const renderEmbed = (embed: any) => {
+  const renderEmbed = (embed: any, postUri?: string) => {
     if (!embed) return null;
 
     if (embed.$type === "app.bsky.embed.images#view") {
@@ -313,26 +367,78 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
         <div
           className={`mt-2 grid gap-1 ${embed.images.length === 1 ? "max-w-2xl grid-cols-1" : embed.images.length === 2 ? "max-w-3xl grid-cols-2" : embed.images.length === 3 ? "max-w-3xl grid-cols-2" : "max-w-3xl grid-cols-2"}`}
         >
-          {embed.images.map((img: any, idx: number) => (
-            <div
-              key={idx}
-              className={`relative cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-90 ${
-                embed.images.length === 3 && idx === 0 ? "col-span-2" : ""
-              }`}
-              onClick={(e) => handleImageClick(e, idx)}
-            >
-              <img
-                src={proxifyBskyImage(img.thumb)}
-                alt={img.alt || ""}
-                className="mx-auto h-auto w-full rounded-lg object-contain"
-                style={{
-                  maxHeight: embed.images.length === 1 ? "400px" : "300px",
-                  maxWidth: embed.images.length === 1 ? "600px" : "100%",
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                }}
-              />
-            </div>
-          ))}
+          {embed.images.map((img: any, idx: number) => {
+            const postKey = postUri || "";
+            const currentAltText = generatedAltTexts[postKey]?.[idx] || img.alt;
+            const hasAltText = currentAltText && currentAltText.length > 0;
+            const isGenerating = generatingAltText[postKey]?.[idx];
+            const shouldShowAlt = showAltText[postKey]?.[idx];
+
+            return (
+              <div
+                key={idx}
+                className={`group relative cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-90 ${
+                  embed.images.length === 3 && idx === 0 ? "col-span-2" : ""
+                }`}
+                onClick={(e) => handleImageClick(e, idx)}
+              >
+                <img
+                  src={proxifyBskyImage(img.thumb)}
+                  alt={currentAltText || ""}
+                  className="mx-auto h-auto w-full rounded-lg object-contain"
+                  style={{
+                    maxHeight: embed.images.length === 1 ? "400px" : "300px",
+                    maxWidth: embed.images.length === 1 ? "600px" : "100%",
+                    backgroundColor: "var(--bsky-bg-tertiary)",
+                  }}
+                />
+
+                {/* Alt text overlay */}
+                {hasAltText && shouldShowAlt && (
+                  <div className="absolute bottom-0 left-0 right-0 rounded-b-lg bg-black bg-opacity-70 p-2 text-xs text-white">
+                    {currentAltText}
+                  </div>
+                )}
+
+                {/* Alt text generation button */}
+                {postUri && (
+                  <button
+                    className="absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (hasAltText && !generatedAltTexts[postKey]?.[idx]) {
+                        // Toggle showing existing alt text
+                        setShowAltText((prev) => ({
+                          ...prev,
+                          [postKey]: {
+                            ...prev[postKey],
+                            [idx]: !shouldShowAlt,
+                          },
+                        }));
+                      } else if (!hasAltText) {
+                        // Generate new alt text
+                        handleGenerateAltText(
+                          proxifyBskyImage(img.fullsize) ||
+                            proxifyBskyImage(img.thumb) ||
+                            "",
+                          postUri,
+                          idx,
+                        );
+                      }
+                    }}
+                    disabled={isGenerating}
+                    title={hasAltText ? "Toggle alt text" : "Generate alt text"}
+                  >
+                    {isGenerating ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <Sparkles size={16} />
+                    )}
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       );
     }
@@ -433,8 +539,8 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     if (embed.$type === "app.bsky.embed.recordWithMedia#view") {
       return (
         <div className="mt-2">
-          {embed.media && renderEmbed(embed.media)}
-          {embed.record && renderEmbed(embed.record)}
+          {embed.media && renderEmbed(embed.media, postUri)}
+          {embed.record && renderEmbed(embed.record, postUri)}
         </div>
       );
     }
@@ -745,7 +851,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     )}
                   </p>
 
-                  {post?.embed && renderEmbed(post.embed)}
+                  {post?.embed && renderEmbed(post.embed, post.uri)}
 
                   {isUnread && (
                     <span

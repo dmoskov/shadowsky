@@ -100,12 +100,12 @@ export const DraftStorageSettings: React.FC = () => {
       draftService.setAgent(agent);
 
       // First, migrate existing drafts to new storage
-      await draftService.migrateStorage(storageType, newType);
+      await draftService.migrateStorage(storageType as any, newType as any);
 
       // Update app preferences in PDS
       appPreferencesService.setAgent(agent);
       await appPreferencesService.updatePreferences({
-        draftStorageType: newType,
+        draftStorageType: newType as any,
       });
 
       setStorageType(newType);
@@ -204,7 +204,7 @@ export const DraftStorageSettings: React.FC = () => {
       <StorageOptionSelector
         options={storageOptions}
         selectedType={storageType}
-        onSelect={handleStorageChange}
+        onSelect={handleStorageChange as any}
         isLoading={isLoading}
       />
 

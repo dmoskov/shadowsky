@@ -5,7 +5,7 @@ import { AT_PROTO_COLLECTIONS } from "./storage/storage-constants";
 // Define the app preferences stored as custom record
 export interface ShadowSkyPreferences {
   $type: "com.shadowsky.preferences";
-  bookmarkStorageType: "local" | "custom";
+  bookmarkStorageType: "local" | "custom" | "official";
   columnStorageType: "local" | "atproto";
   draftStorageType: "local" | "custom";
   appSettingsVersion?: number;
@@ -81,7 +81,7 @@ export interface ShadowSkyDrafts {
 // Legacy interface for compatibility
 export interface AppPreferencesRecord {
   $type: "app.shadowsky.preferences";
-  bookmarkStorageType: "local" | "custom";
+  bookmarkStorageType: "local" | "custom" | "official";
   columnStorageType: "local" | "custom";
   draftStorageType: "local" | "custom";
   createdAt: string;

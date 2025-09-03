@@ -1,6 +1,7 @@
 import { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
 import { createLogger } from "../utils/logger";
 import { LocalStorageBackend } from "./bookmark-backends/LocalStorageBackend";
+import { OfficialBookmarksBackend } from "./bookmark-backends/OfficialBookmarksBackend";
 import { SingletonCustomRecordBackend } from "./bookmark-backends/SingletonCustomRecordBackend";
 import { Bookmark, BookmarkStorageBackend } from "./bookmark-backends/types";
 import { PostCacheService } from "./post-cache-service";
@@ -13,7 +14,7 @@ const logger = createLogger("BookmarkServiceV2");
 
 class BookmarkServiceV2 {
   private backend: BookmarkStorageBackend;
-  private storageType: "local" | "custom" = "local";
+  private storageType: "local" | "custom" | "official" = "local";
   public agent: BskyAgent | null = null;
   private postCacheService = PostCacheService.getInstance();
 
@@ -22,7 +23,7 @@ class BookmarkServiceV2 {
     this.backend = new LocalStorageBackend();
   }
 
-  async init(agent?: BskyAgent, storageType?: "local" | "custom") {
+  async init(agent?: BskyAgent, storageType?: "local" | "custom" | "official") {
     if (agent) {
       this.agent = agent;
     }
@@ -35,15 +36,21 @@ class BookmarkServiceV2 {
       await this.setStorageType(storageType);
     } else {
       // If we already have a backend but agent changed, re-create it
-      if (this.backend && this.storageType === "custom" && agent) {
-        const customBackend = new SingletonCustomRecordBackend(agent);
-        customBackend.setErrorCallback((error: Error, action: string) => {
-          logger.error(
-            `SingletonCustomRecordBackend error during ${action}:`,
-            error,
-          );
-        });
-        this.backend = customBackend;
+      if (this.backend && agent) {
+        if (this.storageType === "custom") {
+          const customBackend = new SingletonCustomRecordBackend(agent);
+          customBackend.setErrorCallback((error: Error, action: string) => {
+            logger.error(
+              `SingletonCustomRecordBackend error during ${action}:`,
+              error,
+            );
+          });
+          this.backend = customBackend;
+        } else if (this.storageType === "official") {
+          const officialBackend = new OfficialBookmarksBackend();
+          officialBackend.setAgent(agent);
+          this.backend = officialBackend;
+        }
       }
       await this.backend.init();
     }
@@ -52,17 +59,27 @@ class BookmarkServiceV2 {
   setAgent(agent: BskyAgent | null) {
     this.agent = agent;
 
-    // If we're using custom storage and the agent changed, we need to update the backend
-    if (this.storageType === "custom" && this.backend && agent) {
+    // If we're using custom or official storage and the agent changed, we need to update the backend
+    if (
+      this.backend &&
+      agent &&
+      (this.storageType === "custom" || this.storageType === "official")
+    ) {
       // Re-initialize the backend with the new agent
-      const customBackend = new SingletonCustomRecordBackend(agent);
-      customBackend.setErrorCallback((error: Error, action: string) => {
-        logger.error(
-          `SingletonCustomRecordBackend error during ${action}:`,
-          error,
-        );
-      });
-      this.backend = customBackend;
+      if (this.storageType === "custom") {
+        const customBackend = new SingletonCustomRecordBackend(agent);
+        customBackend.setErrorCallback((error: Error, action: string) => {
+          logger.error(
+            `SingletonCustomRecordBackend error during ${action}:`,
+            error,
+          );
+        });
+        this.backend = customBackend;
+      } else if (this.storageType === "official") {
+        const officialBackend = new OfficialBookmarksBackend();
+        officialBackend.setAgent(agent);
+        this.backend = officialBackend;
+      }
       // Don't await here to avoid making setAgent async, but log any errors
       this.backend.init().catch((error) => {
         logger.error(
@@ -73,7 +90,7 @@ class BookmarkServiceV2 {
     }
   }
 
-  async setStorageType(type: "local" | "custom") {
+  async setStorageType(type: "local" | "custom" | "official") {
     if (!this.agent && type !== "local") {
       throw new Error("Agent required for non-local storage");
     }
@@ -96,15 +113,22 @@ class BookmarkServiceV2 {
         });
         this.backend = customBackend;
         break;
+      case "official":
+        const officialBackend = new OfficialBookmarksBackend();
+        if (this.agent) {
+          officialBackend.setAgent(this.agent);
+        }
+        this.backend = officialBackend;
+        break;
     }
 
     await this.backend.init();
   }
 
   async migrateStorage(
-    _fromType: "local" | "custom",
-    toType: "local" | "custom",
-  ) {
+    _fromType: "local" | "custom" | "official",
+    toType: "local" | "custom" | "official",
+  ): Promise<void> {
     if (!this.agent && toType !== "local") {
       throw new Error("Agent required for non-local storage");
     }
@@ -243,10 +267,10 @@ class BookmarkServiceV2 {
     }
   }
 
-  setErrorCallback(callback: (error: Error, action: string) => void) {
+  setErrorCallback(_callback: (error: Error, action: string) => void) {
     // Set error callback if backend supports it
     if (this.backend instanceof SingletonCustomRecordBackend) {
-      this.backend.setErrorCallback(callback);
+      this.backend.setErrorCallback(_callback);
     }
   }
 }

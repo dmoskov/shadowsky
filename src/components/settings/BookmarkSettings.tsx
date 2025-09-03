@@ -7,7 +7,7 @@ import { useModal } from "../../contexts/ModalContext";
 import { appPreferencesService } from "../../services/app-preferences-service";
 import { bookmarkServiceV2 } from "../../services/bookmark-service-v2";
 
-type BookmarkStorageType = "local" | "custom";
+type BookmarkStorageType = "local" | "custom" | "official";
 
 export const BookmarkSettings: React.FC = () => {
   const { agent } = useAuth();
@@ -34,7 +34,7 @@ export const BookmarkSettings: React.FC = () => {
   // Load storage type from preferences
   useEffect(() => {
     if (appPreferences) {
-      setStorageType(appPreferences.bookmarkStorageType);
+      setStorageType(appPreferences.bookmarkStorageType as BookmarkStorageType);
     }
   }, [appPreferences]);
 
@@ -81,7 +81,28 @@ export const BookmarkSettings: React.FC = () => {
       return;
     }
 
-    // For non-custom storage, proceed directly
+    // Show info for official bookmarks (when available)
+    if (newType === "official") {
+      await showConfirm(
+        "ℹ️ Official Bookmarks (Private)\n\n" +
+          "Private bookmarks are being implemented by Bluesky (see github.com/bluesky-social/atproto/pull/4163). " +
+          "Once released, your bookmarks will be private and sync across all Bluesky clients.\n\n" +
+          "For now, this will store bookmarks locally. They will automatically migrate when the feature is available.",
+        async () => {
+          // User confirmed - proceed with storage change
+          await performStorageChange(newType);
+        },
+        {
+          variant: "info",
+          title: "Official Bookmarks Coming Soon",
+          confirmText: "Enable (Local for Now)",
+          cancelText: "Cancel",
+        },
+      );
+      return;
+    }
+
+    // For local storage, proceed directly
     await performStorageChange(newType);
   };
 
@@ -139,6 +160,10 @@ export const BookmarkSettings: React.FC = () => {
         return "Local Storage";
       case "custom":
         return "Custom Records";
+      case "official":
+        return "Official Bookmarks";
+      default:
+        return "Local Storage";
     }
   };
 
@@ -157,12 +182,26 @@ export const BookmarkSettings: React.FC = () => {
       icon: Cloud,
       description:
         "Store bookmarks as AT Protocol records. WARNING: These are publicly visible to anyone!",
-      pros: ["Cross-device sync"],
+      pros: ["Cross-device sync", "Available now"],
       cons: [
         "PUBLIC - Anyone can see your bookmarks!",
         "Experimental",
         "May not work with other clients",
       ],
+    },
+    {
+      type: "official" as BookmarkStorageType,
+      name: "Official Bookmarks (Private, Coming Soon)",
+      icon: Cloud,
+      description:
+        "Private bookmarks feature being added to Bluesky. See: github.com/bluesky-social/atproto/pull/4163",
+      pros: [
+        "Private",
+        "Cross-device sync",
+        "Works with all Bluesky clients",
+        "Official support",
+      ],
+      cons: ["Not yet available", "Will use local storage until released"],
     },
   ];
 

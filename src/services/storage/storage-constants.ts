@@ -49,6 +49,7 @@ export const STORAGE_TYPES = {
   LOCAL: "local",
   CUSTOM: "custom",
   ATPROTO: "atproto", // Only used for columns in AT Protocol
+  OFFICIAL: "official", // Official Bluesky bookmarks API
 } as const;
 
 // Helper to get the correct preference key for a data type

@@ -99,12 +99,12 @@ export const ColumnStorageSettings: React.FC = () => {
       columnService.setAgent(agent);
 
       // First, migrate existing columns to new storage
-      await columnService.migrateStorage(storageType, newType);
+      await columnService.migrateStorage(storageType as any, newType as any);
 
       // Update app preferences in PDS
       appPreferencesService.setAgent(agent);
       await appPreferencesService.updatePreferences({
-        columnStorageType: newType,
+        columnStorageType: newType as any,
       });
 
       setStorageType(newType);
@@ -191,7 +191,7 @@ export const ColumnStorageSettings: React.FC = () => {
       <StorageOptionSelector
         options={storageOptions}
         selectedType={storageType}
-        onSelect={handleStorageChange}
+        onSelect={handleStorageChange as any}
         isLoading={isLoading}
       />
 

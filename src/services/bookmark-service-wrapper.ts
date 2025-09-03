@@ -22,7 +22,10 @@ export async function initializeBookmarkService(agent: BskyAgent) {
     );
 
     // Initialize the bookmark service with the correct storage type
-    await bookmarkServiceV2.init(agent, storageType);
+    await bookmarkServiceV2.init(
+      agent,
+      storageType as "local" | "custom" | "official",
+    );
 
     logger.log(
       `Bookmark service successfully initialized with ${storageType} storage`,
@@ -81,7 +84,10 @@ export async function reinitializeBookmarkService() {
       logger.log(
         `Storage type changed from ${currentStorageType} to ${storageType}, reinitializing...`,
       );
-      await bookmarkServiceV2.init(agent, storageType);
+      await bookmarkServiceV2.init(
+        agent,
+        storageType as "local" | "custom" | "official",
+      );
 
       // Refresh the cache to ensure we have the latest data
       await bookmarkServiceV2.refreshCache();

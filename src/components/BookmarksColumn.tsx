@@ -1,11 +1,14 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { Bookmark, Search, X } from "lucide-react";
+import { Bookmark, Cloud, Database, Search, Settings, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router";
+import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModal } from "../contexts/ModalContext";
 import { useModeration } from "../contexts/ModerationContext";
+import { appPreferencesService } from "../services/app-preferences-service";
 import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { ImageGallery } from "./ImageGallery";
@@ -22,11 +25,16 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
   isFocused = false,
   onClose,
 }) => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { agent } = useAuth();
   const { isPostHidden } = useHiddenPosts();
   const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
   const { showAlert } = useModal();
   const [searchQuery, setSearchQuery] = useState("");
+  const [storageType, setStorageType] = useState<
+    "local" | "custom" | "official"
+  >("local");
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [selectedPost, setSelectedPost] =
     useState<AppBskyFeedDefs.PostView | null>(null);
@@ -63,6 +71,22 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
       refetch();
     }
   }, [isFocused, refetch]);
+
+  // Fetch current storage type
+  useEffect(() => {
+    const fetchStorageType = async () => {
+      if (agent) {
+        appPreferencesService.setAgent(agent);
+        const prefs = await appPreferencesService.getPreferences();
+        if (prefs) {
+          setStorageType(
+            prefs.bookmarkStorageType as "local" | "custom" | "official",
+          );
+        }
+      }
+    };
+    fetchStorageType();
+  }, [agent]);
 
   const { data: bookmarkCount } = useQuery({
     queryKey: ["bookmarkCount"],
@@ -228,7 +252,7 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
         style={{ borderColor: "var(--bsky-border-primary)" }}
       >
         <div className="group flex items-center justify-between px-4 py-2.5">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-1 items-center gap-2">
             <Bookmark size={20} style={{ color: "var(--bsky-primary)" }} />
             <h2
               className="text-lg font-semibold"
@@ -248,16 +272,58 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
               </span>
             )}
           </div>
-          {onClose && (
+
+          <div className="flex items-center gap-2">
             <button
-              onClick={onClose}
-              className="rounded-full p-1.5 opacity-0 transition-all hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
-              style={{ color: "var(--bsky-text-secondary)" }}
-              aria-label="Close column"
+              onClick={() => navigate("/settings/data")}
+              className="flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-all hover:bg-gray-200 dark:hover:bg-gray-700"
+              title="Data storage settings"
             >
-              <X size={18} />
+              {storageType === "local" && (
+                <>
+                  <Database
+                    size={14}
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  />
+                  <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    Local
+                  </span>
+                </>
+              )}
+              {storageType === "custom" && (
+                <>
+                  <Cloud size={14} className="text-orange-500" />
+                  <span className="text-orange-500">Public</span>
+                </>
+              )}
+              {storageType === "official" && (
+                <>
+                  <Cloud
+                    size={14}
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  />
+                  <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    Official
+                  </span>
+                </>
+              )}
+              <Settings
+                size={12}
+                style={{ color: "var(--bsky-text-tertiary)" }}
+              />
             </button>
-          )}
+
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="rounded-full p-1.5 opacity-0 transition-all hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
+                style={{ color: "var(--bsky-text-secondary)" }}
+                aria-label="Close column"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Search */}

@@ -7,9 +7,11 @@ import {
   MoreVertical,
   Repeat2,
   Reply,
+  Sparkles,
 } from "lucide-react";
 import React from "react";
 import { useNavigate } from "react-router";
+import { generateAltText } from "../services/anthropic";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { parseBskyUrl } from "../utils/url-helpers";
 import { ImageGallery } from "./ImageGallery";
@@ -52,6 +54,15 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
     alt?: string;
   }> | null>(null);
   const [galleryIndex, setGalleryIndex] = React.useState(0);
+  const [generatedAltTexts, setGeneratedAltTexts] = React.useState<
+    Record<number, string>
+  >({});
+  const [generatingAltText, setGeneratingAltText] = React.useState<
+    Record<number, boolean>
+  >({});
+  const [showAltText, setShowAltText] = React.useState<Record<number, boolean>>(
+    {},
+  );
 
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -75,6 +86,33 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
     setGalleryIndex(index);
   };
 
+  const handleGenerateAltText = async (imageUrl: string, index: number) => {
+    setGeneratingAltText((prev) => ({ ...prev, [index]: true }));
+    try {
+      // Convert HTTP URL to blob URL for the generateAltText function
+      let blobUrl = imageUrl;
+      if (imageUrl.startsWith("http") || imageUrl.startsWith("/")) {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        blobUrl = URL.createObjectURL(blob);
+      }
+
+      const altText = await generateAltText(blobUrl);
+
+      // Clean up blob URL
+      if (blobUrl !== imageUrl) {
+        URL.revokeObjectURL(blobUrl);
+      }
+
+      setGeneratedAltTexts((prev) => ({ ...prev, [index]: altText }));
+      setShowAltText((prev) => ({ ...prev, [index]: true }));
+    } catch (error) {
+      // Error is already handled by generateAltText with user-friendly messages
+    } finally {
+      setGeneratingAltText((prev) => ({ ...prev, [index]: false }));
+    }
+  };
+
   const renderEmbed = (embed: any) => {
     if (!embed) return null;
 
@@ -84,19 +122,63 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
         <div
           className={`mt-2 grid gap-2 ${embed.images.length > 2 ? "grid-cols-2" : embed.images.length === 2 ? "grid-cols-2" : "grid-cols-1"}`}
         >
-          {embed.images.map((image: any, index: number) => (
-            <img
-              key={index}
-              src={proxifyBskyImage(image.thumb)}
-              alt={image.alt || ""}
-              className="cursor-pointer rounded-lg object-cover hover:opacity-90"
-              style={{ maxHeight: "400px" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                openImageGallery(embed.images, index);
-              }}
-            />
-          ))}
+          {embed.images.map((image: any, index: number) => {
+            const currentAltText = generatedAltTexts[index] || image.alt;
+            const hasAltText = currentAltText && currentAltText.length > 0;
+
+            return (
+              <div key={index} className="group relative">
+                <img
+                  src={proxifyBskyImage(image.thumb)}
+                  alt={currentAltText || ""}
+                  className="w-full cursor-pointer rounded-lg object-cover hover:opacity-90"
+                  style={{ maxHeight: "400px" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openImageGallery(embed.images, index);
+                  }}
+                />
+
+                {/* Alt text overlay */}
+                {hasAltText && showAltText[index] && (
+                  <div className="absolute bottom-0 left-0 right-0 rounded-b-lg bg-black bg-opacity-70 p-2 text-xs text-white">
+                    {currentAltText}
+                  </div>
+                )}
+
+                {/* Alt text generation button */}
+                <button
+                  className="absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (hasAltText && !generatedAltTexts[index]) {
+                      // Toggle showing existing alt text
+                      setShowAltText((prev) => ({
+                        ...prev,
+                        [index]: !prev[index],
+                      }));
+                    } else if (!hasAltText) {
+                      // Generate new alt text
+                      handleGenerateAltText(
+                        proxifyBskyImage(image.fullsize) ||
+                          proxifyBskyImage(image.thumb) ||
+                          "",
+                        index,
+                      );
+                    }
+                  }}
+                  disabled={generatingAltText[index]}
+                  title={hasAltText ? "Toggle alt text" : "Generate alt text"}
+                >
+                  {generatingAltText[index] ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    <Sparkles size={16} />
+                  )}
+                </button>
+              </div>
+            );
+          })}
         </div>
       );
     }
