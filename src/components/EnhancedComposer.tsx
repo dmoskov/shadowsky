@@ -14,10 +14,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import {
   generateAltText,
-  generateSmartReplies,
-  suggestHashtags,
-  type HashtagSuggestion,
-  type SmartReply,
 } from "../services/anthropic";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { debug } from "../shared/debug";
@@ -26,6 +22,18 @@ import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
+
+// Temporary type definitions until these are added to anthropic service
+interface SmartReply {
+  text: string;
+  tone: string;
+}
+
+interface HashtagSuggestion {
+  tag: string;
+  relevance: number;
+  isTrending?: boolean;
+}
 
 interface UploadedMedia {
   id: string;
@@ -151,16 +159,20 @@ export function EnhancedComposer({
   useEffect(() => {
     const loadSettings = async () => {
       const prefs = await appPreferencesService.getPreferences();
-      if (prefs?.aiSettings) {
-        setEnableSmartReplies(
-          features.smartReplies === true &&
-            prefs.aiSettings.enableSmartReplies === true,
-        );
-        setEnableHashtags(
-          features.hashtags === true &&
-            prefs.aiSettings.enableHashtagSuggestions === true,
-        );
-      }
+      // TODO: Add aiSettings to AppPreferencesRecord type
+      // if (prefs?.aiSettings) {
+      //   setEnableSmartReplies(
+      //     features.smartReplies === true &&
+      //       prefs.aiSettings.enableSmartReplies === true,
+      //   );
+      //   setEnableHashtags(
+      //     features.hashtags === true &&
+      //       prefs.aiSettings.enableHashtagSuggestions === true,
+      //   );
+      // }
+      // For now, disable these features
+      setEnableSmartReplies(false);
+      setEnableHashtags(false);
     };
     loadSettings();
   }, [features.smartReplies, features.hashtags]);
@@ -239,11 +251,13 @@ export function EnhancedComposer({
 
     setIsLoadingSmartReplies(true);
     try {
-      const result = await generateSmartReplies(
-        replyTo.text,
-        replyTo.author.handle,
-      );
-      setSmartReplies(result.suggestions);
+      // TODO: Implement generateSmartReplies in anthropic service
+      // const result = await generateSmartReplies(
+      //   replyTo.text,
+      //   replyTo.author.handle,
+      // );
+      // setSmartReplies(result.suggestions);
+      setSmartReplies([]); // Temporarily disabled
     } catch (error) {
       debug.error("Failed to generate smart replies:", error);
     } finally {
@@ -254,8 +268,10 @@ export function EnhancedComposer({
   const loadHashtagSuggestions = async () => {
     setIsLoadingHashtags(true);
     try {
-      const result = await suggestHashtags(text);
-      setHashtagSuggestions(result.hashtags);
+      // TODO: Implement suggestHashtags in anthropic service
+      // const result = await suggestHashtags(text);
+      // setHashtagSuggestions(result.hashtags);
+      setHashtagSuggestions([]); // Temporarily disabled
       setShowHashtagSuggestions(true);
     } catch (error) {
       debug.error("Failed to suggest hashtags:", error);
