@@ -13,7 +13,6 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { generateAltText } from "../services/anthropic";
-import { appPreferencesService } from "../services/app-preferences-service";
 import { debug } from "../shared/debug";
 import { extractBskyUrls, parseBskyPostUrl } from "../utils/bsky-url-parser";
 import { compressImage, isCompressibleImage } from "../utils/image-compression";
@@ -156,8 +155,8 @@ export function EnhancedComposer({
   // Load AI settings
   useEffect(() => {
     const loadSettings = async () => {
-      const prefs = await appPreferencesService.getPreferences();
       // TODO: Add aiSettings to AppPreferencesRecord type
+      // const prefs = await appPreferencesService.getPreferences();
       // if (prefs?.aiSettings) {
       //   setEnableSmartReplies(
       //     features.smartReplies === true &&
