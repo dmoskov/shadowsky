@@ -1,6 +1,8 @@
-# GIF to MP4 Converter Server
+# Media Processing Server
 
-This server provides an endpoint to convert GIF images to MP4 videos, which is required for uploading animated content to Bluesky.
+This server provides endpoints for:
+1. Converting GIF images to MP4 videos for Bluesky uploads
+2. Proxying images from external sources to avoid CORS issues
 
 ## Prerequisites
 
@@ -29,7 +31,7 @@ The server will run on port 3002 by default.
 
 ## API Endpoints
 
-### POST /api/convert-gif
+### 1. POST /api/convert-gif
 
 Converts a GIF to MP4 format.
 
@@ -50,6 +52,24 @@ Or with a data URL:
 **Response:**
 - Success: Returns the MP4 video file as binary data with `Content-Type: video/mp4`
 - Error: Returns JSON with error details
+
+### 2. GET /api/proxy-image
+
+Proxies images from external sources to avoid CORS issues.
+
+**Query Parameters:**
+- `url` (required): The URL of the image to proxy
+
+**Example:**
+```
+GET /api/proxy-image?url=https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:example/image.jpeg
+```
+
+**Response:**
+- Success: Returns the image with appropriate CORS headers
+- Error: Returns JSON with error details
+
+This endpoint is primarily used for fetching images from Bluesky's CDN for alt text generation.
 
 ## Environment Variables
 

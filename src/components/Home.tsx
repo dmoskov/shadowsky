@@ -32,6 +32,7 @@ import { generateAltText } from "../services/anthropic";
 import { columnService } from "../services/column-service";
 import { columnFeedPrefs } from "../utils/cookies";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
+import { fetchImageThroughProxy } from "../utils/image-proxy-alt-text";
 import { createLogger } from "../utils/logger";
 import { FeedDiscovery } from "./FeedDiscovery";
 import { ImageGallery } from "./ImageGallery";
@@ -994,17 +995,13 @@ export const Home: React.FC<HomeProps> = ({
       let blobUrl = imageUrl;
       if (imageUrl.startsWith("http") || imageUrl.startsWith("/")) {
         try {
-          const response = await fetch(imageUrl);
-          const blob = await response.blob();
-          blobUrl = URL.createObjectURL(blob);
+          // Use proxy for production to avoid CORS
+          blobUrl = await fetchImageThroughProxy(imageUrl);
         } catch (fetchError) {
-          // If CORS error in production, show a helpful message
-          if (!import.meta.env.DEV && imageUrl.includes("cdn.bsky.app")) {
-            throw new Error(
-              "Alt text generation for external images is currently only available in development mode. This feature will be enabled in production soon.",
-            );
-          }
-          throw fetchError;
+          logger.error("Failed to fetch image:", fetchError);
+          throw new Error(
+            "Failed to fetch image for alt text generation. Please try again.",
+          );
         }
       }
 

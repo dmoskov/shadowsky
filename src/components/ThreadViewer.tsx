@@ -7,6 +7,7 @@ import { useNavigate } from "react-router";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { generateAltText } from "../services/anthropic";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
+import { fetchImageThroughProxy } from "../utils/image-proxy-alt-text";
 import { createLogger } from "../utils/logger";
 import { atUriToBskyUrl, getNotificationUrl } from "../utils/url-helpers";
 import { ImageGallery } from "./ImageGallery";
@@ -299,17 +300,13 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       let blobUrl = imageUrl;
       if (imageUrl.startsWith("http") || imageUrl.startsWith("/")) {
         try {
-          const response = await fetch(imageUrl);
-          const blob = await response.blob();
-          blobUrl = URL.createObjectURL(blob);
+          // Use proxy for production to avoid CORS
+          blobUrl = await fetchImageThroughProxy(imageUrl);
         } catch (fetchError) {
-          // If CORS error in production, show a helpful message
-          if (!import.meta.env.DEV && imageUrl.includes("cdn.bsky.app")) {
-            throw new Error(
-              "Alt text generation for external images is currently only available in development mode. This feature will be enabled in production soon.",
-            );
-          }
-          throw fetchError;
+          logger.error("Failed to fetch image:", fetchError);
+          throw new Error(
+            "Failed to fetch image for alt text generation. Please try again.",
+          );
         }
       }
 

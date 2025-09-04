@@ -10,7 +10,7 @@ const os = require("os");
 const app = express();
 const PORT = process.env.PORT || 3002;
 
-// Enable CORS for your Vite dev server
+// Enable CORS for your Vite dev server and production domains
 app.use(
   cors({
     origin: [
@@ -18,11 +18,59 @@ app.use(
       "http://localhost:5174",
       "http://localhost:5175",
       "http://localhost:5176",
+      "https://main.shadowsky.io",
+      "https://shadowsky.io",
+      "https://*.shadowsky.io",
     ],
+    credentials: true,
   }),
 );
 
 app.use(express.json());
+
+// Endpoint to proxy images from Bluesky CDN for alt text generation
+app.get("/api/proxy-image", async (req, res) => {
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).json({ error: "Image URL is required" });
+  }
+
+  try {
+    console.log("Proxying image from:", url);
+    
+    // Fetch the image from the Bluesky CDN
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "shadowsky-image-proxy/1.0",
+        "Referer": "https://bsky.app",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
+    }
+
+    const buffer = await response.buffer();
+    const contentType = response.headers.get("content-type") || "image/jpeg";
+
+    // Send the image back with proper CORS headers
+    res.set({
+      "Content-Type": contentType,
+      "Content-Length": buffer.length,
+      "Cache-Control": "public, max-age=3600", // Cache for 1 hour
+      "Access-Control-Allow-Origin": "*", // Already handled by CORS middleware but explicit for clarity
+    });
+
+    res.send(buffer);
+  } catch (error) {
+    console.error("Image proxy error:", error);
+    res.status(500).json({
+      error: "Failed to proxy image",
+      details: error.message,
+    });
+  }
+});
 
 // Endpoint to convert GIF URL to MP4
 app.post("/api/convert-gif", async (req, res) => {
