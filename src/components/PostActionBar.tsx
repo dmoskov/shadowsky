@@ -1,6 +1,13 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
-import { Bookmark, Heart, MessageCircle, Repeat2, Share } from "lucide-react";
-import React, { memo } from "react";
+import {
+  Bookmark,
+  Heart,
+  MessageCircle,
+  Quote,
+  Repeat2,
+  Share,
+} from "lucide-react";
+import React, { memo, useState } from "react";
 import { useBookmarks } from "../hooks/useBookmarks";
 import { PostMenu } from "./PostMenu";
 
@@ -8,6 +15,7 @@ interface PostActionBarProps {
   post: AppBskyFeedDefs.PostView;
   onReply?: () => void;
   onRepost?: () => void;
+  onQuote?: () => void;
   onLike?: () => void;
   onShare?: () => void;
   showCounts?: boolean;
@@ -20,6 +28,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
     post,
     onReply,
     onRepost,
+    onQuote,
     onLike,
     onShare,
     showCounts = true,
@@ -27,6 +36,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
     isReplying = false,
   }) => {
     const { isBookmarked, toggleBookmark } = useBookmarks();
+    const [showRepostMenu, setShowRepostMenu] = useState(false);
 
     const iconSize = size === "small" ? 14 : size === "medium" ? 16 : 18;
     const isLiked = !!post.viewer?.like;
@@ -76,21 +86,65 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
           )}
         </button>
 
-        {/* Repost */}
-        <button
-          className={`flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-colors duration-150 hover:text-green-600 ${
-            isReposted ? "text-green-500" : ""
-          }`}
-          onClick={(e) => handleAction(e, onRepost)}
-          aria-label="Repost"
-        >
-          <Repeat2 size={iconSize} />
-          {showCounts && (
-            <span className="min-w-[1rem] text-left text-xs font-medium">
-              {post.repostCount || 0}
-            </span>
+        {/* Repost/Quote */}
+        <div className="relative">
+          <button
+            className={`flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-colors duration-150 hover:text-green-600 ${
+              isReposted ? "text-green-500" : ""
+            }`}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowRepostMenu(!showRepostMenu);
+            }}
+            aria-label="Repost or Quote"
+          >
+            <Repeat2 size={iconSize} />
+            {showCounts && (
+              <span className="min-w-[1rem] text-left text-xs font-medium">
+                {post.repostCount || 0}
+              </span>
+            )}
+          </button>
+
+          {/* Repost menu dropdown */}
+          {showRepostMenu && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowRepostMenu(false)}
+              />
+              <div
+                className="absolute bottom-full left-0 z-20 mb-2 w-40 rounded-lg border bg-white shadow-lg dark:bg-gray-900"
+                style={{
+                  backgroundColor: "var(--bsky-bg-primary)",
+                  borderColor: "var(--bsky-border-primary)",
+                }}
+              >
+                <button
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                  onClick={(e) => {
+                    handleAction(e, onRepost);
+                    setShowRepostMenu(false);
+                  }}
+                >
+                  <Repeat2 size={16} />
+                  <span>Repost</span>
+                </button>
+                <button
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                  onClick={(e) => {
+                    handleAction(e, onQuote);
+                    setShowRepostMenu(false);
+                  }}
+                >
+                  <Quote size={16} />
+                  <span>Quote</span>
+                </button>
+              </div>
+            </>
           )}
-        </button>
+        </div>
 
         {/* Like */}
         <button

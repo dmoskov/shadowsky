@@ -165,6 +165,7 @@ export const Home: React.FC<HomeProps> = ({
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [showThread, setShowThread] = useState(false);
   const [openThreadToReply, setOpenThreadToReply] = useState(false);
+  const [openThreadToQuote, setOpenThreadToQuote] = useState(false);
   const [focusedPostIndex, setFocusedPostIndex] = useState<number>(-1);
   const [generatedAltTexts, setGeneratedAltTexts] = useState<
     Record<string, Record<number, string>>
@@ -691,9 +692,17 @@ export const Home: React.FC<HomeProps> = ({
                   // Open thread modal with reply focus
                   setSelectedPost(post);
                   setOpenThreadToReply(true);
+                  setOpenThreadToQuote(false);
                   setShowThread(true);
                 }}
                 onRepost={() => handleRepost(post)}
+                onQuote={() => {
+                  // Open thread modal with quote focus
+                  setSelectedPost(post);
+                  setOpenThreadToReply(false);
+                  setOpenThreadToQuote(true);
+                  setShowThread(true);
+                }}
                 onLike={() => handleLike(post)}
                 showCounts={true}
                 size="medium"
@@ -1428,10 +1437,12 @@ export const Home: React.FC<HomeProps> = ({
         <ThreadModal
           postUri={selectedPost.uri}
           openToReply={openThreadToReply}
+          openToQuote={openThreadToQuote}
           onClose={() => {
             setShowThread(false);
             setSelectedPost(null);
             setOpenThreadToReply(false);
+            setOpenThreadToQuote(false);
           }}
         />
       )}

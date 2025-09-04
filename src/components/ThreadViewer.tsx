@@ -9,7 +9,6 @@ import { generateAltText } from "../services/anthropic";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { atUriToBskyUrl, getNotificationUrl } from "../utils/url-helpers";
 import { ImageGallery } from "./ImageGallery";
-import { InlineReplyComposer } from "./InlineReplyComposer";
 import { PostActionBar } from "./PostActionBar";
 import { VideoPlayer } from "./VideoPlayer";
 
@@ -28,10 +27,9 @@ export interface ThreadViewerProps {
   notifications?: Notification[];
   rootUri?: string;
   highlightUri?: string;
-  onPostClick?: (uri: string) => void;
+  onPostClick?: (post: Post, action?: "reply" | "quote") => void;
   showUnreadIndicators?: boolean;
   className?: string;
-  onReplySuccess?: () => void;
 }
 
 export const ThreadViewer: React.FC<ThreadViewerProps> = ({
@@ -42,7 +40,6 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   onPostClick,
   showUnreadIndicators = true,
   className = "",
-  onReplySuccess,
 }) => {
   const navigate = useNavigate();
   const [galleryImages, setGalleryImages] = useState<Array<{
@@ -51,7 +48,6 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     alt?: string;
   }> | null>(null);
   const [galleryIndex, setGalleryIndex] = useState(0);
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [hasShownInitialHighlight, setHasShownInitialHighlight] =
     useState(false);
   const [hasScrolledToHighlight, setHasScrolledToHighlight] = useState(false);
@@ -68,24 +64,6 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   // Get optimistic post mutations
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
     useOptimisticPosts();
-
-  // Find the root post info
-  const rootPost = useMemo(() => {
-    if (rootUri) {
-      const root = posts.find((p) => p.uri === rootUri);
-      if (root) {
-        return { uri: root.uri, cid: root.cid };
-      }
-    }
-    // If no root URI specified, find the post that has no parent
-    const rootCandidate = posts.find((post) => {
-      const record = post.record as any;
-      return !record?.reply?.parent;
-    });
-    return rootCandidate
-      ? { uri: rootCandidate.uri, cid: rootCandidate.cid }
-      : null;
-  }, [posts, rootUri]);
 
   // Handle like action
   const handleLike = async (post: Post) => {
@@ -556,7 +534,6 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       const isUnread =
         showUnreadIndicators && notification && !notification.isRead;
       const isHighlighted = highlightUri && post?.uri === highlightUri;
-      const isReplyingTo = post && replyingTo === post.uri;
       const author = post?.author || notification?.author;
       const postUrl =
         post?.uri && author?.handle
@@ -627,23 +604,18 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                 isUnread ? "ring-2 ring-blue-500 ring-opacity-30" : ""
               } ${isHighlighted && !hasShownInitialHighlight ? "ring-2 ring-orange-500 ring-opacity-50" : ""}`}
               style={{
-                backgroundColor: isReplyingTo
-                  ? "rgba(59, 130, 246, 0.1)" // Blue when replying
-                  : isHighlighted && !hasShownInitialHighlight
+                backgroundColor:
+                  isHighlighted && !hasShownInitialHighlight
                     ? "rgba(251, 146, 60, 0.1)" // Orange highlight background (only initially)
                     : node.isRoot
                       ? "var(--bsky-bg-secondary)"
                       : isUnread
                         ? "var(--bsky-bg-primary)"
                         : "var(--bsky-bg-secondary)",
-                border: isReplyingTo
-                  ? "2px solid rgba(59, 130, 246, 0.5)"
-                  : isHighlighted && !hasShownInitialHighlight
+                border:
+                  isHighlighted && !hasShownInitialHighlight
                     ? "2px solid rgba(251, 146, 60, 0.5)"
                     : "1px solid var(--bsky-border-primary)",
-                boxShadow: isReplyingTo
-                  ? "0 0 0 3px rgba(59, 130, 246, 0.1)"
-                  : undefined,
                 overflow: "hidden",
                 fontSize:
                   maxThreadDepth > 15
@@ -653,21 +625,9 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       : "1rem",
               }}
               onClick={(e) => {
-                // Don't navigate if clicking on interactive elements
-                const target = e.target as HTMLElement;
-                if (
-                  target.closest("button") ||
-                  target.closest("a") ||
-                  target.closest("textarea") ||
-                  target.closest("input")
-                ) {
-                  return;
-                }
-
-                if (onPostClick && post?.uri) {
-                  onPostClick(post.uri);
-                }
-                // Removed fallback to window.open - only explicit link icon opens external links
+                // Don't do anything on post click - navigation removed
+                // Only interactive elements like buttons will trigger actions
+                e.stopPropagation();
               }}
               onKeyDown={(e) => {
                 // Prevent Enter key from triggering the click handler
@@ -872,46 +832,19 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                 <PostActionBar
                   post={post}
                   onReply={() => {
-                    setReplyingTo(post.uri === replyingTo ? null : post.uri);
+                    // Pass the post being replied to up to the ThreadModal
+                    onPostClick?.(post, "reply");
                   }}
                   onRepost={() => handleRepost(post)}
+                  onQuote={() => {
+                    // Pass the post being quoted to up to the ThreadModal
+                    onPostClick?.(post, "quote");
+                  }}
                   onLike={() => handleLike(post)}
                   showCounts={true}
                   size={maxThreadDepth > 10 ? "small" : "medium"}
-                  isReplying={replyingTo === post.uri}
+                  isReplying={false}
                 />
-              )}
-
-              {/* Inline reply composer */}
-              {post && replyingTo === post.uri && (
-                <div className="mt-3" onClick={(e) => e.stopPropagation()}>
-                  {/* Visual indicator showing which post is being replied to */}
-                  <div
-                    className="mb-2 ml-10 flex items-center gap-2 text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
-                  >
-                    <CornerDownRight size={16} />
-                    <span>Replying to this post</span>
-                  </div>
-                  <div className="ml-10">
-                    <InlineReplyComposer
-                      replyTo={{
-                        uri: post.uri,
-                        cid: post.cid,
-                        author: {
-                          handle: post.author.handle,
-                          displayName: post.author.displayName,
-                        },
-                      }}
-                      root={rootPost || undefined}
-                      onClose={() => setReplyingTo(null)}
-                      onSuccess={() => {
-                        setReplyingTo(null);
-                        onReplySuccess?.();
-                      }}
-                    />
-                  </div>
-                </div>
               )}
             </div>
           </div>
