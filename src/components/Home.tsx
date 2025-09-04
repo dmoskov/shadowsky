@@ -32,11 +32,14 @@ import { generateAltText } from "../services/anthropic";
 import { columnService } from "../services/column-service";
 import { columnFeedPrefs } from "../utils/cookies";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
+import { createLogger } from "../utils/logger";
 import { FeedDiscovery } from "./FeedDiscovery";
 import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
 import { ThreadModal } from "./ThreadModal";
 import { VideoPlayer } from "./VideoPlayer";
+
+const logger = createLogger("Home");
 
 type FeedType =
   | "following"
@@ -990,9 +993,19 @@ export const Home: React.FC<HomeProps> = ({
       // Convert HTTP URL to blob URL for the generateAltText function
       let blobUrl = imageUrl;
       if (imageUrl.startsWith("http") || imageUrl.startsWith("/")) {
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-        blobUrl = URL.createObjectURL(blob);
+        try {
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          blobUrl = URL.createObjectURL(blob);
+        } catch (fetchError) {
+          // If CORS error in production, show a helpful message
+          if (!import.meta.env.DEV && imageUrl.includes("cdn.bsky.app")) {
+            throw new Error(
+              "Alt text generation for external images is currently only available in development mode. This feature will be enabled in production soon.",
+            );
+          }
+          throw fetchError;
+        }
       }
 
       const altText = await generateAltText(blobUrl);
@@ -1010,8 +1023,12 @@ export const Home: React.FC<HomeProps> = ({
         ...prev,
         [postKey]: { ...prev[postKey], [index]: true },
       }));
-    } catch (_error) {
-      // Error is already handled by generateAltText with user-friendly messages
+    } catch (error) {
+      // Show user-friendly error message
+      logger.error("Error generating alt text:", error);
+      alert(
+        error instanceof Error ? error.message : "Failed to generate alt text",
+      );
     } finally {
       setGeneratingAltText((prev) => ({
         ...prev,
