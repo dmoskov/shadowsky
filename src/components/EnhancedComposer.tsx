@@ -12,9 +12,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import {
-  generateAltText,
-} from "../services/anthropic";
+import { generateAltText } from "../services/anthropic";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { debug } from "../shared/debug";
 import { extractBskyUrls, parseBskyPostUrl } from "../utils/bsky-url-parser";
