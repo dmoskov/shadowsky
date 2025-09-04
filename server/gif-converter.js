@@ -38,12 +38,12 @@ app.get("/api/proxy-image", async (req, res) => {
 
   try {
     console.log("Proxying image from:", url);
-    
+
     // Fetch the image from the Bluesky CDN
     const response = await fetch(url, {
       headers: {
         "User-Agent": "shadowsky-image-proxy/1.0",
-        "Referer": "https://bsky.app",
+        Referer: "https://bsky.app",
       },
     });
 

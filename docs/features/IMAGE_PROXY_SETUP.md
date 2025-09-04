@@ -60,10 +60,12 @@ VITE_PROXY_SERVER_URL=https://api.shadowsky.io
 ## Testing
 
 ### Local Development
+
 - Works directly without proxy (Vite handles CORS)
 - Set `VITE_PROXY_SERVER_URL` to test proxy locally
 
 ### Production
+
 - Ensure proxy server is running
 - Check browser console for any CORS errors
 - Verify alt text generation works for CDN images
