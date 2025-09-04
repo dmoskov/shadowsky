@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import React from "react";
+import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BookmarksColumn } from "../../components/BookmarksColumn";
 import { StorageErrorProvider } from "../../components/providers/StorageErrorProvider";
@@ -72,15 +73,17 @@ const createWrapper = () => {
 
   return ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ModalProvider>
-          <StorageErrorProvider>
-            <HiddenPostsProvider>
-              <ModerationProvider>{children}</ModerationProvider>
-            </HiddenPostsProvider>
-          </StorageErrorProvider>
-        </ModalProvider>
-      </AuthProvider>
+      <MemoryRouter>
+        <AuthProvider>
+          <ModalProvider>
+            <StorageErrorProvider>
+              <HiddenPostsProvider>
+                <ModerationProvider>{children}</ModerationProvider>
+              </HiddenPostsProvider>
+            </StorageErrorProvider>
+          </ModalProvider>
+        </AuthProvider>
+      </MemoryRouter>
     </QueryClientProvider>
   );
 };
