@@ -1,4 +1,4 @@
-import { Bell, Database, Palette, Shield, User } from "lucide-react";
+import { Bell, Database, Palette, PenTool, Shield, User } from "lucide-react";
 import React from "react";
 import { NavLink } from "react-router";
 
@@ -18,6 +18,12 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
       label: "Appearance",
       icon: Palette,
       path: "/settings/appearance",
+    },
+    {
+      id: "composer",
+      label: "Composer & AI",
+      icon: PenTool,
+      path: "/settings/composer",
     },
     {
       id: "notifications",

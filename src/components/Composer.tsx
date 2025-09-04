@@ -5,6 +5,7 @@ import {
   GripVertical,
   Image,
   Loader,
+  MessageSquare,
   Plus,
   Save,
   Send,
@@ -24,8 +25,14 @@ import { analytics } from "../services/analytics";
 import {
   adjustTone,
   generateAltText,
+  getWritingFeedback,
+  optimizeThread,
+  suggestHashtags,
+  type ThreadOptimizationResult,
   type ToneOption,
+  type WritingFeedback,
 } from "../services/anthropic";
+import { appPreferencesService } from "../services/app-preferences-service";
 import { VideoUploadService } from "../services/atproto/video-upload";
 import {
   deleteDraft,
@@ -42,6 +49,7 @@ import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { createLogger } from "../utils/logger";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
+import { AISettingsPanel } from "./settings/AISettingsPanel";
 
 const logger = createLogger("Composer");
 
@@ -207,6 +215,32 @@ export function Composer() {
   const [tonePreview, setTonePreview] = useState<string | null>(null);
   const [showTonePreview, setShowTonePreview] = useState(false);
 
+  // Thread optimization state
+  const [isOptimizingThread, setIsOptimizingThread] = useState(false);
+  const [threadOptimizationResult, setThreadOptimizationResult] =
+    useState<ThreadOptimizationResult | null>(null);
+  const [showThreadPreview, setShowThreadPreview] = useState(false);
+
+  // Hashtag state
+  const [showHashtagSuggestions, setShowHashtagSuggestions] = useState(false);
+  const [hashtagSuggestions, setHashtagSuggestions] = useState<
+    import("../services/anthropic").HashtagSuggestion[]
+  >([]);
+  const [isLoadingHashtags, setIsLoadingHashtags] = useState(false);
+  const [hashtagDebounceTimer, setHashtagDebounceTimer] =
+    useState<NodeJS.Timeout | null>(null);
+
+  // AI settings state
+  const [enableHashtagSuggestions, setEnableHashtagSuggestions] =
+    useState(false);
+  const [enableWritingFeedback, setEnableWritingFeedback] = useState(false);
+
+  // Writing feedback state
+  const [showWritingFeedback, setShowWritingFeedback] = useState(false);
+  const [writingFeedback, setWritingFeedback] =
+    useState<WritingFeedback | null>(null);
+  const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
+
   // Check if we're in development mode
   const isDev = import.meta.env.DEV;
 
@@ -217,25 +251,49 @@ export function Composer() {
     setShowSettings(settings.showSettingsPanel);
     setDelaySeconds(settings.defaultDelaySeconds);
     setNumberingPosition(settings.numberingPosition || "end");
-    setAutoGenerateAltText(settings.autoGenerateAltText || false);
+
+    // Load AI settings from app preferences
+    const loadAiSettings = async () => {
+      const prefs = await appPreferencesService.getPreferences();
+      if (prefs?.aiSettings) {
+        setAutoGenerateAltText(prefs.aiSettings.autoGenerateAltText);
+        setEnableHashtagSuggestions(prefs.aiSettings.enableHashtagSuggestions);
+        setEnableWritingFeedback(prefs.aiSettings.enableWritingFeedback);
+      }
+    };
+
+    loadAiSettings();
   }, []);
 
-  // Save settings when they change
+  // Save thread settings when they change
   useEffect(() => {
     saveComposerSettings({
       numberingFormat,
       showSettingsPanel: showSettings,
       defaultDelaySeconds: delaySeconds,
       numberingPosition,
-      autoGenerateAltText,
     });
-  }, [
-    numberingFormat,
-    showSettings,
-    delaySeconds,
-    numberingPosition,
-    autoGenerateAltText,
-  ]);
+  }, [numberingFormat, showSettings, delaySeconds, numberingPosition]);
+
+  // Save AI settings to app preferences when they change
+  useEffect(() => {
+    const saveAiSettings = async () => {
+      // Check if we have loaded initial settings
+      const prefs = await appPreferencesService.getPreferences();
+      if (prefs) {
+        await appPreferencesService.updatePreferences({
+          aiSettings: {
+            autoGenerateAltText,
+            enableSmartReplies: false, // Not used in composer yet
+            enableHashtagSuggestions,
+            enableWritingFeedback,
+          },
+        });
+      }
+    };
+
+    saveAiSettings();
+  }, [autoGenerateAltText, enableHashtagSuggestions, enableWritingFeedback]);
 
   // Load drafts
   useEffect(() => {
@@ -251,10 +309,53 @@ export function Composer() {
       if (sendTimeout.current) {
         clearTimeout(sendTimeout.current);
       }
+      if (hashtagDebounceTimer) {
+        clearTimeout(hashtagDebounceTimer);
+      }
       // Remove any body overflow styles
       document.body.style.overflow = "";
     };
   }, []);
+
+  // Load hashtag suggestions with debounce
+  useEffect(() => {
+    if (hashtagDebounceTimer) {
+      clearTimeout(hashtagDebounceTimer);
+    }
+
+    // Don't suggest hashtags if feature is disabled or text is too short
+    if (!enableHashtagSuggestions || text.length < 20) {
+      setShowHashtagSuggestions(false);
+      setHashtagSuggestions([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsLoadingHashtags(true);
+      try {
+        const existingTags = text.match(/#[a-zA-Z0-9]+/g) || [];
+        const result = await suggestHashtags(
+          text,
+          existingTags.map((tag) => tag.slice(1)),
+        );
+        setHashtagSuggestions(result.hashtags);
+        setShowHashtagSuggestions(result.hashtags.length > 0);
+      } catch (error) {
+        logger.error("Failed to load hashtag suggestions:", error);
+        // Silently fail - don't show error to user
+      } finally {
+        setIsLoadingHashtags(false);
+      }
+    }, 1000); // 1 second debounce
+
+    setHashtagDebounceTimer(timer);
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [text, enableHashtagSuggestions]);
 
   // Auto-split text into posts when it changes
   useEffect(() => {
@@ -1566,6 +1667,189 @@ export function Composer() {
     setSelectedTone(null);
   }, []);
 
+  // Handle thread optimization
+  const handleThreadOptimization = useCallback(async () => {
+    if (!text.trim()) {
+      setPostStatus({
+        type: "error",
+        message: "Please write some text to optimize",
+      });
+      return;
+    }
+
+    setIsOptimizingThread(true);
+
+    // Track optimization request
+    analytics.trackEvent({
+      category: "composer",
+      action: "thread_optimization_requested",
+      custom_parameters: {
+        text_length: text.length,
+        current_posts: posts.length,
+      },
+    });
+
+    try {
+      const result = await optimizeThread(text, MAX_POST_LENGTH);
+      setThreadOptimizationResult(result);
+      setShowThreadPreview(true);
+      debug.log("Thread optimized successfully", {
+        segmentCount: result.segments.length,
+        format: result.suggestedFormat,
+      });
+
+      // Track successful optimization
+      analytics.trackEvent({
+        category: "composer",
+        action: "thread_optimization_success",
+        label: result.suggestedFormat,
+        custom_parameters: {
+          original_length: text.length,
+          segments_count: result.segments.length,
+          suggested_format: result.suggestedFormat,
+        },
+      });
+    } catch (error) {
+      logger.error("Failed to optimize thread:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to optimize thread";
+      setPostStatus({ type: "error", message: errorMessage });
+
+      // Track optimization error
+      analytics.trackEvent({
+        category: "composer",
+        action: "thread_optimization_error",
+        custom_parameters: {
+          error_message: errorMessage,
+        },
+      });
+    } finally {
+      setIsOptimizingThread(false);
+    }
+  }, [text, posts.length]);
+
+  // Apply thread optimization
+  const applyThreadOptimization = useCallback(() => {
+    if (threadOptimizationResult) {
+      // Create the optimized text with manual splits
+      const optimizedText = threadOptimizationResult.segments
+        .map((s) => s.text)
+        .join("\n---\n");
+
+      setText(optimizedText);
+      // Update numbering format to match suggestion
+      setNumberingFormat(threadOptimizationResult.suggestedFormat);
+
+      setThreadOptimizationResult(null);
+      setShowThreadPreview(false);
+
+      // Track optimization application
+      analytics.trackEvent({
+        category: "composer",
+        action: "thread_optimization_applied",
+        label: threadOptimizationResult.suggestedFormat,
+        custom_parameters: {
+          segments_applied: threadOptimizationResult.segments.length,
+          format_applied: threadOptimizationResult.suggestedFormat,
+        },
+      });
+
+      setPostStatus({
+        type: "success",
+        message: `Thread optimized into ${threadOptimizationResult.segments.length} posts!`,
+      });
+      setTimeout(() => setPostStatus({ type: "idle" }), 2000);
+    }
+  }, [threadOptimizationResult]);
+
+  // Cancel thread optimization
+  const cancelThreadOptimization = useCallback(() => {
+    setThreadOptimizationResult(null);
+    setShowThreadPreview(false);
+  }, []);
+
+  // Handle hashtag application
+  const applyHashtag = useCallback(
+    (tag: string) => {
+      // Add hashtag at the end of the text with proper spacing
+      const currentText = text.trim();
+      const hashtag = `#${tag}`;
+
+      // Check if hashtag already exists
+      if (currentText.includes(hashtag)) {
+        return;
+      }
+
+      // Add space if text doesn't end with space or newline
+      const spacer = currentText && !currentText.match(/[\s\n]$/) ? " " : "";
+      setText(currentText + spacer + hashtag);
+
+      // Track hashtag usage
+      analytics.trackEvent({
+        category: "composer",
+        action: "hashtag_applied",
+        label: tag,
+      });
+    },
+    [text],
+  );
+
+  // Handle writing feedback request
+  const handleWritingFeedback = useCallback(async () => {
+    if (!text.trim()) {
+      setPostStatus({
+        type: "error",
+        message: "Please write some text to get feedback",
+      });
+      return;
+    }
+
+    setIsLoadingFeedback(true);
+
+    // Track feedback request
+    analytics.trackEvent({
+      category: "composer",
+      action: "writing_feedback_requested",
+      custom_parameters: {
+        text_length: text.length,
+      },
+    });
+
+    try {
+      const feedback = await getWritingFeedback(text);
+      setWritingFeedback(feedback);
+      setShowWritingFeedback(true);
+      debug.log("Writing feedback received", feedback);
+
+      // Track successful feedback
+      analytics.trackEvent({
+        category: "composer",
+        action: "writing_feedback_success",
+        custom_parameters: {
+          clarity_score: feedback.clarity.score,
+          engagement_score: feedback.engagement.score,
+          ready_to_post: feedback.overall.readyToPost,
+        },
+      });
+    } catch (error) {
+      logger.error("Failed to get writing feedback:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to get feedback";
+      setPostStatus({ type: "error", message: errorMessage });
+
+      // Track feedback error
+      analytics.trackEvent({
+        category: "composer",
+        action: "writing_feedback_error",
+        custom_parameters: {
+          error_message: errorMessage,
+        },
+      });
+    } finally {
+      setIsLoadingFeedback(false);
+    }
+  }, [text]);
+
   // Cleanup previews on unmount
   useEffect(() => {
     return () => {
@@ -1649,22 +1933,34 @@ export function Composer() {
                   </select>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <input
-                    id="auto-alt-text"
-                    type="checkbox"
-                    checked={autoGenerateAltText}
-                    onChange={(e) => setAutoGenerateAltText(e.target.checked)}
-                    className="rounded"
+                {/* AI Settings */}
+                <div
+                  className="mt-2 border-t pt-2"
+                  style={{ borderColor: "var(--bsky-border-primary)" }}
+                >
+                  <AISettingsPanel
+                    settings={{
+                      autoGenerateAltText,
+                      enableSmartReplies: false,
+                      enableHashtagSuggestions,
+                      enableWritingFeedback,
+                    }}
+                    onChange={async (newSettings) => {
+                      setAutoGenerateAltText(newSettings.autoGenerateAltText);
+                      setEnableHashtagSuggestions(
+                        newSettings.enableHashtagSuggestions,
+                      );
+                      setEnableWritingFeedback(
+                        newSettings.enableWritingFeedback,
+                      );
+
+                      // Save to app preferences
+                      await appPreferencesService.updatePreferences({
+                        aiSettings: newSettings,
+                      });
+                    }}
+                    compact={true}
                   />
-                  <label
-                    htmlFor="auto-alt-text"
-                    className="flex items-center gap-1 text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
-                  >
-                    <Sparkles size={12} />
-                    Auto-generate alt text
-                  </label>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -1763,6 +2059,63 @@ export function Composer() {
           }
           disabled={isPosting}
         />
+
+        {/* Hashtag Suggestions */}
+        {(showHashtagSuggestions || isLoadingHashtags) && text.length >= 20 && (
+          <div className="mb-3 mt-3">
+            <div className="mb-2 flex items-center gap-2">
+              <Sparkles
+                size={14}
+                style={{ color: "var(--bsky-text-tertiary)" }}
+              />
+              <span
+                className="text-xs font-medium"
+                style={{ color: "var(--bsky-text-tertiary)" }}
+              >
+                Suggested Hashtags
+              </span>
+              {isLoadingHashtags && (
+                <Loader size={12} className="animate-spin" />
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {hashtagSuggestions.map((suggestion, index) => (
+                <button
+                  key={index}
+                  onClick={() => applyHashtag(suggestion.tag)}
+                  disabled={isPosting}
+                  className="group relative flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-all hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 dark:hover:bg-opacity-20"
+                  style={{
+                    backgroundColor: "var(--bsky-bg-secondary)",
+                    borderColor:
+                      suggestion.relevance > 0.7
+                        ? "var(--bsky-primary)"
+                        : "var(--bsky-border-primary)",
+                    color: "var(--bsky-text-primary)",
+                  }}
+                >
+                  <span>#{suggestion.tag}</span>
+                  {suggestion.isTrending && (
+                    <span
+                      className="text-xs"
+                      style={{ color: "var(--bsky-primary)" }}
+                      title="Trending"
+                    >
+                      🔥
+                    </span>
+                  )}
+                  {suggestion.relevance > 0.7 && (
+                    <span
+                      className="absolute -right-1 -top-1 flex h-2 w-2 rounded-full"
+                      style={{ background: "var(--bsky-primary)" }}
+                      title="Highly relevant"
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mb-3 mt-3 flex items-center gap-2">
           <input
@@ -2016,6 +2369,52 @@ export function Composer() {
                 </div>
               </div>
             </div>
+
+            <div className="group relative">
+              <button
+                className={`bsky-button-secondary flex items-center gap-2 ${isOptimizingThread ? "animate-pulse" : ""}`}
+                onClick={handleThreadOptimization}
+                disabled={isPosting || isOptimizingThread || !text.trim()}
+                aria-label="Optimize thread"
+              >
+                <Sparkles size={20} />
+                <span className="hidden text-xs sm:inline">Thread</span>
+              </button>
+              <div className="absolute bottom-full right-0 z-10 mb-2 hidden group-hover:block">
+                <div className="whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-xs text-white">
+                  <div className="mb-1 font-semibold">Optimize Thread</div>
+                  <div>AI-powered thread splitting</div>
+                  <div className="mt-1 text-gray-300">
+                    Intelligently splits long text
+                  </div>
+                  <div className="absolute bottom-0 right-4 h-2 w-2 translate-y-1/2 rotate-45 transform bg-gray-900"></div>
+                </div>
+              </div>
+            </div>
+
+            {enableWritingFeedback && (
+              <div className="group relative">
+                <button
+                  className={`bsky-button-secondary flex items-center gap-2 ${isLoadingFeedback ? "animate-pulse" : ""}`}
+                  onClick={handleWritingFeedback}
+                  disabled={isPosting || isLoadingFeedback || !text.trim()}
+                  aria-label="Get writing feedback"
+                >
+                  <MessageSquare size={20} />
+                  <span className="hidden text-xs sm:inline">Feedback</span>
+                </button>
+                <div className="absolute bottom-full right-0 z-10 mb-2 hidden group-hover:block">
+                  <div className="whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-xs text-white">
+                    <div className="mb-1 font-semibold">Writing Feedback</div>
+                    <div>Get AI feedback on your post</div>
+                    <div className="mt-1 text-gray-300">
+                      Check clarity, tone, and engagement
+                    </div>
+                    <div className="absolute bottom-0 right-4 h-2 w-2 translate-y-1/2 rotate-45 transform bg-gray-900"></div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <input
@@ -2706,6 +3105,323 @@ export function Composer() {
               >
                 <CheckCircle size={16} />
                 Use This Version
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Thread Optimization Preview Modal */}
+      {showThreadPreview && threadOptimizationResult && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0, 0, 0, 0.5)" }}
+        >
+          <div
+            className="bsky-card w-full max-w-3xl p-6 shadow-xl"
+            style={{ maxHeight: "90vh", overflowY: "auto" }}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h3
+                className="flex items-center gap-2 text-lg font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                <Sparkles size={20} />
+                Thread Optimization - {threadOptimizationResult.totalPosts}{" "}
+                Posts
+              </h3>
+              <button
+                className="rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+                onClick={cancelThreadOptimization}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p
+                className="text-sm"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                {threadOptimizationResult.summary}
+              </p>
+              <p
+                className="mt-2 text-xs"
+                style={{ color: "var(--bsky-text-tertiary)" }}
+              >
+                Suggested format:{" "}
+                {threadOptimizationResult.suggestedFormat === "simple"
+                  ? "1/n"
+                  : threadOptimizationResult.suggestedFormat === "brackets"
+                    ? "[1/n]"
+                    : threadOptimizationResult.suggestedFormat === "thread"
+                      ? "🧵 1/n"
+                      : threadOptimizationResult.suggestedFormat === "dots"
+                        ? "1•n"
+                        : "None"}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {threadOptimizationResult.segments.map((segment, index) => {
+                const format = NUMBERING_FORMATS.find(
+                  (f) => f.id === threadOptimizationResult.suggestedFormat,
+                );
+                const numbering =
+                  format && format.id !== "none"
+                    ? format.format(
+                        index + 1,
+                        threadOptimizationResult.totalPosts,
+                      ) + " "
+                    : "";
+
+                return (
+                  <div
+                    key={index}
+                    className="rounded-lg border p-4"
+                    style={{
+                      background: "var(--bsky-bg-secondary)",
+                      borderColor: segment.isStandalone
+                        ? "var(--bsky-primary)"
+                        : "var(--bsky-border-primary)",
+                    }}
+                  >
+                    <div className="mb-2 flex items-center justify-between">
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: "var(--bsky-text-tertiary)" }}
+                      >
+                        Post {index + 1} • {numbering}
+                        {segment.text.length} characters
+                      </span>
+                      {segment.isStandalone && (
+                        <span
+                          className="rounded-full px-2 py-0.5 text-xs"
+                          style={{
+                            background: "var(--bsky-primary)",
+                            color: "white",
+                          }}
+                        >
+                          Can stand alone
+                        </span>
+                      )}
+                    </div>
+                    <p
+                      className="whitespace-pre-wrap"
+                      style={{ color: "var(--bsky-text-primary)" }}
+                    >
+                      {numbering}
+                      {segment.text}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                className="bsky-button-secondary px-4 py-2"
+                onClick={cancelThreadOptimization}
+              >
+                Cancel
+              </button>
+              <button
+                className="bsky-button-primary flex items-center gap-2 px-4 py-2"
+                onClick={applyThreadOptimization}
+              >
+                <CheckCircle size={16} />
+                Apply Optimization
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Writing Feedback Modal */}
+      {showWritingFeedback && writingFeedback && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0, 0, 0, 0.5)" }}
+        >
+          <div
+            className="bsky-card w-full max-w-2xl p-6 shadow-xl"
+            style={{ maxHeight: "90vh", overflowY: "auto" }}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h3
+                className="flex items-center gap-2 text-lg font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                <MessageSquare size={20} />
+                Writing Feedback
+              </h3>
+              <button
+                className="rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+                onClick={() => {
+                  setShowWritingFeedback(false);
+                  setWritingFeedback(null);
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Overall Summary */}
+              <div
+                className={`rounded-lg border p-4 ${
+                  writingFeedback.overall.readyToPost
+                    ? "border-green-500 bg-green-50 dark:bg-green-900 dark:bg-opacity-20"
+                    : "border-yellow-500 bg-yellow-50 dark:bg-yellow-900 dark:bg-opacity-20"
+                }`}
+              >
+                <h4 className="mb-2 flex items-center gap-2 font-semibold">
+                  {writingFeedback.overall.readyToPost ? (
+                    <CheckCircle size={16} className="text-green-600" />
+                  ) : (
+                    <AlertCircle size={16} className="text-yellow-600" />
+                  )}
+                  Overall Assessment
+                </h4>
+                <p className="text-sm">{writingFeedback.overall.summary}</p>
+              </div>
+
+              {/* Clarity */}
+              <div
+                className="rounded-lg border p-4"
+                style={{
+                  backgroundColor: "var(--bsky-bg-secondary)",
+                  borderColor: "var(--bsky-border-primary)",
+                }}
+              >
+                <h4 className="mb-3 font-semibold">
+                  Clarity Score: {writingFeedback.clarity.score}/100
+                </h4>
+                <div className="mb-2 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                  <div
+                    className="h-2 rounded-full transition-all"
+                    style={{
+                      width: `${writingFeedback.clarity.score}%`,
+                      background:
+                        writingFeedback.clarity.score >= 70
+                          ? "var(--bsky-success)"
+                          : writingFeedback.clarity.score >= 50
+                            ? "var(--bsky-warning)"
+                            : "var(--bsky-danger)",
+                    }}
+                  />
+                </div>
+                {writingFeedback.clarity.issues.length > 0 && (
+                  <div className="mt-3">
+                    <p className="mb-1 text-sm font-medium">Issues:</p>
+                    <ul className="list-disc space-y-1 pl-5 text-sm">
+                      {writingFeedback.clarity.issues.map((issue, i) => (
+                        <li key={i}>{issue}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {writingFeedback.clarity.suggestions.length > 0 && (
+                  <div className="mt-3">
+                    <p className="mb-1 text-sm font-medium">Suggestions:</p>
+                    <ul className="list-disc space-y-1 pl-5 text-sm">
+                      {writingFeedback.clarity.suggestions.map(
+                        (suggestion, i) => (
+                          <li key={i}>{suggestion}</li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {/* Tone */}
+              <div
+                className="rounded-lg border p-4"
+                style={{
+                  backgroundColor: "var(--bsky-bg-secondary)",
+                  borderColor: "var(--bsky-border-primary)",
+                }}
+              >
+                <h4 className="mb-3 font-semibold">
+                  Tone: {writingFeedback.tone.detected}
+                  <span className="ml-2 text-sm font-normal">
+                    (Appropriateness: {writingFeedback.tone.appropriateness}
+                    /100)
+                  </span>
+                </h4>
+                {writingFeedback.tone.suggestions.length > 0 && (
+                  <ul className="list-disc space-y-1 pl-5 text-sm">
+                    {writingFeedback.tone.suggestions.map((suggestion, i) => (
+                      <li key={i}>{suggestion}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Engagement */}
+              <div
+                className="rounded-lg border p-4"
+                style={{
+                  backgroundColor: "var(--bsky-bg-secondary)",
+                  borderColor: "var(--bsky-border-primary)",
+                }}
+              >
+                <h4 className="mb-3 font-semibold">
+                  Engagement Score: {writingFeedback.engagement.score}/100
+                </h4>
+                <div className="mb-2 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                  <div
+                    className="h-2 rounded-full transition-all"
+                    style={{
+                      width: `${writingFeedback.engagement.score}%`,
+                      background:
+                        writingFeedback.engagement.score >= 70
+                          ? "var(--bsky-success)"
+                          : writingFeedback.engagement.score >= 50
+                            ? "var(--bsky-warning)"
+                            : "var(--bsky-danger)",
+                    }}
+                  />
+                </div>
+                {writingFeedback.engagement.strengths.length > 0 && (
+                  <div className="mt-3">
+                    <p className="mb-1 text-sm font-medium">✅ Strengths:</p>
+                    <ul className="list-disc space-y-1 pl-5 text-sm">
+                      {writingFeedback.engagement.strengths.map(
+                        (strength, i) => (
+                          <li key={i}>{strength}</li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                )}
+                {writingFeedback.engagement.improvements.length > 0 && (
+                  <div className="mt-3">
+                    <p className="mb-1 text-sm font-medium">
+                      💡 Areas for Improvement:
+                    </p>
+                    <ul className="list-disc space-y-1 pl-5 text-sm">
+                      {writingFeedback.engagement.improvements.map(
+                        (improvement, i) => (
+                          <li key={i}>{improvement}</li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                className="bsky-button-primary px-6 py-2"
+                onClick={() => {
+                  setShowWritingFeedback(false);
+                  setWritingFeedback(null);
+                }}
+              >
+                Got it!
               </button>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import type { AppBskyFeedDefs } from "@atproto/api";
+import type { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
 import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
 import { debug } from "@bsky/shared";
 import { rateLimitedPostFetch } from "../services/rate-limiter";
@@ -12,7 +12,7 @@ type Post = AppBskyFeedDefs.PostView;
  */
 export async function prefetchNotificationPosts(
   notifications: Notification[],
-  agent: any,
+  agent: BskyAgent,
   onProgress?: (fetched: number, total: number) => void,
 ): Promise<void> {
   // Extract unique post URIs from notifications that need posts
@@ -100,7 +100,7 @@ export async function prefetchNotificationPosts(
  */
 export async function extractRootPostUris(
   notifications: Notification[],
-  agent: any,
+  agent: BskyAgent,
 ): Promise<string[]> {
   const rootUris = new Set<string>();
   const replyUris = notifications
@@ -159,7 +159,7 @@ export async function extractRootPostUris(
  */
 export async function prefetchRootPosts(
   notifications: Notification[],
-  agent: any,
+  agent: BskyAgent,
 ): Promise<void> {
   const rootUris = await extractRootPostUris(notifications, agent);
 

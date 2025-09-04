@@ -12,6 +12,13 @@ export interface ShadowSkyPreferences {
   createdAt: string;
   updatedAt: string;
   version: number;
+  // AI composer settings
+  aiSettings?: {
+    autoGenerateAltText: boolean;
+    enableSmartReplies: boolean;
+    enableHashtagSuggestions: boolean;
+    enableWritingFeedback: boolean;
+  };
 }
 
 // Column data stored in preferences
@@ -88,6 +95,13 @@ export interface AppPreferencesRecord {
   updatedAt: string;
   // Track if preferences are stored in AT Protocol
   isStoredInAtProto?: boolean;
+  // AI composer settings
+  aiSettings?: {
+    autoGenerateAltText: boolean;
+    enableSmartReplies: boolean;
+    enableHashtagSuggestions: boolean;
+    enableWritingFeedback: boolean;
+  };
 }
 
 const PREFERENCES_COLLECTION = "com.shadowsky.preferences";
@@ -145,6 +159,7 @@ export class AppPreferencesService {
           draftStorageType: shadowSkyPref.draftStorageType || "local",
           createdAt: shadowSkyPref.createdAt,
           updatedAt: shadowSkyPref.updatedAt,
+          aiSettings: shadowSkyPref.aiSettings,
         };
         // Mark that we loaded from AT Protocol
         (prefs as any).isStoredInAtProto = true;
@@ -170,6 +185,7 @@ export class AppPreferencesService {
         draftStorageType: localPrefs.draftStorageType || "local",
         createdAt: localPrefs.createdAt || new Date().toISOString(),
         updatedAt: localPrefs.updatedAt || new Date().toISOString(),
+        aiSettings: localPrefs.aiSettings,
       };
       // Mark that we loaded from localStorage
       (validatedPrefs as any).isStoredInAtProto = false;
@@ -227,6 +243,7 @@ export class AppPreferencesService {
         createdAt: updatedPrefs.createdAt || new Date().toISOString(),
         updatedAt: updatedPrefs.updatedAt || new Date().toISOString(),
         version: 1,
+        aiSettings: updatedPrefs.aiSettings,
       };
 
       logger.log("Saving to AT Protocol:", shadowSkyPref);
@@ -291,6 +308,12 @@ export class AppPreferencesService {
       createdAt: now,
       updatedAt: now,
       isStoredInAtProto: false,
+      aiSettings: {
+        autoGenerateAltText: false,
+        enableSmartReplies: false,
+        enableHashtagSuggestions: false,
+        enableWritingFeedback: false,
+      },
     };
 
     // Try to save to AT Protocol

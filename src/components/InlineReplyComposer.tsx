@@ -1,6 +1,9 @@
-import { Loader2, Send, X } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { Loader2, Send, Sparkles, X } from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { generateSmartReplies, type SmartReply } from "../services/anthropic";
+import { appPreferencesService } from "../services/app-preferences-service";
+import { createLogger } from "../utils/logger";
 
 interface InlineReplyComposerProps {
   replyTo: {
@@ -10,6 +13,7 @@ interface InlineReplyComposerProps {
       handle: string;
       displayName?: string;
     };
+    text?: string;
   };
   root?: {
     uri: string;
@@ -18,6 +22,8 @@ interface InlineReplyComposerProps {
   onClose: () => void;
   onSuccess?: () => void;
 }
+
+const logger = createLogger("InlineReplyComposer");
 
 export function InlineReplyComposer({
   replyTo,
@@ -31,9 +37,49 @@ export function InlineReplyComposer({
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Smart reply state
+  const [showSmartReplies, setShowSmartReplies] = useState(false);
+  const [smartReplies, setSmartReplies] = useState<SmartReply[]>([]);
+  const [isLoadingReplies, setIsLoadingReplies] = useState(false);
+  const [enableSmartReplies, setEnableSmartReplies] = useState(false);
+
   useEffect(() => {
     textareaRef.current?.focus();
+    // Load AI settings from app preferences
+    const loadSettings = async () => {
+      const prefs = await appPreferencesService.getPreferences();
+      if (prefs?.aiSettings) {
+        setEnableSmartReplies(prefs.aiSettings.enableSmartReplies || false);
+      }
+    };
+    loadSettings();
   }, []);
+
+  // Load smart replies when component mounts
+  useEffect(() => {
+    if (replyTo.text && enableSmartReplies) {
+      loadSmartReplies();
+    }
+  }, [replyTo.text, enableSmartReplies]);
+
+  const loadSmartReplies = useCallback(async () => {
+    if (!replyTo.text) return;
+
+    setIsLoadingReplies(true);
+    try {
+      const result = await generateSmartReplies(
+        replyTo.text,
+        replyTo.author.handle,
+      );
+      setSmartReplies(result.suggestions);
+      setShowSmartReplies(true);
+    } catch (error) {
+      logger.error("Failed to generate smart replies:", error);
+      // Silently fail - don't show error to user for AI features
+    } finally {
+      setIsLoadingReplies(false);
+    }
+  }, [replyTo.text, replyTo.author.handle]);
 
   const handleSubmit = async () => {
     if (!agent || !text.trim() || isPosting) return;
@@ -71,6 +117,12 @@ export function InlineReplyComposer({
       setIsPosting(false);
     }
   };
+
+  const handleSelectSmartReply = useCallback((reply: SmartReply) => {
+    setText(reply.text);
+    setShowSmartReplies(false);
+    textareaRef.current?.focus();
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Always stop propagation to prevent parent handlers
@@ -130,6 +182,67 @@ export function InlineReplyComposer({
         maxLength={300}
         disabled={isPosting}
       />
+
+      {/* Smart Reply Suggestions */}
+      {showSmartReplies && smartReplies.length > 0 && !text && (
+        <div className="mt-2 space-y-1">
+          <div className="mb-1 flex items-center gap-1.5">
+            <Sparkles
+              size={12}
+              style={{ color: "var(--bsky-text-tertiary)" }}
+            />
+            <span
+              className="text-xs font-medium"
+              style={{ color: "var(--bsky-text-tertiary)" }}
+            >
+              Smart Replies
+            </span>
+          </div>
+          <div className="flex flex-col gap-1">
+            {smartReplies.slice(0, 3).map((reply, index) => (
+              <button
+                key={index}
+                onClick={() => handleSelectSmartReply(reply)}
+                className="rounded-lg border p-2 text-left text-sm transition-all hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 dark:hover:bg-opacity-20"
+                style={{
+                  backgroundColor: "var(--bsky-bg-secondary)",
+                  borderColor: "var(--bsky-border-primary)",
+                  color: "var(--bsky-text-primary)",
+                }}
+                disabled={isPosting}
+              >
+                <div className="flex items-start gap-2">
+                  <span className="shrink-0 text-xs opacity-60">
+                    {reply.tone === "casual"
+                      ? "😊"
+                      : reply.tone === "professional"
+                        ? "💼"
+                        : reply.tone === "humorous"
+                          ? "😄"
+                          : reply.tone === "informative"
+                            ? "📚"
+                            : reply.tone === "inspirational"
+                              ? "✨"
+                              : "💬"}
+                  </span>
+                  <span className="line-clamp-2">{reply.text}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Loading Smart Replies */}
+      {isLoadingReplies && !text && (
+        <div
+          className="mt-2 flex items-center gap-2 text-sm"
+          style={{ color: "var(--bsky-text-tertiary)" }}
+        >
+          <Loader2 size={14} className="animate-spin" />
+          <span>Generating smart replies...</span>
+        </div>
+      )}
 
       <div className="mt-2 flex items-center justify-between">
         <span

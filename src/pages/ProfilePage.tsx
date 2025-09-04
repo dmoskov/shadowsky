@@ -534,6 +534,7 @@ export default function ProfilePage() {
                   uri: replyToPost.uri,
                   cid: replyToPost.cid,
                   author: replyToPost.author,
+                  text: (replyToPost.record as any)?.text,
                 }}
                 onClose={() => setReplyToPost(null)}
                 onSuccess={() => {

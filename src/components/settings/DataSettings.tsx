@@ -8,7 +8,7 @@ import { bookmarkServiceV2 } from "../../services/bookmark-service-v2";
 import { columnService } from "../../services/column-service";
 import { getStoragePrefKey } from "../../services/storage/storage-constants";
 
-type StorageType = "local" | "custom";
+type StorageType = "local" | "custom" | "official";
 
 interface DataStorageItem {
   id: string;
@@ -325,10 +325,7 @@ export const DataSettings: React.FC = () => {
       switch (dataType) {
         case "bookmarks":
           bookmarkServiceV2.setAgent(agent);
-          await bookmarkServiceV2.migrateStorage(
-            currentType as "local" | "custom" | "official",
-            newType as "local" | "custom" | "official",
-          );
+          await bookmarkServiceV2.migrateStorage(currentType, newType);
           break;
         case "columns":
           columnService.setAgent(agent);
@@ -793,6 +790,105 @@ export const DataSettings: React.FC = () => {
           );
         })}
       </div>
+
+      {/* AT Protocol Preferences Display */}
+      {appPreferences && (
+        <div
+          className="rounded-lg p-6"
+          style={{
+            backgroundColor: "var(--bsky-bg-secondary)",
+            border: "1px solid var(--bsky-border-primary)",
+          }}
+        >
+          <h3
+            className="mb-4 text-lg font-medium"
+            style={{ color: "var(--bsky-text-primary)" }}
+          >
+            AT Protocol Preferences Record
+          </h3>
+          <div
+            className="space-y-3 font-mono text-sm"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
+            <div className="grid grid-cols-2 gap-2">
+              <span className="font-semibold">Collection:</span>
+              <span>com.shadowsky.preferences</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <span className="font-semibold">Record Key:</span>
+              <span>self</span>
+            </div>
+            <div
+              className="border-t pt-3"
+              style={{ borderColor: "var(--bsky-border-primary)" }}
+            >
+              <span className="mb-2 block font-semibold">Current Values:</span>
+              <div className="space-y-2 pl-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <span>bookmarkStorageType:</span>
+                  <span className="font-medium">
+                    {appPreferences.bookmarkStorageType}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <span>columnStorageType:</span>
+                  <span className="font-medium">
+                    {appPreferences.columnStorageType}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <span>draftStorageType:</span>
+                  <span className="font-medium">
+                    {appPreferences.draftStorageType}
+                  </span>
+                </div>
+                {appPreferences.aiSettings && (
+                  <div
+                    className="mt-2 border-t pt-2"
+                    style={{ borderColor: "var(--bsky-border-primary)" }}
+                  >
+                    <span className="mb-1 block">AI Settings:</span>
+                    <div className="space-y-1 pl-4">
+                      <div className="grid grid-cols-2 gap-2">
+                        <span>autoGenerateAltText:</span>
+                        <span className="font-medium">
+                          {appPreferences.aiSettings.autoGenerateAltText
+                            ? "true"
+                            : "false"}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <span>enableSmartReplies:</span>
+                        <span className="font-medium">
+                          {appPreferences.aiSettings.enableSmartReplies
+                            ? "true"
+                            : "false"}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <span>enableHashtagSuggestions:</span>
+                        <span className="font-medium">
+                          {appPreferences.aiSettings.enableHashtagSuggestions
+                            ? "true"
+                            : "false"}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <span>enableWritingFeedback:</span>
+                        <span className="font-medium">
+                          {appPreferences.aiSettings.enableWritingFeedback
+                            ? "true"
+                            : "false"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div
         className="rounded-lg p-4 text-sm"
