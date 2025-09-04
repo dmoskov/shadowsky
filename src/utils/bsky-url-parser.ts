@@ -29,7 +29,7 @@ export function parseBskyPostUrl(url: string): ParsedBskyUrl | null {
 
     // Match the pattern: /profile/{handle}/post/{postId}
     const match = urlObj.pathname.match(
-      /^\/profile\/([^\/]+)\/post\/([^\/]+)$/,
+      /^\/profile\/([^/]+)\/post\/([^/]+)$/,
     );
 
     if (!match) {
@@ -46,7 +46,7 @@ export function parseBskyPostUrl(url: string): ParsedBskyUrl | null {
       postId,
       uri,
     };
-  } catch (e) {
+  } catch (_e) {
     return null;
   }
 }
