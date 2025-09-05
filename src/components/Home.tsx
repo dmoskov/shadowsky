@@ -32,7 +32,6 @@ import { generateAltText } from "../services/anthropic";
 import { columnService } from "../services/column-service";
 import { columnFeedPrefs } from "../utils/cookies";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
-import { fetchImageThroughProxy } from "../utils/image-proxy-alt-text";
 import { createLogger } from "../utils/logger";
 import { FeedDiscovery } from "./FeedDiscovery";
 import { ImageGallery } from "./ImageGallery";
@@ -991,26 +990,8 @@ export const Home: React.FC<HomeProps> = ({
       [postKey]: { ...prev[postKey], [index]: true },
     }));
     try {
-      // Convert HTTP URL to blob URL for the generateAltText function
-      let blobUrl = imageUrl;
-      if (imageUrl.startsWith("http") || imageUrl.startsWith("/")) {
-        try {
-          // Use proxy for production to avoid CORS
-          blobUrl = await fetchImageThroughProxy(imageUrl);
-        } catch (fetchError) {
-          logger.error("Failed to fetch image:", fetchError);
-          throw new Error(
-            "Failed to fetch image for alt text generation. Please try again.",
-          );
-        }
-      }
-
-      const altText = await generateAltText(blobUrl);
-
-      // Clean up blob URL
-      if (blobUrl !== imageUrl) {
-        URL.revokeObjectURL(blobUrl);
-      }
+      // Pass the URL directly to the backend which will handle fetching
+      const altText = await generateAltText(imageUrl);
 
       setGeneratedAltTexts((prev) => ({
         ...prev,

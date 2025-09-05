@@ -457,85 +457,51 @@ Be constructive and helpful. Ensure the response is valid JSON.`,
   }
 }
 
-export async function generateAltText(imageDataUrl: string): Promise<string> {
+export async function generateAltText(imageUrl: string): Promise<string> {
   try {
     // Check if API key is configured
     if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
       throw new Error("Anthropic API key not configured");
     }
-    let base64Data: string;
-    let mediaType: string = "image/jpeg";
 
-    // Handle blob URLs by converting to base64
-    if (imageDataUrl.startsWith("blob:")) {
-      const response = await fetch(imageDataUrl);
-      const blob = await response.blob();
-      mediaType = blob.type || "image/jpeg";
+    // Determine the server URL based on environment
+    const serverUrl = import.meta.env.PROD
+      ? import.meta.env.VITE_PROXY_SERVER_URL || "https://api.shadowsky.io"
+      : ""; // Empty string means use same origin (proxied through Vite)
 
-      // Convert blob to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => {
-          const dataUrl = reader.result as string;
-          const base64 = dataUrl.split(",")[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
-      });
-      reader.readAsDataURL(blob);
-      base64Data = await base64Promise;
-    } else if (imageDataUrl.startsWith("data:")) {
-      // Extract base64 data from data URL
-      const matches = imageDataUrl.match(/^data:([^;]+);base64,(.+)$/);
-      if (!matches || matches.length !== 3) {
-        throw new Error("Invalid data URL format");
-      }
-      mediaType = matches[1];
-      base64Data = matches[2];
-    } else {
-      throw new Error("Unsupported image URL format");
-    }
+    const endpoint = `${serverUrl}/api/generate-alt-text`;
+    const payload = {
+      imageUrl,
+      apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY,
+    };
 
-    if (!base64Data) {
-      throw new Error("Failed to extract image data");
-    }
+    logger.log("Generating alt text:", { endpoint, imageUrl });
 
-    const response = await anthropic.messages.create({
-      model: "claude-3-haiku-20240307",
-      max_tokens: 150,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: mediaType as
-                  | "image/jpeg"
-                  | "image/png"
-                  | "image/gif"
-                  | "image/webp",
-                data: base64Data,
-              },
-            },
-            {
-              type: "text",
-              text: 'Generate a concise, descriptive alt text for this image. The alt text should describe what is visible in the image for someone who cannot see it. Keep it under 125 characters and be factual. Do not include "image of" or "picture of" at the beginning.',
-            },
-          ],
-        },
-      ],
+    // Send the image URL to the backend for processing
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     });
 
-    const content = response.content[0];
-    if (content.type === "text") {
-      // Ensure the alt text is not too long
-      const altText = content.text.trim();
-      return altText.length > 125 ? altText.substring(0, 122) + "..." : altText;
+    logger.log("Alt text response status:", response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      const errorMessage = errorData?.error || `Server returned ${response.status}`;
+      logger.error("Alt text generation failed:", errorMessage, errorData);
+      throw new Error(errorMessage);
     }
 
-    return "";
+    const data = await response.json();
+    logger.log("Alt text response:", data);
+    
+    const altText = data.altText?.trim() || "";
+    
+    // Ensure the alt text is not too long
+    return altText.length > 125 ? altText.substring(0, 122) + "..." : altText;
   } catch (error) {
     logger.error("Error generating alt text:", error);
 

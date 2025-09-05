@@ -13,7 +13,6 @@ import React from "react";
 import { useNavigate } from "react-router";
 import { generateAltText } from "../services/anthropic";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
-import { fetchImageThroughProxy } from "../utils/image-proxy-alt-text";
 import { createLogger } from "../utils/logger";
 import { parseBskyUrl } from "../utils/url-helpers";
 import { ImageGallery } from "./ImageGallery";
@@ -93,26 +92,8 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
   const handleGenerateAltText = async (imageUrl: string, index: number) => {
     setGeneratingAltText((prev) => ({ ...prev, [index]: true }));
     try {
-      // Convert HTTP URL to blob URL for the generateAltText function
-      let blobUrl = imageUrl;
-      if (imageUrl.startsWith("http") || imageUrl.startsWith("/")) {
-        try {
-          // Use proxy for production to avoid CORS
-          blobUrl = await fetchImageThroughProxy(imageUrl);
-        } catch (fetchError) {
-          logger.error("Failed to fetch image:", fetchError);
-          throw new Error(
-            "Failed to fetch image for alt text generation. Please try again.",
-          );
-        }
-      }
-
-      const altText = await generateAltText(blobUrl);
-
-      // Clean up blob URL
-      if (blobUrl !== imageUrl) {
-        URL.revokeObjectURL(blobUrl);
-      }
+      // Pass the URL directly to the backend which will handle fetching
+      const altText = await generateAltText(imageUrl);
 
       setGeneratedAltTexts((prev) => ({ ...prev, [index]: altText }));
       setShowAltText((prev) => ({ ...prev, [index]: true }));

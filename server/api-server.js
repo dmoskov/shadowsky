@@ -28,6 +28,95 @@ app.use(
 
 app.use(express.json());
 
+// Generate alt text for an image URL
+app.post("/api/generate-alt-text", async (req, res) => {
+  const { imageUrl, apiKey } = req.body;
+
+  console.log("Alt text generation request:", { imageUrl, hasApiKey: !!apiKey });
+
+  if (!imageUrl || !apiKey) {
+    return res.status(400).json({ error: "Missing imageUrl or apiKey" });
+  }
+
+  try {
+    // Convert relative URLs to absolute URLs
+    let absoluteUrl = imageUrl;
+    if (imageUrl.startsWith('/bsky-cdn/')) {
+      // Convert Vite proxy path to actual CDN URL
+      absoluteUrl = imageUrl.replace('/bsky-cdn/', 'https://cdn.bsky.app/');
+    } else if (imageUrl.startsWith('/bsky-video/')) {
+      absoluteUrl = imageUrl.replace('/bsky-video/', 'https://video.bsky.app/');
+    } else if (imageUrl.startsWith('/bsky-video-cdn/')) {
+      absoluteUrl = imageUrl.replace('/bsky-video-cdn/', 'https://video.cdn.bsky.app/');
+    } else if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+      // For any other relative URLs, assume they're from the frontend origin
+      absoluteUrl = `http://localhost:5174${imageUrl}`;
+    }
+    
+    console.log("Fetching image from:", absoluteUrl);
+    // Fetch the image
+    const response = await fetch(absoluteUrl);
+    if (!response.ok) {
+      console.error("Image fetch failed:", response.status, response.statusText);
+      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+    }
+
+    const buffer = await response.buffer();
+    const base64Image = buffer.toString("base64");
+    const mimeType = response.headers.get("content-type") || "image/jpeg";
+
+    // Call Anthropic API
+    const anthropicResponse = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-3-haiku-20240307",
+        max_tokens: 300,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "image",
+                source: {
+                  type: "base64",
+                  media_type: mimeType,
+                  data: base64Image,
+                },
+              },
+              {
+                type: "text",
+                text: "Generate concise alt text for this image that would help someone using a screen reader understand what's shown. Keep it under 125 characters. Focus on the main subject and action.",
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    if (!anthropicResponse.ok) {
+      const error = await anthropicResponse.text();
+      throw new Error(`Anthropic API error: ${error}`);
+    }
+
+    const data = await anthropicResponse.json();
+    const altText = data.content[0].text;
+
+    res.json({ altText });
+  } catch (error) {
+    console.error("Error generating alt text:", error);
+    console.error("Stack trace:", error.stack);
+    res.status(500).json({ 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
 // Endpoint to proxy images from Bluesky CDN for alt text generation
 app.get("/api/proxy-image", async (req, res) => {
   const { url } = req.query;
@@ -165,5 +254,9 @@ app.post("/api/convert-gif", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`GIF converter server running on port ${PORT}`);
+  console.log(`ShadowSky API server running on port ${PORT}`);
+  console.log(`Available endpoints:`);
+  console.log(`  - POST /api/convert-gif     : Convert GIF to MP4`);
+  console.log(`  - POST /api/generate-alt-text: Generate alt text for images`);
+  console.log(`  - GET  /api/proxy-image     : Proxy images to avoid CORS`);
 });

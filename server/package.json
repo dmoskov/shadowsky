@@ -1,11 +1,11 @@
 {
-  "name": "gif-converter-server",
+  "name": "shadowsky-api-server",
   "version": "1.0.0",
-  "description": "Server for converting GIFs to MP4",
-  "main": "gif-converter.js",
+  "description": "API server for ShadowSky - handles media conversion, image proxying, and AI features",
+  "main": "api-server.js",
   "scripts": {
-    "start": "node gif-converter.js",
-    "dev": "nodemon gif-converter.js"
+    "start": "node api-server.js",
+    "dev": "nodemon api-server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
