@@ -38,6 +38,10 @@ import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
 import { ThreadModal } from "./ThreadModal";
 import { VideoPlayer } from "./VideoPlayer";
+import { FeedSkeleton } from "./ui/SkeletonLoader";
+import { ProgressiveImage } from "./ui/ProgressiveImage";
+import { usePullToRefresh } from "../hooks/usePullToRefresh";
+import { PullToRefreshIndicator } from "./ui/PullToRefreshIndicator";
 
 const logger = createLogger("Home");
 
@@ -191,6 +195,24 @@ export const Home: React.FC<HomeProps> = ({
 
   const { trackFeatureAction } = useFeatureTracking("home_feed");
   const { trackClick } = useInteractionTracking();
+  
+  // Pull to refresh setup
+  const handleRefresh = async () => {
+    trackFeatureAction("pull_to_refresh");
+    await feedQuery.refetch();
+  };
+  
+  const { 
+    containerRef: pullToRefreshRef,
+    pullDistance,
+    isRefreshing,
+    isPulling,
+    threshold,
+    progress
+  } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    disabled: false
+  });
 
   // Fetch user's saved/pinned feeds
   const { data: userPrefs } = useQuery({
@@ -348,14 +370,7 @@ export const Home: React.FC<HomeProps> = ({
 
   // Dropdown is now handled by the parent component
 
-  const {
-    data,
-    isLoading,
-    error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
+  const feedQuery = useInfiniteQuery({
     queryKey: ["timeline", selectedFeed],
     queryFn: async ({ pageParam }: { pageParam?: string }) => {
       if (!agent) throw new Error("Not authenticated");
@@ -456,6 +471,8 @@ export const Home: React.FC<HomeProps> = ({
     gcTime: 60 * 60 * 1000, // 1 hour
     refetchOnMount: false, // Don't automatically refetch
   });
+
+  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = feedQuery;
 
   const posts = React.useMemo(() => {
     if (!data?.pages) return [];
@@ -1072,22 +1089,11 @@ export const Home: React.FC<HomeProps> = ({
                       isThreeImageLayout && idx === 0 ? "100%" : "75%",
                   }}
                 >
-                  <img
-                    src={proxifyBskyImage(img.thumb)}
+                  <ProgressiveImage
+                    src={proxifyBskyImage(img.fullsize || img.thumb) || ""}
+                    placeholderSrc={proxifyBskyImage(img.thumb) || ""}
                     alt={currentAltText || ""}
-                    className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
-                    loading="lazy"
-                    onLoad={(e) => {
-                      // Fade in on load
-                      const img = e.target as HTMLImageElement;
-                      img.style.opacity = "1";
-                    }}
-                    style={{ opacity: 0 }}
-                  />
-                  {/* Loading state placeholder with blur effect */}
-                  <div
-                    className="absolute inset-0 animate-pulse bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900"
-                    style={{ zIndex: -1, filter: "blur(20px)" }}
+                    className="absolute inset-0 h-full w-full"
                   />
                 </div>
 
@@ -1342,15 +1348,7 @@ export const Home: React.FC<HomeProps> = ({
   };
 
   if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader
-          className="animate-spin"
-          size={32}
-          style={{ color: "var(--bsky-primary)" }}
-        />
-      </div>
-    );
+    return <FeedSkeleton count={5} />;
   }
 
   if (error) {
@@ -1373,12 +1371,30 @@ export const Home: React.FC<HomeProps> = ({
 
   return (
     <div
-      className="w-full"
-      ref={containerRef}
+      className="w-full relative"
+      ref={(el) => {
+        if (el) {
+          (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+          (pullToRefreshRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+        }
+      }}
       tabIndex={-1}
       style={{ outline: "none" }}
     >
-      <div className="mx-auto max-w-2xl px-3 sm:px-4" ref={postsContainerRef}>
+      <PullToRefreshIndicator 
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
+        threshold={threshold}
+        progress={progress}
+      />
+      <div 
+        className="mx-auto max-w-2xl px-3 sm:px-4" 
+        ref={postsContainerRef}
+        style={{ 
+          transform: isPulling ? `translateY(${pullDistance}px)` : 'translateY(0)',
+          transition: isPulling ? 'none' : 'transform 0.2s ease-out'
+        }}
+      >
         <div
           className="divide-y divide-gray-100 dark:divide-gray-950"
           role="feed"

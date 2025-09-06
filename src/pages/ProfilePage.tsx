@@ -12,6 +12,7 @@ import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { getBskyProfileUrl } from "../utils/url-helpers";
+import { ProfileSkeleton } from "../components/ui/SkeletonLoader";
 
 const formatCount = (count: number): string => {
   if (count >= 1000000) {
@@ -216,11 +217,7 @@ export default function ProfilePage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"></div>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (error || !profile) {

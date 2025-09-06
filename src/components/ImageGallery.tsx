@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
+import { ProgressiveImage } from "./ui/ProgressiveImage";
 
 interface ImageGalleryProps {
   images: Array<{
@@ -17,16 +18,13 @@ export function ImageGallery({
   onClose,
 }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const [imageLoading, setImageLoading] = useState(true);
 
   const handlePrevious = useCallback(() => {
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-    setImageLoading(true);
   }, [images.length]);
 
   const handleNext = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % images.length);
-    setImageLoading(true);
   }, [images.length]);
 
   useEffect(() => {
@@ -98,17 +96,12 @@ export function ImageGallery({
 
       {/* Main image */}
       <div className="relative max-h-[90vh] max-w-[90vw]">
-        {imageLoading && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
-          </div>
-        )}
-        <img
+        <ProgressiveImage
           src={images[currentIndex].fullsize}
+          placeholderSrc={images[currentIndex].thumb}
           alt={images[currentIndex].alt || `Image ${currentIndex + 1}`}
-          className="max-h-[90vh] max-w-full object-contain"
-          onLoad={() => setImageLoading(false)}
-          style={{ opacity: imageLoading ? 0 : 1, transition: "opacity 0.2s" }}
+          className="max-h-[90vh] max-w-full"
+          onLoad={() => {/* Image loaded */}}
         />
 
         {/* Alt text display */}
@@ -127,7 +120,6 @@ export function ImageGallery({
               key={index}
               onClick={() => {
                 setCurrentIndex(index);
-                setImageLoading(true);
               }}
               className={`h-12 w-12 overflow-hidden rounded transition-all ${
                 index === currentIndex

@@ -97,8 +97,8 @@ export function useNotifications(priority: boolean = false) {
       return lastPage.cursor;
     },
     enabled: !!session,
-    staleTime: cachedData ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000, // If we have cache, treat as fresh for 24h, otherwise 5min
-    refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
+    staleTime: cachedData ? 5 * 60 * 1000 : 1 * 60 * 1000, // If we have cache, treat as fresh for 5min, otherwise 1min
+    refetchInterval: 30 * 1000, // Refetch every 30 seconds for more timely updates
     refetchOnWindowFocus: false, // Don't refetch on window focus
     refetchOnMount: cachedData ? false : "always", // Only fetch on mount if no cached data
     // Use cached data as initial data if available

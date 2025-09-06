@@ -1,27 +1,19 @@
 import { debug } from "@bsky/shared";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { BackgroundNotificationLoader } from "./components/BackgroundNotificationLoader";
-import { Bookmarks } from "./components/Bookmarks";
-import { ColumnMigrationNotice } from "./components/ColumnMigrationNotice";
-import { Composer } from "./components/Composer";
-import { CompressionTest } from "./components/CompressionTest";
-import { ConversationsSimple as Conversations } from "./components/ConversationsSimple";
 import { DebugConsole } from "./components/DebugConsole";
-import { DirectMessages } from "./components/DirectMessages";
 import { Header } from "./components/Header";
 import { LandingPage } from "./components/LandingPage";
 import { MobileTabBar } from "./components/MobileTabBar";
-import { Notifications } from "./components/Notifications";
-import { NotificationsAnalytics } from "./components/NotificationsAnalytics";
 import { StorageErrorProvider } from "./components/providers/StorageErrorProvider";
 import { RateLimitStatus } from "./components/RateLimitStatus";
-import { Search } from "./components/Search";
 import { Sidebar } from "./components/Sidebar";
-import SkyDeck from "./components/SkyDeck";
 import { SwipeIndicator } from "./components/SwipeIndicator";
-import { VisualTimeline } from "./components/VisualTimeline";
+import { PageLoader } from "./components/ui/PageLoader";
+import { CommandPalette } from "./components/CommandPalette";
+import { FloatingActionButton } from "./components/ui/FloatingActionButton";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { HiddenPostsProvider } from "./contexts/HiddenPostsContext";
 import { ModalProvider } from "./contexts/ModalContext";
@@ -29,14 +21,27 @@ import { ModerationProvider } from "./contexts/ModerationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { useErrorTracking, usePageTracking } from "./hooks/useAnalytics";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
-import ProfilePage from "./pages/ProfilePage";
-import { Settings } from "./pages/Settings";
 import { analytics } from "./services/analytics";
 import { bookmarkStorage } from "./services/bookmark-storage-db";
 import { NotificationStorageDB } from "./services/notification-storage-db";
 import { cleanupLocalStorage } from "./utils/cleanupLocalStorage";
 import "./utils/debug-control"; // Initialize debug controls
 import { removeTrailingSlash } from "./utils/removeTrailingSlash";
+
+// Lazy load route components for better performance
+const Bookmarks = lazy(() => import("./components/Bookmarks").then(m => ({ default: m.Bookmarks })));
+const ColumnMigrationNotice = lazy(() => import("./components/ColumnMigrationNotice").then(m => ({ default: m.ColumnMigrationNotice })));
+const Composer = lazy(() => import("./components/Composer").then(m => ({ default: m.Composer })));
+const CompressionTest = lazy(() => import("./components/CompressionTest").then(m => ({ default: m.CompressionTest })));
+const Conversations = lazy(() => import("./components/ConversationsSimple").then(m => ({ default: m.ConversationsSimple })));
+const DirectMessages = lazy(() => import("./components/DirectMessages").then(m => ({ default: m.DirectMessages })));
+const Notifications = lazy(() => import("./components/Notifications").then(m => ({ default: m.Notifications })));
+const NotificationsAnalytics = lazy(() => import("./components/NotificationsAnalytics").then(m => ({ default: m.NotificationsAnalytics })));
+const Search = lazy(() => import("./components/Search").then(m => ({ default: m.Search })));
+const SkyDeck = lazy(() => import("./components/SkyDeck"));
+const VisualTimeline = lazy(() => import("./components/VisualTimeline").then(m => ({ default: m.VisualTimeline })));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const Settings = lazy(() => import("./pages/Settings").then(m => ({ default: m.Settings })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,6 +71,7 @@ function AppContent() {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
   // Initialize swipe navigation for mobile
   const swipeHandlers = useSwipeNavigation();
@@ -73,6 +79,20 @@ function AppContent() {
   // Initialize analytics tracking
   usePageTracking();
   useErrorTracking();
+
+  // Set up command palette keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+K or Ctrl+K
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setIsCommandPaletteOpen(true);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Auto-collapse sidebar when viewport is too narrow for 3 columns
   useEffect(() => {
@@ -154,30 +174,37 @@ function AppContent() {
         <main
           className={`mt-16 min-h-[calc(100vh-4rem)] flex-1 pb-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto lg:pb-0 ${isSidebarCollapsed ? "lg:ml-16" : "lg:ml-64"}`}
         >
-          <Routes>
-            <Route path="/home" element={<SkyDeck />} />
-            <Route path="/" element={<SkyDeck />} />
-            <Route path="/timeline" element={<VisualTimeline />} />
-            <Route path="/analytics" element={<NotificationsAnalytics />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/conversations" element={<Conversations />} />
-            <Route path="/messages" element={<DirectMessages />} />
-            <Route path="/bookmarks" element={<Bookmarks />} />
-            <Route path="/compose" element={<Composer />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/profile/:handle" element={<ProfilePage />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/settings/:section" element={<Settings />} />
-            <Route path="/compression-test" element={<CompressionTest />} />
-            <Route path="*" element={<Navigate to="/home" replace />} />
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/home" element={<SkyDeck />} />
+              <Route path="/" element={<SkyDeck />} />
+              <Route path="/timeline" element={<VisualTimeline />} />
+              <Route path="/analytics" element={<NotificationsAnalytics />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/conversations" element={<Conversations />} />
+              <Route path="/messages" element={<DirectMessages />} />
+              <Route path="/bookmarks" element={<Bookmarks />} />
+              <Route path="/compose" element={<Composer />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/profile/:handle" element={<ProfilePage />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/settings/:section" element={<Settings />} />
+              <Route path="/compression-test" element={<CompressionTest />} />
+              <Route path="*" element={<Navigate to="/home" replace />} />
+            </Routes>
+          </Suspense>
         </main>
       </div>
       <MobileTabBar />
+      <FloatingActionButton />
       <SwipeIndicator />
       <RateLimitStatus />
       <DebugConsole />
       <ColumnMigrationNotice />
+      <CommandPalette 
+        isOpen={isCommandPaletteOpen} 
+        onClose={() => setIsCommandPaletteOpen(false)} 
+      />
     </div>
   );
 }

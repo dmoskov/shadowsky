@@ -76,8 +76,8 @@ export function useNotificationPosts(
         return allCached;
       }
 
-      // Otherwise, do progressive loading starting with first 200
-      const INITIAL_POSTS_TO_FETCH = 200;
+      // Otherwise, do progressive loading starting with first 500
+      const INITIAL_POSTS_TO_FETCH = 500;
       const urisToFetch = postUris.slice(0, INITIAL_POSTS_TO_FETCH);
 
       // Check cache for initial batch
@@ -156,10 +156,10 @@ export function useNotificationPosts(
       const agent = atProtoClient.agent;
       if (!agent) return;
 
-      // Adaptive batch sizing: start aggressive, then slow down
-      const batchNumber = Math.floor(fetchedCount / 50) + 1;
-      const BATCH_SIZE = batchNumber <= 2 ? 100 : 50; // First 2 batches: 100 posts, then 50
-      const DELAY_BETWEEN_BATCHES = batchNumber <= 2 ? 500 : 2000; // First 2 batches: 500ms, then 2s
+      // More aggressive batch sizing to reduce flicker
+      const batchNumber = Math.floor(fetchedCount / 100) + 1;
+      const BATCH_SIZE = batchNumber <= 3 ? 200 : 100; // First 3 batches: 200 posts, then 100
+      const DELAY_BETWEEN_BATCHES = batchNumber <= 3 ? 100 : 1000; // First 3 batches: 100ms, then 1s
 
       // Get already fetched URIs from current data
       const fetchedUris = new Set(
@@ -191,9 +191,9 @@ export function useNotificationPosts(
             // Cache the newly fetched posts
             PostCache.save(fetchedPosts);
 
-            // Adaptive delay between API calls within a batch
+            // Minimal delay between API calls within a batch
             if (i + 25 < missingBatch.length) {
-              const delay = batchNumber <= 2 ? 100 : 500; // Faster for initial batches
+              const delay = 50; // Consistent fast delay
               await new Promise((resolve) => setTimeout(resolve, delay));
             }
           } catch (error) {
@@ -219,8 +219,8 @@ export function useNotificationPosts(
       }
     };
 
-    // Start fetching more posts after a delay (faster for initial load)
-    const initialDelay = fetchedCount === 0 ? 100 : 1000; // 100ms for first batch, 1s for subsequent
+    // Start fetching more posts immediately for better UX
+    const initialDelay = 50; // Always fast
     const timeoutId = setTimeout(fetchMorePosts, initialDelay);
     return () => clearTimeout(timeoutId);
   }, [

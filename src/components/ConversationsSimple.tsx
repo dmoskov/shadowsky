@@ -63,7 +63,7 @@ const ConversationItem = React.memo(
     });
 
     const rootRecord = convo.rootPost?.record as any;
-    const previewText = rootRecord?.text || "[Post unavailable]";
+    const previewText = rootRecord?.text || (isLoadingRootPost ? "[Loading...]" : "[Post unavailable]");
     const isGroup = convo.participants.size > 2;
     const unreadCount = convo.replies.filter((r) => !r.isRead).length;
 
@@ -824,8 +824,21 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({
       }
     });
 
+    // Filter out conversations where the root post is deleted/unavailable
+    // Only include conversations where we have the root post OR where posts are still loading
+    const conversationsArray = Array.from(threadMap.values()).filter(convo => {
+      // Keep conversation if we have the root post
+      if (convo.rootPost) return true;
+      
+      // Keep conversation if we're still loading posts (might be coming)
+      if (percentageFetched < 100) return true;
+      
+      // Otherwise, filter out (post is deleted/unavailable)
+      return false;
+    });
+
     // Sort conversations by latest activity
-    const sortedConversations = Array.from(threadMap.values()).sort(
+    const sortedConversations = conversationsArray.sort(
       (a, b) =>
         new Date(b.latestReply.indexedAt).getTime() -
         new Date(a.latestReply.indexedAt).getTime(),
@@ -834,6 +847,7 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({
     const groupingTime = performance.now() - startTime;
     debug.log("[ConversationsSimple] Conversations generated:", {
       count: sortedConversations.length,
+      filteredOutCount: threadMap.size - sortedConversations.length,
       replyNotificationCount: replyNotifications.length,
       allPostsMapSize: allPostsMap.size,
       rootPostsVersion,
@@ -847,7 +861,7 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({
     });
 
     return sortedConversations;
-  }, [replyNotifications, allPostsMap, rootPostsVersion]); // Include rootPostsVersion to trigger updates
+  }, [replyNotifications, allPostsMap, rootPostsVersion, percentageFetched]); // Include rootPostsVersion and loading states to trigger updates
 
   // Filter conversations based on search
   const filteredConversations = useMemo(() => {

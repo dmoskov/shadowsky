@@ -98,6 +98,21 @@ export const DirectMessages: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
   }, [conversationData?.messages]);
 
+  // Mark conversation as read when selected
+  useEffect(() => {
+    if (selectedConversation && conversationData?.conversation?.unreadCount && conversationData.conversation.unreadCount > 0) {
+      // Small delay to ensure messages are visible
+      const timer = setTimeout(() => {
+        dmService.updateRead(selectedConversation).then(() => {
+          // Invalidate the conversations list to update unread counts
+          queryClient.invalidateQueries({ queryKey: ["dm-conversations"] });
+        });
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [selectedConversation, conversationData?.conversation.unreadCount, queryClient]);
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedConversation || !messageText.trim()) return;

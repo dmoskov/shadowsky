@@ -74,9 +74,64 @@ export function ThreadModal({
     queryKey: ["thread", postUri],
     queryFn: async () => {
       if (!agent) throw new Error("Not authenticated");
-      const response = await agent.getPostThread({ uri: postUri, depth: 10 });
-      debug.log("Thread response:", response);
-      return response.data.thread;
+      
+      try {
+        const response = await agent.getPostThread({ uri: postUri, depth: 10 });
+        debug.log("Thread response:", response);
+        
+        // Check the response type to provide better error messages
+        const thread = response.data.thread;
+        
+        if (!thread) {
+          throw new Error("Thread data is empty");
+        }
+        
+        // Log the thread type for debugging
+        debug.log("Thread type:", thread.$type);
+        
+        // Check for different thread view types based on official AT Protocol lexicons
+        if (thread.$type === "app.bsky.feed.defs#notFoundPost") {
+          throw new Error("POST_NOT_FOUND");
+        }
+        
+        if (thread.$type === "app.bsky.feed.defs#blockedPost") {
+          throw new Error("POST_BLOCKED");
+        }
+        
+        if (thread.$type !== "app.bsky.feed.defs#threadViewPost") {
+          // Log the full thread object to understand what we're getting
+          debug.error("Unexpected thread type encountered:", {
+            type: thread.$type,
+            threadObject: thread,
+            hasPost: !!(thread as any).post,
+            postUri: postUri
+          });
+          
+          // Check if it might be a partial thread or have a post anyway
+          if ((thread as any).post) {
+            debug.log("Thread has post despite unexpected type, attempting to use it");
+            return thread;
+          }
+          
+          throw new Error(`INVALID_THREAD_TYPE: ${thread.$type || 'undefined'}`);
+        }
+        
+        return thread;
+      } catch (err: any) {
+        debug.error("Failed to load thread:", err);
+        
+        // Re-throw with more context
+        if (err.message) {
+          throw err;
+        }
+        
+        // Handle API errors
+        if (err?.status === 400) {
+          throw new Error("POST_NOT_FOUND");
+        }
+        
+        throw new Error("NETWORK_ERROR");
+      }
     },
     enabled: !!agent && !!postUri,
   });
@@ -89,7 +144,11 @@ export function ThreadModal({
     const processThread = (thread: any) => {
       if (!thread) return;
 
-      if (thread.$type === "app.bsky.feed.defs#threadViewPost" && thread.post) {
+      // Handle both typed and untyped thread objects
+      const isThreadViewPost = thread.$type === "app.bsky.feed.defs#threadViewPost" || 
+                               (!thread.$type && thread.post); // Some responses might not have $type
+      
+      if (isThreadViewPost && thread.post) {
         allPosts.push(thread.post);
 
         // Process parent if exists
@@ -393,9 +452,71 @@ export function ThreadModal({
 
               {error && (
                 <div className="py-8 text-center">
-                  <p style={{ color: "var(--bsky-text-secondary)" }}>
-                    Failed to load thread
-                  </p>
+                  <div className="mx-auto max-w-md space-y-4">
+                    <div className="rounded-lg p-6" style={{ backgroundColor: "var(--bsky-bg-secondary)" }}>
+                      <p className="mb-2 text-lg font-medium" style={{ color: "var(--bsky-text-primary)" }}>
+                        {error.message === "POST_NOT_FOUND" 
+                          ? "Post Not Found"
+                          : error.message === "POST_BLOCKED"
+                          ? "Content Blocked"
+                          : error.message.startsWith("INVALID_THREAD_TYPE")
+                          ? "Unable to Display Thread"
+                          : error.message === "NETWORK_ERROR"
+                          ? "Connection Error"
+                          : "Failed to Load Thread"}
+                      </p>
+                      <p className="text-sm" style={{ color: "var(--bsky-text-secondary)" }}>
+                        {error.message === "POST_NOT_FOUND" 
+                          ? "This post may have been deleted or is no longer available."
+                          : error.message === "POST_BLOCKED"
+                          ? "This content has been blocked and cannot be displayed."
+                          : error.message.startsWith("INVALID_THREAD_TYPE")
+                          ? "The thread format is not supported or may be corrupted."
+                          : error.message === "NETWORK_ERROR"
+                          ? "Please check your connection and try again."
+                          : "An unexpected error occurred while loading the thread."}
+                      </p>
+                      
+                      {/* Debug info when debug mode is enabled */}
+                      {localStorage.getItem("debug") === "true" && (
+                        <details className="mt-4">
+                          <summary className="cursor-pointer text-xs" style={{ color: "var(--bsky-text-tertiary)" }}>
+                            Debug Info
+                          </summary>
+                          <pre className="mt-2 overflow-x-auto rounded bg-black/10 p-2 text-xs">
+{JSON.stringify({
+  error: error.message,
+  errorType: error.message.startsWith("INVALID_THREAD_TYPE") ? error.message.split(": ")[1] : undefined,
+  postUri,
+  timestamp: new Date().toISOString()
+}, null, 2)}
+                          </pre>
+                        </details>
+                      )}
+                      
+                      {/* Retry button for network errors */}
+                      {(error.message === "NETWORK_ERROR" || error.message === "Thread data is empty") && (
+                        <button
+                          onClick={() => refetch()}
+                          className="mt-4 rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-80"
+                          style={{ 
+                            backgroundColor: "var(--bsky-primary)",
+                            color: "white"
+                          }}
+                        >
+                          Try Again
+                        </button>
+                      )}
+                    </div>
+                    
+                    <button
+                      onClick={onClose}
+                      className="text-sm underline"
+                      style={{ color: "var(--bsky-text-tertiary)" }}
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
               )}
 

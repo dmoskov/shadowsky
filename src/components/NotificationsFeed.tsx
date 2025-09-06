@@ -12,6 +12,7 @@ import {
   MessageCircle,
   MoreVertical,
   Quote,
+  RefreshCw,
   Repeat2,
   UserPlus,
   Users,
@@ -27,11 +28,14 @@ import {
   postHasImages,
   useNotificationPosts,
 } from "../hooks/useNotificationPosts";
+import { NotificationSkeleton } from "./ui/SkeletonLoader";
 import {
   useMarkNotificationsRead,
   useNotifications,
   useUnreadCount,
 } from "../hooks/useNotifications";
+import { NotificationCache } from "../utils/notificationCache";
+import { useQueryClient } from "@tanstack/react-query";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { getNotificationUrl } from "../utils/url-helpers";
 import {
@@ -58,6 +62,7 @@ export const NotificationsFeed: React.FC = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const showTopAccounts = searchParams.get("top") === "1";
+  const queryClient = useQueryClient();
 
   const [filter, setFilter] = useState<NotificationFilter>("all");
   // Removed unread only filter
@@ -69,6 +74,7 @@ export const NotificationsFeed: React.FC = () => {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [selectedPostUri, setSelectedPostUri] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   // Removed isFromCache state - no longer needed without header
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const moreFiltersRef = useRef<HTMLDivElement>(null);
@@ -81,6 +87,20 @@ export const NotificationsFeed: React.FC = () => {
   const handleFilterChange = (newFilter: NotificationFilter) => {
     setFilter(newFilter);
     trackFeatureAction("filter_changed", { filter: newFilter });
+  };
+
+  // Handle refresh
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    // Clear all notification caches
+    NotificationCache.clearAll();
+    // Clear any object cache as well
+    localStorage.removeItem('notification_object_cache');
+    // Invalidate and refetch the notifications query
+    await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    await queryClient.refetchQueries({ queryKey: ["notifications"] });
+    setIsRefreshing(false);
+    trackFeatureAction("notifications_refreshed", {});
   };
 
   // Reset filter if top accounts is hidden but was selected
@@ -113,7 +133,7 @@ export const NotificationsFeed: React.FC = () => {
 
       return () => clearTimeout(timer);
     }
-  }, []); // Only run once on mount
+  }, [unreadCount, markAsRead]); // Re-run when unreadCount changes
 
   const notifications = React.useMemo(() => {
     const timestamp = new Date().toLocaleTimeString();
@@ -388,6 +408,8 @@ export const NotificationsFeed: React.FC = () => {
         );
       case "quote":
         return <Quote size={18} style={{ color: "var(--bsky-quote)" }} />;
+      case "starterpack-joined":
+        return <UserPlus size={18} style={{ color: "var(--bsky-follow)" }} />;
       default:
         return null;
     }
@@ -395,12 +417,10 @@ export const NotificationsFeed: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="bsky-card bsky-loading h-20 p-4"></div>
-          ))}
-        </div>
+      <div>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <NotificationSkeleton key={i} />
+        ))}
       </div>
     );
   }
@@ -621,28 +641,45 @@ export const NotificationsFeed: React.FC = () => {
               </div>
             </div>
 
-            {/* Mark all as read button */}
-            {unreadCount && unreadCount > 0 && (
+            {/* Action buttons */}
+            <div className="flex items-center gap-2">
+              {/* Refresh button */}
               <button
-                onClick={() => markAsRead()}
-                className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-bsky-primary transition-all hover:bg-bsky-bg-secondary"
-                title="Mark all notifications as read"
+                onClick={handleRefresh}
+                disabled={isRefreshing || isLoading}
+                className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-bsky-text-secondary transition-all hover:bg-bsky-bg-secondary hover:text-bsky-text-primary disabled:opacity-50"
+                title="Refresh notifications"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="flex-shrink-0"
-                >
-                  <polyline points="9 11 12 14 22 4" />
-                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                </svg>
-                <span className="hidden sm:inline">Mark all read</span>
+                <RefreshCw 
+                  size={16} 
+                  className={isRefreshing ? "animate-spin" : ""}
+                />
+                <span className="hidden sm:inline">Refresh</span>
               </button>
-            )}
+              
+              {/* Mark all as read button */}
+              {unreadCount && unreadCount > 0 && (
+                <button
+                  onClick={() => markAsRead()}
+                  className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-bsky-primary transition-all hover:bg-bsky-bg-secondary"
+                  title="Mark all notifications as read"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="flex-shrink-0"
+                  >
+                    <polyline points="9 11 12 14 22 4" />
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                  </svg>
+                  <span className="hidden sm:inline">Mark all read</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -728,7 +765,6 @@ export const NotificationsFeed: React.FC = () => {
                       isFetchingMore={isFetchingMore}
                       fetchedPosts={fetchedPosts}
                       totalPosts={totalPosts}
-                      percentageFetched={percentageFetched}
                       markAsRead={markAsRead}
                       onNavigate={(url) => {
                         // Check if this is a thread URL
@@ -782,8 +818,7 @@ export const NotificationsFeed: React.FC = () => {
                             isFetchingMore={isFetchingMore}
                             fetchedPosts={fetchedPosts}
                             totalPosts={totalPosts}
-                            percentageFetched={percentageFetched}
-                            setSelectedPostUri={setSelectedPostUri}
+                                  setSelectedPostUri={setSelectedPostUri}
                             markAsRead={markAsRead}
                           />
                         ))}
@@ -817,7 +852,6 @@ export const NotificationsFeed: React.FC = () => {
                     isFetchingMore={isFetchingMore}
                     fetchedPosts={fetchedPosts}
                     totalPosts={totalPosts}
-                    percentageFetched={percentageFetched}
                     setSelectedPostUri={setSelectedPostUri}
                     markAsRead={markAsRead}
                   />
@@ -837,7 +871,6 @@ export const NotificationsFeed: React.FC = () => {
               isFetchingMore={isFetchingMore}
               fetchedPosts={fetchedPosts}
               totalPosts={totalPosts}
-              percentageFetched={percentageFetched}
               setSelectedPostUri={setSelectedPostUri}
               markAsRead={markAsRead}
             />
@@ -867,6 +900,27 @@ export const NotificationsFeed: React.FC = () => {
                 <div className="animate-pulse">↓ Scroll for more</div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Post loading status indicator */}
+        {isFetchingMore && fetchedPosts < totalPosts && (
+          <div 
+            className="sticky bottom-0 bg-opacity-95 backdrop-blur-sm p-3 text-center border-t"
+            style={{ 
+              backgroundColor: "var(--bsky-bg-primary)",
+              borderColor: "var(--bsky-border-primary)"
+            }}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
+              <span 
+                className="text-sm font-medium"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                Loading posts: {fetchedPosts}/{totalPosts} ({percentageFetched}%)
+              </span>
+            </div>
           </div>
         )}
 
@@ -1015,6 +1069,8 @@ function getNotificationText(reason: string): string {
       return "replied to your post";
     case "quote":
       return "quoted your post";
+    case "starterpack-joined":
+      return "joined via your starterpack";
     default:
       return "interacted with your post";
   }
@@ -1028,7 +1084,6 @@ interface NotificationItemProps {
   isFetchingMore?: boolean;
   fetchedPosts?: number;
   totalPosts?: number;
-  percentageFetched?: number;
   setSelectedPostUri: (uri: string | null) => void;
   markAsRead: () => void;
 }
@@ -1042,7 +1097,6 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
     isFetchingMore = false,
     fetchedPosts = 0,
     totalPosts = 0,
-    percentageFetched = 100,
     setSelectedPostUri,
     markAsRead,
   }) => {
@@ -1079,6 +1133,8 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
           return "Reply";
         case "quote":
           return "Quote";
+        case "starterpack-joined":
+          return "Starterpack Join";
         default:
           return reason.charAt(0).toUpperCase() + reason.slice(1);
       }
@@ -1088,8 +1144,8 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
     const renderPostContent = () => {
       // For likes, reposts, replies, and quotes - show loading state if post not yet loaded
       if (["like", "repost", "reply", "quote"].includes(notification.reason)) {
-        // Show loading indicator if post should exist but isn't loaded yet
-        if (!post && postMap.size === 0) {
+        // Show loading indicator only during initial load (first 10 seconds) and if we have no posts at all
+        if (!post && postMap.size === 0 && fetchedPosts === 0) {
           return (
             <div
               className="mt-3 rounded-lg p-4"
@@ -1117,9 +1173,11 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
         }
 
         if (!post) {
-          // Check if we're still fetching more posts
-          if (isFetchingMore && fetchedPosts < totalPosts) {
-            return (
+          // Don't show loading indicator for individual posts during progressive loading
+          // Only show "unable to load" if we've finished fetching and still don't have the post
+          if (!isFetchingMore || fetchedPosts >= totalPosts) {
+            // Post couldn't be loaded or doesn't exist
+              return (
               <div
                 className="mt-3 rounded-lg p-4"
                 style={{
@@ -1128,41 +1186,17 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                   boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                 }}
               >
-                <div className="flex items-center gap-2">
-                  <Loader
-                    className="animate-spin"
-                    size={16}
-                    style={{ color: "var(--bsky-primary)" }}
-                  />
-                  <span
-                    className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
-                  >
-                    Loading post content... ({percentageFetched}% loaded)
-                  </span>
-                </div>
+                <p
+                  className="text-sm italic"
+                  style={{ color: "var(--bsky-text-tertiary)" }}
+                >
+                  [Unable to load post content]
+                </p>
               </div>
             );
           }
-
-          // Post couldn't be loaded or doesn't exist
-          return (
-            <div
-              className="mt-3 rounded-lg p-4"
-              style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                border: "1px solid var(--bsky-border-primary)",
-                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-              }}
-            >
-              <p
-                className="text-sm italic"
-                style={{ color: "var(--bsky-text-tertiary)" }}
-              >
-                [Unable to load post content]
-              </p>
-            </div>
-          );
+          // Return null during progressive loading to avoid flicker
+          return null;
         }
       }
 
