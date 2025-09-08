@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { columnService } from "../services/column-service";
-import { columnFeedPrefs } from "../utils/cookies";
+import { useStorageErrorManager } from "../services/storage/storage-error-manager";
 import { BookmarksColumn } from "./BookmarksColumn";
 import { ColumnHeader } from "./ColumnHeader";
 import { ConversationsSimple as Conversations } from "./ConversationsSimple";
@@ -28,6 +28,7 @@ export default function SkyColumn({
   isFocused = false,
 }: SkyColumnProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const { handleStorageError } = useStorageErrorManager();
   const [hasScrollTop, setHasScrollTop] = useState(false);
   const [hasScrollBottom, setHasScrollBottom] = useState(false);
   const [currentFeedLabel, setCurrentFeedLabel] = useState<string>("");
@@ -36,14 +37,7 @@ export default function SkyColumn({
   const [showFeedDiscovery, setShowFeedDiscovery] = useState(false);
   const [selectedFeedUri, setSelectedFeedUri] = useState<string | undefined>(
     () => {
-      // For feed columns, check saved preferences first
-      if (column.type === "feed" && column.id) {
-        const savedFeed = columnFeedPrefs.getFeedForColumn(column.id);
-        if (savedFeed) {
-          return savedFeed;
-        }
-      }
-      // Fall back to column's data
+      // The column.data already contains the selected feed from storage
       return column.data;
     },
   );
@@ -154,16 +148,33 @@ export default function SkyColumn({
           }
           onFeedChange={
             column.type === "feed"
-              ? (feedUri: string) => {
+              ? async (feedUri: string) => {
+                  // Optimistic update
+                  const previousFeedUri = selectedFeedUri;
                   setSelectedFeedUri(feedUri);
+                  setRefreshCounter((prev) => prev + 1);
+
                   // Save to column-specific preferences if columnId exists
                   if (column.id) {
-                    columnService.updateColumnFeedPreference(
-                      column.id,
-                      feedUri,
-                    );
+                    try {
+                      await columnService.updateColumnFeedPreference(
+                        column.id,
+                        feedUri,
+                      );
+                    } catch (error) {
+                      // Revert on error
+                      setSelectedFeedUri(previousFeedUri);
+                      setRefreshCounter((prev) => prev + 1);
+
+                      // Show error to user
+                      handleStorageError(
+                        error instanceof Error
+                          ? error
+                          : new Error("Failed to save feed preference"),
+                        "update feed preference",
+                      );
+                    }
                   }
-                  setRefreshCounter((prev) => prev + 1);
                 }
               : undefined
           }

@@ -107,11 +107,11 @@ export class ColumnService {
     columnId: string,
     feedUri: string,
   ): Promise<void> {
-    // Only update if using AT Protocol backend
     if (
       this.storageType === "custom" &&
-      this.backend instanceof ColumnAtProtoBackend
+      this.backend.updateColumnFeedPreference
     ) {
+      // AT Protocol backend - update column data directly
       await this.backend.updateColumnFeedPreference(columnId, feedUri);
     } else {
       // For local storage, just update the cookie

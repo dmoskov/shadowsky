@@ -1,5 +1,4 @@
 import { BskyAgent } from "@atproto/api";
-import { columnFeedPrefs } from "../../utils/cookies";
 import { appPreferencesService } from "../app-preferences-service";
 import { ColumnStorageBackend } from "./column-storage-backend";
 import { Column, StoredColumn } from "./types";
@@ -19,11 +18,6 @@ export class ColumnAtProtoBackend implements ColumnStorageBackend {
 
     const columnData = columns.map((col) => {
       const storedCol = col as StoredColumn;
-      // Get feed preference from cookies for feed-type columns
-      const selectedFeedUri =
-        col.type === "feed"
-          ? columnFeedPrefs.getFeedForColumn(col.id) || undefined
-          : undefined;
 
       return {
         id: col.id,
@@ -32,7 +26,6 @@ export class ColumnAtProtoBackend implements ColumnStorageBackend {
         data: col.data,
         createdAt: storedCol.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        selectedFeedUri,
       };
     });
 
@@ -51,13 +44,6 @@ export class ColumnAtProtoBackend implements ColumnStorageBackend {
     if (!columnsData || !columnsData.columns) {
       return [];
     }
-
-    // Restore feed preferences from AT Protocol to cookies
-    columnsData.columns.forEach((col) => {
-      if (col.type === "feed" && col.selectedFeedUri) {
-        columnFeedPrefs.setFeedForColumn(col.id, col.selectedFeedUri);
-      }
-    });
 
     return columnsData.columns.map((col) => ({
       id: col.id,
@@ -114,15 +100,12 @@ export class ColumnAtProtoBackend implements ColumnStorageBackend {
     columnId: string,
     feedUri: string,
   ): Promise<void> {
-    // First update the cookie (for immediate UI response)
-    columnFeedPrefs.setFeedForColumn(columnId, feedUri);
-
-    // Then update AT Protocol storage
+    // Update the column's data field directly
     const columns = await this.loadColumns();
-    const column = columns.find((c) => c.id === columnId);
+    const columnIndex = columns.findIndex((c) => c.id === columnId);
 
-    if (column && column.type === "feed") {
-      // Re-save all columns to include the updated feed preference
+    if (columnIndex !== -1 && columns[columnIndex].type === "feed") {
+      columns[columnIndex].data = feedUri;
       await this.saveColumns(columns);
     }
   }
