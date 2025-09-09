@@ -490,16 +490,17 @@ export async function generateAltText(imageUrl: string): Promise<string> {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      const errorMessage = errorData?.error || `Server returned ${response.status}`;
+      const errorMessage =
+        errorData?.error || `Server returned ${response.status}`;
       logger.error("Alt text generation failed:", errorMessage, errorData);
       throw new Error(errorMessage);
     }
 
     const data = await response.json();
     logger.log("Alt text response:", data);
-    
+
     const altText = data.altText?.trim() || "";
-    
+
     // Ensure the alt text is not too long
     return altText.length > 125 ? altText.substring(0, 122) + "..." : altText;
   } catch (error) {

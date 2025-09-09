@@ -33,6 +33,7 @@ import {
   type WritingFeedback,
 } from "../services/anthropic";
 import { appPreferencesService } from "../services/app-preferences-service";
+import { ThreadgateService } from "../services/atproto/threadgate";
 import { VideoUploadService } from "../services/atproto/video-upload";
 import {
   deleteDraft,
@@ -49,6 +50,7 @@ import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { createLogger } from "../utils/logger";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
+import { ReplyControls, type ReplyPermission } from "./ReplyControls";
 import { AISettingsPanel } from "./settings/AISettingsPanel";
 
 const logger = createLogger("Composer");
@@ -144,8 +146,29 @@ const TONE_OPTIONS: {
 const MAX_POST_LENGTH = 300;
 const MAX_IMAGE_SIZE = 1000000; // 1MB (Bluesky's exact limit)
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_VIDEO_DURATION = 180; // 3 minutes in seconds
 const MAX_IMAGES_PER_POST = 4;
 const SUPPORTED_VIDEO_FORMATS = [".mp4", ".mpeg", ".webm", ".mov"];
+
+// Helper function to get video duration
+async function getVideoDuration(file: File): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video");
+    video.preload = "metadata";
+
+    video.onloadedmetadata = () => {
+      window.URL.revokeObjectURL(video.src);
+      resolve(video.duration);
+    };
+
+    video.onerror = () => {
+      window.URL.revokeObjectURL(video.src);
+      reject(new Error("Failed to load video metadata"));
+    };
+
+    video.src = URL.createObjectURL(file);
+  });
+}
 
 export function Composer() {
   const { agent } = useAuth();
@@ -243,6 +266,10 @@ export function Composer() {
 
   // Check if we're in development mode
   const isDev = import.meta.env.DEV;
+
+  // Reply control state
+  const [replyPermission, setReplyPermission] =
+    useState<ReplyPermission>("everyone");
 
   // Load settings on mount
   useEffect(() => {
@@ -692,6 +719,27 @@ export function Composer() {
               videoFile.type,
             );
 
+            // Check video duration
+            try {
+              const duration = await getVideoDuration(videoFile);
+              if (duration > MAX_VIDEO_DURATION) {
+                setPostStatus({
+                  type: "error",
+                  message: `Converted video duration (${Math.round(duration)}s) exceeds maximum of ${MAX_VIDEO_DURATION} seconds (3 minutes)`,
+                });
+                setTimeout(() => setPostStatus({ type: "idle" }), 3000);
+                continue;
+              }
+            } catch (error) {
+              logger.error("Failed to get video duration:", error);
+              setPostStatus({
+                type: "error",
+                message: "Failed to validate video duration",
+              });
+              setTimeout(() => setPostStatus({ type: "idle" }), 3000);
+              continue;
+            }
+
             const newMedia: UploadedMedia = {
               id: Math.random().toString(36).substr(2, 9),
               file: videoFile,
@@ -759,12 +807,41 @@ export function Composer() {
             }
           }
 
+          const isVideo =
+            processedFile.type.startsWith("video/") ||
+            SUPPORTED_VIDEO_FORMATS.some((format) =>
+              processedFile.name.toLowerCase().endsWith(format),
+            );
+
+          // Check video duration if it's a video
+          if (isVideo) {
+            try {
+              const duration = await getVideoDuration(processedFile);
+              if (duration > MAX_VIDEO_DURATION) {
+                setPostStatus({
+                  type: "error",
+                  message: `Video duration (${Math.round(duration)}s) exceeds maximum of ${MAX_VIDEO_DURATION} seconds (3 minutes)`,
+                });
+                setTimeout(() => setPostStatus({ type: "idle" }), 3000);
+                continue;
+              }
+            } catch (error) {
+              logger.error("Failed to get video duration:", error);
+              setPostStatus({
+                type: "error",
+                message: "Failed to validate video duration",
+              });
+              setTimeout(() => setPostStatus({ type: "idle" }), 3000);
+              continue;
+            }
+          }
+
           const newMedia: UploadedMedia = {
             id: Math.random().toString(36).substr(2, 9),
             file: processedFile,
             preview: URL.createObjectURL(processedFile),
             alt: "",
-            type: processedFile.type.startsWith("video/") ? "video" : "image",
+            type: isVideo ? "video" : "image",
           };
           setMedia((prev) => [...prev, newMedia]);
 
@@ -1354,6 +1431,23 @@ export function Composer() {
           cid: result.cid,
         };
 
+        // Create threadgate for the first post if reply permissions are set
+        if (i === 0 && replyPermission !== "everyone") {
+          try {
+            const threadgateService = new ThreadgateService(agent);
+            await threadgateService.createThreadgate(result.uri, {
+              permission: replyPermission,
+            });
+            logger.log(
+              "Threadgate created for post with permission:",
+              replyPermission,
+            );
+          } catch (error) {
+            logger.error("Failed to create threadgate:", error);
+            // Don't fail the whole post if threadgate creation fails
+          }
+        }
+
         // Small delay between posts to avoid rate limiting
         if (i < numberedPosts.length - 1) {
           await new Promise((resolve) => setTimeout(resolve, 500));
@@ -1373,6 +1467,7 @@ export function Composer() {
       setDraftTitle("");
       setPendingPost(null);
       setCountdown(null);
+      setReplyPermission("everyone"); // Reset reply permission
 
       // Delete draft if it was loaded
       if (currentDraftId) {
@@ -2291,7 +2386,7 @@ export function Composer() {
               <div className="absolute bottom-full right-0 z-10 mb-2 hidden group-hover:block">
                 <div className="whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-xs text-white">
                   <div className="mb-1 font-semibold">Add Video</div>
-                  <div>1 video per post, max 50MB, 60 sec</div>
+                  <div>1 video per post, max 50MB, 3 min</div>
                   <div className="mt-1 text-gray-300">
                     Processed on Bluesky servers
                   </div>
@@ -2424,6 +2519,16 @@ export function Composer() {
             multiple
             onChange={handleMediaSelect}
             style={{ display: "none" }}
+          />
+        </div>
+
+        {/* Reply Controls */}
+        <div className="mt-4">
+          <ReplyControls
+            value={replyPermission}
+            onChange={setReplyPermission}
+            disabled={isPosting}
+            compact
           />
         </div>
       </div>

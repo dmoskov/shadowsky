@@ -63,7 +63,9 @@ const ConversationItem = React.memo(
     });
 
     const rootRecord = convo.rootPost?.record as any;
-    const previewText = rootRecord?.text || (isLoadingRootPost ? "[Loading...]" : "[Post unavailable]");
+    const previewText =
+      rootRecord?.text ||
+      (isLoadingRootPost ? "[Loading...]" : "[Post unavailable]");
     const isGroup = convo.participants.size > 2;
     const unreadCount = convo.replies.filter((r) => !r.isRead).length;
 
@@ -826,16 +828,18 @@ export const ConversationsSimple: React.FC<ConversationsSimpleProps> = ({
 
     // Filter out conversations where the root post is deleted/unavailable
     // Only include conversations where we have the root post OR where posts are still loading
-    const conversationsArray = Array.from(threadMap.values()).filter(convo => {
-      // Keep conversation if we have the root post
-      if (convo.rootPost) return true;
-      
-      // Keep conversation if we're still loading posts (might be coming)
-      if (percentageFetched < 100) return true;
-      
-      // Otherwise, filter out (post is deleted/unavailable)
-      return false;
-    });
+    const conversationsArray = Array.from(threadMap.values()).filter(
+      (convo) => {
+        // Keep conversation if we have the root post
+        if (convo.rootPost) return true;
+
+        // Keep conversation if we're still loading posts (might be coming)
+        if (percentageFetched < 100) return true;
+
+        // Otherwise, filter out (post is deleted/unavailable)
+        return false;
+      },
+    );
 
     // Sort conversations by latest activity
     const sortedConversations = conversationsArray.sort(

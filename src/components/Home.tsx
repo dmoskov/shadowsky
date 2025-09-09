@@ -28,6 +28,7 @@ import {
   useInteractionTracking,
 } from "../hooks/useAnalytics";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
+import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { generateAltText } from "../services/anthropic";
 import { columnService } from "../services/column-service";
 import { columnFeedPrefs } from "../utils/cookies";
@@ -38,10 +39,9 @@ import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
 import { ThreadModal } from "./ThreadModal";
 import { VideoPlayer } from "./VideoPlayer";
-import { FeedSkeleton } from "./ui/SkeletonLoader";
 import { ProgressiveImage } from "./ui/ProgressiveImage";
-import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { PullToRefreshIndicator } from "./ui/PullToRefreshIndicator";
+import { FeedSkeleton } from "./ui/SkeletonLoader";
 
 const logger = createLogger("Home");
 
@@ -195,23 +195,23 @@ export const Home: React.FC<HomeProps> = ({
 
   const { trackFeatureAction } = useFeatureTracking("home_feed");
   const { trackClick } = useInteractionTracking();
-  
+
   // Pull to refresh setup
   const handleRefresh = async () => {
     trackFeatureAction("pull_to_refresh");
     await feedQuery.refetch();
   };
-  
-  const { 
+
+  const {
     containerRef: pullToRefreshRef,
     pullDistance,
     isRefreshing,
     isPulling,
     threshold,
-    progress
+    progress,
   } = usePullToRefresh({
     onRefresh: handleRefresh,
-    disabled: false
+    disabled: false,
   });
 
   // Fetch user's saved/pinned feeds
@@ -472,7 +472,14 @@ export const Home: React.FC<HomeProps> = ({
     refetchOnMount: false, // Don't automatically refetch
   });
 
-  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = feedQuery;
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = feedQuery;
 
   const posts = React.useMemo(() => {
     if (!data?.pages) return [];
@@ -1371,28 +1378,34 @@ export const Home: React.FC<HomeProps> = ({
 
   return (
     <div
-      className="w-full relative"
+      className="relative w-full"
       ref={(el) => {
         if (el) {
-          (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
-          (pullToRefreshRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+          (
+            containerRef as React.MutableRefObject<HTMLDivElement | null>
+          ).current = el;
+          (
+            pullToRefreshRef as React.MutableRefObject<HTMLDivElement | null>
+          ).current = el;
         }
       }}
       tabIndex={-1}
       style={{ outline: "none" }}
     >
-      <PullToRefreshIndicator 
+      <PullToRefreshIndicator
         pullDistance={pullDistance}
         isRefreshing={isRefreshing}
         threshold={threshold}
         progress={progress}
       />
-      <div 
-        className="mx-auto max-w-2xl px-3 sm:px-4" 
+      <div
+        className="mx-auto max-w-2xl px-3 sm:px-4"
         ref={postsContainerRef}
-        style={{ 
-          transform: isPulling ? `translateY(${pullDistance}px)` : 'translateY(0)',
-          transition: isPulling ? 'none' : 'transform 0.2s ease-out'
+        style={{
+          transform: isPulling
+            ? `translateY(${pullDistance}px)`
+            : "translateY(0)",
+          transition: isPulling ? "none" : "transform 0.2s ease-out",
         }}
       >
         <div

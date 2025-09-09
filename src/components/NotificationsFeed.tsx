@@ -1,5 +1,6 @@
 import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
 import { debug } from "@bsky/shared";
+import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
   AtSign,
@@ -28,15 +29,13 @@ import {
   postHasImages,
   useNotificationPosts,
 } from "../hooks/useNotificationPosts";
-import { NotificationSkeleton } from "./ui/SkeletonLoader";
 import {
   useMarkNotificationsRead,
   useNotifications,
   useUnreadCount,
 } from "../hooks/useNotifications";
-import { NotificationCache } from "../utils/notificationCache";
-import { useQueryClient } from "@tanstack/react-query";
 import { proxifyBskyImage } from "../utils/image-proxy";
+import { NotificationCache } from "../utils/notificationCache";
 import { getNotificationUrl } from "../utils/url-helpers";
 import {
   AggregatedNotificationItem,
@@ -44,6 +43,8 @@ import {
 } from "./NotificationAggregator";
 import { ThreadModal } from "./ThreadModal";
 import { TopAccountsView } from "./TopAccountsView";
+import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
+import { NotificationSkeleton } from "./ui/SkeletonLoader";
 
 type NotificationFilter =
   | "all"
@@ -95,7 +96,7 @@ export const NotificationsFeed: React.FC = () => {
     // Clear all notification caches
     NotificationCache.clearAll();
     // Clear any object cache as well
-    localStorage.removeItem('notification_object_cache');
+    localStorage.removeItem("notification_object_cache");
     // Invalidate and refetch the notifications query
     await queryClient.invalidateQueries({ queryKey: ["notifications"] });
     await queryClient.refetchQueries({ queryKey: ["notifications"] });
@@ -650,13 +651,13 @@ export const NotificationsFeed: React.FC = () => {
                 className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-bsky-text-secondary transition-all hover:bg-bsky-bg-secondary hover:text-bsky-text-primary disabled:opacity-50"
                 title="Refresh notifications"
               >
-                <RefreshCw 
-                  size={16} 
+                <RefreshCw
+                  size={16}
                   className={isRefreshing ? "animate-spin" : ""}
                 />
                 <span className="hidden sm:inline">Refresh</span>
               </button>
-              
+
               {/* Mark all as read button */}
               {unreadCount && unreadCount > 0 && (
                 <button
@@ -818,7 +819,7 @@ export const NotificationsFeed: React.FC = () => {
                             isFetchingMore={isFetchingMore}
                             fetchedPosts={fetchedPosts}
                             totalPosts={totalPosts}
-                                  setSelectedPostUri={setSelectedPostUri}
+                            setSelectedPostUri={setSelectedPostUri}
                             markAsRead={markAsRead}
                           />
                         ))}
@@ -905,20 +906,21 @@ export const NotificationsFeed: React.FC = () => {
 
         {/* Post loading status indicator */}
         {isFetchingMore && fetchedPosts < totalPosts && (
-          <div 
-            className="sticky bottom-0 bg-opacity-95 backdrop-blur-sm p-3 text-center border-t"
-            style={{ 
+          <div
+            className="sticky bottom-0 border-t bg-opacity-95 p-3 text-center backdrop-blur-sm"
+            style={{
               backgroundColor: "var(--bsky-bg-primary)",
-              borderColor: "var(--bsky-border-primary)"
+              borderColor: "var(--bsky-border-primary)",
             }}
           >
             <div className="flex items-center justify-center gap-2">
               <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
-              <span 
+              <span
                 className="text-sm font-medium"
                 style={{ color: "var(--bsky-text-secondary)" }}
               >
-                Loading posts: {fetchedPosts}/{totalPosts} ({percentageFetched}%)
+                Loading posts: {fetchedPosts}/{totalPosts} ({percentageFetched}
+                %)
               </span>
             </div>
           </div>
@@ -1177,7 +1179,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
           // Only show "unable to load" if we've finished fetching and still don't have the post
           if (!isFetchingMore || fetchedPosts >= totalPosts) {
             // Post couldn't be loaded or doesn't exist
-              return (
+            return (
               <div
                 className="mt-3 rounded-lg p-4"
                 style={{
@@ -1236,8 +1238,13 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                   {post.author?.handle?.charAt(0).toUpperCase()}
                 </div>
               )}
-              <span className="text-xs font-medium text-bsky-text-secondary">
-                {post.author?.displayName || post.author?.handle || "Unknown"}
+              <span className="inline-flex items-center text-xs font-medium text-bsky-text-secondary">
+                <span>
+                  {post.author?.displayName || post.author?.handle || "Unknown"}
+                </span>
+                {post.author?.handle && (
+                  <DomainVerifiedBadgeInline handle={post.author.handle} />
+                )}
               </span>
               {hasImages && (
                 <span
@@ -1441,11 +1448,17 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
               </div>
             )}
             <p className="text-sm">
-              <span
-                className="font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
-              >
-                {notification.author.displayName || notification.author.handle}
+              <span className="inline-flex items-center">
+                <span
+                  className="font-semibold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  {notification.author.displayName ||
+                    notification.author.handle}
+                </span>
+                <DomainVerifiedBadgeInline
+                  handle={notification.author.handle}
+                />
               </span>{" "}
               <span style={{ color: "var(--bsky-text-secondary)" }}>
                 {getNotificationText(notification.reason)}

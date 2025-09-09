@@ -101,7 +101,9 @@ export function ImageGallery({
           placeholderSrc={images[currentIndex].thumb}
           alt={images[currentIndex].alt || `Image ${currentIndex + 1}`}
           className="max-h-[90vh] max-w-full"
-          onLoad={() => {/* Image loaded */}}
+          onLoad={() => {
+            /* Image loaded */
+          }}
         />
 
         {/* Alt text display */}

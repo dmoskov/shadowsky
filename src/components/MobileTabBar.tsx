@@ -77,7 +77,7 @@ export const MobileTabBar: React.FC = () => {
               <button
                 key={tab.path}
                 onClick={handleHomeClick}
-                className={`relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 transition-all touch-target ${
+                className={`touch-target relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 transition-all ${
                   isActive ? "scale-105" : "opacity-70 hover:opacity-100"
                 }`}
                 style={{
@@ -99,7 +99,7 @@ export const MobileTabBar: React.FC = () => {
               key={tab.path}
               to={tab.path}
               className={({ isActive }) =>
-                `relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 transition-all touch-target ${
+                `touch-target relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 transition-all ${
                   isActive ? "scale-105" : "opacity-70 hover:opacity-100"
                 }`
               }

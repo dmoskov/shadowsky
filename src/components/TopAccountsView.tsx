@@ -9,6 +9,7 @@ import type { CachedProfile } from "../services/follower-cache-db";
 import { getProfileCacheService } from "../services/profile-cache-service";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { getBskyProfileUrl } from "../utils/url-helpers";
+import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
 
 interface TopAccountsViewProps {
   notifications: Notification[];
@@ -340,10 +341,11 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
                 </div>
 
                 <p
-                  className="mb-2 text-sm"
+                  className="mb-2 flex items-center text-sm"
                   style={{ color: "var(--bsky-text-secondary)" }}
                 >
-                  @{account.handle}
+                  <span>@{account.handle}</span>
+                  <DomainVerifiedBadgeInline handle={account.handle} />
                 </p>
 
                 {/* Stats */}

@@ -17,6 +17,7 @@ import { createLogger } from "../utils/logger";
 import { parseBskyUrl } from "../utils/url-helpers";
 import { ImageGallery } from "./ImageGallery";
 import { VideoPlayer } from "./VideoPlayer";
+import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
 
 const logger = createLogger("PostRenderer");
 
@@ -230,6 +231,9 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
               <span className="quote-author-name text-sm">
                 {quotedPost.author?.displayName || quotedPost.author?.handle}
               </span>
+              {quotedPost.author?.handle && (
+                <DomainVerifiedBadgeInline handle={quotedPost.author.handle} />
+              )}
             </div>
             <p className="quote-text text-sm">{quotedPost.value?.text || ""}</p>
           </div>
@@ -305,8 +309,11 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
             style={{ color: "var(--bsky-text-secondary)" }}
           >
             <Repeat2 size={16} />
-            <span>
-              {(reason as any).by.displayName || (reason as any).by.handle}{" "}
+            <span className="inline-flex items-center">
+              {(reason as any).by.displayName || (reason as any).by.handle}
+              {(reason as any).by.handle && (
+                <DomainVerifiedBadgeInline handle={(reason as any).by.handle} />
+              )}{" "}
               reposted
             </span>
           </div>
@@ -350,6 +357,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
                 >
                   @{post.author.handle}
                 </span>
+                <DomainVerifiedBadgeInline handle={post.author.handle} />
                 <span style={{ color: "var(--bsky-text-secondary)" }}>·</span>
                 <span
                   className="text-sm"

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { proxifyBskyImage } from "../utils/image-proxy";
+import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
 
 interface UserListModalProps {
   isOpen: boolean;
@@ -158,8 +159,9 @@ export function UserListModal({
                     <div className="font-medium">
                       {user.displayName || user.handle}
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      @{user.handle}
+                    <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                      <span>@{user.handle}</span>
+                      <DomainVerifiedBadgeInline handle={user.handle} />
                     </div>
                     {user.description && (
                       <div className="mt-1 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">

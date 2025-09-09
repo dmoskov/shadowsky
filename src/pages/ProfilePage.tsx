@@ -6,13 +6,14 @@ import { useNavigate, useParams } from "react-router";
 import { InlineReplyComposer } from "../components/InlineReplyComposer";
 import { PostActionBar } from "../components/PostActionBar";
 import { PostRenderer } from "../components/PostRenderer";
+import { DomainVerifiedBadge } from "../components/ui/DomainVerifiedBadge";
+import { ProfileSkeleton } from "../components/ui/SkeletonLoader";
 import { UserListModal } from "../components/UserListModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { getBskyProfileUrl } from "../utils/url-helpers";
-import { ProfileSkeleton } from "../components/ui/SkeletonLoader";
 
 const formatCount = (count: number): string => {
   if (count >= 1000000) {
@@ -415,9 +416,12 @@ export default function ProfilePage() {
             <h1 className="text-2xl font-bold">
               {profile.displayName || profile.handle}
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
-              @{profile.handle}
-            </p>
+            <div className="flex items-center gap-1">
+              <p className="text-gray-500 dark:text-gray-400">
+                @{profile.handle}
+              </p>
+              <DomainVerifiedBadge handle={profile.handle} size="md" />
+            </div>
           </div>
 
           {profile.description && (

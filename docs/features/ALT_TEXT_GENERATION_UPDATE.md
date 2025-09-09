@@ -48,6 +48,7 @@ We've refactored the alt text generation feature to handle image fetching on the
 ## Configuration
 
 The backend endpoint URL is configured via:
+
 - Production: `VITE_PROXY_SERVER_URL` or defaults to `https://api.shadowsky.io`
 - Development: Defaults to `http://localhost:3001`
 

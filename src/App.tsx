@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { BackgroundNotificationLoader } from "./components/BackgroundNotificationLoader";
+import { CommandPalette } from "./components/CommandPalette";
 import { DebugConsole } from "./components/DebugConsole";
 import { Header } from "./components/Header";
 import { LandingPage } from "./components/LandingPage";
@@ -11,9 +12,8 @@ import { StorageErrorProvider } from "./components/providers/StorageErrorProvide
 import { RateLimitStatus } from "./components/RateLimitStatus";
 import { Sidebar } from "./components/Sidebar";
 import { SwipeIndicator } from "./components/SwipeIndicator";
-import { PageLoader } from "./components/ui/PageLoader";
-import { CommandPalette } from "./components/CommandPalette";
 import { FloatingActionButton } from "./components/ui/FloatingActionButton";
+import { PageLoader } from "./components/ui/PageLoader";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { HiddenPostsProvider } from "./contexts/HiddenPostsContext";
 import { ModalProvider } from "./contexts/ModalContext";
@@ -29,19 +29,55 @@ import "./utils/debug-control"; // Initialize debug controls
 import { removeTrailingSlash } from "./utils/removeTrailingSlash";
 
 // Lazy load route components for better performance
-const Bookmarks = lazy(() => import("./components/Bookmarks").then(m => ({ default: m.Bookmarks })));
-const ColumnMigrationNotice = lazy(() => import("./components/ColumnMigrationNotice").then(m => ({ default: m.ColumnMigrationNotice })));
-const Composer = lazy(() => import("./components/Composer").then(m => ({ default: m.Composer })));
-const CompressionTest = lazy(() => import("./components/CompressionTest").then(m => ({ default: m.CompressionTest })));
-const Conversations = lazy(() => import("./components/ConversationsSimple").then(m => ({ default: m.ConversationsSimple })));
-const DirectMessages = lazy(() => import("./components/DirectMessages").then(m => ({ default: m.DirectMessages })));
-const Notifications = lazy(() => import("./components/Notifications").then(m => ({ default: m.Notifications })));
-const NotificationsAnalytics = lazy(() => import("./components/NotificationsAnalytics").then(m => ({ default: m.NotificationsAnalytics })));
-const Search = lazy(() => import("./components/Search").then(m => ({ default: m.Search })));
+const Bookmarks = lazy(() =>
+  import("./components/Bookmarks").then((m) => ({ default: m.Bookmarks })),
+);
+const ColumnMigrationNotice = lazy(() =>
+  import("./components/ColumnMigrationNotice").then((m) => ({
+    default: m.ColumnMigrationNotice,
+  })),
+);
+const Composer = lazy(() =>
+  import("./components/Composer").then((m) => ({ default: m.Composer })),
+);
+const CompressionTest = lazy(() =>
+  import("./components/CompressionTest").then((m) => ({
+    default: m.CompressionTest,
+  })),
+);
+const Conversations = lazy(() =>
+  import("./components/ConversationsSimple").then((m) => ({
+    default: m.ConversationsSimple,
+  })),
+);
+const DirectMessages = lazy(() =>
+  import("./components/DirectMessages").then((m) => ({
+    default: m.DirectMessages,
+  })),
+);
+const Notifications = lazy(() =>
+  import("./components/Notifications").then((m) => ({
+    default: m.Notifications,
+  })),
+);
+const NotificationsAnalytics = lazy(() =>
+  import("./components/NotificationsAnalytics").then((m) => ({
+    default: m.NotificationsAnalytics,
+  })),
+);
+const Search = lazy(() =>
+  import("./components/Search").then((m) => ({ default: m.Search })),
+);
 const SkyDeck = lazy(() => import("./components/SkyDeck"));
-const VisualTimeline = lazy(() => import("./components/VisualTimeline").then(m => ({ default: m.VisualTimeline })));
+const VisualTimeline = lazy(() =>
+  import("./components/VisualTimeline").then((m) => ({
+    default: m.VisualTimeline,
+  })),
+);
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const Settings = lazy(() => import("./pages/Settings").then(m => ({ default: m.Settings })));
+const Settings = lazy(() =>
+  import("./pages/Settings").then((m) => ({ default: m.Settings })),
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -201,9 +237,9 @@ function AppContent() {
       <RateLimitStatus />
       <DebugConsole />
       <ColumnMigrationNotice />
-      <CommandPalette 
-        isOpen={isCommandPaletteOpen} 
-        onClose={() => setIsCommandPaletteOpen(false)} 
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
       />
     </div>
   );

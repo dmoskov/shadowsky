@@ -228,19 +228,6 @@ async function testSidebarNavigation() {
     await page.waitForTimeout(1000);
     await capture("sidebar-12-responsive-desktop", "Back to desktop view");
 
-    // 13. Test "Discover" section navigation
-    console.log("\nStep 9: Testing Discover section...");
-    await page.goto("http://127.0.0.1:5173/");
-    await page.waitForTimeout(1500);
-
-    const exploreLink = await page.$('.nav-item[href="/explore"]');
-    if (exploreLink) {
-      await exploreLink.click();
-      await page.waitForTimeout(1500);
-      await capture("sidebar-13-explore", "Explore page from Discover section");
-      console.log("  ✓ Explore navigation working");
-    }
-
     // 14. Test ultra-wide screen
     console.log("\nStep 10: Testing ultra-wide screen...");
     await page.setViewportSize({ width: 1920, height: 1080 });
@@ -302,7 +289,6 @@ ${screenshots.map((file) => `- ${file}`).join("\n")}
 - Notifications (with badge)
 - Profile
 - Settings
-- Explore (Discover section)
 
 ## Notes:
 - All navigation transitions smooth

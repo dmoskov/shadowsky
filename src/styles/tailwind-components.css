@@ -42,6 +42,23 @@
     @apply inline-flex items-center rounded-md border border-bsky-border-primary bg-bsky-bg-tertiary px-2 py-0.5 text-xs font-medium text-bsky-text-secondary;
   }
 
+  /* Domain verification badge styles */
+  .domain-verified-badge {
+    @apply inline-flex items-center;
+  }
+
+  .domain-verified-badge svg {
+    @apply drop-shadow-sm;
+  }
+
+  .domain-verified-inline {
+    @apply inline-flex items-center align-middle;
+  }
+
+  .domain-verified-inline svg {
+    @apply drop-shadow-sm transition-transform hover:scale-110;
+  }
+
   /* Notification styles */
   .bsky-notification {
     @apply relative overflow-hidden border-b border-bsky-border-light transition-all duration-200 hover:bg-bsky-bg-hover;

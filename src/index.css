@@ -56,17 +56,17 @@
   .bsky-hover-bg {
     @apply hover:bg-bsky-bg-hover;
   }
-  
+
   /* Touch target optimization for mobile */
   @media (max-width: 640px) {
     .touch-target {
       @apply min-h-[44px] min-w-[44px];
     }
-    
+
     .touch-target-sm {
       @apply min-h-[44px] min-w-[44px] p-3;
     }
-    
+
     /* Ensure all interactive elements meet minimum size */
     button:not(.no-touch-optimize),
     a:not(.no-touch-optimize),

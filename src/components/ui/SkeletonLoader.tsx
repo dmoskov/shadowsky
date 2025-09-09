@@ -16,24 +16,24 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   animation = "pulse",
 }) => {
   const baseClasses = "bg-gray-200 dark:bg-gray-700";
-  
+
   const animationClasses = {
     pulse: "animate-pulse",
     wave: "animate-skeleton-wave",
   };
-  
+
   const variantClasses = {
     text: "h-4 rounded",
     circular: "rounded-full",
     rectangular: "",
     rounded: "rounded-lg",
   };
-  
+
   const style = {
     height: typeof height === "number" ? `${height}px` : height,
     width: typeof width === "number" ? `${width}px` : width,
   };
-  
+
   return (
     <div
       className={`${baseClasses} ${animationClasses[animation]} ${variantClasses[variant]} ${className}`}
@@ -44,11 +44,11 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
 
 export const PostSkeleton: React.FC = () => {
   return (
-    <div className="px-4 py-4 border-b border-gray-200 dark:border-gray-800">
+    <div className="border-b border-gray-200 px-4 py-4 dark:border-gray-800">
       <div className="flex gap-3">
         <SkeletonLoader variant="circular" width={48} height={48} />
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="mb-2 flex items-center gap-2">
             <SkeletonLoader width={120} height={16} />
             <SkeletonLoader width={80} height={16} />
           </div>
@@ -57,7 +57,7 @@ export const PostSkeleton: React.FC = () => {
             <SkeletonLoader width="90%" height={16} />
             <SkeletonLoader width="70%" height={16} />
           </div>
-          <div className="flex gap-4 mt-3">
+          <div className="mt-3 flex gap-4">
             <SkeletonLoader width={50} height={20} variant="rounded" />
             <SkeletonLoader width={50} height={20} variant="rounded" />
             <SkeletonLoader width={50} height={20} variant="rounded" />
@@ -83,7 +83,12 @@ export const ProfileSkeleton: React.FC = () => {
     <div className="p-4">
       <SkeletonLoader variant="rectangular" height={200} className="mb-4" />
       <div className="relative -mt-16 mb-4">
-        <SkeletonLoader variant="circular" width={128} height={128} className="border-4 border-white dark:border-gray-900" />
+        <SkeletonLoader
+          variant="circular"
+          width={128}
+          height={128}
+          className="border-4 border-white dark:border-gray-900"
+        />
       </div>
       <div className="space-y-2">
         <SkeletonLoader width={200} height={24} />
@@ -91,7 +96,7 @@ export const ProfileSkeleton: React.FC = () => {
         <SkeletonLoader width="100%" height={16} />
         <SkeletonLoader width="80%" height={16} />
       </div>
-      <div className="flex gap-4 mt-4">
+      <div className="mt-4 flex gap-4">
         <SkeletonLoader width={100} height={36} variant="rounded" />
         <SkeletonLoader width={100} height={36} variant="rounded" />
       </div>
@@ -101,7 +106,7 @@ export const ProfileSkeleton: React.FC = () => {
 
 export const NotificationSkeleton: React.FC = () => {
   return (
-    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+    <div className="border-b border-gray-200 px-4 py-3 dark:border-gray-800">
       <div className="flex items-start gap-3">
         <SkeletonLoader variant="circular" width={40} height={40} />
         <div className="flex-1">

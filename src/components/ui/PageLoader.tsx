@@ -1,5 +1,5 @@
-import React from "react";
 import { Loader } from "lucide-react";
+import React from "react";
 
 export const PageLoader: React.FC = () => {
   return (
@@ -11,7 +11,7 @@ export const PageLoader: React.FC = () => {
           style={{ color: "var(--bsky-primary)" }}
         />
         <p
-          className="text-sm animate-pulse"
+          className="animate-pulse text-sm"
           style={{ color: "var(--bsky-text-secondary)" }}
         >
           Loading...

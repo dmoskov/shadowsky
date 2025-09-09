@@ -100,7 +100,11 @@ export const DirectMessages: React.FC = () => {
 
   // Mark conversation as read when selected
   useEffect(() => {
-    if (selectedConversation && conversationData?.conversation?.unreadCount && conversationData.conversation.unreadCount > 0) {
+    if (
+      selectedConversation &&
+      conversationData?.conversation?.unreadCount &&
+      conversationData.conversation.unreadCount > 0
+    ) {
       // Small delay to ensure messages are visible
       const timer = setTimeout(() => {
         dmService.updateRead(selectedConversation).then(() => {
@@ -111,7 +115,11 @@ export const DirectMessages: React.FC = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [selectedConversation, conversationData?.conversation.unreadCount, queryClient]);
+  }, [
+    selectedConversation,
+    conversationData?.conversation.unreadCount,
+    queryClient,
+  ]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
