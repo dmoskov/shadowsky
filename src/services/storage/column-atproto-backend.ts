@@ -1,5 +1,4 @@
 import { BskyAgent } from "@atproto/api";
-import { columnFeedPrefs } from "../../utils/cookies";
 import { appPreferencesService } from "../app-preferences-service";
 import { ColumnStorageBackend } from "./column-storage-backend";
 import { Column, StoredColumn } from "./types";
@@ -29,11 +28,9 @@ export class ColumnAtProtoBackend implements ColumnStorageBackend {
         updatedAt: new Date().toISOString(),
       };
 
-      // For feed columns, get the selectedFeedUri from cookies
+      // For feed columns, use the data field as selectedFeedUri
       if (col.type === "feed") {
-        const selectedFeedUri =
-          col.selectedFeedUri || columnFeedPrefs.getFeedForColumn(col.id);
-        columnItem.selectedFeedUri = selectedFeedUri || undefined;
+        columnItem.selectedFeedUri = col.data || undefined;
       } else {
         // For non-feed columns, include undefined selectedFeedUri
         columnItem.selectedFeedUri = undefined;
@@ -58,18 +55,15 @@ export class ColumnAtProtoBackend implements ColumnStorageBackend {
       return [];
     }
 
-    // Restore feed preferences from selectedFeedUri
-    for (const col of columnsData.columns) {
-      if (col.type === "feed" && col.selectedFeedUri) {
-        columnFeedPrefs.setFeedForColumn(col.id, col.selectedFeedUri);
-      }
-    }
-
     return columnsData.columns.map((col) => ({
       id: col.id,
       type: col.type as Column["type"], // Convert from string to ColumnType
       title: col.title,
-      data: col.data,
+      // For feed columns, use selectedFeedUri if available, otherwise use data
+      data:
+        col.type === "feed" && col.selectedFeedUri
+          ? col.selectedFeedUri
+          : col.data,
       createdAt: col.createdAt,
       updatedAt: col.updatedAt,
     }));
@@ -120,9 +114,6 @@ export class ColumnAtProtoBackend implements ColumnStorageBackend {
     columnId: string,
     feedUri: string,
   ): Promise<void> {
-    // Always update the cookie regardless of column existence or type
-    columnFeedPrefs.setFeedForColumn(columnId, feedUri);
-
     // Update the column's data field if it exists and is a feed column
     const columns = await this.loadColumns();
     const columnIndex = columns.findIndex((c) => c.id === columnId);

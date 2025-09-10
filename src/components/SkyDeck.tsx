@@ -16,7 +16,6 @@ import { useModal } from "../contexts/ModalContext";
 import { useColumnSwipe } from "../hooks/useColumnSwipe";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { columnService } from "../services/column-service";
-import { columnFeedPrefs } from "../utils/cookies";
 import { createLogger } from "../utils/logger";
 import SkyColumn from "./SkyColumn";
 
@@ -247,28 +246,10 @@ export default function SkyDeck() {
           const restoredColumns = [
             homeColumn,
             ...savedColumns.filter((col: Column) => col.id !== "home"),
-          ].map((col: Column) => {
-            if (col.type === "feed" && col.id) {
-              const savedFeed = columnFeedPrefs.getFeedForColumn(col.id);
-              if (savedFeed) {
-                return { ...col, data: savedFeed };
-              }
-            }
-            return col;
-          });
+          ];
           setColumns(restoredColumns);
         } else {
-          // Restore feed preferences from cookies
-          const restoredColumns = savedColumns.map((col: Column) => {
-            if (col.type === "feed" && col.id) {
-              const savedFeed = columnFeedPrefs.getFeedForColumn(col.id);
-              if (savedFeed) {
-                return { ...col, data: savedFeed };
-              }
-            }
-            return col;
-          });
-          setColumns(restoredColumns);
+          setColumns(savedColumns);
         }
       } else {
         // First time - just home column

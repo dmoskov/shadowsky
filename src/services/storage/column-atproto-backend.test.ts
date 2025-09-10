@@ -1,16 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMockAgent } from "../../tests/mocks/atproto";
-import * as cookies from "../../utils/cookies";
 import { ColumnAtProtoBackend } from "./column-atproto-backend";
 import { Column } from "./types";
-
-// Mock the cookies module
-vi.mock("../../utils/cookies", () => ({
-  columnFeedPrefs: {
-    setFeedForColumn: vi.fn(),
-    getFeedForColumn: vi.fn(),
-  },
-}));
 
 // Mock the app preferences service
 vi.mock("../app-preferences-service", () => ({
@@ -25,7 +16,6 @@ describe("ColumnAtProtoBackend", () => {
   let backend: ColumnAtProtoBackend;
   let mockAgent: ReturnType<typeof createMockAgent>;
   let mockAppPreferencesService: any;
-  const mockColumnFeedPrefs = vi.mocked(cookies.columnFeedPrefs);
 
   const createMockColumn = (id: string, type: string = "feed"): Column => ({
     id,
@@ -75,14 +65,6 @@ describe("ColumnAtProtoBackend", () => {
         createMockColumn("col3", "feed"),
       ];
 
-      // Clear all previous mock calls
-      mockColumnFeedPrefs.getFeedForColumn.mockReset();
-
-      // Set up return values for each column check
-      mockColumnFeedPrefs.getFeedForColumn
-        .mockReturnValueOnce("at://feed/selected1") // for col1
-        .mockReturnValueOnce("at://feed/selected3"); // for col3
-
       await backend.saveColumns(columns);
 
       expect(mockAppPreferencesService.updateColumns).toHaveBeenCalledWith(
@@ -92,7 +74,7 @@ describe("ColumnAtProtoBackend", () => {
             type: "feed",
             title: "Column col1",
             data: "at://feed/123",
-            selectedFeedUri: "at://feed/selected1",
+            selectedFeedUri: "at://feed/123",
           }),
           expect.objectContaining({
             id: "col2",
@@ -106,7 +88,7 @@ describe("ColumnAtProtoBackend", () => {
             type: "feed",
             title: "Column col3",
             data: "at://feed/123",
-            selectedFeedUri: "at://feed/selected3",
+            selectedFeedUri: "at://feed/123",
           }),
         ]),
       );
@@ -172,20 +154,12 @@ describe("ColumnAtProtoBackend", () => {
         id: "col1",
         type: "feed",
         title: "Feed Column",
-        data: "at://feed/123",
+        data: "at://feed/selected1", // Uses selectedFeedUri when available for feed columns
         createdAt: "2024-01-01T00:00:00Z",
         updatedAt: "2024-01-01T00:00:00Z",
       });
 
-      // Should restore feed preference to cookies
-      expect(mockColumnFeedPrefs.setFeedForColumn).toHaveBeenCalledWith(
-        "col1",
-        "at://feed/selected1",
-      );
-      expect(mockColumnFeedPrefs.setFeedForColumn).not.toHaveBeenCalledWith(
-        "col2",
-        expect.anything(),
-      );
+      // Feed preferences are now stored in the column data itself
     });
   });
 
@@ -368,12 +342,6 @@ describe("ColumnAtProtoBackend", () => {
 
       await backend.updateColumnFeedPreference("col1", "at://feed/new");
 
-      // Should update cookie immediately
-      expect(mockColumnFeedPrefs.setFeedForColumn).toHaveBeenCalledWith(
-        "col1",
-        "at://feed/new",
-      );
-
       // Should save to AT Protocol
       expect(mockAppPreferencesService.updateColumns).toHaveBeenCalled();
     });
@@ -395,13 +363,7 @@ describe("ColumnAtProtoBackend", () => {
 
       await backend.updateColumnFeedPreference("col1", "at://feed/new");
 
-      // Should still update cookie
-      expect(mockColumnFeedPrefs.setFeedForColumn).toHaveBeenCalledWith(
-        "col1",
-        "at://feed/new",
-      );
-
-      // But should not save to AT Protocol
+      // Should not save to AT Protocol since it's not a feed column
       expect(mockAppPreferencesService.updateColumns).not.toHaveBeenCalled();
     });
 
@@ -414,13 +376,7 @@ describe("ColumnAtProtoBackend", () => {
 
       await backend.updateColumnFeedPreference("nonexistent", "at://feed/new");
 
-      // Should still update cookie
-      expect(mockColumnFeedPrefs.setFeedForColumn).toHaveBeenCalledWith(
-        "nonexistent",
-        "at://feed/new",
-      );
-
-      // But should not save to AT Protocol
+      // Should not save to AT Protocol since column doesn't exist
       expect(mockAppPreferencesService.updateColumns).not.toHaveBeenCalled();
     });
   });

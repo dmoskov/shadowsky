@@ -110,16 +110,8 @@ export class ColumnService {
     columnId: string,
     feedUri: string,
   ): Promise<void> {
-    if (
-      this.storageType === "custom" &&
-      this.backend.updateColumnFeedPreference
-    ) {
-      // AT Protocol backend - update column data directly
+    if (this.backend.updateColumnFeedPreference) {
       await this.backend.updateColumnFeedPreference(columnId, feedUri);
-    } else {
-      // For local storage, just update the cookie
-      const { columnFeedPrefs } = await import("../utils/cookies");
-      columnFeedPrefs.setFeedForColumn(columnId, feedUri);
     }
   }
 }

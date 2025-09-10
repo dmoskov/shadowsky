@@ -32,7 +32,6 @@ import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { generateAltText } from "../services/anthropic";
 import { columnService } from "../services/column-service";
-import { columnFeedPrefs } from "../utils/cookies";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
 import { FeedDiscovery } from "./FeedDiscovery";
@@ -135,18 +134,8 @@ export const Home: React.FC<HomeProps> = ({
   // Removed hoveredPost state to prevent re-renders - using CSS hover instead
   // Use initialFeedUri if provided, otherwise get from column preferences
   const [selectedFeed, setSelectedFeed] = React.useState<FeedType>(() => {
-    if (initialFeedUri) {
-      return initialFeedUri as FeedType;
-    }
-    // Check cookie for this column
-    if (columnId) {
-      const savedFeed = columnFeedPrefs.getFeedForColumn(columnId);
-      if (savedFeed) {
-        return savedFeed as FeedType;
-      }
-    }
-    // Default to following feed
-    return "following";
+    // Use the feed from the column data or default to following
+    return (initialFeedUri as FeedType) || "following";
   });
 
   // Update selectedFeed when initialFeedUri changes from parent
@@ -858,7 +847,7 @@ export const Home: React.FC<HomeProps> = ({
         ...post,
         indexedAt: new Date().toISOString(),
       } as any;
-      
+
       // Use the hook's toggleBookmark which updates the BookmarkStore
       toggleBookmark(postView);
     } catch (error) {
