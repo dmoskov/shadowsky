@@ -105,10 +105,7 @@ export const DataSettings: React.FC = () => {
         }
 
         // Columns use singleton record containing array of columns
-        if (
-          (appPreferences.columnStorageType as string) === "atproto" ||
-          appPreferences.columnStorageType === "custom"
-        ) {
+        if (appPreferences.columnStorageType === "atproto") {
           try {
             const columnsData = await appPreferencesService.getColumns();
             counts.columns = columnsData?.columns?.length || 0;
@@ -315,9 +312,9 @@ export const DataSettings: React.FC = () => {
           appPreferences?.[
             `${dataType === "columns" ? "column" : dataType === "bookmarks" ? "bookmark" : dataType}StorageType`
           ] || "local";
-        // Normalize "atproto" to "custom" for columns
+        // Normalize atproto to custom for columns
         currentType = (
-          (rawType as string) === "atproto" ? "custom" : rawType
+          dataType === "columns" && rawType === "atproto" ? "custom" : rawType
         ) as StorageType;
       }
 
@@ -375,8 +372,11 @@ export const DataSettings: React.FC = () => {
         const prefKey = getStoragePrefKey(
           singularType as "bookmark" | "column" | "draft",
         );
+        // For columns, convert "custom" to "atproto" to match the preference type
+        const storageTypeValue =
+          dataType === "columns" && newType === "custom" ? "atproto" : newType;
         await appPreferencesService.updatePreferences({
-          [prefKey]: newType,
+          [prefKey]: storageTypeValue,
         });
       }
 
@@ -442,10 +442,9 @@ export const DataSettings: React.FC = () => {
       icon: Columns,
       storageType:
         successfulMigrations.columns ||
-        (appPreferences?.columnStorageType === "custom" ||
-        (appPreferences?.columnStorageType as string) === "atproto"
+        (appPreferences?.columnStorageType === "atproto"
           ? "custom"
-          : "local"),
+          : appPreferences?.columnStorageType || "local"),
       onToggle: (enabled) => handleStorageToggle("columns", enabled),
       isLoading: loadingStates.columns,
       localKey: "shadowsky_columns",
@@ -901,13 +900,17 @@ export const DataSettings: React.FC = () => {
         <p className="mb-1 font-medium">About Storage Options:</p>
         <ul className="ml-4 space-y-1">
           <li>
-            • <strong>Local Storage:</strong> Fast, private, and works offline.
-            Data stays on this device only.
+            • <strong>Browser Storage:</strong> Fast, private, and works
+            offline. Data stays on this device only.
           </li>
           <li>
-            • <strong>AT Protocol Storage:</strong> Syncs across devices. App
-            settings and columns use the private preferences API, while
-            bookmarks use public records.
+            • <strong>Custom AT Protocol:</strong> Uses custom record types we
+            created. Syncs across devices. App settings and columns use private
+            preferences, while bookmarks and drafts use PUBLIC records.
+          </li>
+          <li>
+            • <strong>Standard AT Protocol:</strong> Uses official Bluesky
+            record types. Currently only available for bookmarks (coming soon).
           </li>
         </ul>
       </div>

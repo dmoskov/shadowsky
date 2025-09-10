@@ -37,7 +37,12 @@ export const ColumnStorageSettings: React.FC = () => {
   // Load storage type from preferences
   useEffect(() => {
     if (appPreferences) {
-      setStorageType(appPreferences.columnStorageType || "local");
+      // Normalize atproto to custom for UI
+      const storageType =
+        appPreferences.columnStorageType === "atproto"
+          ? "custom"
+          : appPreferences.columnStorageType;
+      setStorageType(storageType || "local");
     }
   }, [appPreferences]);
 
@@ -147,7 +152,7 @@ export const ColumnStorageSettings: React.FC = () => {
   const storageOptions: StorageOption[] = [
     {
       type: "local",
-      name: "Local Storage",
+      name: "Browser Storage",
       icon: Database,
       description:
         "Store column configuration on this device only. Private and fast.",
@@ -156,18 +161,12 @@ export const ColumnStorageSettings: React.FC = () => {
     },
     {
       type: "custom",
-      name: "Custom Records (PUBLIC)",
+      name: "Custom AT Protocol (Private)",
       icon: Cloud,
       description:
-        "Store column configuration as AT Protocol records. WARNING: These are publicly visible to anyone!",
-      pros: ["Cross-device sync"],
-      cons: [
-        "PUBLIC - Anyone can see your columns!",
-        "Experimental",
-        "May not work with other clients",
-      ],
-      warning:
-        "Anyone can view your column configuration with this storage method!",
+        "Store column configuration in your AT Protocol preferences record. Syncs across devices and stays private.",
+      pros: ["Private", "Cross-device sync", "Part of your user preferences"],
+      cons: ["Experimental", "May not work with other clients"],
     },
   ];
 

@@ -17,10 +17,13 @@ export class ColumnService {
 
   async initialize(agent: AtpAgent, storageType: StorageType | string) {
     this.agent = agent;
-    this.storageType = storageType as StorageType;
+    // Normalize atproto to custom for internal use
+    this.storageType = (
+      storageType === "atproto" ? "custom" : storageType
+    ) as StorageType;
 
     // Initialize the appropriate backend
-    if (storageType === "custom") {
+    if (this.storageType === "custom") {
       this.backend = new ColumnAtProtoBackend();
       this.backend.setAgent(agent);
     } else {

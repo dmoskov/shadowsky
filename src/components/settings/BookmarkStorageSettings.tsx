@@ -86,24 +86,9 @@ export const BookmarkStorageSettings: React.FC = () => {
       return;
     }
 
-    // Show info for official bookmarks (when available)
+    // No special handling needed for official bookmarks anymore
     if (newType === "official") {
-      await showConfirm(
-        "ℹ️ Official Bookmarks (Private)\n\n" +
-          "Private bookmarks are being implemented by Bluesky (see github.com/bluesky-social/atproto/pull/4163). " +
-          "Once released, your bookmarks will be private and sync across all Bluesky clients.\n\n" +
-          "For now, this will store bookmarks locally. They will automatically migrate when the feature is available.",
-        async () => {
-          // User confirmed - proceed with storage change
-          await performStorageChange(newType);
-        },
-        {
-          variant: "info",
-          title: "Official Bookmarks Coming Soon",
-          confirmText: "Enable (Local for Now)",
-          cancelText: "Cancel",
-        },
-      );
+      await performStorageChange(newType);
       return;
     }
 
@@ -241,7 +226,7 @@ export const BookmarkStorageSettings: React.FC = () => {
   const storageOptions: StorageOption[] = [
     {
       type: "local",
-      name: "Local Storage",
+      name: "Browser Storage",
       icon: Database,
       description: "Store bookmarks on this device only. Private and fast.",
       pros: ["Private", "Works offline", "No sync"],
@@ -249,10 +234,10 @@ export const BookmarkStorageSettings: React.FC = () => {
     },
     {
       type: "custom",
-      name: "Custom Records (PUBLIC)",
+      name: "Custom AT Protocol (PUBLIC)",
       icon: Cloud,
       description:
-        "Store bookmarks as AT Protocol records. WARNING: These are publicly visible to anyone!",
+        "Store bookmarks as custom AT Protocol records. WARNING: These are publicly visible to anyone!",
       pros: ["Cross-device sync", "Available now"],
       cons: [
         "PUBLIC - Anyone can see your bookmarks!",
@@ -263,18 +248,17 @@ export const BookmarkStorageSettings: React.FC = () => {
     },
     {
       type: "official",
-      name: "Official Bookmarks (Private, Coming Soon)",
+      name: "Standard AT Protocol (Private)",
       icon: Cloud,
       description:
-        "Private bookmarks feature being added to Bluesky. See: github.com/bluesky-social/atproto/pull/4163",
+        "Private bookmarks using the official Bluesky bookmarks API. Your bookmarks are private and sync across all Bluesky clients.",
       pros: [
         "Private",
         "Cross-device sync",
         "Works with all Bluesky clients",
         "Official support",
       ],
-      cons: ["Not yet available", "Will use local storage until released"],
-      info: "This feature will activate automatically when Bluesky releases the official bookmarks API.",
+      cons: [],
     },
   ];
 

@@ -47,7 +47,7 @@ export const AT_PROTO_RKEYS = {
 // Storage type values
 export const STORAGE_TYPES = {
   LOCAL: "local",
-  CUSTOM: "custom",
+  CUSTOM: "custom", // Custom AT Protocol records (our own types)
   ATPROTO: "atproto", // Only used for columns in AT Protocol
   OFFICIAL: "official", // Official Bluesky bookmarks API
 } as const;

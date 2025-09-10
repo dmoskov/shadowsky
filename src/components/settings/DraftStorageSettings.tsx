@@ -161,7 +161,7 @@ export const DraftStorageSettings: React.FC = () => {
   const storageOptions: StorageOption[] = [
     {
       type: "local",
-      name: "Local Storage",
+      name: "Browser Storage",
       icon: Database,
       description: "Store drafts on this device only. Private and secure.",
       pros: ["Private", "Works offline", "No sync"],
@@ -169,10 +169,10 @@ export const DraftStorageSettings: React.FC = () => {
     },
     {
       type: "custom",
-      name: "Custom Records (PUBLIC)",
+      name: "Custom AT Protocol (PUBLIC)",
       icon: Cloud,
       description:
-        "Store drafts as AT Protocol records. WARNING: These are publicly visible to anyone!",
+        "Store drafts as custom AT Protocol records. WARNING: These are publicly visible to anyone!",
       pros: ["Cross-device sync"],
       cons: [
         "PUBLIC - Anyone can see your drafts!",

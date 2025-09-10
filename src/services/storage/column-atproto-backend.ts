@@ -1,4 +1,5 @@
 import { BskyAgent } from "@atproto/api";
+import { columnFeedPrefs } from "../../utils/cookies";
 import { appPreferencesService } from "../app-preferences-service";
 import { ColumnStorageBackend } from "./column-storage-backend";
 import { Column, StoredColumn } from "./types";
@@ -16,10 +17,10 @@ export class ColumnAtProtoBackend implements ColumnStorageBackend {
       throw new Error("Agent not set");
     }
 
-    const columnData = columns.map((col) => {
+    const columnData = columns.map((col: any) => {
       const storedCol = col as StoredColumn;
 
-      return {
+      const columnItem: any = {
         id: col.id,
         type: col.type as string, // Convert to string for storage
         title: col.title,
@@ -27,6 +28,18 @@ export class ColumnAtProtoBackend implements ColumnStorageBackend {
         createdAt: storedCol.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+
+      // For feed columns, get the selectedFeedUri from cookies
+      if (col.type === "feed") {
+        const selectedFeedUri =
+          col.selectedFeedUri || columnFeedPrefs.getFeedForColumn(col.id);
+        columnItem.selectedFeedUri = selectedFeedUri || undefined;
+      } else {
+        // For non-feed columns, include undefined selectedFeedUri
+        columnItem.selectedFeedUri = undefined;
+      }
+
+      return columnItem;
     });
 
     const success = await appPreferencesService.updateColumns(columnData);
@@ -43,6 +56,13 @@ export class ColumnAtProtoBackend implements ColumnStorageBackend {
     const columnsData = await appPreferencesService.getColumns();
     if (!columnsData || !columnsData.columns) {
       return [];
+    }
+
+    // Restore feed preferences from selectedFeedUri
+    for (const col of columnsData.columns) {
+      if (col.type === "feed" && col.selectedFeedUri) {
+        columnFeedPrefs.setFeedForColumn(col.id, col.selectedFeedUri);
+      }
     }
 
     return columnsData.columns.map((col) => ({
@@ -100,7 +120,10 @@ export class ColumnAtProtoBackend implements ColumnStorageBackend {
     columnId: string,
     feedUri: string,
   ): Promise<void> {
-    // Update the column's data field directly
+    // Always update the cookie regardless of column existence or type
+    columnFeedPrefs.setFeedForColumn(columnId, feedUri);
+
+    // Update the column's data field if it exists and is a feed column
     const columns = await this.loadColumns();
     const columnIndex = columns.findIndex((c) => c.id === columnId);
 

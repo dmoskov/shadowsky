@@ -16,10 +16,7 @@ export async function initializeColumnService(agent: BskyAgent) {
 
     // Get storage type from PDS record
     const preferences = await appPreferencesService.getPreferences();
-    // Normalize "atproto" to "custom" for column service
-    const rawStorageType = preferences?.columnStorageType || "local";
-    const storageType =
-      (rawStorageType as string) === "atproto" ? "custom" : rawStorageType;
+    const storageType = preferences?.columnStorageType || "local";
 
     logger.log(
       `Attempting to initialize column service with ${storageType} storage`,
