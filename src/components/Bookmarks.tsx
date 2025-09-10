@@ -34,7 +34,8 @@ export const Bookmarks: React.FC = () => {
   const [storageType, setStorageType] = useState<
     "local" | "custom" | "official"
   >("local");
-  const [selectedPost, setSelectedPost] = useState<AppBskyFeedDefs.PostView | null>(null);
+  const [selectedPost, setSelectedPost] =
+    useState<AppBskyFeedDefs.PostView | null>(null);
   const [showThread, setShowThread] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -311,7 +312,9 @@ export const Bookmarks: React.FC = () => {
                   compact
                   onQuoteClick={(uri) => {
                     // Find the quoted post if it's available
-                    const quotedPost = bookmarks?.find(b => b.post?.uri === uri)?.post;
+                    const quotedPost = bookmarks?.find(
+                      (b) => b.post?.uri === uri,
+                    )?.post;
                     if (quotedPost) {
                       setSelectedPost(quotedPost);
                       setShowThread(true);

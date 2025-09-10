@@ -81,9 +81,12 @@ export function useBookmarks() {
   );
 
   // Check if a post is bookmarked
-  const isBookmarked = useCallback((postUri: string) => {
-    return bookmarkMap.has(postUri);
-  }, [bookmarkMap]);
+  const isBookmarked = useCallback(
+    (postUri: string) => {
+      return bookmarkMap.has(postUri);
+    },
+    [bookmarkMap],
+  );
 
   // Toggle bookmark mutation
   const toggleBookmarkMutation = useMutation({

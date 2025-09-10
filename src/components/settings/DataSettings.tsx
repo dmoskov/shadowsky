@@ -658,9 +658,9 @@ export const DataSettings: React.FC = () => {
                           <strong style={{ color: "#f59e0b" }}>
                             ⚠️ CUSTOM AT Protocol:
                           </strong>{" "}
-                          Your bookmarks are stored in a custom AT Protocol record,
-                          visible only in ShadowSky. Toggle to migrate to official
-                          Bluesky bookmarks.
+                          Your bookmarks are stored in a custom AT Protocol
+                          record, visible only in ShadowSky. Toggle to migrate
+                          to official Bluesky bookmarks.
                         </>
                       ) : isEnabled ? (
                         <>
@@ -772,7 +772,8 @@ export const DataSettings: React.FC = () => {
                           onClick={() => item.onToggle(true)}
                           disabled={item.isLoading}
                         >
-                          {item.id === "bookmarks" && item.storageType === "custom"
+                          {item.id === "bookmarks" &&
+                          item.storageType === "custom"
                             ? "Migrate to Official"
                             : item.id === "bookmarks"
                               ? "Official"
@@ -963,7 +964,9 @@ export const DataSettings: React.FC = () => {
                         item.storageType !== "official" && (
                           <div className="mt-2 rounded-lg border border-yellow-200 bg-yellow-50 p-2 dark:border-yellow-800 dark:bg-yellow-900/20">
                             <p className="text-xs text-yellow-700 dark:text-yellow-300">
-                              <strong>Note:</strong> Official private bookmarks are now available! Switch to AT Protocol storage to use them.
+                              <strong>Note:</strong> Official private bookmarks
+                              are now available! Switch to AT Protocol storage
+                              to use them.
                             </p>
                           </div>
                         )}
@@ -1096,7 +1099,8 @@ export const DataSettings: React.FC = () => {
           </li>
           <li>
             • <strong>Standard AT Protocol:</strong> Uses official Bluesky
-            record types. Currently available for bookmarks using private storage.
+            record types. Currently available for bookmarks using private
+            storage.
           </li>
         </ul>
       </div>

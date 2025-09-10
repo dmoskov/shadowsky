@@ -30,18 +30,16 @@ export class OfficialBookmarksBackend implements BookmarkStorageBackend {
       this.cache.clear();
       this.bookmarkRecords.clear();
 
-
       // Use the official bookmark API
       let cursor: string | undefined;
       const allBookmarks: any[] = [];
-      
+
       do {
         const response = await this.agent.app.bsky.bookmark.getBookmarks({
           limit: 100,
           cursor,
         });
-        
-        
+
         // Only continue if we actually got bookmarks
         if (response.data.bookmarks.length > 0) {
           allBookmarks.push(...response.data.bookmarks);
@@ -52,27 +50,28 @@ export class OfficialBookmarksBackend implements BookmarkStorageBackend {
         }
       } while (cursor);
 
-
       // Process each bookmark
       for (const bookmarkView of allBookmarks) {
         // The bookmark has subject (with uri and cid) and item (the post)
         const uri = bookmarkView.subject.uri;
         const createdAt = bookmarkView.createdAt || new Date().toISOString();
-        
+
         // Store bookmark metadata
         this.bookmarkRecords.set(uri, {
           uri,
           cid: bookmarkView.subject.cid,
         });
-        
+
         // If the item is a PostView, convert it to our bookmark format
-        if (bookmarkView.item && bookmarkView.item.$type === 'app.bsky.feed.defs#postView') {
+        if (
+          bookmarkView.item &&
+          bookmarkView.item.$type === "app.bsky.feed.defs#postView"
+        ) {
           const post = bookmarkView.item as AppBskyFeedDefs.PostView;
           const bookmark = this.convertPostToBookmark(post, createdAt);
           this.cache.set(bookmark.postUri, bookmark);
         }
       }
-
     } catch (error) {
       logger.error("Failed to load bookmarks from server:", error);
       logger.error("Error details:", {
@@ -117,7 +116,6 @@ export class OfficialBookmarksBackend implements BookmarkStorageBackend {
         uri: post.uri,
         cid: post.cid,
       });
-      
 
       const savedAt = new Date().toISOString();
       const bookmark = this.convertPostToBookmark(post, savedAt);
@@ -154,7 +152,6 @@ export class OfficialBookmarksBackend implements BookmarkStorageBackend {
       // Update local cache
       this.cache.delete(postUri);
       this.bookmarkRecords.delete(postUri);
-
     } catch (error) {
       logger.error("Failed to remove bookmark:", error);
       throw error;
