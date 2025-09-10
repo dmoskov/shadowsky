@@ -17,6 +17,7 @@ interface PostActionBarProps {
   onRepost?: () => void;
   onQuote?: () => void;
   onLike?: () => void;
+  onBookmark?: () => void;
   onShare?: () => void;
   showCounts?: boolean;
   size?: "small" | "medium" | "large";
@@ -30,6 +31,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
     onRepost,
     onQuote,
     onLike,
+    onBookmark,
     onShare,
     showCounts = true,
     size = "medium",
@@ -52,7 +54,11 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
     const handleBookmark = (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      toggleBookmark(post);
+      if (onBookmark) {
+        onBookmark();
+      } else {
+        toggleBookmark(post);
+      }
     };
 
     return (

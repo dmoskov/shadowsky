@@ -275,6 +275,107 @@ class BookmarkServiceV2 {
       this.backend.setErrorCallback(_callback);
     }
   }
+
+  async detectExistingBookmarks(): Promise<{
+    local: number;
+    custom: number;
+    official: number;
+  }> {
+    const counts = {
+      local: 0,
+      custom: 0,
+      official: 0,
+    };
+
+    try {
+      // Check local storage
+      const localBackend = new LocalStorageBackend();
+      await localBackend.init();
+      counts.local = await localBackend.getCount();
+    } catch (error) {
+      logger.error("Failed to check local bookmarks:", error);
+    }
+
+    if (this.agent) {
+      try {
+        // Check custom AT Protocol storage
+        const customBackend = new SingletonCustomRecordBackend(this.agent);
+        await customBackend.init();
+        counts.custom = await customBackend.getCount();
+      } catch (error) {
+        logger.error("Failed to check custom bookmarks:", error);
+      }
+
+      try {
+        // Check official bookmarks
+        const officialBackend = new OfficialBookmarksBackend();
+        officialBackend.setAgent(this.agent);
+        await officialBackend.init();
+        counts.official = await officialBackend.getCount();
+      } catch (error) {
+        logger.error("Failed to check official bookmarks:", error);
+      }
+    }
+
+    return counts;
+  }
+
+  async migrateBookmarks(
+    fromType: "local" | "custom",
+    toType: "official",
+  ): Promise<{ success: boolean; migratedCount: number; error?: string }> {
+    if (!this.agent) {
+      return {
+        success: false,
+        migratedCount: 0,
+        error: "Agent required for migration",
+      };
+    }
+
+    try {
+      let sourceBackend: BookmarkStorageBackend;
+
+      if (fromType === "local") {
+        sourceBackend = new LocalStorageBackend();
+      } else {
+        sourceBackend = new SingletonCustomRecordBackend(this.agent);
+      }
+
+      await sourceBackend.init();
+      const bookmarks = await sourceBackend.exportBookmarks();
+
+      if (bookmarks.length === 0) {
+        return {
+          success: true,
+          migratedCount: 0,
+        };
+      }
+
+      // Import to official bookmarks
+      const targetBackend = new OfficialBookmarksBackend();
+      targetBackend.setAgent(this.agent);
+      await targetBackend.init();
+      await targetBackend.importBookmarks(bookmarks);
+
+      // Clear source bookmarks after successful migration
+      await sourceBackend.clear();
+
+      return {
+        success: true,
+        migratedCount: bookmarks.length,
+      };
+    } catch (error) {
+      logger.error(
+        `Failed to migrate bookmarks from ${fromType} to ${toType}:`,
+        error,
+      );
+      return {
+        success: false,
+        migratedCount: 0,
+        error: error instanceof Error ? error.message : "Migration failed",
+      };
+    }
+  }
 }
 
 export const bookmarkServiceV2 = new BookmarkServiceV2();

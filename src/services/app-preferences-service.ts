@@ -297,7 +297,7 @@ export class AppPreferencesService {
 
     const defaultPrefs: AppPreferencesRecord = {
       $type: "app.shadowsky.preferences",
-      bookmarkStorageType: "local", // Default to local storage
+      bookmarkStorageType: "official", // Default to official AT Protocol bookmarks
       columnStorageType: "local", // Default to local storage
       draftStorageType: "local", // Always local storage
       createdAt: now,

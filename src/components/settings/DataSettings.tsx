@@ -43,6 +43,13 @@ export const DataSettings: React.FC = () => {
   const [localColumnCount, setLocalColumnCount] = useState<number>(0);
   const [showMigrationPrompt, setShowMigrationPrompt] =
     useState<boolean>(false);
+  const [existingBookmarks, setExistingBookmarks] = useState<{
+    local: number;
+    custom: number;
+    official: number;
+  } | null>(null);
+  const [isCheckingBookmarks, setIsCheckingBookmarks] = useState(false);
+  const [isMigratingBookmarks, setIsMigratingBookmarks] = useState(false);
 
   // Get current storage preferences
   const { data: appPreferences } = useQuery({
@@ -54,6 +61,26 @@ export const DataSettings: React.FC = () => {
       return prefs;
     },
     enabled: !!agent,
+  });
+
+  // Check for existing bookmarks in different storage types
+  useQuery({
+    queryKey: ["existingBookmarks", appPreferences?.bookmarkStorageType],
+    queryFn: async () => {
+      if (!agent || appPreferences?.bookmarkStorageType !== "official")
+        return null;
+
+      setIsCheckingBookmarks(true);
+      try {
+        bookmarkServiceV2.setAgent(agent);
+        const counts = await bookmarkServiceV2.detectExistingBookmarks();
+        setExistingBookmarks(counts);
+        return counts;
+      } finally {
+        setIsCheckingBookmarks(false);
+      }
+    },
+    enabled: !!agent && appPreferences?.bookmarkStorageType === "official",
   });
 
   // Fetch record counts for AT Protocol storage
@@ -250,6 +277,48 @@ export const DataSettings: React.FC = () => {
     }
   };
 
+  const handleBookmarkMigration = async (fromType: "local" | "custom") => {
+    if (!agent) return;
+
+    setIsMigratingBookmarks(true);
+    setMessage(null);
+
+    try {
+      bookmarkServiceV2.setAgent(agent);
+      const result = await bookmarkServiceV2.migrateBookmarks(
+        fromType,
+        "official",
+      );
+
+      if (result.success) {
+        setMessage({
+          type: "success",
+          text: `Successfully migrated ${result.migratedCount} bookmarks to official storage`,
+        });
+
+        // Refresh bookmark counts
+        const counts = await bookmarkServiceV2.detectExistingBookmarks();
+        setExistingBookmarks(counts);
+
+        // Refresh bookmarks query
+        queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+      } else {
+        setMessage({
+          type: "error",
+          text: result.error || "Failed to migrate bookmarks",
+        });
+      }
+    } catch (error) {
+      console.error("Bookmark migration error:", error);
+      setMessage({
+        type: "error",
+        text: "Failed to migrate bookmarks. Please try again.",
+      });
+    } finally {
+      setIsMigratingBookmarks(false);
+    }
+  };
+
   const handleStorageToggle = async (
     dataType: "bookmarks" | "columns" | "settings",
     enabled: boolean,
@@ -262,12 +331,41 @@ export const DataSettings: React.FC = () => {
       return;
     }
 
-    const newType: StorageType = enabled ? "custom" : "local";
+    // Get current storage type
+    const currentType =
+      dataType === "bookmarks"
+        ? appPreferences?.bookmarkStorageType || "local"
+        : dataType === "columns"
+          ? appPreferences?.columnStorageType || "local"
+          : appPreferences?.isStoredInAtProto
+            ? "custom"
+            : "local";
 
-    // Show warning for enabling custom storage
+    // For bookmarks, handle transitions between all three types
+    let newType: StorageType;
+    if (dataType === "bookmarks") {
+      if (!enabled) {
+        newType = "local";
+      } else if (currentType === "custom") {
+        // If currently on custom, switch to official
+        newType = "official";
+      } else {
+        // If currently on local, switch to official
+        newType = "official";
+      }
+    } else {
+      // For other data types, use custom when enabled
+      newType = enabled ? "custom" : "local";
+    }
+
+    // Show warning for enabling custom storage (but not for official bookmarks or private APIs)
     if (enabled) {
-      if (dataType === "settings" || dataType === "columns") {
-        // App settings and columns use private preferences API
+      if (
+        dataType === "settings" ||
+        dataType === "columns" ||
+        dataType === "bookmarks"
+      ) {
+        // App settings, columns use private preferences API, bookmarks use official private API
         await performStorageChange(dataType, newType);
         return;
       }
@@ -430,11 +528,11 @@ export const DataSettings: React.FC = () => {
       storageType:
         successfulMigrations.bookmarks ||
         appPreferences?.bookmarkStorageType ||
-        "local",
+        "official",
       onToggle: (enabled) => handleStorageToggle("bookmarks", enabled),
       isLoading: loadingStates.bookmarks,
       localKey: "shadowsky-bookmarks-*",
-      atProtoKey: "com.shadowsky.bookmarks",
+      atProtoKey: "app.bsky.bookmark",
     },
     {
       id: "columns",
@@ -504,7 +602,9 @@ export const DataSettings: React.FC = () => {
       <div className="space-y-4">
         {storageItems.map((item) => {
           const Icon = item.icon;
-          const isEnabled = item.storageType === "custom";
+          const isEnabled =
+            item.storageType === "custom" ||
+            (item.id === "bookmarks" && item.storageType === "official");
 
           return (
             <div
@@ -543,6 +643,25 @@ export const DataSettings: React.FC = () => {
                             device only.
                           </>
                         )
+                      ) : item.id === "bookmarks" &&
+                        item.storageType === "official" ? (
+                        <>
+                          <strong style={{ color: "#10b981" }}>
+                            🔒 PRIVATE (Official):
+                          </strong>{" "}
+                          Your bookmarks are stored privately using the official
+                          Bluesky bookmarks API and are visible on Bluesky.
+                        </>
+                      ) : item.id === "bookmarks" &&
+                        item.storageType === "custom" ? (
+                        <>
+                          <strong style={{ color: "#f59e0b" }}>
+                            ⚠️ CUSTOM AT Protocol:
+                          </strong>{" "}
+                          Your bookmarks are stored in a custom AT Protocol record,
+                          visible only in ShadowSky. Toggle to migrate to official
+                          Bluesky bookmarks.
+                        </>
                       ) : isEnabled ? (
                         <>
                           <strong style={{ color: "#ef4444" }}>
@@ -653,7 +772,11 @@ export const DataSettings: React.FC = () => {
                           onClick={() => item.onToggle(true)}
                           disabled={item.isLoading}
                         >
-                          AT Protocol
+                          {item.id === "bookmarks" && item.storageType === "custom"
+                            ? "Migrate to Official"
+                            : item.id === "bookmarks"
+                              ? "Official"
+                              : "AT Protocol"}
                         </button>
                       </div>
                       {item.isLoading && (
@@ -764,23 +887,86 @@ export const DataSettings: React.FC = () => {
                               : "."}
                           </p>
                         )}
-                      {/* Coming soon message for private bookmarks */}
-                      {item.id === "bookmarks" && (
-                        <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 p-2 dark:border-blue-800 dark:bg-blue-900/20">
-                          <p className="text-xs text-blue-700 dark:text-blue-300">
-                            <strong>Coming soon:</strong> Private bookmark
-                            storage is being developed.{" "}
-                            <a
-                              href="https://github.com/bluesky-social/atproto/pull/4163"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="underline hover:no-underline"
-                            >
-                              Track progress on GitHub →
-                            </a>
-                          </p>
-                        </div>
-                      )}
+                      {/* Migration UI for bookmarks */}
+                      {item.id === "bookmarks" &&
+                        item.storageType === "official" && (
+                          <div className="mt-2 space-y-2">
+                            {isCheckingBookmarks ? (
+                              <p className="text-xs text-gray-500">
+                                Checking for existing bookmarks...
+                              </p>
+                            ) : existingBookmarks &&
+                              (existingBookmarks.local > 0 ||
+                                existingBookmarks.custom > 0) ? (
+                              <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-800 dark:bg-yellow-900/20">
+                                <p className="mb-2 text-xs font-medium text-yellow-800 dark:text-yellow-200">
+                                  Found existing bookmarks in other storage:
+                                </p>
+                                <div className="space-y-1 text-xs text-yellow-700 dark:text-yellow-300">
+                                  {existingBookmarks.local > 0 && (
+                                    <div className="flex items-center justify-between">
+                                      <span>
+                                        • Local storage:{" "}
+                                        {existingBookmarks.local} bookmarks
+                                      </span>
+                                      <button
+                                        onClick={() =>
+                                          handleBookmarkMigration("local")
+                                        }
+                                        disabled={isMigratingBookmarks}
+                                        className="ml-2 rounded-md bg-yellow-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-yellow-700 disabled:opacity-50"
+                                      >
+                                        {isMigratingBookmarks
+                                          ? "Migrating..."
+                                          : "Import"}
+                                      </button>
+                                    </div>
+                                  )}
+                                  {existingBookmarks.custom > 0 && (
+                                    <div className="flex items-center justify-between">
+                                      <span>
+                                        • Custom AT Protocol:{" "}
+                                        {existingBookmarks.custom} bookmarks
+                                      </span>
+                                      <button
+                                        onClick={() =>
+                                          handleBookmarkMigration("custom")
+                                        }
+                                        disabled={isMigratingBookmarks}
+                                        className="ml-2 rounded-md bg-yellow-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-yellow-700 disabled:opacity-50"
+                                      >
+                                        {isMigratingBookmarks
+                                          ? "Migrating..."
+                                          : "Import"}
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                                <p className="mt-2 text-xs text-yellow-600 dark:text-yellow-400">
+                                  ⚠️ Importing will move bookmarks to official
+                                  storage and clear the source.
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="rounded-lg border border-green-200 bg-green-50 p-2 dark:border-green-800 dark:bg-green-900/20">
+                                <p className="text-xs text-green-700 dark:text-green-300">
+                                  ✅ Using official private bookmark storage.
+                                  Your bookmarks are private and synced across
+                                  devices.
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      {/* Show privacy info for non-official bookmark storage */}
+                      {item.id === "bookmarks" &&
+                        item.storageType !== "official" && (
+                          <div className="mt-2 rounded-lg border border-yellow-200 bg-yellow-50 p-2 dark:border-yellow-800 dark:bg-yellow-900/20">
+                            <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                              <strong>Note:</strong> Official private bookmarks are now available! Switch to AT Protocol storage to use them.
+                            </p>
+                          </div>
+                        )}
                     </>
                   )}
                 </div>
@@ -910,7 +1096,7 @@ export const DataSettings: React.FC = () => {
           </li>
           <li>
             • <strong>Standard AT Protocol:</strong> Uses official Bluesky
-            record types. Currently only available for bookmarks (coming soon).
+            record types. Currently available for bookmarks using private storage.
           </li>
         </ul>
       </div>

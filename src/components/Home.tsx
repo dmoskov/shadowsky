@@ -27,6 +27,7 @@ import {
   useFeatureTracking,
   useInteractionTracking,
 } from "../hooks/useAnalytics";
+import { useBookmarks } from "../hooks/useBookmarks";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { generateAltText } from "../services/anthropic";
@@ -128,6 +129,7 @@ export const Home: React.FC<HomeProps> = ({
   const queryClient = useQueryClient();
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
     useOptimisticPosts();
+  const { toggleBookmark } = useBookmarks();
   const { isPostHidden } = useHiddenPosts();
   const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
   // Removed hoveredPost state to prevent re-renders - using CSS hover instead
@@ -731,6 +733,7 @@ export const Home: React.FC<HomeProps> = ({
                   setShowThread(true);
                 }}
                 onLike={() => handleLike(post)}
+                onBookmark={() => handleBookmark(post)}
                 showCounts={true}
                 size="medium"
               />
@@ -837,6 +840,29 @@ export const Home: React.FC<HomeProps> = ({
       }
     } catch (error) {
       debug.error("Failed to repost:", error);
+    }
+  };
+
+  const handleBookmark = async (post: Post, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!agent) return;
+
+    trackFeatureAction("bookmark_post", { postUri: post.uri });
+
+    try {
+      // Cast to PostView type - add indexedAt field
+      const postView = {
+        ...post,
+        indexedAt: new Date().toISOString(),
+      } as any;
+      
+      // Use the hook's toggleBookmark which updates the BookmarkStore
+      toggleBookmark(postView);
+    } catch (error) {
+      debug.error("Failed to bookmark post:", error);
     }
   };
 

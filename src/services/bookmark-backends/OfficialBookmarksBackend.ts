@@ -1,17 +1,8 @@
-import { AppBskyFeedDefs, AtpAgent } from "@atproto/api";
+import { AppBskyFeedDefs, AppBskyFeedPost, AtpAgent } from "@atproto/api";
 import { createLogger } from "../../utils/logger";
 import { Bookmark, BookmarkStorageBackend } from "./types";
 
 const logger = createLogger("OfficialBookmarksBackend");
-
-// Official bookmark record structure
-interface BookmarkRecord {
-  subject: {
-    uri: string;
-    cid: string;
-  };
-  createdAt: string;
-}
 
 export class OfficialBookmarksBackend implements BookmarkStorageBackend {
   type = "official" as const;
@@ -39,122 +30,114 @@ export class OfficialBookmarksBackend implements BookmarkStorageBackend {
       this.cache.clear();
       this.bookmarkRecords.clear();
 
-      // List all bookmarks
-      const response = await this.agent.com.atproto.repo.listRecords({
-        repo: this.agent.session!.did,
-        collection: "app.bsky.actor.savedPosts",
-        limit: 100,
-      });
 
-      // Collect all URIs to fetch posts in batch
-      const bookmarkRecordMap = new Map<
-        string,
-        (typeof response.data.records)[0]
-      >();
-      const uris: string[] = [];
+      // Use the official bookmark API
+      let cursor: string | undefined;
+      const allBookmarks: any[] = [];
+      
+      do {
+        const response = await this.agent.app.bsky.bookmark.getBookmarks({
+          limit: 100,
+          cursor,
+        });
+        
+        
+        // Only continue if we actually got bookmarks
+        if (response.data.bookmarks.length > 0) {
+          allBookmarks.push(...response.data.bookmarks);
+          cursor = response.data.cursor;
+        } else {
+          // Stop if no bookmarks were returned
+          cursor = undefined;
+        }
+      } while (cursor);
 
-      for (const record of response.data.records) {
-        const bookmarkRecord = record.value as unknown as BookmarkRecord;
-        bookmarkRecordMap.set(bookmarkRecord.subject.uri, record);
-        uris.push(bookmarkRecord.subject.uri);
-      }
 
-      // Fetch posts in batches
-      const batchSize = 25;
-      for (let i = 0; i < uris.length; i += batchSize) {
-        const batch = uris.slice(i, i + batchSize);
-
-        try {
-          const postsResponse = await this.agent.app.bsky.feed.getPosts({
-            uris: batch,
-          });
-
-          for (const post of postsResponse.data.posts) {
-            const record = bookmarkRecordMap.get(post.uri);
-            if (!record) continue;
-
-            const bookmarkRecord = record.value as unknown as BookmarkRecord;
-            const bookmark: Bookmark = {
-              id: post.uri,
-              postUri: post.uri,
-              postCid: post.cid,
-              savedAt: bookmarkRecord.createdAt,
-              author: {
-                did: post.author.did,
-                handle: post.author.handle,
-                displayName: post.author.displayName,
-                avatar: post.author.avatar,
-              },
-              text: (post.record as any)?.text || "",
-            };
-
-            this.cache.set(bookmark.postUri, bookmark);
-            this.bookmarkRecords.set(bookmark.postUri, {
-              uri: record.uri,
-              cid: record.cid,
-            });
-          }
-        } catch (error) {
-          logger.error(`Failed to fetch posts batch:`, error);
-          // Continue with next batch
+      // Process each bookmark
+      for (const bookmarkView of allBookmarks) {
+        // The bookmark has subject (with uri and cid) and item (the post)
+        const uri = bookmarkView.subject.uri;
+        const createdAt = bookmarkView.createdAt || new Date().toISOString();
+        
+        // Store bookmark metadata
+        this.bookmarkRecords.set(uri, {
+          uri,
+          cid: bookmarkView.subject.cid,
+        });
+        
+        // If the item is a PostView, convert it to our bookmark format
+        if (bookmarkView.item && bookmarkView.item.$type === 'app.bsky.feed.defs#postView') {
+          const post = bookmarkView.item as AppBskyFeedDefs.PostView;
+          const bookmark = this.convertPostToBookmark(post, createdAt);
+          this.cache.set(bookmark.postUri, bookmark);
         }
       }
 
-      logger.log(`Loaded ${this.cache.size} bookmarks from server`);
     } catch (error) {
       logger.error("Failed to load bookmarks from server:", error);
+      logger.error("Error details:", {
+        message: (error as any)?.message,
+        status: (error as any)?.status,
+        statusText: (error as any)?.statusText,
+        data: (error as any)?.data,
+      });
       // Don't throw - we can still work with empty cache
     }
   }
 
-  async addBookmark(
+  private convertPostToBookmark(
     post: AppBskyFeedDefs.PostView,
-    notes?: string,
-  ): Promise<Bookmark> {
-    if (!this.agent) throw new Error("Not initialized");
-
-    const bookmark: Bookmark = {
+    savedAt?: string,
+  ): Bookmark {
+    const record = post.record as AppBskyFeedPost.Record;
+    return {
       id: post.uri,
       postUri: post.uri,
       postCid: post.cid,
-      savedAt: new Date().toISOString(),
+      savedAt: savedAt || new Date().toISOString(),
       author: {
         did: post.author.did,
         handle: post.author.handle,
         displayName: post.author.displayName,
         avatar: post.author.avatar,
       },
-      text: (post.record as any)?.text || "",
-      notes,
+      text: record?.text || "",
     };
+  }
+
+  async addBookmark(
+    post: AppBskyFeedDefs.PostView,
+    _notes?: string,
+  ): Promise<Bookmark> {
+    if (!this.agent) throw new Error("Not initialized");
 
     try {
-      // Create the bookmark record
-      const record: BookmarkRecord = {
-        subject: {
-          uri: post.uri,
-          cid: post.cid,
-        },
-        createdAt: new Date().toISOString(),
-      };
-
-      const response = await this.agent.com.atproto.repo.createRecord({
-        repo: this.agent.session!.did,
-        collection: "app.bsky.actor.savedPosts",
-        record: record as unknown as Record<string, unknown>,
+      // Create bookmark using official API
+      await this.agent.app.bsky.bookmark.createBookmark({
+        uri: post.uri,
+        cid: post.cid,
       });
+      
 
-      // Store in cache
+      const savedAt = new Date().toISOString();
+      const bookmark = this.convertPostToBookmark(post, savedAt);
+
+      // Update local cache
       this.cache.set(bookmark.postUri, bookmark);
-      this.bookmarkRecords.set(bookmark.postUri, {
-        uri: response.data.uri,
-        cid: response.data.cid,
+      this.bookmarkRecords.set(post.uri, {
+        uri: post.uri,
+        cid: post.cid,
       });
 
-      logger.log("Bookmark added:", bookmark.postUri);
       return bookmark;
     } catch (error) {
       logger.error("Failed to add bookmark:", error);
+      logger.error("Error details:", {
+        message: (error as any)?.message,
+        status: (error as any)?.status,
+        statusText: (error as any)?.statusText,
+        data: (error as any)?.data,
+      });
       throw error;
     }
   }
@@ -163,38 +146,15 @@ export class OfficialBookmarksBackend implements BookmarkStorageBackend {
     if (!this.agent) throw new Error("Not initialized");
 
     try {
-      const bookmarkRecord = this.bookmarkRecords.get(postUri);
-      if (!bookmarkRecord) {
-        // Not in our cache, try to find it on server
-        const response = await this.agent.com.atproto.repo.listRecords({
-          repo: this.agent.session!.did,
-          collection: "app.bsky.actor.savedPosts",
-          limit: 100,
-        });
+      // Delete bookmark using official API
+      await this.agent.app.bsky.bookmark.deleteBookmark({
+        uri: postUri,
+      });
 
-        const record = response.data.records.find(
-          (r) => (r.value as unknown as BookmarkRecord).subject.uri === postUri,
-        );
-
-        if (record) {
-          await this.agent.com.atproto.repo.deleteRecord({
-            repo: this.agent.session!.did,
-            collection: "app.bsky.actor.savedPosts",
-            rkey: record.uri.split("/").pop()!,
-          });
-        }
-      } else {
-        // Delete using cached record info
-        await this.agent.com.atproto.repo.deleteRecord({
-          repo: this.agent.session!.did,
-          collection: "app.bsky.actor.savedPosts",
-          rkey: bookmarkRecord.uri.split("/").pop()!,
-        });
-      }
-
+      // Update local cache
       this.cache.delete(postUri);
       this.bookmarkRecords.delete(postUri);
-      logger.log("Bookmark removed:", postUri);
+
     } catch (error) {
       logger.error("Failed to remove bookmark:", error);
       throw error;
@@ -225,46 +185,21 @@ export class OfficialBookmarksBackend implements BookmarkStorageBackend {
   async isBookmarked(postUri: string): Promise<boolean> {
     if (!this.agent) throw new Error("Not initialized");
 
-    // Check cache first
-    if (this.cache.has(postUri)) {
-      return true;
-    }
-
-    // Double-check with server in case cache is stale
-    try {
-      const response = await this.agent.com.atproto.repo.listRecords({
-        repo: this.agent.session!.did,
-        collection: "app.bsky.actor.savedPosts",
-        limit: 100,
-      });
-
-      return response.data.records.some(
-        (r) => (r.value as unknown as BookmarkRecord).subject.uri === postUri,
-      );
-    } catch (error) {
-      logger.error("Failed to check bookmark status:", error);
-      return false;
-    }
+    // Check local cache first for performance
+    return this.cache.has(postUri);
   }
 
   async clear(): Promise<void> {
     if (!this.agent) throw new Error("Not initialized");
 
     try {
-      // Get all bookmark records
-      const response = await this.agent.com.atproto.repo.listRecords({
-        repo: this.agent.session!.did,
-        collection: "app.bsky.actor.savedPosts",
-        limit: 100,
-      });
+      // First ensure we have all bookmarks loaded
+      await this.loadFromServer();
 
-      // Delete each bookmark
-      for (const record of response.data.records) {
-        await this.agent.com.atproto.repo.deleteRecord({
-          repo: this.agent.session!.did,
-          collection: "app.bsky.actor.savedPosts",
-          rkey: record.uri.split("/").pop()!,
-        });
+      // Delete all bookmarks one by one
+      const allBookmarkUris = Array.from(this.bookmarkRecords.keys());
+      for (const uri of allBookmarkUris) {
+        await this.removeBookmark(uri);
       }
 
       this.cache.clear();

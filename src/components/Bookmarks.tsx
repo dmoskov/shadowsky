@@ -22,6 +22,7 @@ import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
 import { reinitializeBookmarkService } from "../services/bookmark-service-wrapper";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { PostRenderer } from "./PostRenderer";
+import { ThreadModal } from "./ThreadModal";
 
 export const Bookmarks: React.FC = () => {
   const navigate = useNavigate();
@@ -33,6 +34,8 @@ export const Bookmarks: React.FC = () => {
   const [storageType, setStorageType] = useState<
     "local" | "custom" | "official"
   >("local");
+  const [selectedPost, setSelectedPost] = useState<AppBskyFeedDefs.PostView | null>(null);
+  const [showThread, setShowThread] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -154,10 +157,8 @@ export const Bookmarks: React.FC = () => {
   };
 
   const openPostThread = (post: AppBskyFeedDefs.PostView) => {
-    const parts = post.uri.split("/");
-    const handle = parts[2];
-    const postId = parts[parts.length - 1];
-    navigate(`/thread/${handle}/${postId}`);
+    setSelectedPost(post);
+    setShowThread(true);
   };
 
   return (
@@ -309,10 +310,18 @@ export const Bookmarks: React.FC = () => {
                   isBookmarked={true}
                   compact
                   onQuoteClick={(uri) => {
-                    const parts = uri.split("/");
-                    const handle = parts[2];
-                    const postId = parts[parts.length - 1];
-                    navigate(`/thread/${handle}/${postId}`);
+                    // Find the quoted post if it's available
+                    const quotedPost = bookmarks?.find(b => b.post?.uri === uri)?.post;
+                    if (quotedPost) {
+                      setSelectedPost(quotedPost);
+                      setShowThread(true);
+                    } else {
+                      // If we don't have the post data, navigate instead
+                      const parts = uri.split("/");
+                      const handle = parts[2];
+                      const postId = parts[parts.length - 1];
+                      navigate(`/thread/${handle}/${postId}`);
+                    }
                   }}
                 />
               </div>
@@ -388,6 +397,16 @@ export const Bookmarks: React.FC = () => {
             />
           </div>
         </div>
+      )}
+
+      {showThread && selectedPost && (
+        <ThreadModal
+          postUri={selectedPost.uri}
+          onClose={() => {
+            setShowThread(false);
+            setSelectedPost(null);
+          }}
+        />
       )}
     </div>
   );

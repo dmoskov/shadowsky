@@ -1,6 +1,6 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
 
 // Global bookmark state store
@@ -74,10 +74,16 @@ export async function initializeBookmarkStore() {
 export function useBookmarks() {
   const queryClient = useQueryClient();
 
+  // Subscribe to bookmark store changes
+  const bookmarkMap = useSyncExternalStore(
+    (callback) => bookmarkStore.subscribe(callback),
+    () => bookmarkStore.getSnapshot(),
+  );
+
   // Check if a post is bookmarked
   const isBookmarked = useCallback((postUri: string) => {
-    return bookmarkStore.isBookmarked(postUri);
-  }, []); // No dependencies needed - bookmarkStore.isBookmarked is stable
+    return bookmarkMap.has(postUri);
+  }, [bookmarkMap]);
 
   // Toggle bookmark mutation
   const toggleBookmarkMutation = useMutation({
