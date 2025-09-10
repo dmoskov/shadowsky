@@ -3,21 +3,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
   Bookmark,
-  Cloud,
-  Database,
   Download,
   MoreVertical,
   Search,
-  Settings,
   Trash2,
   Upload,
   X,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
-import { appPreferencesService } from "../services/app-preferences-service";
 import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
 import { reinitializeBookmarkService } from "../services/bookmark-service-wrapper";
 import { proxifyBskyImage } from "../utils/image-proxy";
@@ -27,13 +22,9 @@ import { ThreadModal } from "./ThreadModal";
 export const Bookmarks: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { agent } = useAuth();
   const { showAlert, showConfirm } = useModal();
   const [searchQuery, setSearchQuery] = useState("");
   const [showExportModal, setShowExportModal] = useState(false);
-  const [storageType, setStorageType] = useState<
-    "local" | "custom" | "official"
-  >("local");
   const [selectedPost, setSelectedPost] =
     useState<AppBskyFeedDefs.PostView | null>(null);
   const [showThread, setShowThread] = useState(false);
@@ -48,22 +39,6 @@ export const Bookmarks: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
     });
   }, [queryClient]);
-
-  // Fetch current storage type
-  useEffect(() => {
-    const fetchStorageType = async () => {
-      if (agent) {
-        appPreferencesService.setAgent(agent);
-        const prefs = await appPreferencesService.getPreferences();
-        if (prefs) {
-          setStorageType(
-            prefs.bookmarkStorageType as "local" | "custom" | "official",
-          );
-        }
-      }
-    };
-    fetchStorageType();
-  }, [agent]);
 
   // Note: bookmarkServiceV2 is initialized in AuthContext
 
@@ -177,34 +152,6 @@ export const Bookmarks: React.FC = () => {
               </span>
             )}
           </div>
-
-          <button
-            onClick={() => navigate("/settings/data")}
-            className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-all duration-200 hover:bg-bsky-bg-secondary"
-            title="Data storage settings"
-          >
-            {storageType === "local" && (
-              <>
-                <Database className="h-4 w-4 text-bsky-text-secondary" />
-                <span className="text-bsky-text-secondary">Local Storage</span>
-              </>
-            )}
-            {storageType === "custom" && (
-              <>
-                <Cloud className="h-4 w-4 text-orange-500" />
-                <span className="text-orange-500">Public Records</span>
-              </>
-            )}
-            {storageType === "official" && (
-              <>
-                <Cloud className="h-4 w-4 text-bsky-text-secondary" />
-                <span className="text-bsky-text-secondary">
-                  Official (Soon)
-                </span>
-              </>
-            )}
-            <Settings className="h-3 w-3 text-bsky-text-tertiary" />
-          </button>
         </div>
 
         <div className="flex items-center gap-2">
