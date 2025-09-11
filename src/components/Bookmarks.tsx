@@ -11,7 +11,6 @@ import {
   X,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
 import { useModal } from "../contexts/ModalContext";
 import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
 import { reinitializeBookmarkService } from "../services/bookmark-service-wrapper";
@@ -20,7 +19,6 @@ import { PostRenderer } from "./PostRenderer";
 import { ThreadModal } from "./ThreadModal";
 
 export const Bookmarks: React.FC = () => {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { showAlert, showConfirm } = useModal();
   const [searchQuery, setSearchQuery] = useState("");
@@ -266,11 +264,10 @@ export const Bookmarks: React.FC = () => {
                       setSelectedPost(quotedPost);
                       setShowThread(true);
                     } else {
-                      // If we don't have the post data, navigate instead
-                      const parts = uri.split("/");
-                      const handle = parts[2];
-                      const postId = parts[parts.length - 1];
-                      navigate(`/thread/${handle}/${postId}`);
+                      // If we don't have the post data, open ThreadModal with the URI
+                      // ThreadModal will fetch the post data itself
+                      setSelectedPost({ uri } as AppBskyFeedDefs.PostView);
+                      setShowThread(true);
                     }
                   }}
                 />
