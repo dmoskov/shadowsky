@@ -338,7 +338,7 @@ export const DirectMessages: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  {[...conversationData.messages].reverse().map((message) => {
+                  {conversationData.messages.map((message) => {
                     const isOwnMessage = message.sender.did === session?.did;
                     return (
                       <div

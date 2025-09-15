@@ -219,7 +219,6 @@ export const NotificationsFeed: React.FC = () => {
     totalPosts,
     fetchedPosts,
     isFetchingMore,
-    percentageFetched,
   } = useNotificationPosts(notifications);
 
   // Set up intersection observer to load more notifications
@@ -685,42 +684,6 @@ export const NotificationsFeed: React.FC = () => {
         </div>
       </div>
 
-      {/* Post loading progress indicator - only show if we're actually fetching from API */}
-      {isFetchingMore &&
-        percentageFetched < 100 &&
-        fetchedPosts < totalPosts && (
-          <div
-            className="border-b"
-            style={{
-              borderColor: "var(--bsky-border-secondary)",
-              backgroundColor: "var(--bsky-bg-secondary)",
-              fontSize: "0.875rem",
-              color: "var(--bsky-text-secondary)",
-            }}
-          >
-            <div className="px-3 py-2 sm:px-6">
-              <div className="flex items-center justify-between">
-                <span>Loading post content...</span>
-                <span>
-                  {percentageFetched}% ({fetchedPosts}/{totalPosts} posts)
-                </span>
-              </div>
-              <div
-                className="mt-1 h-1 overflow-hidden rounded-full bg-gray-200"
-                style={{ backgroundColor: "var(--bsky-border-primary)" }}
-              >
-                <div
-                  className="h-full transition-all duration-300 ease-out"
-                  style={{
-                    width: `${percentageFetched}%`,
-                    backgroundColor: "var(--bsky-primary)",
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
       {/* Notifications list */}
       <div className="px-3 sm:px-6">
         {filter === "top-accounts" ? (
@@ -901,28 +864,6 @@ export const NotificationsFeed: React.FC = () => {
                 <div className="animate-pulse">↓ Scroll for more</div>
               </div>
             )}
-          </div>
-        )}
-
-        {/* Post loading status indicator */}
-        {isFetchingMore && fetchedPosts < totalPosts && (
-          <div
-            className="sticky bottom-0 border-t bg-opacity-95 p-3 text-center backdrop-blur-sm"
-            style={{
-              backgroundColor: "var(--bsky-bg-primary)",
-              borderColor: "var(--bsky-border-primary)",
-            }}
-          >
-            <div className="flex items-center justify-center gap-2">
-              <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
-              <span
-                className="text-sm font-medium"
-                style={{ color: "var(--bsky-text-secondary)" }}
-              >
-                Loading posts: {fetchedPosts}/{totalPosts} ({percentageFetched}
-                %)
-              </span>
-            </div>
           </div>
         )}
 
@@ -1146,34 +1087,6 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
     const renderPostContent = () => {
       // For likes, reposts, replies, and quotes - show loading state if post not yet loaded
       if (["like", "repost", "reply", "quote"].includes(notification.reason)) {
-        // Show loading indicator only during initial load (first 10 seconds) and if we have no posts at all
-        if (!post && postMap.size === 0 && fetchedPosts === 0) {
-          return (
-            <div
-              className="mt-3 rounded-lg p-4"
-              style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                border: "1px solid var(--bsky-border-primary)",
-                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <Loader
-                  className="animate-spin"
-                  size={16}
-                  style={{ color: "var(--bsky-primary)" }}
-                />
-                <span
-                  className="text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
-                >
-                  Loading post content...
-                </span>
-              </div>
-            </div>
-          );
-        }
-
         if (!post) {
           // Don't show loading indicator for individual posts during progressive loading
           // Only show "unable to load" if we've finished fetching and still don't have the post

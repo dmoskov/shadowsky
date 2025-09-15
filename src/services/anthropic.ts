@@ -1,4 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
+import type { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
+import { ProfileService } from "../shared/services";
 import { createLogger } from "../utils/logger";
 import { analytics } from "./analytics";
 
@@ -148,18 +150,10 @@ Ensure the response is valid JSON.`,
           "Failed to parse thread optimization response:",
           parseError,
         );
-        // Fallback to simple splitting
-        const segments = text.match(/.{1,300}(?:\s|$)/g) || [text];
-        return {
-          segments: segments.map((s, i) => ({
-            text: s.trim(),
-            number: i + 1,
-            isStandalone: false,
-          })),
-          summary: "Thread about " + text.slice(0, 50) + "...",
-          suggestedFormat: "simple",
-          totalPosts: segments.length,
-        };
+        logger.error("Raw response:", content.text);
+        throw new Error(
+          "AI service returned invalid response format. Please try again.",
+        );
       }
     }
 
@@ -177,101 +171,6 @@ Ensure the response is valid JSON.`,
     } else {
       throw new Error(
         `Thread optimization failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-    }
-  }
-}
-
-export interface SmartReply {
-  text: string;
-  tone: ToneOption;
-  confidence: number;
-}
-
-export interface SmartReplyResult {
-  suggestions: SmartReply[];
-  context: string;
-}
-
-export async function generateSmartReplies(
-  parentPost: string,
-  userHandle?: string,
-  conversationContext?: string[],
-): Promise<SmartReplyResult> {
-  try {
-    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
-      throw new Error("Anthropic API key not configured");
-    }
-
-    const contextString = conversationContext?.join("\n---\n") || "";
-
-    const response = await anthropic.messages.create({
-      model: "claude-3-haiku-20240307",
-      max_tokens: 1500,
-      messages: [
-        {
-          role: "user",
-          content: `Generate 3-4 smart reply suggestions for this social media post. Each reply should have a different tone and be under 280 characters.
-
-Parent post: "${parentPost}"
-${userHandle ? `Posted by: @${userHandle}` : ""}
-${contextString ? `Conversation context:\n${contextString}` : ""}
-
-Generate replies with these tones:
-1. Friendly/supportive
-2. Thoughtful/analytical
-3. Humorous (if appropriate)
-4. Question/engaging
-
-Respond with a JSON object containing:
-- suggestions: array of {text: string, tone: string, confidence: number (0-1)}
-- context: brief description of the conversation topic
-
-Make replies natural, relevant, and appropriate to the context. Ensure the response is valid JSON.`,
-        },
-      ],
-    });
-
-    const content = response.content[0];
-    if (content.type === "text") {
-      try {
-        const result = JSON.parse(content.text);
-        return result;
-      } catch (parseError) {
-        logger.error("Failed to parse smart reply response:", parseError);
-        // Fallback responses
-        return {
-          suggestions: [
-            {
-              text: "Thanks for sharing this!",
-              tone: "casual",
-              confidence: 0.5,
-            },
-            {
-              text: "Interesting perspective. What made you think of this?",
-              tone: "informative",
-              confidence: 0.5,
-            },
-          ],
-          context: "General conversation",
-        };
-      }
-    }
-
-    throw new Error("Unexpected response format");
-  } catch (error) {
-    logger.error("Error generating smart replies:", error);
-    analytics.trackError(error as Error, "smart_replies");
-
-    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
-      throw new Error("Smart replies failed: API key not configured");
-    } else if (error instanceof Error && error.message.includes("401")) {
-      throw new Error("Smart replies failed: Invalid API key");
-    } else if (error instanceof Error && error.message.includes("429")) {
-      throw new Error("Smart replies failed: Rate limit exceeded");
-    } else {
-      throw new Error(
-        `Smart replies failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
@@ -331,17 +230,10 @@ Ensure the response is valid JSON.`,
         return result;
       } catch (parseError) {
         logger.error("Failed to parse hashtag response:", parseError);
-        // Fallback
-        return {
-          hashtags: [
-            {
-              tag: "thoughts",
-              relevance: 0.5,
-              isTrending: false,
-            },
-          ],
-          category: "General",
-        };
+        logger.error("Raw response:", content.text);
+        throw new Error(
+          "AI service returned invalid response format. Please try again.",
+        );
       }
     }
 
@@ -365,24 +257,17 @@ Ensure the response is valid JSON.`,
 }
 
 export interface WritingFeedback {
-  clarity: {
-    score: number; // 0-100
-    issues: string[];
-    suggestions: string[];
-  };
-  tone: {
-    detected: string;
-    appropriateness: number; // 0-100
-    suggestions: string[];
-  };
-  engagement: {
-    score: number; // 0-100
-    strengths: string[];
-    improvements: string[];
-  };
-  overall: {
+  assessment: {
     summary: string;
-    readyToPost: boolean;
+    hasIssues: boolean;
+  };
+  correctedVersion: {
+    text: string;
+    changes: string[]; // List of corrections made
+  };
+  enhancedVersion: {
+    text: string;
+    improvements: string[]; // List of enhancements made
   };
 }
 
@@ -400,23 +285,36 @@ export async function getWritingFeedback(
       messages: [
         {
           role: "user",
-          content: `Analyze this social media post and provide constructive feedback.
+          content: `Analyze this social media post and provide helpful feedback with improved versions.
 
 Post: "${text}"
 
-Provide feedback in a JSON format with these sections:
-1. clarity: score (0-100), issues array, suggestions array
-2. tone: detected tone, appropriateness score (0-100), suggestions array
-3. engagement: score (0-100), strengths array, improvements array
-4. overall: brief summary, readyToPost boolean
+Provide a JSON response with:
+1. assessment: 
+   - summary: brief quality assessment (1-2 sentences)
+   - hasIssues: boolean indicating if there are typos or issues
+2. correctedVersion:
+   - text: the post with ONLY typos, grammar, and spelling fixed (minimal changes)
+   - changes: array of strings describing corrections (e.g. ["Fixed spelling of 'spelling'", "Corrected grammar"]) - empty array if none needed
+3. enhancedVersion:
+   - text: a slightly improved version (just a little better - keep the original voice and style)
+   - improvements: array of strings describing what was enhanced
 
-Focus on:
-- Is the message clear and easy to understand?
-- Is the tone appropriate for social media?
-- Will it engage readers?
-- Are there any potential issues (typos, unclear phrasing, etc)?
+Keep corrections minimal and enhancements subtle. Preserve the author's voice.
 
-Be constructive and helpful. Ensure the response is valid JSON.`,
+Example JSON structure:
+{
+  "assessment": { "summary": "...", "hasIssues": true },
+  "correctedVersion": { "text": "...", "changes": ["Fixed X", "Corrected Y"] },
+  "enhancedVersion": { "text": "...", "improvements": ["Made more concise", "Enhanced clarity"] }
+}
+
+IMPORTANT: Your response MUST be valid JSON only. Rules:
+1. Use proper JSON arrays with strings only (no arrow notation like "a" -> "b")
+2. Ensure all arrays and objects are properly closed with ] and }
+3. Double-check that your JSON is valid before responding
+4. Do not include any text before or after the JSON object
+5. Start directly with { and end with }`,
         },
       ],
     });
@@ -428,17 +326,14 @@ Be constructive and helpful. Ensure the response is valid JSON.`,
         return result;
       } catch (parseError) {
         logger.error("Failed to parse writing feedback response:", parseError);
-        // Fallback
-        return {
-          clarity: { score: 75, issues: [], suggestions: [] },
-          tone: { detected: "neutral", appropriateness: 80, suggestions: [] },
-          engagement: { score: 70, strengths: [], improvements: [] },
-          overall: { summary: "Your post looks good!", readyToPost: true },
-        };
+        logger.error("Raw response:", content.text);
+        throw new Error(
+          "AI service returned invalid response format. Please try again.",
+        );
       }
     }
 
-    throw new Error("Unexpected response format");
+    throw new Error("Unexpected response format from AI service");
   } catch (error) {
     logger.error("Error getting writing feedback:", error);
     analytics.trackError(error as Error, "writing_feedback");
@@ -521,5 +416,151 @@ export async function generateAltText(imageUrl: string): Promise<string> {
         `Alt text generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
+  }
+}
+
+export interface StyleMatchedWritingFeedback extends WritingFeedback {
+  styleAnalysis: {
+    userStyleSummary: string;
+    matchesStyle: boolean;
+    styleNotes: string[];
+  };
+}
+
+export async function getStyleMatchedWritingFeedback(
+  text: string,
+  agent: BskyAgent,
+): Promise<StyleMatchedWritingFeedback> {
+  try {
+    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
+      throw new Error("Anthropic API key not configured");
+    }
+
+    // Get current user's handle
+    const session = agent.session;
+    if (!session?.handle) {
+      throw new Error("User not authenticated");
+    }
+
+    logger.log("Fetching recent posts for style matching...");
+
+    // Fetch user's recent posts
+    const profileService = new ProfileService(agent);
+    const authorFeed = await profileService.getAuthorFeed(
+      session.handle,
+      40, // Get last 40 posts
+      undefined,
+      "posts_no_replies", // Only get original posts, not replies
+    );
+
+    // Extract text content from posts
+    const userPosts: string[] = [];
+    authorFeed.feed.forEach((item: AppBskyFeedDefs.FeedViewPost) => {
+      if (
+        item.post.record &&
+        typeof item.post.record === "object" &&
+        "text" in item.post.record
+      ) {
+        const postText = (item.post.record as { text: string }).text;
+        if (postText && postText.trim()) {
+          userPosts.push(postText);
+        }
+      }
+    });
+
+    logger.log(`Fetched ${userPosts.length} posts for style analysis`);
+
+    // Create a sample of recent posts for context (limit to avoid token limits)
+    const recentPostsSample = userPosts.slice(0, 20).join("\n---\n");
+
+    const response = await anthropic.messages.create({
+      model: "claude-3-haiku-20240307",
+      max_tokens: 2000,
+      messages: [
+        {
+          role: "user",
+          content: `Analyze this social media post and provide helpful feedback with improved versions, taking into account the user's writing style.
+
+User's recent posts (for style reference):
+${recentPostsSample}
+
+New post to analyze: "${text}"
+
+Provide a JSON response with:
+1. assessment: 
+   - summary: brief quality assessment (1-2 sentences)
+   - hasIssues: boolean indicating if there are typos or issues
+2. correctedVersion:
+   - text: the post with ONLY typos, grammar, and spelling fixed (minimal changes)
+   - changes: array of strings describing corrections (e.g. ["Fixed spelling of 'spelling'", "Corrected grammar"]) - empty array if none needed
+3. enhancedVersion:
+   - text: a slightly improved version that maintains their writing style
+   - improvements: array of strings describing what was enhanced
+4. styleAnalysis:
+   - userStyleSummary: brief description of their typical writing style
+   - matchesStyle: boolean indicating if this post matches their usual style
+   - styleNotes: array of strings with observations about style consistency
+
+Keep corrections minimal and enhancements subtle. The enhanced version should feel natural to their voice.
+
+Example JSON structure:
+{
+  "assessment": { "summary": "...", "hasIssues": true },
+  "correctedVersion": { "text": "...", "changes": ["Fixed X", "Corrected Y"] },
+  "enhancedVersion": { "text": "...", "improvements": ["Made more concise"] },
+  "styleAnalysis": { "userStyleSummary": "...", "matchesStyle": true, "styleNotes": ["Note 1", "Note 2"] }
+}
+
+IMPORTANT: Your response MUST be valid JSON only. Rules:
+1. Use proper JSON arrays with strings only (no arrow notation like "a" -> "b")
+2. Ensure all arrays and objects are properly closed with ] and }
+3. Double-check that your JSON is valid before responding
+4. Do not include any text before or after the JSON object
+5. Start directly with { and end with }`,
+        },
+      ],
+    });
+
+    const content = response.content[0];
+    if (content.type === "text") {
+      try {
+        const result = JSON.parse(content.text);
+        return result;
+      } catch (parseError) {
+        logger.error(
+          "Failed to parse style-matched feedback response:",
+          parseError,
+        );
+        logger.error("Raw response:", content.text);
+        throw new Error(
+          "AI service returned invalid response format. Please try again.",
+        );
+      }
+    }
+
+    throw new Error("Unexpected response format from AI service");
+  } catch (error) {
+    logger.error("Error getting style-matched writing feedback:", error);
+    analytics.trackError(error as Error, "style_matched_writing_feedback");
+
+    // Provide specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes("User not authenticated")) {
+        throw new Error("Please sign in to use writing feedback");
+      } else if (error.message.includes("401")) {
+        throw new Error(
+          "AI service authentication failed. Please check API key configuration.",
+        );
+      } else if (error.message.includes("429")) {
+        throw new Error(
+          "AI service rate limit exceeded. Please try again later.",
+        );
+      } else if (error.message.includes("API key not configured")) {
+        throw new Error("AI service not configured. Please contact support.");
+      }
+    }
+
+    // Re-throw the error so it's shown in the UI
+    throw error;
   }
 }

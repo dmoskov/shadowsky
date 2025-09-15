@@ -1046,14 +1046,6 @@ export const DataSettings: React.FC = () => {
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        <span>enableSmartReplies:</span>
-                        <span className="font-medium">
-                          {appPreferences.aiSettings.enableSmartReplies
-                            ? "true"
-                            : "false"}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
                         <span>enableHashtagSuggestions:</span>
                         <span className="font-medium">
                           {appPreferences.aiSettings.enableHashtagSuggestions

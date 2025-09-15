@@ -634,7 +634,6 @@ export function ThreadModal({
                       giphy: true,
                       altTextGeneration: true,
                       shortcuts: true,
-                      smartReplies: replyState.isReplying,
                       hashtags: true,
                       threadOptimization: false,
                     }}

@@ -15,7 +15,6 @@ export interface ShadowSkyPreferences {
   // AI composer settings
   aiSettings?: {
     autoGenerateAltText: boolean;
-    enableSmartReplies: boolean;
     enableHashtagSuggestions: boolean;
     enableWritingFeedback: boolean;
   };
@@ -98,7 +97,6 @@ export interface AppPreferencesRecord {
   // AI composer settings
   aiSettings?: {
     autoGenerateAltText: boolean;
-    enableSmartReplies: boolean;
     enableHashtagSuggestions: boolean;
     enableWritingFeedback: boolean;
   };
@@ -305,7 +303,6 @@ export class AppPreferencesService {
       isStoredInAtProto: false,
       aiSettings: {
         autoGenerateAltText: false,
-        enableSmartReplies: false,
         enableHashtagSuggestions: false,
         enableWritingFeedback: false,
       },

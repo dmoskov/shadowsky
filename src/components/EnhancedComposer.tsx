@@ -21,11 +21,6 @@ import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
 
 // Temporary type definitions until these are added to anthropic service
-interface SmartReply {
-  text: string;
-  tone: string;
-}
-
 interface HashtagSuggestion {
   tag: string;
   relevance: number;
@@ -72,7 +67,6 @@ interface EnhancedComposerProps {
     giphy?: boolean;
     altTextGeneration?: boolean;
     shortcuts?: boolean;
-    smartReplies?: boolean;
     hashtags?: boolean;
     threadOptimization?: boolean;
   };
@@ -110,7 +104,6 @@ export function EnhancedComposer({
     giphy: false,
     altTextGeneration: true,
     shortcuts: true,
-    smartReplies: true,
     hashtags: true,
     threadOptimization: false,
   },
@@ -135,13 +128,10 @@ export function EnhancedComposer({
   const [generatingAlt, setGeneratingAlt] = useState<string | null>(null);
 
   // AI features state
-  const [smartReplies, setSmartReplies] = useState<SmartReply[]>([]);
-  const [, setIsLoadingSmartReplies] = useState(false);
   const [hashtagSuggestions, setHashtagSuggestions] = useState<
     HashtagSuggestion[]
   >([]);
   const [, setIsLoadingHashtags] = useState(false);
-  const [enableSmartReplies, setEnableSmartReplies] = useState(false);
   const [enableHashtags, setEnableHashtags] = useState(false);
 
   // Quote post detection state
@@ -158,28 +148,16 @@ export function EnhancedComposer({
       // TODO: Add aiSettings to AppPreferencesRecord type
       // const prefs = await appPreferencesService.getPreferences();
       // if (prefs?.aiSettings) {
-      //   setEnableSmartReplies(
-      //     features.smartReplies === true &&
-      //       prefs.aiSettings.enableSmartReplies === true,
-      //   );
       //   setEnableHashtags(
       //     features.hashtags === true &&
       //       prefs.aiSettings.enableHashtagSuggestions === true,
       //   );
       // }
       // For now, disable these features
-      setEnableSmartReplies(false);
       setEnableHashtags(false);
     };
     loadSettings();
-  }, [features.smartReplies, features.hashtags]);
-
-  // Load smart replies for replies
-  useEffect(() => {
-    if (replyTo?.text && enableSmartReplies && !text) {
-      loadSmartReplies();
-    }
-  }, [replyTo?.text, enableSmartReplies, text]);
+  }, [features.hashtags]);
 
   // Load hashtag suggestions
   useEffect(() => {
@@ -242,25 +220,6 @@ export function EnhancedComposer({
 
     return () => clearTimeout(timer);
   }, [text, agent, quotedPost]);
-
-  const loadSmartReplies = async () => {
-    if (!replyTo?.text) return;
-
-    setIsLoadingSmartReplies(true);
-    try {
-      // TODO: Implement generateSmartReplies in anthropic service
-      // const result = await generateSmartReplies(
-      //   replyTo.text,
-      //   replyTo.author.handle,
-      // );
-      // setSmartReplies(result.suggestions);
-      setSmartReplies([]); // Temporarily disabled
-    } catch (error) {
-      debug.error("Failed to generate smart replies:", error);
-    } finally {
-      setIsLoadingSmartReplies(false);
-    }
-  };
 
   const loadHashtagSuggestions = async () => {
     setIsLoadingHashtags(true);
@@ -459,7 +418,6 @@ export function EnhancedComposer({
       setShowEmojiPicker(false);
       setShowGifSearch(false);
       setShowHashtagSuggestions(false);
-      setSmartReplies([]);
       setDetectedQuotePost(null);
     } catch (error) {
       debug.error("Failed to submit:", error);
@@ -503,14 +461,6 @@ export function EnhancedComposer({
       debug.error("Failed to add GIF:", error);
       setError("Failed to add GIF");
     }
-  };
-
-  // Handle smart reply selection
-  const handleSelectSmartReply = (reply: SmartReply) => {
-    setText(reply.text);
-    onChange?.(reply.text);
-    setSmartReplies([]);
-    textareaRef.current?.focus();
   };
 
   // Handle hashtag selection
@@ -684,41 +634,6 @@ export function EnhancedComposer({
                 </>
               );
             })()}
-          </div>
-        </div>
-      )}
-
-      {/* Smart reply suggestions */}
-      {smartReplies.length > 0 && !text && (
-        <div className="mb-3">
-          <div className="mb-1 flex items-center gap-1.5">
-            <Sparkles
-              size={14}
-              style={{ color: "var(--bsky-text-tertiary)" }}
-            />
-            <span
-              className="text-xs font-medium"
-              style={{ color: "var(--bsky-text-tertiary)" }}
-            >
-              Smart Replies
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {smartReplies.slice(0, 3).map((reply, index) => (
-              <button
-                key={index}
-                onClick={() => handleSelectSmartReply(reply)}
-                className="rounded-lg border px-3 py-1.5 text-sm transition-all hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 dark:hover:bg-opacity-20"
-                style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
-                  color: "var(--bsky-text-primary)",
-                }}
-                disabled={isSubmitting}
-              >
-                {reply.text}
-              </button>
-            ))}
           </div>
         </div>
       )}

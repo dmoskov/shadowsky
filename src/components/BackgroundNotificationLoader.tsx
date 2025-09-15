@@ -77,13 +77,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
         100,
       );
 
-      debug.log("[BackgroundNotificationLoader] Fetched notifications page:", {
-        notificationCount: result.notifications.length,
-        cursor: result.cursor,
-        hasMore: !!result.cursor,
-        timestamp: new Date().toISOString(),
-      });
-
       return result;
     },
     initialPageParam: undefined as string | undefined,

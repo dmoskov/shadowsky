@@ -25,12 +25,12 @@ import { analytics } from "../services/analytics";
 import {
   adjustTone,
   generateAltText,
-  getWritingFeedback,
+  getStyleMatchedWritingFeedback,
   optimizeThread,
   suggestHashtags,
+  type StyleMatchedWritingFeedback,
   type ThreadOptimizationResult,
   type ToneOption,
-  type WritingFeedback,
 } from "../services/anthropic";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { ThreadgateService } from "../services/atproto/threadgate";
@@ -261,7 +261,7 @@ export function Composer() {
   // Writing feedback state
   const [showWritingFeedback, setShowWritingFeedback] = useState(false);
   const [writingFeedback, setWritingFeedback] =
-    useState<WritingFeedback | null>(null);
+    useState<StyleMatchedWritingFeedback | null>(null);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
 
   // Check if we're in development mode
@@ -311,7 +311,6 @@ export function Composer() {
         await appPreferencesService.updatePreferences({
           aiSettings: {
             autoGenerateAltText,
-            enableSmartReplies: false, // Not used in composer yet
             enableHashtagSuggestions,
             enableWritingFeedback,
           },
@@ -1911,7 +1910,10 @@ export function Composer() {
     });
 
     try {
-      const feedback = await getWritingFeedback(text);
+      if (!agent) {
+        throw new Error("Not authenticated");
+      }
+      const feedback = await getStyleMatchedWritingFeedback(text, agent);
       setWritingFeedback(feedback);
       setShowWritingFeedback(true);
       debug.log("Writing feedback received", feedback);
@@ -1921,9 +1923,10 @@ export function Composer() {
         category: "composer",
         action: "writing_feedback_success",
         custom_parameters: {
-          clarity_score: feedback.clarity.score,
-          engagement_score: feedback.engagement.score,
-          ready_to_post: feedback.overall.readyToPost,
+          has_issues: feedback.assessment.hasIssues,
+          matches_style: feedback.styleAnalysis.matchesStyle,
+          corrections_count: feedback.correctedVersion.changes.length,
+          improvements_count: feedback.enhancedVersion.improvements.length,
         },
       });
     } catch (error) {
@@ -2036,7 +2039,6 @@ export function Composer() {
                   <AISettingsPanel
                     settings={{
                       autoGenerateAltText,
-                      enableSmartReplies: false,
                       enableHashtagSuggestions,
                       enableWritingFeedback,
                     }}
@@ -3372,26 +3374,26 @@ export function Composer() {
             </div>
 
             <div className="space-y-4">
-              {/* Overall Summary */}
+              {/* Assessment */}
               <div
                 className={`rounded-lg border p-4 ${
-                  writingFeedback.overall.readyToPost
+                  !writingFeedback.assessment.hasIssues
                     ? "border-green-500 bg-green-50 dark:bg-green-900 dark:bg-opacity-20"
                     : "border-yellow-500 bg-yellow-50 dark:bg-yellow-900 dark:bg-opacity-20"
                 }`}
               >
                 <h4 className="mb-2 flex items-center gap-2 font-semibold">
-                  {writingFeedback.overall.readyToPost ? (
+                  {!writingFeedback.assessment.hasIssues ? (
                     <CheckCircle size={16} className="text-green-600" />
                   ) : (
                     <AlertCircle size={16} className="text-yellow-600" />
                   )}
-                  Overall Assessment
+                  Quality Assessment
                 </h4>
-                <p className="text-sm">{writingFeedback.overall.summary}</p>
+                <p className="text-sm">{writingFeedback.assessment.summary}</p>
               </div>
 
-              {/* Clarity */}
+              {/* Corrected Version */}
               <div
                 className="rounded-lg border p-4"
                 style={{
@@ -3399,72 +3401,41 @@ export function Composer() {
                   borderColor: "var(--bsky-border-primary)",
                 }}
               >
-                <h4 className="mb-3 font-semibold">
-                  Clarity Score: {writingFeedback.clarity.score}/100
-                </h4>
-                <div className="mb-2 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-                  <div
-                    className="h-2 rounded-full transition-all"
-                    style={{
-                      width: `${writingFeedback.clarity.score}%`,
-                      background:
-                        writingFeedback.clarity.score >= 70
-                          ? "var(--bsky-success)"
-                          : writingFeedback.clarity.score >= 50
-                            ? "var(--bsky-warning)"
-                            : "var(--bsky-danger)",
-                    }}
-                  />
-                </div>
-                {writingFeedback.clarity.issues.length > 0 && (
-                  <div className="mt-3">
-                    <p className="mb-1 text-sm font-medium">Issues:</p>
-                    <ul className="list-disc space-y-1 pl-5 text-sm">
-                      {writingFeedback.clarity.issues.map((issue, i) => (
-                        <li key={i}>{issue}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {writingFeedback.clarity.suggestions.length > 0 && (
-                  <div className="mt-3">
-                    <p className="mb-1 text-sm font-medium">Suggestions:</p>
-                    <ul className="list-disc space-y-1 pl-5 text-sm">
-                      {writingFeedback.clarity.suggestions.map(
-                        (suggestion, i) => (
-                          <li key={i}>{suggestion}</li>
-                        ),
-                      )}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              {/* Tone */}
-              <div
-                className="rounded-lg border p-4"
-                style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
-                }}
-              >
-                <h4 className="mb-3 font-semibold">
-                  Tone: {writingFeedback.tone.detected}
-                  <span className="ml-2 text-sm font-normal">
-                    (Appropriateness: {writingFeedback.tone.appropriateness}
-                    /100)
+                <h4 className="mb-3 flex items-center justify-between font-semibold">
+                  <span className="flex items-center gap-2">
+                    <FileText size={16} />
+                    Corrected Version
                   </span>
+                  <button
+                    className="bsky-button-secondary flex items-center gap-1 px-3 py-1 text-sm"
+                    onClick={() => {
+                      setText(writingFeedback.correctedVersion.text);
+                      setShowWritingFeedback(false);
+                      setWritingFeedback(null);
+                    }}
+                  >
+                    <Undo size={14} />
+                    Use This
+                  </button>
                 </h4>
-                {writingFeedback.tone.suggestions.length > 0 && (
-                  <ul className="list-disc space-y-1 pl-5 text-sm">
-                    {writingFeedback.tone.suggestions.map((suggestion, i) => (
-                      <li key={i}>{suggestion}</li>
-                    ))}
-                  </ul>
+                <p className="mb-3 rounded bg-gray-50 p-3 text-sm dark:bg-gray-900">
+                  {writingFeedback.correctedVersion.text}
+                </p>
+                {writingFeedback.correctedVersion.changes.length > 0 && (
+                  <div className="text-xs text-gray-500">
+                    <p className="font-medium">Corrections made:</p>
+                    <ul className="list-disc space-y-0.5 pl-5">
+                      {writingFeedback.correctedVersion.changes.map(
+                        (change, i) => (
+                          <li key={i}>{change}</li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
                 )}
               </div>
 
-              {/* Engagement */}
+              {/* Enhanced Version */}
               <div
                 className="rounded-lg border p-4"
                 style={{
@@ -3472,48 +3443,66 @@ export function Composer() {
                   borderColor: "var(--bsky-border-primary)",
                 }}
               >
-                <h4 className="mb-3 font-semibold">
-                  Engagement Score: {writingFeedback.engagement.score}/100
-                </h4>
-                <div className="mb-2 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-                  <div
-                    className="h-2 rounded-full transition-all"
-                    style={{
-                      width: `${writingFeedback.engagement.score}%`,
-                      background:
-                        writingFeedback.engagement.score >= 70
-                          ? "var(--bsky-success)"
-                          : writingFeedback.engagement.score >= 50
-                            ? "var(--bsky-warning)"
-                            : "var(--bsky-danger)",
+                <h4 className="mb-3 flex items-center justify-between font-semibold">
+                  <span className="flex items-center gap-2">
+                    <Sparkles size={16} />
+                    Enhanced Version
+                  </span>
+                  <button
+                    className="bsky-button-primary flex items-center gap-1 px-3 py-1 text-sm"
+                    onClick={() => {
+                      setText(writingFeedback.enhancedVersion.text);
+                      setShowWritingFeedback(false);
+                      setWritingFeedback(null);
                     }}
-                  />
-                </div>
-                {writingFeedback.engagement.strengths.length > 0 && (
-                  <div className="mt-3">
-                    <p className="mb-1 text-sm font-medium">✅ Strengths:</p>
-                    <ul className="list-disc space-y-1 pl-5 text-sm">
-                      {writingFeedback.engagement.strengths.map(
-                        (strength, i) => (
-                          <li key={i}>{strength}</li>
-                        ),
-                      )}
-                    </ul>
-                  </div>
-                )}
-                {writingFeedback.engagement.improvements.length > 0 && (
-                  <div className="mt-3">
-                    <p className="mb-1 text-sm font-medium">
-                      💡 Areas for Improvement:
-                    </p>
-                    <ul className="list-disc space-y-1 pl-5 text-sm">
-                      {writingFeedback.engagement.improvements.map(
+                  >
+                    <Undo size={14} />
+                    Use This
+                  </button>
+                </h4>
+                <p className="mb-3 rounded bg-gray-50 p-3 text-sm dark:bg-gray-900">
+                  {writingFeedback.enhancedVersion.text}
+                </p>
+                {writingFeedback.enhancedVersion.improvements.length > 0 && (
+                  <div className="text-xs text-gray-500">
+                    <p className="font-medium">Improvements:</p>
+                    <ul className="list-disc space-y-0.5 pl-5">
+                      {writingFeedback.enhancedVersion.improvements.map(
                         (improvement, i) => (
                           <li key={i}>{improvement}</li>
                         ),
                       )}
                     </ul>
                   </div>
+                )}
+              </div>
+
+              {/* Style Analysis */}
+              <div
+                className="rounded-lg border p-4"
+                style={{
+                  backgroundColor: "var(--bsky-bg-secondary)",
+                  borderColor: "var(--bsky-border-primary)",
+                }}
+              >
+                <h4 className="mb-3 flex items-center gap-2 font-semibold">
+                  <MessageSquare size={16} />
+                  Your Writing Style
+                </h4>
+                <p className="mb-2 text-sm italic">
+                  {writingFeedback.styleAnalysis.userStyleSummary}
+                </p>
+                <p className="mb-2 text-sm">
+                  {writingFeedback.styleAnalysis.matchesStyle
+                    ? "✅ This post matches your typical style"
+                    : "⚡ This post differs from your usual style"}
+                </p>
+                {writingFeedback.styleAnalysis.styleNotes.length > 0 && (
+                  <ul className="list-disc space-y-0.5 pl-5 text-xs text-gray-500">
+                    {writingFeedback.styleAnalysis.styleNotes.map((note, i) => (
+                      <li key={i}>{note}</li>
+                    ))}
+                  </ul>
                 )}
               </div>
             </div>
