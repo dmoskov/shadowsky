@@ -66,7 +66,7 @@ const NotificationsAnalytics = lazy(() =>
   })),
 );
 const Search = lazy(() =>
-  import("./components/Search").then((m) => ({ default: m.Search })),
+  import("./components/SearchTabbed").then((m) => ({ default: m.SearchTabbed })),
 );
 const SkyDeck = lazy(() => import("./components/SkyDeck"));
 const VisualTimeline = lazy(() =>

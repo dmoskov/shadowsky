@@ -1393,7 +1393,7 @@ export const Home: React.FC<HomeProps> = ({
 
   return (
     <div
-      className="relative w-full"
+      className="home-container relative w-full"
       ref={(el) => {
         if (el) {
           (

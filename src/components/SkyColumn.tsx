@@ -1,3 +1,4 @@
+import { ArrowUp, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { columnService } from "../services/column-service";
 import { useStorageErrorManager } from "../services/storage/storage-error-manager";
@@ -41,29 +42,53 @@ export default function SkyColumn({
       return column.data;
     },
   );
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const checkScroll = () => {
+      let scrollTop = 0;
+      let scrollHeight = 0;
+      let clientHeight = 0;
+
+      // Check the column's scroll container first
       if (scrollContainerRef.current) {
-        const { scrollTop, scrollHeight, clientHeight } =
-          scrollContainerRef.current;
-        setHasScrollTop(scrollTop > 10);
-        setHasScrollBottom(scrollTop < scrollHeight - clientHeight - 10);
+        scrollTop = scrollContainerRef.current.scrollTop;
+        scrollHeight = scrollContainerRef.current.scrollHeight;
+        clientHeight = scrollContainerRef.current.clientHeight;
       }
+
+      // In mobile view, check window scroll
+      if (scrollTop === 0 && window.innerWidth < 768) {
+        scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        scrollHeight = document.documentElement.scrollHeight;
+        clientHeight = window.innerHeight;
+      }
+
+      setHasScrollTop(scrollTop > 10);
+      setHasScrollBottom(scrollTop < scrollHeight - clientHeight - 10);
+      // Show scroll button when scrolled down more than 200px
+      setShowScrollButton(scrollTop > 200);
     };
 
     const scrollContainer = scrollContainerRef.current;
+
     if (scrollContainer) {
       scrollContainer.addEventListener("scroll", checkScroll);
-      checkScroll(); // Initial check
     }
+
+    // Also listen to window scroll in mobile view
+    window.addEventListener("scroll", checkScroll);
+
+    checkScroll(); // Initial check
 
     return () => {
       if (scrollContainer) {
         scrollContainer.removeEventListener("scroll", checkScroll);
       }
+      window.removeEventListener("scroll", checkScroll);
     };
-  }, []);
+  }, [column.type]);
 
   // Listen for refresh feed events (from mobile tab bar double tap)
   useEffect(() => {
@@ -79,6 +104,39 @@ export default function SkyColumn({
       window.removeEventListener("refreshFeed", handleRefreshFeed);
     };
   }, [column.type]);
+
+  // Scroll to top function with smooth animation
+  const scrollToTop = () => {
+    // Try the column's scroll container first
+    if (
+      scrollContainerRef.current &&
+      scrollContainerRef.current.scrollTop > 0
+    ) {
+      scrollContainerRef.current.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    } else if (window.innerWidth < 768) {
+      // In mobile view, scroll the window
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  // Combined scroll to top and refresh function
+  const scrollToTopAndRefresh = async () => {
+    if (column.type === "feed") {
+      setIsRefreshing(true);
+      scrollToTop();
+      setRefreshCounter((prev) => prev + 1);
+      // Add a small delay to show the refresh animation
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 1000);
+    }
+  };
 
   // Render different components based on column type
   const renderContent = () => {
@@ -201,6 +259,35 @@ export default function SkyColumn({
               hasScrollTop ? "has-scroll-top" : ""
             } ${hasScrollBottom ? "has-scroll-bottom" : ""}`}
           />
+          {/* Floating scroll-to-top button with refresh option */}
+          {column.type === "feed" && showScrollButton && (
+            <div className="absolute bottom-4 right-4 z-50 flex flex-col gap-2 pb-16 sm:pb-0">
+              {/* Refresh button */}
+              <button
+                onClick={scrollToTopAndRefresh}
+                className={`bg-primary hover:bg-primary/90 group relative rounded-full p-3 text-white shadow-lg transition-all hover:shadow-xl ${
+                  isRefreshing ? "animate-spin" : ""
+                }`}
+                title="Refresh feed"
+              >
+                <RefreshCw className="h-5 w-5" />
+                <span className="absolute -left-12 top-1/2 -translate-y-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 dark:bg-gray-700">
+                  Refresh
+                </span>
+              </button>
+              {/* Scroll to top button */}
+              <button
+                onClick={scrollToTop}
+                className="bg-primary hover:bg-primary/90 group relative rounded-full p-3 text-white shadow-lg transition-all hover:shadow-xl"
+                title="Scroll to top"
+              >
+                <ArrowUp className="h-5 w-5" />
+                <span className="absolute -left-16 top-1/2 -translate-y-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 dark:bg-gray-700">
+                  Back to top
+                </span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
