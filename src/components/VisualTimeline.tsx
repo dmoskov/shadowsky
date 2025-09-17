@@ -1002,8 +1002,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
             className="absolute bottom-0 left-[1.5rem] top-0 w-0.5 sm:left-[6.5rem]"
             style={{
               background:
-                "linear-gradient(to bottom, var(--bsky-border-color) 0%, var(--bsky-border-color) 100%)",
-              position: "relative",
+                "linear-gradient(to bottom, var(--bsky-border-primary) 0%, var(--bsky-border-primary) 100%)",
             }}
           />
 
@@ -1022,7 +1021,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                       }
                     : {}),
                   backgroundColor: "var(--bsky-bg-primary)",
-                  borderBottom: "1px solid var(--bsky-border-color)",
+                  borderBottom: "1px solid var(--bsky-border-primary)",
                   backdropFilter: "blur(10px)",
                   WebkitBackdropFilter: "blur(10px)",
                   boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
@@ -1421,7 +1420,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                       className="h-10 w-10 rounded-full"
                                       style={{
                                         border:
-                                          "1px solid var(--bsky-border-color)",
+                                          "1px solid var(--bsky-border-primary)",
                                       }}
                                     />
                                   </div>
@@ -1594,7 +1593,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                         backgroundColor:
                                           "var(--bsky-bg-tertiary)",
                                         border:
-                                          "1px solid var(--bsky-border-color)",
+                                          "1px solid var(--bsky-border-primary)",
                                       }}
                                     >
                                       <MessageCircle
@@ -1623,7 +1622,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                               "var(--bsky-bg-tertiary)",
                                             color: "var(--bsky-text-secondary)",
                                             border:
-                                              "1px solid var(--bsky-border-color)",
+                                              "1px solid var(--bsky-border-primary)",
                                           }}
                                         >
                                           {event.notifications.length}+
@@ -2105,7 +2104,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                       differenceInHours(previousEvent.time, event.time) >=
                         12 && (
                         <div
-                          className="before:bg-bsky-border-color after:bg-bsky-border-color absolute relative -top-3 left-[5rem] whitespace-nowrap rounded-[10px] bg-bsky-bg-secondary px-1.5 py-0.5 text-xs before:absolute before:-top-3 before:left-1/2 before:h-2 before:w-px before:-translate-x-1/2 before:opacity-30 before:content-[''] after:absolute after:-bottom-3 after:left-1/2 after:h-2 after:w-px after:-translate-x-1/2 after:opacity-30 after:content-[''] sm:left-[7.5rem]"
+                          className="absolute -top-3 left-[5rem] whitespace-nowrap rounded-[10px] bg-bsky-bg-secondary px-1.5 py-0.5 text-xs sm:left-[7.5rem]"
                           style={{
                             color: "var(--bsky-text-tertiary)",
                             transform: "translateX(-50%)",
@@ -2129,7 +2128,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
             <div className="w-24" />
             <div
               className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: "var(--bsky-border-color)" }}
+              style={{ backgroundColor: "var(--bsky-border-primary)" }}
             />
             <span
               className="text-sm"
