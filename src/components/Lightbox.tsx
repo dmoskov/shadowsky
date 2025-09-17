@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import React, { useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface LightboxImage {
   src: string;
@@ -49,6 +50,19 @@ export const Lightbox: React.FC<LightboxProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
+  // Prevent body scroll when lightbox is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -57,27 +71,34 @@ export const Lightbox: React.FC<LightboxProps> = ({
     }
   };
 
-  const handlePrevious = () => {
+  const handlePrevious = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (currentIndex > 0) {
       onNavigate(currentIndex - 1);
     }
   };
 
-  const handleNext = () => {
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (currentIndex < images.length - 1) {
       onNavigate(currentIndex + 1);
     }
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+      className="fixed inset-0 flex items-center justify-center bg-black"
       onClick={handleBackdropClick}
+      style={{ zIndex: 999999 }}
     >
       {/* Close button */}
       <button
-        onClick={onClose}
-        className="absolute right-4 top-4 z-50 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        className="fixed right-4 top-4 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-all hover:bg-white/20"
+        style={{ zIndex: 1000000 }}
         aria-label="Close lightbox"
       >
         <X size={24} />
@@ -89,28 +110,35 @@ export const Lightbox: React.FC<LightboxProps> = ({
           <button
             onClick={handlePrevious}
             disabled={currentIndex === 0}
-            className="absolute left-4 top-1/2 z-50 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-50"
+            className="fixed left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-all hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-30"
+            style={{ zIndex: 1000000 }}
             aria-label="Previous image"
           >
-            <ChevronLeft size={24} />
+            <ChevronLeft size={32} />
           </button>
           <button
             onClick={handleNext}
             disabled={currentIndex === images.length - 1}
-            className="absolute right-4 top-1/2 z-50 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-50"
+            className="fixed right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-all hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-30"
+            style={{ zIndex: 1000000 }}
             aria-label="Next image"
           >
-            <ChevronRight size={24} />
+            <ChevronRight size={32} />
           </button>
         </>
       )}
 
       {/* Main image */}
-      <div className="relative max-h-[90vh] max-w-[90vw]">
+      <div
+        className="relative flex items-center justify-center"
+        style={{ maxHeight: "90vh", maxWidth: "90vw" }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <img
           src={images[currentIndex].src}
           alt={images[currentIndex].alt || ""}
           className="max-h-[90vh] max-w-[90vw] object-contain"
+          style={{ position: "relative", zIndex: 1000001 }}
         />
 
         {/* Alt text display */}
@@ -123,26 +151,38 @@ export const Lightbox: React.FC<LightboxProps> = ({
 
       {/* Image counter */}
       {images.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-sm text-white">
+        <div
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-sm text-white backdrop-blur-sm"
+          style={{ zIndex: 1000000 }}
+        >
           {currentIndex + 1} / {images.length}
         </div>
       )}
 
       {/* Thumbnails strip */}
       {images.length > 1 && (
-        <div className="absolute bottom-20 left-1/2 flex -translate-x-1/2 gap-2">
+        <div
+          className="fixed bottom-20 left-1/2 flex -translate-x-1/2 gap-2"
+          style={{ zIndex: 1000000 }}
+        >
           {images.map((_, idx) => (
             <button
               key={idx}
-              onClick={() => onNavigate(idx)}
-              className={`h-2 w-8 rounded-full transition-colors ${
-                idx === currentIndex ? "bg-white" : "bg-white/40"
+              onClick={(e) => {
+                e.stopPropagation();
+                onNavigate(idx);
+              }}
+              className={`h-2 w-8 rounded-full transition-all ${
+                idx === currentIndex
+                  ? "bg-white"
+                  : "bg-white/40 hover:bg-white/60"
               }`}
               aria-label={`Go to image ${idx + 1}`}
             />
           ))}
         </div>
       )}
-    </div>
+    </div>,
+    document.body,
   );
 };
