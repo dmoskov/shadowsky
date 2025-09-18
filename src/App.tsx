@@ -1,7 +1,13 @@
 import { debug } from "@bsky/shared";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router";
 import { BackgroundNotificationLoader } from "./components/BackgroundNotificationLoader";
 import { CommandPalette } from "./components/CommandPalette";
 import { DebugConsole } from "./components/DebugConsole";
@@ -22,6 +28,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { useErrorTracking, usePageTracking } from "./hooks/useAnalytics";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
 import { analytics } from "./services/analytics";
+import { appPreferencesService } from "./services/app-preferences-service";
 import { bookmarkStorage } from "./services/bookmark-storage-db";
 import { NotificationStorageDB } from "./services/notification-storage-db";
 import { cleanupLocalStorage } from "./utils/cleanupLocalStorage";
@@ -81,16 +88,20 @@ const Settings = lazy(() =>
   import("./pages/Settings").then((m) => ({ default: m.Settings })),
 );
 
+// Mobile-optimized query client settings
+const isMobile = window.innerWidth < 768;
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30 * 60 * 1000, // 30 minutes - increased to prevent frequent refetches
-      gcTime: 2 * 60 * 60 * 1000, // 2 hours - keep data in cache much longer
+      // More aggressive cleanup for mobile to prevent memory issues
+      staleTime: isMobile ? 15 * 60 * 1000 : 30 * 60 * 1000, // 15/30 minutes
+      gcTime: isMobile ? 30 * 60 * 1000 : 2 * 60 * 60 * 1000, // 30 mins/2 hours
       retry: (failureCount, error: unknown) => {
         const err = error as { status?: number };
         if (err?.status === 429) return false; // Don't retry rate limits
         if (err?.status === 401) return false; // Don't retry auth errors
-        return failureCount < 3;
+        // Fewer retries on mobile to save battery/data
+        return failureCount < (isMobile ? 1 : 3);
       },
       // Keep previous data while fetching new data
       placeholderData: <T,>(previousData: T) => previousData,
@@ -101,15 +112,24 @@ const queryClient = new QueryClient({
       // Prevent UI flicker by using structural sharing
       structuralSharing: true,
     },
+    mutations: {
+      // Reduce retry attempts on mobile
+      retry: isMobile ? 0 : 2,
+    },
   },
 });
 
 function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  // Check if we're on the home route
+  const isHomeRoute =
+    location.pathname === "/" || location.pathname === "/home";
 
   // Initialize swipe navigation for mobile
   const swipeHandlers = useSwipeNavigation();
@@ -134,18 +154,29 @@ function AppContent() {
 
   // Auto-collapse sidebar when viewport is too narrow for 3 columns
   useEffect(() => {
-    const checkViewportWidth = () => {
-      // Sidebar: 256px, 3 columns: 3*400px + 2*12px gap + 24px padding = 1248px
-      // Total needed: 1504px
-      const shouldCollapse =
-        window.innerWidth < 1504 && window.innerWidth >= 1024; // Only on desktop
-      setIsSidebarCollapsed(shouldCollapse);
+    const checkViewportWidth = async () => {
+      // Get column width from preferences
+      if (isAuthenticated) {
+        const prefs = await appPreferencesService.getPreferences();
+        const columnWidth = prefs?.columnWidth || 320;
+
+        // Sidebar: 256px, 3 columns: 3*columnWidth + 2*12px gap + 24px padding
+        const totalNeeded = 256 + 3 * columnWidth + 2 * 12 + 24;
+        const shouldCollapse =
+          window.innerWidth < totalNeeded && window.innerWidth >= 1024; // Only on desktop
+        setIsSidebarCollapsed(shouldCollapse);
+      } else {
+        // Default calculation if not authenticated
+        const shouldCollapse =
+          window.innerWidth < 1280 && window.innerWidth >= 1024;
+        setIsSidebarCollapsed(shouldCollapse);
+      }
     };
 
     checkViewportWidth();
     window.addEventListener("resize", checkViewportWidth);
     return () => window.removeEventListener("resize", checkViewportWidth);
-  }, []);
+  }, [isAuthenticated]);
 
   // Run one-time migration on app load
   useEffect(() => {
@@ -203,14 +234,16 @@ function AppContent() {
     >
       <BackgroundNotificationLoader />
       <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
-      <div className="flex">
+      <div
+        className={`relative flex ${isHomeRoute ? "" : "mx-auto 2xl:max-w-[1536px]"}`}
+      >
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
           isCollapsed={isSidebarCollapsed}
         />
         <main
-          className={`mt-16 min-h-[calc(100vh-4rem)] flex-1 pb-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto lg:pb-0 ${isSidebarCollapsed ? "lg:ml-16" : "lg:ml-64"}`}
+          className={`mt-16 min-h-[calc(100vh-4rem)] flex-1 pb-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto lg:pb-0`}
         >
           <Suspense fallback={<PageLoader />}>
             <Routes>

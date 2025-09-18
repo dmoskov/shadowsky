@@ -1,35 +1,57 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface ProgressiveImageProps {
   src: string;
   alt: string;
   className?: string;
+  style?: React.CSSProperties;
   width?: number;
   height?: number;
   placeholderSrc?: string;
   onLoad?: () => void;
   onError?: () => void;
+  priority?: boolean; // Skip lazy loading for above-the-fold images
+}
+
+// Increase concurrent loads since we're preloading further ahead
+const MAX_CONCURRENT_LOADS = window.innerWidth < 768 ? 6 : 12;
+let currentLoads = 0;
+const loadQueue: Array<() => void> = [];
+
+function processLoadQueue() {
+  while (currentLoads < MAX_CONCURRENT_LOADS && loadQueue.length > 0) {
+    const loadFn = loadQueue.shift();
+    if (loadFn) {
+      currentLoads++;
+      loadFn();
+    }
+  }
 }
 
 export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   src,
   alt,
   className = "",
+  style,
   width,
   height,
   placeholderSrc,
   onLoad,
   onError,
+  priority = false,
 }) => {
   const [imgSrc, setImgSrc] = useState(placeholderSrc || "");
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [shouldLoad, setShouldLoad] = useState(priority);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   // Generate a low-quality placeholder if not provided
   const getLowQualitySrc = (originalSrc: string) => {
-    // If it's a proxied image, add quality parameter
+    // If it's a proxied image, add quality parameter for true low quality
     if (originalSrc.includes("/api/image-proxy")) {
-      return originalSrc + "&q=20&blur=20";
+      return originalSrc + "&q=10&w=50";
     }
     // For Bluesky CDN images, use thumbnail variant
     if (originalSrc.includes("cdn.bsky.app")) {
@@ -40,36 +62,100 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
     return originalSrc;
   };
 
+  // Set up Intersection Observer for lazy loading
   useEffect(() => {
-    // Load low quality version first
-    const lowQualitySrc = placeholderSrc || getLowQualitySrc(src);
+    // Priority images load immediately, no need for observer
+    if (priority) {
+      setShouldLoad(true);
+      return;
+    }
 
-    // Create image object to preload high quality version
-    const img = new Image();
+    if (shouldLoad) return;
 
-    img.onload = () => {
-      setImgSrc(src);
-      setIsLoading(false);
-      onLoad?.();
-    };
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setShouldLoad(true);
+            observerRef.current?.disconnect();
+          }
+        });
+      },
+      {
+        // Preload images WAY before they enter viewport
+        // Mobile: 5 viewport heights, Desktop: 8 viewport heights
+        // This ensures images are fully loaded even with moderate scrolling
+        rootMargin:
+          window.innerWidth < 768 ? "500% 0px 500% 0px" : "800% 0px 800% 0px",
+        threshold: 0.01,
+      },
+    );
 
-    img.onerror = () => {
-      setHasError(true);
-      setIsLoading(false);
-      onError?.();
-    };
-
-    // Start with low quality
-    setImgSrc(lowQualitySrc);
-
-    // Load high quality
-    img.src = src;
+    const currentElement = imgRef.current;
+    if (currentElement) {
+      observerRef.current.observe(currentElement);
+    }
 
     return () => {
-      img.onload = null;
-      img.onerror = null;
+      observerRef.current?.disconnect();
     };
-  }, [src, placeholderSrc, onLoad, onError]);
+  }, [priority, shouldLoad]);
+
+  useEffect(() => {
+    if (!shouldLoad) return;
+
+    const lowQualitySrc = placeholderSrc || getLowQualitySrc(src);
+    setImgSrc(lowQualitySrc);
+
+    const loadImage = () => {
+      const img = new Image();
+
+      img.onload = () => {
+        // Add small delay to ensure smooth transition
+        requestAnimationFrame(() => {
+          setImgSrc(src);
+          setIsLoading(false);
+          onLoad?.();
+        });
+        currentLoads--;
+        processLoadQueue();
+        // Clear image reference to free memory
+        img.onload = null;
+        img.onerror = null;
+      };
+
+      img.onerror = () => {
+        setHasError(true);
+        setIsLoading(false);
+        onError?.();
+        currentLoads--;
+        processLoadQueue();
+        // Clear image reference to free memory
+        img.onload = null;
+        img.onerror = null;
+      };
+
+      img.src = src;
+    };
+
+    // Queue the image load
+    if (priority) {
+      // Priority images skip the queue
+      currentLoads++;
+      loadImage();
+    } else {
+      loadQueue.push(loadImage);
+      processLoadQueue();
+    }
+
+    return () => {
+      // Remove from queue if component unmounts
+      const index = loadQueue.findIndex((fn) => fn === loadImage);
+      if (index > -1) {
+        loadQueue.splice(index, 1);
+      }
+    };
+  }, [src, placeholderSrc, shouldLoad, onLoad, onError, priority]);
 
   if (hasError) {
     return (
@@ -86,21 +172,35 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
 
   return (
     <div
-      className={`relative overflow-hidden ${className}`}
+      className={`relative overflow-hidden bg-gray-100 dark:bg-gray-800 ${className}`}
       style={{ width, height }}
     >
       <img
+        ref={imgRef}
         src={imgSrc}
         alt={alt}
-        className={`h-full w-full object-cover transition-all duration-300 ${
-          isLoading ? "scale-105 blur-sm filter" : "scale-100 filter-none"
-        }`}
+        loading={priority ? "eager" : "lazy"}
+        decoding={priority ? "sync" : "async"}
+        className={`${className} ${isLoading ? "opacity-0" : "opacity-100"}`}
         style={{
-          transition: "filter 0.3s ease-out, transform 0.3s ease-out",
+          transition: isLoading ? "none" : "opacity 0.2s ease-out",
+          // Mobile performance optimizations
+          willChange: "auto",
+          backfaceVisibility: "hidden",
+          transform: "translateZ(0)",
+          ...style,
         }}
       />
-      {isLoading && (
-        <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-gray-100/50 to-gray-200/50 dark:from-gray-800/50 dark:to-gray-700/50" />
+      {/* Show placeholder with blur while loading */}
+      {isLoading && imgSrc && (
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url(${imgSrc})`,
+            filter: "blur(20px)",
+            transform: "scale(1.1)",
+          }}
+        />
       )}
     </div>
   );

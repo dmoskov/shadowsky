@@ -28,6 +28,7 @@ import {
   useInteractionTracking,
 } from "../hooks/useAnalytics";
 import { useBookmarks } from "../hooks/useBookmarks";
+import { useIntersectionLoader } from "../hooks/useIntersectionLoader";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { generateAltText } from "../services/anthropic";
@@ -113,6 +114,19 @@ interface HomeProps {
   showFeedDiscovery?: boolean;
   onCloseFeedDiscovery?: () => void;
 }
+
+// Mobile performance configuration
+const MOBILE_CONFIG = {
+  // Reduce page size for mobile to improve memory usage
+  PAGE_SIZE: window.innerWidth < 768 ? 20 : 30,
+  // More aggressive GC for mobile
+  STALE_TIME: window.innerWidth < 768 ? 15 * 60 * 1000 : 30 * 60 * 1000,
+  GC_TIME: window.innerWidth < 768 ? 30 * 60 * 1000 : 60 * 60 * 1000,
+  // Limit total pages in memory
+  MAX_PAGES: window.innerWidth < 768 ? 5 : 10,
+  // Virtual overscan for smooth scrolling
+  VIRTUAL_OVERSCAN: window.innerWidth < 768 ? 3 : 5,
+};
 
 export const Home: React.FC<HomeProps> = ({
   initialFeedUri,
@@ -374,7 +388,7 @@ export const Home: React.FC<HomeProps> = ({
           case "recent":
             response = await agent.getTimeline({
               cursor: pageParam,
-              limit: 30,
+              limit: MOBILE_CONFIG.PAGE_SIZE,
             });
             break;
 
@@ -387,14 +401,14 @@ export const Home: React.FC<HomeProps> = ({
                 response = await agent.app.bsky.feed.getListFeed({
                   list: selectedFeed,
                   cursor: pageParam,
-                  limit: 30,
+                  limit: MOBILE_CONFIG.PAGE_SIZE,
                 });
               } else {
                 // It's a regular feed
                 response = await agent.app.bsky.feed.getFeed({
                   feed: selectedFeed,
                   cursor: pageParam,
-                  limit: 30,
+                  limit: MOBILE_CONFIG.PAGE_SIZE,
                 });
               }
             } else {
@@ -404,7 +418,7 @@ export const Home: React.FC<HomeProps> = ({
                   response = await agent.app.bsky.feed.getFeed({
                     feed: "at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot",
                     cursor: pageParam,
-                    limit: 30,
+                    limit: MOBILE_CONFIG.PAGE_SIZE,
                   });
                   break;
 
@@ -412,7 +426,7 @@ export const Home: React.FC<HomeProps> = ({
                   response = await agent.app.bsky.feed.getFeed({
                     feed: "at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/with-friends",
                     cursor: pageParam,
-                    limit: 30,
+                    limit: MOBILE_CONFIG.PAGE_SIZE,
                   });
                   break;
 
@@ -458,8 +472,8 @@ export const Home: React.FC<HomeProps> = ({
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.cursor,
     enabled: !!agent,
-    staleTime: 30 * 60 * 1000, // 30 minutes
-    gcTime: 60 * 60 * 1000, // 1 hour
+    staleTime: MOBILE_CONFIG.STALE_TIME,
+    gcTime: MOBILE_CONFIG.GC_TIME,
     refetchOnMount: false, // Don't automatically refetch
   });
 
@@ -495,6 +509,31 @@ export const Home: React.FC<HomeProps> = ({
         })),
     );
   }, [data, isPostHidden, isUserMuted, isUserBlocked, isThreadMuted]);
+
+  // Use progressive loading instead of full virtualization
+  const {
+    visibleItems,
+    loadMoreRef: progressiveLoadRef,
+    hasMore,
+  } = useIntersectionLoader(posts, {
+    initialLoad: window.innerWidth < 768 ? 25 : 40,
+    increment: window.innerWidth < 768 ? 15 : 25,
+  });
+
+  // Clean up old pages when we hit the limit for memory management
+  React.useEffect(() => {
+    if (data?.pages && data.pages.length > MOBILE_CONFIG.MAX_PAGES) {
+      // Remove oldest pages from cache
+      queryClient.setQueryData(["timeline", selectedFeed], (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          pages: oldData.pages.slice(-MOBILE_CONFIG.MAX_PAGES),
+          pageParams: oldData.pageParams.slice(-MOBILE_CONFIG.MAX_PAGES),
+        };
+      });
+    }
+  }, [data?.pages, queryClient, selectedFeed]);
 
   // Memoize post rendering to prevent unnecessary re-renders
   const PostItem = React.memo(
@@ -701,7 +740,7 @@ export const Home: React.FC<HomeProps> = ({
                 {post.record.text}
               </div>
 
-              {renderEmbed(post.embed, post.uri)}
+              {renderEmbed(post.embed, post.uri, index)}
 
               {/* Post Action Bar */}
               <PostActionBar
@@ -1054,7 +1093,7 @@ export const Home: React.FC<HomeProps> = ({
     }
   };
 
-  const renderEmbed = (embed: any, postUri?: string) => {
+  const renderEmbed = (embed: any, postUri?: string, postIndex?: number) => {
     if (!embed) return null;
 
     if (embed.$type === "app.bsky.embed.images#view") {
@@ -1103,19 +1142,22 @@ export const Home: React.FC<HomeProps> = ({
                 onClick={(e) => handleImageClick(e, idx)}
                 style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
               >
-                {/* Aspect ratio container */}
+                {/* Image container with max height to prevent tall images */}
                 <div
                   className="relative w-full"
                   style={{
-                    paddingBottom:
-                      isThreeImageLayout && idx === 0 ? "100%" : "75%",
+                    paddingBottom: 0, // Remove padding-based aspect ratio
+                    maxHeight:
+                      isThreeImageLayout && idx === 0 ? "500px" : "350px",
                   }}
                 >
                   <ProgressiveImage
                     src={proxifyBskyImage(img.fullsize || img.thumb) || ""}
                     placeholderSrc={proxifyBskyImage(img.thumb) || ""}
                     alt={currentAltText || ""}
-                    className="absolute inset-0 h-full w-full"
+                    className="h-auto w-full"
+                    style={{ maxHeight: "inherit" }}
+                    priority={postIndex !== undefined && postIndex < 8}
                   />
                 </div>
 
@@ -1292,7 +1334,7 @@ export const Home: React.FC<HomeProps> = ({
                 {quotedPost.value.text}
               </div>
               {quotedPost.embeds?.[0] &&
-                renderEmbed(quotedPost.embeds[0], postUri)}
+                renderEmbed(quotedPost.embeds[0], postUri, postIndex)}
             </div>
           </div>
         );
@@ -1360,8 +1402,8 @@ export const Home: React.FC<HomeProps> = ({
     if (embed.$type === "app.bsky.embed.recordWithMedia#view") {
       return (
         <div className="mt-3">
-          {embed.media && renderEmbed(embed.media, postUri)}
-          {embed.record && renderEmbed(embed.record, postUri)}
+          {embed.media && renderEmbed(embed.media, postUri, postIndex)}
+          {embed.record && renderEmbed(embed.record, postUri, postIndex)}
         </div>
       );
     }
@@ -1421,6 +1463,9 @@ export const Home: React.FC<HomeProps> = ({
             ? `translateY(${pullDistance}px)`
             : "translateY(0)",
           transition: isPulling ? "none" : "transform 0.2s ease-out",
+          // Performance optimizations for mobile
+          willChange: isPulling ? "transform" : "auto",
+          contain: "layout style paint",
         }}
       >
         <div
@@ -1428,7 +1473,7 @@ export const Home: React.FC<HomeProps> = ({
           role="feed"
           aria-label="Posts"
         >
-          {posts.map((item: any, index: number) => (
+          {visibleItems.map((item: any, index: number) => (
             <PostItem
               key={`${item.post.uri}-page${item._pageIndex}-item${item._itemIndex}`}
               item={item}
@@ -1447,6 +1492,22 @@ export const Home: React.FC<HomeProps> = ({
           </div>
         )}
 
+        {/* Progressive loader sentinel */}
+        {hasMore && (
+          <div
+            ref={progressiveLoadRef}
+            className="flex items-center justify-center p-4"
+          >
+            <div
+              className="text-sm"
+              style={{ color: "var(--bsky-text-secondary)" }}
+            >
+              Loading more posts...
+            </div>
+          </div>
+        )}
+
+        {/* Infinite scroll sentinel */}
         <div ref={loadMoreRef} className="h-20" />
       </div>
 
