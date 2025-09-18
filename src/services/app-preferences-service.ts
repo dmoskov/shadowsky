@@ -18,6 +18,8 @@ export interface ShadowSkyPreferences {
     enableHashtagSuggestions: boolean;
     enableWritingFeedback: boolean;
   };
+  // Column display settings
+  columnWidth?: number;
 }
 
 // Column data stored in preferences
@@ -100,6 +102,8 @@ export interface AppPreferencesRecord {
     enableHashtagSuggestions: boolean;
     enableWritingFeedback: boolean;
   };
+  // Column display settings
+  columnWidth?: number;
 }
 
 const PREFERENCES_COLLECTION = "com.shadowsky.preferences";
@@ -155,6 +159,7 @@ export class AppPreferencesService {
           createdAt: shadowSkyPref.createdAt,
           updatedAt: shadowSkyPref.updatedAt,
           aiSettings: shadowSkyPref.aiSettings,
+          columnWidth: shadowSkyPref.columnWidth,
         };
         // Mark that we loaded from AT Protocol
         (prefs as any).isStoredInAtProto = true;
@@ -181,6 +186,7 @@ export class AppPreferencesService {
         createdAt: localPrefs.createdAt || new Date().toISOString(),
         updatedAt: localPrefs.updatedAt || new Date().toISOString(),
         aiSettings: localPrefs.aiSettings,
+        columnWidth: localPrefs.columnWidth,
       };
       // Mark that we loaded from localStorage
       (validatedPrefs as any).isStoredInAtProto = false;
@@ -237,6 +243,7 @@ export class AppPreferencesService {
         updatedAt: updatedPrefs.updatedAt || new Date().toISOString(),
         version: 1,
         aiSettings: updatedPrefs.aiSettings,
+        columnWidth: updatedPrefs.columnWidth,
       };
 
       logger.log("Saving to AT Protocol:", shadowSkyPref);

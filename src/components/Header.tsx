@@ -1,5 +1,6 @@
 import { Menu } from "lucide-react";
 import React from "react";
+import { useLocation } from "react-router";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 import butterflyIcon from "/butterfly-icon.svg";
@@ -9,12 +10,17 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
+  const location = useLocation();
+  const isHomeRoute =
+    location.pathname === "/" || location.pathname === "/home";
   return (
     <header
       className="bsky-glass fixed left-0 right-0 top-0 z-50 h-16"
       style={{ borderBottom: "1px solid var(--bsky-border-primary)" }}
     >
-      <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4">
+      <div
+        className={`flex h-full items-center justify-between px-4 ${isHomeRoute ? "" : "mx-auto 2xl:max-w-[1536px]"}`}
+      >
         <div className="flex items-center gap-4">
           <button
             onClick={onMenuToggle}

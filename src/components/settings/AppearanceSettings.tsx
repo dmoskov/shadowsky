@@ -1,9 +1,50 @@
-import { Monitor, Moon, Sun } from "lucide-react";
-import React from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Columns, Monitor, Moon, Sun } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { appPreferencesService } from "../../services/app-preferences-service";
 
 export const AppearanceSettings: React.FC = () => {
   const { theme, setTheme } = useTheme();
+  const { agent } = useAuth();
+  const queryClient = useQueryClient();
+  const [selectedWidth, setSelectedWidth] = useState(320);
+
+  // Get current preferences
+  const { data: appPreferences } = useQuery({
+    queryKey: ["appPreferences"],
+    queryFn: async () => {
+      if (!agent) return null;
+      appPreferencesService.setAgent(agent);
+      return await appPreferencesService.getPreferences();
+    },
+    enabled: !!agent,
+  });
+
+  // Load column width from preferences
+  useEffect(() => {
+    if (appPreferences?.columnWidth) {
+      setSelectedWidth(appPreferences.columnWidth);
+    }
+  }, [appPreferences]);
+
+  // Update column width mutation
+  const updateColumnWidth = useMutation({
+    mutationFn: async (width: number) => {
+      if (!agent) throw new Error("Not authenticated");
+      appPreferencesService.setAgent(agent);
+      await appPreferencesService.updatePreferences({ columnWidth: width });
+      return width;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appPreferences"] });
+      // Reload to apply new column width
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    },
+  });
 
   const themes = [
     { value: "light", label: "Light", icon: Sun },
@@ -129,6 +170,93 @@ export const AppearanceSettings: React.FC = () => {
               }}
             >
               Secondary Button
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h3
+          className="text-sm font-medium"
+          style={{ color: "var(--bsky-text-primary)" }}
+        >
+          <Columns className="mr-2 inline-block h-4 w-4" />
+          Column Width
+        </h3>
+        <div
+          className="rounded-lg p-4"
+          style={{
+            backgroundColor: "var(--bsky-bg-secondary)",
+            border: "1px solid var(--bsky-border-primary)",
+          }}
+        >
+          <p
+            className="mb-4 text-sm"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
+            Adjust the width of columns in your home feed. Smaller widths allow
+            more columns to fit on screen.
+          </p>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label
+                className="text-sm font-medium"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                Width: {selectedWidth}px
+              </label>
+              <span
+                className="text-xs"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                {selectedWidth === 280 && "Compact"}
+                {selectedWidth === 320 && "Default"}
+                {selectedWidth === 360 && "Comfortable"}
+                {selectedWidth === 400 && "Spacious"}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="280"
+              max="400"
+              step="40"
+              value={selectedWidth}
+              onChange={(e) => setSelectedWidth(Number(e.target.value))}
+              className="h-2 w-full cursor-pointer appearance-none rounded-lg"
+              style={{
+                background: `linear-gradient(to right, var(--bsky-primary) 0%, var(--bsky-primary) ${((selectedWidth - 280) / 120) * 100}%, var(--bsky-bg-tertiary) ${((selectedWidth - 280) / 120) * 100}%, var(--bsky-bg-tertiary) 100%)`,
+              }}
+            />
+            <div
+              className="flex justify-between text-xs"
+              style={{ color: "var(--bsky-text-secondary)" }}
+            >
+              <span>280px</span>
+              <span>320px</span>
+              <span>360px</span>
+              <span>400px</span>
+            </div>
+            <button
+              onClick={() => updateColumnWidth.mutate(selectedWidth)}
+              disabled={
+                updateColumnWidth.isPending ||
+                selectedWidth === appPreferences?.columnWidth
+              }
+              className="mt-3 rounded px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+              style={{
+                backgroundColor:
+                  updateColumnWidth.isPending ||
+                  selectedWidth === appPreferences?.columnWidth
+                    ? "var(--bsky-bg-tertiary)"
+                    : "var(--bsky-primary)",
+                color:
+                  updateColumnWidth.isPending ||
+                  selectedWidth === appPreferences?.columnWidth
+                    ? "var(--bsky-text-secondary)"
+                    : "white",
+              }}
+            >
+              {updateColumnWidth.isPending ? "Applying..." : "Apply Width"}
             </button>
           </div>
         </div>

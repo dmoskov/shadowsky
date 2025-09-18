@@ -142,7 +142,11 @@ export const DirectMessages: React.FC = () => {
     <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden bg-bsky-bg-primary lg:h-[calc(100vh-4rem)]">
       {/* Conversations list */}
       <div
-        className={`flex h-full w-full flex-col overflow-hidden border-r border-bsky-border-primary md:w-80 md:max-w-sm ${selectedConversation ? "hidden md:flex" : "flex"}`}
+        className={`flex h-full flex-col overflow-hidden border-r border-bsky-border-primary ${selectedConversation ? "hidden md:flex" : "flex"}`}
+        style={{
+          width: selectedConversation ? "320px" : "100%",
+          maxWidth: selectedConversation ? "320px" : "100%",
+        }}
       >
         <div className="border-b border-bsky-border-primary p-4">
           <h2

@@ -93,6 +93,7 @@ export default function SkyDeck() {
   const [mobileColumnIndex, setMobileColumnIndex] = useState(0);
   const [customFeedUri, setCustomFeedUri] = useState("");
   const [isLoadingCustomFeed, setIsLoadingCustomFeed] = useState(false);
+  const [columnWidth, setColumnWidth] = useState(320); // Default width
   const columnsContainerRef = useRef<HTMLDivElement>(null);
 
   // Fetch user's saved/pinned feeds
@@ -236,6 +237,11 @@ export default function SkyDeck() {
       const appPreferences = await appPreferencesService.getPreferences();
       const storageType = appPreferences?.columnStorageType || "local";
       await columnService.initialize(agent, storageType);
+
+      // Set column width from preferences
+      if (appPreferences?.columnWidth) {
+        setColumnWidth(appPreferences.columnWidth);
+      }
 
       // Load columns from service
       const savedColumns = await columnService.getColumns();
@@ -417,11 +423,12 @@ export default function SkyDeck() {
           {columns.map((column, index) => (
             <div
               key={column.id}
-              className={`h-full w-[320px] rounded-lg border border-gray-200 bg-white shadow-md transition-all duration-300 ease-out dark:border-gray-700 dark:bg-gray-900 ${
+              className={`h-full rounded-lg border border-gray-200 bg-white shadow-md transition-all duration-300 ease-out dark:border-gray-700 dark:bg-gray-900 ${
                 focusedColumnIndex === index
                   ? "shadow-xl ring-2 ring-blue-500/30"
                   : "hover:shadow-lg dark:hover:shadow-black/30"
               }`}
+              style={{ width: `${columnWidth}px` }}
               onClick={(e) => {
                 // Don't focus column if clicking on menu button, menu dropdown, or remove button
                 const target = e.target as HTMLElement;
@@ -470,7 +477,7 @@ export default function SkyDeck() {
             </div>
           ))}
 
-          <div className="h-full w-[320px]">
+          <div className="h-full" style={{ width: `${columnWidth}px` }}>
             {isAddingColumn ? (
               <div className="flex h-full animate-fade-in flex-col rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
                 <div className="flex-1 overflow-y-auto p-3">

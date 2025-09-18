@@ -65,8 +65,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar */}
       <aside
-        className={`bsky-glass fixed bottom-0 left-0 top-16 z-40 ${isCollapsed ? "w-16" : "w-64"} max-w-[80vw] transform transition-all duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
-        style={{ borderRight: "1px solid var(--bsky-border-primary)" }}
+        className={`bsky-glass fixed bottom-0 top-16 z-40 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] ${isCollapsed ? "w-16" : "w-64"} max-w-[80vw] transform transition-all duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
+        style={{
+          borderRight: "1px solid var(--bsky-border-primary)",
+          left: isOpen ? "0" : undefined,
+        }}
       >
         <div className="flex items-center justify-between p-4 lg:hidden">
           <h2 className="bsky-gradient-text text-lg font-bold">Menu</h2>
