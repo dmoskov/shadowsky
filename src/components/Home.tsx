@@ -735,7 +735,10 @@ export const Home: React.FC<HomeProps> = ({
               <div
                 className="cursor-pointer whitespace-pre-wrap"
                 style={{ color: "var(--bsky-text-primary)" }}
-                onClick={() => handlePostClick(post)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePostClick(post);
+                }}
               >
                 {post.record.text}
               </div>
