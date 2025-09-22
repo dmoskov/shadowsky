@@ -1105,7 +1105,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                   className="text-sm italic"
                   style={{ color: "var(--bsky-text-tertiary)" }}
                 >
-                  [Unable to load post content]
+                  Post unavailable
                 </p>
               </div>
             );

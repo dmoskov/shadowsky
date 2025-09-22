@@ -184,7 +184,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
       isFetchingMore = false,
       fetchedPosts = 0,
       totalPosts = 0,
-      percentageFetched = 100,
+      percentageFetched: _percentageFetched = 100,
       markAsRead,
     }) => {
       const getIcon = () => {
@@ -480,8 +480,9 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                   : notification.uri;
               const post = postMap?.get(postUri);
 
-              // Show loading indicator if posts are still being fetched
-              if (!post && postMap && postMap.size === 0) {
+              // Show loading indicator if this specific post hasn't been fetched yet
+              // and we're still in the process of fetching posts
+              if (!post && isFetchingMore && fetchedPosts < totalPosts) {
                 return (
                   <div
                     className="mt-3 rounded-lg p-4"
@@ -656,31 +657,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                     </p>
                   </div>
                 );
-              } else if (!post && postMap && postMap.size > 0) {
-                // Check if we're still fetching more posts
-                if (isFetchingMore && fetchedPosts < totalPosts) {
-                  return (
-                    <div
-                      className="mt-3 rounded-lg p-4"
-                      style={{
-                        backgroundColor: "var(--bsky-bg-secondary)",
-                        border: "1px solid var(--bsky-border-primary)",
-                        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500" />
-                        <span
-                          className="text-sm"
-                          style={{ color: "var(--bsky-text-secondary)" }}
-                        >
-                          Loading post content... ({percentageFetched}% loaded)
-                        </span>
-                      </div>
-                    </div>
-                  );
-                }
-
+              } else if (!post) {
                 // Post couldn't be loaded or doesn't exist
                 return (
                   <div
@@ -695,7 +672,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                       className="text-sm italic"
                       style={{ color: "var(--bsky-text-tertiary)" }}
                     >
-                      [Unable to load post content]
+                      Post unavailable
                     </p>
                   </div>
                 );
