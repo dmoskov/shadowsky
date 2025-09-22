@@ -997,7 +997,6 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
       {/* Scrollable content wrapper */}
       <div className={isInSkyDeck ? "flex-1 overflow-y-auto" : ""}>
         <div className="relative">
-
           {eventsByDay.map((dayGroup, dayIndex) => (
             <div key={dayGroup.label} data-day-group={dayGroup.label}>
               {/* Sticky day label */}
