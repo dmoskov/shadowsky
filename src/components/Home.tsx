@@ -30,7 +30,6 @@ import {
 import { useBookmarks } from "../hooks/useBookmarks";
 import { useIntersectionLoader } from "../hooks/useIntersectionLoader";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
-import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { generateAltText } from "../services/anthropic";
 import { columnService } from "../services/column-service";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
@@ -41,7 +40,6 @@ import { PostActionBar } from "./PostActionBar";
 import { ThreadModal } from "./ThreadModal";
 import { VideoPlayer } from "./VideoPlayer";
 import { ProgressiveImage } from "./ui/ProgressiveImage";
-import { PullToRefreshIndicator } from "./ui/PullToRefreshIndicator";
 import { FeedSkeleton } from "./ui/SkeletonLoader";
 
 const logger = createLogger("Home");
@@ -201,24 +199,6 @@ export const Home: React.FC<HomeProps> = React.memo(
 
     const { trackFeatureAction } = useFeatureTracking("home_feed");
     const { trackClick } = useInteractionTracking();
-
-    // Pull to refresh setup
-    const handleRefresh = async () => {
-      trackFeatureAction("pull_to_refresh");
-      await feedQuery.refetch();
-    };
-
-    const {
-      containerRef: pullToRefreshRef,
-      pullDistance,
-      isRefreshing,
-      isPulling,
-      threshold,
-      progress,
-    } = usePullToRefresh({
-      onRefresh: handleRefresh,
-      disabled: false,
-    });
 
     // Fetch user's saved/pinned feeds
     const { data: userPrefs } = useQuery({
@@ -548,7 +528,7 @@ export const Home: React.FC<HomeProps> = React.memo(
             ref={(el) => {
               if (el) postRefs.current[`${post.uri}-${index}`] = el;
             }}
-            className={`relative px-3 py-2.5 ${
+            className={`relative cursor-pointer px-3 py-2.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900 ${
               item.reply?.parent || post.record?.reply?.parent
                 ? "from-blue-500/3 border-l-4 border-blue-500 bg-gradient-to-r to-transparent"
                 : ""
@@ -558,7 +538,7 @@ export const Home: React.FC<HomeProps> = React.memo(
             aria-selected={isFocused}
             role="article"
             onClick={(e) => {
-              // Only update focused index if clicking on non-interactive elements
+              // Only handle click if not on interactive elements
               const target = e.target as HTMLElement;
               const clickedOnInteractive =
                 target.closest('[role="button"]') ||
@@ -572,6 +552,8 @@ export const Home: React.FC<HomeProps> = React.memo(
                 // Update focused index on click (not keyboard navigation)
                 isKeyboardNavigationRef.current = false;
                 setFocusedPostIndex(index);
+                // Open thread view when clicking anywhere on the card
+                handlePostClick(post);
               }
             }}
             onKeyDown={(e) => {
@@ -747,11 +729,8 @@ export const Home: React.FC<HomeProps> = React.memo(
               {/* Post content below, aligned with avatar */}
               <div className="mt-2">
                 <div
-                  className="cursor-pointer whitespace-pre-wrap"
+                  className="whitespace-pre-wrap"
                   style={{ color: "var(--bsky-text-primary)" }}
-                  onClick={() => {
-                    handlePostClick(post);
-                  }}
                 >
                   {post.record.text}
                 </div>
@@ -1507,30 +1486,16 @@ export const Home: React.FC<HomeProps> = React.memo(
             (
               containerRef as React.MutableRefObject<HTMLDivElement | null>
             ).current = el;
-            (
-              pullToRefreshRef as React.MutableRefObject<HTMLDivElement | null>
-            ).current = el;
           }
         }}
         tabIndex={-1}
         style={{ outline: "none" }}
       >
-        <PullToRefreshIndicator
-          pullDistance={pullDistance}
-          isRefreshing={isRefreshing}
-          threshold={threshold}
-          progress={progress}
-        />
         <div
           className="mx-auto max-w-2xl px-3 sm:px-4"
           ref={postsContainerRef}
           style={{
-            transform: isPulling
-              ? `translateY(${pullDistance}px)`
-              : "translateY(0)",
-            transition: isPulling ? "none" : "transform 0.2s ease-out",
             // Performance optimizations for mobile
-            willChange: isPulling ? "transform" : "auto",
             contain: "layout style paint",
           }}
         >
