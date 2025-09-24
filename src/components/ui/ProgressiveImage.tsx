@@ -157,52 +157,45 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
     };
   }, [src, placeholderSrc, shouldLoad, onLoad, onError, priority]);
 
-  if (hasError) {
-    return (
-      <div
-        className={`flex items-center justify-center bg-gray-200 dark:bg-gray-700 ${className}`}
-        style={{ width, height }}
-      >
-        <span className="text-sm text-gray-500 dark:text-gray-400">
-          Failed to load image
-        </span>
-      </div>
-    );
-  }
-
   return (
-    <div
-      className={`relative overflow-hidden bg-gray-100 dark:bg-gray-800 ${className}`}
-      style={{ width, height }}
-    >
-      <img
-        ref={imgRef}
-        src={imgSrc}
-        alt={alt}
-        loading={priority ? "eager" : "lazy"}
-        decoding={priority ? "sync" : "async"}
-        className={`${className} ${isLoading ? "opacity-0" : "opacity-100"}`}
-        style={{
-          transition: isLoading ? "none" : "opacity 0.2s ease-out",
-          // Mobile performance optimizations
-          willChange: "auto",
-          backfaceVisibility: "hidden",
-          transform: "translateZ(0)",
-          ...style,
-        }}
-      />
-      {/* Show placeholder with blur while loading */}
-      {isLoading && imgSrc && (
+    <>
+      {hasError ? (
         <div
-          className="absolute inset-0 bg-cover bg-center"
+          className={`flex items-center justify-center bg-gray-200 dark:bg-gray-700 ${className}`}
+          style={{ width: width || "100%", height: height || "100%", ...style }}
+        >
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            Failed to load image
+          </span>
+        </div>
+      ) : (
+        <img
+          ref={imgRef}
+          src={imgSrc}
+          alt={alt}
+          loading={priority ? "eager" : "lazy"}
+          decoding={priority ? "sync" : "async"}
+          className={`${className} ${isLoading ? "blur-sm" : ""}`}
           style={{
-            backgroundImage: `url(${imgSrc})`,
-            filter: "blur(20px)",
-            transform: "scale(1.1)",
+            transition: "filter 0.2s ease-out",
+            // Mobile performance optimizations
+            willChange: "auto",
+            backfaceVisibility: "hidden",
+            transform: "translateZ(0)",
+            width: width || undefined,
+            height: height || undefined,
+            ...style,
+          }}
+          width={width}
+          height={height}
+          onError={() => {
+            setHasError(true);
+            setIsLoading(false);
+            onError?.();
           }}
         />
       )}
-    </div>
+    </>
   );
 };
 

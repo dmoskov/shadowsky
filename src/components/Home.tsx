@@ -1122,9 +1122,9 @@ export const Home: React.FC<HomeProps> = React.memo(
           const handleImageClick = (e: React.MouseEvent, index: number) => {
             e.stopPropagation();
             const images = embed.images.map((img: any) => ({
-              thumb: proxifyBskyImage(img.thumb),
-              fullsize: proxifyBskyImage(img.fullsize),
-              alt: img.alt,
+              thumb: proxifyBskyImage(img.thumb) || "",
+              fullsize: proxifyBskyImage(img.fullsize || img.thumb) || "",
+              alt: img.alt || "",
             }));
             setGalleryImages(images);
             setGalleryIndex(index);

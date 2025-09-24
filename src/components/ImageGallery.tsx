@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
-import { ProgressiveImage } from "./ui/ProgressiveImage";
+import ReactDOM from "react-dom";
 
 interface ImageGalleryProps {
   images: Array<{
@@ -18,6 +18,14 @@ export function ImageGallery({
   onClose,
 }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [imageError, setImageError] = useState(false);
+
+  // Reset error state when image changes
+  React.useEffect(() => {
+    setImageError(false);
+  }, [currentIndex]);
 
   const handlePrevious = useCallback(() => {
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
@@ -26,6 +34,31 @@ export function ImageGallery({
   const handleNext = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % images.length);
   }, [images.length]);
+
+  // Handle touch events for mobile swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && images.length > 1) {
+      handleNext();
+    }
+    if (isRightSwipe && images.length > 1) {
+      handlePrevious();
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -53,15 +86,17 @@ export function ImageGallery({
     }
   };
 
-  return (
+  return ReactDOM.createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+      className="fixed inset-0 flex items-center justify-center bg-black"
+      style={{ backgroundColor: "rgba(0, 0, 0, 0.9)", zIndex: 9999 }}
       onClick={handleBackdropClick}
     >
       {/* Close button */}
       <button
         onClick={onClose}
         className="absolute right-4 top-4 rounded-full p-2 text-white transition-colors hover:bg-white/10 hover:text-gray-300"
+        style={{ zIndex: 10002 }}
         aria-label="Close gallery"
       >
         <X size={24} />
@@ -95,20 +130,60 @@ export function ImageGallery({
       )}
 
       {/* Main image */}
-      <div className="relative max-h-[90vh] max-w-[90vw]">
-        <ProgressiveImage
-          src={images[currentIndex].fullsize}
-          placeholderSrc={images[currentIndex].thumb}
-          alt={images[currentIndex].alt || `Image ${currentIndex + 1}`}
-          className="max-h-[90vh] max-w-full"
-          onLoad={() => {
-            /* Image loaded */
-          }}
-        />
+      <div
+        className="flex items-center justify-center"
+        style={{
+          width: "90vw",
+          maxWidth: "90vw",
+          height: "90vh",
+          maxHeight: "90vh",
+          zIndex: 10000,
+          position: "relative",
+          backgroundColor: "transparent",
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {imageError ? (
+          <div className="p-4 text-center text-white">
+            <p>Failed to load image</p>
+            <p className="mt-2 text-sm text-gray-400">
+              URL: {images[currentIndex].fullsize || images[currentIndex].thumb}
+            </p>
+          </div>
+        ) : (
+          <img
+            key={`${currentIndex}-${images[currentIndex].fullsize}`} // Better key for re-render
+            src={
+              images[currentIndex].fullsize || images[currentIndex].thumb || ""
+            }
+            alt={images[currentIndex].alt || `Image ${currentIndex + 1}`}
+            style={{
+              maxHeight: "90vh",
+              maxWidth: "90vw",
+              height: "auto",
+              width: "auto",
+              objectFit: "contain",
+              display: "block",
+              position: "relative",
+              zIndex: 10001,
+              margin: "0 auto",
+              backgroundColor: "transparent",
+            }}
+            loading="eager"
+            onError={() => {
+              setImageError(true);
+            }}
+          />
+        )}
 
         {/* Alt text display */}
         {images[currentIndex].alt && (
-          <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-3 text-sm text-white">
+          <div
+            className="absolute bottom-0 left-0 right-0 bg-black/70 p-3 text-sm text-white"
+            style={{ zIndex: 10002 }}
+          >
             {images[currentIndex].alt}
           </div>
         )}
@@ -138,6 +213,7 @@ export function ImageGallery({
           ))}
         </div>
       )}
-    </div>
+    </div>,
+    document.body,
   );
 }
