@@ -188,8 +188,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           atProtoClient.updateService(pdsUrl);
         }
 
+        const trimAt = (s: string) => s.length > 0 && s[0] === "@" ? s.slice(1) : s;
+
         const newSession = await atProtoClient.login(
-          identifier,
+          trimAt(identifier),
           password,
           authFactorToken,
         );
