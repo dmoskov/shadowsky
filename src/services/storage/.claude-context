@@ -1,0 +1,27 @@
+purpose: Storage backend implementations for data persistence
+common_tasks:
+  - Implementing storage backends
+  - Managing data persistence
+  - Handling storage migrations
+  - Implementing cache strategies
+  - Managing storage quotas
+  - Syncing between storage types
+watch_out_for:
+  - Test with BOTH storage types always
+  - Handle storage quota limits
+  - Implement proper error recovery
+  - Clean up old data periodically
+  - Handle migration edge cases
+  - Browser compatibility issues
+related_files:
+  - /src/services/*-service-wrapper.ts (service wrappers)
+  - /src/services/bookmark-backends/* (specific implementations)
+  - /src/contexts/PreferencesContext.tsx (storage preferences)
+  - IndexedDB API (for large data)
+test_command: npm run test:unit
+key_patterns:
+  - Implement StorageBackend interface
+  - Async operations throughout
+  - Handle serialization/deserialization
+  - Provide migration methods
+  - Clean error messages

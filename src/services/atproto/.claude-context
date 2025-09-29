@@ -1,0 +1,27 @@
+purpose: AT Protocol/Bluesky API integration and record management
+common_tasks:
+  - Implementing AT Protocol operations
+  - Managing user sessions
+  - Creating/updating/deleting records
+  - Fetching feeds and timelines
+  - Handling authentication flows
+  - WebSocket connections for real-time updates
+watch_out_for:
+  - Use singleton records with rkey "self" for user data
+  - Follow com.shadowsky.* collection naming
+  - Handle 400 errors (record doesn't exist)
+  - Refresh tokens before expiry
+  - Rate limiting on API calls
+  - CORS issues with media
+related_files:
+  - /src/contexts/AuthContext.tsx (authentication)
+  - /src/services/bookmark-backends/* (AT Protocol storage)
+  - /src/services/jetstream-service.ts (WebSocket)
+  - @atproto/api (SDK library)
+test_command: npm run test:unit
+key_patterns:
+  - Always check session validity
+  - Handle network errors gracefully
+  - Use proper DID resolution
+  - Implement retry logic
+  - Cache API responses

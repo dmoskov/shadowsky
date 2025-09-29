@@ -18,6 +18,7 @@ import { parseBskyUrl } from "../utils/url-helpers";
 import { ImageGallery } from "./ImageGallery";
 import { VideoPlayer } from "./VideoPlayer";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
+import { ProgressiveImage } from "./ui/ProgressiveImage";
 
 const logger = createLogger("PostRenderer");
 
@@ -114,26 +115,49 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
 
     // Images
     if (embed.images) {
+      // Determine grid layout based on image count
+      const gridClass =
+        embed.images.length === 1
+          ? "grid-cols-1"
+          : embed.images.length === 2
+            ? "grid-cols-2"
+            : embed.images.length === 3
+              ? "grid-cols-3"
+              : "grid-cols-2";
+
       return (
-        <div
-          className={`mt-2 grid gap-2 ${embed.images.length > 2 ? "grid-cols-2" : embed.images.length === 2 ? "grid-cols-2" : "grid-cols-1"}`}
-        >
+        <div className={`mt-2 grid gap-1 ${gridClass}`}>
           {embed.images.map((image: any, index: number) => {
+            // Special layout for 3 images: first image takes 2/3, others 1/3 each
+            const isThreeImageLayout = embed.images.length === 3;
+            const colSpan =
+              isThreeImageLayout && index === 0 ? "col-span-2 row-span-2" : "";
+
             const currentAltText = generatedAltTexts[index] || image.alt;
             const hasAltText = currentAltText && currentAltText.length > 0;
 
             return (
-              <div key={index} className="group relative">
-                <img
-                  src={proxifyBskyImage(image.thumb)}
-                  alt={currentAltText || ""}
-                  className="w-full cursor-pointer rounded-lg object-cover hover:opacity-90"
-                  style={{ maxHeight: "400px" }}
-                  onClick={(e) => {
+              <div key={index} className={`group relative ${colSpan}`}>
+                <div
+                  className="relative w-full cursor-pointer overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
+                  style={{
+                    aspectRatio:
+                      isThreeImageLayout && index === 0 ? "1" : "16/9",
+                    maxHeight:
+                      isThreeImageLayout && index === 0 ? "500px" : "350px",
+                  }}
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                     openImageGallery(embed.images, index);
                   }}
-                />
+                >
+                  <ProgressiveImage
+                    src={proxifyBskyImage(image.fullsize || image.thumb) || ""}
+                    placeholderSrc={proxifyBskyImage(image.thumb) || ""}
+                    alt={currentAltText || ""}
+                    className="h-full w-full object-contain hover:opacity-90"
+                  />
+                </div>
 
                 {/* Alt text overlay */}
                 {hasAltText && showAltText[index] && (

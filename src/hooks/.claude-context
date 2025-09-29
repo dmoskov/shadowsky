@@ -1,0 +1,27 @@
+purpose: Custom React hooks for reusable logic and state management
+common_tasks:
+  - Creating data fetching hooks
+  - Implementing state management hooks
+  - Adding UI interaction hooks
+  - Wrapping service calls in hooks
+  - Managing side effects
+  - Composing multiple hooks
+watch_out_for:
+  - Follow Rules of Hooks strictly
+  - Hooks must start with 'use'
+  - No conditional hook calls
+  - Proper dependency arrays
+  - Clean up effects
+  - Avoid infinite loops
+related_files:
+  - /src/services/* (services wrapped by hooks)
+  - /src/contexts/* (contexts used by hooks)
+  - /src/components/* (components using hooks)
+  - @tanstack/react-query (data fetching)
+test_command: npm run test:unit
+key_patterns:
+  - Use React Query for server state
+  - Return consistent object shape
+  - Handle loading and error states
+  - Memoize callbacks and values
+  - Proper TypeScript generics

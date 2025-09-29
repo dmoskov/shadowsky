@@ -1,0 +1,27 @@
+purpose: Utility functions and helper methods
+common_tasks:
+  - Adding date formatting functions
+  - Creating string manipulation utilities
+  - Implementing validation functions
+  - Adding API helper methods
+  - Creating performance utilities
+  - Managing constants
+watch_out_for:
+  - Keep functions pure (no side effects)
+  - Handle edge cases and null values
+  - Add proper TypeScript types
+  - Write comprehensive tests
+  - Avoid duplicating existing utilities
+  - Check for existing libraries first
+related_files:
+  - Used throughout the codebase
+  - /src/utils/logger.ts (logging utility)
+  - /src/utils/date.ts (date formatting)
+  - /src/utils/storage.ts (storage helpers)
+test_command: npm run test:unit
+key_patterns:
+  - Pure functions only
+  - Explicit error handling
+  - Generic types where useful
+  - JSDoc documentation
+  - Guard against null/undefined

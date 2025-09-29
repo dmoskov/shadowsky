@@ -1,0 +1,27 @@
+purpose: Build scripts, deployment automation, and development utilities
+common_tasks:
+  - Running pre-push checks
+  - Automating deployment processes
+  - Building for different environments
+  - Running database migrations
+  - Generating documentation
+  - Cleaning up artifacts
+watch_out_for:
+  - Make scripts executable (chmod +x)
+  - Test scripts in all environments
+  - Handle error cases properly
+  - Use proper exit codes
+  - Document script parameters
+  - Consider cross-platform compatibility
+related_files:
+  - /scripts/push.sh (git push with checks)
+  - /package.json (npm scripts)
+  - /.github/workflows/* (CI/CD)
+  - /amplify.yml (AWS deployment)
+test_command: ./scripts/push.sh --dry-run
+key_patterns:
+  - Use bash strict mode
+  - Provide help text
+  - Validate prerequisites
+  - Log actions clearly
+  - Clean up on failure

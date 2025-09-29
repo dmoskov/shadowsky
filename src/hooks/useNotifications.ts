@@ -97,10 +97,10 @@ export function useNotifications(priority: boolean = false) {
       return lastPage.cursor;
     },
     enabled: !!session,
-    staleTime: cachedData ? 5 * 60 * 1000 : 1 * 60 * 1000, // If we have cache, treat as fresh for 5min, otherwise 1min
+    staleTime: 30 * 1000, // Data is considered fresh for 30 seconds
     refetchInterval: 30 * 1000, // Refetch every 30 seconds for more timely updates
-    refetchOnWindowFocus: false, // Don't refetch on window focus
-    refetchOnMount: cachedData ? false : "always", // Only fetch on mount if no cached data
+    refetchOnWindowFocus: true, // Refetch on window focus to get latest notifications
+    refetchOnMount: "always", // Always fetch on mount to ensure fresh data
     // Use cached data as initial data if available
     initialData: cachedData
       ? {
@@ -125,13 +125,13 @@ export function useNotifications(priority: boolean = false) {
 
   // Invalidate visual timeline when data changes
   React.useEffect(() => {
-    if (query.data) {
+    if (query.data?.pages) {
       // Also invalidate visual timeline to keep it in sync
       queryClient.invalidateQueries({
         queryKey: ["notifications-visual-timeline"],
       });
     }
-  }, [query.data, queryClient]);
+  }, [query.data?.pages, queryClient]);
 
   // Save to cache after successful data fetch
   React.useEffect(() => {
@@ -144,6 +144,12 @@ export function useNotifications(priority: boolean = false) {
       debug.log(
         `💾 [${successTimestamp}] React Query: Saving ${totalNotifications} notifications to cache`,
       );
+      console.log("[useNotifications] Data updated:", {
+        pages: query.data.pages.length,
+        totalNotifications,
+        firstNotification: query.data.pages[0]?.notifications[0]?.indexedAt,
+        timestamp: new Date().toISOString(),
+      });
       NotificationCache.save(query.data.pages, priority);
 
       // Also save individual notifications to object cache

@@ -1,0 +1,26 @@
+purpose: React Context providers for global state management
+common_tasks:
+  - Managing authentication state
+  - Providing theme configuration
+  - Sharing user preferences
+  - Managing moderation settings
+  - Coordinating global app state
+watch_out_for:
+  - Context should be at app root
+  - Avoid unnecessary re-renders
+  - Split contexts by concern
+  - Provide TypeScript types
+  - Handle provider nesting order
+  - Consider performance impact
+related_files:
+  - /src/App.tsx (context providers setup)
+  - /src/hooks/useAuth.ts (auth context hook)
+  - /src/hooks/useTheme.ts (theme context hook)
+  - /src/services/* (services used by contexts)
+test_command: npm run test:unit
+key_patterns:
+  - Create custom hook for context usage
+  - Throw error if used outside provider
+  - Memoize context values
+  - Separate state and dispatch
+  - TypeScript discriminated unions for actions

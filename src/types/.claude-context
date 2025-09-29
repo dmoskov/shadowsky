@@ -1,0 +1,27 @@
+purpose: TypeScript type definitions and interfaces
+common_tasks:
+  - Defining data structures
+  - Creating API response types
+  - Adding component prop types
+  - Defining service interfaces
+  - Creating utility types
+  - Managing type exports
+watch_out_for:
+  - Keep types organized by domain
+  - Avoid using 'any' type
+  - Prefer interfaces over types for objects
+  - Use discriminated unions for variants
+  - Export all public types from index.ts
+  - Document complex types with JSDoc
+related_files:
+  - All TypeScript files import from here
+  - /src/services/* (service types)
+  - /src/components/* (prop types)
+  - /src/hooks/* (hook return types)
+test_command: npm run test:types
+key_patterns:
+  - PascalCase for type names
+  - No 'I' prefix for interfaces
+  - Group related types together
+  - Use generic types where appropriate
+  - Const assertions for literal types

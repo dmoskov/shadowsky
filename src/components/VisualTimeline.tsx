@@ -12,6 +12,7 @@ import {
   Heart,
   MessageCircle,
   Quote,
+  RefreshCw,
   Repeat2,
   UserPlus,
 } from "lucide-react";
@@ -28,7 +29,13 @@ interface AggregatedEvent {
   types: Set<string>;
   actors: Set<string>;
   postUri?: string; // For post-specific aggregations
-  aggregationType: "post" | "follow" | "mixed" | "post-burst" | "user-activity"; // Type of aggregation
+  aggregationType:
+    | "post"
+    | "follow"
+    | "mixed"
+    | "post-burst"
+    | "user-activity"
+    | "recent-comments"; // Type of aggregation
   earliestTime?: Date; // Track the earliest notification in the group
   latestTime?: Date; // Track the latest notification in the group
   burstIntensity?: "low" | "medium" | "high"; // For post bursts
@@ -68,6 +75,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
   const { agent } = useAuth();
   const navigate = useNavigate();
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const scrollableRef = React.useRef<HTMLDivElement>(null);
   const timelineItemsRef = React.useRef<Map<string, HTMLDivElement>>(new Map());
   const [selectedItemIndex, setSelectedItemIndex] = React.useState<number>(-1);
   const [selectedPostUri, setSelectedPostUri] = React.useState<string | null>(
@@ -77,6 +85,12 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
     Map<string, { color: string; position: number }>
   >(new Map());
   // Removed expandedItems state - cards are always expanded
+  const [cursor, setCursor] = React.useState<string | undefined>(undefined);
+  const [allNotifications, setAllNotifications] = React.useState<any[]>([]);
+  const [hasMore, setHasMore] = React.useState(true);
+  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
+  const [hasNewNotifications, setHasNewNotifications] = React.useState(false);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   // Helper function to handle internal navigation
   const handleInternalNavigation = (e: React.MouseEvent, url: string) => {
@@ -85,11 +99,12 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
     navigate(url);
   };
 
+  // Initial load query
   const { data, isLoading } = useQuery({
-    queryKey: ["notifications-visual-timeline"],
+    queryKey: ["notifications-visual-timeline", "initial"],
     queryFn: async () => {
       if (!agent) throw new Error("Not authenticated");
-      const response = await agent.listNotifications({ limit: 100 });
+      const response = await agent.listNotifications({ limit: 50 });
       return response.data;
     },
     refetchOnWindowFocus: false,
@@ -99,8 +114,226 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
     enabled: !!agent, // Only run when agent is available
   });
 
-  // Get notifications from the response
-  const notifications = data?.notifications || [];
+  // Update state when initial data loads
+  React.useEffect(() => {
+    if (data) {
+      console.log("=== Initial Data Loaded ===", {
+        notificationCount: data.notifications?.length,
+        cursor: data.cursor,
+        hasCursor: !!data.cursor,
+      });
+      setAllNotifications(data.notifications || []);
+      setCursor(data.cursor);
+      setHasMore(!!data.cursor);
+    }
+  }, [data]);
+
+  // Periodically check for new notifications
+  React.useEffect(() => {
+    if (!agent || allNotifications.length === 0) return;
+
+    const checkForNew = async () => {
+      try {
+        const response = await agent.listNotifications({ limit: 1 });
+        if (response.data.notifications?.[0]) {
+          const latestNotification = response.data.notifications[0];
+          const currentLatest = allNotifications[0];
+
+          if (latestNotification.uri !== currentLatest.uri) {
+            setHasNewNotifications(true);
+          }
+        }
+      } catch (_error) {
+        // Silently fail - this is just a background check
+      }
+    };
+
+    // Check every 30 seconds
+    const interval = setInterval(checkForNew, 30000);
+    return () => clearInterval(interval);
+  }, [agent, allNotifications]);
+
+  // Load more function
+  const loadMore = React.useCallback(async () => {
+    console.log("=== LoadMore Called ===", {
+      hasAgent: !!agent,
+      cursor,
+      isLoadingMore,
+      hasMore,
+      currentNotificationsLength: allNotifications.length,
+    });
+
+    if (!agent || !cursor || isLoadingMore || !hasMore) {
+      console.log("LoadMore blocked:", {
+        noAgent: !agent,
+        noCursor: !cursor,
+        alreadyLoading: isLoadingMore,
+        noMore: !hasMore,
+      });
+      return;
+    }
+
+    setIsLoadingMore(true);
+    try {
+      console.log("Fetching more notifications with cursor:", cursor);
+      const response = await agent.listNotifications({
+        limit: 50,
+        cursor: cursor,
+      });
+
+      console.log("LoadMore response:", {
+        notificationCount: response.data.notifications?.length,
+        newCursor: response.data.cursor,
+        hasNewCursor: !!response.data.cursor,
+      });
+
+      if (
+        response.data.notifications &&
+        response.data.notifications.length > 0
+      ) {
+        const newNotifications = response.data.notifications;
+        console.log("Adding new notifications:", {
+          newCount: newNotifications.length,
+          firstNew: newNotifications[0]?.uri,
+          lastNew: newNotifications[newNotifications.length - 1]?.uri,
+        });
+
+        setAllNotifications((prev) => {
+          const updated = [...prev, ...newNotifications];
+          console.log("Updated notifications array:", {
+            previousLength: prev.length,
+            newLength: updated.length,
+            actuallyAdded: updated.length - prev.length,
+          });
+          return updated;
+        });
+        setCursor(response.data.cursor);
+        setHasMore(!!response.data.cursor);
+      } else {
+        console.log("No more notifications to load");
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error("Error loading more notifications:", error);
+      setHasMore(false);
+    } finally {
+      setIsLoadingMore(false);
+      console.log("LoadMore completed:", {
+        finalNotificationsLength: allNotifications.length,
+        hasMore,
+      });
+    }
+  }, [agent, cursor, isLoadingMore, hasMore, allNotifications.length]);
+
+  // Refresh function to load new notifications
+  const refreshNotifications = React.useCallback(async () => {
+    if (!agent || isRefreshing) return;
+
+    setIsRefreshing(true);
+    setHasNewNotifications(false);
+
+    try {
+      const response = await agent.listNotifications({
+        limit: 50,
+      });
+
+      if (response.data.notifications) {
+        // Check for new notifications by comparing the first notification
+        const latestNotification = response.data.notifications[0];
+        const currentLatest = allNotifications[0];
+
+        if (
+          latestNotification &&
+          currentLatest &&
+          latestNotification.uri !== currentLatest.uri
+        ) {
+          // Find where the new notifications end
+          const existingIndex = response.data.notifications.findIndex((n) =>
+            allNotifications.some((existing) => existing.uri === n.uri),
+          );
+
+          if (existingIndex > 0) {
+            // Add only the new notifications at the beginning
+            const newNotifications = response.data.notifications.slice(
+              0,
+              existingIndex,
+            );
+            setAllNotifications((prev) => [...newNotifications, ...prev]);
+
+            // Scroll to top to show new notifications
+            if (scrollableRef.current) {
+              scrollableRef.current.scrollTop = 0;
+            } else {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          } else if (existingIndex === -1) {
+            // All notifications are new (rare case)
+            setAllNotifications(response.data.notifications);
+            setCursor(response.data.cursor);
+            setHasMore(!!response.data.cursor);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error refreshing notifications:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [agent, allNotifications, isRefreshing]);
+
+  // Intersection observer for infinite scrolling
+  React.useEffect(() => {
+    // For non-SkyDeck mode, use document's main element as root
+    // For SkyDeck mode, use the scrollable container
+    const scrollRoot = isInSkyDeck
+      ? scrollableRef.current
+      : document.querySelector("main") || null;
+
+    const options = {
+      root: scrollRoot,
+      rootMargin: "200px",
+      threshold: 0.1,
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      const target = entries[0];
+      console.log("Intersection Observer triggered:", {
+        isIntersecting: target.isIntersecting,
+        hasMore,
+        isLoadingMore,
+        willLoadMore: target.isIntersecting && hasMore && !isLoadingMore,
+      });
+      if (target.isIntersecting && hasMore && !isLoadingMore) {
+        loadMore();
+      }
+    }, options);
+
+    // Create sentinel element
+    const sentinel = document.getElementById("timeline-scroll-sentinel");
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => {
+      if (sentinel) {
+        observer.unobserve(sentinel);
+      }
+    };
+  }, [loadMore, hasMore, isLoadingMore, isInSkyDeck]);
+
+  // Get notifications from the state
+  const notifications = allNotifications;
+
+  // Log whenever allNotifications changes
+  React.useEffect(() => {
+    console.log("=== allNotifications Updated ===", {
+      length: allNotifications.length,
+      hasMore,
+      cursor,
+      firstNotification: allNotifications[0]?.uri,
+      lastNotification: allNotifications[allNotifications.length - 1]?.uri,
+    });
+  }, [allNotifications, hasMore, cursor]);
 
   // Fetch posts for notifications to show richer content
   const { data: posts } = useNotificationPosts(notifications);
@@ -113,10 +346,10 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
 
   // Smart aggregation based on notification type and context
   const aggregatedEvents = React.useMemo(() => {
-    if (!data?.notifications) return [];
+    if (!allNotifications || allNotifications.length === 0) return [];
 
     const events: AggregatedEvent[] = [];
-    const sorted = [...data.notifications].sort(
+    const sorted = [...allNotifications].sort(
       (a, b) =>
         new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime(),
     );
@@ -379,8 +612,79 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
       }
     });
 
-    // Add other notifications as individual events
-    otherNotifications.forEach((notification) => {
+    // Group recent comments (replies and quotes) by time window
+    const recentCommentWindow = 30; // 30 minutes window for comment grouping
+    const commentNotifications = otherNotifications.filter(
+      (n) => n.reason === "reply" || n.reason === "quote",
+    );
+    const nonCommentNotifications = otherNotifications.filter(
+      (n) => n.reason !== "reply" && n.reason !== "quote",
+    );
+
+    // Sort comments by time for proper grouping
+    commentNotifications.sort(
+      (a, b) =>
+        new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime(),
+    );
+
+    const commentGroups: any[] = [];
+    const processedComments = new Set<string>();
+
+    commentNotifications.forEach((notification) => {
+      if (processedComments.has(notification.uri)) return;
+
+      // Start a new group with this comment
+      const group = [notification];
+      processedComments.add(notification.uri);
+
+      // Find other comments within the time window
+      const notifTime = new Date(notification.indexedAt);
+
+      commentNotifications.forEach((otherNotif) => {
+        if (processedComments.has(otherNotif.uri)) return;
+
+        const otherTime = new Date(otherNotif.indexedAt);
+        const timeDiff = Math.abs(differenceInMinutes(notifTime, otherTime));
+
+        if (timeDiff <= recentCommentWindow) {
+          group.push(otherNotif);
+          processedComments.add(otherNotif.uri);
+        }
+      });
+
+      if (group.length >= 3) {
+        // Only aggregate if 3 or more comments
+        commentGroups.push(group);
+      } else {
+        // Add back as individual notifications
+        group.forEach((n) => {
+          processedComments.delete(n.uri); // Remove from processed so they can be added individually
+        });
+      }
+    });
+
+    // Create aggregated comment events
+    commentGroups.forEach((group) => {
+      const times = group.map((n: any) => new Date(n.indexedAt).getTime());
+      const latestTime = new Date(Math.max(...times));
+      const earliestTime = new Date(Math.min(...times));
+
+      events.push({
+        time: latestTime,
+        notifications: group,
+        types: new Set(group.map((n: any) => n.reason)),
+        actors: new Set(group.map((n: any) => n.author?.handle || "unknown")),
+        aggregationType: "recent-comments",
+        earliestTime: earliestTime,
+        latestTime: latestTime,
+      });
+    });
+
+    // Add non-aggregated comments and other notifications as individual events
+    [
+      ...commentNotifications.filter((n) => !processedComments.has(n.uri)),
+      ...nonCommentNotifications,
+    ].forEach((notification) => {
       events.push({
         time: new Date(notification.indexedAt),
         notifications: [notification],
@@ -394,7 +698,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
     events.sort((a, b) => b.time.getTime() - a.time.getTime());
 
     return events;
-  }, [data, postMap]);
+  }, [allNotifications, postMap]);
 
   // Calculate visual spacing based on time gaps
   const getSpacingClass = (currentTime: Date, previousTime?: Date) => {
@@ -995,8 +1299,37 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
       style={{ outline: "none" }}
     >
       {/* Scrollable content wrapper */}
-      <div className={isInSkyDeck ? "flex-1 overflow-y-auto" : ""}>
+      <div
+        className={isInSkyDeck ? "flex-1 overflow-y-auto" : ""}
+        ref={scrollableRef}
+      >
         <div className="relative">
+          {/* New notifications banner */}
+          {hasNewNotifications && !isRefreshing && (
+            <div
+              className="sticky top-0 z-40 mb-2 px-4 py-2 backdrop-blur-md sm:px-6"
+              style={{
+                backgroundColor: "var(--bsky-bg-primary)",
+                borderBottom: "1px solid var(--bsky-primary)",
+              }}
+            >
+              <button
+                onClick={refreshNotifications}
+                className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all hover:opacity-90"
+                style={{
+                  backgroundColor: "var(--bsky-primary)",
+                  color: "white",
+                }}
+              >
+                <RefreshCw
+                  size={16}
+                  className={isRefreshing ? "animate-spin" : ""}
+                />
+                New notifications available
+              </button>
+            </div>
+          )}
+
           {eventsByDay.map((dayGroup, dayIndex) => (
             <div key={dayGroup.label} data-day-group={dayGroup.label}>
               {/* Sticky day label */}
@@ -1788,6 +2121,185 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
                                   </div>
                                 </div>
                               </div>
+                            ) : event.aggregationType === "recent-comments" ? (
+                              // Recent comments aggregation
+                              <div>
+                                <div className="mb-4 flex items-center gap-3">
+                                  <div
+                                    className="flex h-10 w-10 items-center justify-center rounded-full"
+                                    style={{
+                                      backgroundColor:
+                                        "var(--bsky-bg-tertiary)",
+                                      border:
+                                        "1px solid var(--bsky-border-primary)",
+                                    }}
+                                  >
+                                    <MessageCircle
+                                      size={20}
+                                      style={{ color: "var(--bsky-primary)" }}
+                                    />
+                                  </div>
+                                  <div>
+                                    <h3
+                                      className="text-base font-bold"
+                                      style={{
+                                        color: "var(--bsky-text-primary)",
+                                      }}
+                                    >
+                                      Recent Comments
+                                    </h3>
+                                    <p
+                                      className="text-sm"
+                                      style={{
+                                        color: "var(--bsky-text-tertiary)",
+                                      }}
+                                    >
+                                      {event.notifications.length} comments from{" "}
+                                      {
+                                        new Set(
+                                          event.notifications.map(
+                                            (n) => n.author?.handle,
+                                          ),
+                                        ).size
+                                      }{" "}
+                                      people
+                                      {event.earliestTime &&
+                                        event.latestTime && (
+                                          <span>
+                                            {" "}
+                                            over{" "}
+                                            {formatDistanceToNow(
+                                              event.earliestTime,
+                                              {
+                                                addSuffix: false,
+                                              },
+                                            )}
+                                          </span>
+                                        )}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Comment list in table format */}
+                                <div
+                                  className="rounded-lg border"
+                                  style={{
+                                    backgroundColor: "var(--bsky-bg-tertiary)",
+                                    borderColor: "var(--bsky-border-primary)",
+                                  }}
+                                >
+                                  {event.notifications
+                                    .slice(0, 5)
+                                    .map((notification, idx) => (
+                                      <div
+                                        key={notification.uri}
+                                        className={`flex gap-3 p-3 ${
+                                          idx !== 0 ? "border-t" : ""
+                                        }`}
+                                        style={{
+                                          borderColor:
+                                            "var(--bsky-border-primary)",
+                                        }}
+                                      >
+                                        {/* Author avatar */}
+                                        <div className="flex-shrink-0">
+                                          <div
+                                            onClick={(e) =>
+                                              handleInternalNavigation(
+                                                e,
+                                                getProfileUrl(
+                                                  notification.author.handle,
+                                                ),
+                                              )
+                                            }
+                                            className="cursor-pointer"
+                                          >
+                                            <img
+                                              src={proxifyBskyImage(
+                                                notification.author.avatar,
+                                              )}
+                                              alt={notification.author.handle}
+                                              className="h-8 w-8 rounded-full transition-opacity hover:opacity-80"
+                                              style={{
+                                                border:
+                                                  "1px solid var(--bsky-border-primary)",
+                                              }}
+                                            />
+                                          </div>
+                                        </div>
+
+                                        {/* Content */}
+                                        <div className="min-w-0 flex-1">
+                                          <div className="mb-1 flex items-baseline justify-between gap-2">
+                                            <span
+                                              onClick={(e) =>
+                                                handleInternalNavigation(
+                                                  e,
+                                                  getProfileUrl(
+                                                    notification.author.handle,
+                                                  ),
+                                                )
+                                              }
+                                              className="cursor-pointer truncate font-medium hover:underline"
+                                              style={{
+                                                color:
+                                                  "var(--bsky-text-primary)",
+                                              }}
+                                            >
+                                              {notification.author
+                                                .displayName ||
+                                                notification.author.handle}
+                                            </span>
+                                            <span
+                                              className="flex-shrink-0 text-xs"
+                                              style={{
+                                                color:
+                                                  "var(--bsky-text-tertiary)",
+                                              }}
+                                            >
+                                              {formatDistanceToNow(
+                                                new Date(
+                                                  notification.indexedAt,
+                                                ),
+                                                { addSuffix: true },
+                                              )}
+                                            </span>
+                                          </div>
+                                          <p
+                                            onClick={() => {
+                                              if (notification.reasonSubject) {
+                                                setSelectedPostUri(
+                                                  notification.reasonSubject,
+                                                );
+                                              }
+                                            }}
+                                            className="line-clamp-2 cursor-pointer text-sm hover:opacity-80"
+                                            style={{
+                                              color: "var(--bsky-text-primary)",
+                                            }}
+                                          >
+                                            {(notification.record as any)
+                                              ?.text || "[No text]"}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    ))}
+
+                                  {event.notifications.length > 5 && (
+                                    <div
+                                      className="border-t px-3 py-2 text-center text-sm"
+                                      style={{
+                                        borderColor:
+                                          "var(--bsky-border-primary)",
+                                        color: "var(--bsky-text-tertiary)",
+                                      }}
+                                    >
+                                      +{event.notifications.length - 5} more
+                                      comments
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             ) : (
                               // Regular aggregated layout
                               <div className="flex items-center gap-3">
@@ -2114,21 +2626,48 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
             </div>
           ))}
 
-          {/* End of timeline */}
-          <div className="relative mt-8 flex items-center gap-3">
-            <div className="w-24" />
-            <div
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: "var(--bsky-border-primary)" }}
-            />
-            <span
-              className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
-            >
-              {notifications.length === 0
-                ? "No notifications yet"
-                : `${notifications.length} recent notifications`}
-            </span>
+          {/* Load more indicator / End of timeline */}
+          <div id="timeline-scroll-sentinel" className="relative mb-4 mt-8">
+            <div className="flex items-center gap-3">
+              <div className="w-24" />
+              <div
+                className={`h-3 w-3 rounded-full ${isLoadingMore ? "animate-pulse" : ""}`}
+                style={{
+                  backgroundColor: isLoadingMore
+                    ? "var(--bsky-primary)"
+                    : "var(--bsky-border-primary)",
+                }}
+              />
+              <span
+                className="text-sm"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                {isLoadingMore
+                  ? "Loading more notifications..."
+                  : notifications.length === 0
+                    ? "No notifications yet"
+                    : hasMore
+                      ? `${notifications.length} notifications loaded`
+                      : `All ${notifications.length} notifications loaded`}
+              </span>
+            </div>
+
+            {/* Manual load more button */}
+            {hasMore && !isLoadingMore && notifications.length > 0 && (
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={loadMore}
+                  className="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-90"
+                  style={{
+                    backgroundColor: "var(--bsky-bg-secondary)",
+                    color: "var(--bsky-text-primary)",
+                    border: "1px solid var(--bsky-border-primary)",
+                  }}
+                >
+                  Load More Notifications
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

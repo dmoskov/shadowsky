@@ -1,0 +1,27 @@
+purpose: React components for UI rendering and user interactions
+common_tasks:
+  - Adding new UI components
+  - Modifying existing component behavior
+  - Updating component styling with Tailwind
+  - Adding event handlers and user interactions
+  - Implementing responsive design
+  - Creating reusable component patterns
+watch_out_for:
+  - NO headers in feed views (user preference)
+  - Always test dark mode compatibility
+  - Ensure mobile responsiveness
+  - Follow existing component patterns
+  - Use TypeScript strictly
+  - Memoize expensive components
+related_files:
+  - /src/hooks/* (custom hooks used by components)
+  - /src/contexts/* (global state providers)
+  - /src/services/* (business logic)
+  - /src/types/* (TypeScript interfaces)
+test_command: npm run test:unit
+key_patterns:
+  - Functional components only (no class components)
+  - Props interfaces defined above component
+  - Hooks at top of component
+  - Event handlers before render
+  - Tailwind for styling (avoid inline styles)

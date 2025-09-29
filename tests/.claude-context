@@ -1,0 +1,27 @@
+purpose: Test suites for unit, integration, and e2e testing
+common_tasks:
+  - Writing unit tests for components
+  - Creating integration tests
+  - Adding e2e test scenarios
+  - Mocking external dependencies
+  - Testing error scenarios
+  - Performance testing
+watch_out_for:
+  - Clean up after tests
+  - Mock external services
+  - Test both happy and error paths
+  - Avoid flaky tests
+  - Test with different storage types
+  - Consider mobile viewport tests
+related_files:
+  - /src/**/*.test.tsx (component tests)
+  - /src/**/*.test.ts (service tests)
+  - /tests/mocks/* (mock implementations)
+  - /tests/utils/* (test utilities)
+test_command: npm run test
+key_patterns:
+  - Arrange-Act-Assert pattern
+  - Use Testing Library best practices
+  - Mock at the service boundary
+  - Test user behavior not implementation
+  - Comprehensive error testing

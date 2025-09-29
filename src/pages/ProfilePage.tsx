@@ -3,9 +3,8 @@ import { getProfileService } from "@bsky/shared";
 import { Edit, MoreHorizontal, Share2, UserX, VolumeX } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { InlineReplyComposer } from "../components/InlineReplyComposer";
-import { PostActionBar } from "../components/PostActionBar";
-import { PostRenderer } from "../components/PostRenderer";
+import { PostCard } from "../components/PostCard";
+import { ThreadModal } from "../components/ThreadModal";
 import { DomainVerifiedBadge } from "../components/ui/DomainVerifiedBadge";
 import { ProfileSkeleton } from "../components/ui/SkeletonLoader";
 import { UserListModal } from "../components/UserListModal";
@@ -57,11 +56,14 @@ export default function ProfilePage() {
   const [cursor, setCursor] = useState<string | undefined>();
   const [hasMore, setHasMore] = useState(true);
   const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
-  const [replyToPost, setReplyToPost] =
-    useState<AppBskyFeedDefs.PostView | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const [selectedPost, setSelectedPost] =
+    useState<AppBskyFeedDefs.PostView | null>(null);
+  const [showThread, setShowThread] = useState(false);
+  const [openThreadToReply, setOpenThreadToReply] = useState(false);
+  const [openThreadToQuote, setOpenThreadToQuote] = useState(false);
 
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
     useOptimisticPosts();
@@ -318,7 +320,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="w-full">
+    <div className="mx-auto w-full max-w-4xl">
       {/* Profile Header */}
       <div className="relative">
         {/* Banner */}
@@ -502,49 +504,44 @@ export default function ProfilePage() {
       {/* Posts */}
       <div>
         {posts.map((post) => (
-          <div key={post.post.uri} className="border-b dark:border-gray-700">
-            <PostRenderer
-              post={post.post}
-              reason={post.reason}
-              showActions={false}
-              onClick={() => {
-                const parts = post.post.uri.split("/");
-                const handle = parts[2];
-                const postId = parts[parts.length - 1];
-                navigate(`/thread/${handle}/${postId}`);
-              }}
-              onQuoteClick={(uri) => {
-                const parts = uri.split("/");
-                const handle = parts[2];
-                const postId = parts[parts.length - 1];
-                navigate(`/thread/${handle}/${postId}`);
-              }}
-            />
-            <div className="px-4 pb-3">
-              <PostActionBar
-                post={post.post}
-                onLike={() => handleLike(post.post)}
-                onRepost={() => handleRepost(post.post)}
-                onReply={() => setReplyToPost(post.post)}
-                showCounts={true}
-              />
-            </div>
-            {replyToPost?.uri === post.post.uri && (
-              <InlineReplyComposer
-                replyTo={{
-                  uri: replyToPost.uri,
-                  cid: replyToPost.cid,
-                  author: replyToPost.author,
-                  text: (replyToPost.record as any)?.text,
-                }}
-                onClose={() => setReplyToPost(null)}
-                onSuccess={() => {
-                  setReplyToPost(null);
-                  // Optionally refresh the feed
-                }}
-              />
-            )}
-          </div>
+          <PostCard
+            key={post.post.uri}
+            post={post.post}
+            reason={post.reason}
+            onClick={() => {
+              setSelectedPost(post.post);
+              setOpenThreadToReply(false);
+              setOpenThreadToQuote(false);
+              setShowThread(true);
+            }}
+            onQuoteClick={(uri) => {
+              // Find the quoted post from our posts array or create a minimal post object
+              const quotedPost = posts.find((p) => p.post.uri === uri)?.post;
+              if (quotedPost) {
+                setSelectedPost(quotedPost);
+              } else {
+                // Create a minimal post object with just the URI for the ThreadModal to fetch
+                setSelectedPost({ uri } as AppBskyFeedDefs.PostView);
+              }
+              setOpenThreadToReply(false);
+              setOpenThreadToQuote(false);
+              setShowThread(true);
+            }}
+            onLike={() => handleLike(post.post)}
+            onRepost={() => handleRepost(post.post)}
+            onReply={() => {
+              setSelectedPost(post.post);
+              setOpenThreadToReply(true);
+              setOpenThreadToQuote(false);
+              setShowThread(true);
+            }}
+            onQuote={() => {
+              setSelectedPost(post.post);
+              setOpenThreadToReply(false);
+              setOpenThreadToQuote(true);
+              setShowThread(true);
+            }}
+          />
         ))}
         {postsLoading && (
           <div className="flex justify-center p-4">
@@ -579,6 +576,20 @@ export default function ProfilePage() {
         actor={profile?.did || ""}
         type="following"
       />
+
+      {showThread && selectedPost && (
+        <ThreadModal
+          postUri={selectedPost.uri}
+          openToReply={openThreadToReply}
+          openToQuote={openThreadToQuote}
+          onClose={() => {
+            setShowThread(false);
+            setSelectedPost(null);
+            setOpenThreadToReply(false);
+            setOpenThreadToQuote(false);
+          }}
+        />
+      )}
     </div>
   );
 }

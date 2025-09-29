@@ -136,7 +136,7 @@ export const Bookmarks: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full flex-col bg-bsky-bg-primary">
+    <div className="mx-auto flex h-full max-w-4xl flex-col bg-bsky-bg-primary">
       <div className="sticky top-0 z-10 border-b border-bsky-border-primary bg-bsky-bg-primary p-4">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">

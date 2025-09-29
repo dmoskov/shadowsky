@@ -1,0 +1,27 @@
+purpose: Business logic, API integrations, and data management
+common_tasks:
+  - Adding new service methods
+  - Implementing storage backends
+  - Integrating with AT Protocol APIs
+  - Managing data persistence
+  - Handling authentication flows
+  - Implementing caching strategies
+watch_out_for:
+  - Always test with BOTH storage types (local and AT Protocol)
+  - Handle 400 errors gracefully (record might not exist)
+  - Service wrappers handle initialization
+  - Services should be storage-agnostic
+  - Maintain singleton pattern where appropriate
+  - Clean up event listeners
+related_files:
+  - /src/services/storage/* (storage backends)
+  - /src/services/atproto/* (AT Protocol integration)
+  - /src/types/* (service interfaces)
+  - /src/hooks/* (hooks that use services)
+test_command: npm run test:unit
+key_patterns:
+  - Wrapper → Service → Backend architecture
+  - Async initialization pattern
+  - Event emitter for real-time updates
+  - Error recovery with retries
+  - Proper TypeScript typing
