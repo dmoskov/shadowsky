@@ -49,7 +49,7 @@ const TrackedChart: React.FC<{
 };
 
 export const NotificationsAnalytics: React.FC = () => {
-  const { agent } = useAuth();
+  const { agent, session } = useAuth();
   const [timeRange, setTimeRange] = React.useState<TimeRange>("7d");
   const [activityView, setActivityView] = React.useState<"received" | "sent">(
     "received",
@@ -57,10 +57,6 @@ export const NotificationsAnalytics: React.FC = () => {
   const [topUsersView, setTopUsersView] = React.useState<"received" | "sent">(
     "received",
   );
-
-  // Temporary override for analytics testing
-  // TODO: Remove this override and revert to using session?.handle
-  const analyticsHandle = "chancethelawyer.bsky.social";
 
   // Analytics hooks
   const { trackFeatureAction } = useFeatureTracking("analytics");
@@ -77,9 +73,9 @@ export const NotificationsAnalytics: React.FC = () => {
 
   // Query for user's own activity
   const { data: userActivity } = useQuery({
-    queryKey: ["user-activity", analyticsHandle, timeRange],
+    queryKey: ["user-activity", session?.handle, timeRange],
     queryFn: async () => {
-      if (!agent || !analyticsHandle) throw new Error("Not authenticated");
+      if (!agent || !session?.handle) throw new Error("Not authenticated");
 
       const cutoffDate =
         timeRange === "1d"
@@ -100,7 +96,7 @@ export const NotificationsAnalytics: React.FC = () => {
 
       for (let page = 0; page < maxPages && !fetchedEnough; page++) {
         const response = await agent.getAuthorFeed({
-          actor: analyticsHandle,
+          actor: session.handle,
           limit: 100,
           cursor,
         });
@@ -181,7 +177,7 @@ export const NotificationsAnalytics: React.FC = () => {
       }
 
       // Also fetch user's profile to get follower/following counts
-      const profile = await agent.getProfile({ actor: analyticsHandle });
+      const profile = await agent.getProfile({ actor: session.handle });
 
       return {
         postsCount: postsInTimeRange,
@@ -200,9 +196,9 @@ export const NotificationsAnalytics: React.FC = () => {
 
   // Query for users the current user engages with most
   const { data: topUsersSent } = useQuery({
-    queryKey: ["top-users-sent", analyticsHandle, timeRange],
+    queryKey: ["top-users-sent", session?.handle, timeRange],
     queryFn: async () => {
-      if (!agent || !analyticsHandle) throw new Error("Not authenticated");
+      if (!agent || !session?.handle) throw new Error("Not authenticated");
 
       const cutoffDate =
         timeRange === "1d"
@@ -254,7 +250,7 @@ export const NotificationsAnalytics: React.FC = () => {
 
       // Fetch user's own posts to see who they replied to
       const ownFeed = await agent.getAuthorFeed({
-        actor: analyticsHandle,
+        actor: session?.handle,
         limit: 100,
       });
 
@@ -268,7 +264,7 @@ export const NotificationsAnalytics: React.FC = () => {
           if (
             parentAuthor &&
             "handle" in parentAuthor &&
-            parentAuthor.handle !== analyticsHandle
+            parentAuthor.handle !== session.handle
           ) {
             addInteraction(parentAuthor, "replies");
           }
@@ -287,7 +283,7 @@ export const NotificationsAnalytics: React.FC = () => {
             // Check if current user liked this post
             if (item.post.viewer?.like) {
               const author = item.post.author;
-              if (author.handle !== analyticsHandle) {
+              if (author.handle !== session.handle) {
                 addInteraction(author, "likes");
               }
             }
@@ -295,7 +291,7 @@ export const NotificationsAnalytics: React.FC = () => {
             // Check if current user reposted
             if (item.post.viewer?.repost) {
               const author = item.post.author;
-              if (author.handle !== analyticsHandle) {
+              if (author.handle !== session.handle) {
                 addInteraction(author, "reposts");
               }
             }
@@ -319,9 +315,9 @@ export const NotificationsAnalytics: React.FC = () => {
 
   // Query for user's sent activity (posts, likes, reposts they made)
   const { data: sentActivity } = useQuery({
-    queryKey: ["user-sent-activity", analyticsHandle, timeRange],
+    queryKey: ["user-sent-activity", session?.handle, timeRange],
     queryFn: async () => {
-      if (!agent || !analyticsHandle) throw new Error("Not authenticated");
+      if (!agent || !session?.handle) throw new Error("Not authenticated");
 
       const cutoffDate =
         timeRange === "1d"
@@ -340,7 +336,7 @@ export const NotificationsAnalytics: React.FC = () => {
 
       for (let page = 0; page < maxPages && !fetchedEnough; page++) {
         const response = await agent.getAuthorFeed({
-          actor: analyticsHandle,
+          actor: session.handle,
           limit: 100,
           cursor,
         });
