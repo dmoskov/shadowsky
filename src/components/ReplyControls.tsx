@@ -85,7 +85,7 @@ export function ReplyControls({
 
         {isOpen && !disabled && (
           <div
-            className="absolute bottom-full left-0 z-50 mb-2 w-64 rounded-lg border shadow-lg"
+            className="absolute bottom-full left-0 z-[70] mb-2 w-64 rounded-lg border shadow-lg"
             style={{
               backgroundColor: "var(--bsky-bg-primary)",
               borderColor: "var(--bsky-border-primary)",

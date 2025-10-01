@@ -13,6 +13,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModal } from "../contexts/ModalContext";
@@ -37,7 +38,9 @@ export const PostMenu: React.FC<PostMenuProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showReportMenu, setShowReportMenu] = useState(false);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const { session, agent } = useAuth();
   const { hidePost } = useHiddenPosts();
   const { muteUser, muteThread, blockUser } = useModeration();
@@ -244,8 +247,16 @@ export const PostMenu: React.FC<PostMenuProps> = ({
   return (
     <div className={`relative ${className}`} ref={menuRef}>
       <button
+        ref={buttonRef}
         onClick={(e) => {
           e.stopPropagation();
+          if (!isOpen && buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            setMenuPosition({
+              top: rect.bottom + 8,
+              left: rect.right - 224, // 224px = w-56
+            });
+          }
           setIsOpen(!isOpen);
         }}
         className="rounded-full p-2 transition-opacity hover:opacity-70"
@@ -254,9 +265,14 @@ export const PostMenu: React.FC<PostMenuProps> = ({
         <MoreHorizontal className="h-5 w-5 text-gray-500 dark:text-gray-400" />
       </button>
 
-      {isOpen && (
+      {isOpen && menuPosition && ReactDOM.createPortal(
         <div
-          className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
+          ref={menuRef}
+          className="fixed z-[9999] w-56 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
+          style={{
+            top: `${menuPosition.top}px`,
+            left: `${menuPosition.left}px`,
+          }}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="overflow-hidden py-1">
@@ -379,7 +395,8 @@ export const PostMenu: React.FC<PostMenuProps> = ({
               </button>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

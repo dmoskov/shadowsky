@@ -1,7 +1,8 @@
 import { AppBskyFeedDefs } from "@atproto/api";
 import { getProfileService } from "@bsky/shared";
 import { Edit, MoreHorizontal, Share2, UserX, VolumeX } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 import { useNavigate, useParams } from "react-router";
 import { PostCard } from "../components/PostCard";
 import { ThreadModal } from "../components/ThreadModal";
@@ -57,6 +58,7 @@ export default function ProfilePage() {
   const [hasMore, setHasMore] = useState(true);
   const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [profileMenuPosition, setProfileMenuPosition] = useState<{ top: number; right: number } | null>(null);
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
   const [selectedPost, setSelectedPost] =
@@ -64,6 +66,9 @@ export default function ProfilePage() {
   const [showThread, setShowThread] = useState(false);
   const [openThreadToReply, setOpenThreadToReply] = useState(false);
   const [openThreadToQuote, setOpenThreadToQuote] = useState(false);
+
+  const profileMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
     useOptimisticPosts();
@@ -361,13 +366,30 @@ export default function ProfilePage() {
               )}
               <div className="relative">
                 <button
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  ref={profileMenuButtonRef}
+                  onClick={() => {
+                    if (!showProfileMenu && profileMenuButtonRef.current) {
+                      const rect = profileMenuButtonRef.current.getBoundingClientRect();
+                      setProfileMenuPosition({
+                        top: rect.bottom + 8,
+                        right: window.innerWidth - rect.right,
+                      });
+                    }
+                    setShowProfileMenu(!showProfileMenu);
+                  }}
                   className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
                   <MoreHorizontal className="h-5 w-5" />
                 </button>
-                {showProfileMenu && (
-                  <div className="absolute right-0 z-20 mt-2 w-48 rounded-lg bg-white py-2 shadow-lg dark:bg-gray-800">
+                {showProfileMenu && profileMenuPosition && ReactDOM.createPortal(
+                  <div
+                    ref={profileMenuRef}
+                    className="fixed z-[9999] w-48 rounded-lg bg-white py-2 shadow-lg dark:bg-gray-800"
+                    style={{
+                      top: `${profileMenuPosition.top}px`,
+                      right: `${profileMenuPosition.right}px`,
+                    }}
+                  >
                     {isOwnProfile ? (
                       <button
                         onClick={(e) => {
@@ -408,7 +430,8 @@ export default function ProfilePage() {
                         </button>
                       </>
                     )}
-                  </div>
+                  </div>,
+                  document.body
                 )}
               </div>
             </div>
@@ -550,16 +573,6 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Click outside to close menu */}
-      {showProfileMenu && (
-        <div
-          className="fixed inset-0 z-10"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowProfileMenu(false);
-          }}
-        />
-      )}
 
       {/* User List Modals */}
       <UserListModal

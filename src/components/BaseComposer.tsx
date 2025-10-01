@@ -492,7 +492,7 @@ export function BaseComposer({
                 <Smile size={isInline ? 16 : 20} />
               </button>
               {showEmojiPicker && (
-                <div className="absolute bottom-full right-0 z-50 mb-2">
+                <div className="absolute bottom-full right-0 z-[70] mb-2">
                   <EmojiPicker
                     onSelectEmoji={handleEmojiSelect}
                     onClose={() => setShowEmojiPicker(false)}

@@ -1,11 +1,14 @@
 import { ChevronDown, LogOut, Settings, User } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 
 export const UserMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const { session, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -60,7 +63,17 @@ export const UserMenu: React.FC = () => {
   return (
     <div className="relative" ref={menuRef}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        ref={buttonRef}
+        onClick={() => {
+          if (!isOpen && buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            setMenuPosition({
+              top: rect.bottom + 8,
+              right: window.innerWidth - rect.right,
+            });
+          }
+          setIsOpen(!isOpen);
+        }}
         className="flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-white hover:bg-opacity-10"
         style={{ color: "var(--bsky-text-primary)" }}
       >
@@ -73,12 +86,15 @@ export const UserMenu: React.FC = () => {
         />
       </button>
 
-      {isOpen && (
+      {isOpen && menuPosition && ReactDOM.createPortal(
         <div
-          className="bsky-glass absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-lg shadow-lg"
+          ref={menuRef}
+          className="bsky-glass fixed z-[9999] w-56 overflow-hidden rounded-lg shadow-lg"
           style={{
             backgroundColor: "var(--bsky-bg-secondary)",
             border: "1px solid var(--bsky-border-primary)",
+            top: `${menuPosition.top}px`,
+            right: `${menuPosition.right}px`,
           }}
         >
           <div
@@ -131,7 +147,8 @@ export const UserMenu: React.FC = () => {
               );
             })}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
