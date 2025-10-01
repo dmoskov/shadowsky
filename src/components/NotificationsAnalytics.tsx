@@ -49,7 +49,7 @@ const TrackedChart: React.FC<{
 };
 
 export const NotificationsAnalytics: React.FC = () => {
-  const { agent, session } = useAuth();
+  const { agent } = useAuth();
   const [timeRange, setTimeRange] = React.useState<TimeRange>("7d");
   const [activityView, setActivityView] = React.useState<"received" | "sent">(
     "received",
@@ -57,6 +57,10 @@ export const NotificationsAnalytics: React.FC = () => {
   const [topUsersView, setTopUsersView] = React.useState<"received" | "sent">(
     "received",
   );
+
+  // Temporary override for analytics testing
+  // TODO: Remove this override and revert to using session?.handle
+  const analyticsHandle = "chancethelawyer.bsky.social";
 
   // Analytics hooks
   const { trackFeatureAction } = useFeatureTracking("analytics");
@@ -73,9 +77,9 @@ export const NotificationsAnalytics: React.FC = () => {
 
   // Query for user's own activity
   const { data: userActivity } = useQuery({
-    queryKey: ["user-activity", session?.handle, timeRange],
+    queryKey: ["user-activity", analyticsHandle, timeRange],
     queryFn: async () => {
-      if (!agent || !session?.handle) throw new Error("Not authenticated");
+      if (!agent || !analyticsHandle) throw new Error("Not authenticated");
 
       const cutoffDate =
         timeRange === "1d"
@@ -87,29 +91,97 @@ export const NotificationsAnalytics: React.FC = () => {
               : subDays(new Date(), 28);
 
       // Fetch user's recent posts to analyze their activity
-      const posts = await agent.getAuthorFeed({
-        actor: session.handle,
-        limit: 100,
-      });
+
+      // Fetch multiple pages if needed to cover the time range
+      let allPosts: any[] = [];
+      let cursor: string | undefined;
+      let fetchedEnough = false;
+      const maxPages = 5; // Limit to prevent excessive API calls
+
+      for (let page = 0; page < maxPages && !fetchedEnough; page++) {
+        const response = await agent.getAuthorFeed({
+          actor: analyticsHandle,
+          limit: 100,
+          cursor,
+        });
+
+        allPosts = allPosts.concat(response.data.feed);
+        cursor = response.data.cursor;
+
+        // Check if we've fetched posts older than our cutoff
+        if (response.data.feed.length > 0) {
+          const oldestInBatch =
+            response.data.feed[response.data.feed.length - 1];
+          const oldestDate = new Date(oldestInBatch.post.indexedAt);
+          if (oldestDate < cutoffDate || !cursor) {
+            fetchedEnough = true;
+          }
+        } else {
+          fetchedEnough = true;
+        }
+      }
+
+      const posts = { data: { feed: allPosts } };
 
       // Count likes, reposts, and replies from the posts
+      // NOTE: This counts TOTAL engagement on posts made in the time range,
+      // not NEW engagement received during the time range
       let totalLikes = 0;
       let totalReposts = 0;
       let totalReplies = 0;
       let postsInTimeRange = 0;
 
+      // Track top posts for debugging
+      const topPosts: Array<{
+        text: string;
+        likes: number;
+        reposts: number;
+        replies: number;
+        date: string;
+        uri: string;
+        author?: string;
+        isRepost?: boolean;
+      }> = [];
+
       for (const item of posts.data.feed) {
         const postDate = new Date(item.post.indexedAt);
+
+        // Skip reposts - we only want engagement on posts authored by the user
+        const isRepost =
+          item.reason?.$type === "app.bsky.feed.defs#reasonRepost";
+        if (isRepost) {
+          continue;
+        }
+
         if (postDate >= cutoffDate) {
           postsInTimeRange++;
-          totalLikes += item.post.likeCount || 0;
-          totalReposts += item.post.repostCount || 0;
-          totalReplies += item.post.replyCount || 0;
+          const likes = item.post.likeCount || 0;
+          const reposts = item.post.repostCount || 0;
+          const replies = item.post.replyCount || 0;
+
+          totalLikes += likes;
+          totalReposts += reposts;
+          totalReplies += replies;
+
+          // Track posts with significant engagement
+          if (likes > 1000 || reposts > 100) {
+            const author = item.post.author;
+            topPosts.push({
+              text: item.post.record?.text?.substring(0, 100) || "[No text]",
+              likes,
+              reposts,
+              replies,
+              date: postDate.toISOString(),
+              uri: item.post.uri,
+              author: `@${author.handle}`,
+              isRepost: false,
+            });
+          }
         }
       }
 
       // Also fetch user's profile to get follower/following counts
-      const profile = await agent.getProfile({ actor: session.handle });
+      const profile = await agent.getProfile({ actor: analyticsHandle });
 
       return {
         postsCount: postsInTimeRange,
@@ -121,15 +193,16 @@ export const NotificationsAnalytics: React.FC = () => {
         postsTotal: profile.data.postsCount || 0,
       };
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0, // Always refetch when query key changes
+    gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
   // Query for users the current user engages with most
   const { data: topUsersSent } = useQuery({
-    queryKey: ["top-users-sent", session?.handle, timeRange],
+    queryKey: ["top-users-sent", analyticsHandle, timeRange],
     queryFn: async () => {
-      if (!agent || !session?.handle) throw new Error("Not authenticated");
+      if (!agent || !analyticsHandle) throw new Error("Not authenticated");
 
       const cutoffDate =
         timeRange === "1d"
@@ -181,7 +254,7 @@ export const NotificationsAnalytics: React.FC = () => {
 
       // Fetch user's own posts to see who they replied to
       const ownFeed = await agent.getAuthorFeed({
-        actor: session.handle,
+        actor: analyticsHandle,
         limit: 100,
       });
 
@@ -195,7 +268,7 @@ export const NotificationsAnalytics: React.FC = () => {
           if (
             parentAuthor &&
             "handle" in parentAuthor &&
-            parentAuthor.handle !== session.handle
+            parentAuthor.handle !== analyticsHandle
           ) {
             addInteraction(parentAuthor, "replies");
           }
@@ -214,7 +287,7 @@ export const NotificationsAnalytics: React.FC = () => {
             // Check if current user liked this post
             if (item.post.viewer?.like) {
               const author = item.post.author;
-              if (author.handle !== session.handle) {
+              if (author.handle !== analyticsHandle) {
                 addInteraction(author, "likes");
               }
             }
@@ -222,7 +295,7 @@ export const NotificationsAnalytics: React.FC = () => {
             // Check if current user reposted
             if (item.post.viewer?.repost) {
               const author = item.post.author;
-              if (author.handle !== session.handle) {
+              if (author.handle !== analyticsHandle) {
                 addInteraction(author, "reposts");
               }
             }
@@ -246,9 +319,9 @@ export const NotificationsAnalytics: React.FC = () => {
 
   // Query for user's sent activity (posts, likes, reposts they made)
   const { data: sentActivity } = useQuery({
-    queryKey: ["user-sent-activity", session?.handle, timeRange],
+    queryKey: ["user-sent-activity", analyticsHandle, timeRange],
     queryFn: async () => {
-      if (!agent || !session?.handle) throw new Error("Not authenticated");
+      if (!agent || !analyticsHandle) throw new Error("Not authenticated");
 
       const cutoffDate =
         timeRange === "1d"
@@ -259,11 +332,35 @@ export const NotificationsAnalytics: React.FC = () => {
               ? subDays(new Date(), 7)
               : subDays(new Date(), 28);
 
-      // Fetch user's recent posts
-      const posts = await agent.getAuthorFeed({
-        actor: session.handle,
-        limit: 100,
-      });
+      // Fetch user's recent posts (same logic as user activity)
+      let allPosts: any[] = [];
+      let cursor: string | undefined;
+      let fetchedEnough = false;
+      const maxPages = 5;
+
+      for (let page = 0; page < maxPages && !fetchedEnough; page++) {
+        const response = await agent.getAuthorFeed({
+          actor: analyticsHandle,
+          limit: 100,
+          cursor,
+        });
+
+        allPosts = allPosts.concat(response.data.feed);
+        cursor = response.data.cursor;
+
+        if (response.data.feed.length > 0) {
+          const oldestInBatch =
+            response.data.feed[response.data.feed.length - 1];
+          const oldestDate = new Date(oldestInBatch.post.indexedAt);
+          if (oldestDate < cutoffDate || !cursor) {
+            fetchedEnough = true;
+          }
+        } else {
+          fetchedEnough = true;
+        }
+      }
+
+      const posts = { data: { feed: allPosts } };
 
       // Organize by time buckets
       const buckets: Array<{
@@ -1544,6 +1641,21 @@ export const NotificationsAnalytics: React.FC = () => {
               Your Activity
             </h2>
 
+            <div
+              className="mb-3 text-sm"
+              style={{ color: "var(--bsky-text-secondary)" }}
+            >
+              Showing cumulative engagement on original posts (not reposts) from
+              the last{" "}
+              {timeRange === "1d"
+                ? "24 hours"
+                : timeRange === "3d"
+                  ? "3 days"
+                  : timeRange === "7d"
+                    ? "7 days"
+                    : "4 weeks"}
+            </div>
+
             <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
               <div
                 className="rounded-lg p-3 text-center"
@@ -1574,7 +1686,7 @@ export const NotificationsAnalytics: React.FC = () => {
                   className="text-sm"
                   style={{ color: "var(--bsky-text-secondary)" }}
                 >
-                  Likes Received
+                  Total Likes on Posts
                 </div>
               </div>
 
@@ -1589,7 +1701,7 @@ export const NotificationsAnalytics: React.FC = () => {
                   className="text-sm"
                   style={{ color: "var(--bsky-text-secondary)" }}
                 >
-                  Reposts
+                  Total Reposts
                 </div>
               </div>
 
@@ -1604,7 +1716,7 @@ export const NotificationsAnalytics: React.FC = () => {
                   className="text-sm"
                   style={{ color: "var(--bsky-text-secondary)" }}
                 >
-                  Replies
+                  Total Replies
                 </div>
               </div>
             </div>
