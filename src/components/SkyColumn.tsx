@@ -5,7 +5,7 @@ import { useStorageErrorManager } from "../services/storage/storage-error-manage
 import { BookmarksColumn } from "./BookmarksColumn";
 import { ColumnHeader } from "./ColumnHeader";
 import { ConversationsSimple as Conversations } from "./ConversationsSimple";
-import { DirectMessages } from "./DirectMessages";
+import { DirectMessagesColumn } from "./DirectMessagesColumn";
 import { Home } from "./Home";
 import { NotificationsFeed } from "./NotificationsFeed";
 import type { Column } from "./SkyDeck";
@@ -157,7 +157,7 @@ export default function SkyColumn({
         return <Conversations isFocused={isFocused} />;
 
       case "messages":
-        return <DirectMessages />;
+        return <DirectMessagesColumn />;
 
       case "bookmarks":
         return <BookmarksColumn isFocused={isFocused} />;
