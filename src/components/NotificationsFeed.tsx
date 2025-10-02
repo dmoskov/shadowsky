@@ -18,6 +18,7 @@ import {
   Users,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 import { useLocation, useNavigate } from "react-router";
 import {
   useFeatureTracking,
@@ -73,11 +74,13 @@ export const NotificationsFeed: React.FC = () => {
   const [minFollowerCount, setMinFollowerCount] = useState(10000);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [moreFiltersPosition, setMoreFiltersPosition] = useState<{ top: number; right: number } | null>(null);
   const [selectedPostUri, setSelectedPostUri] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   // Removed isFromCache state - no longer needed without header
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const moreFiltersRef = useRef<HTMLDivElement>(null);
+  const moreFiltersButtonRef = useRef<HTMLButtonElement>(null);
 
   // Analytics hooks
   const { trackNotificationView } = useNotificationTracking();
@@ -539,9 +542,19 @@ export const NotificationsFeed: React.FC = () => {
               </div>
 
               {/* More menu for mobile */}
-              <div className="relative md:hidden" ref={moreFiltersRef}>
+              <div className="relative md:hidden">
                 <button
-                  onClick={() => setShowMoreFilters(!showMoreFilters)}
+                  ref={moreFiltersButtonRef}
+                  onClick={() => {
+                    if (!showMoreFilters && moreFiltersButtonRef.current) {
+                      const rect = moreFiltersButtonRef.current.getBoundingClientRect();
+                      setMoreFiltersPosition({
+                        top: rect.bottom + 4,
+                        right: window.innerWidth - rect.right,
+                      });
+                    }
+                    setShowMoreFilters(!showMoreFilters);
+                  }}
                   className={`flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
                     showMoreFilters
                       ? "bg-bsky-primary text-white"
@@ -552,8 +565,15 @@ export const NotificationsFeed: React.FC = () => {
                   <MoreVertical size={16} />
                 </button>
 
-                {showMoreFilters && (
-                  <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-1 shadow-md">
+                {showMoreFilters && moreFiltersPosition && ReactDOM.createPortal(
+                  <div
+                    ref={moreFiltersRef}
+                    className="fixed z-[9999] w-48 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-1 shadow-md"
+                    style={{
+                      top: `${moreFiltersPosition.top}px`,
+                      right: `${moreFiltersPosition.right}px`,
+                    }}
+                  >
                     <button
                       onClick={() => {
                         handleFilterChange("quotes");
@@ -625,7 +645,8 @@ export const NotificationsFeed: React.FC = () => {
                         )}
                       </button>
                     )}
-                  </div>
+                  </div>,
+                  document.body
                 )}
               </div>
             </div>

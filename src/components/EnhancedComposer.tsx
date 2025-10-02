@@ -790,7 +790,7 @@ export function EnhancedComposer({
                 <Smile size={20} />
               </button>
               {showEmojiPicker && (
-                <div className="absolute bottom-full left-0 z-50 mb-2">
+                <div className="absolute bottom-full left-0 z-[70] mb-2">
                   <EmojiPicker
                     onSelectEmoji={handleEmojiSelect}
                     onClose={() => setShowEmojiPicker(false)}

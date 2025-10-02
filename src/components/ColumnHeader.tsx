@@ -9,6 +9,7 @@ import {
   X,
 } from "lucide-react";
 import React from "react";
+import ReactDOM from "react-dom";
 import type { Column } from "./SkyDeck";
 
 interface ColumnHeaderProps {
@@ -38,7 +39,12 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
 }) => {
   const [showMenu, setShowMenu] = React.useState(false);
   const [showFeedDropdown, setShowFeedDropdown] = React.useState(false);
+  const [feedMenuPosition, setFeedMenuPosition] = React.useState<{ top: number; right: number } | null>(null);
+  const [moreMenuPosition, setMoreMenuPosition] = React.useState<{ top: number; right: number } | null>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const moreMenuRef = React.useRef<HTMLDivElement>(null);
+  const feedButtonRef = React.useRef<HTMLButtonElement>(null);
+  const moreButtonRef = React.useRef<HTMLButtonElement>(null);
 
   // Close dropdowns when clicking outside
   React.useEffect(() => {
@@ -110,7 +116,17 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
         {column.type === "feed" && onFeedChange && feedOptions && (
           <div className="relative" ref={dropdownRef}>
             <button
-              onClick={() => setShowFeedDropdown(!showFeedDropdown)}
+              ref={feedButtonRef}
+              onClick={() => {
+                if (!showFeedDropdown && feedButtonRef.current) {
+                  const rect = feedButtonRef.current.getBoundingClientRect();
+                  setFeedMenuPosition({
+                    top: rect.bottom + 4,
+                    right: window.innerWidth - rect.right,
+                  });
+                }
+                setShowFeedDropdown(!showFeedDropdown);
+              }}
               className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
               title="Change feed"
             >
@@ -120,8 +136,15 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
               />
             </button>
 
-            {showFeedDropdown && (
-              <div className="absolute right-0 top-full z-30 mt-1 max-h-96 w-64 overflow-y-auto rounded-md border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            {showFeedDropdown && feedMenuPosition && ReactDOM.createPortal(
+              <div
+                ref={dropdownRef}
+                className="fixed z-[9999] max-h-96 w-64 overflow-y-auto rounded-md border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                style={{
+                  top: `${feedMenuPosition.top}px`,
+                  right: `${feedMenuPosition.right}px`,
+                }}
+              >
                 <div className="py-1">
                   {feedOptions.map((option) => (
                     <button
@@ -156,7 +179,8 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
                     </>
                   )}
                 </div>
-              </div>
+              </div>,
+              document.body
             )}
           </div>
         )}
@@ -175,20 +199,37 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
         {/* More menu */}
         <div className="relative">
           <button
-            onClick={() => setShowMenu(!showMenu)}
+            ref={moreButtonRef}
+            onClick={() => {
+              if (!showMenu && moreButtonRef.current) {
+                const rect = moreButtonRef.current.getBoundingClientRect();
+                setMoreMenuPosition({
+                  top: rect.bottom + 4,
+                  right: window.innerWidth - rect.right,
+                });
+              }
+              setShowMenu(!showMenu);
+            }}
             className="rounded-md p-2 transition-opacity hover:opacity-70"
             title="More options"
           >
             <MoreVertical className="h-4 w-4 text-gray-500 dark:text-gray-400" />
           </button>
 
-          {showMenu && (
+          {showMenu && moreMenuPosition && ReactDOM.createPortal(
             <>
               <div
-                className="fixed inset-0 z-10"
+                className="fixed inset-0 z-[9998]"
                 onClick={() => setShowMenu(false)}
               />
-              <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-md border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <div
+                ref={moreMenuRef}
+                className="fixed z-[9999] w-48 rounded-md border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                style={{
+                  top: `${moreMenuPosition.top}px`,
+                  right: `${moreMenuPosition.right}px`,
+                }}
+              >
                 <div className="py-1">
                   {onMoveLeft && (
                     <button
@@ -216,7 +257,8 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
                   )}
                 </div>
               </div>
-            </>
+            </>,
+            document.body
           )}
         </div>
       </div>

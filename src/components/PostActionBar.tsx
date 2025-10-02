@@ -7,7 +7,8 @@ import {
   Repeat2,
   Share,
 } from "lucide-react";
-import React, { memo, useState } from "react";
+import React, { memo, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 import { useBookmarks } from "../hooks/useBookmarks";
 import { PostMenu } from "./PostMenu";
 
@@ -39,6 +40,8 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
   }) => {
     const { isBookmarked, toggleBookmark } = useBookmarks();
     const [showRepostMenu, setShowRepostMenu] = useState(false);
+    const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+    const repostButtonRef = useRef<HTMLButtonElement>(null);
 
     const iconSize = size === "small" ? 14 : size === "medium" ? 16 : 18;
     const isLiked = !!post.viewer?.like;
@@ -95,12 +98,20 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
         {/* Repost/Quote */}
         <div className="relative">
           <button
+            ref={repostButtonRef}
             className={`touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-colors duration-150 hover:text-green-600 ${
               isReposted ? "text-green-500" : ""
             }`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              if (!showRepostMenu && repostButtonRef.current) {
+                const rect = repostButtonRef.current.getBoundingClientRect();
+                setMenuPosition({
+                  top: rect.top - 100, // Position above the button (100px = approximate menu height)
+                  left: rect.left,
+                });
+              }
               setShowRepostMenu(!showRepostMenu);
             }}
             aria-label="Repost or Quote"
@@ -114,17 +125,19 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
           </button>
 
           {/* Repost menu dropdown */}
-          {showRepostMenu && (
+          {showRepostMenu && menuPosition && ReactDOM.createPortal(
             <>
               <div
-                className="fixed inset-0 z-10"
+                className="fixed inset-0 z-[9998]"
                 onClick={() => setShowRepostMenu(false)}
               />
               <div
-                className="absolute bottom-full left-0 z-20 mb-2 w-40 rounded-lg border bg-white shadow-lg dark:bg-gray-900"
+                className="fixed z-[9999] w-40 rounded-lg border bg-white shadow-lg dark:bg-gray-900"
                 style={{
                   backgroundColor: "var(--bsky-bg-primary)",
                   borderColor: "var(--bsky-border-primary)",
+                  top: `${menuPosition.top}px`,
+                  left: `${menuPosition.left}px`,
                 }}
               >
                 <button
@@ -148,7 +161,8 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
                   <span>Quote</span>
                 </button>
               </div>
-            </>
+            </>,
+            document.body
           )}
         </div>
 
