@@ -40,7 +40,10 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
   }) => {
     const { isBookmarked, toggleBookmark } = useBookmarks();
     const [showRepostMenu, setShowRepostMenu] = useState(false);
-    const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+    const [menuPosition, setMenuPosition] = useState<{
+      top: number;
+      left: number;
+    } | null>(null);
     const repostButtonRef = useRef<HTMLButtonElement>(null);
 
     const iconSize = size === "small" ? 14 : size === "medium" ? 16 : 18;
@@ -125,45 +128,47 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
           </button>
 
           {/* Repost menu dropdown */}
-          {showRepostMenu && menuPosition && ReactDOM.createPortal(
-            <>
-              <div
-                className="fixed inset-0 z-[9998]"
-                onClick={() => setShowRepostMenu(false)}
-              />
-              <div
-                className="fixed z-[9999] w-40 rounded-lg border bg-white shadow-lg dark:bg-gray-900"
-                style={{
-                  backgroundColor: "var(--bsky-bg-primary)",
-                  borderColor: "var(--bsky-border-primary)",
-                  top: `${menuPosition.top}px`,
-                  left: `${menuPosition.left}px`,
-                }}
-              >
-                <button
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-                  onClick={(e) => {
-                    handleAction(e, onRepost);
-                    setShowRepostMenu(false);
+          {showRepostMenu &&
+            menuPosition &&
+            ReactDOM.createPortal(
+              <>
+                <div
+                  className="fixed inset-0 z-[9998]"
+                  onClick={() => setShowRepostMenu(false)}
+                />
+                <div
+                  className="fixed z-[9999] w-40 rounded-lg border bg-white shadow-lg dark:bg-gray-900"
+                  style={{
+                    backgroundColor: "var(--bsky-bg-primary)",
+                    borderColor: "var(--bsky-border-primary)",
+                    top: `${menuPosition.top}px`,
+                    left: `${menuPosition.left}px`,
                   }}
                 >
-                  <Repeat2 size={16} />
-                  <span>Repost</span>
-                </button>
-                <button
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-                  onClick={(e) => {
-                    handleAction(e, onQuote);
-                    setShowRepostMenu(false);
-                  }}
-                >
-                  <Quote size={16} />
-                  <span>Quote</span>
-                </button>
-              </div>
-            </>,
-            document.body
-          )}
+                  <button
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                    onClick={(e) => {
+                      handleAction(e, onRepost);
+                      setShowRepostMenu(false);
+                    }}
+                  >
+                    <Repeat2 size={16} />
+                    <span>Repost</span>
+                  </button>
+                  <button
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                    onClick={(e) => {
+                      handleAction(e, onQuote);
+                      setShowRepostMenu(false);
+                    }}
+                  >
+                    <Quote size={16} />
+                    <span>Quote</span>
+                  </button>
+                </div>
+              </>,
+              document.body,
+            )}
         </div>
 
         {/* Like */}

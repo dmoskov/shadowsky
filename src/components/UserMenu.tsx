@@ -6,7 +6,10 @@ import { useAuth } from "../contexts/AuthContext";
 
 export const UserMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number;
+    right: number;
+  } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { session, logout } = useAuth();
@@ -86,70 +89,72 @@ export const UserMenu: React.FC = () => {
         />
       </button>
 
-      {isOpen && menuPosition && ReactDOM.createPortal(
-        <div
-          ref={menuRef}
-          className="bsky-glass fixed z-[9999] w-56 overflow-hidden rounded-lg shadow-lg"
-          style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
-            top: `${menuPosition.top}px`,
-            right: `${menuPosition.right}px`,
-          }}
-        >
+      {isOpen &&
+        menuPosition &&
+        ReactDOM.createPortal(
           <div
-            className="border-b px-4 py-3"
-            style={{ borderColor: "var(--bsky-border-primary)" }}
+            ref={menuRef}
+            className="bsky-glass fixed z-[9999] w-56 overflow-hidden rounded-lg shadow-lg"
+            style={{
+              backgroundColor: "var(--bsky-bg-secondary)",
+              border: "1px solid var(--bsky-border-primary)",
+              top: `${menuPosition.top}px`,
+              right: `${menuPosition.right}px`,
+            }}
           >
-            <p
-              className="font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
+            <div
+              className="border-b px-4 py-3"
+              style={{ borderColor: "var(--bsky-border-primary)" }}
             >
-              {session?.handle}
-            </p>
-            <p
-              className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
-            >
-              @{session?.handle}
-            </p>
-          </div>
+              <p
+                className="font-medium"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                {session?.handle}
+              </p>
+              <p
+                className="text-sm"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                @{session?.handle}
+              </p>
+            </div>
 
-          <div className="py-1">
-            {menuItems.map((item, index) => {
-              if (item.divider) {
+            <div className="py-1">
+              {menuItems.map((item, index) => {
+                if (item.divider) {
+                  return (
+                    <div
+                      key={index}
+                      className="my-1 border-t"
+                      style={{ borderColor: "var(--bsky-border-primary)" }}
+                    />
+                  );
+                }
+
+                const Icon = item.icon!;
                 return (
-                  <div
+                  <button
                     key={index}
-                    className="my-1 border-t"
-                    style={{ borderColor: "var(--bsky-border-primary)" }}
-                  />
+                    onClick={item.onClick}
+                    className={`flex w-full items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-blue-50 ${
+                      item.className || ""
+                    }`}
+                    style={{
+                      color: item.className?.includes("text-red")
+                        ? undefined
+                        : "var(--bsky-text-primary)",
+                    }}
+                  >
+                    <Icon size={16} />
+                    <span>{item.label}</span>
+                  </button>
                 );
-              }
-
-              const Icon = item.icon!;
-              return (
-                <button
-                  key={index}
-                  onClick={item.onClick}
-                  className={`flex w-full items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-blue-50 ${
-                    item.className || ""
-                  }`}
-                  style={{
-                    color: item.className?.includes("text-red")
-                      ? undefined
-                      : "var(--bsky-text-primary)",
-                  }}
-                >
-                  <Icon size={16} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>,
-        document.body
-      )}
+              })}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };

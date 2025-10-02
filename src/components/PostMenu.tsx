@@ -38,7 +38,10 @@ export const PostMenu: React.FC<PostMenuProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showReportMenu, setShowReportMenu] = useState(false);
-  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { session, agent } = useAuth();
@@ -265,139 +268,143 @@ export const PostMenu: React.FC<PostMenuProps> = ({
         <MoreHorizontal className="h-5 w-5 text-gray-500 dark:text-gray-400" />
       </button>
 
-      {isOpen && menuPosition && ReactDOM.createPortal(
-        <div
-          ref={menuRef}
-          className="fixed z-[9999] w-56 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
-          style={{
-            top: `${menuPosition.top}px`,
-            left: `${menuPosition.left}px`,
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="overflow-hidden py-1">
-            {/* Always visible options */}
-            <button
-              onClick={handleCopyLink}
-              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-            >
-              <Link className="h-4 w-4" />
-              Copy link to post
-            </button>
-
-            <button
-              onClick={handleEmbed}
-              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-            >
-              <Code className="h-4 w-4" />
-              Embed post
-            </button>
-
-            <div className="my-1 border-t border-gray-200 dark:border-gray-700" />
-
-            {/* Thread-specific options */}
-            {isThread && (
-              <>
-                <button
-                  onClick={handleMuteThread}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-                >
-                  <BellOff className="h-4 w-4" />
-                  Mute thread
-                </button>
-                <div className="my-1 border-t border-gray-200 dark:border-gray-700" />
-              </>
-            )}
-
-            {/* Options for posts from others */}
-            {!isOwnPost && (
-              <>
-                <button
-                  onClick={handleHidePost}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-                >
-                  <EyeOff className="h-4 w-4" />
-                  Hide this post
-                </button>
-
-                <button
-                  onClick={handleMute}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-                  title={`Mute @${post.author.handle}`}
-                >
-                  <VolumeX className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">Mute @{post.author.handle}</span>
-                </button>
-
-                <button
-                  onClick={handleBlock}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-                  title={`Block @${post.author.handle}`}
-                >
-                  <UserX className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">Block @{post.author.handle}</span>
-                </button>
-
-                {!showReportMenu ? (
-                  <button
-                    onClick={() => setShowReportMenu(true)}
-                    className="flex w-full items-center justify-between gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-                  >
-                    <span className="flex items-center gap-3">
-                      <Flag className="h-4 w-4" />
-                      Report post
-                    </span>
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                ) : (
-                  <div className="bg-gray-50 dark:bg-gray-800">
-                    <button
-                      onClick={() => handleReport("spam")}
-                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-                    >
-                      <AlertTriangle className="h-4 w-4" />
-                      Spam
-                    </button>
-                    <button
-                      onClick={() => handleReport("abuse")}
-                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-                    >
-                      <AlertTriangle className="h-4 w-4" />
-                      Abuse & Harassment
-                    </button>
-                    <button
-                      onClick={() => handleReport("misleading")}
-                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-                    >
-                      <AlertTriangle className="h-4 w-4" />
-                      Misleading
-                    </button>
-                    <button
-                      onClick={() => handleReport("other")}
-                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-                    >
-                      <AlertTriangle className="h-4 w-4" />
-                      Other violation
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Options for own posts */}
-            {isOwnPost && (
+      {isOpen &&
+        menuPosition &&
+        ReactDOM.createPortal(
+          <div
+            ref={menuRef}
+            className="fixed z-[9999] w-56 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
+            style={{
+              top: `${menuPosition.top}px`,
+              left: `${menuPosition.left}px`,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="overflow-hidden py-1">
+              {/* Always visible options */}
               <button
-                onClick={handleDelete}
-                className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                onClick={handleCopyLink}
+                className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
               >
-                <Trash2 className="h-4 w-4" />
-                Delete post
+                <Link className="h-4 w-4" />
+                Copy link to post
               </button>
-            )}
-          </div>
-        </div>,
-        document.body
-      )}
+
+              <button
+                onClick={handleEmbed}
+                className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
+              >
+                <Code className="h-4 w-4" />
+                Embed post
+              </button>
+
+              <div className="my-1 border-t border-gray-200 dark:border-gray-700" />
+
+              {/* Thread-specific options */}
+              {isThread && (
+                <>
+                  <button
+                    onClick={handleMuteThread}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
+                  >
+                    <BellOff className="h-4 w-4" />
+                    Mute thread
+                  </button>
+                  <div className="my-1 border-t border-gray-200 dark:border-gray-700" />
+                </>
+              )}
+
+              {/* Options for posts from others */}
+              {!isOwnPost && (
+                <>
+                  <button
+                    onClick={handleHidePost}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
+                  >
+                    <EyeOff className="h-4 w-4" />
+                    Hide this post
+                  </button>
+
+                  <button
+                    onClick={handleMute}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
+                    title={`Mute @${post.author.handle}`}
+                  >
+                    <VolumeX className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">Mute @{post.author.handle}</span>
+                  </button>
+
+                  <button
+                    onClick={handleBlock}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
+                    title={`Block @${post.author.handle}`}
+                  >
+                    <UserX className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">
+                      Block @{post.author.handle}
+                    </span>
+                  </button>
+
+                  {!showReportMenu ? (
+                    <button
+                      onClick={() => setShowReportMenu(true)}
+                      className="flex w-full items-center justify-between gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
+                    >
+                      <span className="flex items-center gap-3">
+                        <Flag className="h-4 w-4" />
+                        Report post
+                      </span>
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  ) : (
+                    <div className="bg-gray-50 dark:bg-gray-800">
+                      <button
+                        onClick={() => handleReport("spam")}
+                        className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
+                      >
+                        <AlertTriangle className="h-4 w-4" />
+                        Spam
+                      </button>
+                      <button
+                        onClick={() => handleReport("abuse")}
+                        className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
+                      >
+                        <AlertTriangle className="h-4 w-4" />
+                        Abuse & Harassment
+                      </button>
+                      <button
+                        onClick={() => handleReport("misleading")}
+                        className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
+                      >
+                        <AlertTriangle className="h-4 w-4" />
+                        Misleading
+                      </button>
+                      <button
+                        onClick={() => handleReport("other")}
+                        className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
+                      >
+                        <AlertTriangle className="h-4 w-4" />
+                        Other violation
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Options for own posts */}
+              {isOwnPost && (
+                <button
+                  onClick={handleDelete}
+                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete post
+                </button>
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };

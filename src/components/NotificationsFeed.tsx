@@ -74,7 +74,10 @@ export const NotificationsFeed: React.FC = () => {
   const [minFollowerCount, setMinFollowerCount] = useState(10000);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
-  const [moreFiltersPosition, setMoreFiltersPosition] = useState<{ top: number; right: number } | null>(null);
+  const [moreFiltersPosition, setMoreFiltersPosition] = useState<{
+    top: number;
+    right: number;
+  } | null>(null);
   const [selectedPostUri, setSelectedPostUri] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   // Removed isFromCache state - no longer needed without header
@@ -547,7 +550,8 @@ export const NotificationsFeed: React.FC = () => {
                   ref={moreFiltersButtonRef}
                   onClick={() => {
                     if (!showMoreFilters && moreFiltersButtonRef.current) {
-                      const rect = moreFiltersButtonRef.current.getBoundingClientRect();
+                      const rect =
+                        moreFiltersButtonRef.current.getBoundingClientRect();
                       setMoreFiltersPosition({
                         top: rect.bottom + 4,
                         right: window.innerWidth - rect.right,
@@ -565,89 +569,91 @@ export const NotificationsFeed: React.FC = () => {
                   <MoreVertical size={16} />
                 </button>
 
-                {showMoreFilters && moreFiltersPosition && ReactDOM.createPortal(
-                  <div
-                    ref={moreFiltersRef}
-                    className="fixed z-[9999] w-48 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-1 shadow-md"
-                    style={{
-                      top: `${moreFiltersPosition.top}px`,
-                      right: `${moreFiltersPosition.right}px`,
-                    }}
-                  >
-                    <button
-                      onClick={() => {
-                        handleFilterChange("quotes");
-                        setShowMoreFilters(false);
+                {showMoreFilters &&
+                  moreFiltersPosition &&
+                  ReactDOM.createPortal(
+                    <div
+                      ref={moreFiltersRef}
+                      className="fixed z-[9999] w-48 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-1 shadow-md"
+                      style={{
+                        top: `${moreFiltersPosition.top}px`,
+                        right: `${moreFiltersPosition.right}px`,
                       }}
-                      className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
-                        filter === "quotes" ? "text-blue-500" : ""
-                      }`}
                     >
-                      <Quote size={16} />
-                      <span>Quotes</span>
-                      {filterCounts["quotes"] > 0 && (
-                        <span className="ml-auto text-xs">
-                          ({filterCounts["quotes"]})
-                        </span>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleFilterChange("images");
-                        setShowMoreFilters(false);
-                      }}
-                      className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
-                        filter === "images" ? "text-blue-500" : ""
-                      }`}
-                    >
-                      <Image size={16} />
-                      <span>Images</span>
-                      {filterCounts["images"] > 0 && (
-                        <span className="ml-auto text-xs">
-                          ({filterCounts["images"]})
-                        </span>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleFilterChange("from-following");
-                        setShowMoreFilters(false);
-                      }}
-                      className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
-                        filter === "from-following" ? "text-blue-500" : ""
-                      }`}
-                      disabled={isLoadingFollowing}
-                    >
-                      <Users size={16} />
-                      <span>Following</span>
-                      {filterCounts["from-following"] > 0 && (
-                        <span className="ml-auto text-xs">
-                          ({filterCounts["from-following"]})
-                        </span>
-                      )}
-                    </button>
-                    {showTopAccounts && (
                       <button
                         onClick={() => {
-                          handleFilterChange("top-accounts");
+                          handleFilterChange("quotes");
                           setShowMoreFilters(false);
                         }}
                         className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
-                          filter === "top-accounts" ? "text-blue-500" : ""
+                          filter === "quotes" ? "text-blue-500" : ""
                         }`}
                       >
-                        <Crown size={16} />
-                        <span>Top Accounts</span>
-                        {filterCounts["top-accounts"] > 0 && (
+                        <Quote size={16} />
+                        <span>Quotes</span>
+                        {filterCounts["quotes"] > 0 && (
                           <span className="ml-auto text-xs">
-                            ({filterCounts["top-accounts"]})
+                            ({filterCounts["quotes"]})
                           </span>
                         )}
                       </button>
-                    )}
-                  </div>,
-                  document.body
-                )}
+                      <button
+                        onClick={() => {
+                          handleFilterChange("images");
+                          setShowMoreFilters(false);
+                        }}
+                        className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
+                          filter === "images" ? "text-blue-500" : ""
+                        }`}
+                      >
+                        <Image size={16} />
+                        <span>Images</span>
+                        {filterCounts["images"] > 0 && (
+                          <span className="ml-auto text-xs">
+                            ({filterCounts["images"]})
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleFilterChange("from-following");
+                          setShowMoreFilters(false);
+                        }}
+                        className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
+                          filter === "from-following" ? "text-blue-500" : ""
+                        }`}
+                        disabled={isLoadingFollowing}
+                      >
+                        <Users size={16} />
+                        <span>Following</span>
+                        {filterCounts["from-following"] > 0 && (
+                          <span className="ml-auto text-xs">
+                            ({filterCounts["from-following"]})
+                          </span>
+                        )}
+                      </button>
+                      {showTopAccounts && (
+                        <button
+                          onClick={() => {
+                            handleFilterChange("top-accounts");
+                            setShowMoreFilters(false);
+                          }}
+                          className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
+                            filter === "top-accounts" ? "text-blue-500" : ""
+                          }`}
+                        >
+                          <Crown size={16} />
+                          <span>Top Accounts</span>
+                          {filterCounts["top-accounts"] > 0 && (
+                            <span className="ml-auto text-xs">
+                              ({filterCounts["top-accounts"]})
+                            </span>
+                          )}
+                        </button>
+                      )}
+                    </div>,
+                    document.body,
+                  )}
               </div>
             </div>
 
