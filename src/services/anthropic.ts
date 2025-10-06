@@ -44,7 +44,7 @@ export async function adjustTone(
     }
 
     const response = await anthropic.messages.create({
-      model: "claude-3-haiku-20240307",
+      model: "claude-sonnet-4.5-20250929",
       max_tokens: 1000,
       messages: [
         {
@@ -112,7 +112,7 @@ export async function optimizeThread(
     }
 
     const response = await anthropic.messages.create({
-      model: "claude-3-haiku-20240307",
+      model: "claude-sonnet-4.5-20250929",
       max_tokens: 2000,
       messages: [
         {
@@ -197,7 +197,7 @@ export async function suggestHashtags(
     }
 
     const response = await anthropic.messages.create({
-      model: "claude-3-haiku-20240307",
+      model: "claude-sonnet-4.5-20250929",
       max_tokens: 500,
       messages: [
         {
@@ -280,7 +280,7 @@ export async function getWritingFeedback(
     }
 
     const response = await anthropic.messages.create({
-      model: "claude-3-haiku-20240307",
+      model: "claude-sonnet-4.5-20250929",
       max_tokens: 1500,
       messages: [
         {
@@ -474,7 +474,7 @@ export async function getStyleMatchedWritingFeedback(
     const recentPostsSample = userPosts.slice(0, 20).join("\n---\n");
 
     const response = await anthropic.messages.create({
-      model: "claude-3-haiku-20240307",
+      model: "claude-sonnet-4.5-20250929",
       max_tokens: 2000,
       messages: [
         {

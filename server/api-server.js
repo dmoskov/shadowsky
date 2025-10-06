@@ -91,7 +91,7 @@ app.post("/api/generate-alt-text", async (req, res) => {
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-3-haiku-20240307",
+          model: "claude-sonnet-4.5-20250929",
           max_tokens: 300,
           messages: [
             {
