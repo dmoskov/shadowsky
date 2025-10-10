@@ -58,7 +58,10 @@ export default function ProfilePage() {
   const [hasMore, setHasMore] = useState(true);
   const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [profileMenuPosition, setProfileMenuPosition] = useState<{ top: number; right: number } | null>(null);
+  const [profileMenuPosition, setProfileMenuPosition] = useState<{
+    top: number;
+    right: number;
+  } | null>(null);
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
   const [selectedPost, setSelectedPost] =
@@ -369,7 +372,8 @@ export default function ProfilePage() {
                   ref={profileMenuButtonRef}
                   onClick={() => {
                     if (!showProfileMenu && profileMenuButtonRef.current) {
-                      const rect = profileMenuButtonRef.current.getBoundingClientRect();
+                      const rect =
+                        profileMenuButtonRef.current.getBoundingClientRect();
                       setProfileMenuPosition({
                         top: rect.bottom + 8,
                         right: window.innerWidth - rect.right,
@@ -381,58 +385,60 @@ export default function ProfilePage() {
                 >
                   <MoreHorizontal className="h-5 w-5" />
                 </button>
-                {showProfileMenu && profileMenuPosition && ReactDOM.createPortal(
-                  <div
-                    ref={profileMenuRef}
-                    className="fixed z-[9999] w-48 rounded-lg bg-white py-2 shadow-lg dark:bg-gray-800"
-                    style={{
-                      top: `${profileMenuPosition.top}px`,
-                      right: `${profileMenuPosition.right}px`,
-                    }}
-                  >
-                    {isOwnProfile ? (
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setShowProfileMenu(false);
-                          navigate("/settings/account");
-                        }}
-                        className="flex w-full items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        <Edit className="h-4 w-4" />
-                        Edit Profile
-                      </button>
-                    ) : (
-                      <>
+                {showProfileMenu &&
+                  profileMenuPosition &&
+                  ReactDOM.createPortal(
+                    <div
+                      ref={profileMenuRef}
+                      className="fixed z-[9999] w-48 rounded-lg bg-white py-2 shadow-lg dark:bg-gray-800"
+                      style={{
+                        top: `${profileMenuPosition.top}px`,
+                        right: `${profileMenuPosition.right}px`,
+                      }}
+                    >
+                      {isOwnProfile ? (
                         <button
-                          onClick={handleShare}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setShowProfileMenu(false);
+                            navigate("/settings/account");
+                          }}
                           className="flex w-full items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
-                          <Share2 className="h-4 w-4" />
-                          Share Profile
+                          <Edit className="h-4 w-4" />
+                          Edit Profile
                         </button>
-                        <button
-                          onClick={handleMute}
-                          className="flex w-full items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          <VolumeX className="h-4 w-4" />
-                          {profile.viewer?.muted ? "Unmute" : "Mute"} @
-                          {profile.handle}
-                        </button>
-                        <button
-                          onClick={handleBlock}
-                          className="flex w-full items-center gap-3 px-4 py-2 text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        >
-                          <UserX className="h-4 w-4" />
-                          {profile.viewer?.blocking ? "Unblock" : "Block"} @
-                          {profile.handle}
-                        </button>
-                      </>
-                    )}
-                  </div>,
-                  document.body
-                )}
+                      ) : (
+                        <>
+                          <button
+                            onClick={handleShare}
+                            className="flex w-full items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <Share2 className="h-4 w-4" />
+                            Share Profile
+                          </button>
+                          <button
+                            onClick={handleMute}
+                            className="flex w-full items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <VolumeX className="h-4 w-4" />
+                            {profile.viewer?.muted ? "Unmute" : "Mute"} @
+                            {profile.handle}
+                          </button>
+                          <button
+                            onClick={handleBlock}
+                            className="flex w-full items-center gap-3 px-4 py-2 text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <UserX className="h-4 w-4" />
+                            {profile.viewer?.blocking ? "Unblock" : "Block"} @
+                            {profile.handle}
+                          </button>
+                        </>
+                      )}
+                    </div>,
+                    document.body,
+                  )}
               </div>
             </div>
           </div>
@@ -572,7 +578,6 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
-
 
       {/* User List Modals */}
       <UserListModal

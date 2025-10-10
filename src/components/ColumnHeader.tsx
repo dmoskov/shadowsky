@@ -39,8 +39,14 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
 }) => {
   const [showMenu, setShowMenu] = React.useState(false);
   const [showFeedDropdown, setShowFeedDropdown] = React.useState(false);
-  const [feedMenuPosition, setFeedMenuPosition] = React.useState<{ top: number; right: number } | null>(null);
-  const [moreMenuPosition, setMoreMenuPosition] = React.useState<{ top: number; right: number } | null>(null);
+  const [feedMenuPosition, setFeedMenuPosition] = React.useState<{
+    top: number;
+    right: number;
+  } | null>(null);
+  const [moreMenuPosition, setMoreMenuPosition] = React.useState<{
+    top: number;
+    right: number;
+  } | null>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const moreMenuRef = React.useRef<HTMLDivElement>(null);
   const feedButtonRef = React.useRef<HTMLButtonElement>(null);
@@ -136,52 +142,54 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
               />
             </button>
 
-            {showFeedDropdown && feedMenuPosition && ReactDOM.createPortal(
-              <div
-                ref={dropdownRef}
-                className="fixed z-[9999] max-h-96 w-64 overflow-y-auto rounded-md border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
-                style={{
-                  top: `${feedMenuPosition.top}px`,
-                  right: `${feedMenuPosition.right}px`,
-                }}
-              >
-                <div className="py-1">
-                  {feedOptions.map((option) => (
-                    <button
-                      key={option.type}
-                      onClick={() => {
-                        onFeedChange(option.type);
-                        setShowFeedDropdown(false);
-                      }}
-                      className="flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      <option.icon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                      <span className="text-sm text-gray-900 dark:text-gray-100">
-                        {option.label}
-                      </span>
-                    </button>
-                  ))}
-                  {onDiscoverFeeds && (
-                    <>
-                      <div className="border-t dark:border-gray-700" />
+            {showFeedDropdown &&
+              feedMenuPosition &&
+              ReactDOM.createPortal(
+                <div
+                  ref={dropdownRef}
+                  className="fixed z-[9999] max-h-96 w-64 overflow-y-auto rounded-md border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                  style={{
+                    top: `${feedMenuPosition.top}px`,
+                    right: `${feedMenuPosition.right}px`,
+                  }}
+                >
+                  <div className="py-1">
+                    {feedOptions.map((option) => (
                       <button
+                        key={option.type}
                         onClick={() => {
-                          onDiscoverFeeds();
+                          onFeedChange(option.type);
                           setShowFeedDropdown(false);
                         }}
                         className="flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
-                        <Plus className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                        <option.icon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                         <span className="text-sm text-gray-900 dark:text-gray-100">
-                          Discover Feeds...
+                          {option.label}
                         </span>
                       </button>
-                    </>
-                  )}
-                </div>
-              </div>,
-              document.body
-            )}
+                    ))}
+                    {onDiscoverFeeds && (
+                      <>
+                        <div className="border-t dark:border-gray-700" />
+                        <button
+                          onClick={() => {
+                            onDiscoverFeeds();
+                            setShowFeedDropdown(false);
+                          }}
+                          className="flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          <Plus className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                          <span className="text-sm text-gray-900 dark:text-gray-100">
+                            Discover Feeds...
+                          </span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>,
+                document.body,
+              )}
           </div>
         )}
 
@@ -216,50 +224,52 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
             <MoreVertical className="h-4 w-4 text-gray-500 dark:text-gray-400" />
           </button>
 
-          {showMenu && moreMenuPosition && ReactDOM.createPortal(
-            <>
-              <div
-                className="fixed inset-0 z-[9998]"
-                onClick={() => setShowMenu(false)}
-              />
-              <div
-                ref={moreMenuRef}
-                className="fixed z-[9999] w-48 rounded-md border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
-                style={{
-                  top: `${moreMenuPosition.top}px`,
-                  right: `${moreMenuPosition.right}px`,
-                }}
-              >
-                <div className="py-1">
-                  {onMoveLeft && (
-                    <button
-                      onClick={() => {
-                        onMoveLeft();
-                        setShowMenu(false);
-                      }}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Move Left
-                    </button>
-                  )}
-                  {onMoveRight && (
-                    <button
-                      onClick={() => {
-                        onMoveRight();
-                        setShowMenu(false);
-                      }}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                      Move Right
-                    </button>
-                  )}
+          {showMenu &&
+            moreMenuPosition &&
+            ReactDOM.createPortal(
+              <>
+                <div
+                  className="fixed inset-0 z-[9998]"
+                  onClick={() => setShowMenu(false)}
+                />
+                <div
+                  ref={moreMenuRef}
+                  className="fixed z-[9999] w-48 rounded-md border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                  style={{
+                    top: `${moreMenuPosition.top}px`,
+                    right: `${moreMenuPosition.right}px`,
+                  }}
+                >
+                  <div className="py-1">
+                    {onMoveLeft && (
+                      <button
+                        onClick={() => {
+                          onMoveLeft();
+                          setShowMenu(false);
+                        }}
+                        className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Move Left
+                      </button>
+                    )}
+                    {onMoveRight && (
+                      <button
+                        onClick={() => {
+                          onMoveRight();
+                          setShowMenu(false);
+                        }}
+                        className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                        Move Right
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </>,
-            document.body
-          )}
+              </>,
+              document.body,
+            )}
         </div>
       </div>
     </div>
