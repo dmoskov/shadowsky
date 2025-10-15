@@ -44,7 +44,7 @@ export async function adjustTone(
     }
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-3-5-sonnet-20241022",
       max_tokens: 1000,
       messages: [
         {
@@ -112,7 +112,7 @@ export async function optimizeThread(
     }
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-3-5-sonnet-20241022",
       max_tokens: 2000,
       messages: [
         {
@@ -197,7 +197,7 @@ export async function suggestHashtags(
     }
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-3-5-sonnet-20241022",
       max_tokens: 500,
       messages: [
         {
@@ -280,7 +280,7 @@ export async function getWritingFeedback(
     }
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-3-5-sonnet-20241022",
       max_tokens: 1500,
       messages: [
         {
@@ -496,7 +496,7 @@ export async function getStyleMatchedWritingFeedback(
     const recentPostsSample = userPosts.slice(0, 20).join("\n---\n");
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-3-5-sonnet-20241022",
       max_tokens: 2000,
       messages: [
         {
@@ -546,8 +546,17 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
     const content = response.content[0];
     if (content.type === "text") {
       try {
-        const result = JSON.parse(content.text);
-        return result;
+        // Log the raw response for debugging
+        logger.log("Raw API response:", content.text);
+        
+        // Try to extract JSON from the response
+        const jsonMatch = content.text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const result = JSON.parse(jsonMatch[0]);
+          return result;
+        } else {
+          throw new Error("No JSON object found in response");
+        }
       } catch (parseError) {
         logger.error(
           "Failed to parse style-matched feedback response:",
