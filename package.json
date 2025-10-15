@@ -7,6 +7,7 @@
     "build": "wireit",
     "build:app": "wireit",
     "dev": "vite",
+    "dev:api": "node server/api-server.js",
     "fix": "wireit",
     "fix:format": "wireit",
     "fix:lint": "wireit",

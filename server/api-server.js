@@ -7,6 +7,9 @@ const path = require("path");
 const crypto = require("crypto");
 const os = require("os");
 
+// Load environment variables from parent directory's .env file
+require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
+
 const app = express();
 const PORT = process.env.PORT || 3002;
 
@@ -26,59 +29,85 @@ app.use(
   }),
 );
 
-app.use(express.json());
+// Increase JSON payload size limit for base64-encoded images
+app.use(express.json({ limit: "50mb" }));
 
 // Generate alt text for an image URL
 app.post("/api/generate-alt-text", async (req, res) => {
-  const { imageUrl, apiKey } = req.body;
+  const { imageUrl } = req.body;
+
+  // Use server-side API key from environment variable
+  const apiKey = process.env.ANTHROPIC_API_KEY;
 
   console.log("Alt text generation request:", {
     imageUrl,
-    hasApiKey: !!apiKey,
+    hasServerApiKey: !!apiKey,
   });
 
-  if (!imageUrl || !apiKey) {
-    return res.status(400).json({ error: "Missing imageUrl or apiKey" });
+  if (!imageUrl) {
+    return res.status(400).json({ error: "Missing imageUrl" });
+  }
+
+  if (!apiKey) {
+    return res.status(500).json({ error: "Server API key not configured" });
   }
 
   try {
-    // Convert relative URLs to absolute URLs
-    let absoluteUrl = imageUrl;
-    if (imageUrl.startsWith("/bsky-cdn/")) {
-      // Convert Vite proxy path to actual CDN URL
-      absoluteUrl = imageUrl.replace("/bsky-cdn/", "https://cdn.bsky.app/");
-    } else if (imageUrl.startsWith("/bsky-video/")) {
-      absoluteUrl = imageUrl.replace("/bsky-video/", "https://video.bsky.app/");
-    } else if (imageUrl.startsWith("/bsky-video-cdn/")) {
-      absoluteUrl = imageUrl.replace(
-        "/bsky-video-cdn/",
-        "https://video.cdn.bsky.app/",
-      );
-    } else if (
-      !imageUrl.startsWith("http://") &&
-      !imageUrl.startsWith("https://")
-    ) {
-      // For any other relative URLs, assume they're from the frontend origin
-      absoluteUrl = `http://localhost:5174${imageUrl}`;
-    }
+    let base64Image;
+    let mimeType;
 
-    console.log("Fetching image from:", absoluteUrl);
-    // Fetch the image
-    const response = await fetch(absoluteUrl);
-    if (!response.ok) {
-      console.error(
-        "Image fetch failed:",
-        response.status,
-        response.statusText,
-      );
-      throw new Error(
-        `Failed to fetch image: ${response.status} ${response.statusText}`,
-      );
-    }
+    // Handle data URLs (base64 encoded images)
+    if (imageUrl.startsWith("data:")) {
+      console.log("Processing data URL");
+      // Extract mime type and base64 data from data URL
+      const matches = imageUrl.match(/^data:([^;]+);base64,(.+)$/);
+      if (!matches) {
+        throw new Error("Invalid data URL format");
+      }
+      mimeType = matches[1];
+      base64Image = matches[2];
+    } else {
+      // Convert relative URLs to absolute URLs
+      let absoluteUrl = imageUrl;
+      if (imageUrl.startsWith("/bsky-cdn/")) {
+        // Convert Vite proxy path to actual CDN URL
+        absoluteUrl = imageUrl.replace("/bsky-cdn/", "https://cdn.bsky.app/");
+      } else if (imageUrl.startsWith("/bsky-video/")) {
+        absoluteUrl = imageUrl.replace(
+          "/bsky-video/",
+          "https://video.bsky.app/",
+        );
+      } else if (imageUrl.startsWith("/bsky-video-cdn/")) {
+        absoluteUrl = imageUrl.replace(
+          "/bsky-video-cdn/",
+          "https://video.cdn.bsky.app/",
+        );
+      } else if (
+        !imageUrl.startsWith("http://") &&
+        !imageUrl.startsWith("https://")
+      ) {
+        // For any other relative URLs, assume they're from the frontend origin
+        absoluteUrl = `http://localhost:5174${imageUrl}`;
+      }
 
-    const buffer = await response.buffer();
-    const base64Image = buffer.toString("base64");
-    const mimeType = response.headers.get("content-type") || "image/jpeg";
+      console.log("Fetching image from:", absoluteUrl);
+      // Fetch the image
+      const response = await fetch(absoluteUrl);
+      if (!response.ok) {
+        console.error(
+          "Image fetch failed:",
+          response.status,
+          response.statusText,
+        );
+        throw new Error(
+          `Failed to fetch image: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const buffer = await response.buffer();
+      base64Image = buffer.toString("base64");
+      mimeType = response.headers.get("content-type") || "image/jpeg";
+    }
 
     // Call Anthropic API
     const anthropicResponse = await fetch(
@@ -91,7 +120,7 @@ app.post("/api/generate-alt-text", async (req, res) => {
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4.5-20250929",
+          model: "claude-sonnet-4-5-20250929",
           max_tokens: 300,
           messages: [
             {
@@ -277,4 +306,10 @@ app.listen(PORT, () => {
   console.log(`  - POST /api/convert-gif     : Convert GIF to MP4`);
   console.log(`  - POST /api/generate-alt-text: Generate alt text for images`);
   console.log(`  - GET  /api/proxy-image     : Proxy images to avoid CORS`);
+  console.log(
+    `\nAPI Configuration:`,
+    process.env.ANTHROPIC_API_KEY
+      ? `✓ Anthropic API key loaded`
+      : `✗ Anthropic API key not found`,
+  );
 });

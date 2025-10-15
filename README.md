@@ -239,15 +239,26 @@ npm install
 
 # Start development server
 npm run dev
+
+# In a separate terminal, start the API server (required for AI features)
+npm run dev:api
 ```
 
 The app will be available at `http://localhost:5174`
+
+**Note**: The API server (`npm run dev:api`) is required for:
+- AI-generated alt text for images
+- GIF to MP4 conversion
+- Image proxy for CORS handling
+
+If you don't need these features, you can skip running the API server.
 
 ### Development Scripts
 
 ```bash
 # Development
-npm run dev              # Start dev server
+npm run dev              # Start dev server (frontend)
+npm run dev:api          # Start API server (backend for AI features)
 npm run test:unit:watch  # Run tests in watch mode
 
 # Quality checks

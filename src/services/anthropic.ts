@@ -44,7 +44,7 @@ export async function adjustTone(
     }
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4.5-20250929",
+      model: "claude-3-5-sonnet-20241022",
       max_tokens: 1000,
       messages: [
         {
@@ -112,7 +112,7 @@ export async function optimizeThread(
     }
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4.5-20250929",
+      model: "claude-3-5-sonnet-20241022",
       max_tokens: 2000,
       messages: [
         {
@@ -197,7 +197,7 @@ export async function suggestHashtags(
     }
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4.5-20250929",
+      model: "claude-3-5-sonnet-20241022",
       max_tokens: 500,
       messages: [
         {
@@ -280,7 +280,7 @@ export async function getWritingFeedback(
     }
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4.5-20250929",
+      model: "claude-3-5-sonnet-20241022",
       max_tokens: 1500,
       messages: [
         {
@@ -354,25 +354,44 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
 
 export async function generateAltText(imageUrl: string): Promise<string> {
   try {
-    // Check if API key is configured
-    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
-      throw new Error("Anthropic API key not configured");
+    // Convert blob URLs to data URLs since the backend needs base64 data
+    let processedImageUrl = imageUrl;
+    if (imageUrl.startsWith("blob:")) {
+      logger.log("Converting blob URL to data URL for alt text generation");
+      try {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        processedImageUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        logger.log("Blob URL converted to data URL successfully");
+      } catch (conversionError) {
+        logger.error(
+          "Failed to convert blob URL to data URL:",
+          conversionError,
+        );
+        throw new Error("Failed to process image for alt text generation");
+      }
     }
 
-    // Determine the server URL based on environment
+    // Always use the backend proxy for all image types
+    // This keeps the API key secure on the server
+    logger.log("Generating alt text via backend proxy");
+
     const serverUrl = import.meta.env.PROD
       ? import.meta.env.VITE_PROXY_SERVER_URL || "https://api.shadowsky.io"
       : ""; // Empty string means use same origin (proxied through Vite)
 
     const endpoint = `${serverUrl}/api/generate-alt-text`;
     const payload = {
-      imageUrl,
-      apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY,
+      imageUrl: processedImageUrl,
     };
 
-    logger.log("Generating alt text:", { endpoint, imageUrl });
+    logger.log("Generating alt text via backend:", { endpoint });
 
-    // Send the image URL to the backend for processing
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
@@ -395,8 +414,6 @@ export async function generateAltText(imageUrl: string): Promise<string> {
     logger.log("Alt text response:", data);
 
     const altText = data.altText?.trim() || "";
-
-    // Ensure the alt text is not too long
     return altText.length > 125 ? altText.substring(0, 122) + "..." : altText;
   } catch (error) {
     logger.error("Error generating alt text:", error);
@@ -405,12 +422,17 @@ export async function generateAltText(imageUrl: string): Promise<string> {
     analytics.trackError(error as Error, "alt_text_generation");
 
     // Provide more specific error messages
-    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
-      throw new Error("Alt text generation failed: API key not configured");
-    } else if (error instanceof Error && error.message.includes("401")) {
+    if (error instanceof Error && error.message.includes("401")) {
       throw new Error("Alt text generation failed: Invalid API key");
     } else if (error instanceof Error && error.message.includes("429")) {
       throw new Error("Alt text generation failed: Rate limit exceeded");
+    } else if (
+      error instanceof Error &&
+      error.message.includes("Server API key not configured")
+    ) {
+      throw new Error(
+        "Alt text generation failed: Server configuration error",
+      );
     } else {
       throw new Error(
         `Alt text generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -474,7 +496,7 @@ export async function getStyleMatchedWritingFeedback(
     const recentPostsSample = userPosts.slice(0, 20).join("\n---\n");
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4.5-20250929",
+      model: "claude-3-5-sonnet-20241022",
       max_tokens: 2000,
       messages: [
         {
@@ -524,8 +546,17 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
     const content = response.content[0];
     if (content.type === "text") {
       try {
-        const result = JSON.parse(content.text);
-        return result;
+        // Log the raw response for debugging
+        logger.log("Raw API response:", content.text);
+        
+        // Try to extract JSON from the response
+        const jsonMatch = content.text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const result = JSON.parse(jsonMatch[0]);
+          return result;
+        } else {
+          throw new Error("No JSON object found in response");
+        }
       } catch (parseError) {
         logger.error(
           "Failed to parse style-matched feedback response:",

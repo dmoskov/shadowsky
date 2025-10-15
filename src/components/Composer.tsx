@@ -1890,6 +1890,7 @@ export function Composer() {
 
   // Handle writing feedback request
   const handleWritingFeedback = useCallback(async () => {
+    debug.log("Writing feedback button clicked", { text, agent });
     if (!text.trim()) {
       setPostStatus({
         type: "error",
@@ -1946,7 +1947,7 @@ export function Composer() {
     } finally {
       setIsLoadingFeedback(false);
     }
-  }, [text]);
+  }, [text, agent]);
 
   // Cleanup previews on unmount
   useEffect(() => {
