@@ -247,6 +247,7 @@ npm run dev:api
 The app will be available at `http://localhost:5174`
 
 **Note**: The API server (`npm run dev:api`) is required for:
+
 - AI-generated alt text for images
 - GIF to MP4 conversion
 - Image proxy for CORS handling

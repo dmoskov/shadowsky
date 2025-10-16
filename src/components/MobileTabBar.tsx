@@ -67,7 +67,7 @@ export const MobileTabBar: React.FC = () => {
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
-      <div className="flex h-14 items-center justify-around">
+      <div className="flex h-16 items-center justify-around">
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.path;
 
@@ -87,7 +87,7 @@ export const MobileTabBar: React.FC = () => {
                 }}
               >
                 <div className="relative">
-                  {React.createElement(tab.icon, { size: 24 })}
+                  {React.createElement(tab.icon, { size: 20 })}
                 </div>
               </button>
             );
@@ -110,13 +110,13 @@ export const MobileTabBar: React.FC = () => {
               })}
             >
               <div className="relative">
-                {React.createElement(tab.icon, { size: 24 })}
+                {React.createElement(tab.icon, { size: 20 })}
                 {tab.path === "/notifications" &&
                   unreadCount !== undefined &&
                   unreadCount !== null &&
                   unreadCount > 0 && (
                     <span
-                      className="absolute -right-1 -top-1 h-1.5 w-1.5 rounded-full"
+                      className="absolute -right-1 -top-1 h-2 w-2 rounded-full"
                       style={{
                         backgroundColor: "var(--bsky-accent)",
                       }}

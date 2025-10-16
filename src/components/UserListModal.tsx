@@ -5,6 +5,7 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
+import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 
 interface UserListModalProps {
   isOpen: boolean;
@@ -146,19 +147,23 @@ export function UserListModal({
                   className="flex cursor-pointer items-center gap-3 border-b p-4 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
                   onClick={() => handleUserClick(user.handle)}
                 >
-                  <img
-                    src={
-                      user.avatar
-                        ? proxifyBskyImage(user.avatar)
-                        : "/default-avatar.svg"
-                    }
-                    alt={user.displayName || user.handle}
-                    className="h-12 w-12 rounded-full"
-                  />
+                  <ProfileHoverCard handle={user.handle}>
+                    <img
+                      src={
+                        user.avatar
+                          ? proxifyBskyImage(user.avatar)
+                          : "/default-avatar.svg"
+                      }
+                      alt={user.displayName || user.handle}
+                      className="h-12 w-12 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+                    />
+                  </ProfileHoverCard>
                   <div className="flex-1">
-                    <div className="font-medium">
-                      {user.displayName || user.handle}
-                    </div>
+                    <ProfileHoverCard handle={user.handle}>
+                      <div className="cursor-pointer font-medium hover:underline">
+                        {user.displayName || user.handle}
+                      </div>
+                    </ProfileHoverCard>
                     <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                       <span>@{user.handle}</span>
                       <DomainVerifiedBadgeInline handle={user.handle} />

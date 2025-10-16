@@ -330,9 +330,15 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto w-full max-w-4xl">
       {/* Profile Header */}
-      <div className="relative">
+      <div className="relative overflow-hidden rounded-xl">
         {/* Banner */}
-        <div className="h-32 bg-gradient-to-b from-blue-200 to-blue-300 dark:from-blue-800 dark:to-blue-900">
+        <div
+          className="h-48 bg-gradient-to-br"
+          style={{
+            backgroundImage:
+              "linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)",
+          }}
+        >
           {profile.banner && (
             <img
               src={proxifyBskyImage(profile.banner)}
@@ -343,8 +349,8 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile Info */}
-        <div className="px-4 pb-4">
-          <div className="-mt-16 mb-4 flex items-end justify-between">
+        <div className="bsky-card border-0 px-6 pb-6">
+          <div className="-mt-20 mb-4 flex items-end justify-between">
             <img
               src={
                 profile.avatar
@@ -352,16 +358,20 @@ export default function ProfilePage() {
                   : "/default-avatar.svg"
               }
               alt={profile.displayName || profile.handle}
-              className="h-32 w-32 rounded-full border-4 border-white bg-white dark:border-gray-900 dark:bg-gray-800"
+              className="h-36 w-36 rounded-full border-4 shadow-lg transition-transform hover:scale-105"
+              style={{
+                borderColor: "var(--bsky-bg-secondary)",
+                backgroundColor: "var(--bsky-bg-tertiary)",
+              }}
             />
             <div className="flex items-center gap-2">
               {!isOwnProfile && (
                 <button
                   onClick={handleFollow}
-                  className={`rounded-full px-6 py-2 font-medium transition-colors ${
+                  className={`rounded-full px-6 py-2.5 font-medium transition-all ${
                     profile.viewer?.following
-                      ? "bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
+                      ? "bsky-button-secondary hover:scale-105"
+                      : "bsky-button-primary hover:scale-105"
                   }`}
                 >
                   {profile.viewer?.following ? "Following" : "Follow"}
@@ -381,7 +391,17 @@ export default function ProfilePage() {
                     }
                     setShowProfileMenu(!showProfileMenu);
                   }}
-                  className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="rounded-full p-2 transition-all hover:scale-110"
+                  style={{
+                    color: "var(--bsky-text-secondary)",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor =
+                      "var(--bsky-bg-hover)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = "transparent")
+                  }
                 >
                   <MoreHorizontal className="h-5 w-5" />
                 </button>
@@ -390,8 +410,11 @@ export default function ProfilePage() {
                   ReactDOM.createPortal(
                     <div
                       ref={profileMenuRef}
-                      className="fixed z-[9999] w-48 rounded-lg bg-white py-2 shadow-lg dark:bg-gray-800"
+                      className="fixed z-[9999] w-48 rounded-lg border py-2 shadow-lg"
                       style={{
+                        backgroundColor: "var(--bsky-bg-secondary)",
+                        borderColor: "var(--bsky-border-primary)",
+                        boxShadow: "var(--bsky-shadow-lg)",
                         top: `${profileMenuPosition.top}px`,
                         right: `${profileMenuPosition.right}px`,
                       }}
@@ -404,7 +427,16 @@ export default function ProfilePage() {
                             setShowProfileMenu(false);
                             navigate("/settings/account");
                           }}
-                          className="flex w-full items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-all"
+                          style={{ color: "var(--bsky-text-primary)" }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
+                          }
                         >
                           <Edit className="h-4 w-4" />
                           Edit Profile
@@ -413,14 +445,32 @@ export default function ProfilePage() {
                         <>
                           <button
                             onClick={handleShare}
-                            className="flex w-full items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="flex w-full items-center gap-3 rounded-t-lg px-4 py-2.5 text-sm transition-all"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
+                            }
                           >
                             <Share2 className="h-4 w-4" />
                             Share Profile
                           </button>
                           <button
                             onClick={handleMute}
-                            className="flex w-full items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
+                            }
                           >
                             <VolumeX className="h-4 w-4" />
                             {profile.viewer?.muted ? "Unmute" : "Mute"} @
@@ -428,7 +478,15 @@ export default function ProfilePage() {
                           </button>
                           <button
                             onClick={handleBlock}
-                            className="flex w-full items-center gap-3 px-4 py-2 text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="flex w-full items-center gap-3 rounded-b-lg px-4 py-2.5 text-sm text-red-600 transition-all"
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
+                            }
                           >
                             <UserX className="h-4 w-4" />
                             {profile.viewer?.blocking ? "Unblock" : "Block"} @
@@ -444,11 +502,14 @@ export default function ProfilePage() {
           </div>
 
           <div className="mb-4">
-            <h1 className="text-2xl font-bold">
+            <h1
+              className="text-2xl font-bold"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
               {profile.displayName || profile.handle}
             </h1>
             <div className="flex items-center gap-1">
-              <p className="text-gray-500 dark:text-gray-400">
+              <p style={{ color: "var(--bsky-text-secondary)" }}>
                 @{profile.handle}
               </p>
               <DomainVerifiedBadge handle={profile.handle} size="md" />
@@ -456,37 +517,60 @@ export default function ProfilePage() {
           </div>
 
           {profile.description && (
-            <p className="mb-4 whitespace-pre-wrap">{profile.description}</p>
+            <p
+              className="mb-4 whitespace-pre-wrap"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              {profile.description}
+            </p>
           )}
 
           <div className="flex gap-6 text-sm">
             <div>
-              <span className="font-semibold">
+              <span
+                className="font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
                 {formatCount(profile.postsCount || 0)}
               </span>
-              <span className="ml-1 text-gray-500 dark:text-gray-400">
+              <span
+                className="ml-1"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
                 posts
               </span>
             </div>
             <button
               onClick={() => setShowFollowersModal(true)}
-              className="hover:underline"
+              className="transition-all hover:scale-105 hover:underline"
             >
-              <span className="font-semibold">
+              <span
+                className="font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
                 {formatCount(profile.followersCount || 0)}
               </span>
-              <span className="ml-1 text-gray-500 dark:text-gray-400">
+              <span
+                className="ml-1"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
                 followers
               </span>
             </button>
             <button
               onClick={() => setShowFollowingModal(true)}
-              className="hover:underline"
+              className="transition-all hover:scale-105 hover:underline"
             >
-              <span className="font-semibold">
+              <span
+                className="font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
                 {formatCount(profile.followsCount || 0)}
               </span>
-              <span className="ml-1 text-gray-500 dark:text-gray-400">
+              <span
+                className="ml-1"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
                 following
               </span>
             </button>
@@ -495,37 +579,75 @@ export default function ProfilePage() {
       </div>
 
       {/* Profile Tabs */}
-      <div className="sticky top-0 z-10 border-b border-t bg-white dark:border-gray-700 dark:bg-gray-900">
+      <div
+        className="sticky top-16 z-10 mt-4 rounded-t-xl"
+        style={{
+          backgroundColor: "var(--bsky-bg-secondary)",
+          borderTop: "1px solid var(--bsky-border-primary)",
+          borderLeft: "1px solid var(--bsky-border-primary)",
+          borderRight: "1px solid var(--bsky-border-primary)",
+        }}
+      >
         <div className="flex">
           <button
             onClick={() => setActiveTab("posts")}
-            className={`flex-1 px-4 py-4 text-center font-medium transition-colors ${
-              activeTab === "posts"
-                ? "border-b-2 border-blue-500 text-blue-500"
-                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+              activeTab === "posts" ? "" : "hover:scale-105"
             }`}
+            style={{
+              color:
+                activeTab === "posts"
+                  ? "var(--bsky-primary)"
+                  : "var(--bsky-text-secondary)",
+            }}
           >
             Posts
+            {activeTab === "posts" && (
+              <div
+                className="absolute bottom-0 left-0 right-0 h-0.5"
+                style={{ backgroundColor: "var(--bsky-primary)" }}
+              />
+            )}
           </button>
           <button
             onClick={() => setActiveTab("replies")}
-            className={`flex-1 px-4 py-4 text-center font-medium transition-colors ${
-              activeTab === "replies"
-                ? "border-b-2 border-blue-500 text-blue-500"
-                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+              activeTab === "replies" ? "" : "hover:scale-105"
             }`}
+            style={{
+              color:
+                activeTab === "replies"
+                  ? "var(--bsky-primary)"
+                  : "var(--bsky-text-secondary)",
+            }}
           >
             Replies
+            {activeTab === "replies" && (
+              <div
+                className="absolute bottom-0 left-0 right-0 h-0.5"
+                style={{ backgroundColor: "var(--bsky-primary)" }}
+              />
+            )}
           </button>
           <button
             onClick={() => setActiveTab("media")}
-            className={`flex-1 px-4 py-4 text-center font-medium transition-colors ${
-              activeTab === "media"
-                ? "border-b-2 border-blue-500 text-blue-500"
-                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+              activeTab === "media" ? "" : "hover:scale-105"
             }`}
+            style={{
+              color:
+                activeTab === "media"
+                  ? "var(--bsky-primary)"
+                  : "var(--bsky-text-secondary)",
+            }}
           >
             Media
+            {activeTab === "media" && (
+              <div
+                className="absolute bottom-0 left-0 right-0 h-0.5"
+                style={{ backgroundColor: "var(--bsky-primary)" }}
+              />
+            )}
           </button>
         </div>
       </div>

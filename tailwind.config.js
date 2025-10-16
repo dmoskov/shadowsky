@@ -263,20 +263,26 @@ export default {
     // Custom component classes plugin
     function ({ addComponents }) {
       addComponents({
-        // Glass morphism effect
+        // Glass morphism effect with subtle gradient overlay
         ".bsky-glass": {
-          background: "rgba(255, 255, 255, 0.95)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-          border: "1px solid rgba(0, 0, 0, 0.1)",
+          background:
+            "linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.92) 100%)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          border: "1px solid rgba(0, 0, 0, 0.08)",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.03)",
         },
         ".dark .bsky-glass": {
-          background: "rgba(17, 24, 39, 0.95)",
-          border: "1px solid rgba(255, 255, 255, 0.15)",
+          background:
+            "linear-gradient(180deg, rgba(17, 24, 39, 0.98) 0%, rgba(17, 24, 39, 0.92) 100%)",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3)",
         },
         '[data-theme="dark"] .bsky-glass': {
-          background: "rgba(17, 24, 39, 0.85)",
-          border: "1px solid rgba(255, 255, 255, 0.15)",
+          background:
+            "linear-gradient(180deg, rgba(17, 24, 39, 0.88) 0%, rgba(17, 24, 39, 0.82) 100%)",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3)",
         },
         // Custom scrollbar
         ".bsky-scrollbar": {

@@ -13,6 +13,7 @@ import {
 import { useNotificationPosts } from "../hooks/useNotificationPosts";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { ThreadModal } from "./ThreadModal";
+import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 
 type Post = AppBskyFeedDefs.PostView;
 
@@ -114,12 +115,14 @@ const ConversationItem = React.memo(
         <div className="flex items-center gap-3">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
-            {mainParticipantAvatar ? (
-              <img
-                src={proxifyBskyImage(mainParticipantAvatar)}
-                alt=""
-                className="h-12 w-12 rounded-full object-cover"
-              />
+            {mainParticipantAvatar && mainParticipantHandle ? (
+              <ProfileHoverCard handle={mainParticipantHandle}>
+                <img
+                  src={proxifyBskyImage(mainParticipantAvatar)}
+                  alt=""
+                  className="h-12 w-12 cursor-pointer rounded-full object-cover transition-opacity hover:opacity-80"
+                />
+              </ProfileHoverCard>
             ) : (
               <div className="bsky-gradient flex h-12 w-12 items-center justify-center rounded-full font-medium text-white">
                 {mainParticipantDisplayName?.[0] ||
@@ -170,12 +173,15 @@ const ConversationItem = React.memo(
             {/* Show latest reply author and snippet */}
             <div className="flex items-center gap-2 text-xs">
               {/* Profile picture of commenter */}
-              {convo.latestReply.author?.avatar ? (
-                <img
-                  src={proxifyBskyImage(convo.latestReply.author.avatar)}
-                  alt={convo.latestReply.author?.handle || ""}
-                  className="h-5 w-5 flex-shrink-0 rounded-full object-cover"
-                />
+              {convo.latestReply.author?.avatar &&
+              convo.latestReply.author?.handle ? (
+                <ProfileHoverCard handle={convo.latestReply.author.handle}>
+                  <img
+                    src={proxifyBskyImage(convo.latestReply.author.avatar)}
+                    alt={convo.latestReply.author?.handle || ""}
+                    className="h-5 w-5 flex-shrink-0 cursor-pointer rounded-full object-cover transition-opacity hover:opacity-80"
+                  />
+                </ProfileHoverCard>
               ) : (
                 <div
                   className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full"

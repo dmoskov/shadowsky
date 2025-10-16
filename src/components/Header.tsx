@@ -24,7 +24,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
         <div className="flex items-center gap-4">
           <button
             onClick={onMenuToggle}
-            className="rounded-lg p-2 transition-all hover:bg-white hover:bg-opacity-10 lg:hidden"
+            className="rounded-lg p-2 transition-all hover:scale-110 hover:bg-white hover:bg-opacity-10 lg:hidden"
           >
             <Menu size={24} style={{ color: "var(--bsky-text-primary)" }} />
           </button>
@@ -33,8 +33,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
             <img
               src={butterflyIcon}
               alt="ShadowSky Logo"
-              className="h-7 w-7"
-              style={{ marginTop: "2px" }}
+              className="h-7 w-7 self-center"
             />
             <h1 className="bsky-gradient-text hidden text-xl font-bold sm:block">
               ShadowSky

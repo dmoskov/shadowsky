@@ -29,7 +29,10 @@ export const PostCard: React.FC<PostCardProps> = ({
   showBorder = true,
 }) => {
   return (
-    <div className={`${showBorder ? "border-b dark:border-gray-700" : ""}`}>
+    <div
+      className={showBorder ? "border-b" : ""}
+      style={showBorder ? { borderColor: "var(--bsky-border-primary)" } : {}}
+    >
       <PostRenderer
         post={post}
         reason={reason}

@@ -430,9 +430,7 @@ export async function generateAltText(imageUrl: string): Promise<string> {
       error instanceof Error &&
       error.message.includes("Server API key not configured")
     ) {
-      throw new Error(
-        "Alt text generation failed: Server configuration error",
-      );
+      throw new Error("Alt text generation failed: Server configuration error");
     } else {
       throw new Error(
         `Alt text generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -548,7 +546,7 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
       try {
         // Log the raw response for debugging
         logger.log("Raw API response:", content.text);
-        
+
         // Try to extract JSON from the response
         const jsonMatch = content.text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {

@@ -69,7 +69,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
 
     return (
       <div
-        className={`relative z-10 flex w-full select-none items-center justify-between rounded-lg bg-bsky-bg-secondary ${
+        className={`relative z-10 flex w-full select-none items-center justify-between ${
           size === "small"
             ? "mt-2 px-2 py-1.5"
             : size === "large"
@@ -81,7 +81,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
       >
         {/* Reply */}
         <button
-          className={`touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-colors duration-150 hover:text-blue-600 ${
+          className={`touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-150 hover:scale-110 hover:text-blue-600 ${
             isReplying ? "text-blue-500" : ""
           }`}
           onClick={(e) => handleAction(e, onReply)}
@@ -102,7 +102,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
         <div className="relative">
           <button
             ref={repostButtonRef}
-            className={`touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-colors duration-150 hover:text-green-600 ${
+            className={`touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-150 hover:scale-110 hover:text-green-600 ${
               isReposted ? "text-green-500" : ""
             }`}
             onClick={(e) => {
@@ -137,16 +137,25 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
                   onClick={() => setShowRepostMenu(false)}
                 />
                 <div
-                  className="fixed z-[9999] w-40 rounded-lg border bg-white shadow-lg dark:bg-gray-900"
+                  className="fixed z-[9999] w-40 rounded-lg border shadow-lg"
                   style={{
-                    backgroundColor: "var(--bsky-bg-primary)",
+                    backgroundColor: "var(--bsky-bg-secondary)",
                     borderColor: "var(--bsky-border-primary)",
+                    boxShadow: "var(--bsky-shadow-lg)",
                     top: `${menuPosition.top}px`,
                     left: `${menuPosition.left}px`,
                   }}
                 >
                   <button
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="flex w-full items-center gap-3 rounded-t-lg px-4 py-3 text-left text-sm transition-all"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor =
+                        "var(--bsky-bg-hover)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "transparent")
+                    }
                     onClick={(e) => {
                       handleAction(e, onRepost);
                       setShowRepostMenu(false);
@@ -156,7 +165,15 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
                     <span>Repost</span>
                   </button>
                   <button
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="flex w-full items-center gap-3 rounded-b-lg px-4 py-3 text-left text-sm transition-all"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor =
+                        "var(--bsky-bg-hover)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "transparent")
+                    }
                     onClick={(e) => {
                       handleAction(e, onQuote);
                       setShowRepostMenu(false);
@@ -173,7 +190,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
 
         {/* Like */}
         <button
-          className={`touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-colors duration-150 hover:text-red-600 ${
+          className={`touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-150 hover:scale-110 hover:text-red-600 ${
             isLiked ? "text-red-500" : ""
           }`}
           onClick={(e) => handleAction(e, onLike)}
@@ -189,7 +206,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
 
         {/* Bookmark */}
         <button
-          className={`touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-colors duration-150 hover:text-amber-600 ${
+          className={`touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-150 hover:scale-110 hover:text-amber-600 ${
             bookmarked ? "text-amber-500" : ""
           }`}
           onClick={handleBookmark}
@@ -205,7 +222,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
         {/* Share */}
         {onShare && (
           <button
-            className="touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-colors duration-150 hover:text-blue-600"
+            className="touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-150 hover:scale-110 hover:text-blue-600"
             onClick={(e) => handleAction(e, onShare)}
             aria-label="Share"
           >

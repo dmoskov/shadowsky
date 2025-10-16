@@ -18,6 +18,7 @@ import { parseBskyUrl } from "../utils/url-helpers";
 import { ImageGallery } from "./ImageGallery";
 import { VideoPlayer } from "./VideoPlayer";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
+import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { ProgressiveImage } from "./ui/ProgressiveImage";
 
 const logger = createLogger("PostRenderer");
@@ -244,17 +245,30 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
           </div>
           <div className="p-3">
             <div className="quote-author mb-2 flex items-center gap-2">
-              <img
-                src={
-                  proxifyBskyImage(quotedPost.author?.avatar) ||
-                  "/default-avatar.svg"
-                }
-                alt=""
-                className="quote-avatar h-5 w-5 rounded-full"
-              />
-              <span className="quote-author-name text-sm">
-                {quotedPost.author?.displayName || quotedPost.author?.handle}
-              </span>
+              {quotedPost.author?.handle && (
+                <ProfileHoverCard handle={quotedPost.author.handle}>
+                  <img
+                    src={
+                      proxifyBskyImage(quotedPost.author?.avatar) ||
+                      "/default-avatar.svg"
+                    }
+                    alt=""
+                    className="quote-avatar h-5 w-5 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+                  />
+                </ProfileHoverCard>
+              )}
+              {quotedPost.author?.handle ? (
+                <ProfileHoverCard handle={quotedPost.author.handle}>
+                  <span className="quote-author-name cursor-pointer text-sm hover:underline">
+                    {quotedPost.author?.displayName ||
+                      quotedPost.author?.handle}
+                  </span>
+                </ProfileHoverCard>
+              ) : (
+                <span className="quote-author-name text-sm">
+                  {quotedPost.author?.displayName || quotedPost.author?.handle}
+                </span>
+              )}
               {quotedPost.author?.handle && (
                 <DomainVerifiedBadgeInline handle={quotedPost.author.handle} />
               )}
@@ -356,31 +370,39 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
 
         <div className="flex gap-3">
           {/* Author avatar */}
-          <img
-            src={proxifyBskyImage(post.author.avatar) || "/default-avatar.svg"}
-            alt={post.author.handle}
-            className="h-12 w-12 cursor-pointer rounded-full transition-opacity hover:opacity-80"
-            onClick={handleAuthorClick}
-          />
+          <ProfileHoverCard handle={post.author.handle}>
+            <img
+              src={
+                proxifyBskyImage(post.author.avatar) || "/default-avatar.svg"
+              }
+              alt={post.author.handle}
+              className="h-12 w-12 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+              onClick={handleAuthorClick}
+            />
+          </ProfileHoverCard>
 
           <div className="min-w-0 flex-1">
             {/* Author info and menu */}
             <div className="flex items-start justify-between">
               <div className="flex flex-wrap items-center gap-1">
-                <span
-                  className="cursor-pointer font-semibold hover:underline"
-                  style={{ color: "var(--bsky-text-primary)" }}
-                  onClick={handleAuthorClick}
-                >
-                  {post.author.displayName || post.author.handle}
-                </span>
-                <span
-                  className="cursor-pointer hover:underline"
-                  style={{ color: "var(--bsky-text-secondary)" }}
-                  onClick={handleAuthorClick}
-                >
-                  @{post.author.handle}
-                </span>
+                <ProfileHoverCard handle={post.author.handle}>
+                  <span
+                    className="cursor-pointer font-semibold hover:underline"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                    onClick={handleAuthorClick}
+                  >
+                    {post.author.displayName || post.author.handle}
+                  </span>
+                </ProfileHoverCard>
+                <ProfileHoverCard handle={post.author.handle}>
+                  <span
+                    className="cursor-pointer hover:underline"
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                    onClick={handleAuthorClick}
+                  >
+                    @{post.author.handle}
+                  </span>
+                </ProfileHoverCard>
                 <DomainVerifiedBadgeInline handle={post.author.handle} />
                 <span style={{ color: "var(--bsky-text-secondary)" }}>·</span>
                 <span

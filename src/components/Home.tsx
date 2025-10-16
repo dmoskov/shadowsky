@@ -39,6 +39,7 @@ import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
 import { ThreadModal } from "./ThreadModal";
 import { VideoPlayer } from "./VideoPlayer";
+import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { ProgressiveImage } from "./ui/ProgressiveImage";
 import { FeedSkeleton } from "./ui/SkeletonLoader";
 
@@ -668,31 +669,35 @@ export const Home: React.FC<HomeProps> = React.memo(
             <div>
               {/* Avatar and user info row */}
               <div className="flex items-start gap-3">
-                <img
-                  src={
-                    proxifyBskyImage(post.author.avatar) ||
-                    "/default-avatar.svg"
-                  }
-                  alt={post.author.handle}
-                  className="h-12 w-12 cursor-pointer rounded-full transition-opacity hover:opacity-80"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/profile/${post.author.handle}`);
-                  }}
-                />
+                <ProfileHoverCard handle={post.author.handle}>
+                  <img
+                    src={
+                      proxifyBskyImage(post.author.avatar) ||
+                      "/default-avatar.svg"
+                    }
+                    alt={post.author.handle}
+                    className="h-12 w-12 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/profile/${post.author.handle}`);
+                    }}
+                  />
+                </ProfileHoverCard>
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span
-                      className="cursor-pointer font-semibold hover:underline"
-                      style={{ color: "var(--bsky-text-primary)" }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/profile/${post.author.handle}`);
-                      }}
-                    >
-                      {post.author.displayName || post.author.handle}
-                    </span>
+                    <ProfileHoverCard handle={post.author.handle}>
+                      <span
+                        className="cursor-pointer font-semibold hover:underline"
+                        style={{ color: "var(--bsky-text-primary)" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/profile/${post.author.handle}`);
+                        }}
+                      >
+                        {post.author.displayName || post.author.handle}
+                      </span>
+                    </ProfileHoverCard>
                     {(item.reply?.parent || post.record?.reply?.parent) && (
                       <span
                         className="rounded-full px-2 py-0.5 text-xs font-medium"
@@ -709,15 +714,17 @@ export const Home: React.FC<HomeProps> = React.memo(
                     className="text-sm"
                     style={{ color: "var(--bsky-text-secondary)" }}
                   >
-                    <span
-                      className="cursor-pointer hover:underline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/profile/${post.author.handle}`);
-                      }}
-                    >
-                      @{post.author.handle}
-                    </span>{" "}
+                    <ProfileHoverCard handle={post.author.handle}>
+                      <span
+                        className="cursor-pointer hover:underline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/profile/${post.author.handle}`);
+                        }}
+                      >
+                        @{post.author.handle}
+                      </span>
+                    </ProfileHoverCard>{" "}
                     ·{" "}
                     {formatDistanceToNow(new Date(post.record.createdAt), {
                       addSuffix: true,
@@ -1341,23 +1348,37 @@ export const Home: React.FC<HomeProps> = React.memo(
                   }}
                 >
                   <div className="mb-2 flex items-center gap-2">
-                    <img
-                      src={
-                        proxifyBskyImage(quotedPost.author.avatar) ||
-                        "/default-avatar.svg"
-                      }
-                      alt={quotedPost.author?.handle || "unknown"}
-                      className="h-5 w-5 rounded-full"
-                    />
+                    {quotedPost.author?.handle && (
+                      <ProfileHoverCard handle={quotedPost.author.handle}>
+                        <img
+                          src={
+                            proxifyBskyImage(quotedPost.author.avatar) ||
+                            "/default-avatar.svg"
+                          }
+                          alt={quotedPost.author?.handle || "unknown"}
+                          className="h-5 w-5 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+                        />
+                      </ProfileHoverCard>
+                    )}
                     <div className="flex items-center gap-1 text-sm">
-                      <span
-                        className="font-semibold"
-                        style={{ color: "var(--bsky-text-primary)" }}
-                      >
-                        {quotedPost.author?.displayName ||
-                          quotedPost.author?.handle ||
-                          "Unknown"}
-                      </span>
+                      {quotedPost.author?.handle ? (
+                        <ProfileHoverCard handle={quotedPost.author.handle}>
+                          <span
+                            className="cursor-pointer font-semibold hover:underline"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                          >
+                            {quotedPost.author?.displayName ||
+                              quotedPost.author?.handle}
+                          </span>
+                        </ProfileHoverCard>
+                      ) : (
+                        <span
+                          className="font-semibold"
+                          style={{ color: "var(--bsky-text-primary)" }}
+                        >
+                          Unknown
+                        </span>
+                      )}
                       <span style={{ color: "var(--bsky-text-secondary)" }}>
                         @{quotedPost.author?.handle || "unknown"}
                       </span>

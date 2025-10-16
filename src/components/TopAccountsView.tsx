@@ -10,6 +10,7 @@ import { getProfileCacheService } from "../services/profile-cache-service";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { getBskyProfileUrl } from "../utils/url-helpers";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
+import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 
 interface TopAccountsViewProps {
   notifications: Notification[];
@@ -309,34 +310,38 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
               </div>
 
               {/* Avatar */}
-              <div className="flex-shrink-0">
-                {account.avatar ? (
-                  <img
-                    src={proxifyBskyImage(account.avatar)}
-                    alt={account.handle}
-                    className="bsky-avatar h-12 w-12"
-                  />
-                ) : (
-                  <div
-                    className="bsky-avatar flex h-12 w-12 items-center justify-center"
-                    style={{ background: "var(--bsky-bg-tertiary)" }}
-                  >
-                    <span className="text-lg font-semibold">
-                      {account.handle?.charAt(0).toUpperCase() || "U"}
-                    </span>
-                  </div>
-                )}
-              </div>
+              <ProfileHoverCard handle={account.handle}>
+                <div className="flex-shrink-0">
+                  {account.avatar ? (
+                    <img
+                      src={proxifyBskyImage(account.avatar)}
+                      alt={account.handle}
+                      className="bsky-avatar h-12 w-12 cursor-pointer transition-opacity hover:opacity-80"
+                    />
+                  ) : (
+                    <div
+                      className="bsky-avatar flex h-12 w-12 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
+                      style={{ background: "var(--bsky-bg-tertiary)" }}
+                    >
+                      <span className="text-lg font-semibold">
+                        {account.handle?.charAt(0).toUpperCase() || "U"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </ProfileHoverCard>
 
               {/* Account info */}
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center gap-2">
-                  <h3
-                    className="truncate font-semibold"
-                    style={{ color: "var(--bsky-text-primary)" }}
-                  >
-                    {account.displayName || account.handle}
-                  </h3>
+                  <ProfileHoverCard handle={account.handle}>
+                    <h3
+                      className="cursor-pointer truncate font-semibold hover:underline"
+                      style={{ color: "var(--bsky-text-primary)" }}
+                    >
+                      {account.displayName || account.handle}
+                    </h3>
+                  </ProfileHoverCard>
                   {index < 3 && <span title="Top 3">👑</span>}
                 </div>
 

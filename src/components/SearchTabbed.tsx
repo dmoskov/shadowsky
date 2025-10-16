@@ -32,6 +32,7 @@ import { proxifyBskyImage } from "../utils/image-proxy";
 import { constructAtUri, parseBskyUrl } from "../utils/url-helpers";
 import { ImageGrid } from "./ImageGrid";
 import { ThreadViewer } from "./ThreadViewer";
+import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 
 type SearchTab = "posts" | "users" | "feeds";
 
@@ -1485,26 +1486,34 @@ export const SearchTabbed: React.FC = () => {
                                         }}
                                       >
                                         {suggestion.avatar && (
-                                          <img
-                                            src={proxifyBskyImage(
-                                              suggestion.avatar,
-                                            )}
-                                            alt=""
-                                            className="h-8 w-8 rounded-full"
-                                          />
+                                          <ProfileHoverCard
+                                            handle={suggestion.handle}
+                                          >
+                                            <img
+                                              src={proxifyBskyImage(
+                                                suggestion.avatar,
+                                              )}
+                                              alt=""
+                                              className="h-8 w-8 rounded-full"
+                                            />
+                                          </ProfileHoverCard>
                                         )}
                                         <div className="min-w-0 flex-1">
                                           <div className="flex items-center gap-2">
-                                            <span
-                                              className="truncate font-medium"
-                                              style={{
-                                                color:
-                                                  "var(--bsky-text-primary)",
-                                              }}
+                                            <ProfileHoverCard
+                                              handle={suggestion.handle}
                                             >
-                                              {suggestion.displayName ||
-                                                suggestion.handle}
-                                            </span>
+                                              <span
+                                                className="truncate font-medium"
+                                                style={{
+                                                  color:
+                                                    "var(--bsky-text-primary)",
+                                                }}
+                                              >
+                                                {suggestion.displayName ||
+                                                  suggestion.handle}
+                                              </span>
+                                            </ProfileHoverCard>
                                             {isFollower && (
                                               <span
                                                 className="rounded px-1.5 py-0.5 text-xs"
@@ -1997,26 +2006,34 @@ export const SearchTabbed: React.FC = () => {
                                         }}
                                       >
                                         {suggestion.avatar && (
-                                          <img
-                                            src={proxifyBskyImage(
-                                              suggestion.avatar,
-                                            )}
-                                            alt=""
-                                            className="h-8 w-8 rounded-full"
-                                          />
+                                          <ProfileHoverCard
+                                            handle={suggestion.handle}
+                                          >
+                                            <img
+                                              src={proxifyBskyImage(
+                                                suggestion.avatar,
+                                              )}
+                                              alt=""
+                                              className="h-8 w-8 rounded-full"
+                                            />
+                                          </ProfileHoverCard>
                                         )}
                                         <div className="min-w-0 flex-1">
                                           <div className="flex items-center gap-2">
-                                            <span
-                                              className="truncate font-medium"
-                                              style={{
-                                                color:
-                                                  "var(--bsky-text-primary)",
-                                              }}
+                                            <ProfileHoverCard
+                                              handle={suggestion.handle}
                                             >
-                                              {suggestion.displayName ||
-                                                suggestion.handle}
-                                            </span>
+                                              <span
+                                                className="truncate font-medium"
+                                                style={{
+                                                  color:
+                                                    "var(--bsky-text-primary)",
+                                                }}
+                                              >
+                                                {suggestion.displayName ||
+                                                  suggestion.handle}
+                                              </span>
+                                            </ProfileHoverCard>
                                             {isFollower && (
                                               <span
                                                 className="rounded px-1.5 py-0.5 text-xs"
@@ -2295,19 +2312,23 @@ export const SearchTabbed: React.FC = () => {
                         onClick={() => handlePostClick(post)}
                       >
                         <div className="flex items-start gap-2.5">
-                          <img
-                            src={proxifyBskyImage(post.author.avatar)}
-                            alt={post.author.displayName}
-                            className="h-9 w-9 flex-shrink-0 rounded-full"
-                          />
+                          <ProfileHoverCard handle={post.author.handle}>
+                            <img
+                              src={proxifyBskyImage(post.author.avatar)}
+                              alt={post.author.displayName}
+                              className="h-9 w-9 flex-shrink-0 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+                            />
+                          </ProfileHoverCard>
                           <div className="min-w-0 flex-1">
                             <div className="mb-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                              <span
-                                className="truncate text-sm font-medium"
-                                style={{ color: "var(--bsky-text-primary)" }}
-                              >
-                                {post.author.displayName}
-                              </span>
+                              <ProfileHoverCard handle={post.author.handle}>
+                                <span
+                                  className="cursor-pointer truncate text-sm font-medium hover:underline"
+                                  style={{ color: "var(--bsky-text-primary)" }}
+                                >
+                                  {post.author.displayName}
+                                </span>
+                              </ProfileHoverCard>
                               <span
                                 className="truncate text-xs"
                                 style={{
@@ -2353,20 +2374,34 @@ export const SearchTabbed: React.FC = () => {
                                 return (
                                   <div className="mt-2 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-2.5">
                                     <div className="mb-1 flex items-center gap-1.5">
-                                      {quotedPost.author?.avatar && (
-                                        <img
-                                          src={proxifyBskyImage(
-                                            quotedPost.author.avatar,
-                                          )}
-                                          alt={quotedPost.author.handle}
-                                          className="h-4 w-4 rounded-full"
-                                        />
+                                      {quotedPost.author?.avatar &&
+                                        quotedPost.author?.handle && (
+                                          <ProfileHoverCard
+                                            handle={quotedPost.author.handle}
+                                          >
+                                            <img
+                                              src={proxifyBskyImage(
+                                                quotedPost.author.avatar,
+                                              )}
+                                              alt={quotedPost.author.handle}
+                                              className="h-4 w-4 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+                                            />
+                                          </ProfileHoverCard>
+                                        )}
+                                      {quotedPost.author?.handle ? (
+                                        <ProfileHoverCard
+                                          handle={quotedPost.author.handle}
+                                        >
+                                          <span className="cursor-pointer text-xs font-medium text-bsky-text-secondary hover:underline">
+                                            {quotedPost.author?.displayName ||
+                                              quotedPost.author?.handle}
+                                          </span>
+                                        </ProfileHoverCard>
+                                      ) : (
+                                        <span className="text-xs font-medium text-bsky-text-secondary">
+                                          Unknown
+                                        </span>
                                       )}
-                                      <span className="text-xs font-medium text-bsky-text-secondary">
-                                        {quotedPost.author?.displayName ||
-                                          quotedPost.author?.handle ||
-                                          "Unknown"}
-                                      </span>
                                       <span className="text-xs text-bsky-text-tertiary">
                                         @
                                         {quotedPost.author?.handle || "unknown"}

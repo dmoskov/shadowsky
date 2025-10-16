@@ -57,8 +57,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="pointer-events-auto fixed inset-0 z-40 backdrop-blur-sm lg:hidden"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
+          className="pointer-events-auto fixed inset-0 z-40 backdrop-blur-sm transition-opacity duration-300 lg:hidden"
+          style={{
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+          }}
           onClick={onClose}
         />
       )}
@@ -90,7 +92,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => onClose()}
                 className={({ isActive }) =>
                   `group relative flex items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 ${
-                    isActive ? "text-white shadow-md" : "hover:bg-blue-50"
+                    isActive
+                      ? "scale-[1.02] text-white shadow-md"
+                      : "hover:scale-[1.02] hover:bg-blue-50"
                   } `
                 }
                 style={({ isActive }) => ({
@@ -110,7 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     unreadCount !== undefined &&
                     unreadCount > 0 && (
                       <span
-                        className="absolute -right-1 -top-1 h-2 w-2 rounded-full"
+                        className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full"
                         style={{
                           backgroundColor: "var(--bsky-accent)",
                         }}
@@ -157,7 +161,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {!isCollapsed && (
           <div
-            className="absolute bottom-0 left-0 right-0 border-t p-4"
+            className="absolute bottom-0 left-0 right-0 border-t p-6"
             style={{ borderColor: "var(--bsky-border-primary)" }}
           >
             <div
@@ -165,7 +169,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               style={{ color: "var(--bsky-text-tertiary)" }}
             >
               <div className="bsky-gradient-text mb-1 font-bold">ShadowSky</div>
-              <div>Version 0.5.0</div>
+              <div className="tracking-wide">Version 0.5.0</div>
             </div>
           </div>
         )}

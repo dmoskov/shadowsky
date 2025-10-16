@@ -44,6 +44,7 @@ import {
 import { ThreadModal } from "./ThreadModal";
 import { TopAccountsView } from "./TopAccountsView";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
+import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { NotificationSkeleton } from "./ui/SkeletonLoader";
 
 type NotificationFilter =
@@ -1150,30 +1151,44 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
                   ? "Quoting your post:"
                   : "Your post:"}
             </span>
-            {post.author?.avatar ? (
-              <img
-                src={proxifyBskyImage(post.author.avatar)}
-                alt={post.author.handle}
-                className="bsky-avatar h-5 w-5 cursor-pointer transition-opacity hover:opacity-80"
-                onClick={handleAuthorClick}
-              />
-            ) : (
-              <div
-                className="bsky-avatar flex h-5 w-5 cursor-pointer items-center justify-center text-xs transition-opacity hover:opacity-80"
-                style={{ background: "var(--bsky-bg-tertiary)" }}
-                onClick={handleAuthorClick}
-              >
-                {post.author?.handle?.charAt(0).toUpperCase()}
-              </div>
+            {post.author?.handle && (
+              <ProfileHoverCard handle={post.author.handle}>
+                {post.author?.avatar ? (
+                  <img
+                    src={proxifyBskyImage(post.author.avatar)}
+                    alt={post.author.handle}
+                    className="bsky-avatar h-5 w-5 cursor-pointer transition-opacity hover:opacity-80"
+                    onClick={handleAuthorClick}
+                  />
+                ) : (
+                  <div
+                    className="bsky-avatar flex h-5 w-5 cursor-pointer items-center justify-center text-xs transition-opacity hover:opacity-80"
+                    style={{ background: "var(--bsky-bg-tertiary)" }}
+                    onClick={handleAuthorClick}
+                  >
+                    {post.author?.handle?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </ProfileHoverCard>
             )}
-            <span className="inline-flex items-center text-xs font-medium text-bsky-text-secondary">
-              <span>
-                {post.author?.displayName || post.author?.handle || "Unknown"}
+            {post.author?.handle ? (
+              <ProfileHoverCard handle={post.author.handle}>
+                <span className="inline-flex cursor-pointer items-center text-xs font-medium text-bsky-text-secondary hover:underline">
+                  <span>
+                    {post.author?.displayName ||
+                      post.author?.handle ||
+                      "Unknown"}
+                  </span>
+                  <DomainVerifiedBadgeInline handle={post.author.handle} />
+                </span>
+              </ProfileHoverCard>
+            ) : (
+              <span className="inline-flex items-center text-xs font-medium text-bsky-text-secondary">
+                <span>
+                  {post.author?.displayName || post.author?.handle || "Unknown"}
+                </span>
               </span>
-              {post.author?.handle && (
-                <DomainVerifiedBadgeInline handle={post.author.handle} />
-              )}
-            </span>
+            )}
             {hasImages && (
               <span
                 className="flex items-center gap-1 text-xs"
@@ -1342,24 +1357,26 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
         {/* Icon and Avatar section */}
         <div className="flex flex-shrink-0 items-center gap-2">
           <div className="w-5">{getNotificationIcon(notification.reason)}</div>
-          {notification.author.avatar ? (
-            <img
-              src={proxifyBskyImage(notification.author.avatar)}
-              alt={notification.author.handle}
-              className="bsky-avatar h-10 w-10 cursor-pointer transition-opacity hover:opacity-80"
-              onClick={handleAuthorClick}
-            />
-          ) : (
-            <div
-              className="bsky-avatar flex h-10 w-10 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
-              style={{ background: "var(--bsky-bg-tertiary)" }}
-              onClick={handleAuthorClick}
-            >
-              <span className="text-sm font-semibold">
-                {notification.author?.handle?.charAt(0).toUpperCase() || "U"}
-              </span>
-            </div>
-          )}
+          <ProfileHoverCard handle={notification.author.handle}>
+            {notification.author.avatar ? (
+              <img
+                src={proxifyBskyImage(notification.author.avatar)}
+                alt={notification.author.handle}
+                className="bsky-avatar h-10 w-10 cursor-pointer transition-opacity hover:opacity-80"
+                onClick={handleAuthorClick}
+              />
+            ) : (
+              <div
+                className="bsky-avatar flex h-10 w-10 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
+                style={{ background: "var(--bsky-bg-tertiary)" }}
+                onClick={handleAuthorClick}
+              >
+                <span className="text-sm font-semibold">
+                  {notification.author?.handle?.charAt(0).toUpperCase() || "U"}
+                </span>
+              </div>
+            )}
+          </ProfileHoverCard>
         </div>
 
         {/* User info and timestamp */}
@@ -1379,15 +1396,20 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
             </div>
           )}
           <p className="text-sm">
-            <span className="inline-flex items-center">
-              <span
-                className="font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
-              >
-                {notification.author.displayName || notification.author.handle}
+            <ProfileHoverCard handle={notification.author.handle}>
+              <span className="inline-flex items-center">
+                <span
+                  className="cursor-pointer font-semibold hover:underline"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  {notification.author.displayName ||
+                    notification.author.handle}
+                </span>
+                <DomainVerifiedBadgeInline
+                  handle={notification.author.handle}
+                />
               </span>
-              <DomainVerifiedBadgeInline handle={notification.author.handle} />
-            </span>{" "}
+            </ProfileHoverCard>{" "}
             <span style={{ color: "var(--bsky-text-secondary)" }}>
               {getNotificationText(notification.reason)}
             </span>
