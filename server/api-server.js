@@ -16,16 +16,34 @@ const PORT = process.env.PORT || 3002;
 // Enable CORS for your Vite dev server and production domains
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "http://localhost:5175",
-      "http://localhost:5176",
-      "https://main.shadowsky.io",
-      "https://shadowsky.io",
-      "https://*.shadowsky.io",
-    ],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      const allowedOrigins = [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://localhost:5176",
+        "https://main.shadowsky.io",
+        "https://shadowsky.io",
+        "https://www.shadowsky.io",
+      ];
+
+      // Allow any subdomain of shadowsky.io
+      if (
+        origin.match(/^https?:\/\/.*\.shadowsky\.io$/) ||
+        allowedOrigins.includes(origin)
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    optionsSuccessStatus: 200, // Some legacy browsers choke on 204
   }),
 );
 

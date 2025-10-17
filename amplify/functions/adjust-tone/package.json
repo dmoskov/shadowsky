@@ -1,0 +1,8 @@
+{
+  "name": "adjust-tone",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Amplify function for adjusting text tone",
+  "main": "handler.js",
+  "dependencies": {}
+}

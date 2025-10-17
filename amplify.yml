@@ -23,3 +23,48 @@ frontend:
   cache:
     paths:
       - node_modules/**/*
+
+# Amplify Compute (serverless functions)
+compute:
+  - identifier: generate-alt-text
+    path: /api/generate-alt-text
+    runtime: nodejs20.x
+    handler: handler
+    entrypoint: amplify/functions/generate-alt-text
+    environment:
+      variables:
+        NODE_ENV: production
+      secrets:
+        - ANTHROPIC_API_KEY
+  - identifier: adjust-tone
+    path: /api/adjust-tone
+    runtime: nodejs20.x
+    handler: handler
+    entrypoint: amplify/functions/adjust-tone
+    environment:
+      secrets:
+        - ANTHROPIC_API_KEY
+  - identifier: optimize-thread
+    path: /api/optimize-thread
+    runtime: nodejs20.x
+    handler: handler
+    entrypoint: amplify/functions/optimize-thread
+    environment:
+      secrets:
+        - ANTHROPIC_API_KEY
+  - identifier: suggest-hashtags
+    path: /api/suggest-hashtags
+    runtime: nodejs20.x
+    handler: handler
+    entrypoint: amplify/functions/suggest-hashtags
+    environment:
+      secrets:
+        - ANTHROPIC_API_KEY
+  - identifier: writing-feedback
+    path: /api/writing-feedback
+    runtime: nodejs20.x
+    handler: handler
+    entrypoint: amplify/functions/writing-feedback
+    environment:
+      secrets:
+        - ANTHROPIC_API_KEY

@@ -1,0 +1,8 @@
+{
+  "name": "suggest-hashtags",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Amplify function for suggesting hashtags",
+  "main": "handler.js",
+  "dependencies": {}
+}

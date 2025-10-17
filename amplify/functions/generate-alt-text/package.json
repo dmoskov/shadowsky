@@ -1,0 +1,8 @@
+{
+  "name": "generate-alt-text",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Amplify function for generating image alt text using Claude",
+  "main": "handler.js",
+  "dependencies": {}
+}

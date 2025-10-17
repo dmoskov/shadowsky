@@ -1,0 +1,8 @@
+{
+  "name": "optimize-thread",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Amplify function for optimizing thread structure",
+  "main": "handler.js",
+  "dependencies": {}
+}

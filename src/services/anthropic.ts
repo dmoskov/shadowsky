@@ -1,13 +1,7 @@
-import Anthropic from "@anthropic-ai/sdk";
 import type { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
 import { ProfileService } from "../shared/services";
 import { createLogger } from "../utils/logger";
 import { analytics } from "./analytics";
-
-const anthropic = new Anthropic({
-  apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY || "",
-  dangerouslyAllowBrowser: true,
-});
 
 const logger = createLogger("AnthropicService");
 
@@ -38,46 +32,28 @@ export async function adjustTone(
   tone: ToneOption,
 ): Promise<ToneAdjustmentResult> {
   try {
-    // Check if API key is configured
-    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
-      throw new Error("Anthropic API key not configured");
-    }
-
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
-      max_tokens: 1000,
-      messages: [
-        {
-          role: "user",
-          content: `Rewrite the following text to have a ${tone} tone. Use ${TONE_DESCRIPTIONS[tone]}. Maintain the original meaning and key information, but adjust the style and word choice. Keep it concise and suitable for a social media post (under 300 characters per segment if it needs to be split).
-
-Original text: "${text}"
-
-Provide only the rewritten text without any explanation or prefixes.`,
-        },
-      ],
+    const response = await fetch("/api/adjust-tone", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text, tone }),
     });
 
-    const content = response.content[0];
-    if (content.type === "text") {
-      return {
-        adjustedText: content.text.trim(),
-        originalText: text,
-        tone,
-      };
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      const errorMessage =
+        errorData?.error || `Server returned ${response.status}`;
+      throw new Error(errorMessage);
     }
 
-    throw new Error("Unexpected response format");
+    const data = await response.json();
+    return data;
   } catch (error) {
     logger.error("Error adjusting tone:", error);
-
-    // Track error for analytics
     analytics.trackError(error as Error, "tone_adjustment");
 
-    // Provide more specific error messages
-    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
-      throw new Error("Tone adjustment failed: API key not configured");
-    } else if (error instanceof Error && error.message.includes("401")) {
+    if (error instanceof Error && error.message.includes("401")) {
       throw new Error("Tone adjustment failed: Invalid API key");
     } else if (error instanceof Error && error.message.includes("429")) {
       throw new Error("Tone adjustment failed: Rate limit exceeded");
@@ -107,64 +83,28 @@ export async function optimizeThread(
   maxCharsPerPost: number = 300,
 ): Promise<ThreadOptimizationResult> {
   try {
-    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
-      throw new Error("Anthropic API key not configured");
-    }
-
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
-      max_tokens: 2000,
-      messages: [
-        {
-          role: "user",
-          content: `Analyze this text and split it into an optimal thread for a social media platform. Each post should be under ${maxCharsPerPost} characters, self-contained, and engaging.
-
-Rules:
-1. Each segment must make sense on its own
-2. Preserve the narrative flow
-3. End segments with complete thoughts
-4. Create natural breaks at topic transitions
-5. Keep important context together
-6. Suggest the best numbering format based on content type
-
-Text to split: "${text}"
-
-Respond with a JSON object containing:
-- segments: array of {text: string, number: number, isStandalone: boolean}
-- summary: brief description of the thread topic
-- suggestedFormat: "simple" (1/n), "brackets" ([1/n]), "thread" (🧵), or "dots" (1.)
-- totalPosts: total number of posts
-
-Ensure the response is valid JSON.`,
-        },
-      ],
+    const response = await fetch("/api/optimize-thread", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text, maxCharsPerPost }),
     });
 
-    const content = response.content[0];
-    if (content.type === "text") {
-      try {
-        const result = JSON.parse(content.text);
-        return result;
-      } catch (parseError) {
-        logger.error(
-          "Failed to parse thread optimization response:",
-          parseError,
-        );
-        logger.error("Raw response:", content.text);
-        throw new Error(
-          "AI service returned invalid response format. Please try again.",
-        );
-      }
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      const errorMessage =
+        errorData?.error || `Server returned ${response.status}`;
+      throw new Error(errorMessage);
     }
 
-    throw new Error("Unexpected response format");
+    const data = await response.json();
+    return data;
   } catch (error) {
     logger.error("Error optimizing thread:", error);
     analytics.trackError(error as Error, "thread_optimization");
 
-    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
-      throw new Error("Thread optimization failed: API key not configured");
-    } else if (error instanceof Error && error.message.includes("401")) {
+    if (error instanceof Error && error.message.includes("401")) {
       throw new Error("Thread optimization failed: Invalid API key");
     } else if (error instanceof Error && error.message.includes("429")) {
       throw new Error("Thread optimization failed: Rate limit exceeded");
@@ -192,59 +132,28 @@ export async function suggestHashtags(
   existingTags?: string[],
 ): Promise<HashtagResult> {
   try {
-    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
-      throw new Error("Anthropic API key not configured");
-    }
-
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
-      max_tokens: 500,
-      messages: [
-        {
-          role: "user",
-          content: `Suggest 3-5 relevant hashtags for this social media post. Consider the content, tone, and potential audience.
-
-Post content: "${text}"
-${existingTags?.length ? `Already using: ${existingTags.join(", ")}` : ""}
-
-Rules:
-1. Hashtags should be relevant and specific to the content
-2. Mix popular and niche tags for better reach
-3. Avoid overly generic tags
-4. Consider current trends and topics
-5. Don't repeat existing tags
-
-Respond with a JSON object containing:
-- hashtags: array of {tag: string (without #), relevance: number (0-1), isTrending: boolean}
-- category: main topic category of the post
-
-Ensure the response is valid JSON.`,
-        },
-      ],
+    const response = await fetch("/api/suggest-hashtags", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text, existingTags }),
     });
 
-    const content = response.content[0];
-    if (content.type === "text") {
-      try {
-        const result = JSON.parse(content.text);
-        return result;
-      } catch (parseError) {
-        logger.error("Failed to parse hashtag response:", parseError);
-        logger.error("Raw response:", content.text);
-        throw new Error(
-          "AI service returned invalid response format. Please try again.",
-        );
-      }
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      const errorMessage =
+        errorData?.error || `Server returned ${response.status}`;
+      throw new Error(errorMessage);
     }
 
-    throw new Error("Unexpected response format");
+    const data = await response.json();
+    return data;
   } catch (error) {
     logger.error("Error suggesting hashtags:", error);
     analytics.trackError(error as Error, "hashtag_suggestions");
 
-    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
-      throw new Error("Hashtag suggestions failed: API key not configured");
-    } else if (error instanceof Error && error.message.includes("401")) {
+    if (error instanceof Error && error.message.includes("401")) {
       throw new Error("Hashtag suggestions failed: Invalid API key");
     } else if (error instanceof Error && error.message.includes("429")) {
       throw new Error("Hashtag suggestions failed: Rate limit exceeded");
@@ -275,72 +184,28 @@ export async function getWritingFeedback(
   text: string,
 ): Promise<WritingFeedback> {
   try {
-    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
-      throw new Error("Anthropic API key not configured");
-    }
-
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
-      max_tokens: 1500,
-      messages: [
-        {
-          role: "user",
-          content: `Analyze this social media post and provide helpful feedback with improved versions.
-
-Post: "${text}"
-
-Provide a JSON response with:
-1. assessment: 
-   - summary: brief quality assessment (1-2 sentences)
-   - hasIssues: boolean indicating if there are typos or issues
-2. correctedVersion:
-   - text: the post with ONLY typos, grammar, and spelling fixed (minimal changes)
-   - changes: array of strings describing corrections (e.g. ["Fixed spelling of 'spelling'", "Corrected grammar"]) - empty array if none needed
-3. enhancedVersion:
-   - text: a slightly improved version (just a little better - keep the original voice and style)
-   - improvements: array of strings describing what was enhanced
-
-Keep corrections minimal and enhancements subtle. Preserve the author's voice.
-
-Example JSON structure:
-{
-  "assessment": { "summary": "...", "hasIssues": true },
-  "correctedVersion": { "text": "...", "changes": ["Fixed X", "Corrected Y"] },
-  "enhancedVersion": { "text": "...", "improvements": ["Made more concise", "Enhanced clarity"] }
-}
-
-IMPORTANT: Your response MUST be valid JSON only. Rules:
-1. Use proper JSON arrays with strings only (no arrow notation like "a" -> "b")
-2. Ensure all arrays and objects are properly closed with ] and }
-3. Double-check that your JSON is valid before responding
-4. Do not include any text before or after the JSON object
-5. Start directly with { and end with }`,
-        },
-      ],
+    const response = await fetch("/api/writing-feedback", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text }),
     });
 
-    const content = response.content[0];
-    if (content.type === "text") {
-      try {
-        const result = JSON.parse(content.text);
-        return result;
-      } catch (parseError) {
-        logger.error("Failed to parse writing feedback response:", parseError);
-        logger.error("Raw response:", content.text);
-        throw new Error(
-          "AI service returned invalid response format. Please try again.",
-        );
-      }
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      const errorMessage =
+        errorData?.error || `Server returned ${response.status}`;
+      throw new Error(errorMessage);
     }
 
-    throw new Error("Unexpected response format from AI service");
+    const data = await response.json();
+    return data;
   } catch (error) {
     logger.error("Error getting writing feedback:", error);
     analytics.trackError(error as Error, "writing_feedback");
 
-    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
-      throw new Error("Writing feedback failed: API key not configured");
-    } else if (error instanceof Error && error.message.includes("401")) {
+    if (error instanceof Error && error.message.includes("401")) {
       throw new Error("Writing feedback failed: Invalid API key");
     } else if (error instanceof Error && error.message.includes("429")) {
       throw new Error("Writing feedback failed: Rate limit exceeded");
@@ -377,15 +242,13 @@ export async function generateAltText(imageUrl: string): Promise<string> {
       }
     }
 
-    // Always use the backend proxy for all image types
+    // Always use the backend API for all image types
     // This keeps the API key secure on the server
-    logger.log("Generating alt text via backend proxy");
+    logger.log("Generating alt text via backend API");
 
-    const serverUrl = import.meta.env.PROD
-      ? import.meta.env.VITE_PROXY_SERVER_URL || "https://api.shadowsky.io"
-      : ""; // Empty string means use same origin (proxied through Vite)
-
-    const endpoint = `${serverUrl}/api/generate-alt-text`;
+    // In production, use Amplify Function (same origin)
+    // In development, proxy through Vite dev server to local Express server
+    const endpoint = "/api/generate-alt-text";
     const payload = {
       imageUrl: processedImageUrl,
     };
@@ -421,8 +284,13 @@ export async function generateAltText(imageUrl: string): Promise<string> {
     // Track error for analytics
     analytics.trackError(error as Error, "alt_text_generation");
 
-    // Provide more specific error messages
-    if (error instanceof Error && error.message.includes("401")) {
+    // Provide more specific error messages based on error type
+    if (error instanceof TypeError && error.message.includes("fetch")) {
+      // Network error - likely backend is down or SSL issue
+      throw new Error(
+        "Alt text generation service is temporarily unavailable. Please deploy the backend server to api.shadowsky.io",
+      );
+    } else if (error instanceof Error && error.message.includes("401")) {
       throw new Error("Alt text generation failed: Invalid API key");
     } else if (error instanceof Error && error.message.includes("429")) {
       throw new Error("Alt text generation failed: Rate limit exceeded");
@@ -431,6 +299,13 @@ export async function generateAltText(imageUrl: string): Promise<string> {
       error.message.includes("Server API key not configured")
     ) {
       throw new Error("Alt text generation failed: Server configuration error");
+    } else if (
+      error instanceof Error &&
+      error.message.includes("Failed to fetch")
+    ) {
+      throw new Error(
+        "Backend API server is not responding. Please check that the server is deployed and running.",
+      );
     } else {
       throw new Error(
         `Alt text generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
