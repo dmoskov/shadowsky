@@ -48,6 +48,12 @@ If formatting issues are found, the script will suggest running `npm run fix:for
 
 ## Development Best Practices
 
+### Version Management
+
+- **Update version in multiple locations**: When bumping the version number in `package.json`, also update it in:
+  - `src/components/Sidebar.tsx` - The UI displays the version at the bottom of the sidebar (line 172)
+- Both locations must stay in sync to ensure the displayed version matches the package version.
+
 ### Debug Logging
 
 - **Clean up debug logging at the end of sessions**: If you add any `console.log`, `console.error`, or verbose `logger.log` statements for debugging during development, please remove them before completing the session.
