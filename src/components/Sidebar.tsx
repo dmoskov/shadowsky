@@ -169,7 +169,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               style={{ color: "var(--bsky-text-tertiary)" }}
             >
               <div className="bsky-gradient-text mb-1 font-bold">ShadowSky</div>
-              <div className="tracking-wide">Version 0.5.0</div>
+              <div className="tracking-wide">Version 0.6.0</div>
             </div>
           </div>
         )}
