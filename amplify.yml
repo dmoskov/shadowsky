@@ -16,6 +16,16 @@ frontend:
       commands:
         # Create a 404.html that redirects to index.html for client-side routing
         - cp dist/index.html dist/404.html
+        # Create _redirects file to handle trailing slashes for API endpoints
+        - |
+          cat > dist/_redirects << 'EOF'
+          # Redirect trailing slashes on API endpoints
+          /api/writing-feedback/ /api/writing-feedback 301
+          /api/generate-alt-text/ /api/generate-alt-text 301
+          /api/adjust-tone/ /api/adjust-tone 301
+          /api/optimize-thread/ /api/optimize-thread 301
+          /api/suggest-hashtags/ /api/suggest-hashtags 301
+          EOF
   artifacts:
     baseDirectory: dist
     files:
@@ -23,6 +33,15 @@ frontend:
   cache:
     paths:
       - node_modules/**/*
+customHeaders:
+  - pattern: "**/*"
+    headers:
+      - key: "X-Frame-Options"
+        value: "SAMEORIGIN"
+      - key: "X-Content-Type-Options"
+        value: "nosniff"
+      - key: "Strict-Transport-Security"
+        value: "max-age=31536000; includeSubDomains"
 
 # Amplify Compute (serverless functions)
 compute:
