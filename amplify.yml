@@ -33,6 +33,28 @@ frontend:
   cache:
     paths:
       - node_modules/**/*
+# Redirect and rewrite rules
+redirects:
+  # Remove trailing slashes from API endpoints
+  - source: /api/writing-feedback/
+    target: /api/writing-feedback
+    status: 301
+  - source: /api/generate-alt-text/
+    target: /api/generate-alt-text
+    status: 301
+  - source: /api/adjust-tone/
+    target: /api/adjust-tone
+    status: 301
+  - source: /api/optimize-thread/
+    target: /api/optimize-thread
+    status: 301
+  - source: /api/suggest-hashtags/
+    target: /api/suggest-hashtags
+    status: 301
+  # SPA fallback - serve index.html for all other routes
+  - source: /<*>
+    target: /index.html
+    status: 404-200
 customHeaders:
   - pattern: "**/*"
     headers:
