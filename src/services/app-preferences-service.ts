@@ -16,7 +16,6 @@ export interface ShadowSkyPreferences {
   aiSettings?: {
     autoGenerateAltText: boolean;
     enableHashtagSuggestions: boolean;
-    enableWritingFeedback: boolean;
   };
   // Column display settings
   columnWidth?: number;
@@ -100,7 +99,6 @@ export interface AppPreferencesRecord {
   aiSettings?: {
     autoGenerateAltText: boolean;
     enableHashtagSuggestions: boolean;
-    enableWritingFeedback: boolean;
   };
   // Column display settings
   columnWidth?: number;
@@ -311,7 +309,6 @@ export class AppPreferencesService {
       aiSettings: {
         autoGenerateAltText: false,
         enableHashtagSuggestions: false,
-        enableWritingFeedback: false,
       },
     };
 

@@ -26,7 +26,6 @@ import {
   adjustTone,
   generateAltText,
   getStyleMatchedWritingFeedback,
-  optimizeThread,
   suggestHashtags,
   type StyleMatchedWritingFeedback,
   type ThreadOptimizationResult,
@@ -45,6 +44,7 @@ import {
   type ThreadDraft,
 } from "../services/drafts";
 import { debug } from "../shared/debug";
+import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { isGifFile } from "../utils/gif-to-video";
 import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { createLogger } from "../utils/logger";
@@ -239,7 +239,6 @@ export function Composer() {
   const [showTonePreview, setShowTonePreview] = useState(false);
 
   // Thread optimization state
-  const [isOptimizingThread, setIsOptimizingThread] = useState(false);
   const [threadOptimizationResult, setThreadOptimizationResult] =
     useState<ThreadOptimizationResult | null>(null);
   const [showThreadPreview, setShowThreadPreview] = useState(false);
@@ -256,7 +255,6 @@ export function Composer() {
   // AI settings state
   const [enableHashtagSuggestions, setEnableHashtagSuggestions] =
     useState(false);
-  const [enableWritingFeedback, setEnableWritingFeedback] = useState(false);
 
   // Writing feedback state
   const [showWritingFeedback, setShowWritingFeedback] = useState(false);
@@ -285,7 +283,6 @@ export function Composer() {
       if (prefs?.aiSettings) {
         setAutoGenerateAltText(prefs.aiSettings.autoGenerateAltText);
         setEnableHashtagSuggestions(prefs.aiSettings.enableHashtagSuggestions);
-        setEnableWritingFeedback(prefs.aiSettings.enableWritingFeedback);
       }
     };
 
@@ -312,14 +309,13 @@ export function Composer() {
           aiSettings: {
             autoGenerateAltText,
             enableHashtagSuggestions,
-            enableWritingFeedback,
           },
         });
       }
     };
 
     saveAiSettings();
-  }, [autoGenerateAltText, enableHashtagSuggestions, enableWritingFeedback]);
+  }, [autoGenerateAltText, enableHashtagSuggestions]);
 
   // Load drafts
   useEffect(() => {
@@ -1403,12 +1399,16 @@ export function Composer() {
             };
           } else {
             logger.log("No video found, uploading as images");
-            // Upload images
+            // Upload images with retry logic
             const images = await Promise.all(
               postMedia.map(async (img) => {
-                const uploadResult = await agent.uploadBlob(img.data, {
-                  encoding: img.mimeType,
-                });
+                const uploadResult = await uploadBlobWithRetry(
+                  agent,
+                  img.data,
+                  {
+                    encoding: img.mimeType,
+                  },
+                );
                 return {
                   alt: img.alt || "",
                   image: uploadResult.data.blob,
@@ -1761,66 +1761,62 @@ export function Composer() {
     setSelectedTone(null);
   }, []);
 
-  // Handle thread optimization
-  const handleThreadOptimization = useCallback(async () => {
-    if (!text.trim()) {
-      setPostStatus({
-        type: "error",
-        message: "Please write some text to optimize",
-      });
-      return;
-    }
+  // Handle thread optimization (currently disabled)
+  // const handleThreadOptimization = useCallback(async () => {
+  //   if (!text.trim()) {
+  //     setPostStatus({
+  //       type: "error",
+  //       message: "Please write some text to optimize",
+  //     });
+  //     return;
+  //   }
 
-    setIsOptimizingThread(true);
+  //   // Track optimization request
+  //   analytics.trackEvent({
+  //     category: "composer",
+  //     action: "thread_optimization_requested",
+  //     custom_parameters: {
+  //       text_length: text.length,
+  //       current_posts: posts.length,
+  //     },
+  //   });
 
-    // Track optimization request
-    analytics.trackEvent({
-      category: "composer",
-      action: "thread_optimization_requested",
-      custom_parameters: {
-        text_length: text.length,
-        current_posts: posts.length,
-      },
-    });
+  //   try {
+  //     const result = await optimizeThread(text, MAX_POST_LENGTH);
+  //     setThreadOptimizationResult(result);
+  //     setShowThreadPreview(true);
+  //     debug.log("Thread optimized successfully", {
+  //       segmentCount: result.segments.length,
+  //       format: result.suggestedFormat,
+  //     });
 
-    try {
-      const result = await optimizeThread(text, MAX_POST_LENGTH);
-      setThreadOptimizationResult(result);
-      setShowThreadPreview(true);
-      debug.log("Thread optimized successfully", {
-        segmentCount: result.segments.length,
-        format: result.suggestedFormat,
-      });
+  //     // Track successful optimization
+  //     analytics.trackEvent({
+  //       category: "composer",
+  //       action: "thread_optimization_success",
+  //       label: result.suggestedFormat,
+  //       custom_parameters: {
+  //         original_length: text.length,
+  //         segments_count: result.segments.length,
+  //         suggested_format: result.suggestedFormat,
+  //       },
+  //     });
+  //   } catch (error) {
+  //     logger.error("Failed to optimize thread:", error);
+  //     const errorMessage =
+  //       error instanceof Error ? error.message : "Failed to optimize thread";
+  //     setPostStatus({ type: "error", message: errorMessage });
 
-      // Track successful optimization
-      analytics.trackEvent({
-        category: "composer",
-        action: "thread_optimization_success",
-        label: result.suggestedFormat,
-        custom_parameters: {
-          original_length: text.length,
-          segments_count: result.segments.length,
-          suggested_format: result.suggestedFormat,
-        },
-      });
-    } catch (error) {
-      logger.error("Failed to optimize thread:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to optimize thread";
-      setPostStatus({ type: "error", message: errorMessage });
-
-      // Track optimization error
-      analytics.trackEvent({
-        category: "composer",
-        action: "thread_optimization_error",
-        custom_parameters: {
-          error_message: errorMessage,
-        },
-      });
-    } finally {
-      setIsOptimizingThread(false);
-    }
-  }, [text, posts.length]);
+  //     // Track optimization error
+  //     analytics.trackEvent({
+  //       category: "composer",
+  //       action: "thread_optimization_error",
+  //       custom_parameters: {
+  //         error_message: errorMessage,
+  //       },
+  //     });
+  //   }
+  // }, [text, posts.length]);
 
   // Apply thread optimization
   const applyThreadOptimization = useCallback(() => {
@@ -2041,15 +2037,11 @@ export function Composer() {
                     settings={{
                       autoGenerateAltText,
                       enableHashtagSuggestions,
-                      enableWritingFeedback,
                     }}
                     onChange={async (newSettings) => {
                       setAutoGenerateAltText(newSettings.autoGenerateAltText);
                       setEnableHashtagSuggestions(
                         newSettings.enableHashtagSuggestions,
-                      );
-                      setEnableWritingFeedback(
-                        newSettings.enableWritingFeedback,
                       );
 
                       // Save to app preferences
@@ -2470,49 +2462,25 @@ export function Composer() {
 
             <div className="group relative">
               <button
-                className={`bsky-button-secondary flex items-center gap-2 ${isOptimizingThread ? "animate-pulse" : ""}`}
-                onClick={handleThreadOptimization}
-                disabled={isPosting || isOptimizingThread || !text.trim()}
-                aria-label="Optimize thread"
+                className={`bsky-button-secondary flex items-center gap-2 ${isLoadingFeedback ? "animate-pulse" : ""}`}
+                onClick={handleWritingFeedback}
+                disabled={isPosting || isLoadingFeedback || !text.trim()}
+                aria-label="Get writing feedback"
               >
-                <Sparkles size={20} />
-                <span className="hidden text-xs sm:inline">Thread</span>
+                <MessageSquare size={20} />
+                <span className="hidden text-xs sm:inline">Feedback</span>
               </button>
               <div className="absolute bottom-full right-0 z-10 mb-2 hidden group-hover:block">
                 <div className="whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-xs text-white">
-                  <div className="mb-1 font-semibold">Optimize Thread</div>
-                  <div>AI-powered thread splitting</div>
+                  <div className="mb-1 font-semibold">Writing Feedback</div>
+                  <div>Get AI feedback on your post</div>
                   <div className="mt-1 text-gray-300">
-                    Intelligently splits long text
+                    Check clarity, tone, and engagement
                   </div>
                   <div className="absolute bottom-0 right-4 h-2 w-2 translate-y-1/2 rotate-45 transform bg-gray-900"></div>
                 </div>
               </div>
             </div>
-
-            {enableWritingFeedback && (
-              <div className="group relative">
-                <button
-                  className={`bsky-button-secondary flex items-center gap-2 ${isLoadingFeedback ? "animate-pulse" : ""}`}
-                  onClick={handleWritingFeedback}
-                  disabled={isPosting || isLoadingFeedback || !text.trim()}
-                  aria-label="Get writing feedback"
-                >
-                  <MessageSquare size={20} />
-                  <span className="hidden text-xs sm:inline">Feedback</span>
-                </button>
-                <div className="absolute bottom-full right-0 z-10 mb-2 hidden group-hover:block">
-                  <div className="whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-xs text-white">
-                    <div className="mb-1 font-semibold">Writing Feedback</div>
-                    <div>Get AI feedback on your post</div>
-                    <div className="mt-1 text-gray-300">
-                      Check clarity, tone, and engagement
-                    </div>
-                    <div className="absolute bottom-0 right-4 h-2 w-2 translate-y-1/2 rotate-45 transform bg-gray-900"></div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           <input

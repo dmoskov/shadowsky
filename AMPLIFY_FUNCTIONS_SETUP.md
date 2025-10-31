@@ -26,6 +26,7 @@ amplify/
 ### 1. Enable Amplify Compute
 
 In the Amplify Console:
+
 1. Go to your app → **Hosting → Compute**
 2. Enable **Server-side rendering and Compute** (if not already enabled)
 3. This allows the `compute:` section in `amplify.yml` to work
@@ -41,6 +42,7 @@ In the Amplify Console:
 ### 3. Deploy
 
 Push your changes:
+
 ```bash
 git add .
 git commit -m "Add Amplify function for alt-text generation"
@@ -48,6 +50,7 @@ git push
 ```
 
 Amplify will:
+
 1. Build your frontend
 2. Deploy the serverless function
 3. Route `/api/generate-alt-text` to the function
@@ -55,6 +58,7 @@ Amplify will:
 ### 4. Test
 
 Once deployed, test in production:
+
 1. Open browser DevTools → Console
 2. Upload an image in composer
 3. Click "Generate alt text"
@@ -79,6 +83,7 @@ The Vite dev server (port 5174) proxies `/api/*` requests to the Express server 
 ## How It Works
 
 ### Development Mode
+
 ```
 Browser → http://localhost:5174/api/generate-alt-text
          ↓ (Vite proxy)
@@ -86,6 +91,7 @@ Browser → http://localhost:5174/api/generate-alt-text
 ```
 
 ### Production Mode
+
 ```
 Browser → https://shadowsky.io/api/generate-alt-text
          ↓ (Amplify routing)
@@ -106,21 +112,25 @@ A: Yes, but it requires separate deployment. Amplify Functions are easier for yo
 ## Troubleshooting
 
 ### Function not deploying
+
 - Check Amplify build logs for errors in the Compute section
 - Verify `amplify.yml` syntax is correct
 - Ensure `amplify/functions/` directory exists in your repo
 
 ### ANTHROPIC_API_KEY not found
+
 - Check environment variables in Amplify Console
 - Make sure it's marked as a secret
 - Redeploy after adding the variable
 
 ### 404 on /api/generate-alt-text
+
 - Verify Amplify Compute is enabled
 - Check that the function deployed successfully in build logs
 - Try clearing cache and redeploying
 
 ### Still getting CORS errors
+
 - Remove `api.shadowsky.io` from Amplify custom domains if you added it
 - The function should be on the same domain as your frontend
 - Check browser console for the actual error message
@@ -128,6 +138,7 @@ A: Yes, but it requires separate deployment. Amplify Functions are easier for yo
 ## Cost
 
 Amplify Functions pricing:
+
 - **Free tier:** 1 million requests/month, 400,000 GB-seconds compute
 - **After free tier:** $0.20 per million requests
 

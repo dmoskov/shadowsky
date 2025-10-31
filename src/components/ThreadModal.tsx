@@ -7,6 +7,7 @@ import ReactDOM from "react-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useModalSwipeBack } from "../hooks/useModalSwipeBack";
 import { VideoUploadService } from "../services/atproto/video-upload";
+import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { EnhancedComposer } from "./EnhancedComposer";
 import { ThreadViewer } from "./ThreadViewer";
 
@@ -254,7 +255,7 @@ export function ThreadModal({
           media
             .filter((m) => m.type === "image")
             .map(async (img) => {
-              const response = await agent.uploadBlob(img.file, {
+              const response = await uploadBlobWithRetry(agent, img.file, {
                 encoding: "image/jpeg",
               });
               return {
@@ -359,7 +360,7 @@ export function ThreadModal({
           media
             .filter((m) => m.type === "image")
             .map(async (img) => {
-              const response = await agent.uploadBlob(img.file, {
+              const response = await uploadBlobWithRetry(agent, img.file, {
                 encoding: "image/jpeg",
               });
               return {

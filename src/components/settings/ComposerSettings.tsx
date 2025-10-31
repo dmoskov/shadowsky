@@ -12,7 +12,6 @@ export const ComposerSettings: React.FC = () => {
   const [aiSettings, setAiSettings] = useState<AISettings>({
     autoGenerateAltText: false,
     enableHashtagSuggestions: false,
-    enableWritingFeedback: false,
   });
   const [saved, setSaved] = useState(false);
 

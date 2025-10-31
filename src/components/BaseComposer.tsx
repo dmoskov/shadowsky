@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { generateAltText } from "../services/anthropic";
 import { debug } from "../shared/debug";
 import { compressImage, isCompressibleImage } from "../utils/image-compression";
+import { safeCreateObjectURL, safeRevokeObjectURL } from "../utils/retry";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
 
@@ -175,8 +176,13 @@ export function BaseComposer({
         file = processedFile;
       }
 
-      // Create preview
-      const preview = URL.createObjectURL(file);
+      // Create preview with error handling
+      const preview = safeCreateObjectURL(file);
+      if (!preview) {
+        setError("Failed to create preview for media file");
+        return;
+      }
+
       const newMedia: UploadedMedia = {
         id: Date.now().toString(),
         file: file,
@@ -198,7 +204,7 @@ export function BaseComposer({
     setMedia((prev) => {
       const item = prev.find((m) => m.id === id);
       if (item) {
-        URL.revokeObjectURL(item.preview);
+        safeRevokeObjectURL(item.preview);
       }
       return prev.filter((m) => m.id !== id);
     });
@@ -226,7 +232,9 @@ export function BaseComposer({
             reject(new Error("Failed to read file"));
           }
         };
-        reader.onerror = reject;
+        reader.onerror = () => {
+          reject(reader.error || new Error("FileReader error"));
+        };
         reader.readAsDataURL(item.file);
       });
 
@@ -234,7 +242,25 @@ export function BaseComposer({
       updateAltText(id, alt);
     } catch (error) {
       debug.error("Failed to generate alt text:", error);
-      setError("Failed to generate alt text");
+      // Provide more specific error message
+      if (error instanceof Error && error.message.includes("rate limit")) {
+        setError(
+          "Alt text generation rate limit reached. Please try again later.",
+        );
+      } else if (
+        error instanceof Error &&
+        error.message.includes("temporarily unavailable")
+      ) {
+        setError(
+          "Alt text service is temporarily unavailable. Please try again later.",
+        );
+      } else {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Failed to generate alt text. Please try again.",
+        );
+      }
     } finally {
       setGeneratingAlt(null);
     }

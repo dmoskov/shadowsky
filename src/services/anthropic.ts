@@ -1,6 +1,10 @@
-import type { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
-import { ProfileService } from "../shared/services";
+import type { BskyAgent } from "@atproto/api";
 import { createLogger } from "../utils/logger";
+import {
+  API_RETRY_OPTIONS,
+  blobUrlToDataUrl,
+  fetchWithRetry,
+} from "../utils/retry";
 import { analytics } from "./analytics";
 
 const logger = createLogger("AnthropicService");
@@ -18,34 +22,32 @@ export interface ToneAdjustmentResult {
   tone: ToneOption;
 }
 
-const TONE_DESCRIPTIONS: Record<ToneOption, string> = {
-  professional: "formal, clear, and business-appropriate language",
-  casual: "relaxed, conversational, and friendly language",
-  humorous:
-    "witty, playful, and entertaining language while maintaining the core message",
-  informative: "educational, fact-focused, and explanatory language",
-  inspirational: "motivating, uplifting, and encouraging language",
-};
+// Tone descriptions for future use
+// const TONE_DESCRIPTIONS: Record<ToneOption, string> = {
+//   professional: "formal, clear, and business-appropriate language",
+//   casual: "relaxed, conversational, and friendly language",
+//   humorous:
+//     "witty, playful, and entertaining language while maintaining the core message",
+//   informative: "educational, fact-focused, and explanatory language",
+//   inspirational: "motivating, uplifting, and encouraging language",
+// };
 
 export async function adjustTone(
   text: string,
   tone: ToneOption,
 ): Promise<ToneAdjustmentResult> {
   try {
-    const response = await fetch("/api/adjust-tone", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetchWithRetry(
+      "/api/adjust-tone",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text, tone }),
       },
-      body: JSON.stringify({ text, tone }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const errorMessage =
-        errorData?.error || `Server returned ${response.status}`;
-      throw new Error(errorMessage);
-    }
+      API_RETRY_OPTIONS,
+    );
 
     const data = await response.json();
     return data;
@@ -83,20 +85,17 @@ export async function optimizeThread(
   maxCharsPerPost: number = 300,
 ): Promise<ThreadOptimizationResult> {
   try {
-    const response = await fetch("/api/optimize-thread", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetchWithRetry(
+      "/api/optimize-thread",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text, maxCharsPerPost }),
       },
-      body: JSON.stringify({ text, maxCharsPerPost }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const errorMessage =
-        errorData?.error || `Server returned ${response.status}`;
-      throw new Error(errorMessage);
-    }
+      API_RETRY_OPTIONS,
+    );
 
     const data = await response.json();
     return data;
@@ -132,20 +131,17 @@ export async function suggestHashtags(
   existingTags?: string[],
 ): Promise<HashtagResult> {
   try {
-    const response = await fetch("/api/suggest-hashtags", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetchWithRetry(
+      "/api/suggest-hashtags",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text, existingTags }),
       },
-      body: JSON.stringify({ text, existingTags }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const errorMessage =
-        errorData?.error || `Server returned ${response.status}`;
-      throw new Error(errorMessage);
-    }
+      API_RETRY_OPTIONS,
+    );
 
     const data = await response.json();
     return data;
@@ -184,20 +180,17 @@ export async function getWritingFeedback(
   text: string,
 ): Promise<WritingFeedback> {
   try {
-    const response = await fetch("/api/writing-feedback", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetchWithRetry(
+      "/api/writing-feedback",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text }),
       },
-      body: JSON.stringify({ text }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const errorMessage =
-        errorData?.error || `Server returned ${response.status}`;
-      throw new Error(errorMessage);
-    }
+      API_RETRY_OPTIONS,
+    );
 
     const data = await response.json();
     return data;
@@ -224,14 +217,8 @@ export async function generateAltText(imageUrl: string): Promise<string> {
     if (imageUrl.startsWith("blob:")) {
       logger.log("Converting blob URL to data URL for alt text generation");
       try {
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-        processedImageUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
+        // Use retry-enabled blob URL conversion
+        processedImageUrl = await blobUrlToDataUrl(imageUrl);
         logger.log("Blob URL converted to data URL successfully");
       } catch (conversionError) {
         logger.error(
@@ -255,23 +242,19 @@ export async function generateAltText(imageUrl: string): Promise<string> {
 
     logger.log("Generating alt text via backend:", { endpoint });
 
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetchWithRetry(
+      endpoint,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       },
-      body: JSON.stringify(payload),
-    });
+      API_RETRY_OPTIONS,
+    );
 
     logger.log("Alt text response status:", response.status);
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const errorMessage =
-        errorData?.error || `Server returned ${response.status}`;
-      logger.error("Alt text generation failed:", errorMessage, errorData);
-      throw new Error(errorMessage);
-    }
 
     const data = await response.json();
     logger.log("Alt text response:", data);
@@ -324,147 +307,28 @@ export interface StyleMatchedWritingFeedback extends WritingFeedback {
 
 export async function getStyleMatchedWritingFeedback(
   text: string,
-  agent: BskyAgent,
+  _agent: BskyAgent,
 ): Promise<StyleMatchedWritingFeedback> {
   try {
-    if (!import.meta.env.VITE_ANTHROPIC_API_KEY) {
-      throw new Error("Anthropic API key not configured");
-    }
+    // For now, use the basic writing feedback endpoint
+    // Style matching will be added in a future update
+    const basicFeedback = await getWritingFeedback(text);
 
-    // Get current user's handle
-    const session = agent.session;
-    if (!session?.handle) {
-      throw new Error("User not authenticated");
-    }
+    // Add default style analysis
+    const styleMatchedFeedback: StyleMatchedWritingFeedback = {
+      ...basicFeedback,
+      styleAnalysis: {
+        userStyleSummary:
+          "Unable to analyze style - requires additional implementation",
+        matchesStyle: true,
+        styleNotes: [],
+      },
+    };
 
-    logger.log("Fetching recent posts for style matching...");
-
-    // Fetch user's recent posts
-    const profileService = new ProfileService(agent);
-    const authorFeed = await profileService.getAuthorFeed(
-      session.handle,
-      40, // Get last 40 posts
-      undefined,
-      "posts_no_replies", // Only get original posts, not replies
-    );
-
-    // Extract text content from posts
-    const userPosts: string[] = [];
-    authorFeed.feed.forEach((item: AppBskyFeedDefs.FeedViewPost) => {
-      if (
-        item.post.record &&
-        typeof item.post.record === "object" &&
-        "text" in item.post.record
-      ) {
-        const postText = (item.post.record as { text: string }).text;
-        if (postText && postText.trim()) {
-          userPosts.push(postText);
-        }
-      }
-    });
-
-    logger.log(`Fetched ${userPosts.length} posts for style analysis`);
-
-    // Create a sample of recent posts for context (limit to avoid token limits)
-    const recentPostsSample = userPosts.slice(0, 20).join("\n---\n");
-
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
-      max_tokens: 2000,
-      messages: [
-        {
-          role: "user",
-          content: `Analyze this social media post and provide helpful feedback with improved versions, taking into account the user's writing style.
-
-User's recent posts (for style reference):
-${recentPostsSample}
-
-New post to analyze: "${text}"
-
-Provide a JSON response with:
-1. assessment: 
-   - summary: brief quality assessment (1-2 sentences)
-   - hasIssues: boolean indicating if there are typos or issues
-2. correctedVersion:
-   - text: the post with ONLY typos, grammar, and spelling fixed (minimal changes)
-   - changes: array of strings describing corrections (e.g. ["Fixed spelling of 'spelling'", "Corrected grammar"]) - empty array if none needed
-3. enhancedVersion:
-   - text: a slightly improved version that maintains their writing style
-   - improvements: array of strings describing what was enhanced
-4. styleAnalysis:
-   - userStyleSummary: brief description of their typical writing style
-   - matchesStyle: boolean indicating if this post matches their usual style
-   - styleNotes: array of strings with observations about style consistency
-
-Keep corrections minimal and enhancements subtle. The enhanced version should feel natural to their voice.
-
-Example JSON structure:
-{
-  "assessment": { "summary": "...", "hasIssues": true },
-  "correctedVersion": { "text": "...", "changes": ["Fixed X", "Corrected Y"] },
-  "enhancedVersion": { "text": "...", "improvements": ["Made more concise"] },
-  "styleAnalysis": { "userStyleSummary": "...", "matchesStyle": true, "styleNotes": ["Note 1", "Note 2"] }
-}
-
-IMPORTANT: Your response MUST be valid JSON only. Rules:
-1. Use proper JSON arrays with strings only (no arrow notation like "a" -> "b")
-2. Ensure all arrays and objects are properly closed with ] and }
-3. Double-check that your JSON is valid before responding
-4. Do not include any text before or after the JSON object
-5. Start directly with { and end with }`,
-        },
-      ],
-    });
-
-    const content = response.content[0];
-    if (content.type === "text") {
-      try {
-        // Log the raw response for debugging
-        logger.log("Raw API response:", content.text);
-
-        // Try to extract JSON from the response
-        const jsonMatch = content.text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const result = JSON.parse(jsonMatch[0]);
-          return result;
-        } else {
-          throw new Error("No JSON object found in response");
-        }
-      } catch (parseError) {
-        logger.error(
-          "Failed to parse style-matched feedback response:",
-          parseError,
-        );
-        logger.error("Raw response:", content.text);
-        throw new Error(
-          "AI service returned invalid response format. Please try again.",
-        );
-      }
-    }
-
-    throw new Error("Unexpected response format from AI service");
+    return styleMatchedFeedback;
   } catch (error) {
     logger.error("Error getting style-matched writing feedback:", error);
     analytics.trackError(error as Error, "style_matched_writing_feedback");
-
-    // Provide specific error messages
-    if (error instanceof Error) {
-      if (error.message.includes("User not authenticated")) {
-        throw new Error("Please sign in to use writing feedback");
-      } else if (error.message.includes("401")) {
-        throw new Error(
-          "AI service authentication failed. Please check API key configuration.",
-        );
-      } else if (error.message.includes("429")) {
-        throw new Error(
-          "AI service rate limit exceeded. Please try again later.",
-        );
-      } else if (error.message.includes("API key not configured")) {
-        throw new Error("AI service not configured. Please contact support.");
-      }
-    }
-
-    // Re-throw the error so it's shown in the UI
     throw error;
   }
 }

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Camera, Upload } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
+import { uploadBlobWithRetry } from "../../utils/blob-upload";
 import { proxifyBskyImage } from "../../utils/image-proxy";
 
 export const AccountSettings: React.FC = () => {
@@ -61,9 +62,13 @@ export const AccountSettings: React.FC = () => {
     if (!agent) throw new Error("No agent available");
 
     const imageBytes = await file.arrayBuffer();
-    const response = await agent.uploadBlob(new Uint8Array(imageBytes), {
-      encoding: file.type,
-    });
+    const response = await uploadBlobWithRetry(
+      agent,
+      new Uint8Array(imageBytes),
+      {
+        encoding: file.type,
+      },
+    );
 
     return response.data;
   };

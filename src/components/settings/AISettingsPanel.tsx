@@ -4,7 +4,6 @@ import React from "react";
 export interface AISettings {
   autoGenerateAltText: boolean;
   enableHashtagSuggestions: boolean;
-  enableWritingFeedback: boolean;
 }
 
 interface AISettingsPanelProps {
@@ -95,33 +94,6 @@ export const AISettingsPanel: React.FC<AISettingsPanelProps> = ({
             checked={settings.enableHashtagSuggestions}
             onChange={(e) =>
               handleChange("enableHashtagSuggestions", e.target.checked)
-            }
-            className="ml-4 h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-2 focus:ring-blue-500"
-          />
-        </label>
-
-        <label className="flex items-center justify-between">
-          <div className="flex-1">
-            <div
-              className={compact ? "text-sm font-medium" : "font-medium"}
-              style={{ color: "var(--bsky-text-primary)" }}
-            >
-              Writing Feedback
-            </div>
-            {!compact && (
-              <div
-                className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
-              >
-                Get AI feedback on clarity, tone, and engagement before posting
-              </div>
-            )}
-          </div>
-          <input
-            type="checkbox"
-            checked={settings.enableWritingFeedback}
-            onChange={(e) =>
-              handleChange("enableWritingFeedback", e.target.checked)
             }
             className="ml-4 h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-2 focus:ring-blue-500"
           />

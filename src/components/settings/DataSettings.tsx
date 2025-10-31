@@ -1053,14 +1053,6 @@ export const DataSettings: React.FC = () => {
                             : "false"}
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <span>enableWritingFeedback:</span>
-                        <span className="font-medium">
-                          {appPreferences.aiSettings.enableWritingFeedback
-                            ? "true"
-                            : "false"}
-                        </span>
-                      </div>
                     </div>
                   </div>
                 )}

@@ -1,5 +1,6 @@
 import { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
 import { createLogger } from "../../utils/logger";
+import { AT_PROTO_RETRY_OPTIONS, retryWithBackoff } from "../../utils/retry";
 import { ShadowSkyBookmarks } from "../app-preferences-service";
 import {
   AT_PROTO_COLLECTIONS,
@@ -51,12 +52,16 @@ export class SingletonCustomRecordBackend implements BookmarkStorageBackend {
         throw new Error("No DID available");
       }
 
-      // Try to get the singleton bookmarks record
-      const response = await this.agent.api.com.atproto.repo.getRecord({
-        repo: did,
-        collection: AT_PROTO_COLLECTIONS.BOOKMARKS,
-        rkey: AT_PROTO_RKEYS.BOOKMARKS,
-      });
+      // Try to get the singleton bookmarks record with retry
+      const response = await retryWithBackoff(
+        () =>
+          this.agent.api.com.atproto.repo.getRecord({
+            repo: did,
+            collection: AT_PROTO_COLLECTIONS.BOOKMARKS,
+            rkey: AT_PROTO_RKEYS.BOOKMARKS,
+          }),
+        AT_PROTO_RETRY_OPTIONS,
+      );
 
       if (response.data.value) {
         const bookmarksData = response.data
@@ -187,21 +192,29 @@ export class SingletonCustomRecordBackend implements BookmarkStorageBackend {
       };
 
       if (this.recordUri) {
-        // Update existing record
-        await this.agent.api.com.atproto.repo.putRecord({
-          repo: did,
-          collection: AT_PROTO_COLLECTIONS.BOOKMARKS,
-          rkey: AT_PROTO_RKEYS.BOOKMARKS,
-          record: bookmarksData as any,
-        });
+        // Update existing record with retry
+        await retryWithBackoff(
+          () =>
+            this.agent.api.com.atproto.repo.putRecord({
+              repo: did,
+              collection: AT_PROTO_COLLECTIONS.BOOKMARKS,
+              rkey: AT_PROTO_RKEYS.BOOKMARKS,
+              record: bookmarksData as any,
+            }),
+          AT_PROTO_RETRY_OPTIONS,
+        );
       } else {
-        // Create new record
-        const response = await this.agent.api.com.atproto.repo.createRecord({
-          repo: did,
-          collection: AT_PROTO_COLLECTIONS.BOOKMARKS,
-          rkey: AT_PROTO_RKEYS.BOOKMARKS,
-          record: bookmarksData as any,
-        });
+        // Create new record with retry
+        const response = await retryWithBackoff(
+          () =>
+            this.agent.api.com.atproto.repo.createRecord({
+              repo: did,
+              collection: AT_PROTO_COLLECTIONS.BOOKMARKS,
+              rkey: AT_PROTO_RKEYS.BOOKMARKS,
+              record: bookmarksData as any,
+            }),
+          AT_PROTO_RETRY_OPTIONS,
+        );
         this.recordUri = response.data.uri;
       }
 
