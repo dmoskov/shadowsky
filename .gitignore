@@ -59,3 +59,8 @@ test-results/
 .wireit/
 *.tsbuildinfo
 .eslintcache
+
+# amplify
+.amplify
+amplify_outputs*
+amplifyconfiguration*
