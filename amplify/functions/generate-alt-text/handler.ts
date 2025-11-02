@@ -1,5 +1,3 @@
-import type { APIGatewayProxyHandler } from "aws-lambda";
-
 /**
  * Retry a function with exponential backoff
  */
@@ -43,7 +41,7 @@ async function retryWithBackoff<T>(
   throw lastError;
 }
 
-export const handler: APIGatewayProxyHandler = async (event) => {
+export const handler = async (event: any) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type,Authorization",
@@ -51,7 +49,9 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     "Content-Type": "application/json",
   };
 
-  if (event.requestContext.http.method === "OPTIONS") {
+  // Handle OPTIONS request for CORS
+  const method = event.requestContext?.http?.method || event.httpMethod;
+  if (method === "OPTIONS") {
     return {
       statusCode: 200,
       headers,
