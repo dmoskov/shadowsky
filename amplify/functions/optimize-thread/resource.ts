@@ -1,7 +1,7 @@
 import { defineFunction, secret } from "@aws-amplify/backend";
 
-export const generateAltText = defineFunction({
-  name: "generate-alt-text",
+export const optimizeThread = defineFunction({
+  name: "optimize-thread",
   entry: "./handler.ts",
   environment: {
     ANTHROPIC_API_KEY: secret("ANTHROPIC_API_KEY"),

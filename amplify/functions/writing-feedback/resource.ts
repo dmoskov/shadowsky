@@ -6,4 +6,6 @@ export const writingFeedback = defineFunction({
   environment: {
     ANTHROPIC_API_KEY: secret("ANTHROPIC_API_KEY"),
   },
+  timeoutSeconds: 60,
+  memoryMB: 512,
 });

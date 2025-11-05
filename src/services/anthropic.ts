@@ -1,4 +1,5 @@
 import type { BskyAgent } from "@atproto/api";
+import { getApiBaseUrl } from "../config/amplify";
 import { createLogger } from "../utils/logger";
 import {
   API_RETRY_OPTIONS,
@@ -37,8 +38,9 @@ export async function adjustTone(
   tone: ToneOption,
 ): Promise<ToneAdjustmentResult> {
   try {
+    const apiBaseUrl = getApiBaseUrl();
     const response = await fetchWithRetry(
-      "/api/adjust-tone",
+      `${apiBaseUrl}/api/adjust-tone`,
       {
         method: "POST",
         headers: {
@@ -85,8 +87,9 @@ export async function optimizeThread(
   maxCharsPerPost: number = 300,
 ): Promise<ThreadOptimizationResult> {
   try {
+    const apiBaseUrl = getApiBaseUrl();
     const response = await fetchWithRetry(
-      "/api/optimize-thread",
+      `${apiBaseUrl}/api/optimize-thread`,
       {
         method: "POST",
         headers: {
@@ -131,8 +134,9 @@ export async function suggestHashtags(
   existingTags?: string[],
 ): Promise<HashtagResult> {
   try {
+    const apiBaseUrl = getApiBaseUrl();
     const response = await fetchWithRetry(
-      "/api/suggest-hashtags",
+      `${apiBaseUrl}/api/suggest-hashtags`,
       {
         method: "POST",
         headers: {
@@ -180,8 +184,9 @@ export async function getWritingFeedback(
   text: string,
 ): Promise<WritingFeedback> {
   try {
+    const apiBaseUrl = getApiBaseUrl();
     const response = await fetchWithRetry(
-      "/api/writing-feedback",
+      `${apiBaseUrl}/api/writing-feedback`,
       {
         method: "POST",
         headers: {
@@ -233,9 +238,10 @@ export async function generateAltText(imageUrl: string): Promise<string> {
     // This keeps the API key secure on the server
     logger.log("Generating alt text via backend API");
 
-    // In production, use Amplify Function (same origin)
+    // In production, use Amplify Function (via API Gateway)
     // In development, proxy through Vite dev server to local Express server
-    const endpoint = "/api/generate-alt-text";
+    const apiBaseUrl = getApiBaseUrl();
+    const endpoint = `${apiBaseUrl}/api/generate-alt-text`;
     const payload = {
       imageUrl: processedImageUrl,
     };

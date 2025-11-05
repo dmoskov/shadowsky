@@ -16,16 +16,6 @@ frontend:
       commands:
         # Create a 404.html that redirects to index.html for client-side routing
         - cp dist/index.html dist/404.html
-        # Create _redirects file to handle trailing slashes for API endpoints
-        - |
-          cat > dist/_redirects << 'EOF'
-          # Redirect trailing slashes on API endpoints
-          /api/writing-feedback/ /api/writing-feedback 301
-          /api/generate-alt-text/ /api/generate-alt-text 301
-          /api/adjust-tone/ /api/adjust-tone 301
-          /api/optimize-thread/ /api/optimize-thread 301
-          /api/suggest-hashtags/ /api/suggest-hashtags 301
-          EOF
   artifacts:
     baseDirectory: dist
     files:
@@ -35,22 +25,6 @@ frontend:
       - node_modules/**/*
 # Redirect and rewrite rules
 redirects:
-  # Remove trailing slashes from API endpoints
-  - source: /api/writing-feedback/
-    target: /api/writing-feedback
-    status: 301
-  - source: /api/generate-alt-text/
-    target: /api/generate-alt-text
-    status: 301
-  - source: /api/adjust-tone/
-    target: /api/adjust-tone
-    status: 301
-  - source: /api/optimize-thread/
-    target: /api/optimize-thread
-    status: 301
-  - source: /api/suggest-hashtags/
-    target: /api/suggest-hashtags
-    status: 301
   # SPA fallback - serve index.html for all other routes
   - source: /<*>
     target: /index.html
@@ -64,48 +38,3 @@ customHeaders:
         value: "nosniff"
       - key: "Strict-Transport-Security"
         value: "max-age=31536000; includeSubDomains"
-
-# Amplify Compute (serverless functions)
-compute:
-  - identifier: generate-alt-text
-    path: /api/generate-alt-text
-    runtime: nodejs20.x
-    handler: handler
-    entrypoint: amplify/functions/generate-alt-text
-    environment:
-      variables:
-        NODE_ENV: production
-      secrets:
-        - ANTHROPIC_API_KEY
-  - identifier: adjust-tone
-    path: /api/adjust-tone
-    runtime: nodejs20.x
-    handler: handler
-    entrypoint: amplify/functions/adjust-tone
-    environment:
-      secrets:
-        - ANTHROPIC_API_KEY
-  - identifier: optimize-thread
-    path: /api/optimize-thread
-    runtime: nodejs20.x
-    handler: handler
-    entrypoint: amplify/functions/optimize-thread
-    environment:
-      secrets:
-        - ANTHROPIC_API_KEY
-  - identifier: suggest-hashtags
-    path: /api/suggest-hashtags
-    runtime: nodejs20.x
-    handler: handler
-    entrypoint: amplify/functions/suggest-hashtags
-    environment:
-      secrets:
-        - ANTHROPIC_API_KEY
-  - identifier: writing-feedback
-    path: /api/writing-feedback
-    runtime: nodejs20.x
-    handler: handler
-    entrypoint: amplify/functions/writing-feedback
-    environment:
-      secrets:
-        - ANTHROPIC_API_KEY

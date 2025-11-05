@@ -1,20 +1,14 @@
 // Helper function to strip markdown code fences from JSON responses
 function cleanJsonResponse(text: string): string {
-  // Remove markdown code fences if present
   let cleaned = text.trim();
-
-  // Remove ```json or ``` at the start
   if (cleaned.startsWith('```json')) {
     cleaned = cleaned.slice(7);
   } else if (cleaned.startsWith('```')) {
     cleaned = cleaned.slice(3);
   }
-
-  // Remove ``` at the end
   if (cleaned.endsWith('```')) {
     cleaned = cleaned.slice(0, -3);
   }
-
   return cleaned.trim();
 }
 
@@ -34,13 +28,13 @@ export const handler = async (event: any) => {
 
   try {
     const body = JSON.parse(event.body || "{}");
-    const { text } = body;
+    const { text, tone } = body;
 
-    if (!text) {
+    if (!text || !tone) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: "Missing text" }),
+        body: JSON.stringify({ error: "Missing text or tone" }),
       };
     }
 
@@ -53,6 +47,14 @@ export const handler = async (event: any) => {
       };
     }
 
+    const toneDescriptions: Record<string, string> = {
+      professional: "formal, clear, and business-appropriate language",
+      casual: "relaxed, conversational, and friendly language",
+      humorous: "witty, playful, and entertaining language while maintaining the core message",
+      informative: "educational, fact-focused, and explanatory language",
+      inspirational: "motivating, uplifting, and encouraging language",
+    };
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -62,40 +64,28 @@ export const handler = async (event: any) => {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-5-20250929",
-        max_tokens: 1500,
+        max_tokens: 1000,
         messages: [
           {
             role: "user",
-            content: `Analyze this social media post and provide helpful feedback with improved versions.
+            content: `Adjust the tone of this social media post to be ${toneDescriptions[tone]}.
 
-Post: "${text}"
+Original post: "${text}"
 
 Provide a JSON response with:
-1. assessment:
-   - summary: brief quality assessment (1-2 sentences)
-   - hasIssues: boolean indicating if there are typos or issues
-2. correctedVersion:
-   - text: the post with ONLY typos, grammar, and spelling fixed (minimal changes)
-   - changes: array of strings describing corrections (e.g. ["Fixed spelling of 'spelling'", "Corrected grammar"]) - empty array if none needed
-3. enhancedVersion:
-   - text: a slightly improved version (just a little better - keep the original voice and style)
-   - improvements: array of strings describing what was enhanced
-
-Keep corrections minimal and enhancements subtle. Preserve the author's voice.
-
-Example JSON structure:
 {
-  "assessment": { "summary": "...", "hasIssues": true },
-  "correctedVersion": { "text": "...", "changes": ["Fixed X", "Corrected Y"] },
-  "enhancedVersion": { "text": "...", "improvements": ["Made more concise", "Enhanced clarity"] }
+  "adjustedText": "the rewritten post with the new tone",
+  "originalText": "${text}",
+  "tone": "${tone}"
 }
 
-IMPORTANT: Your response MUST be valid JSON only. Rules:
-1. Use proper JSON arrays with strings only (no arrow notation like "a" -> "b")
-2. Ensure all arrays and objects are properly closed with ] and }
-3. Double-check that your JSON is valid before responding
-4. Do not include any text before or after the JSON object
-5. Start directly with { and end with }`,
+Important:
+- Keep the core message and meaning the same
+- Match the character count as closely as possible
+- Preserve any hashtags, mentions, or links
+- Make the changes subtle and natural
+
+Your response MUST be valid JSON only. Start with { and end with }.`,
           },
         ],
       }),
@@ -120,7 +110,7 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
       body: JSON.stringify(result),
     };
   } catch (error) {
-    console.error("Error getting writing feedback:", error);
+    console.error("Error adjusting tone:", error);
     return {
       statusCode: 500,
       headers,
