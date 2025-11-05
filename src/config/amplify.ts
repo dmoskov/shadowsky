@@ -41,8 +41,10 @@ export function getApiBaseUrl(): string {
   if (customApi) {
     const apiName = Object.keys(customApi)[0];
     if (apiName && customApi[apiName]?.endpoint) {
-      // Return the base URL with /prod/api path
-      return `${customApi[apiName].endpoint}prod`;
+      // Endpoint already includes the stage (e.g., https://xxx.execute-api.us-west-1.amazonaws.com/prod/)
+      // Remove trailing slash if present since our API paths start with /
+      const endpoint = customApi[apiName].endpoint;
+      return endpoint.endsWith('/') ? endpoint.slice(0, -1) : endpoint;
     }
   }
 
