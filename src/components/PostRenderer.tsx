@@ -23,6 +23,133 @@ import { ProgressiveImage } from "./ui/ProgressiveImage";
 
 const logger = createLogger("PostRenderer");
 
+// Component to detect and render Bluesky URLs as embedded quotes
+const BskyUrlEmbed: React.FC<{
+  text: string;
+  onQuoteClick?: (uri: string) => void;
+}> = ({ text, onQuoteClick }) => {
+  const [quotedPost, setQuotedPost] = React.useState<AppBskyFeedDefs.PostView | null>(null);
+  const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    const fetchQuotedPost = async () => {
+      // Check if text contains a Bluesky URL
+      const bskyUrlMatch = text.match(/https?:\/\/bsky\.app\/profile\/[^\s]+\/post\/[^\s]+/);
+      if (!bskyUrlMatch) return;
+
+      const url = bskyUrlMatch[0];
+      const parsed = parseBskyUrl(url);
+      if (!parsed || !parsed.postId) return;
+
+      setLoading(true);
+      try {
+        const { atProtoClient } = await import("../services/atproto");
+        const agent = atProtoClient.agent;
+        if (!agent) return;
+
+        // Resolve handle to DID if needed
+        let did = parsed.did;
+        if (!did && parsed.handle) {
+          try {
+            const profileResponse = await agent.getProfile({ actor: parsed.handle });
+            did = profileResponse.data.did;
+          } catch (error) {
+            logger.error("Failed to resolve handle:", error);
+            return;
+          }
+        }
+
+        if (!did) return;
+
+        // Construct AT URI with DID
+        const uri = `at://${did}/app.bsky.feed.post/${parsed.postId}`;
+        const response = await agent.app.bsky.feed.getPosts({ uris: [uri] });
+
+        if (response.data.posts.length > 0) {
+          setQuotedPost(response.data.posts[0]);
+        }
+      } catch (error) {
+        logger.error("Failed to fetch quoted post from URL:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuotedPost();
+  }, [text]);
+
+  if (loading) {
+    return (
+      <div className="mt-2 rounded-lg border p-4" style={{ borderColor: "var(--bsky-border-primary)" }}>
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--bsky-text-secondary)" }}>
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500" />
+          <span>Loading quoted post...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!quotedPost) return null;
+
+  const record = quotedPost.record as any;
+  return (
+    <div
+      className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+      style={{ borderColor: "var(--bsky-border-primary)" }}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (onQuoteClick && quotedPost.uri) {
+          onQuoteClick(quotedPost.uri);
+        }
+      }}
+    >
+      <div
+        className="flex items-center gap-2 px-3 py-1.5 text-xs"
+        style={{
+          backgroundColor: "var(--bsky-bg-tertiary)",
+          borderBottom: "1px solid var(--bsky-border-primary)",
+          color: "var(--bsky-text-secondary)",
+        }}
+      >
+        <MessageCircle size={12} />
+        <span>Quoted post</span>
+      </div>
+      <div className="p-3">
+        <div className="quote-author mb-2 flex items-center gap-2">
+          <img
+            src={proxifyBskyImage(quotedPost.author.avatar) || "/default-avatar.svg"}
+            alt=""
+            className="h-5 w-5 rounded-full"
+          />
+          <span className="text-sm font-semibold">
+            {quotedPost.author.displayName || quotedPost.author.handle}
+          </span>
+          <span className="text-sm" style={{ color: "var(--bsky-text-secondary)" }}>
+            @{quotedPost.author.handle}
+          </span>
+        </div>
+        <p className="text-sm">{record?.text || ""}</p>
+        {quotedPost.embed && (
+          <div className="mt-2">
+            {(quotedPost.embed as any).images && (
+              <div className="grid grid-cols-2 gap-1">
+                {(quotedPost.embed as any).images.slice(0, 4).map((img: any, i: number) => (
+                  <img
+                    key={i}
+                    src={proxifyBskyImage(img.thumb) || ""}
+                    alt={img.alt || ""}
+                    className="h-32 w-full rounded object-cover"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 interface PostRendererProps {
   post: AppBskyFeedDefs.PostView;
   reason?: AppBskyFeedDefs.FeedViewPost["reason"];
@@ -113,6 +240,18 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
 
   const renderEmbed = (embed: any) => {
     if (!embed) return null;
+
+    // Record with media (quoted post with images/video)
+    if (embed.$type === "app.bsky.embed.recordWithMedia#view") {
+      return (
+        <div className="mt-2 space-y-2">
+          {/* Render the media first */}
+          {embed.media && renderEmbed(embed.media)}
+          {/* Then render the quoted post */}
+          {embed.record && renderEmbed(embed.record)}
+        </div>
+      );
+    }
 
     // Images
     if (embed.images) {
@@ -218,8 +357,108 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
       );
     }
 
-    // Quoted post
-    if (embed.record) {
+    // Quoted post (app.bsky.embed.record#view)
+    // Handle both typed and untyped record embeds
+    if ((embed.$type === "app.bsky.embed.record#view" || !embed.$type) && embed.record && embed.record.$type === "app.bsky.embed.record#viewRecord") {
+      // Check if it's a post view or if it's deleted/blocked
+      const quotedPost = embed.record;
+
+      // Handle deleted or blocked posts
+      if (quotedPost.$type === "app.bsky.embed.record#viewNotFound") {
+        return (
+          <div
+            className="mt-2 overflow-hidden rounded-lg border p-3 text-sm italic"
+            style={{
+              borderColor: "var(--bsky-border-primary)",
+              color: "var(--bsky-text-secondary)"
+            }}
+          >
+            Post not found or deleted
+          </div>
+        );
+      }
+
+      if (quotedPost.$type === "app.bsky.embed.record#viewBlocked") {
+        return (
+          <div
+            className="mt-2 overflow-hidden rounded-lg border p-3 text-sm italic"
+            style={{
+              borderColor: "var(--bsky-border-primary)",
+              color: "var(--bsky-text-secondary)"
+            }}
+          >
+            Post from blocked user
+          </div>
+        );
+      }
+
+      // Normal quoted post
+      return (
+        <div
+          className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+          style={{ borderColor: "var(--bsky-border-primary)" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onQuoteClick && quotedPost.uri) {
+              onQuoteClick(quotedPost.uri);
+            }
+          }}
+        >
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 text-xs"
+            style={{
+              backgroundColor: "var(--bsky-bg-tertiary)",
+              borderBottom: "1px solid var(--bsky-border-primary)",
+              color: "var(--bsky-text-secondary)",
+            }}
+          >
+            <MessageCircle size={12} />
+            <span>Quoted post</span>
+          </div>
+          <div className="p-3">
+            <div className="quote-author mb-2 flex items-center gap-2">
+              {quotedPost.author?.handle && (
+                <ProfileHoverCard handle={quotedPost.author.handle}>
+                  <img
+                    src={
+                      proxifyBskyImage(quotedPost.author?.avatar) ||
+                      "/default-avatar.svg"
+                    }
+                    alt=""
+                    className="quote-avatar h-5 w-5 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+                  />
+                </ProfileHoverCard>
+              )}
+              {quotedPost.author?.handle ? (
+                <ProfileHoverCard handle={quotedPost.author.handle}>
+                  <span className="quote-author-name cursor-pointer text-sm hover:underline">
+                    {quotedPost.author?.displayName ||
+                      quotedPost.author?.handle}
+                  </span>
+                </ProfileHoverCard>
+              ) : (
+                <span className="quote-author-name text-sm">
+                  {quotedPost.author?.displayName || quotedPost.author?.handle}
+                </span>
+              )}
+              {quotedPost.author?.handle && (
+                <DomainVerifiedBadgeInline handle={quotedPost.author.handle} />
+              )}
+            </div>
+            <p className="quote-text text-sm">{quotedPost.value?.text || ""}</p>
+            {/* Render embedded content in the quoted post */}
+            {quotedPost.embeds?.[0] && (
+              <div className="mt-2">
+                {renderEmbed(quotedPost.embeds[0])}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Fallback for old-style record embeds without explicit type
+    if (embed.record && !embed.$type) {
       const quotedPost = embed.record;
       return (
         <div
@@ -435,7 +674,11 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
               >
                 {record?.text || ""}
               </p>
-              {renderEmbed(post.embed)}
+              {post.embed && renderEmbed(post.embed)}
+              {/* If no embed but text contains a bsky URL, try to render it */}
+              {!post.embed && record?.text && (
+                <BskyUrlEmbed text={record.text} onQuoteClick={onQuoteClick} />
+              )}
             </div>
 
             {/* Actions */}
