@@ -3362,6 +3362,23 @@ export function Composer() {
                 <p className="text-sm">{writingFeedback.assessment.summary}</p>
               </div>
 
+              {/* Original Version */}
+              <div
+                className="rounded-lg border p-4"
+                style={{
+                  backgroundColor: "var(--bsky-bg-secondary)",
+                  borderColor: "var(--bsky-border-primary)",
+                }}
+              >
+                <h4 className="mb-3 flex items-center gap-2 font-semibold">
+                  <FileText size={16} />
+                  Original Version
+                </h4>
+                <p className="rounded bg-gray-50 p-3 text-sm dark:bg-gray-900">
+                  {text}
+                </p>
+              </div>
+
               {/* Corrected Version */}
               <div
                 className="rounded-lg border p-4"

@@ -13,6 +13,7 @@ import { generateAltText } from './functions/generate-alt-text/resource';
 import { adjustTone } from './functions/adjust-tone/resource';
 import { optimizeThread } from './functions/optimize-thread/resource';
 import { suggestHashtags } from './functions/suggest-hashtags/resource';
+import { styleAnalysis } from './functions/style-analysis/resource';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -25,6 +26,7 @@ const backend = defineBackend({
   adjustTone,
   optimizeThread,
   suggestHashtags,
+  styleAnalysis,
 });
 
 // Create a stack for the API
@@ -72,6 +74,9 @@ const optimizeThreadIntegration = new LambdaIntegration(
 const suggestHashtagsIntegration = new LambdaIntegration(
   backend.suggestHashtags.resources.lambda
 );
+const styleAnalysisIntegration = new LambdaIntegration(
+  backend.styleAnalysis.resources.lambda
+);
 
 // Add method options with NONE authorization (no authentication required)
 const methodOptions = {
@@ -93,6 +98,9 @@ optimizeThreadResource.addMethod('POST', optimizeThreadIntegration, methodOption
 
 const suggestHashtagsResource = apiResource.addResource('suggest-hashtags');
 suggestHashtagsResource.addMethod('POST', suggestHashtagsIntegration, methodOptions);
+
+const styleAnalysisResource = apiResource.addResource('style-analysis');
+styleAnalysisResource.addMethod('POST', styleAnalysisIntegration, methodOptions);
 
 // Add custom stack output for the API URL
 backend.addOutput({

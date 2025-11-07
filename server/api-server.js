@@ -318,12 +318,381 @@ app.post("/api/convert-gif", async (req, res) => {
   }
 });
 
+// Helper function to clean JSON responses (remove markdown code fences)
+function cleanJsonResponse(text) {
+  let cleaned = text.trim();
+  if (cleaned.startsWith("```json")) {
+    cleaned = cleaned.slice(7);
+  } else if (cleaned.startsWith("```")) {
+    cleaned = cleaned.slice(3);
+  }
+  if (cleaned.endsWith("```")) {
+    cleaned = cleaned.slice(0, -3);
+  }
+  return cleaned.trim();
+}
+
+// Writing feedback endpoint
+app.post("/api/writing-feedback", async (req, res) => {
+  const { text } = req.body;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (!text) {
+    return res.status(400).json({ error: "Missing text" });
+  }
+
+  if (!apiKey) {
+    return res.status(500).json({ error: "Server API key not configured" });
+  }
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5-20250929",
+        max_tokens: 1500,
+        messages: [
+          {
+            role: "user",
+            content: `Analyze this social media post and provide helpful feedback with improved versions.
+
+Post: "${text}"
+
+Provide a JSON response with:
+1. assessment:
+   - summary: brief quality assessment (1-2 sentences)
+   - hasIssues: boolean indicating if there are typos or issues
+2. correctedVersion:
+   - text: the post with ONLY typos, grammar, and spelling fixed (minimal changes)
+   - changes: array of strings describing corrections (e.g. ["Fixed spelling of 'spelling'", "Corrected grammar"]) - empty array if none needed
+3. enhancedVersion:
+   - text: a slightly improved version (just a little better - keep the original voice and style)
+   - improvements: array of strings describing what was enhanced
+
+Keep corrections minimal and enhancements subtle. Preserve the author's voice.
+
+Example JSON structure:
+{
+  "assessment": { "summary": "...", "hasIssues": true },
+  "correctedVersion": { "text": "...", "changes": ["Fixed X", "Corrected Y"] },
+  "enhancedVersion": { "text": "...", "improvements": ["Made more concise", "Enhanced clarity"] }
+}
+
+IMPORTANT: Your response MUST be valid JSON only. Rules:
+1. Use proper JSON arrays with strings only (no arrow notation like "a" -> "b")
+2. Ensure all arrays and objects are properly closed with ] and }
+3. Double-check that your JSON is valid before responding
+4. Do not include any text before or after the JSON object
+5. Start directly with { and end with }`,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Anthropic API error: ${error}`);
+    }
+
+    const data = await response.json();
+    const cleanedText = cleanJsonResponse(data.content[0].text);
+    const result = JSON.parse(cleanedText);
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error getting writing feedback:", error);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+});
+
+// Style analysis endpoint
+app.post("/api/style-analysis", async (req, res) => {
+  const { currentText, historicalPosts } = req.body;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (!currentText) {
+    return res.status(400).json({ error: "Missing currentText" });
+  }
+
+  if (!historicalPosts || !Array.isArray(historicalPosts)) {
+    return res
+      .status(400)
+      .json({ error: "Missing or invalid historicalPosts array" });
+  }
+
+  if (!apiKey) {
+    return res.status(500).json({ error: "Server API key not configured" });
+  }
+
+  try {
+    // Build the historical posts context
+    const historicalContext = historicalPosts
+      .slice(0, 20) // Limit to 20 most recent posts
+      .map((post, i) => `${i + 1}. ${post}`)
+      .join("\n");
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5-20250929",
+        max_tokens: 1000,
+        messages: [
+          {
+            role: "user",
+            content: `You are a writing style analyst. Analyze the user's writing style based on their historical posts, then compare their current draft to that style.
+
+HISTORICAL POSTS:
+${historicalContext}
+
+CURRENT DRAFT:
+"${currentText}"
+
+Provide a JSON response with:
+1. userStyleSummary: A 1-2 sentence description of their typical writing style (tone, patterns, word choice, post length, emoji usage, etc.)
+2. matchesStyle: boolean indicating if the current draft matches their typical style
+3. styleNotes: array of 2-4 specific observations about how this draft compares to their style (e.g., "Usually more casual", "Typically uses more emojis", "Shorter than usual posts", "More formal tone than typical")
+
+Example JSON structure:
+{
+  "userStyleSummary": "Your posts are typically casual and conversational with frequent emoji use. You tend to keep things brief and punchy.",
+  "matchesStyle": true,
+  "styleNotes": [
+    "Matches your usual conversational tone",
+    "Similar length to your typical posts",
+    "Consistent emoji usage"
+  ]
+}
+
+IMPORTANT: Your response MUST be valid JSON only. Rules:
+1. Keep userStyleSummary to 1-2 sentences maximum
+2. Include 2-4 specific, actionable styleNotes
+3. Base analysis on actual patterns from historical posts
+4. Be constructive and helpful, not critical
+5. Start directly with { and end with }`,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Anthropic API error: ${error}`);
+    }
+
+    const data = await response.json();
+    const cleanedText = cleanJsonResponse(data.content[0].text);
+    const result = JSON.parse(cleanedText);
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error analyzing writing style:", error);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+});
+
+// Adjust tone endpoint
+app.post("/api/adjust-tone", async (req, res) => {
+  const { text, tone } = req.body;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (!text || !tone) {
+    return res.status(400).json({ error: "Missing text or tone" });
+  }
+
+  if (!apiKey) {
+    return res.status(500).json({ error: "Server API key not configured" });
+  }
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5-20250929",
+        max_tokens: 500,
+        messages: [
+          {
+            role: "user",
+            content: `Rewrite this social media post in a ${tone} tone while preserving the core message:
+
+"${text}"
+
+Respond with ONLY the rewritten text, no explanations or quotes.`,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Anthropic API error: ${error}`);
+    }
+
+    const data = await response.json();
+    const adjustedText = data.content[0].text.trim();
+
+    res.json({
+      adjustedText,
+      originalText: text,
+      tone,
+    });
+  } catch (error) {
+    console.error("Error adjusting tone:", error);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+});
+
+// Optimize thread endpoint
+app.post("/api/optimize-thread", async (req, res) => {
+  const { text, maxCharsPerPost = 300 } = req.body;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (!text) {
+    return res.status(400).json({ error: "Missing text" });
+  }
+
+  if (!apiKey) {
+    return res.status(500).json({ error: "Server API key not configured" });
+  }
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5-20250929",
+        max_tokens: 2000,
+        messages: [
+          {
+            role: "user",
+            content: `Split this text into a well-structured thread with posts under ${maxCharsPerPost} characters each:
+
+"${text}"
+
+Provide a JSON response with:
+- segments: array of {text, number, isStandalone} objects
+- summary: brief description of the thread structure
+- suggestedFormat: one of "simple", "brackets", "thread", "dots"
+- totalPosts: number of posts
+
+Start directly with { and end with }`,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Anthropic API error: ${error}`);
+    }
+
+    const data = await response.json();
+    const cleanedText = cleanJsonResponse(data.content[0].text);
+    const result = JSON.parse(cleanedText);
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error optimizing thread:", error);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+});
+
+// Suggest hashtags endpoint
+app.post("/api/suggest-hashtags", async (req, res) => {
+  const { text, existingTags = [] } = req.body;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (!text) {
+    return res.status(400).json({ error: "Missing text" });
+  }
+
+  if (!apiKey) {
+    return res.status(500).json({ error: "Server API key not configured" });
+  }
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5-20250929",
+        max_tokens: 500,
+        messages: [
+          {
+            role: "user",
+            content: `Suggest 3-5 relevant hashtags for this social media post${existingTags.length > 0 ? `, avoiding these existing tags: ${existingTags.join(", ")}` : ""}:
+
+"${text}"
+
+Provide a JSON response with:
+- hashtags: array of {tag, relevance, isTrending} objects
+- category: general content category
+
+Start directly with { and end with }`,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Anthropic API error: ${error}`);
+    }
+
+    const data = await response.json();
+    const cleanedText = cleanJsonResponse(data.content[0].text);
+    const result = JSON.parse(cleanedText);
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error suggesting hashtags:", error);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`ShadowSky API server running on port ${PORT}`);
   console.log(`Available endpoints:`);
-  console.log(`  - POST /api/convert-gif     : Convert GIF to MP4`);
-  console.log(`  - POST /api/generate-alt-text: Generate alt text for images`);
-  console.log(`  - GET  /api/proxy-image     : Proxy images to avoid CORS`);
+  console.log(`  - POST /api/convert-gif       : Convert GIF to MP4`);
+  console.log(`  - POST /api/generate-alt-text : Generate alt text for images`);
+  console.log(`  - GET  /api/proxy-image       : Proxy images to avoid CORS`);
+  console.log(`  - POST /api/writing-feedback  : Get writing feedback`);
+  console.log(`  - POST /api/style-analysis    : Analyze writing style`);
+  console.log(`  - POST /api/adjust-tone       : Adjust post tone`);
+  console.log(`  - POST /api/optimize-thread   : Optimize thread structure`);
+  console.log(`  - POST /api/suggest-hashtags  : Suggest hashtags`);
   console.log(
     `\nAPI Configuration:`,
     process.env.ANTHROPIC_API_KEY

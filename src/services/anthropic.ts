@@ -311,27 +311,123 @@ export interface StyleMatchedWritingFeedback extends WritingFeedback {
   };
 }
 
+async function analyzeWritingStyle(
+  currentText: string,
+  historicalPosts: string[],
+): Promise<{
+  userStyleSummary: string;
+  matchesStyle: boolean;
+  styleNotes: string[];
+}> {
+  try {
+    const apiBaseUrl = getApiBaseUrl();
+    const response = await fetchWithRetry(
+      `${apiBaseUrl}/api/style-analysis`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ currentText, historicalPosts }),
+      },
+      API_RETRY_OPTIONS,
+    );
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    logger.error("Error analyzing writing style:", error);
+    analytics.trackError(error as Error, "style_analysis");
+
+    if (error instanceof Error && error.message.includes("401")) {
+      throw new Error("Style analysis failed: Invalid API key");
+    } else if (error instanceof Error && error.message.includes("429")) {
+      throw new Error("Style analysis failed: Rate limit exceeded");
+    } else {
+      throw new Error(
+        `Style analysis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+}
+
 export async function getStyleMatchedWritingFeedback(
   text: string,
-  _agent: BskyAgent,
+  agent: BskyAgent,
 ): Promise<StyleMatchedWritingFeedback> {
   try {
-    // For now, use the basic writing feedback endpoint
-    // Style matching will be added in a future update
+    // Get basic writing feedback
     const basicFeedback = await getWritingFeedback(text);
 
-    // Add default style analysis
-    const styleMatchedFeedback: StyleMatchedWritingFeedback = {
-      ...basicFeedback,
-      styleAnalysis: {
-        userStyleSummary:
-          "Unable to analyze style - requires additional implementation",
-        matchesStyle: true,
-        styleNotes: [],
-      },
-    };
+    // Fetch user's recent posts for style analysis
+    const session = agent.session;
+    if (!session?.did) {
+      // If no session, return basic feedback without style analysis
+      return {
+        ...basicFeedback,
+        styleAnalysis: {
+          userStyleSummary: "Sign in to enable style analysis",
+          matchesStyle: true,
+          styleNotes: [],
+        },
+      };
+    }
 
-    return styleMatchedFeedback;
+    try {
+      // Fetch user's recent posts (up to 30 posts)
+      const authorFeed = await agent.getAuthorFeed({
+        actor: session.did,
+        limit: 30,
+        filter: "posts_no_replies", // Only get original posts, not replies
+      });
+
+      // Extract text from posts
+      const historicalPosts = authorFeed.data.feed
+        .map((item) => {
+          const post = item.post;
+          if (
+            post.record &&
+            typeof post.record === "object" &&
+            "text" in post.record
+          ) {
+            return post.record.text as string;
+          }
+          return null;
+        })
+        .filter((text): text is string => text !== null && text.length > 0);
+
+      // If we have at least 5 posts, perform style analysis
+      if (historicalPosts.length >= 5) {
+        const styleAnalysis = await analyzeWritingStyle(text, historicalPosts);
+
+        return {
+          ...basicFeedback,
+          styleAnalysis,
+        };
+      } else {
+        // Not enough posts for meaningful analysis
+        return {
+          ...basicFeedback,
+          styleAnalysis: {
+            userStyleSummary:
+              "Not enough posts for style analysis (need at least 5 posts)",
+            matchesStyle: true,
+            styleNotes: [],
+          },
+        };
+      }
+    } catch (styleError) {
+      logger.error("Error fetching posts for style analysis:", styleError);
+      // Return basic feedback with error message
+      return {
+        ...basicFeedback,
+        styleAnalysis: {
+          userStyleSummary: "Unable to analyze style - could not fetch posts",
+          matchesStyle: true,
+          styleNotes: [],
+        },
+      };
+    }
   } catch (error) {
     logger.error("Error getting style-matched writing feedback:", error);
     analytics.trackError(error as Error, "style_matched_writing_feedback");
