@@ -31,12 +31,7 @@ Amplify.configure({
 
 // Get API base URL
 export function getApiBaseUrl(): string {
-  // In development, use relative URLs (proxied through Vite)
-  if (import.meta.env.DEV) {
-    return '';
-  }
-
-  // In production, use the API Gateway URL from amplify_outputs
+  // Use the API Gateway URL from amplify_outputs for both dev and prod
   const customApi = outputs.custom?.API;
   if (customApi) {
     const apiName = Object.keys(customApi)[0];
@@ -48,7 +43,7 @@ export function getApiBaseUrl(): string {
     }
   }
 
-  // Fallback to relative URLs
+  // Fallback to relative URLs (will use Vite proxy if configured)
   return '';
 }
 

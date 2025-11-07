@@ -3446,34 +3446,41 @@ export function Composer() {
                 )}
               </div>
 
-              {/* Style Analysis */}
-              <div
-                className="rounded-lg border p-4"
-                style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
-                }}
-              >
-                <h4 className="mb-3 flex items-center gap-2 font-semibold">
-                  <MessageSquare size={16} />
-                  Your Writing Style
-                </h4>
-                <p className="mb-2 text-sm italic">
-                  {writingFeedback.styleAnalysis.userStyleSummary}
-                </p>
-                <p className="mb-2 text-sm">
-                  {writingFeedback.styleAnalysis.matchesStyle
-                    ? "✅ This post matches your typical style"
-                    : "⚡ This post differs from your usual style"}
-                </p>
-                {writingFeedback.styleAnalysis.styleNotes.length > 0 && (
-                  <ul className="list-disc space-y-0.5 pl-5 text-xs text-gray-500">
-                    {writingFeedback.styleAnalysis.styleNotes.map((note, i) => (
-                      <li key={i}>{note}</li>
-                    ))}
-                  </ul>
+              {/* Style Analysis - only show if actually implemented */}
+              {writingFeedback.styleAnalysis.userStyleSummary &&
+                !writingFeedback.styleAnalysis.userStyleSummary.includes(
+                  "requires additional implementation",
+                ) && (
+                  <div
+                    className="rounded-lg border p-4"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-secondary)",
+                      borderColor: "var(--bsky-border-primary)",
+                    }}
+                  >
+                    <h4 className="mb-3 flex items-center gap-2 font-semibold">
+                      <MessageSquare size={16} />
+                      Your Writing Style
+                    </h4>
+                    <p className="mb-2 text-sm italic">
+                      {writingFeedback.styleAnalysis.userStyleSummary}
+                    </p>
+                    <p className="mb-2 text-sm">
+                      {writingFeedback.styleAnalysis.matchesStyle
+                        ? "✅ This post matches your typical style"
+                        : "⚡ This post differs from your usual style"}
+                    </p>
+                    {writingFeedback.styleAnalysis.styleNotes.length > 0 && (
+                      <ul className="list-disc space-y-0.5 pl-5 text-xs text-gray-500">
+                        {writingFeedback.styleAnalysis.styleNotes.map(
+                          (note, i) => (
+                            <li key={i}>{note}</li>
+                          ),
+                        )}
+                      </ul>
+                    )}
+                  </div>
                 )}
-              </div>
             </div>
 
             <div className="mt-6 flex justify-end">
