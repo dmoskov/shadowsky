@@ -8,7 +8,6 @@ import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { generateAltText } from "../services/anthropic";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
-import { atUriToBskyUrl, getNotificationUrl } from "../utils/url-helpers";
 import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
 import { VideoPlayer } from "./VideoPlayer";
@@ -530,12 +529,14 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
         showUnreadIndicators && notification && !notification.isRead;
       const isHighlighted = highlightUri && post?.uri === highlightUri;
       const author = post?.author || notification?.author;
+      // Generate external bsky.app URL for the external link button
       const postUrl =
         post?.uri && author?.handle
-          ? atUriToBskyUrl(post.uri, author.handle)
-          : notification
-            ? getNotificationUrl(notification)
-            : null;
+          ? (() => {
+              const postId = post.uri.split("/").pop();
+              return `https://bsky.app/profile/${author.handle}/post/${postId}`;
+            })()
+          : null;
 
       return (
         <div

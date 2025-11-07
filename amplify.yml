@@ -23,9 +23,16 @@ frontend:
   cache:
     paths:
       - node_modules/**/*
-# Redirect and rewrite rules
+# Redirect and rewrite rules for SPA routing
 redirects:
-  # SPA fallback - serve index.html for all other routes
+  # Remove trailing slashes (permanent redirect)
+  - source: /<*>/
+    target: /<*>
+    status: 301
+
+  # SPA fallback - serve index.html for all routes that don't match static files
+  # The 404-200 status means: if the file doesn't exist (404), serve index.html with 200 status
+  # This enables client-side routing to work on refresh
   - source: /<*>
     target: /index.html
     status: 404-200

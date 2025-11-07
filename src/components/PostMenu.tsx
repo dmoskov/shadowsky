@@ -4,6 +4,7 @@ import {
   BellOff,
   ChevronRight,
   Code,
+  ExternalLink,
   EyeOff,
   Flag,
   Link,
@@ -166,7 +167,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
   const handleCopyLink = () => {
     setIsOpen(false);
     const postId = post.uri.split("/").pop();
-    const link = `https://bsky.app/profile/${post.author.handle}/post/${postId}`;
+    const link = `${window.location.origin}/thread/${post.author.handle}/${postId}`;
     navigator.clipboard.writeText(link);
     // You might want to show a toast notification here
   };
@@ -177,6 +178,13 @@ export const PostMenu: React.FC<PostMenuProps> = ({
     const embedCode = `<iframe src="https://bsky.app/profile/${post.author.handle}/post/${postId}/embed" width="500" height="350" frameborder="0"></iframe>`;
     navigator.clipboard.writeText(embedCode);
     // You might want to show a toast notification here
+  };
+
+  const handleOpenInBluesky = () => {
+    setIsOpen(false);
+    const postId = post.uri.split("/").pop();
+    const link = `https://bsky.app/profile/${post.author.handle}/post/${postId}`;
+    window.open(link, "_blank", "noopener,noreferrer");
   };
 
   const handleMuteThread = async () => {
@@ -296,6 +304,14 @@ export const PostMenu: React.FC<PostMenuProps> = ({
               >
                 <Code className="h-4 w-4" />
                 Embed post
+              </button>
+
+              <button
+                onClick={handleOpenInBluesky}
+                className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Open in Bluesky
               </button>
 
               <div className="my-1 border-t border-gray-200 dark:border-gray-700" />

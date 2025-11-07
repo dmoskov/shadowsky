@@ -1,6 +1,13 @@
 import { AppBskyFeedDefs } from "@atproto/api";
 import { getProfileService } from "@bsky/shared";
-import { Edit, MoreHorizontal, Share2, UserX, VolumeX } from "lucide-react";
+import {
+  Edit,
+  ExternalLink,
+  MoreHorizontal,
+  Share2,
+  UserX,
+  VolumeX,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate, useParams } from "react-router";
@@ -278,7 +285,15 @@ export default function ProfilePage() {
   const handleShare = () => {
     if (!profile) return;
     const profileUrl = getBskyProfileUrl(profile.handle);
-    navigator.clipboard.writeText(profileUrl);
+    const fullUrl = `${window.location.origin}${profileUrl}`;
+    navigator.clipboard.writeText(fullUrl);
+  };
+
+  const handleOpenInBluesky = () => {
+    if (!profile) return;
+    const profileUrl = `https://bsky.app/profile/${profile.handle}`;
+    window.open(profileUrl, "_blank", "noopener,noreferrer");
+    setShowProfileMenu(false);
   };
 
   const handleBlock = async () => {
@@ -458,6 +473,22 @@ export default function ProfilePage() {
                           >
                             <Share2 className="h-4 w-4" />
                             Share Profile
+                          </button>
+                          <button
+                            onClick={handleOpenInBluesky}
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
+                            }
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            Open in Bluesky
                           </button>
                           <button
                             onClick={handleMute}

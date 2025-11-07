@@ -84,6 +84,7 @@ const VisualTimeline = lazy(() =>
   })),
 );
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const ThreadPage = lazy(() => import("./pages/ThreadPage"));
 const Settings = lazy(() =>
   import("./pages/Settings").then((m) => ({ default: m.Settings })),
 );
@@ -258,6 +259,7 @@ function AppContent() {
               <Route path="/compose" element={<Composer />} />
               <Route path="/search" element={<Search />} />
               <Route path="/profile/:handle" element={<ProfilePage />} />
+              <Route path="/thread/:handle/:postId" element={<ThreadPage />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/:section" element={<Settings />} />
               <Route path="/compression-test" element={<CompressionTest />} />
