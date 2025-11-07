@@ -266,7 +266,9 @@ export async function generateAltText(imageUrl: string): Promise<string> {
     logger.log("Alt text response:", data);
 
     const altText = data.altText?.trim() || "";
-    return altText.length > 125 ? altText.substring(0, 122) + "..." : altText;
+    // Bluesky supports up to 1000 chars, but we soft-cap at 500 for reasonableness
+    // Don't hard truncate - let Claude generate appropriate length
+    return altText;
   } catch (error) {
     logger.error("Error generating alt text:", error);
 

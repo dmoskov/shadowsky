@@ -154,7 +154,7 @@ app.post("/api/generate-alt-text", async (req, res) => {
                 },
                 {
                   type: "text",
-                  text: "Generate concise alt text for this image that would help someone using a screen reader understand what's shown. Keep it under 125 characters. Focus on the main subject and action.",
+                  text: "Generate alt text for this image that would help someone using a screen reader understand what's shown. Keep it concise (most descriptions should be brief), but you can use up to 500 characters when needed for complex images. Focus on the main subject and action.",
                 },
               ],
             },
