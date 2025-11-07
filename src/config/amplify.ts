@@ -1,6 +1,6 @@
-import { Amplify } from 'aws-amplify';
-import { parseAmplifyConfig } from 'aws-amplify/utils';
-import amplifyOutputs from '../../amplify_outputs.json';
+import { Amplify } from "aws-amplify";
+import { parseAmplifyConfig } from "aws-amplify/utils";
+import amplifyOutputs from "../../amplify_outputs.json";
 
 // Type for the extended amplify outputs with custom API configuration
 type AmplifyOutputsWithAPI = typeof amplifyOutputs & {
@@ -39,12 +39,12 @@ export function getApiBaseUrl(): string {
       // Endpoint already includes the stage (e.g., https://xxx.execute-api.us-west-1.amazonaws.com/prod/)
       // Remove trailing slash if present since our API paths start with /
       const endpoint = customApi[apiName].endpoint;
-      return endpoint.endsWith('/') ? endpoint.slice(0, -1) : endpoint;
+      return endpoint.endsWith("/") ? endpoint.slice(0, -1) : endpoint;
     }
   }
 
   // Fallback to relative URLs (will use Vite proxy if configured)
-  return '';
+  return "";
 }
 
 export { outputs };

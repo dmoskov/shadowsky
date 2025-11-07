@@ -28,13 +28,16 @@ const BskyUrlEmbed: React.FC<{
   text: string;
   onQuoteClick?: (uri: string) => void;
 }> = ({ text, onQuoteClick }) => {
-  const [quotedPost, setQuotedPost] = React.useState<AppBskyFeedDefs.PostView | null>(null);
+  const [quotedPost, setQuotedPost] =
+    React.useState<AppBskyFeedDefs.PostView | null>(null);
   const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
     const fetchQuotedPost = async () => {
       // Check if text contains a Bluesky URL
-      const bskyUrlMatch = text.match(/https?:\/\/bsky\.app\/profile\/[^\s]+\/post\/[^\s]+/);
+      const bskyUrlMatch = text.match(
+        /https?:\/\/bsky\.app\/profile\/[^\s]+\/post\/[^\s]+/,
+      );
       if (!bskyUrlMatch) return;
 
       const url = bskyUrlMatch[0];
@@ -51,7 +54,9 @@ const BskyUrlEmbed: React.FC<{
         let did = parsed.did;
         if (!did && parsed.handle) {
           try {
-            const profileResponse = await agent.getProfile({ actor: parsed.handle });
+            const profileResponse = await agent.getProfile({
+              actor: parsed.handle,
+            });
             did = profileResponse.data.did;
           } catch (error) {
             logger.error("Failed to resolve handle:", error);
@@ -80,8 +85,14 @@ const BskyUrlEmbed: React.FC<{
 
   if (loading) {
     return (
-      <div className="mt-2 rounded-lg border p-4" style={{ borderColor: "var(--bsky-border-primary)" }}>
-        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--bsky-text-secondary)" }}>
+      <div
+        className="mt-2 rounded-lg border p-4"
+        style={{ borderColor: "var(--bsky-border-primary)" }}
+      >
+        <div
+          className="flex items-center gap-2 text-sm"
+          style={{ color: "var(--bsky-text-secondary)" }}
+        >
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500" />
           <span>Loading quoted post...</span>
         </div>
@@ -117,14 +128,20 @@ const BskyUrlEmbed: React.FC<{
       <div className="p-3">
         <div className="quote-author mb-2 flex items-center gap-2">
           <img
-            src={proxifyBskyImage(quotedPost.author.avatar) || "/default-avatar.svg"}
+            src={
+              proxifyBskyImage(quotedPost.author.avatar) ||
+              "/default-avatar.svg"
+            }
             alt=""
             className="h-5 w-5 rounded-full"
           />
           <span className="text-sm font-semibold">
             {quotedPost.author.displayName || quotedPost.author.handle}
           </span>
-          <span className="text-sm" style={{ color: "var(--bsky-text-secondary)" }}>
+          <span
+            className="text-sm"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
             @{quotedPost.author.handle}
           </span>
         </div>
@@ -133,14 +150,16 @@ const BskyUrlEmbed: React.FC<{
           <div className="mt-2">
             {(quotedPost.embed as any).images && (
               <div className="grid grid-cols-2 gap-1">
-                {(quotedPost.embed as any).images.slice(0, 4).map((img: any, i: number) => (
-                  <img
-                    key={i}
-                    src={proxifyBskyImage(img.thumb) || ""}
-                    alt={img.alt || ""}
-                    className="h-32 w-full rounded object-cover"
-                  />
-                ))}
+                {(quotedPost.embed as any).images
+                  .slice(0, 4)
+                  .map((img: any, i: number) => (
+                    <img
+                      key={i}
+                      src={proxifyBskyImage(img.thumb) || ""}
+                      alt={img.alt || ""}
+                      className="h-32 w-full rounded object-cover"
+                    />
+                  ))}
               </div>
             )}
           </div>
@@ -359,7 +378,11 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
 
     // Quoted post (app.bsky.embed.record#view)
     // Handle both typed and untyped record embeds
-    if ((embed.$type === "app.bsky.embed.record#view" || !embed.$type) && embed.record && embed.record.$type === "app.bsky.embed.record#viewRecord") {
+    if (
+      (embed.$type === "app.bsky.embed.record#view" || !embed.$type) &&
+      embed.record &&
+      embed.record.$type === "app.bsky.embed.record#viewRecord"
+    ) {
       // Check if it's a post view or if it's deleted/blocked
       const quotedPost = embed.record;
 
@@ -370,7 +393,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
             className="mt-2 overflow-hidden rounded-lg border p-3 text-sm italic"
             style={{
               borderColor: "var(--bsky-border-primary)",
-              color: "var(--bsky-text-secondary)"
+              color: "var(--bsky-text-secondary)",
             }}
           >
             Post not found or deleted
@@ -384,7 +407,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
             className="mt-2 overflow-hidden rounded-lg border p-3 text-sm italic"
             style={{
               borderColor: "var(--bsky-border-primary)",
-              color: "var(--bsky-text-secondary)"
+              color: "var(--bsky-text-secondary)",
             }}
           >
             Post from blocked user
@@ -448,9 +471,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
             <p className="quote-text text-sm">{quotedPost.value?.text || ""}</p>
             {/* Render embedded content in the quoted post */}
             {quotedPost.embeds?.[0] && (
-              <div className="mt-2">
-                {renderEmbed(quotedPost.embeds[0])}
-              </div>
+              <div className="mt-2">{renderEmbed(quotedPost.embeds[0])}</div>
             )}
           </div>
         </div>
