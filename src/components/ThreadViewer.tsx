@@ -2,10 +2,15 @@ import type { AppBskyFeedDefs } from "@atproto/api";
 import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { CornerDownRight, ExternalLink, Loader2, Sparkles } from "lucide-react";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate } from "react-router";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
-import { generateAltText } from "../services/anthropic";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
 import { ImageGallery } from "./ImageGallery";
@@ -13,6 +18,10 @@ import { PostActionBar } from "./PostActionBar";
 import { VideoPlayer } from "./VideoPlayer";
 
 const logger = createLogger("ThreadViewer");
+
+async function loadAnthropicService() {
+  return await import("../services/anthropic");
+}
 
 type Post = AppBskyFeedDefs.PostView;
 
@@ -68,42 +77,48 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     useOptimisticPosts();
 
   // Handle like action
-  const handleLike = async (post: Post) => {
-    try {
-      if (post.viewer?.like) {
-        await unlikeMutation.mutateAsync({
-          likeUri: post.viewer.like,
-          postUri: post.uri,
-        });
-      } else {
-        await likeMutation.mutateAsync({
-          uri: post.uri,
-          cid: post.cid,
-        });
+  const handleLike = useCallback(
+    async (post: Post) => {
+      try {
+        if (post.viewer?.like) {
+          await unlikeMutation.mutateAsync({
+            likeUri: post.viewer.like,
+            postUri: post.uri,
+          });
+        } else {
+          await likeMutation.mutateAsync({
+            uri: post.uri,
+            cid: post.cid,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to like/unlike post:", error);
       }
-    } catch (error) {
-      console.error("Failed to like/unlike post:", error);
-    }
-  };
+    },
+    [likeMutation, unlikeMutation],
+  );
 
   // Handle repost action
-  const handleRepost = async (post: Post) => {
-    try {
-      if (post.viewer?.repost) {
-        await unrepostMutation.mutateAsync({
-          repostUri: post.viewer.repost,
-          postUri: post.uri,
-        });
-      } else {
-        await repostMutation.mutateAsync({
-          uri: post.uri,
-          cid: post.cid,
-        });
+  const handleRepost = useCallback(
+    async (post: Post) => {
+      try {
+        if (post.viewer?.repost) {
+          await unrepostMutation.mutateAsync({
+            repostUri: post.viewer.repost,
+            postUri: post.uri,
+          });
+        } else {
+          await repostMutation.mutateAsync({
+            uri: post.uri,
+            cid: post.cid,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to repost/unrepost:", error);
       }
-    } catch (error) {
-      console.error("Failed to repost/unrepost:", error);
-    }
-  };
+    },
+    [repostMutation, unrepostMutation],
+  );
 
   // Create a map of notifications by URI
   const notificationMap = useMemo(() => {
@@ -283,471 +298,423 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     }
   }, [highlightUri, hasShownInitialHighlight]);
 
-  const handleGenerateAltText = async (
-    imageUrl: string,
-    postUri: string,
-    index: number,
-  ) => {
-    const postKey = postUri;
-    setGeneratingAltText((prev) => ({
-      ...prev,
-      [postKey]: { ...prev[postKey], [index]: true },
-    }));
-    try {
-      // Pass the URL directly to the backend which will handle fetching
-      const altText = await generateAltText(imageUrl);
-
-      setGeneratedAltTexts((prev) => ({
-        ...prev,
-        [postKey]: { ...prev[postKey], [index]: altText },
-      }));
-      setShowAltText((prev) => ({
+  const handleGenerateAltText = useCallback(
+    async (imageUrl: string, postUri: string, index: number) => {
+      const postKey = postUri;
+      setGeneratingAltText((prev) => ({
         ...prev,
         [postKey]: { ...prev[postKey], [index]: true },
       }));
-    } catch (error) {
-      // Show user-friendly error message
-      logger.error("Error generating alt text:", error);
-      alert(
-        error instanceof Error ? error.message : "Failed to generate alt text",
-      );
-    } finally {
-      setGeneratingAltText((prev) => ({
-        ...prev,
-        [postKey]: { ...prev[postKey], [index]: false },
-      }));
-    }
-  };
+      try {
+        // Pass the URL directly to the backend which will handle fetching
+        const anthropicService = await loadAnthropicService();
+        const altText = await anthropicService.generateAltText(imageUrl);
+
+        setGeneratedAltTexts((prev) => ({
+          ...prev,
+          [postKey]: { ...prev[postKey], [index]: altText },
+        }));
+        setShowAltText((prev) => ({
+          ...prev,
+          [postKey]: { ...prev[postKey], [index]: true },
+        }));
+      } catch (error) {
+        // Show user-friendly error message
+        logger.error("Error generating alt text:", error);
+        alert(
+          error instanceof Error
+            ? error.message
+            : "Failed to generate alt text",
+        );
+      } finally {
+        setGeneratingAltText((prev) => ({
+          ...prev,
+          [postKey]: { ...prev[postKey], [index]: false },
+        }));
+      }
+    },
+    [],
+  );
 
   // Render embeds (images, videos, quotes, etc)
-  const renderEmbed = (embed: any, postUri?: string) => {
-    if (!embed) return null;
+  const renderEmbed = useCallback(
+    (embed: any, postUri?: string) => {
+      if (!embed) return null;
 
-    if (embed.$type === "app.bsky.embed.images#view") {
-      const handleImageClick = (e: React.MouseEvent, index: number) => {
-        e.stopPropagation();
-        const images = embed.images.map((img: any) => ({
-          thumb: proxifyBskyImage(img.thumb),
-          fullsize: proxifyBskyImage(img.fullsize),
-          alt: img.alt,
-        }));
-        setGalleryImages(images);
-        setGalleryIndex(index);
-      };
+      if (embed.$type === "app.bsky.embed.images#view") {
+        const handleImageClick = (e: React.MouseEvent, index: number) => {
+          e.stopPropagation();
+          const images = embed.images.map((img: any) => ({
+            thumb: proxifyBskyImage(img.thumb),
+            fullsize: proxifyBskyImage(img.fullsize),
+            alt: img.alt,
+          }));
+          setGalleryImages(images);
+          setGalleryIndex(index);
+        };
 
-      return (
-        <div
-          className={`mt-2 grid gap-1 ${embed.images.length === 1 ? "max-w-2xl grid-cols-1" : embed.images.length === 2 ? "max-w-3xl grid-cols-2" : embed.images.length === 3 ? "max-w-3xl grid-cols-2" : "max-w-3xl grid-cols-2"}`}
-        >
-          {embed.images.map((img: any, idx: number) => {
-            const postKey = postUri || "";
-            const currentAltText = generatedAltTexts[postKey]?.[idx] || img.alt;
-            const hasAltText = currentAltText && currentAltText.length > 0;
-            const isGenerating = generatingAltText[postKey]?.[idx];
-            const shouldShowAlt = showAltText[postKey]?.[idx];
-
-            return (
-              <div
-                key={idx}
-                className={`group relative cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-90 ${
-                  embed.images.length === 3 && idx === 0 ? "col-span-2" : ""
-                }`}
-                onClick={(e) => handleImageClick(e, idx)}
-              >
-                <img
-                  src={proxifyBskyImage(img.thumb)}
-                  alt={currentAltText || ""}
-                  className="mx-auto h-auto w-full rounded-lg object-contain"
-                  style={{
-                    maxHeight: embed.images.length === 1 ? "400px" : "300px",
-                    maxWidth: embed.images.length === 1 ? "600px" : "100%",
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                  }}
-                />
-
-                {/* Alt text overlay */}
-                {hasAltText && shouldShowAlt && (
-                  <div className="absolute bottom-0 left-0 right-0 rounded-b-lg bg-black bg-opacity-70 p-2 text-xs text-white">
-                    {currentAltText}
-                  </div>
-                )}
-
-                {/* Alt text generation button */}
-                {postUri && (
-                  <button
-                    className="absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (hasAltText && !generatedAltTexts[postKey]?.[idx]) {
-                        // Toggle showing existing alt text
-                        setShowAltText((prev) => ({
-                          ...prev,
-                          [postKey]: {
-                            ...prev[postKey],
-                            [idx]: !shouldShowAlt,
-                          },
-                        }));
-                      } else if (!hasAltText) {
-                        // Generate new alt text
-                        handleGenerateAltText(
-                          proxifyBskyImage(img.fullsize) ||
-                            proxifyBskyImage(img.thumb) ||
-                            "",
-                          postUri,
-                          idx,
-                        );
-                      }
-                    }}
-                    disabled={isGenerating}
-                    title={hasAltText ? "Toggle alt text" : "Generate alt text"}
-                  >
-                    {isGenerating ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    ) : (
-                      <Sparkles size={16} />
-                    )}
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-
-    if (embed.$type === "app.bsky.embed.external#view") {
-      return (
-        <div
-          className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-blue-500 hover:bg-opacity-5"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (embed.external.uri) {
-              window.open(embed.external.uri, "_blank", "noopener,noreferrer");
-            }
-          }}
-        >
-          {embed.external.thumb && (
-            <img
-              src={proxifyBskyImage(embed.external.thumb)}
-              alt=""
-              className="mb-1 h-auto w-full rounded object-contain"
-              style={{
-                maxHeight: "200px",
-                backgroundColor: "var(--bsky-bg-tertiary)",
-              }}
-            />
-          )}
-          <div
-            className="font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
-          >
-            {embed.external.title}
-          </div>
-          <div
-            className="mt-0.5 opacity-80"
-            style={{ color: "var(--bsky-text-secondary)" }}
-          >
-            {embed.external.description}
-          </div>
-        </div>
-      );
-    }
-
-    if (embed.$type === "app.bsky.embed.video#view") {
-      return (
-        <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-          <VideoPlayer
-            src={proxifyBskyVideo(embed.playlist) || ""}
-            thumbnail={
-              embed.thumbnail ? proxifyBskyVideo(embed.thumbnail) : undefined
-            }
-            aspectRatio={embed.aspectRatio}
-            alt={embed.alt}
-          />
-        </div>
-      );
-    }
-
-    // Handle quote posts
-    if (embed.$type === "app.bsky.embed.record#view") {
-      const quotedPost = embed.record;
-      if (quotedPost?.$type === "app.bsky.embed.record#viewRecord") {
         return (
           <div
-            className="mt-2 rounded-lg border p-2 text-xs"
-            style={{ borderColor: "var(--bsky-border-primary)" }}
+            className={`mt-2 grid gap-1 ${embed.images.length === 1 ? "max-w-2xl grid-cols-1" : embed.images.length === 2 ? "max-w-3xl grid-cols-2" : embed.images.length === 3 ? "max-w-3xl grid-cols-2" : "max-w-3xl grid-cols-2"}`}
           >
-            <div className="mb-1 flex items-center gap-1">
+            {embed.images.map((img: any, idx: number) => {
+              const postKey = postUri || "";
+              const currentAltText =
+                generatedAltTexts[postKey]?.[idx] || img.alt;
+              const hasAltText = currentAltText && currentAltText.length > 0;
+              const isGenerating = generatingAltText[postKey]?.[idx];
+              const shouldShowAlt = showAltText[postKey]?.[idx];
+
+              return (
+                <div
+                  key={idx}
+                  className={`group relative cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-90 ${
+                    embed.images.length === 3 && idx === 0 ? "col-span-2" : ""
+                  }`}
+                  onClick={(e) => handleImageClick(e, idx)}
+                >
+                  <img
+                    src={proxifyBskyImage(img.thumb)}
+                    alt={currentAltText || ""}
+                    className="mx-auto h-auto w-full rounded-lg object-contain"
+                    style={{
+                      maxHeight: embed.images.length === 1 ? "400px" : "300px",
+                      maxWidth: embed.images.length === 1 ? "600px" : "100%",
+                      backgroundColor: "var(--bsky-bg-tertiary)",
+                    }}
+                  />
+
+                  {/* Alt text overlay */}
+                  {hasAltText && shouldShowAlt && (
+                    <div className="absolute bottom-0 left-0 right-0 rounded-b-lg bg-black bg-opacity-70 p-2 text-xs text-white">
+                      {currentAltText}
+                    </div>
+                  )}
+
+                  {/* Alt text generation button */}
+                  {postUri && (
+                    <button
+                      className="absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (hasAltText && !generatedAltTexts[postKey]?.[idx]) {
+                          // Toggle showing existing alt text
+                          setShowAltText((prev) => ({
+                            ...prev,
+                            [postKey]: {
+                              ...prev[postKey],
+                              [idx]: !shouldShowAlt,
+                            },
+                          }));
+                        } else if (!hasAltText) {
+                          // Generate new alt text
+                          handleGenerateAltText(
+                            proxifyBskyImage(img.fullsize) ||
+                              proxifyBskyImage(img.thumb) ||
+                              "",
+                            postUri,
+                            idx,
+                          );
+                        }
+                      }}
+                      disabled={isGenerating}
+                      title={
+                        hasAltText ? "Toggle alt text" : "Generate alt text"
+                      }
+                    >
+                      {isGenerating ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      ) : (
+                        <Sparkles size={16} />
+                      )}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+      }
+
+      if (embed.$type === "app.bsky.embed.external#view") {
+        return (
+          <div
+            className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-blue-500 hover:bg-opacity-5"
+            style={{ borderColor: "var(--bsky-border-primary)" }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (embed.external.uri) {
+                window.open(
+                  embed.external.uri,
+                  "_blank",
+                  "noopener,noreferrer",
+                );
+              }
+            }}
+          >
+            {embed.external.thumb && (
               <img
-                src={
-                  proxifyBskyImage(quotedPost.author.avatar) ||
-                  "/default-avatar.svg"
-                }
-                alt={quotedPost.author?.handle || "unknown"}
-                className="h-4 w-4 rounded-full"
+                src={proxifyBskyImage(embed.external.thumb)}
+                alt=""
+                className="mb-1 h-auto w-full rounded object-contain"
+                style={{
+                  maxHeight: "200px",
+                  backgroundColor: "var(--bsky-bg-tertiary)",
+                }}
               />
-              <span
-                className="font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
-              >
-                {quotedPost.author?.displayName ||
-                  quotedPost.author?.handle ||
-                  "Unknown"}
-              </span>
-              <span style={{ color: "var(--bsky-text-secondary)" }}>
-                @{quotedPost.author?.handle || "unknown"}
-              </span>
+            )}
+            <div
+              className="font-semibold"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              {embed.external.title}
             </div>
-            <div style={{ color: "var(--bsky-text-primary)" }}>
-              {quotedPost.value.text}
+            <div
+              className="mt-0.5 opacity-80"
+              style={{ color: "var(--bsky-text-secondary)" }}
+            >
+              {embed.external.description}
             </div>
           </div>
         );
       }
-    }
 
-    // Handle record with media
-    if (embed.$type === "app.bsky.embed.recordWithMedia#view") {
-      return (
-        <div className="mt-2">
-          {embed.media && renderEmbed(embed.media, postUri)}
-          {embed.record && renderEmbed(embed.record, postUri)}
-        </div>
-      );
-    }
+      if (embed.$type === "app.bsky.embed.video#view") {
+        return (
+          <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+            <VideoPlayer
+              src={proxifyBskyVideo(embed.playlist) || ""}
+              thumbnail={
+                embed.thumbnail ? proxifyBskyVideo(embed.thumbnail) : undefined
+              }
+              aspectRatio={embed.aspectRatio}
+              alt={embed.alt}
+            />
+          </div>
+        );
+      }
 
-    return null;
-  };
+      // Handle quote posts
+      if (embed.$type === "app.bsky.embed.record#view") {
+        const quotedPost = embed.record;
+        if (quotedPost?.$type === "app.bsky.embed.record#viewRecord") {
+          return (
+            <div
+              className="mt-2 rounded-lg border p-2 text-xs"
+              style={{ borderColor: "var(--bsky-border-primary)" }}
+            >
+              <div className="mb-1 flex items-center gap-1">
+                <img
+                  src={
+                    proxifyBskyImage(quotedPost.author.avatar) ||
+                    "/default-avatar.svg"
+                  }
+                  alt={quotedPost.author?.handle || "unknown"}
+                  className="h-4 w-4 rounded-full"
+                />
+                <span
+                  className="font-semibold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  {quotedPost.author?.displayName ||
+                    quotedPost.author?.handle ||
+                    "Unknown"}
+                </span>
+                <span style={{ color: "var(--bsky-text-secondary)" }}>
+                  @{quotedPost.author?.handle || "unknown"}
+                </span>
+              </div>
+              <div style={{ color: "var(--bsky-text-primary)" }}>
+                {quotedPost.value.text}
+              </div>
+            </div>
+          );
+        }
+      }
+
+      // Handle record with media
+      if (embed.$type === "app.bsky.embed.recordWithMedia#view") {
+        return (
+          <div className="mt-2">
+            {embed.media && renderEmbed(embed.media, postUri)}
+            {embed.record && renderEmbed(embed.record, postUri)}
+          </div>
+        );
+      }
+
+      return null;
+    },
+    [
+      generatedAltTexts,
+      generatingAltText,
+      showAltText,
+      handleGenerateAltText,
+      setGalleryImages,
+      setGalleryIndex,
+      setShowAltText,
+    ],
+  );
 
   // Render thread nodes recursively
-  const renderThreadNodes = (nodes: ThreadNode[]) => {
-    return nodes.map((node) => {
-      const post = node.post;
-      const notification = node.notification;
-      const isUnread =
-        showUnreadIndicators && notification && !notification.isRead;
-      const isHighlighted = highlightUri && post?.uri === highlightUri;
-      const author = post?.author || notification?.author;
-      // Generate external bsky.app URL for the external link button
-      const postUrl =
-        post?.uri && author?.handle
-          ? (() => {
-              const postId = post.uri.split("/").pop();
-              return `https://bsky.app/profile/${author.handle}/post/${postId}`;
-            })()
-          : null;
+  const renderThreadNodes = useCallback(
+    (nodes: ThreadNode[]): JSX.Element[] => {
+      return nodes.map((node) => {
+        const post = node.post;
+        const notification = node.notification;
+        const isUnread =
+          showUnreadIndicators && notification && !notification.isRead;
+        const isHighlighted = highlightUri && post?.uri === highlightUri;
+        const author = post?.author || notification?.author;
+        // Generate external bsky.app URL for the external link button
+        const postUrl =
+          post?.uri && author?.handle
+            ? (() => {
+                const postId = post.uri.split("/").pop();
+                return `https://bsky.app/profile/${author.handle}/post/${postId}`;
+              })()
+            : null;
 
-      return (
-        <div
-          key={post?.uri || notification?.uri || `node-${node.depth}`}
-          className="mb-4"
-          ref={isHighlighted ? highlightRef : null}
-        >
-          {/* Thread line connector for nested replies */}
-          {node.depth > 0 && (
-            <div className="flex">
-              <div
-                className="flex w-8 flex-shrink-0 justify-center"
-                style={{ marginLeft: `${(node.depth - 1) * indentWidth}px` }}
-              >
-                <div
-                  className="-mt-6 h-6 w-0.5"
-                  style={{ backgroundColor: "var(--bsky-border-primary)" }}
-                />
-              </div>
-              <div className="flex-1" />
-            </div>
-          )}
-
-          {/* Post content */}
+        return (
           <div
-            className="flex"
-            style={{ marginLeft: `${node.depth * indentWidth}px` }}
+            key={post?.uri || notification?.uri || `node-${node.depth}`}
+            className="mb-4"
+            ref={isHighlighted ? highlightRef : null}
           >
-            {/* Branch indicator */}
-            {node.depth > 0 && (maxThreadDepth <= 15 || node.depth < 10) && (
-              <div
-                className="flex flex-shrink-0 items-start justify-center pt-3"
-                style={{
-                  width:
-                    maxThreadDepth > 10
-                      ? "16px"
-                      : maxThreadDepth > 7
-                        ? "24px"
-                        : "32px",
-                  marginRight: maxThreadDepth > 10 ? "4px" : "0",
-                }}
-              >
-                <CornerDownRight
-                  size={maxThreadDepth > 10 ? 10 : maxThreadDepth > 7 ? 12 : 16}
-                  style={{
-                    color: "var(--bsky-text-tertiary)",
-                    opacity:
-                      maxThreadDepth > 15
-                        ? 0.3
-                        : maxThreadDepth > 10
-                          ? 0.5
-                          : 0.7,
-                  }}
-                />
+            {/* Thread line connector for nested replies */}
+            {node.depth > 0 && (
+              <div className="flex">
+                <div
+                  className="flex w-8 flex-shrink-0 justify-center"
+                  style={{ marginLeft: `${(node.depth - 1) * indentWidth}px` }}
+                >
+                  <div
+                    className="-mt-6 h-6 w-0.5"
+                    style={{ backgroundColor: "var(--bsky-border-primary)" }}
+                  />
+                </div>
+                <div className="flex-1" />
               </div>
             )}
 
-            {/* Post card */}
+            {/* Post content */}
             <div
-              className={`min-w-0 flex-1 ${maxThreadDepth > 15 ? "p-2" : maxThreadDepth > 10 ? "p-3" : "p-4"} cursor-pointer rounded-lg transition-all hover:bg-blue-500 hover:bg-opacity-5 ${
-                isUnread ? "ring-2 ring-blue-500 ring-opacity-30" : ""
-              } ${isHighlighted && !hasShownInitialHighlight ? "ring-2 ring-orange-500 ring-opacity-50" : ""}`}
-              style={{
-                backgroundColor:
-                  isHighlighted && !hasShownInitialHighlight
-                    ? "rgba(251, 146, 60, 0.1)" // Orange highlight background (only initially)
-                    : node.isRoot
-                      ? "var(--bsky-bg-secondary)"
-                      : isUnread
-                        ? "var(--bsky-bg-primary)"
-                        : "var(--bsky-bg-secondary)",
-                border:
-                  isHighlighted && !hasShownInitialHighlight
-                    ? "2px solid rgba(251, 146, 60, 0.5)"
-                    : "1px solid var(--bsky-border-primary)",
-                overflow: "hidden",
-                fontSize:
-                  maxThreadDepth > 15
-                    ? "0.75rem"
-                    : maxThreadDepth > 10
-                      ? "0.875rem"
-                      : "1rem",
-              }}
-              onClick={(e) => {
-                // Don't do anything on post click - navigation removed
-                // Only interactive elements like buttons will trigger actions
-                e.stopPropagation();
-              }}
-              onKeyDown={(e) => {
-                // Prevent Enter key from triggering the click handler
-                if (e.key === "Enter") {
-                  e.stopPropagation();
-                }
-              }}
+              className="flex"
+              style={{ marginLeft: `${node.depth * indentWidth}px` }}
             >
-              {(node.isRoot ||
-                node.depth > 5 ||
-                (isHighlighted && hasShownInitialHighlight)) && (
-                <div className="mb-2 flex items-center gap-2">
-                  {node.isRoot && (
-                    <span
-                      className="rounded-full px-2 py-1 text-xs font-medium"
-                      style={{
-                        backgroundColor: "var(--bsky-bg-primary)",
-                        color: "var(--bsky-text-secondary)",
-                        border: "1px solid var(--bsky-border-primary)",
-                      }}
-                    >
-                      Original Post
-                    </span>
-                  )}
-                  {node.depth > 5 && !node.isRoot && (
-                    <span
-                      className="rounded px-2 py-0.5 text-xs font-medium"
-                      style={{
-                        backgroundColor: "var(--bsky-bg-tertiary)",
-                        color: "var(--bsky-text-tertiary)",
-                        opacity: 0.8,
-                      }}
-                    >
-                      Depth: {node.depth}
-                    </span>
-                  )}
-                  {isHighlighted &&
-                    hasShownInitialHighlight &&
-                    !node.isRoot && (
-                      <span
-                        className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium"
-                        style={{
-                          backgroundColor: "rgba(251, 146, 60, 0.1)",
-                          color: "rgb(251, 146, 60)",
-                          border: "1px solid rgba(251, 146, 60, 0.3)",
-                        }}
-                      >
-                        <ExternalLink size={10} />
-                        Opened here
-                      </span>
-                    )}
-                  {post && node.isRoot && (
-                    <span
-                      className="rounded px-2 py-1 text-xs"
-                      style={{
-                        color: "var(--bsky-text-tertiary)",
-                        backgroundColor: "var(--bsky-bg-primary)",
-                      }}
-                    >
-                      {formatDistanceToNow(
-                        new Date(
-                          (post.record as any)?.createdAt || post.indexedAt,
-                        ),
-                        { addSuffix: true },
-                      )}
-                    </span>
-                  )}
+              {/* Branch indicator */}
+              {node.depth > 0 && (maxThreadDepth <= 15 || node.depth < 10) && (
+                <div
+                  className="flex flex-shrink-0 items-start justify-center pt-3"
+                  style={{
+                    width:
+                      maxThreadDepth > 10
+                        ? "16px"
+                        : maxThreadDepth > 7
+                          ? "24px"
+                          : "32px",
+                    marginRight: maxThreadDepth > 10 ? "4px" : "0",
+                  }}
+                >
+                  <CornerDownRight
+                    size={
+                      maxThreadDepth > 10 ? 10 : maxThreadDepth > 7 ? 12 : 16
+                    }
+                    style={{
+                      color: "var(--bsky-text-tertiary)",
+                      opacity:
+                        maxThreadDepth > 15
+                          ? 0.3
+                          : maxThreadDepth > 10
+                            ? 0.5
+                            : 0.7,
+                    }}
+                  />
                 </div>
               )}
 
+              {/* Post card */}
               <div
-                className={`flex items-start ${maxThreadDepth > 15 ? "gap-2" : "gap-3"}`}
+                className={`min-w-0 flex-1 ${maxThreadDepth > 15 ? "p-2" : maxThreadDepth > 10 ? "p-3" : "p-4"} cursor-pointer rounded-lg transition-all hover:bg-blue-500 hover:bg-opacity-5 ${
+                  isUnread ? "ring-2 ring-blue-500 ring-opacity-30" : ""
+                } ${isHighlighted && !hasShownInitialHighlight ? "ring-2 ring-orange-500 ring-opacity-50" : ""}`}
+                style={{
+                  backgroundColor:
+                    isHighlighted && !hasShownInitialHighlight
+                      ? "rgba(251, 146, 60, 0.1)" // Orange highlight background (only initially)
+                      : node.isRoot
+                        ? "var(--bsky-bg-secondary)"
+                        : isUnread
+                          ? "var(--bsky-bg-primary)"
+                          : "var(--bsky-bg-secondary)",
+                  border:
+                    isHighlighted && !hasShownInitialHighlight
+                      ? "2px solid rgba(251, 146, 60, 0.5)"
+                      : "1px solid var(--bsky-border-primary)",
+                  overflow: "hidden",
+                  fontSize:
+                    maxThreadDepth > 15
+                      ? "0.75rem"
+                      : maxThreadDepth > 10
+                        ? "0.875rem"
+                        : "1rem",
+                }}
+                onClick={(e) => {
+                  // Don't do anything on post click - navigation removed
+                  // Only interactive elements like buttons will trigger actions
+                  e.stopPropagation();
+                }}
+                onKeyDown={(e) => {
+                  // Prevent Enter key from triggering the click handler
+                  if (e.key === "Enter") {
+                    e.stopPropagation();
+                  }
+                }}
               >
-                <div className="flex-shrink-0">
-                  {author?.avatar ? (
-                    <img
-                      src={proxifyBskyImage(author.avatar)}
-                      alt={author.handle}
-                      className={`${maxThreadDepth > 15 ? "h-6 w-6" : maxThreadDepth > 10 ? "h-8 w-8" : "h-10 w-10"} cursor-pointer rounded-full object-cover transition-opacity hover:opacity-80`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (author.handle) {
-                          navigate(`/profile/${author.handle}`);
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div
-                      className={`${maxThreadDepth > 15 ? "h-6 w-6" : maxThreadDepth > 10 ? "h-8 w-8" : "h-10 w-10"} flex cursor-pointer items-center justify-center rounded-full transition-opacity hover:opacity-80`}
-                      style={{ background: "var(--bsky-bg-tertiary)" }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (author?.handle) {
-                          navigate(`/profile/${author.handle}`);
-                        }
-                      }}
-                    >
+                {(node.isRoot ||
+                  node.depth > 5 ||
+                  (isHighlighted && hasShownInitialHighlight)) && (
+                  <div className="mb-2 flex items-center gap-2">
+                    {node.isRoot && (
                       <span
-                        className={`${maxThreadDepth > 15 ? "text-xs" : "text-sm"} font-semibold`}
+                        className="rounded-full px-2 py-1 text-xs font-medium"
+                        style={{
+                          backgroundColor: "var(--bsky-bg-primary)",
+                          color: "var(--bsky-text-secondary)",
+                          border: "1px solid var(--bsky-border-primary)",
+                        }}
                       >
-                        {author?.handle?.charAt(0).toUpperCase() || "U"}
+                        Original Post
                       </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex items-center justify-between">
-                    <div className="flex min-w-0 items-center gap-1">
+                    )}
+                    {node.depth > 5 && !node.isRoot && (
                       <span
-                        className="truncate text-sm font-semibold"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        className="rounded px-2 py-0.5 text-xs font-medium"
+                        style={{
+                          backgroundColor: "var(--bsky-bg-tertiary)",
+                          color: "var(--bsky-text-tertiary)",
+                          opacity: 0.8,
+                        }}
                       >
-                        {author?.displayName || author?.handle || "Unknown"}
+                        Depth: {node.depth}
                       </span>
+                    )}
+                    {isHighlighted &&
+                      hasShownInitialHighlight &&
+                      !node.isRoot && (
+                        <span
+                          className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium"
+                          style={{
+                            backgroundColor: "rgba(251, 146, 60, 0.1)",
+                            color: "rgb(251, 146, 60)",
+                            border: "1px solid rgba(251, 146, 60, 0.3)",
+                          }}
+                        >
+                          <ExternalLink size={10} />
+                          Opened here
+                        </span>
+                      )}
+                    {post && node.isRoot && (
                       <span
-                        className="flex-shrink-0 text-xs"
-                        style={{ color: "var(--bsky-text-secondary)" }}
-                      >
-                        @{author?.handle || "unknown"}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <time
                         className="rounded px-2 py-1 text-xs"
                         style={{
                           color: "var(--bsky-text-tertiary)",
@@ -756,103 +723,188 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       >
                         {formatDistanceToNow(
                           new Date(
-                            (post?.record as any)?.createdAt ||
-                              post?.indexedAt ||
-                              Date.now(),
+                            (post.record as any)?.createdAt || post.indexedAt,
                           ),
                           { addSuffix: true },
                         )}
-                      </time>
-                      {postUrl && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.open(
-                              postUrl,
-                              "_blank",
-                              "noopener,noreferrer",
-                            );
-                          }}
-                          className="transition-opacity hover:opacity-70"
-                          aria-label="Open in Bluesky"
-                        >
-                          <ExternalLink
-                            size={14}
-                            style={{ color: "var(--bsky-text-tertiary)" }}
-                          />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <p
-                    className="overflow-wrap-anywhere break-words text-sm"
-                    style={{
-                      color: "var(--bsky-text-primary)",
-                      lineHeight: "1.5",
-                      wordBreak: "break-word",
-                      overflowWrap: "anywhere",
-                    }}
-                  >
-                    {post ? (
-                      (post.record as any)?.text || "[No text]"
-                    ) : (
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
-                        <Loader2
-                          size={14}
-                          className="mr-1 inline animate-spin"
-                        />
-                        Loading post content...
                       </span>
                     )}
-                  </p>
+                  </div>
+                )}
 
-                  {post?.embed && renderEmbed(post.embed, post.uri)}
+                <div
+                  className={`flex items-start ${maxThreadDepth > 15 ? "gap-2" : "gap-3"}`}
+                >
+                  <div className="flex-shrink-0">
+                    {author?.avatar ? (
+                      <img
+                        src={proxifyBskyImage(author.avatar)}
+                        alt={author.handle}
+                        className={`${maxThreadDepth > 15 ? "h-6 w-6" : maxThreadDepth > 10 ? "h-8 w-8" : "h-10 w-10"} cursor-pointer rounded-full object-cover transition-opacity hover:opacity-80`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (author.handle) {
+                            navigate(`/profile/${author.handle}`);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className={`${maxThreadDepth > 15 ? "h-6 w-6" : maxThreadDepth > 10 ? "h-8 w-8" : "h-10 w-10"} flex cursor-pointer items-center justify-center rounded-full transition-opacity hover:opacity-80`}
+                        style={{ background: "var(--bsky-bg-tertiary)" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (author?.handle) {
+                            navigate(`/profile/${author.handle}`);
+                          }
+                        }}
+                      >
+                        <span
+                          className={`${maxThreadDepth > 15 ? "text-xs" : "text-sm"} font-semibold`}
+                        >
+                          {author?.handle?.charAt(0).toUpperCase() || "U"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
 
-                  {isUnread && (
-                    <span
-                      className="mt-2 inline-block rounded-full px-2 py-0.5 text-xs"
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center justify-between">
+                      <div className="flex min-w-0 items-center gap-1">
+                        <span
+                          className="truncate text-sm font-semibold"
+                          style={{ color: "var(--bsky-text-primary)" }}
+                        >
+                          {author?.displayName || author?.handle || "Unknown"}
+                        </span>
+                        <span
+                          className="flex-shrink-0 text-xs"
+                          style={{ color: "var(--bsky-text-secondary)" }}
+                        >
+                          @{author?.handle || "unknown"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <time
+                          className="rounded px-2 py-1 text-xs"
+                          style={{
+                            color: "var(--bsky-text-tertiary)",
+                            backgroundColor: "var(--bsky-bg-primary)",
+                          }}
+                        >
+                          {formatDistanceToNow(
+                            new Date(
+                              (post?.record as any)?.createdAt ||
+                                post?.indexedAt ||
+                                Date.now(),
+                            ),
+                            { addSuffix: true },
+                          )}
+                        </time>
+                        {postUrl && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(
+                                postUrl,
+                                "_blank",
+                                "noopener,noreferrer",
+                              );
+                            }}
+                            className="transition-opacity hover:opacity-70"
+                            aria-label="Open in Bluesky"
+                          >
+                            <ExternalLink
+                              size={14}
+                              style={{ color: "var(--bsky-text-tertiary)" }}
+                            />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <p
+                      className="overflow-wrap-anywhere break-words text-sm"
                       style={{
-                        backgroundColor: "var(--bsky-primary)",
-                        color: "white",
+                        color: "var(--bsky-text-primary)",
+                        lineHeight: "1.5",
+                        wordBreak: "break-word",
+                        overflowWrap: "anywhere",
                       }}
                     >
-                      New
-                    </span>
-                  )}
+                      {post ? (
+                        (post.record as any)?.text || "[No text]"
+                      ) : (
+                        <span style={{ color: "var(--bsky-text-secondary)" }}>
+                          <Loader2
+                            size={14}
+                            className="mr-1 inline animate-spin"
+                          />
+                          Loading post content...
+                        </span>
+                      )}
+                    </p>
+
+                    {post?.embed && renderEmbed(post.embed, post.uri)}
+
+                    {isUnread && (
+                      <span
+                        className="mt-2 inline-block rounded-full px-2 py-0.5 text-xs"
+                        style={{
+                          backgroundColor: "var(--bsky-primary)",
+                          color: "white",
+                        }}
+                      >
+                        New
+                      </span>
+                    )}
+                  </div>
                 </div>
+
+                {/* Post Action Bar */}
+                {post && (
+                  <PostActionBar
+                    post={post}
+                    onReply={() => {
+                      // Pass the post being replied to up to the ThreadModal
+                      onPostClick?.(post, "reply");
+                    }}
+                    onRepost={() => handleRepost(post)}
+                    onQuote={() => {
+                      // Pass the post being quoted to up to the ThreadModal
+                      onPostClick?.(post, "quote");
+                    }}
+                    onLike={() => handleLike(post)}
+                    showCounts={true}
+                    size={maxThreadDepth > 10 ? "small" : "medium"}
+                    isReplying={false}
+                  />
+                )}
               </div>
-
-              {/* Post Action Bar */}
-              {post && (
-                <PostActionBar
-                  post={post}
-                  onReply={() => {
-                    // Pass the post being replied to up to the ThreadModal
-                    onPostClick?.(post, "reply");
-                  }}
-                  onRepost={() => handleRepost(post)}
-                  onQuote={() => {
-                    // Pass the post being quoted to up to the ThreadModal
-                    onPostClick?.(post, "quote");
-                  }}
-                  onLike={() => handleLike(post)}
-                  showCounts={true}
-                  size={maxThreadDepth > 10 ? "small" : "medium"}
-                  isReplying={false}
-                />
-              )}
             </div>
-          </div>
 
-          {/* Render children */}
-          {node.children.length > 0 && (
-            <div>{renderThreadNodes(node.children)}</div>
-          )}
-        </div>
-      );
-    });
-  };
+            {/* Render children */}
+            {node.children.length > 0 && (
+              <div>{renderThreadNodes(node.children)}</div>
+            )}
+          </div>
+        );
+      });
+    },
+    [
+      showUnreadIndicators,
+      highlightUri,
+      highlightRef,
+      hasShownInitialHighlight,
+      indentWidth,
+      maxThreadDepth,
+      navigate,
+      onPostClick,
+      renderEmbed,
+      handleLike,
+      handleRepost,
+    ],
+  );
 
   return (
     <>

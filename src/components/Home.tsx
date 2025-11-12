@@ -30,7 +30,6 @@ import {
 import { useBookmarks } from "../hooks/useBookmarks";
 import { useIntersectionLoader } from "../hooks/useIntersectionLoader";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
-import { generateAltText } from "../services/anthropic";
 import { columnService } from "../services/column-service";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
@@ -44,6 +43,10 @@ import { ProgressiveImage } from "./ui/ProgressiveImage";
 import { FeedSkeleton } from "./ui/SkeletonLoader";
 
 const logger = createLogger("Home");
+
+async function loadAnthropicService() {
+  return await import("../services/anthropic");
+}
 
 type FeedType =
   | "following"
@@ -1092,7 +1095,8 @@ export const Home: React.FC<HomeProps> = React.memo(
         }));
         try {
           // Pass the URL directly to the backend which will handle fetching
-          const altText = await generateAltText(imageUrl);
+          const anthropicService = await loadAnthropicService();
+          const altText = await anthropicService.generateAltText(imageUrl);
 
           setGeneratedAltTexts((prev) => ({
             ...prev,

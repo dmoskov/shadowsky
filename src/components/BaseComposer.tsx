@@ -1,12 +1,15 @@
 import { AlertCircle, Image, Loader, Send, Smile, X } from "lucide-react";
 import React, { useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { generateAltText } from "../services/anthropic";
 import { debug } from "../shared/debug";
 import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { safeCreateObjectURL, safeRevokeObjectURL } from "../utils/retry";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
+
+async function loadAnthropicService() {
+  return await import("../services/anthropic");
+}
 
 interface UploadedMedia {
   id: string;
@@ -238,7 +241,8 @@ export function BaseComposer({
         reader.readAsDataURL(item.file);
       });
 
-      const alt = await generateAltText(dataUrl);
+      const anthropicService = await loadAnthropicService();
+      const alt = await anthropicService.generateAltText(dataUrl);
       updateAltText(id, alt);
     } catch (error) {
       debug.error("Failed to generate alt text:", error);

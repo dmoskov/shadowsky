@@ -2,6 +2,7 @@ import type { BskyAgent } from "@atproto/api";
 import { getApiBaseUrl } from "../config/amplify";
 import { createLogger } from "../utils/logger";
 import {
+  ALT_TEXT_RETRY_OPTIONS,
   API_RETRY_OPTIONS,
   blobUrlToDataUrl,
   fetchWithRetry,
@@ -257,7 +258,7 @@ export async function generateAltText(imageUrl: string): Promise<string> {
         },
         body: JSON.stringify(payload),
       },
-      API_RETRY_OPTIONS,
+      ALT_TEXT_RETRY_OPTIONS,
     );
 
     logger.log("Alt text response status:", response.status);
@@ -276,7 +277,16 @@ export async function generateAltText(imageUrl: string): Promise<string> {
     analytics.trackError(error as Error, "alt_text_generation");
 
     // Provide more specific error messages based on error type
-    if (error instanceof TypeError && error.message.includes("fetch")) {
+    if (
+      error instanceof Error &&
+      (error.message.toLowerCase().includes("timeout") ||
+        error.message.includes("TIMEOUT_ERROR"))
+    ) {
+      // Timeout error after all retries
+      throw new Error(
+        "Alt text generation timed out. The service took too long to respond. Please try again with a smaller image.",
+      );
+    } else if (error instanceof TypeError && error.message.includes("fetch")) {
       // Network error - likely backend is down or SSL issue
       throw new Error(
         "Alt text generation service is temporarily unavailable. Please deploy the backend server to api.shadowsky.io",

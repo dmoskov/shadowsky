@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import React from "react";
 import { useNavigate } from "react-router";
-import { generateAltText } from "../services/anthropic";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
 import { parseBskyUrl } from "../utils/url-helpers";
@@ -22,6 +21,10 @@ import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { ProgressiveImage } from "./ui/ProgressiveImage";
 
 const logger = createLogger("PostRenderer");
+
+async function loadAnthropicService() {
+  return await import("../services/anthropic");
+}
 
 // Component to detect and render Bluesky URLs as embedded quotes
 const BskyUrlEmbed: React.FC<{
@@ -242,7 +245,8 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
     setGeneratingAltText((prev) => ({ ...prev, [index]: true }));
     try {
       // Pass the URL directly to the backend which will handle fetching
-      const altText = await generateAltText(imageUrl);
+      const anthropicService = await loadAnthropicService();
+      const altText = await anthropicService.generateAltText(imageUrl);
 
       setGeneratedAltTexts((prev) => ({ ...prev, [index]: altText }));
       setShowAltText((prev) => ({ ...prev, [index]: true }));

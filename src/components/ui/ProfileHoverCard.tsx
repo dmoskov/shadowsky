@@ -41,7 +41,7 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = ({
 
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const triggerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLSpanElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const { agent, session } = useAuth();
@@ -169,14 +169,14 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = ({
 
   return (
     <>
-      <div
+      <span
         ref={triggerRef}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
         style={{ display: "inline-block" }}
       >
         {children}
-      </div>
+      </span>
 
       {showCard &&
         cardPosition &&

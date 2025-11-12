@@ -12,13 +12,16 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { generateAltText } from "../services/anthropic";
 import { debug } from "../shared/debug";
 import { extractBskyUrls, parseBskyPostUrl } from "../utils/bsky-url-parser";
 import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
+
+async function loadAnthropicService() {
+  return await import("../services/anthropic");
+}
 
 // Temporary type definitions until these are added to anthropic service
 interface HashtagSuggestion {
@@ -366,7 +369,8 @@ export function EnhancedComposer({
         reader.readAsDataURL(item.file);
       });
 
-      const alt = await generateAltText(dataUrl);
+      const anthropicService = await loadAnthropicService();
+      const alt = await anthropicService.generateAltText(dataUrl);
       updateAltText(id, alt);
     } catch (error) {
       debug.error("Failed to generate alt text:", error);

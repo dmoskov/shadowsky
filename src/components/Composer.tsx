@@ -22,14 +22,10 @@ import {
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { analytics } from "../services/analytics";
-import {
-  adjustTone,
-  generateAltText,
-  getStyleMatchedWritingFeedback,
-  suggestHashtags,
-  type StyleMatchedWritingFeedback,
-  type ThreadOptimizationResult,
-  type ToneOption,
+import type {
+  StyleMatchedWritingFeedback,
+  ThreadOptimizationResult,
+  ToneOption,
 } from "../services/anthropic";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { ThreadgateService } from "../services/atproto/threadgate";
@@ -54,6 +50,16 @@ import { ReplyControls, type ReplyPermission } from "./ReplyControls";
 import { AISettingsPanel } from "./settings/AISettingsPanel";
 
 const logger = createLogger("Composer");
+
+let anthropicServiceModule: typeof import("../services/anthropic") | null =
+  null;
+
+async function loadAnthropicService() {
+  if (!anthropicServiceModule) {
+    anthropicServiceModule = await import("../services/anthropic");
+  }
+  return anthropicServiceModule;
+}
 
 interface NumberingFormat {
   id: string;
@@ -355,8 +361,9 @@ export function Composer() {
     const timer = setTimeout(async () => {
       setIsLoadingHashtags(true);
       try {
+        const anthropicService = await loadAnthropicService();
         const existingTags = text.match(/#[a-zA-Z0-9]+/g) || [];
-        const result = await suggestHashtags(
+        const result = await anthropicService.suggestHashtags(
           text,
           existingTags.map((tag) => tag.slice(1)),
         );
@@ -883,7 +890,10 @@ export function Composer() {
       setGeneratingAltTextFor(mediaId);
 
       try {
-        const altText = await generateAltText(mediaItem.preview);
+        const anthropicService = await loadAnthropicService();
+        const altText = await anthropicService.generateAltText(
+          mediaItem.preview,
+        );
         updateMediaAlt(mediaId, altText);
         setGeneratingAltTextFor(null);
         debug.log("Alt text generated successfully", {
@@ -1687,7 +1697,8 @@ export function Composer() {
       });
 
       try {
-        const result = await adjustTone(text, tone);
+        const anthropicService = await loadAnthropicService();
+        const result = await anthropicService.adjustTone(text, tone);
         setTonePreview(result.adjustedText);
         setShowTonePreview(true);
         setShowToneOptions(false);
@@ -1910,7 +1921,11 @@ export function Composer() {
       if (!agent) {
         throw new Error("Not authenticated");
       }
-      const feedback = await getStyleMatchedWritingFeedback(text, agent);
+      const anthropicService = await loadAnthropicService();
+      const feedback = await anthropicService.getStyleMatchedWritingFeedback(
+        text,
+        agent,
+      );
       setWritingFeedback(feedback);
       setShowWritingFeedback(true);
       debug.log("Writing feedback received", feedback);

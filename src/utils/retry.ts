@@ -169,6 +169,46 @@ export const AT_PROTO_RETRY_OPTIONS: RetryOptions = {
 };
 
 /**
+ * Retry options optimized for alt-text generation
+ * - 8 second timeout per request (handled by Lambda)
+ * - Maximum 3 attempts (1 initial + 2 retries)
+ * - Exponential backoff: 1s, 2s delays
+ * - Total max time: ~27s (8s + 1s + 8s + 2s + 8s)
+ * - Target: 95% completion within 10s
+ */
+export const ALT_TEXT_RETRY_OPTIONS: RetryOptions = {
+  maxAttempts: 3,
+  initialDelayMs: 1000,
+  maxDelayMs: 2000,
+  backoffFactor: 2,
+  retryableErrors: (error: any) => {
+    // Don't retry on authentication errors (401)
+    if (error instanceof Error && error.message.includes("401")) {
+      return false;
+    }
+
+    // Don't retry on client errors (400, 403)
+    if (
+      error instanceof Error &&
+      (error.message.includes("400") || error.message.includes("403"))
+    ) {
+      return false;
+    }
+
+    // Retry on timeout errors
+    if (
+      error instanceof Error &&
+      (error.message.toLowerCase().includes("timeout") ||
+        error.message.includes("TIMEOUT_ERROR"))
+    ) {
+      return true;
+    }
+
+    return DEFAULT_OPTIONS.retryableErrors(error);
+  },
+};
+
+/**
  * Safe wrapper for createObjectURL with error handling
  */
 export function safeCreateObjectURL(blob: Blob): string | null {

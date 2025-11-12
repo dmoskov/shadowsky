@@ -6,6 +6,7 @@ import {
   LambdaIntegration,
   RestApi,
 } from 'aws-cdk-lib/aws-apigateway';
+import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { writingFeedback } from './functions/writing-feedback/resource';
@@ -14,6 +15,7 @@ import { adjustTone } from './functions/adjust-tone/resource';
 import { optimizeThread } from './functions/optimize-thread/resource';
 import { suggestHashtags } from './functions/suggest-hashtags/resource';
 import { styleAnalysis } from './functions/style-analysis/resource';
+import { createAnthropicDashboard, createAnthropicAlarms } from './functions/shared/cloudwatch-dashboard';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -101,6 +103,28 @@ suggestHashtagsResource.addMethod('POST', suggestHashtagsIntegration, methodOpti
 
 const styleAnalysisResource = apiResource.addResource('style-analysis');
 styleAnalysisResource.addMethod('POST', styleAnalysisIntegration, methodOptions);
+
+// Create DynamoDB table for alt-text cache
+const altTextCacheTable = new Table(apiStack, 'AltTextCache', {
+  partitionKey: {
+    name: 'imageHash',
+    type: AttributeType.STRING,
+  },
+  billingMode: BillingMode.PAY_PER_REQUEST,
+  timeToLiveAttribute: 'ttl',
+  tableName: 'shadowsky-alt-text-cache',
+});
+
+// Grant the generate-alt-text Lambda permission to read/write to the cache table
+altTextCacheTable.grantReadWriteData(backend.generateAltText.resources.lambda);
+
+// Add table name as environment variable to the Lambda
+backend.generateAltText.addEnvironment('ALT_TEXT_CACHE_TABLE', altTextCacheTable.tableName);
+
+// Create CloudWatch Dashboard for Anthropic API monitoring
+const monitoringStack = backend.createStack('monitoring-stack');
+createAnthropicDashboard(monitoringStack);
+createAnthropicAlarms(monitoringStack);
 
 // Add custom stack output for the API URL
 backend.addOutput({
