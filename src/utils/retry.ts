@@ -1,4 +1,11 @@
 import { createLogger } from "./logger";
+import {
+  logRequestStart,
+  logRequestSuccess,
+  logRequestFailure,
+  logRetryAttempt,
+  type NetworkLogContext,
+} from "./network-logger";
 
 const logger = createLogger("Retry");
 
@@ -264,26 +271,85 @@ export async function blobUrlToDataUrl(
 }
 
 /**
- * Fetch with retry
+ * Fetch with retry and structured logging
  */
 export async function fetchWithRetry(
   url: string,
   init?: RequestInit,
   options: RetryOptions = API_RETRY_OPTIONS,
 ): Promise<Response> {
-  return retryWithBackoff(async () => {
-    const response = await fetch(url, init);
+  const opts = { ...DEFAULT_OPTIONS, ...options };
+  let lastError: any;
+  let logContext: NetworkLogContext | undefined;
 
-    // Throw on HTTP errors to trigger retry logic
-    if (!response.ok) {
-      const error: any = new Error(
-        `HTTP ${response.status}: ${response.statusText}`,
+  for (let attempt = 1; attempt <= opts.maxAttempts; attempt++) {
+    try {
+      logContext = logRequestStart(url, init, attempt);
+      const response = await fetch(url, init);
+
+      // Throw on HTTP errors to trigger retry logic
+      if (!response.ok) {
+        const error: any = new Error(
+          `HTTP ${response.status}: ${response.statusText}`,
+        );
+        error.status = response.status;
+        error.response = response;
+
+        // Log failure
+        logRequestFailure(logContext, error);
+
+        // Check if we should retry
+        if (attempt < opts.maxAttempts && opts.retryableErrors(error)) {
+          lastError = error;
+          const delay = Math.min(
+            opts.initialDelayMs * Math.pow(opts.backoffFactor, attempt - 1),
+            opts.maxDelayMs,
+          );
+          logRetryAttempt(logContext, attempt, delay, error);
+          opts.onRetry(error, attempt);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+
+        throw error;
+      }
+
+      logRequestSuccess(logContext, response);
+      return response;
+    } catch (error) {
+      lastError = error;
+
+      if (logContext && !(error && typeof error === 'object' && 'response' in error)) {
+        logRequestFailure(logContext, error);
+      }
+
+      // Check if this is the last attempt
+      if (attempt === opts.maxAttempts) {
+        logger.error(`Failed after ${attempt} attempts:`, error);
+        throw error;
+      }
+
+      // Check if error is retryable
+      if (!opts.retryableErrors(error)) {
+        logger.error("Non-retryable error:", error);
+        throw error;
+      }
+
+      // Calculate delay with exponential backoff
+      const delay = Math.min(
+        opts.initialDelayMs * Math.pow(opts.backoffFactor, attempt - 1),
+        opts.maxDelayMs,
       );
-      error.status = response.status;
-      error.response = response;
-      throw error;
-    }
 
-    return response;
-  }, options);
+      if (logContext) {
+        logRetryAttempt(logContext, attempt, delay, error);
+      }
+      opts.onRetry(error, attempt);
+
+      // Wait before retrying
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError;
 }

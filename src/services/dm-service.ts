@@ -1,5 +1,6 @@
 import type { BskyAgent } from "@atproto/api";
 import { debug } from "@bsky/shared";
+import { fetchWithRetry, API_RETRY_OPTIONS } from "../utils/retry";
 
 export interface DmConversation {
   id: string;
@@ -72,19 +73,13 @@ class DmService {
       // The chat API is separate from the user's PDS
       const headers = await this.getAuthHeaders();
 
-      const apiResponse = await fetch(
+      const apiResponse = await fetchWithRetry(
         "https://api.bsky.chat/xrpc/chat.bsky.convo.listConvos",
         {
           headers,
         },
+        API_RETRY_OPTIONS,
       );
-
-      if (!apiResponse.ok) {
-        const errorText = await apiResponse.text();
-        throw new Error(
-          `Failed to list conversations: ${apiResponse.status} ${apiResponse.statusText}. ${errorText}`,
-        );
-      }
 
       const response = await apiResponse.json();
 
@@ -135,33 +130,24 @@ class DmService {
     try {
       const headers = await this.getAuthHeaders();
 
-      const messagesResponse = await fetch(
+      const messagesResponse = await fetchWithRetry(
         `https://api.bsky.chat/xrpc/chat.bsky.convo.getMessages?convoId=${conversationId}`,
         {
           headers,
         },
+        API_RETRY_OPTIONS,
       );
-
-      if (!messagesResponse.ok) {
-        const errorText = await messagesResponse.text();
-        throw new Error(
-          `Failed to get messages: ${messagesResponse.status} ${messagesResponse.statusText}. ${errorText}`,
-        );
-      }
 
       const messagesData = await messagesResponse.json();
 
       // Also get the conversation details
-      const convoResponse = await fetch(
+      const convoResponse = await fetchWithRetry(
         `https://api.bsky.chat/xrpc/chat.bsky.convo.getConvo?convoId=${conversationId}`,
         {
           headers,
         },
+        API_RETRY_OPTIONS,
       );
-
-      if (!convoResponse.ok) {
-        throw new Error(`Failed to get conversation details`);
-      }
 
       const convoData = await convoResponse.json();
       const convo = convoData.convo;
@@ -228,7 +214,7 @@ class DmService {
       const headers = await this.getAuthHeaders();
       headers["Content-Type"] = "application/json";
 
-      const response = await fetch(
+      await fetchWithRetry(
         "https://api.bsky.chat/xrpc/chat.bsky.convo.sendMessage",
         {
           method: "POST",
@@ -240,14 +226,8 @@ class DmService {
             },
           }),
         },
+        API_RETRY_OPTIONS,
       );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to send message: ${response.status} ${response.statusText}. ${errorText}`,
-        );
-      }
     } catch (error: any) {
       debug.error("Failed to send message:", error);
       if (error.status === 401 || error.statusCode === 401) {
@@ -267,16 +247,13 @@ class DmService {
       headers["Content-Type"] = "application/json";
 
       // First get the conversation to get the latest message ID
-      const convoResponse = await fetch(
+      const convoResponse = await fetchWithRetry(
         `https://api.bsky.chat/xrpc/chat.bsky.convo.getConvo?convoId=${conversationId}`,
         {
           headers,
         },
+        API_RETRY_OPTIONS,
       );
-
-      if (!convoResponse.ok) {
-        throw new Error(`Failed to get conversation details`);
-      }
 
       const convoData = await convoResponse.json();
       const convo = convoData.convo;
@@ -287,7 +264,7 @@ class DmService {
       }
 
       // Update read status
-      const response = await fetch(
+      await fetchWithRetry(
         "https://api.bsky.chat/xrpc/chat.bsky.convo.updateRead",
         {
           method: "POST",
@@ -297,15 +274,8 @@ class DmService {
             messageId: convo.lastMessage.id,
           }),
         },
+        API_RETRY_OPTIONS,
       );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        debug.error(
-          `Failed to update read status: ${response.status} ${response.statusText}. ${errorText}`,
-        );
-        // Don't throw error - this is not critical
-      }
     } catch (error: any) {
       debug.error("Failed to update read status:", error);
       // Don't throw - marking as read is not critical
@@ -324,7 +294,7 @@ class DmService {
       const headers = await this.getAuthHeaders();
       headers["Content-Type"] = "application/json";
 
-      const response = await fetch(
+      await fetchWithRetry(
         "https://api.bsky.chat/xrpc/chat.bsky.convo.deleteMessage",
         {
           method: "POST",
@@ -334,14 +304,8 @@ class DmService {
             messageId,
           }),
         },
+        API_RETRY_OPTIONS,
       );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to delete message: ${response.status} ${response.statusText}. ${errorText}`,
-        );
-      }
     } catch (error: any) {
       debug.error("Failed to delete message:", error);
       if (error.status === 401 || error.statusCode === 401) {
@@ -360,7 +324,7 @@ class DmService {
       const headers = await this.getAuthHeaders();
       headers["Content-Type"] = "application/json";
 
-      const response = await fetch(
+      await fetchWithRetry(
         "https://api.bsky.chat/xrpc/chat.bsky.convo.muteConvo",
         {
           method: "POST",
@@ -369,14 +333,8 @@ class DmService {
             convoId: conversationId,
           }),
         },
+        API_RETRY_OPTIONS,
       );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to mute conversation: ${response.status} ${response.statusText}. ${errorText}`,
-        );
-      }
     } catch (error: any) {
       debug.error("Failed to mute conversation:", error);
       throw error;
@@ -392,7 +350,7 @@ class DmService {
       const headers = await this.getAuthHeaders();
       headers["Content-Type"] = "application/json";
 
-      const response = await fetch(
+      await fetchWithRetry(
         "https://api.bsky.chat/xrpc/chat.bsky.convo.unmuteConvo",
         {
           method: "POST",
@@ -401,14 +359,8 @@ class DmService {
             convoId: conversationId,
           }),
         },
+        API_RETRY_OPTIONS,
       );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to unmute conversation: ${response.status} ${response.statusText}. ${errorText}`,
-        );
-      }
     } catch (error: any) {
       debug.error("Failed to unmute conversation:", error);
       throw error;

@@ -1,5 +1,6 @@
 import { BskyAgent } from "@atproto/api";
 import { createLogger } from "../../utils/logger";
+import { fetchWithRetry, API_RETRY_OPTIONS } from "../../utils/retry";
 
 export interface VideoUploadResult {
   blob: {
@@ -37,19 +38,19 @@ export class VideoUploadService {
       const uploadUrl =
         "https://video.bsky.app/xrpc/app.bsky.video.uploadVideo";
 
-      const uploadResponse = await fetch(uploadUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${serviceAuth.data.token}`,
-          "Content-Type": mimeType,
-          "Content-Length": videoData.length.toString(),
+      const uploadResponse = await fetchWithRetry(
+        uploadUrl,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${serviceAuth.data.token}`,
+            "Content-Type": mimeType,
+            "Content-Length": videoData.length.toString(),
+          },
+          body: videoData as any,
         },
-        body: videoData as any,
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error(`Video upload failed: ${uploadResponse.statusText}`);
-      }
+        API_RETRY_OPTIONS,
+      );
 
       const uploadResult = await uploadResponse.json();
       const jobId = uploadResult.jobId;
