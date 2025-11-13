@@ -1,6 +1,7 @@
 import { BskyAgent } from "@atproto/api";
 import { createLogger } from "../../utils/logger";
 import { API_RETRY_OPTIONS, fetchWithRetry } from "../../utils/retry";
+import { getVideoUploadMetricsTracker } from "../../utils/video-upload-metrics";
 
 export interface VideoUploadResult {
   blob: {
@@ -15,6 +16,7 @@ export interface VideoUploadResult {
 }
 
 const logger = createLogger("VideoUploadService");
+const metricsTracker = getVideoUploadMetricsTracker();
 
 export class VideoUploadService {
   private agent: BskyAgent;
@@ -28,13 +30,15 @@ export class VideoUploadService {
     mimeType: string,
     onProgress?: (progress: number) => void,
   ): Promise<VideoUploadResult> {
+    const uploadId = metricsTracker.startUpload(mimeType, videoData.length);
+
     try {
       // Get service auth token
       const serviceAuth = await this.agent.com.atproto.server.getServiceAuth({
         aud: "did:web:video.bsky.app",
       });
 
-      // Upload video
+      // Upload video with retry tracking
       const uploadUrl =
         "https://video.bsky.app/xrpc/app.bsky.video.uploadVideo";
 
@@ -49,11 +53,20 @@ export class VideoUploadService {
           },
           body: videoData as any,
         },
-        API_RETRY_OPTIONS,
+        {
+          ...API_RETRY_OPTIONS,
+          onRetry: (_error, attempt) => {
+            metricsTracker.trackRetry(uploadId);
+            logger.log(`Retry attempt ${attempt} for upload ${uploadId}`);
+          },
+        },
       );
 
       const uploadResult = await uploadResponse.json();
       const jobId = uploadResult.jobId;
+
+      // Track transcoding start
+      metricsTracker.startTranscoding(uploadId);
 
       // Poll for job status
       let jobStatus;
@@ -67,13 +80,25 @@ export class VideoUploadService {
         jobStatus = statusResponse.data.jobStatus;
 
         if (jobStatus.state === "JOB_STATE_COMPLETED" && jobStatus.blob) {
+          // Track transcoding completion
+          metricsTracker.completeTranscoding(uploadId, attempts + 1);
+
+          // Complete upload successfully
+          const blobRef =
+            typeof jobStatus.blob.ref === "string"
+              ? jobStatus.blob.ref
+              : jobStatus.blob.ref.$link;
+          metricsTracker.completeUpload(uploadId, blobRef);
+
           return {
             blob: jobStatus.blob,
           };
         } else if (jobStatus.state === "JOB_STATE_FAILED") {
-          throw new Error(
+          const error = new Error(
             `Video processing failed: ${jobStatus.error || "Unknown error"}`,
           );
+          metricsTracker.failUpload(uploadId, error);
+          throw error;
         }
 
         // Update progress if callback provided
@@ -86,9 +111,15 @@ export class VideoUploadService {
         attempts++;
       }
 
-      throw new Error("Video processing timeout");
+      const timeoutError = new Error("Video processing timeout");
+      metricsTracker.failUpload(uploadId, timeoutError);
+      throw timeoutError;
     } catch (error) {
       logger.error("Video upload error:", error);
+      metricsTracker.failUpload(
+        uploadId,
+        error instanceof Error ? error : new Error(String(error)),
+      );
       throw error;
     }
   }
