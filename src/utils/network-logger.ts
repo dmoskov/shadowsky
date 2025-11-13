@@ -58,16 +58,19 @@ function generateCorrelationId(): string {
 /**
  * Redact sensitive data from headers
  */
-function redactHeaders(headers: Record<string, string> | Headers): Record<string, string> {
+function redactHeaders(
+  headers: Record<string, string> | Headers,
+): Record<string, string> {
   const redacted: Record<string, string> = {};
 
-  const entries = headers instanceof Headers
-    ? Array.from(headers.entries())
-    : Object.entries(headers);
+  const entries =
+    headers instanceof Headers
+      ? Array.from(headers.entries())
+      : Object.entries(headers);
 
   for (const [key, value] of entries) {
-    const isSensitive = SENSITIVE_HEADER_PATTERNS.some(pattern =>
-      pattern.test(key)
+    const isSensitive = SENSITIVE_HEADER_PATTERNS.some((pattern) =>
+      pattern.test(key),
     );
 
     if (isSensitive) {
@@ -89,7 +92,7 @@ function redactUrl(url: string): string {
   for (const pattern of SENSITIVE_URL_PATTERNS) {
     redactedUrl = redactedUrl.replace(
       pattern,
-      (match) => `${match.split('=')[0]}=[REDACTED]`
+      (match) => `${match.split("=")[0]}=[REDACTED]`,
     );
   }
 
@@ -193,7 +196,7 @@ function formatStructuredLog(context: NetworkLogContext): string {
 export function logRequestStart(
   url: string,
   init?: RequestInit,
-  retryAttempt?: number
+  retryAttempt?: number,
 ): NetworkLogContext {
   const correlationId = generateCorrelationId();
   const timestamp = Date.now();
@@ -219,7 +222,7 @@ export function logRequestStart(
  */
 export function logRequestSuccess(
   context: NetworkLogContext,
-  response: Response
+  response: Response,
 ): void {
   const endTime = performance.now();
   const duration = Math.round(endTime - context.startTime);
@@ -242,7 +245,7 @@ export function logRequestSuccess(
  */
 export function logRequestFailure(
   context: NetworkLogContext,
-  error: any
+  error: any,
 ): void {
   const endTime = performance.now();
   const duration = Math.round(endTime - context.startTime);
@@ -270,7 +273,7 @@ export function logRetryAttempt(
   context: NetworkLogContext,
   attempt: number,
   delayMs: number,
-  error: any
+  error: any,
 ): void {
   const retryContext: NetworkLogContext = {
     ...context,
@@ -279,7 +282,9 @@ export function logRetryAttempt(
     errorType: categorizeError(error),
   };
 
-  logger.warn(`${formatStructuredLog(retryContext)} - Retrying in ${delayMs}ms`);
+  logger.warn(
+    `${formatStructuredLog(retryContext)} - Retrying in ${delayMs}ms`,
+  );
 }
 
 /**
@@ -288,7 +293,7 @@ export function logRetryAttempt(
 export async function fetchWithStructuredLogging(
   url: string,
   init?: RequestInit,
-  retryAttempt?: number
+  retryAttempt?: number,
 ): Promise<Response> {
   const context = logRequestStart(url, init, retryAttempt);
 

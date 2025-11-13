@@ -1,8 +1,8 @@
 import { createLogger } from "./logger";
 import {
+  logRequestFailure,
   logRequestStart,
   logRequestSuccess,
-  logRequestFailure,
   logRetryAttempt,
   type NetworkLogContext,
 } from "./network-logger";
@@ -319,7 +319,10 @@ export async function fetchWithRetry(
     } catch (error) {
       lastError = error;
 
-      if (logContext && !(error && typeof error === 'object' && 'response' in error)) {
+      if (
+        logContext &&
+        !(error && typeof error === "object" && "response" in error)
+      ) {
         logRequestFailure(logContext, error);
       }
 

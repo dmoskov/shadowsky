@@ -1,6 +1,6 @@
 import type { BskyAgent } from "@atproto/api";
 import { debug } from "@bsky/shared";
-import { fetchWithRetry, API_RETRY_OPTIONS } from "../utils/retry";
+import { API_RETRY_OPTIONS, fetchWithRetry } from "../utils/retry";
 
 export interface DmConversation {
   id: string;

@@ -42,18 +42,22 @@ Implemented comprehensive security controls for CloudWatch metrics to prevent un
 ### 1. Access Control and Authorization
 
 **Namespace Restrictions:**
+
 - Only whitelisted namespaces accessible: `ShadowSky/AnthropicAPI`, `ShadowSky/AltTextGeneration`, `AWS/Lambda`
 - Prevents access to sensitive AWS resources (EC2, RDS, etc.)
 
 **Metric Name Restrictions:**
+
 - Each namespace has specific allowed metrics
 - Prevents unauthorized metric queries
 
 **Dimension Restrictions:**
+
 - Only allowed dimensions per namespace
 - Function dimension requires function access validation
 
 **User Context Authorization:**
+
 ```typescript
 interface UserContext {
   userId?: string;
@@ -65,53 +69,64 @@ interface UserContext {
 ### 2. Input Validation and Sanitization
 
 **String Identifier Validation:**
+
 - Character whitelist: `a-z`, `A-Z`, `0-9`, `-`, `_`, `/`, `.`
 - Length limits enforced (255-256 chars)
 - Rejects control characters and HTML/script tags
 
 **Dimension Value Sanitization:**
+
 - Removes HTML/script characters: `<`, `>`, `"`, `'`
 - Strips control characters
 - Enforces length limits
 
 **Timestamp Validation:**
+
 - Must be within last 2 weeks
 - Cannot be more than 2 hours in future
 - Prevents timestamp manipulation
 
 **Count Limits:**
+
 - Maximum 20 metrics per publish call
 - Maximum 10 dimensions per metric
 
 ### 3. Injection Attack Prevention
 
 **SQL Injection:**
+
 - Pattern: `'; DROP TABLE metrics;--`
 - Protection: Semicolons, quotes, and SQL keywords rejected
 
 **XSS Injection:**
+
 - Pattern: `<script>alert(document.cookie)</script>`
 - Protection: HTML/script tags removed during sanitization
 
 **Command Injection:**
+
 - Pattern: `; rm -rf /` or `| cat /etc/passwd`
 - Protection: Shell characters rejected
 
 **Path Traversal:**
+
 - Pattern: `../../../etc/passwd`
 - Protection: Whitelist validation prevents path manipulation
 
 **LDAP Injection:**
+
 - Pattern: `Function)(cn=*`
 - Protection: Special LDAP characters rejected
 
 **NoSQL Injection:**
+
 - Pattern: `{ "$ne": null }`
 - Protection: JSON syntax characters rejected
 
 ### 4. Rate Limiting
 
 **Implementation:**
+
 - Sliding window algorithm
 - 100 requests per 60 seconds per identifier
 - Per-identifier tracking (userId, IP, API key)
@@ -121,11 +136,13 @@ interface UserContext {
 ### 5. Error Handling and Logging
 
 **Security Event Logging:**
+
 - All validation failures logged with structured data
 - Event types: `validation_error`, `access_denied`, `suspicious_activity`
 - CloudWatch Logs integration with `SECURITY_EVENT:` prefix
 
 **Error Sanitization:**
+
 - Removes sensitive patterns: API keys, tokens, passwords, secrets
 - Example: `api_key=sk-123` → `api_key=***`
 
@@ -166,13 +183,14 @@ logSecurityEvent(eventType: string, details: Record<string, any>): void
 
 ```typescript
 class SecurityValidationError extends Error {
-  field: string;      // Field that failed validation
-  value: any;         // Value that was rejected
-  reason: string;     // Machine-readable reason code
+  field: string; // Field that failed validation
+  value: any; // Value that was rejected
+  reason: string; // Machine-readable reason code
 }
 ```
 
 **Reason Codes:**
+
 - `missing_value`, `length_exceeded`, `invalid_characters`
 - `unauthorized_namespace`, `unauthorized_metric`, `unauthorized_dimension`
 - `unauthorized_function`, `access_denied`
@@ -181,27 +199,31 @@ class SecurityValidationError extends Error {
 ## Usage Example
 
 ```typescript
-import { publishMetrics } from './cloudwatch-metrics';
-import { UserContext } from './cloudwatch-security';
+import { publishMetrics } from "./cloudwatch-metrics";
+import { UserContext } from "./cloudwatch-security";
 
 const userContext: UserContext = {
-  userId: 'user-123',
-  allowedFunctions: ['generate-alt-text'],
+  userId: "user-123",
+  allowedFunctions: ["generate-alt-text"],
   isAdmin: false,
 };
 
-await publishMetrics({
-  functionName: 'generate-alt-text',
-  latencyMs: 250,
-  inputTokens: 1000,
-  outputTokens: 150,
-  success: true,
-}, userContext);
+await publishMetrics(
+  {
+    functionName: "generate-alt-text",
+    latencyMs: 250,
+    inputTokens: 1000,
+    outputTokens: 150,
+    success: true,
+  },
+  userContext,
+);
 ```
 
 ## Testing Coverage
 
 ### Test Suite Statistics
+
 - **Total Tests:** 50+
 - **Coverage Areas:**
   - Namespace validation (5 tests)
@@ -214,6 +236,7 @@ await publishMetrics({
   - Injection attack prevention (7 tests)
 
 ### Injection Attack Tests
+
 - ✅ SQL injection prevention
 - ✅ XSS injection prevention
 - ✅ Path traversal prevention
@@ -225,6 +248,7 @@ await publishMetrics({
 ### Security Event Queries
 
 **Security Event Count:**
+
 ```
 fields @timestamp
 | filter @message like /SECURITY_EVENT:/
@@ -232,6 +256,7 @@ fields @timestamp
 ```
 
 **Validation Errors by Reason:**
+
 ```
 fields reason
 | filter @message like /SECURITY_EVENT:/ and eventType = "validation_error"
@@ -239,6 +264,7 @@ fields reason
 ```
 
 **Access Denied Events:**
+
 ```
 fields userId, functionName
 | filter @message like /SECURITY_EVENT:/ and reason = "access_denied"
@@ -246,6 +272,7 @@ fields userId, functionName
 ```
 
 **Rate Limit Exceeded Events:**
+
 ```
 fields identifier
 | filter @message like /SECURITY_EVENT:/ and reason = "rate_limit_exceeded"
@@ -269,12 +296,14 @@ fields identifier
 ## Files Created/Modified
 
 ### New Files
+
 - `/amplify/functions/shared/cloudwatch-security.ts` (540 lines)
 - `/amplify/functions/shared/__tests__/cloudwatch-security.test.ts` (550 lines)
 - `/amplify/functions/shared/SECURITY.md` (650 lines)
 - `/CLOUDWATCH_SECURITY_IMPLEMENTATION.md` (this file)
 
 ### Modified Files
+
 - `/amplify/functions/shared/cloudwatch-metrics.ts`
   - Added security validation imports
   - Updated `publishMetrics()` to accept `UserContext`
@@ -315,16 +344,19 @@ fields identifier
 ## Compliance Considerations
 
 ### Data Privacy
+
 - No PII logged in security events
 - User IDs treated as non-sensitive identifiers
 - Error messages sanitized to remove secrets
 
 ### Audit Trail
+
 - All validation failures logged
 - Timestamp, field, value, and reason recorded
 - Logs retained per CloudWatch Logs retention policy
 
 ### Access Control
+
 - Role-based access through UserContext
 - Admin flag for privileged operations
 - Function-level access restrictions
@@ -370,23 +402,27 @@ All TypeScript compilation succeeded with no errors.
 ## Acceptance Criteria Verification
 
 ✅ **Add user/resource ownership filtering to metric queries**
+
 - Implemented UserContext with userId and allowedFunctions
 - Function dimension validated against user's allowed functions
 - Admin bypass flag for privileged operations
 
 ✅ **Implement query parameter validation for metric dimensions and namespaces**
+
 - Namespace validation with whitelist
 - Metric name validation per namespace
 - Dimension name and value validation
 - Comprehensive input validation rules
 
 ✅ **Prevent injection attacks through input sanitization**
+
 - Character whitelisting for identifiers
 - HTML/script tag removal in values
 - Control character stripping
 - Protection against SQL, XSS, Command, Path Traversal, LDAP injections
 
 ✅ **Add tests for access control enforcement**
+
 - 50+ comprehensive test cases
 - User context authorization tests
 - Admin privilege tests
@@ -394,6 +430,7 @@ All TypeScript compilation succeeded with no errors.
 - Injection attack prevention tests
 
 ✅ **Document metric access control model**
+
 - Comprehensive SECURITY.md documentation
 - Access control rules clearly defined
 - Usage examples provided

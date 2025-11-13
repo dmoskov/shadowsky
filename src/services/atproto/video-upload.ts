@@ -1,6 +1,6 @@
 import { BskyAgent } from "@atproto/api";
 import { createLogger } from "../../utils/logger";
-import { fetchWithRetry, API_RETRY_OPTIONS } from "../../utils/retry";
+import { API_RETRY_OPTIONS, fetchWithRetry } from "../../utils/retry";
 
 export interface VideoUploadResult {
   blob: {

@@ -4,7 +4,7 @@
  * Tests for access controls, input validation, and query filtering
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   validateNamespace,
   validateMetricName,
@@ -326,7 +326,7 @@ describe('CloudWatch Security', () => {
 
   describe('logSecurityEvent', () => {
     it('should log security events with structured data', () => {
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation();
 
       logSecurityEvent('validation_error', {
         field: 'namespace',
@@ -346,7 +346,7 @@ describe('CloudWatch Security', () => {
   describe('checkRateLimit', () => {
     beforeEach(() => {
       // Clear rate limiter between tests
-      rateLimiter.cleanup();
+      rateLimiter.clear();
     });
 
     it('should allow requests within rate limit', () => {

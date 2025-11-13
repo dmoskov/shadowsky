@@ -513,6 +513,10 @@ class RateLimiter {
       }
     }
   }
+
+  clear(): void {
+    this.requests.clear();
+  }
 }
 
 // Global rate limiter instance

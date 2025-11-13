@@ -11,16 +11,19 @@ Implemented a comprehensive structured logging system for all network requests i
 Created a new structured logging utility with the following features:
 
 #### Request/Response Correlation IDs
+
 - Unique IDs generated for each request: `req_{timestamp}_{random}`
 - Enables tracking requests from initiation through completion or failure
 - Format: `[req_1699123456789_abc123]`
 
 #### Timing Information
+
 - Automatic start/end time tracking using `performance.now()`
 - Duration calculated in milliseconds
 - Example output: `[req_123_abc] GET https://api.example.com ✓ 200 145ms`
 
 #### Success/Failure Categorization
+
 - Visual indicators: ✓ for success, ✗ for failure
 - HTTP status codes logged
 - Structured error categorization:
@@ -34,6 +37,7 @@ Created a new structured logging utility with the following features:
   - `UNKNOWN_ERROR` - Other errors
 
 #### Automatic Sensitive Data Redaction
+
 - **Header redaction** - Automatically redacts sensitive headers:
   - Authorization
   - API keys
@@ -50,6 +54,7 @@ Created a new structured logging utility with the following features:
   - `secret=` parameters
 
 Example:
+
 ```
 Before: Authorization: Bearer eyJhbGc...
 After:  Authorization: [REDACTED]
@@ -68,6 +73,7 @@ Integrated structured logging into the existing retry utility:
 - Maintains backward compatibility with existing code
 
 Example log output:
+
 ```
 [req_123_abc] POST https://api.example.com (attempt 1)
 [req_123_abc] POST https://api.example.com ✗ 503 1200ms - Retrying in 1000ms
@@ -78,6 +84,7 @@ Example log output:
 ### 3. Updated Services
 
 #### DM Service (`src/services/dm-service.ts`)
+
 - Replaced all raw `fetch()` calls with `fetchWithRetry()`
 - 7 API endpoints now use structured logging:
   - List conversations
@@ -89,33 +96,39 @@ Example log output:
   - Mute/unmute conversation
 
 #### Video Upload Service (`src/services/atproto/video-upload.ts`)
+
 - Video upload requests now use structured logging
 - Better visibility into upload performance
 
 #### Anthropic Service (`src/services/anthropic.ts`)
+
 - Already using `fetchWithRetry`, automatically benefits from new logging
 - All API calls (alt text, tone adjustment, thread optimization, etc.) now logged
 
 ## Benefits
 
 ### 1. Security
+
 - **No more exposed API keys in logs** - Automatic redaction prevents accidental exposure
 - Addresses critical security concern mentioned in task description
 - Pattern-based detection catches various naming conventions
 
 ### 2. Debuggability
+
 - Correlation IDs make it easy to trace requests across multiple log entries
 - Timing information helps identify performance bottlenecks
 - Error categorization helps quickly identify issue types
 - Retry attempts are clearly visible
 
 ### 3. Production Monitoring
+
 - Structured format is easily parseable by log aggregation tools
 - Success/failure rates can be calculated from logs
 - Performance metrics available without additional instrumentation
 - Error patterns can be identified and analyzed
 
 ### 4. Developer Experience
+
 - Logs are concise and readable
 - Critical information is highlighted (status codes, durations)
 - Retry logic is transparent
@@ -124,11 +137,13 @@ Example log output:
 ## Example Log Output
 
 ### Successful Request
+
 ```
 [BSKY] [NetworkRequest] [req_1699123456789_abc123] GET https://api.bsky.chat/xrpc/chat.bsky.convo.listConvos ✓ 200 245ms
 ```
 
 ### Failed Request with Retry
+
 ```
 [BSKY] [NetworkRequest] [req_1699123456790_def456] POST https://api.example.com (attempt 1)
 [BSKY] [NetworkRequest] [req_1699123456790_def456] POST https://api.example.com ✗ 503 1200ms (attempt 1)
@@ -138,6 +153,7 @@ Example log output:
 ```
 
 ### Redacted Sensitive Data
+
 ```
 [BSKY] [NetworkRequest] [req_1699123456791_ghi789] POST https://api.example.com?api_key=[REDACTED]
 Request Headers: {
@@ -171,7 +187,7 @@ The logging system is automatically enabled when debug mode is active:
 
 ```javascript
 // In browser console
-window.enableDebug()
+window.enableDebug();
 
 // Refresh page to see logs
 ```
