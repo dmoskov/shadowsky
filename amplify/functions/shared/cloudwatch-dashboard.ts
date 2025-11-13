@@ -2,19 +2,44 @@
  * CloudWatch Dashboard Configuration
  *
  * Defines dashboards and alarms for monitoring Anthropic API performance.
+ * Includes security validation to prevent injection attacks.
  */
 
 import { Dashboard, GraphWidget, SingleValueWidget, Alarm, ComparisonOperator, TreatMissingData } from 'aws-cdk-lib/aws-cloudwatch';
 import { Stack } from 'aws-cdk-lib';
 import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions';
 import { Topic } from 'aws-cdk-lib/aws-sns';
+import {
+  validateAlarmConfig,
+  DashboardValidationError,
+  AlarmConfig,
+} from './cloudwatch-validation';
 
 const NAMESPACE = 'ShadowSky/AnthropicAPI';
 
 /**
+ * Validates the namespace to prevent injection attacks
+ */
+function validateNamespace(namespace: string): void {
+  if (!/^[a-zA-Z0-9\-_\/\.]+$/.test(namespace)) {
+    throw new DashboardValidationError(
+      'Invalid namespace format - must contain only alphanumeric characters, hyphens, underscores, dots, and forward slashes'
+    );
+  }
+  if (namespace.length > 255) {
+    throw new DashboardValidationError(
+      'Namespace exceeds maximum length of 255 characters'
+    );
+  }
+}
+
+/**
  * Creates a CloudWatch dashboard for Anthropic API monitoring
+ * Validates all configuration to prevent injection attacks
  */
 export function createAnthropicDashboard(stack: Stack): Dashboard {
+  validateNamespace(NAMESPACE);
+
   const dashboard = new Dashboard(stack, 'AnthropicAPIDashboard', {
     dashboardName: 'ShadowSky-Anthropic-API-Performance',
   });
@@ -175,12 +200,14 @@ export function createAnthropicDashboard(stack: Stack): Dashboard {
 
 /**
  * Creates CloudWatch alarms for critical metrics
+ * Validates all alarm configurations to prevent injection attacks
  */
 export function createAnthropicAlarms(stack: Stack, alertTopic?: Topic): Alarm[] {
+  validateNamespace(NAMESPACE);
+
   const alarms: Alarm[] = [];
 
-  // Alarm for high latency (p99 > 5000ms)
-  const highLatencyAlarm = new Alarm(stack, 'AnthropicHighLatencyAlarm', {
+  const highLatencyConfig: AlarmConfig = {
     alarmName: 'ShadowSky-Anthropic-HighLatency',
     alarmDescription: 'Alert when p99 API latency exceeds 5 seconds',
     metric: {
@@ -190,14 +217,29 @@ export function createAnthropicAlarms(stack: Stack, alertTopic?: Topic): Alarm[]
     },
     threshold: 5000,
     evaluationPeriods: 2,
+    comparisonOperator: 'GreaterThanThreshold',
+    treatMissingData: 'notBreaching',
+  };
+
+  validateAlarmConfig(highLatencyConfig);
+
+  const highLatencyAlarm = new Alarm(stack, 'AnthropicHighLatencyAlarm', {
+    alarmName: highLatencyConfig.alarmName,
+    alarmDescription: highLatencyConfig.alarmDescription,
+    metric: {
+      namespace: highLatencyConfig.metric.namespace,
+      metricName: highLatencyConfig.metric.metricName,
+      statistic: highLatencyConfig.metric.statistic,
+    },
+    threshold: highLatencyConfig.threshold,
+    evaluationPeriods: highLatencyConfig.evaluationPeriods,
     comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
     treatMissingData: TreatMissingData.NOT_BREACHING,
   });
 
   alarms.push(highLatencyAlarm);
 
-  // Alarm for high error rate (> 5%)
-  const highErrorRateAlarm = new Alarm(stack, 'AnthropicHighErrorRateAlarm', {
+  const highErrorRateConfig: AlarmConfig = {
     alarmName: 'ShadowSky-Anthropic-HighErrorRate',
     alarmDescription: 'Alert when error rate exceeds 5%',
     metric: {
@@ -207,14 +249,29 @@ export function createAnthropicAlarms(stack: Stack, alertTopic?: Topic): Alarm[]
     },
     threshold: 0.05,
     evaluationPeriods: 3,
+    comparisonOperator: 'GreaterThanThreshold',
+    treatMissingData: 'notBreaching',
+  };
+
+  validateAlarmConfig(highErrorRateConfig);
+
+  const highErrorRateAlarm = new Alarm(stack, 'AnthropicHighErrorRateAlarm', {
+    alarmName: highErrorRateConfig.alarmName,
+    alarmDescription: highErrorRateConfig.alarmDescription,
+    metric: {
+      namespace: highErrorRateConfig.metric.namespace,
+      metricName: highErrorRateConfig.metric.metricName,
+      statistic: highErrorRateConfig.metric.statistic,
+    },
+    threshold: highErrorRateConfig.threshold,
+    evaluationPeriods: highErrorRateConfig.evaluationPeriods,
     comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
     treatMissingData: TreatMissingData.NOT_BREACHING,
   });
 
   alarms.push(highErrorRateAlarm);
 
-  // Alarm for timeouts
-  const timeoutAlarm = new Alarm(stack, 'AnthropicTimeoutAlarm', {
+  const timeoutConfig: AlarmConfig = {
     alarmName: 'ShadowSky-Anthropic-Timeouts',
     alarmDescription: 'Alert when timeouts occur',
     metric: {
@@ -224,6 +281,22 @@ export function createAnthropicAlarms(stack: Stack, alertTopic?: Topic): Alarm[]
     },
     threshold: 5,
     evaluationPeriods: 1,
+    comparisonOperator: 'GreaterThanThreshold',
+    treatMissingData: 'notBreaching',
+  };
+
+  validateAlarmConfig(timeoutConfig);
+
+  const timeoutAlarm = new Alarm(stack, 'AnthropicTimeoutAlarm', {
+    alarmName: timeoutConfig.alarmName,
+    alarmDescription: timeoutConfig.alarmDescription,
+    metric: {
+      namespace: timeoutConfig.metric.namespace,
+      metricName: timeoutConfig.metric.metricName,
+      statistic: timeoutConfig.metric.statistic,
+    },
+    threshold: timeoutConfig.threshold,
+    evaluationPeriods: timeoutConfig.evaluationPeriods,
     comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
     treatMissingData: TreatMissingData.NOT_BREACHING,
   });

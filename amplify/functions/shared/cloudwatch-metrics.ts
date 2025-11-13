@@ -3,13 +3,69 @@
  *
  * Provides structured performance monitoring for Anthropic API calls.
  * Tracks latency, token usage, error rates, and timeout occurrences.
+ *
+ * Features:
+ * - Token bucket rate limiting to prevent quota exhaustion
+ * - Exponential backoff retry logic for transient failures
+ * - Metric caching to reduce redundant API calls
+ * - Self-monitoring metrics for rate limiting and caching
+ * - Input validation and sanitization
+ * - Namespace and metric name validation
+ * - Resource ownership enforcement
  */
 
 import { CloudWatchClient, PutMetricDataCommand, MetricDatum, StandardUnit } from '@aws-sdk/client-cloudwatch';
+import { TokenBucketRateLimiter, DEFAULT_CLOUDWATCH_RATE_LIMIT } from './rate-limiter';
+import { MetricCache, DEFAULT_METRIC_CACHE_CONFIG, createMetricCacheKey } from './metric-cache';
+import {
+  validateMetricData,
+  UserContext,
+  SecurityValidationError,
+  logSecurityEvent,
+  sanitizeErrorMessage,
+} from './cloudwatch-security';
+import {
+  validateCloudWatchPermissions,
+  validateNamespaceAccess,
+  InsufficientPermissionsError,
+  formatPermissionError,
+} from './cloudwatch-iam-validation';
 
-const cloudwatch = new CloudWatchClient({ region: process.env.AWS_REGION || 'us-east-1' });
+// Validate AWS_REGION is set
+if (!process.env.AWS_REGION) {
+  throw new Error(
+    'AWS_REGION environment variable must be set. ' +
+    'This is required for CloudWatch metrics to be sent to the correct region. ' +
+    'Configure this in your Lambda function resource definition.'
+  );
+}
+
+// Use AWS SDK default region resolution (respects AWS_REGION env var, AWS config, and instance metadata)
+const cloudwatch = new CloudWatchClient({
+  region: process.env.AWS_REGION,
+});
 
 const NAMESPACE = 'ShadowSky/AnthropicAPI';
+const MONITORING_NAMESPACE = 'ShadowSky/Monitoring';
+
+// Initialize rate limiter and cache
+const rateLimiter = new TokenBucketRateLimiter(DEFAULT_CLOUDWATCH_RATE_LIMIT);
+const metricCache = new MetricCache<boolean>(DEFAULT_METRIC_CACHE_CONFIG);
+
+// Validate CloudWatch permissions on initialization (async, non-blocking)
+let permissionsValidated = false;
+validateCloudWatchPermissions()
+  .then(() => {
+    permissionsValidated = true;
+    console.log('CloudWatch permissions validated successfully');
+  })
+  .catch((error) => {
+    if (error instanceof InsufficientPermissionsError) {
+      console.error('CloudWatch permission validation failed:', formatPermissionError(error));
+    } else {
+      console.warn('CloudWatch permission validation skipped:', error);
+    }
+  });
 
 export interface APIMetrics {
   functionName: string;
@@ -22,9 +78,12 @@ export interface APIMetrics {
 }
 
 /**
- * Publishes performance metrics to CloudWatch
+ * Publishes performance metrics to CloudWatch with security validation
  */
-export async function publishMetrics(metrics: APIMetrics): Promise<void> {
+export async function publishMetrics(
+  metrics: APIMetrics,
+  userContext?: UserContext
+): Promise<void> {
   const metricData: MetricDatum[] = [];
 
   // Latency metric with percentile statistics
@@ -114,17 +173,121 @@ export async function publishMetrics(metrics: APIMetrics): Promise<void> {
     ],
   });
 
+  // Create cache key for deduplication
+  const cacheKey = createMetricCacheKey(
+    NAMESPACE,
+    `${metrics.functionName}-${Date.now()}`,
+    {
+      success: String(metrics.success),
+      latency: String(Math.floor(metrics.latencyMs / 1000)),
+    }
+  );
+
+  // Check if we've recently published similar metrics
+  if (metricCache.has(cacheKey)) {
+    return;
+  }
+
+  // Wait for rate limiter token (with 2 second timeout)
+  const allowed = await rateLimiter.waitForTokens(1, 2000);
+
+  if (!allowed) {
+    const limiterMetrics = rateLimiter.getMetrics();
+    console.warn('CloudWatch API call rate limited', {
+      tokensRemaining: limiterMetrics.tokensRemaining,
+      throttleRate: rateLimiter.getThrottleRate(),
+    });
+    return;
+  }
+
   try {
+    // Validate namespace access (checks IAM permissions)
+    await validateNamespaceAccess([NAMESPACE]);
+
+    // Validate metrics before publishing
+    validateMetricData(NAMESPACE, metricData, userContext);
+
     const command = new PutMetricDataCommand({
       Namespace: NAMESPACE,
       MetricData: metricData,
     });
 
-    await cloudwatch.send(command);
+    // Send with exponential backoff retry logic
+    await sendMetricsWithRetry(command);
+
+    // Mark as cached to prevent redundant calls
+    metricCache.set(cacheKey, true);
   } catch (error) {
+    // Handle insufficient permissions
+    if (error instanceof InsufficientPermissionsError) {
+      const errorMessage = formatPermissionError(error);
+      console.error(errorMessage);
+      logSecurityEvent('access_denied', {
+        missingPermissions: error.missingPermissions,
+        requiredFor: error.requiredFor,
+        namespace: NAMESPACE,
+        userContext,
+      });
+      return; // Don't break the main flow
+    }
+
+    // Log security validation errors for monitoring
+    if (error instanceof SecurityValidationError) {
+      logSecurityEvent('validation_error', {
+        field: error.field,
+        value: error.value,
+        reason: error.reason,
+        namespace: NAMESPACE,
+        userContext,
+      });
+    }
+
     // Log but don't throw - metrics should never break the main flow
-    console.error('Failed to publish CloudWatch metrics:', error);
+    const sanitizedMessage = sanitizeErrorMessage(error);
+    console.error('Failed to publish CloudWatch metrics:', sanitizedMessage);
   }
+}
+
+/**
+ * Send CloudWatch API call with exponential backoff retry logic
+ */
+async function sendMetricsWithRetry(
+  command: PutMetricDataCommand,
+  maxRetries: number = 3,
+  initialDelayMs: number = 100
+): Promise<void> {
+  let lastError: any;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await cloudwatch.send(command);
+      return;
+    } catch (error: any) {
+      lastError = error;
+
+      // Don't retry on client errors (400-499) except throttling (429)
+      if (error.$metadata?.httpStatusCode >= 400 &&
+          error.$metadata?.httpStatusCode < 500 &&
+          error.$metadata?.httpStatusCode !== 429) {
+        throw error;
+      }
+
+      // If this is the last attempt, throw
+      if (attempt === maxRetries) {
+        throw error;
+      }
+
+      // Calculate exponential backoff with jitter
+      const delay = Math.min(
+        initialDelayMs * Math.pow(2, attempt - 1) + Math.random() * 100,
+        5000
+      );
+
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError;
 }
 
 /**
@@ -168,4 +331,104 @@ export function categorizeError(error: any): string {
     return 'NetworkError';
   }
   return 'Unknown';
+}
+
+/**
+ * Publish monitoring metrics for rate limiter and cache performance
+ * Should be called periodically to track system health
+ */
+export async function publishMonitoringMetrics(): Promise<void> {
+  const rateLimiterMetrics = rateLimiter.getMetrics();
+  const cacheMetrics = metricCache.getMetrics();
+
+  const metricData: MetricDatum[] = [];
+
+  // Rate limiter metrics
+  metricData.push({
+    MetricName: 'RateLimiterTokensRemaining',
+    Value: rateLimiterMetrics.tokensRemaining,
+    Unit: StandardUnit.Count,
+    Timestamp: new Date(),
+  });
+
+  metricData.push({
+    MetricName: 'RateLimiterTotalRequests',
+    Value: rateLimiterMetrics.totalRequests,
+    Unit: StandardUnit.Count,
+    Timestamp: new Date(),
+  });
+
+  metricData.push({
+    MetricName: 'RateLimiterThrottledRequests',
+    Value: rateLimiterMetrics.throttledRequests,
+    Unit: StandardUnit.Count,
+    Timestamp: new Date(),
+  });
+
+  if (rateLimiterMetrics.totalRequests > 0) {
+    const throttleRate = (rateLimiterMetrics.throttledRequests / rateLimiterMetrics.totalRequests) * 100;
+    metricData.push({
+      MetricName: 'RateLimiterThrottleRate',
+      Value: throttleRate,
+      Unit: StandardUnit.Percent,
+      Timestamp: new Date(),
+    });
+  }
+
+  // Cache metrics
+  metricData.push({
+    MetricName: 'CacheSize',
+    Value: cacheMetrics.size,
+    Unit: StandardUnit.Count,
+    Timestamp: new Date(),
+  });
+
+  metricData.push({
+    MetricName: 'CacheHits',
+    Value: cacheMetrics.hits,
+    Unit: StandardUnit.Count,
+    Timestamp: new Date(),
+  });
+
+  metricData.push({
+    MetricName: 'CacheMisses',
+    Value: cacheMetrics.misses,
+    Unit: StandardUnit.Count,
+    Timestamp: new Date(),
+  });
+
+  metricData.push({
+    MetricName: 'CacheEvictions',
+    Value: cacheMetrics.evictions,
+    Unit: StandardUnit.Count,
+    Timestamp: new Date(),
+  });
+
+  metricData.push({
+    MetricName: 'CacheHitRate',
+    Value: cacheMetrics.hitRate,
+    Unit: StandardUnit.Percent,
+    Timestamp: new Date(),
+  });
+
+  try {
+    const command = new PutMetricDataCommand({
+      Namespace: MONITORING_NAMESPACE,
+      MetricData: metricData,
+    });
+
+    await cloudwatch.send(command);
+  } catch (error) {
+    console.error('Failed to publish monitoring metrics:', error);
+  }
+}
+
+/**
+ * Get current rate limiter and cache metrics (for debugging)
+ */
+export function getSystemMetrics() {
+  return {
+    rateLimiter: rateLimiter.getMetrics(),
+    cache: metricCache.getMetrics(),
+  };
 }
