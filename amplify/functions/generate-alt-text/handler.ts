@@ -2,11 +2,14 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { CloudWatchClient, PutMetricDataCommand } from '@aws-sdk/client-cloudwatch';
 import * as crypto from 'crypto';
-import { publishMetrics, logPerformance, categorizeError } from '../shared/cloudwatch-metrics';
+import { publishMetrics, logPerformance, categorizeError, publishMonitoringMetrics } from '../shared/cloudwatch-metrics';
 
-const dynamoClient = new DynamoDBClient({});
+// Track invocations to periodically publish monitoring metrics
+let invocationCount = 0;
+
+const dynamoClient = new DynamoDBClient({ region: process.env.AWS_REGION });
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
-const cloudWatchClient = new CloudWatchClient({});
+const cloudWatchClient = new CloudWatchClient({ region: process.env.AWS_REGION });
 
 const CACHE_TABLE_NAME = process.env.ALT_TEXT_CACHE_TABLE;
 const CACHE_TTL_DAYS = 90;
@@ -202,6 +205,14 @@ async function retryWithBackoff<T>(
 }
 
 export const handler = async (event: any) => {
+  // Publish monitoring metrics every 10 invocations
+  invocationCount++;
+  if (invocationCount % 10 === 0) {
+    publishMonitoringMetrics().catch(err =>
+      console.error('Failed to publish monitoring metrics:', err)
+    );
+  }
+
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type,Authorization",

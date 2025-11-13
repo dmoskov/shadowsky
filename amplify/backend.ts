@@ -1,5 +1,5 @@
 import { defineBackend } from '@aws-amplify/backend';
-import { Stack } from 'aws-cdk-lib';
+import { Stack, RemovalPolicy } from 'aws-cdk-lib';
 import {
   AuthorizationType,
   Cors,
@@ -7,6 +7,7 @@ import {
   RestApi,
 } from 'aws-cdk-lib/aws-apigateway';
 import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
+import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { writingFeedback } from './functions/writing-feedback/resource';
@@ -16,6 +17,7 @@ import { optimizeThread } from './functions/optimize-thread/resource';
 import { suggestHashtags } from './functions/suggest-hashtags/resource';
 import { styleAnalysis } from './functions/style-analysis/resource';
 import { createAnthropicDashboard, createAnthropicAlarms } from './functions/shared/cloudwatch-dashboard';
+import { createCloudWatchLogsKmsKey, SENSITIVE_LAMBDA_FUNCTIONS } from './functions/shared/kms-encryption';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -118,13 +120,40 @@ const altTextCacheTable = new Table(apiStack, 'AltTextCache', {
 // Grant the generate-alt-text Lambda permission to read/write to the cache table
 altTextCacheTable.grantReadWriteData(backend.generateAltText.resources.lambda);
 
-// Add table name as environment variable to the Lambda
+// Add table name and AWS region as environment variables to the Lambda
 backend.generateAltText.addEnvironment('ALT_TEXT_CACHE_TABLE', altTextCacheTable.tableName);
+backend.generateAltText.addEnvironment('AWS_REGION', Stack.of(apiStack).region);
 
 // Create CloudWatch Dashboard for Anthropic API monitoring
 const monitoringStack = backend.createStack('monitoring-stack');
 createAnthropicDashboard(monitoringStack);
 createAnthropicAlarms(monitoringStack);
+
+// Create KMS key for CloudWatch logs encryption
+const securityStack = backend.createStack('security-stack');
+const kmsKey = createCloudWatchLogsKmsKey(securityStack);
+
+// Configure encrypted log groups for all Lambda functions handling sensitive data
+const lambdaFunctions = {
+  'generate-alt-text': backend.generateAltText.resources.lambda,
+  'adjust-tone': backend.adjustTone.resources.lambda,
+  'writing-feedback': backend.writingFeedback.resources.lambda,
+  'optimize-thread': backend.optimizeThread.resources.lambda,
+  'suggest-hashtags': backend.suggestHashtags.resources.lambda,
+  'style-analysis': backend.styleAnalysis.resources.lambda,
+};
+
+SENSITIVE_LAMBDA_FUNCTIONS.forEach((functionName) => {
+  const lambda = lambdaFunctions[functionName];
+  if (lambda) {
+    new LogGroup(securityStack, `${functionName}-LogGroup`, {
+      logGroupName: `/aws/lambda/${lambda.functionName}`,
+      retention: RetentionDays.ONE_MONTH,
+      encryptionKey: kmsKey,
+      removalPolicy: RemovalPolicy.RETAIN,
+    });
+  }
+});
 
 // Add custom stack output for the API URL
 backend.addOutput({
