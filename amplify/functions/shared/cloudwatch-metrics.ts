@@ -12,6 +12,16 @@
  * - Input validation and sanitization
  * - Namespace and metric name validation
  * - Resource ownership enforcement
+ * - Circuit breaker pattern to prevent cascading failures
+ * - Configurable timeout guards (default 2s) for CloudWatch API calls
+ * - Graceful degradation when CloudWatch API is unhealthy
+ * - Automatic recovery with exponential backoff
+ *
+ * Circuit Breaker Configuration:
+ * - Error threshold: 50% (configurable via CLOUDWATCH_ERROR_THRESHOLD env)
+ * - Time window: 60 seconds (configurable via CLOUDWATCH_WINDOW_MS env)
+ * - Timeout: 2 seconds (configurable via CLOUDWATCH_TIMEOUT_MS env)
+ * - States: CLOSED (normal), OPEN (disabled), HALF_OPEN (testing recovery)
  */
 
 import { CloudWatchClient, PutMetricDataCommand, MetricDatum, StandardUnit } from '@aws-sdk/client-cloudwatch';
@@ -30,6 +40,11 @@ import {
   InsufficientPermissionsError,
   formatPermissionError,
 } from './cloudwatch-iam-validation';
+import {
+  CircuitBreaker,
+  CircuitBreakerOpenError,
+  DEFAULT_CIRCUIT_BREAKER_CONFIG,
+} from './circuit-breaker';
 
 // Validate AWS_REGION is set
 if (!process.env.AWS_REGION) {
@@ -48,9 +63,26 @@ const cloudwatch = new CloudWatchClient({
 const NAMESPACE = 'ShadowSky/AnthropicAPI';
 const MONITORING_NAMESPACE = 'ShadowSky/Monitoring';
 
-// Initialize rate limiter and cache
+// CloudWatch API timeout configuration (default 2s, configurable via env)
+const CLOUDWATCH_TIMEOUT_MS = parseInt(
+  process.env.CLOUDWATCH_TIMEOUT_MS || '2000',
+  10
+);
+
+// Initialize rate limiter, cache, and circuit breaker
 const rateLimiter = new TokenBucketRateLimiter(DEFAULT_CLOUDWATCH_RATE_LIMIT);
 const metricCache = new MetricCache<boolean>(DEFAULT_METRIC_CACHE_CONFIG);
+const circuitBreaker = new CircuitBreaker({
+  ...DEFAULT_CIRCUIT_BREAKER_CONFIG,
+  errorThresholdPercentage: parseInt(
+    process.env.CLOUDWATCH_ERROR_THRESHOLD || '50',
+    10
+  ),
+  timeWindowMs: parseInt(
+    process.env.CLOUDWATCH_WINDOW_MS || '60000',
+    10
+  ),
+});
 
 // Validate CloudWatch permissions on initialization (async, non-blocking)
 let permissionsValidated = false;
@@ -212,12 +244,23 @@ export async function publishMetrics(
       MetricData: metricData,
     });
 
-    // Send with exponential backoff retry logic
-    await sendMetricsWithRetry(command);
+    // Execute with circuit breaker protection and timeout
+    await circuitBreaker.execute(
+      () => sendMetricsWithRetry(command),
+      'CloudWatch metrics publishing'
+    );
 
     // Mark as cached to prevent redundant calls
     metricCache.set(cacheKey, true);
   } catch (error) {
+    // Handle circuit breaker open state gracefully
+    if (error instanceof CircuitBreakerOpenError) {
+      console.warn('CloudWatch metrics disabled due to circuit breaker:', {
+        metrics: error.metrics,
+        functionName: metrics.functionName,
+      });
+      return; // Gracefully degrade - don't break upload flow
+    }
     // Handle insufficient permissions
     if (error instanceof InsufficientPermissionsError) {
       const errorMessage = formatPermissionError(error);
@@ -249,7 +292,37 @@ export async function publishMetrics(
 }
 
 /**
- * Send CloudWatch API call with exponential backoff retry logic
+ * Execute a promise with timeout protection
+ */
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  operationName: string
+): Promise<T> {
+  let timeoutHandle: NodeJS.Timeout;
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutHandle = setTimeout(() => {
+      reject(
+        new Error(
+          `${operationName} timed out after ${timeoutMs}ms. CloudWatch API may be slow or unresponsive.`
+        )
+      );
+    }, timeoutMs);
+  });
+
+  try {
+    const result = await Promise.race([promise, timeoutPromise]);
+    clearTimeout(timeoutHandle!);
+    return result;
+  } catch (error) {
+    clearTimeout(timeoutHandle!);
+    throw error;
+  }
+}
+
+/**
+ * Send CloudWatch API call with exponential backoff retry logic and timeout protection
  */
 async function sendMetricsWithRetry(
   command: PutMetricDataCommand,
@@ -260,7 +333,12 @@ async function sendMetricsWithRetry(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      await cloudwatch.send(command);
+      // Wrap CloudWatch API call with timeout protection
+      await withTimeout(
+        cloudwatch.send(command),
+        CLOUDWATCH_TIMEOUT_MS,
+        'CloudWatch PutMetricData'
+      );
       return;
     } catch (error: any) {
       lastError = error;
@@ -417,18 +495,53 @@ export async function publishMonitoringMetrics(): Promise<void> {
       MetricData: metricData,
     });
 
-    await cloudwatch.send(command);
+    // Execute with circuit breaker protection and timeout
+    await circuitBreaker.execute(
+      () => withTimeout(
+        cloudwatch.send(command),
+        CLOUDWATCH_TIMEOUT_MS,
+        'CloudWatch monitoring metrics'
+      ),
+      'CloudWatch monitoring metrics publishing'
+    );
   } catch (error) {
+    // Gracefully handle circuit breaker open state
+    if (error instanceof CircuitBreakerOpenError) {
+      console.warn('CloudWatch monitoring metrics disabled due to circuit breaker:', error.metrics);
+      return;
+    }
     console.error('Failed to publish monitoring metrics:', error);
   }
 }
 
 /**
- * Get current rate limiter and cache metrics (for debugging)
+ * Get current rate limiter, cache, and circuit breaker metrics (for debugging)
  */
 export function getSystemMetrics() {
   return {
     rateLimiter: rateLimiter.getMetrics(),
     cache: metricCache.getMetrics(),
+    circuitBreaker: circuitBreaker.getMetrics(),
   };
+}
+
+/**
+ * Get circuit breaker metrics
+ */
+export function getCircuitBreakerMetrics() {
+  return circuitBreaker.getMetrics();
+}
+
+/**
+ * Get circuit breaker state
+ */
+export function getCircuitBreakerState() {
+  return circuitBreaker.getState();
+}
+
+/**
+ * Reset circuit breaker (for testing or manual intervention)
+ */
+export function resetCircuitBreaker() {
+  circuitBreaker.reset();
 }
