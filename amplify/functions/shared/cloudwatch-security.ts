@@ -541,3 +541,100 @@ export function checkRateLimit(identifier: string): void {
     );
   }
 }
+
+/**
+ * Validates a batch of metric data for multiple namespaces
+ * Used for batched metric publishing to CloudWatch
+ */
+export function validateMetricDataBatch(
+  metricBatch: Array<{ namespace: string; metricData: MetricDatum[] }>,
+  userContext?: UserContext
+): void {
+  // Validate total batch size doesn't exceed CloudWatch limits
+  const totalMetrics = metricBatch.reduce(
+    (sum, item) => sum + item.metricData.length,
+    0
+  );
+
+  if (totalMetrics > LIMITS.MAX_METRIC_DATA_POINTS) {
+    throw new SecurityValidationError(
+      `Batch cannot contain more than ${LIMITS.MAX_METRIC_DATA_POINTS} total metrics`,
+      'metricBatch',
+      totalMetrics,
+      'limit_exceeded'
+    );
+  }
+
+  // Validate each namespace's metrics
+  for (const item of metricBatch) {
+    validateMetricData(item.namespace, item.metricData, userContext);
+  }
+}
+
+/**
+ * Validates namespace for video upload metrics
+ * Extension to support ShadowSky/VideoUpload namespace
+ */
+const VIDEO_UPLOAD_NAMESPACE = 'ShadowSky/VideoUpload';
+
+export function validateVideoUploadNamespace(namespace: string): string {
+  if (namespace === VIDEO_UPLOAD_NAMESPACE) {
+    return namespace;
+  }
+  // Fall back to standard validation
+  return validateNamespace(namespace);
+}
+
+/**
+ * Allowed metrics for video upload namespace
+ */
+const VIDEO_UPLOAD_METRICS = [
+  'UploadDuration',
+  'BandwidthUtilization',
+  'TranscodingWaitTime',
+  'RetryAttempts',
+  'UploadCount',
+] as const;
+
+/**
+ * Validates metric name for video upload namespace
+ */
+export function validateVideoUploadMetric(metricName: string): string {
+  if (!metricName) {
+    throw new SecurityValidationError(
+      'Metric name is required',
+      'metricName',
+      metricName,
+      'missing_value'
+    );
+  }
+
+  if (metricName.length > LIMITS.MAX_METRIC_NAME_LENGTH) {
+    throw new SecurityValidationError(
+      `Metric name exceeds maximum length of ${LIMITS.MAX_METRIC_NAME_LENGTH}`,
+      'metricName',
+      metricName,
+      'length_exceeded'
+    );
+  }
+
+  if (!isValidIdentifier(metricName)) {
+    throw new SecurityValidationError(
+      'Metric name contains invalid characters',
+      'metricName',
+      metricName,
+      'invalid_characters'
+    );
+  }
+
+  if (!VIDEO_UPLOAD_METRICS.includes(metricName as any)) {
+    throw new SecurityValidationError(
+      `Metric '${metricName}' is not allowed for video upload namespace`,
+      'metricName',
+      metricName,
+      'unauthorized_metric'
+    );
+  }
+
+  return metricName;
+}
