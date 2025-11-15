@@ -435,6 +435,20 @@ export class VideoUploadMetricsTracker {
   }
 
   /**
+   * Get active upload metrics by upload ID
+   */
+  getActiveUpload(uploadId: string): VideoUploadMetrics | undefined {
+    return this.activeUploads.get(uploadId);
+  }
+
+  /**
+   * Get all active uploads
+   */
+  getActiveUploads(): VideoUploadMetrics[] {
+    return Array.from(this.activeUploads.values());
+  }
+
+  /**
    * Get current session statistics
    */
   getSessionStatistics(): VideoUploadSession {

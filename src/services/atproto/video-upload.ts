@@ -18,6 +18,7 @@ export interface VideoUploadResult {
     width: number;
     height: number;
   };
+  uploadId: string;
 }
 
 const logger = createLogger("VideoUploadService");
@@ -111,8 +112,13 @@ export class VideoUploadService {
     videoData: Uint8Array,
     mimeType: string,
     onProgress?: (progress: number) => void,
+    onUploadIdCreated?: (uploadId: string) => void,
   ): Promise<VideoUploadResult> {
     const uploadId = metricsTracker.startUpload(mimeType, videoData.length);
+
+    if (onUploadIdCreated) {
+      onUploadIdCreated(uploadId);
+    }
 
     try {
       // Get service auth token with retry logic
@@ -262,6 +268,7 @@ export class VideoUploadService {
 
             return {
               blob: jobStatus.blob,
+              uploadId,
             };
           } else if (jobStatus.state === "JOB_STATE_FAILED") {
             const error = new Error(

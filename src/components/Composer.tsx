@@ -48,6 +48,7 @@ import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
 import { ReplyControls, type ReplyPermission } from "./ReplyControls";
 import { AISettingsPanel } from "./settings/AISettingsPanel";
+import { UploadProgressBar } from "./ui/UploadProgressBar";
 
 const logger = createLogger("Composer");
 
@@ -192,6 +193,7 @@ export function Composer() {
   const [media, setMedia] = useState<UploadedMedia[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [currentVideoUploadId, setCurrentVideoUploadId] = useState<string | null>(null);
 
   // Draft and scheduling state
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
@@ -1381,26 +1383,20 @@ export function Composer() {
 
           if (videoMedia) {
             logger.log("Found video media, uploading as video");
-            // Upload video
-            setPostStatus({
-              type: "posting",
-              message: `Uploading video for post ${i + 1}...`,
-            });
             setUploadingVideo(true);
 
             const videoService = new VideoUploadService(agent);
             const videoBlob = await videoService.uploadVideo(
               videoMedia.data,
               videoMedia.mimeType,
-              (progress) => {
-                setPostStatus({
-                  type: "posting",
-                  message: `Uploading video for post ${i + 1}... ${Math.round(progress)}%`,
-                });
+              undefined,
+              (uploadId) => {
+                setCurrentVideoUploadId(uploadId);
               },
             );
 
             setUploadingVideo(false);
+            setCurrentVideoUploadId(null);
 
             postData.embed = {
               $type: "app.bsky.embed.video",
@@ -3022,6 +3018,13 @@ export function Composer() {
               </button>
             )}
           </div>
+        )}
+
+        {currentVideoUploadId && (
+          <UploadProgressBar
+            uploadId={currentVideoUploadId}
+            fileName={media.find((m) => m.type === "video")?.file.name}
+          />
         )}
       </div>
 
