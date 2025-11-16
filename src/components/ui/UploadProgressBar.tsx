@@ -1,6 +1,8 @@
 import { AlertCircle, CheckCircle, Loader, RotateCcw, Upload } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { mapATProtoError, type StandardErrorResponse } from "../../services/atproto/error-handler";
 import { getVideoUploadMetricsTracker } from "../../utils/video-upload-metrics";
+import { VideoUploadErrorPanel } from "./VideoUploadErrorPanel";
 
 export type UploadState = "queued" | "uploading" | "processing" | "complete" | "error";
 
@@ -21,6 +23,7 @@ interface UploadProgress {
   timeRemaining: number;
   retryAttempts: number;
   errorMessage?: string;
+  errorDetails?: StandardErrorResponse;
 }
 
 function formatBytes(bytes: number): string {
@@ -92,6 +95,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
         let bytesUploaded = 0;
         let speed = 0;
         let timeRemaining = 0;
+        let errorDetails: StandardErrorResponse | undefined;
 
         if (currentUpload.success) {
           state = "complete";
@@ -100,6 +104,43 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
         } else if (currentUpload.errorMessage) {
           state = "error";
           percentage = 0;
+
+          try {
+            const error: any = new Error(currentUpload.errorMessage);
+
+            if (currentUpload.errorType === "Timeout") {
+              error.message = error.message.includes("timeout") ? error.message : `Timeout: ${error.message}`;
+            } else if (currentUpload.errorType === "RateLimit") {
+              error.message = error.message.includes("rate limit") ? error.message : `Rate limit: ${error.message}`;
+            } else if (currentUpload.errorType === "NetworkError") {
+              error.message = error.message.includes("network") ? error.message : `Network error: ${error.message}`;
+            } else if (currentUpload.errorType === "ProcessingError") {
+              error.message = error.message.includes("processing") ? error.message : `Processing failed: ${error.message}`;
+            } else if (currentUpload.errorType === "ServerError") {
+              error.message = error.message.includes("500") ? error.message : `Server error: ${error.message}`;
+            }
+
+            errorDetails = mapATProtoError(
+              error,
+              "videoUpload",
+              {
+                uploadId,
+                errorType: currentUpload.errorType,
+                retryAttempts: currentUpload.retryAttempts,
+              }
+            );
+          } catch (e) {
+            errorDetails = {
+              code: "UNKNOWN" as any,
+              message: currentUpload.errorMessage,
+              context: {
+                uploadId,
+                errorType: currentUpload.errorType,
+                timestamp: new Date().toISOString()
+              },
+              retryable: false,
+            };
+          }
         } else if (currentUpload.transcodingStartTime && !currentUpload.transcodingEndTime) {
           state = "processing";
           percentage = 95;
@@ -143,6 +184,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
           timeRemaining,
           retryAttempts: currentUpload.retryAttempts,
           errorMessage: currentUpload.errorMessage,
+          errorDetails,
         });
       }
 
@@ -204,6 +246,19 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
   const Icon = stateConfig.icon;
 
   if (compact) {
+    if (progress.state === "error" && progress.errorDetails) {
+      return (
+        <VideoUploadErrorPanel
+          error={progress.errorDetails}
+          uploadId={uploadId}
+          fileName={fileName}
+          onRetry={onRetry}
+          onCancel={onCancel}
+          compact={true}
+        />
+      );
+    }
+
     return (
       <div
         className="flex items-center gap-2 py-1 px-2 rounded-md bg-gray-100 dark:bg-gray-800"
@@ -234,6 +289,19 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
     );
   }
 
+  if (progress.state === "error" && progress.errorDetails) {
+    return (
+      <VideoUploadErrorPanel
+        error={progress.errorDetails}
+        uploadId={uploadId}
+        fileName={fileName}
+        onRetry={onRetry}
+        onCancel={onCancel}
+        compact={false}
+      />
+    );
+  }
+
   return (
     <div
       className="w-full p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm"
@@ -261,17 +329,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
               </p>
             </div>
 
-            {progress.state === "error" && onRetry && (
-              <button
-                onClick={onRetry}
-                className="ml-2 p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                aria-label="Retry upload"
-              >
-                <RotateCcw className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-              </button>
-            )}
-
-            {onCancel && progress.state !== "complete" && progress.state !== "error" && (
+            {onCancel && progress.state !== "complete" && (
               <button
                 onClick={onCancel}
                 className="ml-2 p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -281,15 +339,6 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
               </button>
             )}
           </div>
-
-          {progress.state === "error" && progress.errorMessage && (
-            <div
-              className="mb-2 p-2 rounded bg-red-50 dark:bg-red-900/20 text-xs text-red-700 dark:text-red-300"
-              role="alert"
-            >
-              {progress.errorMessage}
-            </div>
-          )}
 
           <div
             className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-2"
