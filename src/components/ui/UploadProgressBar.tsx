@@ -1,6 +1,5 @@
 import { AlertCircle, CheckCircle, Loader, RotateCcw, Upload } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import type { VideoUploadMetrics } from "../../utils/video-upload-metrics";
 import { getVideoUploadMetricsTracker } from "../../utils/video-upload-metrics";
 
 export type UploadState = "queued" | "uploading" | "processing" | "complete" | "error";

@@ -7,6 +7,25 @@ import {
   type RetryOptions,
 } from "../../utils/retry";
 import { getVideoUploadMetricsTracker } from "../../utils/video-upload-metrics";
+import {
+  createVideoProcessingError,
+  createVideoTimeoutError,
+  logError,
+  mapATProtoError,
+  type StandardErrorResponse,
+} from "./error-handler";
+import {
+  ATProtoEndpointType,
+  getGlobalRateLimiter,
+} from "./rate-limiter";
+import {
+  extractRateLimitHeaders,
+  parseRateLimitHeaders,
+  validateResponse,
+  jobStatusResponseSchema,
+  serviceAuthResponseSchema,
+  uploadVideoResponseSchema,
+} from "./schemas";
 
 export interface VideoUploadResult {
   blob: {
@@ -103,6 +122,7 @@ const VIDEO_STATUS_POLLING_RETRY_OPTIONS: RetryOptions = {
 
 export class VideoUploadService {
   private agent: BskyAgent;
+  private rateLimiter = getGlobalRateLimiter();
 
   constructor(agent: BskyAgent) {
     this.agent = agent;
@@ -121,30 +141,57 @@ export class VideoUploadService {
     }
 
     try {
-      // Get service auth token with retry logic
+      // Get service auth token with rate limiting and validation
       logger.log(`[${uploadId}] Getting service auth token for video upload`);
+
+      // Check rate limit before making request
+      const rateLimitAllowed = await this.rateLimiter.waitForAllowance(
+        ATProtoEndpointType.AUTH,
+        1,
+        5000,
+      );
+
+      if (!rateLimitAllowed) {
+        const error = mapATProtoError(
+          new Error("Rate limit exceeded for auth endpoint"),
+          "com.atproto.server.getServiceAuth",
+          { uploadId },
+        );
+        logError(error, "getServiceAuth");
+        metricsTracker.failUpload(uploadId, new Error(error.message));
+        throw new Error(error.message);
+      }
+
       const serviceAuth = await retryWithBackoff(
         async () => {
           try {
-            return await this.agent.com.atproto.server.getServiceAuth({
+            const response = await this.agent.com.atproto.server.getServiceAuth({
               aud: "did:web:video.bsky.app",
             });
+
+            // Validate response schema
+            const validatedResponse = validateResponse(
+              serviceAuthResponseSchema,
+              response,
+              "com.atproto.server.getServiceAuth",
+            );
+
+            return validatedResponse;
           } catch (error: any) {
-            // Enhance error with status code if available
-            if (error?.status) {
-              const enhancedError: any = new Error(
-                `Service auth failed: ${error.status} - ${error.message || "Unknown error"}`,
-              );
-              enhancedError.status = error.status;
-              enhancedError.originalError = error;
-              logger.error(
-                `[${uploadId}] Service auth error (status ${error.status}):`,
-                error,
-              );
-              throw enhancedError;
-            }
-            logger.error(`[${uploadId}] Service auth error:`, error);
-            throw error;
+            // Map to standardized error format
+            const standardError = mapATProtoError(
+              error,
+              "com.atproto.server.getServiceAuth",
+              { uploadId },
+            );
+            logError(standardError, "getServiceAuth");
+
+            // Re-throw with enhanced context
+            const enhancedError: any = new Error(standardError.message);
+            enhancedError.status = standardError.context.status;
+            enhancedError.code = standardError.code;
+            enhancedError.retryable = standardError.retryable;
+            throw enhancedError;
           }
         },
         {
@@ -160,13 +207,31 @@ export class VideoUploadService {
       );
       logger.log(`[${uploadId}] Service auth token obtained successfully`);
 
-      // Upload video with retry tracking
+      // Upload video with rate limiting and retry tracking
       const uploadUrl =
         "https://video.bsky.app/xrpc/app.bsky.video.uploadVideo";
 
       logger.log(
         `[${uploadId}] Starting video upload: ${(videoData.length / (1024 * 1024)).toFixed(2)} MB`,
       );
+
+      // Check rate limit for upload endpoint
+      const uploadRateLimitAllowed = await this.rateLimiter.waitForAllowance(
+        ATProtoEndpointType.UPLOAD,
+        1,
+        10000,
+      );
+
+      if (!uploadRateLimitAllowed) {
+        const error = mapATProtoError(
+          new Error("Rate limit exceeded for upload endpoint"),
+          "app.bsky.video.uploadVideo",
+          { uploadId },
+        );
+        logError(error, "uploadVideo");
+        metricsTracker.failUpload(uploadId, new Error(error.message));
+        throw new Error(error.message);
+      }
 
       const uploadResponse = await fetchWithRetry(
         uploadUrl,
@@ -191,22 +256,49 @@ export class VideoUploadService {
         },
       );
 
-      const uploadResult = await uploadResponse.json();
-      const jobId = uploadResult.jobId;
+      // Extract and track rate limit headers
+      const rateLimitHeaders = extractRateLimitHeaders(uploadResponse);
+      if (rateLimitHeaders) {
+        const metrics = parseRateLimitHeaders(rateLimitHeaders);
+        this.rateLimiter.trackRateLimitHeaders(ATProtoEndpointType.UPLOAD, metrics);
 
-      if (!jobId) {
-        const error = new Error("No job ID returned from video upload");
-        logger.error(`[${uploadId}] Upload response missing jobId:`, uploadResult);
-        metricsTracker.failUpload(uploadId, error);
-        throw error;
+        // Track in CloudWatch metrics
+        metricsTracker.trackRateLimitMetrics(uploadId, {
+          ...metrics,
+          endpoint: "app.bsky.video.uploadVideo",
+        });
+
+        logger.log(`[${uploadId}] Rate limit metrics:`, metrics);
       }
 
+      // Parse and validate response
+      const uploadResult = await uploadResponse.json();
+
+      let validatedUploadResult;
+      try {
+        validatedUploadResult = validateResponse(
+          uploadVideoResponseSchema,
+          uploadResult,
+          "app.bsky.video.uploadVideo",
+        );
+      } catch (validationError: any) {
+        const error = mapATProtoError(
+          validationError,
+          "app.bsky.video.uploadVideo",
+          { uploadId, rawResponse: uploadResult },
+        );
+        logError(error, "uploadVideo");
+        metricsTracker.failUpload(uploadId, new Error(error.message));
+        throw new Error(error.message);
+      }
+
+      const jobId = validatedUploadResult.jobId;
       logger.log(`[${uploadId}] Video upload successful, job ID: ${jobId}`);
 
       // Track transcoding start
       metricsTracker.startTranscoding(uploadId);
 
-      // Poll for job status with retry logic
+      // Poll for job status with retry logic and validation
       let jobStatus;
       let attempts = 0;
       const maxAttempts = 60; // 60 seconds timeout
@@ -216,25 +308,52 @@ export class VideoUploadService {
 
       while (attempts < maxAttempts) {
         try {
+          // Check rate limit before polling
+          const pollRateLimitAllowed = this.rateLimiter.canProceed(
+            ATProtoEndpointType.FEED,
+            1,
+          );
+
+          if (!pollRateLimitAllowed) {
+            logger.warn(
+              `[${uploadId}] Rate limit reached for polling, waiting before retry`,
+            );
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            attempts++;
+            continue;
+          }
+
           // Use retryWithBackoff for each status check to handle transient failures
           const statusResponse = await retryWithBackoff(
             async () => {
               try {
-                return await this.agent.app.bsky.video.getJobStatus({
+                const response = await this.agent.app.bsky.video.getJobStatus({
                   jobId,
                 });
+
+                // Validate response schema
+                const validatedResponse = validateResponse(
+                  jobStatusResponseSchema,
+                  response,
+                  "app.bsky.video.getJobStatus",
+                );
+
+                return validatedResponse;
               } catch (error: any) {
-                // Enhance error with job context
-                if (error?.status) {
-                  const enhancedError: any = new Error(
-                    `Job status check failed: ${error.status} - ${error.message || "Unknown error"}`,
-                  );
-                  enhancedError.status = error.status;
-                  enhancedError.jobId = jobId;
-                  enhancedError.originalError = error;
-                  throw enhancedError;
-                }
-                throw error;
+                // Map to standardized error format
+                const standardError = mapATProtoError(
+                  error,
+                  "app.bsky.video.getJobStatus",
+                  { uploadId, jobId, pollingAttempt: attempts + 1 },
+                );
+
+                // Re-throw with enhanced context
+                const enhancedError: any = new Error(standardError.message);
+                enhancedError.status = standardError.context.status;
+                enhancedError.code = standardError.code;
+                enhancedError.retryable = standardError.retryable;
+                enhancedError.jobId = jobId;
+                throw enhancedError;
               }
             },
             {
@@ -266,20 +385,28 @@ export class VideoUploadService {
               `[${uploadId}] Video processing completed successfully after ${attempts + 1} polling attempts`,
             );
 
+            // Normalize blob ref to expected format
+            const normalizedBlob = {
+              ref: typeof jobStatus.blob.ref === "string"
+                ? { $link: jobStatus.blob.ref }
+                : jobStatus.blob.ref,
+              mimeType: jobStatus.blob.mimeType,
+              size: jobStatus.blob.size,
+            };
+
             return {
-              blob: jobStatus.blob,
+              blob: normalizedBlob,
               uploadId,
             };
           } else if (jobStatus.state === "JOB_STATE_FAILED") {
-            const error = new Error(
-              `Video processing failed: ${jobStatus.error || "Unknown error"}`,
+            const standardError = createVideoProcessingError(
+              uploadId,
+              jobId,
+              jobStatus.error || jobStatus.message,
             );
-            logger.error(
-              `[${uploadId}] Video processing failed at server:`,
-              jobStatus,
-            );
-            metricsTracker.failUpload(uploadId, error);
-            throw error;
+            logError(standardError, "videoProcessing");
+            metricsTracker.failUpload(uploadId, new Error(standardError.message));
+            throw new Error(standardError.message);
           }
 
           // Update progress if callback provided
@@ -322,39 +449,35 @@ export class VideoUploadService {
         }
       }
 
-      const timeoutError = new Error(
-        `Video processing timeout after ${maxAttempts} polling attempts`,
-      );
-      logger.error(`[${uploadId}] Video processing timeout`, {
-        attempts: maxAttempts,
-        lastJobStatus: jobStatus,
-      });
-      metricsTracker.failUpload(uploadId, timeoutError);
-      throw timeoutError;
+      const timeoutError = createVideoTimeoutError(uploadId, jobId, maxAttempts);
+      logError(timeoutError, "videoProcessingTimeout");
+      metricsTracker.failUpload(uploadId, new Error(timeoutError.message));
+      throw new Error(timeoutError.message);
     } catch (error: any) {
-      // Classify error type for structured logging
-      const errorType = this.classifyError(error);
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      // Map error to standardized format if not already mapped
+      let standardError: StandardErrorResponse;
 
-      // Log structured error with classification
-      logger.error(`[${uploadId}] Video upload failed`, {
-        errorType,
-        errorMessage,
-        status: error?.status,
-        jobId: error?.jobId,
-        stack: error?.stack,
-      });
+      if (error.code && error.message && error.context) {
+        // Already a standardized error
+        standardError = error as StandardErrorResponse;
+      } else {
+        // Map to standardized format
+        standardError = mapATProtoError(error, "videoUpload", { uploadId });
+      }
+
+      // Log structured error
+      logError(standardError, "videoUpload");
 
       // Track failure in metrics (only if not already tracked)
-      // Check if error already tracked by looking at active uploads
       try {
-        metricsTracker.failUpload(
-          uploadId,
-          error instanceof Error ? error : new Error(String(error)),
-        );
+        const activeUpload = metricsTracker.getActiveUpload(uploadId);
+        if (activeUpload) {
+          metricsTracker.failUpload(
+            uploadId,
+            error instanceof Error ? error : new Error(standardError.message),
+          );
+        }
       } catch (metricsError) {
-        // Metrics tracking failed, but don't let it break the error flow
         logger.error(
           `[${uploadId}] Failed to track upload failure:`,
           metricsError,
@@ -365,63 +488,4 @@ export class VideoUploadService {
     }
   }
 
-  /**
-   * Classify error types for structured logging and metrics
-   */
-  private classifyError(error: any): string {
-    if (!error) {
-      return "UNKNOWN_ERROR";
-    }
-
-    // Check error message patterns
-    const message = error.message?.toLowerCase() || "";
-    const status = error.status;
-
-    // Timeout errors
-    if (message.includes("timeout")) {
-      return "TIMEOUT_ERROR";
-    }
-
-    // Network errors
-    if (error instanceof TypeError && message.includes("fetch")) {
-      return "NETWORK_ERROR";
-    }
-
-    // Rate limit errors
-    if (status === 429 || message.includes("429") || message.includes("rate limit")) {
-      return "RATE_LIMIT_ERROR";
-    }
-
-    // Authentication errors
-    if (status === 401 || message.includes("401") || message.includes("unauthorized")) {
-      return "AUTH_ERROR";
-    }
-
-    // Authorization errors
-    if (status === 403 || message.includes("403") || message.includes("forbidden")) {
-      return "FORBIDDEN_ERROR";
-    }
-
-    // Server errors
-    if (status >= 500 || message.includes("500") || message.includes("503") || message.includes("server error")) {
-      return "SERVER_ERROR";
-    }
-
-    // Client errors
-    if (status >= 400 && status < 500) {
-      return "CLIENT_ERROR";
-    }
-
-    // Processing errors
-    if (message.includes("processing failed") || message.includes("job") || message.includes("transcoding")) {
-      return "PROCESSING_ERROR";
-    }
-
-    // Service auth specific errors
-    if (message.includes("service auth")) {
-      return "SERVICE_AUTH_ERROR";
-    }
-
-    return "UNKNOWN_ERROR";
-  }
 }

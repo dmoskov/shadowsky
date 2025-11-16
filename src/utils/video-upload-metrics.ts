@@ -173,6 +173,14 @@ class MetricBatcher {
 // Global metric batcher instance
 const metricBatcher = new MetricBatcher();
 
+export interface RateLimitMetricsData {
+  limit?: number;
+  remaining?: number;
+  resetTimestamp?: number;
+  retryAfterSeconds?: number;
+  endpoint?: string;
+}
+
 export interface VideoUploadMetrics {
   uploadId: string;
   startTime: number;
@@ -192,6 +200,7 @@ export interface VideoUploadMetrics {
   errorMessage?: string;
   mimeType: string;
   videoId?: string;
+  rateLimitMetrics?: RateLimitMetricsData[];
 }
 
 export interface VideoUploadSession {
@@ -351,6 +360,27 @@ export class VideoUploadMetricsTracker {
 
     metrics.retryAttempts++;
     logger.log(`Retry attempt ${metrics.retryAttempts} for upload ${uploadId}`);
+  }
+
+  /**
+   * Track rate limit metrics from API response headers
+   */
+  trackRateLimitMetrics(
+    uploadId: string,
+    rateLimitData: RateLimitMetricsData,
+  ): void {
+    const metrics = this.activeUploads.get(uploadId);
+    if (!metrics) {
+      logger.error(`Upload ${uploadId} not found`);
+      return;
+    }
+
+    if (!metrics.rateLimitMetrics) {
+      metrics.rateLimitMetrics = [];
+    }
+
+    metrics.rateLimitMetrics.push(rateLimitData);
+    logger.log(`Tracked rate limit metrics for upload ${uploadId}:`, rateLimitData);
   }
 
   /**
@@ -602,6 +632,7 @@ export class VideoUploadMetricsTracker {
         totalBytes: metrics.totalBytes,
         averageChunkSize: metrics.averageChunkSize,
         pollingAttempts: metrics.pollingAttempts,
+        rateLimitMetrics: metrics.rateLimitMetrics,
       },
     };
 
