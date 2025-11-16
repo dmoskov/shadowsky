@@ -44,6 +44,7 @@ import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { isGifFile } from "../utils/gif-to-video";
 import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { createLogger } from "../utils/logger";
+import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
 import { ReplyControls, type ReplyPermission } from "./ReplyControls";
@@ -192,8 +193,9 @@ export function Composer() {
   } | null>({ type: "idle" });
   const [media, setMedia] = useState<UploadedMedia[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
-  const [currentVideoUploadId, setCurrentVideoUploadId] = useState<string | null>(null);
+
+  // Video upload manager with automatic cleanup and duplicate prevention
+  const videoUploadManager = useVideoUploadManager(agent);
 
   // Draft and scheduling state
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
@@ -875,10 +877,15 @@ export function Composer() {
       const removed = prev.find((m) => m.id === id);
       if (removed) {
         URL.revokeObjectURL(removed.preview);
+
+        // If removing a video, cancel any active upload
+        if (removed.type === "video" && videoUploadManager.isUploading) {
+          videoUploadManager.cancelUpload();
+        }
       }
       return prev.filter((m) => m.id !== id);
     });
-  }, []);
+  }, [videoUploadManager]);
 
   const updateMediaAlt = useCallback((id: string, alt: string) => {
     setMedia((prev) => prev.map((m) => (m.id === id ? { ...m, alt } : m)));
@@ -1318,6 +1325,7 @@ export function Composer() {
           mimeType: string;
           alt?: string;
           type: "image" | "video";
+          file?: File;
         }>
       >();
 
@@ -1338,6 +1346,7 @@ export function Composer() {
           mimeType: m.file.type,
           alt: m.alt,
           type: m.type,
+          file: m.file, // Include file reference for upload manager
         };
 
         postMediaMap.get(reorderedIndex)!.push(mediaData);
@@ -1383,20 +1392,26 @@ export function Composer() {
 
           if (videoMedia) {
             logger.log("Found video media, uploading as video");
-            setUploadingVideo(true);
 
-            const videoService = new VideoUploadService(agent);
-            const videoBlob = await videoService.uploadVideo(
+            // Use the video upload manager to handle the upload with proper state management
+            const videoBlob = await videoUploadManager.startUpload(
               videoMedia.data,
               videoMedia.mimeType,
-              undefined,
-              (uploadId) => {
-                setCurrentVideoUploadId(uploadId);
-              },
+              videoMedia.file?.name || "video.mp4",
+              (progress) => {
+                logger.log(`Upload progress: ${progress}%`);
+              }
             );
 
-            setUploadingVideo(false);
-            setCurrentVideoUploadId(null);
+            // Check if upload was cancelled or failed
+            if (!videoBlob) {
+              const error = videoUploadManager.uploadState.error;
+              if (error) {
+                throw new Error(error.message);
+              }
+              // Upload was cancelled
+              throw new Error("Video upload was cancelled");
+            }
 
             postData.embed = {
               $type: "app.bsky.embed.video",
@@ -1473,6 +1488,7 @@ export function Composer() {
       setPendingPost(null);
       setCountdown(null);
       setReplyPermission("everyone"); // Reset reply permission
+      videoUploadManager.resetUpload(); // Reset video upload state
 
       // Delete draft if it was loaded
       if (currentDraftId) {
@@ -2271,6 +2287,7 @@ export function Composer() {
                 setMedia([]);
                 setCurrentDraftId(null);
                 setDraftTitle("");
+                videoUploadManager.resetUpload(); // Reset video upload state
                 setPostStatus({
                   type: "success",
                   message: "Ready for new draft",
@@ -2339,7 +2356,7 @@ export function Composer() {
                   isPosting ||
                   media.length >= MAX_IMAGES_PER_POST ||
                   media.some((m) => m.type === "video") ||
-                  uploadingVideo
+                  videoUploadManager.isUploading
                 }
                 aria-label="Add images"
               >
@@ -2376,7 +2393,7 @@ export function Composer() {
                     fileInputRef.current.click();
                   }
                 }}
-                disabled={isPosting || media.length > 0 || uploadingVideo}
+                disabled={isPosting || media.length > 0 || videoUploadManager.isUploading}
                 aria-label="Add video"
               >
                 <Video size={20} />
@@ -3020,10 +3037,12 @@ export function Composer() {
           </div>
         )}
 
-        {currentVideoUploadId && (
+        {videoUploadManager.uploadState.uploadId && (
           <UploadProgressBar
-            uploadId={currentVideoUploadId}
-            fileName={media.find((m) => m.type === "video")?.file.name}
+            uploadId={videoUploadManager.uploadState.uploadId}
+            fileName={videoUploadManager.uploadState.fileName}
+            onRetry={() => videoUploadManager.retryUpload()}
+            onCancel={() => videoUploadManager.cancelUpload()}
           />
         )}
       </div>

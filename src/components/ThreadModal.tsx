@@ -6,7 +6,7 @@ import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useModalSwipeBack } from "../hooks/useModalSwipeBack";
-import { VideoUploadService } from "../services/atproto/video-upload";
+import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
 import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { EnhancedComposer } from "./EnhancedComposer";
 import { ThreadViewer } from "./ThreadViewer";
@@ -38,6 +38,7 @@ export function ThreadModal({
 }: ThreadModalProps) {
   const { agent } = useAuth();
   const swipeHandlers = useModalSwipeBack({ onClose });
+  const videoUploadManager = useVideoUploadManager(agent);
   const [replyState, setReplyState] = useState<ReplyState>({
     isReplying: openToReply,
     replyToPost: null,
@@ -230,18 +231,27 @@ export function ThreadModal({
       const hasVideo = media.some((m) => m.type === "video");
 
       if (hasVideo) {
-        // Handle video upload
+        // Handle video upload with proper state management
         const videoFile = media.find((m) => m.type === "video");
         if (videoFile) {
           // Convert File to Uint8Array
           const arrayBuffer = await videoFile.file.arrayBuffer();
           const videoData = new Uint8Array(arrayBuffer);
 
-          const uploadService = new VideoUploadService(agent);
-          const videoBlob = await uploadService.uploadVideo(
+          const videoBlob = await videoUploadManager.startUpload(
             videoData,
             videoFile.file.type || "video/mp4",
+            videoFile.file.name || "video.mp4"
           );
+
+          // Check if upload was cancelled or failed
+          if (!videoBlob) {
+            const error = videoUploadManager.uploadState.error;
+            if (error) {
+              throw new Error(error.message);
+            }
+            throw new Error("Video upload was cancelled");
+          }
 
           embed = {
             $type: "app.bsky.embed.video",
@@ -335,18 +345,27 @@ export function ThreadModal({
       const hasVideo = media.some((m) => m.type === "video");
 
       if (hasVideo) {
-        // Handle video upload
+        // Handle video upload with proper state management
         const videoFile = media.find((m) => m.type === "video");
         if (videoFile) {
           // Convert File to Uint8Array
           const arrayBuffer = await videoFile.file.arrayBuffer();
           const videoData = new Uint8Array(arrayBuffer);
 
-          const uploadService = new VideoUploadService(agent);
-          const videoBlob = await uploadService.uploadVideo(
+          const videoBlob = await videoUploadManager.startUpload(
             videoData,
             videoFile.file.type || "video/mp4",
+            videoFile.file.name || "video.mp4"
           );
+
+          // Check if upload was cancelled or failed
+          if (!videoBlob) {
+            const error = videoUploadManager.uploadState.error;
+            if (error) {
+              throw new Error(error.message);
+            }
+            throw new Error("Video upload was cancelled");
+          }
 
           embed = {
             $type: "app.bsky.embed.video",
