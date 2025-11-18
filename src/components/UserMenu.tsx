@@ -1,8 +1,9 @@
-import { ChevronDown, LogOut, Settings, User } from "lucide-react";
+import { ChevronDown, LogOut, Settings, User, Users } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
+import { AccountManager } from "../services/account-manager";
 
 export const UserMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,6 +42,8 @@ export const UserMenu: React.FC = () => {
     setIsOpen(false);
   };
 
+  const hasMultipleAccounts = AccountManager.hasMultipleAccounts();
+
   const menuItems = [
     {
       icon: User,
@@ -52,6 +55,15 @@ export const UserMenu: React.FC = () => {
       label: "Settings",
       onClick: () => handleNavigation("/settings"),
     },
+    ...(hasMultipleAccounts
+      ? [
+          {
+            icon: Users,
+            label: "Manage Accounts",
+            onClick: () => handleNavigation("/settings/accounts"),
+          },
+        ]
+      : []),
     {
       divider: true,
     },

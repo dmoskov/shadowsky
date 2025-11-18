@@ -16,6 +16,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { AccountManager } from "../services/account-manager";
 import { analytics } from "../services/analytics";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { atProtoClient, ATProtoClient } from "../services/atproto";
@@ -37,11 +38,12 @@ interface AuthContextType {
     pdsUrl?: string,
     authFactorToken?: string,
   ) => Promise<boolean>;
-  logout: () => void;
+  logout: (logoutAllAccounts?: boolean) => void;
   session: Session | null;
   client: ATProtoClient;
   agent: BskyAgent | null;
   refreshSession: () => Promise<boolean>;
+  switchAccount: (did: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -65,7 +67,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const initAttempts = useRef(0);
   const maxRetries = 3;
 
-  const logout = useCallback(() => {
+  const logout = useCallback((logoutAllAccounts = false) => {
     // Track logout event
     analytics.trackLogout();
 
@@ -83,6 +85,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Clear React Query cache
     queryClient.clear();
+
+    // Clear all accounts if specified
+    if (logoutAllAccounts) {
+      AccountManager.clearAllAccounts();
+    }
 
     // Force a page reload to ensure all state is cleared
     window.location.href = "/";
@@ -204,6 +211,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await initializeDataServices(atProtoClient.agent);
         dmService.setAgent(atProtoClient.agent);
 
+        // Fetch profile data and store account
+        try {
+          const { data: profile } = await atProtoClient.agent.getProfile({
+            actor: newSession.did,
+          });
+          AccountManager.addOrUpdateAccount(newSession, {
+            displayName: profile.displayName,
+            avatar: profile.avatar,
+          });
+        } catch (error) {
+          debug.error("Failed to fetch profile for account storage:", error);
+          AccountManager.addOrUpdateAccount(newSession);
+        }
+
         // Track successful login
         analytics.trackLogin(pdsUrl ? "custom_pds" : "bluesky");
         analytics.setUserId(newSession.did);
@@ -213,6 +234,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         debug.error("Login error:", error);
         // Re-throw the error so the Login component can handle it
         throw error;
+      }
+    },
+    [],
+  );
+
+  const switchAccount = useCallback(
+    async (did: string): Promise<boolean> => {
+      try {
+        const account = AccountManager.switchAccount(did);
+        if (!account) {
+          return false;
+        }
+
+        const resumedSession = await atProtoClient.resumeSession(
+          account.session,
+        );
+        setIsAuthenticated(true);
+        setSession(resumedSession);
+
+        await initializeBookmarkService(atProtoClient.agent);
+        await initializeDataServices(atProtoClient.agent);
+        dmService.setAgent(atProtoClient.agent);
+
+        queryClient.clear();
+
+        analytics.setUserId(resumedSession.did);
+
+        window.location.href = "/";
+        return true;
+      } catch (error) {
+        debug.error("Failed to switch account:", error);
+        return false;
       }
     },
     [],
@@ -229,6 +282,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         client: atProtoClient,
         agent: isAuthenticated ? atProtoClient.agent : null,
         refreshSession,
+        switchAccount,
       }}
     >
       {children}
