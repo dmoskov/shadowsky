@@ -1,6 +1,7 @@
-import { Bell, Database, Palette, PenTool, Shield, User } from "lucide-react";
+import { Bell, Database, Palette, PenTool, Shield, ShieldCheck, User, Users } from "lucide-react";
 import React from "react";
 import { NavLink } from "react-router";
+import { AccountManager } from "../../services/account-manager";
 
 interface SettingsLayoutProps {
   children: React.ReactNode;
@@ -11,8 +12,20 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
   children,
   activeSection: _activeSection,
 }) => {
+  const hasMultipleAccounts = AccountManager.hasMultipleAccounts();
+
   const sections = [
     { id: "account", label: "Account", icon: User, path: "/settings/account" },
+    ...(hasMultipleAccounts
+      ? [
+          {
+            id: "accounts",
+            label: "Manage Accounts",
+            icon: Users,
+            path: "/settings/accounts",
+          },
+        ]
+      : []),
     {
       id: "appearance",
       label: "Appearance",
@@ -36,6 +49,12 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
       label: "Privacy & Safety",
       icon: Shield,
       path: "/settings/privacy",
+    },
+    {
+      id: "moderation",
+      label: "Content Moderation",
+      icon: ShieldCheck,
+      path: "/settings/moderation",
     },
     {
       id: "data",
