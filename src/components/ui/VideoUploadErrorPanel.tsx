@@ -7,7 +7,6 @@ import {
   RefreshCw,
   Server,
   Shield,
-  Wifi,
   WifiOff,
   X,
   XCircle,

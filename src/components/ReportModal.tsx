@@ -1,5 +1,5 @@
 import { AlertTriangle, CheckCircle, Flag, X } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useModeration } from "../contexts/ModerationContext";
 

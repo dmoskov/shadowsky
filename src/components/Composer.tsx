@@ -29,7 +29,6 @@ import type {
 } from "../services/anthropic";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { ThreadgateService } from "../services/atproto/threadgate";
-import { VideoUploadService } from "../services/atproto/video-upload";
 import {
   deleteDraft,
   generateDraftId,

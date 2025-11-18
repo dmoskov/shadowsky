@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle, Loader, RotateCcw, Upload } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader, Upload } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { mapATProtoError, type StandardErrorResponse } from "../../services/atproto/error-handler";
 import { getVideoUploadMetricsTracker } from "../../utils/video-upload-metrics";

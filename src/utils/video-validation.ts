@@ -14,20 +14,20 @@ export interface VideoValidationResult {
   error?: VideoValidationError;
 }
 
-// Allowed video MIME types
+// Allowed video MIME types (as per security requirements)
 const ALLOWED_MIME_TYPES = [
   "video/mp4",
   "video/quicktime",
   "video/webm",
-  "video/ogg",
+  "video/x-m4v",
 ] as const;
 
 // MIME type to extension mapping for validation
 const MIME_TO_EXTENSIONS: Record<string, string[]> = {
-  "video/mp4": [".mp4", ".m4v", ".mpeg"],
+  "video/mp4": [".mp4", ".mpeg"],
   "video/quicktime": [".mov"],
   "video/webm": [".webm"],
-  "video/ogg": [".ogg", ".ogv"],
+  "video/x-m4v": [".m4v"],
 };
 
 // Maximum file size (500MB as per requirements)
@@ -87,7 +87,7 @@ export function validateVideoFile(
       valid: false,
       error: {
         code: "INVALID_MIME_TYPE",
-        message: `Invalid video format. Allowed formats: MP4, QuickTime (MOV), WebM, Ogg`,
+        message: `Invalid video format. Allowed formats: MP4, QuickTime (MOV), WebM, M4V`,
         context: {
           providedMimeType: mimeType,
           allowedMimeTypes: [...ALLOWED_MIME_TYPES],
