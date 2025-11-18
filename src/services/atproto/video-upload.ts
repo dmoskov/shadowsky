@@ -306,6 +306,100 @@ export class VideoUploadService {
     this.agent = agent;
   }
 
+  /**
+   * Get a valid service auth token, refreshing if expired or near expiration
+   * @param uploadId Upload tracking ID
+   * @param forceRefresh Force token refresh even if cached token exists
+   * @returns Valid auth token
+   */
+  private async getServiceAuthToken(
+    uploadId: string,
+    forceRefresh: boolean = false,
+  ): Promise<string> {
+    // Check if we have a valid cached token (unless force refresh requested)
+    let authToken = forceRefresh ? null : tokenManager.getToken(uploadId);
+
+    if (!authToken) {
+      logger.log(
+        `[${uploadId}] ${forceRefresh ? "Refreshing" : "Obtaining"} service auth token`,
+      );
+
+      // Check rate limit before making request
+      const rateLimitAllowed = await this.rateLimiter.waitForAllowance(
+        ATProtoEndpointType.AUTH,
+        1,
+        5000,
+      );
+
+      if (!rateLimitAllowed) {
+        const error = mapATProtoError(
+          new Error("Rate limit exceeded for auth endpoint"),
+          "com.atproto.server.getServiceAuth",
+          { uploadId },
+        );
+        logError(error, "getServiceAuth");
+        throw new Error(error.message);
+      }
+
+      const serviceAuth = await retryWithBackoff(
+        async () => {
+          try {
+            const response =
+              await this.agent.com.atproto.server.getServiceAuth({
+                aud: "did:web:video.bsky.app",
+              });
+
+            // Validate response schema
+            const validatedResponse = validateResponse(
+              serviceAuthResponseSchema,
+              response,
+              "com.atproto.server.getServiceAuth",
+            );
+
+            return validatedResponse;
+          } catch (error: any) {
+            // Map to standardized error format
+            const standardError = mapATProtoError(
+              error,
+              "com.atproto.server.getServiceAuth",
+              { uploadId },
+            );
+            logError(standardError, "getServiceAuth");
+
+            // Re-throw with enhanced context
+            const enhancedError: any = new Error(standardError.message);
+            enhancedError.status = standardError.context.status;
+            enhancedError.code = standardError.code;
+            enhancedError.retryable = standardError.retryable;
+            throw enhancedError;
+          }
+        },
+        {
+          ...VIDEO_SERVICE_AUTH_RETRY_OPTIONS,
+          onRetry: (error, attempt) => {
+            metricsTracker.trackRetry(uploadId);
+            logger.warn(
+              `[${uploadId}] Service auth retry attempt ${attempt}:`,
+              error,
+            );
+          },
+        },
+      );
+
+      authToken = serviceAuth.data.token;
+
+      // Store token in secure memory with automatic expiration
+      tokenManager.storeToken(authToken, uploadId);
+      logger.log(
+        `[${uploadId}] Service auth token obtained and stored successfully`,
+      );
+    } else {
+      logger.log(`[${uploadId}] Using cached service auth token`);
+    }
+
+    return authToken;
+  }
+
   async uploadVideo(
     videoData: Uint8Array,
     mimeType: string,
@@ -313,6 +407,7 @@ export class VideoUploadService {
     onUploadIdCreated?: (uploadId: string) => void,
   ): Promise<VideoUploadResult> {
     const uploadId = metricsTracker.startUpload(mimeType, videoData.length);
+    const uploadStartTime = Date.now();
 
     if (onUploadIdCreated) {
       onUploadIdCreated(uploadId);
@@ -321,84 +416,7 @@ export class VideoUploadService {
     try {
       // Get or refresh service auth token with rate limiting and validation
       logger.log(`[${uploadId}] Getting service auth token for video upload`);
-
-      // Check if we have a valid cached token
-      let authToken = tokenManager.getToken(uploadId);
-
-      if (!authToken) {
-        // Check rate limit before making request
-        const rateLimitAllowed = await this.rateLimiter.waitForAllowance(
-          ATProtoEndpointType.AUTH,
-          1,
-          5000,
-        );
-
-        if (!rateLimitAllowed) {
-          const error = mapATProtoError(
-            new Error("Rate limit exceeded for auth endpoint"),
-            "com.atproto.server.getServiceAuth",
-            { uploadId },
-          );
-          logError(error, "getServiceAuth");
-          metricsTracker.failUpload(uploadId, new Error(error.message));
-          throw new Error(error.message);
-        }
-
-        const serviceAuth = await retryWithBackoff(
-          async () => {
-            try {
-              const response =
-                await this.agent.com.atproto.server.getServiceAuth({
-                  aud: "did:web:video.bsky.app",
-                });
-
-              // Validate response schema
-              const validatedResponse = validateResponse(
-                serviceAuthResponseSchema,
-                response,
-                "com.atproto.server.getServiceAuth",
-              );
-
-              return validatedResponse;
-            } catch (error: any) {
-              // Map to standardized error format
-              const standardError = mapATProtoError(
-                error,
-                "com.atproto.server.getServiceAuth",
-                { uploadId },
-              );
-              logError(standardError, "getServiceAuth");
-
-              // Re-throw with enhanced context
-              const enhancedError: any = new Error(standardError.message);
-              enhancedError.status = standardError.context.status;
-              enhancedError.code = standardError.code;
-              enhancedError.retryable = standardError.retryable;
-              throw enhancedError;
-            }
-          },
-          {
-            ...VIDEO_SERVICE_AUTH_RETRY_OPTIONS,
-            onRetry: (error, attempt) => {
-              metricsTracker.trackRetry(uploadId);
-              logger.warn(
-                `[${uploadId}] Service auth retry attempt ${attempt}:`,
-                error,
-              );
-            },
-          },
-        );
-
-        authToken = serviceAuth.data.token;
-
-        // Store token in secure memory with automatic expiration
-        tokenManager.storeToken(authToken, uploadId);
-        logger.log(
-          `[${uploadId}] Service auth token obtained and stored successfully`,
-        );
-      } else {
-        logger.log(`[${uploadId}] Using cached service auth token`);
-      }
+      let authToken = await this.getServiceAuthToken(uploadId);
 
       // Upload video with rate limiting and retry tracking
       const uploadUrl =
@@ -498,10 +516,35 @@ export class VideoUploadService {
       let jobStatus;
       let attempts = 0;
       const maxAttempts = 60; // 60 seconds timeout
+      const TOKEN_ROTATION_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
       logger.log(`[${uploadId}] Starting job status polling for job ${jobId}`);
 
       while (attempts < maxAttempts) {
         try {
+          // Check if token needs rotation for long-running uploads
+          const uploadDuration = Date.now() - uploadStartTime;
+          if (
+            uploadDuration > TOKEN_ROTATION_INTERVAL_MS &&
+            uploadDuration % TOKEN_ROTATION_INTERVAL_MS < 1000
+          ) {
+            // Upload has been running for more than 10 minutes, rotate token
+            logger.log(
+              `[${uploadId}] Upload running for ${Math.floor(uploadDuration / 60000)} minutes, rotating service auth token`,
+            );
+            try {
+              authToken = await this.getServiceAuthToken(uploadId, true);
+              logger.log(
+                `[${uploadId}] Service auth token rotated successfully for long-running upload`,
+              );
+            } catch (rotationError) {
+              logger.warn(
+                `[${uploadId}] Failed to rotate token, continuing with existing token:`,
+                rotationError,
+              );
+              // Continue with existing token - rotation is best-effort
+            }
+          }
+
           // Check rate limit before polling
           const pollRateLimitAllowed = this.rateLimiter.canProceed(
             ATProtoEndpointType.FEED,
