@@ -1,0 +1,260 @@
+import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import { debug } from "@bsky/shared";
+import { useQueryClient } from "@tanstack/react-query";
+import type { ReactNode } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  getWebSocketService,
+  initializeWebSocketService,
+} from "../services/websocket-service";
+import {
+  WebSocketConnectionState,
+  WebSocketEventType,
+  type NewNotificationEvent,
+  type NotificationCountEvent,
+  type WebSocketStats,
+} from "../types/websocket";
+import { useAuth } from "./AuthContext";
+
+interface WebSocketContextType {
+  isConnected: boolean;
+  connectionState: WebSocketConnectionState;
+  stats: WebSocketStats;
+  reconnect: () => void;
+}
+
+const WebSocketContext = createContext<WebSocketContextType | null>(null);
+
+export const useWebSocket = () => {
+  const context = useContext(WebSocketContext);
+  if (!context) {
+    throw new Error("useWebSocket must be used within WebSocketProvider");
+  }
+  return context;
+};
+
+interface WebSocketProviderProps {
+  children: ReactNode;
+}
+
+export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
+  children,
+}) => {
+  const { isAuthenticated, session } = useAuth();
+  const queryClient = useQueryClient();
+  const [connectionState, setConnectionState] =
+    useState<WebSocketConnectionState>(WebSocketConnectionState.DISCONNECTED);
+  const [stats, setStats] = useState<WebSocketStats>({
+    connectionState: WebSocketConnectionState.DISCONNECTED,
+    reconnectAttempts: 0,
+    messagesSent: 0,
+    messagesReceived: 0,
+  });
+
+  const isInitialized = useRef(false);
+  const reconnectAttemptTimer = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  const updateStats = useCallback(() => {
+    const service = getWebSocketService();
+    if (service) {
+      const currentStats = service.getStats();
+      setStats(currentStats);
+      setConnectionState(currentStats.connectionState);
+    }
+  }, []);
+
+  const handleNewNotification = useCallback(
+    (event: NewNotificationEvent) => {
+      debug.log(
+        "📬 [WebSocket] New notification received:",
+        event.notification,
+      );
+
+      queryClient.setQueryData(["notificationCount"], (oldCount: number) => {
+        return (oldCount || 0) + 1;
+      });
+
+      queryClient.setQueriesData(
+        { queryKey: ["notifications"] },
+        (oldData: any) => {
+          if (!oldData?.pages) return oldData;
+
+          const newPages = [...oldData.pages];
+          if (newPages[0]) {
+            newPages[0] = {
+              ...newPages[0],
+              notifications: [event.notification, ...newPages[0].notifications],
+            };
+          }
+
+          return {
+            ...oldData,
+            pages: newPages,
+          };
+        },
+      );
+
+      if (window.Notification?.permission === "granted") {
+        new window.Notification("New Bluesky Notification", {
+          body: getNotificationBody(event.notification),
+          icon: event.notification.author.avatar,
+          tag: event.notification.uri,
+        });
+      }
+    },
+    [queryClient],
+  );
+
+  const handleNotificationCount = useCallback(
+    (event: NotificationCountEvent) => {
+      debug.log("🔢 [WebSocket] Notification count update:", event.count);
+      queryClient.setQueryData(["notificationCount"], event.count);
+    },
+    [queryClient],
+  );
+
+  const handleConnect = useCallback(() => {
+    debug.log("✅ [WebSocket] Connected");
+    updateStats();
+  }, [updateStats]);
+
+  const handleDisconnect = useCallback(() => {
+    debug.log("❌ [WebSocket] Disconnected");
+    updateStats();
+  }, [updateStats]);
+
+  const handleReconnect = useCallback(() => {
+    debug.log("🔄 [WebSocket] Reconnecting...");
+    updateStats();
+  }, [updateStats]);
+
+  const handleError = useCallback(() => {
+    debug.error("⚠️ [WebSocket] Error occurred");
+    updateStats();
+  }, [updateStats]);
+
+  const reconnect = useCallback(() => {
+    const service = getWebSocketService();
+    if (service) {
+      debug.log("🔄 [WebSocket] Manual reconnection triggered");
+      service.disconnect();
+      setTimeout(() => {
+        service.connect();
+      }, 1000);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || !session) {
+      if (isInitialized.current) {
+        debug.log("🔌 [WebSocket] User logged out, disconnecting");
+        const service = getWebSocketService();
+        if (service) {
+          service.disconnect();
+        }
+        isInitialized.current = false;
+      }
+      return;
+    }
+
+    if (isInitialized.current) {
+      return;
+    }
+
+    const wsUrl = import.meta.env.VITE_WS_URL;
+    if (!wsUrl) {
+      debug.warn(
+        "🔌 [WebSocket] VITE_WS_URL not configured, WebSocket disabled",
+      );
+      return;
+    }
+
+    const fullWsUrl = `${wsUrl}?token=${session.accessJwt}`;
+
+    debug.log("🔌 [WebSocket] Initializing service");
+    const service = initializeWebSocketService({
+      url: fullWsUrl,
+      reconnectDelay: 5000,
+      maxReconnectAttempts: 10,
+      heartbeatInterval: 30000,
+      debug: true,
+    });
+
+    service.on(WebSocketEventType.NEW_NOTIFICATION, (event) =>
+      handleNewNotification(event as NewNotificationEvent),
+    );
+    service.on(WebSocketEventType.NOTIFICATION_COUNT, (event) =>
+      handleNotificationCount(event as NotificationCountEvent),
+    );
+    service.on(WebSocketEventType.CONNECT, handleConnect);
+    service.on(WebSocketEventType.DISCONNECT, handleDisconnect);
+    service.on(WebSocketEventType.RECONNECT, handleReconnect);
+    service.on(WebSocketEventType.ERROR, handleError);
+
+    service.connect();
+    isInitialized.current = true;
+
+    const statsInterval = setInterval(updateStats, 5000);
+
+    return () => {
+      clearInterval(statsInterval);
+      if (reconnectAttemptTimer.current) {
+        clearTimeout(reconnectAttemptTimer.current);
+      }
+    };
+  }, [
+    isAuthenticated,
+    session,
+    handleNewNotification,
+    handleNotificationCount,
+    handleConnect,
+    handleDisconnect,
+    handleReconnect,
+    handleError,
+    updateStats,
+  ]);
+
+  const value: WebSocketContextType = {
+    isConnected: connectionState === WebSocketConnectionState.CONNECTED,
+    connectionState,
+    stats,
+    reconnect,
+  };
+
+  return (
+    <WebSocketContext.Provider value={value}>
+      {children}
+    </WebSocketContext.Provider>
+  );
+};
+
+function getNotificationBody(notification: Notification): string {
+  const author =
+    notification.author.displayName || `@${notification.author.handle}`;
+
+  switch (notification.reason) {
+    case "like":
+      return `${author} liked your post`;
+    case "repost":
+      return `${author} reposted your post`;
+    case "follow":
+      return `${author} followed you`;
+    case "mention":
+      return `${author} mentioned you`;
+    case "reply":
+      return `${author} replied to your post`;
+    case "quote":
+      return `${author} quoted your post`;
+    default:
+      return `${author} interacted with your post`;
+  }
+}

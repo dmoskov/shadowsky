@@ -14,10 +14,12 @@ import { DebugConsole } from "./components/DebugConsole";
 import { Header } from "./components/Header";
 import { LandingPage } from "./components/LandingPage";
 import { MobileTabBar } from "./components/MobileTabBar";
+import { NotificationPermissionPrompt } from "./components/NotificationPermissionPrompt";
 import { StorageErrorProvider } from "./components/providers/StorageErrorProvider";
 import { RateLimitStatus } from "./components/RateLimitStatus";
 import { Sidebar } from "./components/Sidebar";
 import { SwipeIndicator } from "./components/SwipeIndicator";
+import { WebSocketStatus } from "./components/WebSocketStatus";
 import { FloatingActionButton } from "./components/ui/FloatingActionButton";
 import { PageLoader } from "./components/ui/PageLoader";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
@@ -25,6 +27,7 @@ import { HiddenPostsProvider } from "./contexts/HiddenPostsContext";
 import { ModalProvider } from "./contexts/ModalContext";
 import { ModerationProvider } from "./contexts/ModerationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { useErrorTracking, usePageTracking } from "./hooks/useAnalytics";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
 import { analytics } from "./services/analytics";
@@ -62,6 +65,14 @@ const DirectMessages = lazy(() =>
     default: m.DirectMessages,
   })),
 );
+const Lists = lazy(() =>
+  import("./components/Lists").then((m) => ({ default: m.Lists })),
+);
+const ListTimeline = lazy(() =>
+  import("./components/ListTimeline").then((m) => ({
+    default: m.ListTimeline,
+  })),
+);
 const Notifications = lazy(() =>
   import("./components/Notifications").then((m) => ({
     default: m.Notifications,
@@ -87,6 +98,9 @@ const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const ThreadPage = lazy(() => import("./pages/ThreadPage"));
 const Settings = lazy(() =>
   import("./pages/Settings").then((m) => ({ default: m.Settings })),
+);
+const UserAnalytics = lazy(() =>
+  import("./pages/UserAnalytics").then((m) => ({ default: m.UserAnalytics })),
 );
 
 // Mobile-optimized query client settings
@@ -251,11 +265,17 @@ function AppContent() {
               <Route path="/home" element={<SkyDeck />} />
               <Route path="/" element={<SkyDeck />} />
               <Route path="/timeline" element={<VisualTimeline />} />
-              <Route path="/analytics" element={<NotificationsAnalytics />} />
+              <Route path="/analytics" element={<UserAnalytics />} />
+              <Route
+                path="/analytics/notifications"
+                element={<NotificationsAnalytics />}
+              />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/conversations" element={<Conversations />} />
               <Route path="/messages" element={<DirectMessages />} />
               <Route path="/bookmarks" element={<Bookmarks />} />
+              <Route path="/lists" element={<Lists />} />
+              <Route path="/lists/:listId" element={<ListTimeline />} />
               <Route path="/compose" element={<Composer />} />
               <Route path="/search" element={<Search />} />
               <Route path="/profile/:handle" element={<ProfilePage />} />
@@ -272,6 +292,8 @@ function AppContent() {
       <FloatingActionButton />
       <SwipeIndicator />
       <RateLimitStatus />
+      <WebSocketStatus />
+      <NotificationPermissionPrompt />
       <DebugConsole />
       <ColumnMigrationNotice />
       <CommandPalette
@@ -304,15 +326,17 @@ function App() {
       <BrowserRouter>
         <ThemeProvider>
           <AuthProvider>
-            <ModalProvider>
-              <HiddenPostsProvider>
-                <ModerationProvider>
-                  <StorageErrorProvider>
-                    <AppContent />
-                  </StorageErrorProvider>
-                </ModerationProvider>
-              </HiddenPostsProvider>
-            </ModalProvider>
+            <WebSocketProvider>
+              <ModalProvider>
+                <HiddenPostsProvider>
+                  <ModerationProvider>
+                    <StorageErrorProvider>
+                      <AppContent />
+                    </StorageErrorProvider>
+                  </ModerationProvider>
+                </HiddenPostsProvider>
+              </ModalProvider>
+            </WebSocketProvider>
           </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>
