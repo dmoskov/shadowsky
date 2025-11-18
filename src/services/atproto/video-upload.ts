@@ -14,17 +14,14 @@ import {
   mapATProtoError,
   type StandardErrorResponse,
 } from "./error-handler";
-import {
-  ATProtoEndpointType,
-  getGlobalRateLimiter,
-} from "./rate-limiter";
+import { ATProtoEndpointType, getGlobalRateLimiter } from "./rate-limiter";
 import {
   extractRateLimitHeaders,
-  parseRateLimitHeaders,
-  validateResponse,
   jobStatusResponseSchema,
+  parseRateLimitHeaders,
   serviceAuthResponseSchema,
   uploadVideoResponseSchema,
+  validateResponse,
 } from "./schemas";
 
 export interface VideoUploadResult {
@@ -42,6 +39,183 @@ export interface VideoUploadResult {
 
 const logger = createLogger("VideoUploadService");
 const metricsTracker = getVideoUploadMetricsTracker();
+
+/**
+ * Secure in-memory token storage with automatic expiration
+ * Tokens are never persisted to localStorage or cookies
+ */
+interface TokenEntry {
+  token: string;
+  expiresAt: number;
+  uploadId: string;
+}
+
+class TokenManager {
+  private tokens = new Map<string, TokenEntry>();
+  private cleanupIntervalId: NodeJS.Timeout | null = null;
+  private readonly CLEANUP_INTERVAL_MS = 60000; // Clean up every 60 seconds
+  private readonly TOKEN_BUFFER_MS = 5000; // Consider token expired 5 seconds early to account for network delays
+
+  constructor() {
+    this.startCleanupInterval();
+  }
+
+  /**
+   * Store a service auth token with expiration tracking
+   * Decodes JWT to extract expiration time
+   */
+  storeToken(token: string, uploadId: string): void {
+    try {
+      const expiresAt = this.decodeTokenExpiration(token);
+      this.tokens.set(uploadId, { token, expiresAt, uploadId });
+      logger.log(
+        `[${uploadId}] Service auth token stored (expires at ${new Date(expiresAt).toISOString()})`,
+      );
+    } catch (error) {
+      logger.warn(
+        `[${uploadId}] Failed to decode token expiration, using default TTL:`,
+        error,
+      );
+      // Default to 60 seconds if we can't decode the JWT
+      const expiresAt = Date.now() + 60000;
+      this.tokens.set(uploadId, { token, expiresAt, uploadId });
+    }
+  }
+
+  /**
+   * Retrieve a token if it exists and is not expired
+   */
+  getToken(uploadId: string): string | null {
+    const entry = this.tokens.get(uploadId);
+    if (!entry) {
+      return null;
+    }
+
+    // Check if token is expired (with buffer)
+    if (Date.now() >= entry.expiresAt - this.TOKEN_BUFFER_MS) {
+      logger.log(`[${uploadId}] Service auth token expired, clearing`);
+      this.clearToken(uploadId);
+      return null;
+    }
+
+    return entry.token;
+  }
+
+  /**
+   * Clear a specific token from memory
+   */
+  clearToken(uploadId: string): void {
+    const wasDeleted = this.tokens.delete(uploadId);
+    if (wasDeleted) {
+      logger.log(`[${uploadId}] Service auth token cleared from memory`);
+    }
+  }
+
+  /**
+   * Clear all tokens (used for cleanup)
+   */
+  clearAllTokens(): void {
+    const count = this.tokens.size;
+    this.tokens.clear();
+    if (count > 0) {
+      logger.log(`Cleared ${count} service auth tokens from memory`);
+    }
+  }
+
+  /**
+   * Decode JWT to extract expiration time
+   * Note: This does NOT verify the signature, only extracts the exp claim
+   */
+  private decodeTokenExpiration(token: string): number {
+    try {
+      // JWT format: header.payload.signature
+      const parts = token.split(".");
+      if (parts.length !== 3) {
+        throw new Error("Invalid JWT format");
+      }
+
+      // Decode base64url payload
+      const payload = parts[1];
+      const decodedPayload = this.base64UrlDecode(payload);
+      const claims = JSON.parse(decodedPayload);
+
+      // Extract exp claim (Unix timestamp in seconds)
+      if (typeof claims.exp !== "number") {
+        throw new Error("JWT missing exp claim");
+      }
+
+      // Convert to milliseconds
+      return claims.exp * 1000;
+    } catch (error) {
+      throw new Error(
+        `Failed to decode JWT expiration: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Decode base64url string (JWT uses base64url encoding, not standard base64)
+   */
+  private base64UrlDecode(str: string): string {
+    // Convert base64url to base64
+    let base64 = str.replace(/-/g, "+").replace(/_/g, "/");
+
+    // Add padding if necessary
+    while (base64.length % 4 !== 0) {
+      base64 += "=";
+    }
+
+    // Decode base64
+    try {
+      return atob(base64);
+    } catch (error) {
+      throw new Error("Invalid base64url encoding");
+    }
+  }
+
+  /**
+   * Periodically clean up expired tokens
+   */
+  private startCleanupInterval(): void {
+    this.cleanupIntervalId = setInterval(() => {
+      this.cleanupExpiredTokens();
+    }, this.CLEANUP_INTERVAL_MS);
+  }
+
+  /**
+   * Remove expired tokens from memory
+   */
+  private cleanupExpiredTokens(): void {
+    const now = Date.now();
+    const expiredUploadIds: string[] = [];
+
+    for (const [uploadId, entry] of this.tokens.entries()) {
+      if (now >= entry.expiresAt) {
+        expiredUploadIds.push(uploadId);
+      }
+    }
+
+    for (const uploadId of expiredUploadIds) {
+      this.tokens.delete(uploadId);
+      logger.log(
+        `[${uploadId}] Expired service auth token automatically cleared`,
+      );
+    }
+  }
+
+  /**
+   * Stop the cleanup interval (for testing or cleanup)
+   */
+  stopCleanupInterval(): void {
+    if (this.cleanupIntervalId) {
+      clearInterval(this.cleanupIntervalId);
+      this.cleanupIntervalId = null;
+    }
+  }
+}
+
+// Global token manager instance (module-level singleton)
+const tokenManager = new TokenManager();
 
 /**
  * Retry options optimized for video upload operations
@@ -76,7 +250,11 @@ const VIDEO_SERVICE_AUTH_RETRY_OPTIONS: RetryOptions = {
     }
 
     // Retry on server errors (500, 503)
-    if (error?.status >= 500 || error?.message?.includes("500") || error?.message?.includes("503")) {
+    if (
+      error?.status >= 500 ||
+      error?.message?.includes("500") ||
+      error?.message?.includes("503")
+    ) {
       return true;
     }
 
@@ -141,71 +319,86 @@ export class VideoUploadService {
     }
 
     try {
-      // Get service auth token with rate limiting and validation
+      // Get or refresh service auth token with rate limiting and validation
       logger.log(`[${uploadId}] Getting service auth token for video upload`);
 
-      // Check rate limit before making request
-      const rateLimitAllowed = await this.rateLimiter.waitForAllowance(
-        ATProtoEndpointType.AUTH,
-        1,
-        5000,
-      );
+      // Check if we have a valid cached token
+      let authToken = tokenManager.getToken(uploadId);
 
-      if (!rateLimitAllowed) {
-        const error = mapATProtoError(
-          new Error("Rate limit exceeded for auth endpoint"),
-          "com.atproto.server.getServiceAuth",
-          { uploadId },
+      if (!authToken) {
+        // Check rate limit before making request
+        const rateLimitAllowed = await this.rateLimiter.waitForAllowance(
+          ATProtoEndpointType.AUTH,
+          1,
+          5000,
         );
-        logError(error, "getServiceAuth");
-        metricsTracker.failUpload(uploadId, new Error(error.message));
-        throw new Error(error.message);
-      }
 
-      const serviceAuth = await retryWithBackoff(
-        async () => {
-          try {
-            const response = await this.agent.com.atproto.server.getServiceAuth({
-              aud: "did:web:video.bsky.app",
-            });
+        if (!rateLimitAllowed) {
+          const error = mapATProtoError(
+            new Error("Rate limit exceeded for auth endpoint"),
+            "com.atproto.server.getServiceAuth",
+            { uploadId },
+          );
+          logError(error, "getServiceAuth");
+          metricsTracker.failUpload(uploadId, new Error(error.message));
+          throw new Error(error.message);
+        }
 
-            // Validate response schema
-            const validatedResponse = validateResponse(
-              serviceAuthResponseSchema,
-              response,
-              "com.atproto.server.getServiceAuth",
-            );
+        const serviceAuth = await retryWithBackoff(
+          async () => {
+            try {
+              const response =
+                await this.agent.com.atproto.server.getServiceAuth({
+                  aud: "did:web:video.bsky.app",
+                });
 
-            return validatedResponse;
-          } catch (error: any) {
-            // Map to standardized error format
-            const standardError = mapATProtoError(
-              error,
-              "com.atproto.server.getServiceAuth",
-              { uploadId },
-            );
-            logError(standardError, "getServiceAuth");
+              // Validate response schema
+              const validatedResponse = validateResponse(
+                serviceAuthResponseSchema,
+                response,
+                "com.atproto.server.getServiceAuth",
+              );
 
-            // Re-throw with enhanced context
-            const enhancedError: any = new Error(standardError.message);
-            enhancedError.status = standardError.context.status;
-            enhancedError.code = standardError.code;
-            enhancedError.retryable = standardError.retryable;
-            throw enhancedError;
-          }
-        },
-        {
-          ...VIDEO_SERVICE_AUTH_RETRY_OPTIONS,
-          onRetry: (error, attempt) => {
-            metricsTracker.trackRetry(uploadId);
-            logger.warn(
-              `[${uploadId}] Service auth retry attempt ${attempt}:`,
-              error,
-            );
+              return validatedResponse;
+            } catch (error: any) {
+              // Map to standardized error format
+              const standardError = mapATProtoError(
+                error,
+                "com.atproto.server.getServiceAuth",
+                { uploadId },
+              );
+              logError(standardError, "getServiceAuth");
+
+              // Re-throw with enhanced context
+              const enhancedError: any = new Error(standardError.message);
+              enhancedError.status = standardError.context.status;
+              enhancedError.code = standardError.code;
+              enhancedError.retryable = standardError.retryable;
+              throw enhancedError;
+            }
           },
-        },
-      );
-      logger.log(`[${uploadId}] Service auth token obtained successfully`);
+          {
+            ...VIDEO_SERVICE_AUTH_RETRY_OPTIONS,
+            onRetry: (error, attempt) => {
+              metricsTracker.trackRetry(uploadId);
+              logger.warn(
+                `[${uploadId}] Service auth retry attempt ${attempt}:`,
+                error,
+              );
+            },
+          },
+        );
+
+        authToken = serviceAuth.data.token;
+
+        // Store token in secure memory with automatic expiration
+        tokenManager.storeToken(authToken, uploadId);
+        logger.log(
+          `[${uploadId}] Service auth token obtained and stored successfully`,
+        );
+      } else {
+        logger.log(`[${uploadId}] Using cached service auth token`);
+      }
 
       // Upload video with rate limiting and retry tracking
       const uploadUrl =
@@ -238,7 +431,7 @@ export class VideoUploadService {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${serviceAuth.data.token}`,
+            Authorization: `Bearer ${authToken}`,
             "Content-Type": mimeType,
             "Content-Length": videoData.length.toString(),
           },
@@ -260,7 +453,10 @@ export class VideoUploadService {
       const rateLimitHeaders = extractRateLimitHeaders(uploadResponse);
       if (rateLimitHeaders) {
         const metrics = parseRateLimitHeaders(rateLimitHeaders);
-        this.rateLimiter.trackRateLimitHeaders(ATProtoEndpointType.UPLOAD, metrics);
+        this.rateLimiter.trackRateLimitHeaders(
+          ATProtoEndpointType.UPLOAD,
+          metrics,
+        );
 
         // Track in CloudWatch metrics
         metricsTracker.trackRateLimitMetrics(uploadId, {
@@ -302,9 +498,7 @@ export class VideoUploadService {
       let jobStatus;
       let attempts = 0;
       const maxAttempts = 60; // 60 seconds timeout
-      logger.log(
-        `[${uploadId}] Starting job status polling for job ${jobId}`,
-      );
+      logger.log(`[${uploadId}] Starting job status polling for job ${jobId}`);
 
       while (attempts < maxAttempts) {
         try {
@@ -385,11 +579,15 @@ export class VideoUploadService {
               `[${uploadId}] Video processing completed successfully after ${attempts + 1} polling attempts`,
             );
 
+            // Clear service auth token after successful upload
+            tokenManager.clearToken(uploadId);
+
             // Normalize blob ref to expected format
             const normalizedBlob = {
-              ref: typeof jobStatus.blob.ref === "string"
-                ? { $link: jobStatus.blob.ref }
-                : jobStatus.blob.ref,
+              ref:
+                typeof jobStatus.blob.ref === "string"
+                  ? { $link: jobStatus.blob.ref }
+                  : jobStatus.blob.ref,
               mimeType: jobStatus.blob.mimeType,
               size: jobStatus.blob.size,
             };
@@ -405,7 +603,14 @@ export class VideoUploadService {
               jobStatus.error || jobStatus.message,
             );
             logError(standardError, "videoProcessing");
-            metricsTracker.failUpload(uploadId, new Error(standardError.message));
+            metricsTracker.failUpload(
+              uploadId,
+              new Error(standardError.message),
+            );
+
+            // Clear service auth token on processing failure
+            tokenManager.clearToken(uploadId);
+
             throw new Error(standardError.message);
           }
 
@@ -449,11 +654,22 @@ export class VideoUploadService {
         }
       }
 
-      const timeoutError = createVideoTimeoutError(uploadId, jobId, maxAttempts);
+      const timeoutError = createVideoTimeoutError(
+        uploadId,
+        jobId,
+        maxAttempts,
+      );
       logError(timeoutError, "videoProcessingTimeout");
       metricsTracker.failUpload(uploadId, new Error(timeoutError.message));
+
+      // Clear service auth token on timeout
+      tokenManager.clearToken(uploadId);
+
       throw new Error(timeoutError.message);
     } catch (error: any) {
+      // Clear service auth token on any error to prevent token leakage
+      tokenManager.clearToken(uploadId);
+
       // Map error to standardized format if not already mapped
       let standardError: StandardErrorResponse;
 
@@ -487,5 +703,4 @@ export class VideoUploadService {
       throw error;
     }
   }
-
 }
