@@ -144,6 +144,7 @@ export function EnhancedComposer({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mediaUrlsRef = useRef<Set<string>>(new Set());
 
   // Load AI settings
   useEffect(() => {
@@ -224,16 +225,24 @@ export function EnhancedComposer({
     return () => clearTimeout(timer);
   }, [text, agent, quotedPost]);
 
-  // Cleanup blob URLs on unmount and when onCancel is called
+  // Track media URLs for cleanup
+  useEffect(() => {
+    media.forEach((m) => {
+      if (m.preview && !m.preview.startsWith("data:")) {
+        mediaUrlsRef.current.add(m.preview);
+      }
+    });
+  }, [media]);
+
+  // Cleanup all blob URLs on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
-      media.forEach((m) => {
-        if (m.preview) {
-          URL.revokeObjectURL(m.preview);
-        }
+      mediaUrlsRef.current.forEach((url) => {
+        URL.revokeObjectURL(url);
       });
+      mediaUrlsRef.current.clear();
     };
-  }, [media]);
+  }, []);
 
   const loadHashtagSuggestions = async () => {
     setIsLoadingHashtags(true);
@@ -328,6 +337,7 @@ export function EnhancedComposer({
       }
 
       const preview = URL.createObjectURL(file);
+      mediaUrlsRef.current.add(preview);
       const newMedia: UploadedMedia = {
         id: Date.now().toString(),
         file: file,
@@ -350,6 +360,7 @@ export function EnhancedComposer({
       const item = prev.find((m) => m.id === id);
       if (item) {
         URL.revokeObjectURL(item.preview);
+        mediaUrlsRef.current.delete(item.preview);
       }
       return prev.filter((m) => m.id !== id);
     });
@@ -427,6 +438,12 @@ export function EnhancedComposer({
       }
 
       await onSubmit(finalText, media, finalQuotedPost);
+
+      // Clean up media preview URLs after successful submission
+      media.forEach((m) => {
+        URL.revokeObjectURL(m.preview);
+        mediaUrlsRef.current.delete(m.preview);
+      });
 
       setText("");
       setMedia([]);

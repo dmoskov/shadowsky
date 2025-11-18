@@ -575,10 +575,12 @@ export function Composer() {
         }
 
         // Add to media
+        const previewUrl = URL.createObjectURL(blob);
+        mediaUrlsRef.current.add(previewUrl);
         const newMedia: UploadedMedia = {
           id: Math.random().toString(36).substr(2, 9),
           file,
-          preview: URL.createObjectURL(blob),
+          preview: previewUrl,
           alt: "",
           type: "image",
         };
@@ -746,10 +748,12 @@ export function Composer() {
               continue;
             }
 
+            const previewUrl = URL.createObjectURL(videoBlob);
+            mediaUrlsRef.current.add(previewUrl);
             const newMedia: UploadedMedia = {
               id: Math.random().toString(36).substr(2, 9),
               file: videoFile,
-              preview: URL.createObjectURL(videoBlob),
+              preview: previewUrl,
               alt: "",
               type: "video",
             };
@@ -780,10 +784,12 @@ export function Composer() {
               }
             }
 
+            const previewUrl = URL.createObjectURL(processedFile);
+            mediaUrlsRef.current.add(previewUrl);
             const newMedia: UploadedMedia = {
               id: Math.random().toString(36).substr(2, 9),
               file: processedFile,
-              preview: URL.createObjectURL(processedFile),
+              preview: previewUrl,
               alt: "",
               type: "image",
             };
@@ -842,10 +848,12 @@ export function Composer() {
             }
           }
 
+          const previewUrl = URL.createObjectURL(processedFile);
+          mediaUrlsRef.current.add(previewUrl);
           const newMedia: UploadedMedia = {
             id: Math.random().toString(36).substr(2, 9),
             file: processedFile,
-            preview: URL.createObjectURL(processedFile),
+            preview: previewUrl,
             alt: "",
             type: isVideo ? "video" : "image",
           };
@@ -1610,10 +1618,12 @@ export function Composer() {
       });
 
       // Add to media
+      const previewUrl = URL.createObjectURL(videoBlob);
+      mediaUrlsRef.current.add(previewUrl);
       const newMedia: UploadedMedia = {
         id: Math.random().toString(36).substr(2, 9),
         file,
-        preview: URL.createObjectURL(videoBlob),
+        preview: previewUrl,
         alt: "GIF from Giphy",
         type: mediaType,
       };
