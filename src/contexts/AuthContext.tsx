@@ -18,6 +18,7 @@ import React, {
 } from "react";
 import { AccountManager } from "../services/account-manager";
 import { analytics } from "../services/analytics";
+import { analyticsTracker } from "../services/analytics-tracker";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { atProtoClient, ATProtoClient } from "../services/atproto";
 import {
@@ -82,6 +83,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     appPreferencesService.setAgent(null);
     columnService.setAgent(null);
     draftService.setAgent(null);
+    analyticsTracker.setAgent(null, null);
 
     // Clear React Query cache
     queryClient.clear();
@@ -134,6 +136,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             await initializeBookmarkService(atProtoClient.agent);
             await initializeDataServices(atProtoClient.agent);
             dmService.setAgent(atProtoClient.agent);
+            analyticsTracker.setAgent(
+              atProtoClient.agent,
+              resumedSession.handle,
+            );
           } catch (error) {
             debug.error("Failed to resume session:", error);
 
@@ -210,6 +216,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await initializeBookmarkService(atProtoClient.agent);
         await initializeDataServices(atProtoClient.agent);
         dmService.setAgent(atProtoClient.agent);
+        analyticsTracker.setAgent(atProtoClient.agent, newSession.handle);
 
         // Fetch profile data and store account
         try {
@@ -256,6 +263,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await initializeBookmarkService(atProtoClient.agent);
         await initializeDataServices(atProtoClient.agent);
         dmService.setAgent(atProtoClient.agent);
+        analyticsTracker.setAgent(atProtoClient.agent, resumedSession.handle);
 
         queryClient.clear();
 

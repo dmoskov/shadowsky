@@ -8,6 +8,7 @@ import {
 } from "date-fns";
 import {
   BarChart3,
+  Clock,
   Heart,
   MessageCircle,
   Repeat2,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { analyticsTracker } from "../services/analytics-tracker";
 import { proxifyBskyImage } from "../utils/image-proxy";
 
 type DateRange = "7d" | "30d" | "90d" | "all";
@@ -181,30 +183,62 @@ export const UserAnalytics: React.FC = () => {
     enabled: !!agent && !!session?.handle,
   });
 
+  const { data: historicalData } = useQuery({
+    queryKey: ["historical-analytics", session?.handle, dateRange],
+    queryFn: async () => {
+      if (!session?.handle) return null;
+      const hasData = await analyticsTracker.hasHistoricalData();
+      if (!hasData) return null;
+      const data = await analyticsTracker.getHistoricalData(startDate, endDate);
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!session?.handle && dateRange !== "all",
+  });
+
   const followerGrowthData = useMemo(() => {
     if (!profileData || dateRange === "all") return null;
 
-    const days =
-      dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : 90;
+    const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : 90;
     const data = [];
     const currentFollowers = profileData.followersCount || 0;
 
-    for (let i = days - 1; i >= 0; i--) {
-      const date = subDays(new Date(), i);
-      const estimatedFollowers = Math.max(
-        0,
-        Math.floor(currentFollowers - (Math.random() * i * 5)),
-      );
-      data.push({
-        date: format(date, "MMM d"),
-        followers: estimatedFollowers,
+    if (historicalData && historicalData.length > 1) {
+      const dataByDay = new Map<string, number>();
+      historicalData.forEach((snapshot) => {
+        const dateKey = format(new Date(snapshot.timestamp), "yyyy-MM-dd");
+        dataByDay.set(dateKey, snapshot.followersCount);
       });
+
+      for (let i = days - 1; i >= 0; i--) {
+        const date = subDays(new Date(), i);
+        const dateKey = format(date, "yyyy-MM-dd");
+        const followers = dataByDay.get(dateKey) || currentFollowers;
+        data.push({
+          date: format(date, "MMM d"),
+          followers,
+        });
+      }
+
+      data[data.length - 1].followers = currentFollowers;
+    } else {
+      for (let i = days - 1; i >= 0; i--) {
+        const date = subDays(new Date(), i);
+        const estimatedFollowers = Math.max(
+          0,
+          Math.floor(currentFollowers - Math.random() * i * 5),
+        );
+        data.push({
+          date: format(date, "MMM d"),
+          followers: estimatedFollowers,
+        });
+      }
+
+      data[data.length - 1].followers = currentFollowers;
     }
 
-    data[data.length - 1].followers = currentFollowers;
-
     return data;
-  }, [profileData, dateRange]);
+  }, [profileData, dateRange, historicalData, startDate, endDate]);
 
   const engagementChartData = useMemo(() => {
     if (!postsData?.dailyEngagement) return [];
@@ -242,6 +276,72 @@ export const UserAnalytics: React.FC = () => {
     if (!followerGrowthData) return 1;
     return Math.max(1, ...followerGrowthData.map((d) => d.followers));
   }, [followerGrowthData]);
+
+  const postingTimeAnalysis = useMemo(() => {
+    if (!postsData?.posts) return null;
+
+    const hourCounts = new Array(24).fill(0);
+    const hourEngagement = new Array(24).fill(0);
+
+    postsData.posts.forEach((post) => {
+      const hour = new Date(post.createdAt).getHours();
+      hourCounts[hour]++;
+      hourEngagement[hour] += post.totalEngagement;
+    });
+
+    const avgEngagementByHour = hourEngagement.map((total, hour) =>
+      hourCounts[hour] > 0 ? total / hourCounts[hour] : 0,
+    );
+
+    const maxEngagementHour = avgEngagementByHour.reduce(
+      (maxIdx, val, idx, arr) => (val > arr[maxIdx] ? idx : maxIdx),
+      0,
+    );
+
+    const maxPostsHour = hourCounts.reduce(
+      (maxIdx, val, idx, arr) => (val > arr[maxIdx] ? idx : maxIdx),
+      0,
+    );
+
+    return {
+      hourCounts,
+      avgEngagementByHour,
+      maxEngagementHour,
+      maxPostsHour,
+      maxCount: Math.max(...hourCounts, 1),
+      maxAvgEngagement: Math.max(...avgEngagementByHour, 1),
+    };
+  }, [postsData]);
+
+  const postFrequencyData = useMemo(() => {
+    if (!postsData?.dailyEngagement) return [];
+
+    const days =
+      dateRange === "7d"
+        ? 7
+        : dateRange === "30d"
+          ? 30
+          : dateRange === "90d"
+            ? 90
+            : 365;
+    const data = [];
+
+    for (let i = days - 1; i >= 0; i--) {
+      const date = subDays(new Date(), i);
+      const dateKey = format(date, "yyyy-MM-dd");
+      const dayData = postsData.dailyEngagement[dateKey] || { posts: 0 };
+      data.push({
+        date: format(date, dateRange === "7d" ? "EEE" : "M/d"),
+        posts: dayData.posts,
+      });
+    }
+
+    return data;
+  }, [postsData, dateRange]);
+
+  const maxPostsPerDay = useMemo(() => {
+    return Math.max(1, ...postFrequencyData.map((d) => d.posts));
+  }, [postFrequencyData]);
 
   const isLoading = isLoadingProfile || isLoadingPosts;
 
@@ -343,7 +443,7 @@ export const UserAnalytics: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
         <div
           className="bsky-card p-4"
           style={{ background: "var(--bsky-bg-secondary)" }}
@@ -373,9 +473,7 @@ export const UserAnalytics: React.FC = () => {
             <Heart size={16} className="text-red-500" />
             <span style={{ color: "var(--bsky-text-secondary)" }}>Likes</span>
           </div>
-          <div
-            className="mt-2 text-2xl font-bold text-red-500"
-          >
+          <div className="mt-2 text-2xl font-bold text-red-500">
             {postsData?.totalLikes?.toLocaleString() || 0}
           </div>
         </div>
@@ -388,9 +486,7 @@ export const UserAnalytics: React.FC = () => {
             <Repeat2 size={16} className="text-blue-500" />
             <span style={{ color: "var(--bsky-text-secondary)" }}>Reposts</span>
           </div>
-          <div
-            className="mt-2 text-2xl font-bold text-blue-500"
-          >
+          <div className="mt-2 text-2xl font-bold text-blue-500">
             {postsData?.totalReposts?.toLocaleString() || 0}
           </div>
         </div>
@@ -403,10 +499,31 @@ export const UserAnalytics: React.FC = () => {
             <MessageCircle size={16} className="text-green-500" />
             <span style={{ color: "var(--bsky-text-secondary)" }}>Replies</span>
           </div>
-          <div
-            className="mt-2 text-2xl font-bold text-green-500"
-          >
+          <div className="mt-2 text-2xl font-bold text-green-500">
             {postsData?.totalReplies?.toLocaleString() || 0}
+          </div>
+        </div>
+
+        <div
+          className="bsky-card p-4"
+          style={{ background: "var(--bsky-bg-secondary)" }}
+        >
+          <div className="flex items-center gap-2 text-sm">
+            <TrendingUp size={16} className="text-purple-500" />
+            <span style={{ color: "var(--bsky-text-secondary)" }}>
+              Engagement Rate
+            </span>
+          </div>
+          <div className="mt-2 text-2xl font-bold text-purple-500">
+            {postsData?.totalPosts && postsData.totalPosts > 0
+              ? ((postsData.totalEngagement / postsData.totalPosts).toFixed(1))
+              : "0.0"}
+          </div>
+          <div
+            className="mt-1 text-xs"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
+            avg per post
           </div>
         </div>
       </div>
@@ -416,13 +533,23 @@ export const UserAnalytics: React.FC = () => {
           className="bsky-card p-6"
           style={{ background: "var(--bsky-bg-secondary)" }}
         >
-          <h2
-            className="mb-4 flex items-center gap-2 text-lg font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
-          >
-            <TrendingUp size={20} className="text-blue-500" />
-            Follower Growth
-          </h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2
+              className="flex items-center gap-2 text-lg font-semibold"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              <TrendingUp size={20} className="text-blue-500" />
+              Follower Growth
+            </h2>
+            {!historicalData || historicalData.length <= 1 ? (
+              <div
+                className="text-xs"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                Estimated data - Real tracking starts now
+              </div>
+            ) : null}
+          </div>
           <div className="relative" style={{ height: "300px" }}>
             <div
               className="absolute bottom-0 left-0 top-0 flex flex-col justify-between text-xs"
@@ -712,6 +839,190 @@ export const UserAnalytics: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {postFrequencyData.length > 0 && (
+          <div
+            className="bsky-card p-6"
+            style={{ background: "var(--bsky-bg-secondary)" }}
+          >
+            <h2
+              className="mb-4 flex items-center gap-2 text-lg font-semibold"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              <Clock size={20} className="text-orange-500" />
+              Posting Frequency
+            </h2>
+            <div className="relative" style={{ height: "250px" }}>
+              <div
+                className="absolute bottom-0 left-0 top-0 flex flex-col justify-between text-xs"
+                style={{ width: "30px", color: "var(--bsky-text-secondary)" }}
+              >
+                <span>{maxPostsPerDay}</span>
+                <span>{Math.round(maxPostsPerDay * 0.75)}</span>
+                <span>{Math.round(maxPostsPerDay * 0.5)}</span>
+                <span>{Math.round(maxPostsPerDay * 0.25)}</span>
+                <span>0</span>
+              </div>
+
+              <div className="relative ml-10 h-full">
+                <div className="absolute inset-0">
+                  {[0, 0.25, 0.5, 0.75, 1].map((fraction) => (
+                    <div
+                      key={fraction}
+                      className="absolute w-full"
+                      style={{
+                        bottom: `${fraction * 100}%`,
+                        borderBottom: "1px solid",
+                        borderColor: "var(--bsky-border-secondary)",
+                        opacity: fraction === 0 ? 1 : 0.2,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <div
+                  className="relative flex h-full items-end justify-between"
+                  style={{ gap: "2px", paddingBottom: "30px" }}
+                >
+                  {postFrequencyData.map((data, index) => (
+                    <div
+                      key={`${data.date}-${index}`}
+                      className="group relative"
+                      style={{
+                        width: `${100 / postFrequencyData.length - 0.5}%`,
+                        minWidth: "6px",
+                      }}
+                    >
+                      <div
+                        className="w-full rounded-t-lg transition-all duration-300 hover:opacity-80"
+                        style={{
+                          height: `${(data.posts / maxPostsPerDay) * 220}px`,
+                          background:
+                            "linear-gradient(180deg, #fb923c 0%, #f97316 100%)",
+                        }}
+                        title={`${data.posts} posts`}
+                      />
+
+                      {(postFrequencyData.length <= 14 ||
+                        index % 3 === 0 ||
+                        index === postFrequencyData.length - 1) && (
+                        <div className="absolute left-0 right-0 top-full mt-1 text-center">
+                          <span
+                            className="text-xs"
+                            style={{
+                              color: "var(--bsky-text-secondary)",
+                              fontSize:
+                                postFrequencyData.length > 30 ? "8px" : "10px",
+                            }}
+                          >
+                            {data.date}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {postingTimeAnalysis && (
+          <div
+            className="bsky-card p-6"
+            style={{ background: "var(--bsky-bg-secondary)" }}
+          >
+            <h2
+              className="mb-4 flex items-center gap-2 text-lg font-semibold"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              <Clock size={20} className="text-purple-500" />
+              Best Posting Times
+            </h2>
+            <div className="mb-4 space-y-2 text-sm">
+              <div
+                className="rounded-lg p-3"
+                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              >
+                <div style={{ color: "var(--bsky-text-secondary)" }}>
+                  Highest Engagement
+                </div>
+                <div
+                  className="mt-1 text-lg font-semibold"
+                  style={{ color: "var(--bsky-primary)" }}
+                >
+                  {postingTimeAnalysis.maxEngagementHour}:00 -{" "}
+                  {postingTimeAnalysis.maxEngagementHour + 1}:00
+                </div>
+                <div
+                  className="mt-1 text-xs"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  Avg {postingTimeAnalysis.avgEngagementByHour[postingTimeAnalysis.maxEngagementHour].toFixed(1)}{" "}
+                  interactions per post
+                </div>
+              </div>
+              <div
+                className="rounded-lg p-3"
+                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              >
+                <div style={{ color: "var(--bsky-text-secondary)" }}>
+                  Most Active Hour
+                </div>
+                <div
+                  className="mt-1 text-lg font-semibold"
+                  style={{ color: "var(--bsky-primary)" }}
+                >
+                  {postingTimeAnalysis.maxPostsHour}:00 -{" "}
+                  {postingTimeAnalysis.maxPostsHour + 1}:00
+                </div>
+                <div
+                  className="mt-1 text-xs"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  {postingTimeAnalysis.hourCounts[postingTimeAnalysis.maxPostsHour]}{" "}
+                  posts
+                </div>
+              </div>
+            </div>
+            <div className="relative" style={{ height: "120px" }}>
+              <div className="flex h-full items-end justify-between gap-px">
+                {postingTimeAnalysis.hourCounts.map((count, hour) => (
+                  <div
+                    key={hour}
+                    className="group relative flex-1"
+                    title={`${hour}:00 - ${count} posts, avg ${postingTimeAnalysis.avgEngagementByHour[hour].toFixed(1)} engagement`}
+                  >
+                    <div
+                      className="w-full rounded-t transition-all duration-300"
+                      style={{
+                        height: `${(postingTimeAnalysis.avgEngagementByHour[hour] / postingTimeAnalysis.maxAvgEngagement) * 100}px`,
+                        background:
+                          hour === postingTimeAnalysis.maxEngagementHour
+                            ? "linear-gradient(180deg, #a78bfa 0%, #8b5cf6 100%)"
+                            : "linear-gradient(180deg, #c4b5fd 0%, #a78bfa 100%)",
+                        opacity:
+                          hour === postingTimeAnalysis.maxEngagementHour
+                            ? 1
+                            : 0.5,
+                      }}
+                    />
+                    {hour % 3 === 0 && (
+                      <div
+                        className="absolute left-0 right-0 top-full mt-1 text-center text-xs"
+                        style={{ color: "var(--bsky-text-secondary)" }}
+                      >
+                        {hour}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div
