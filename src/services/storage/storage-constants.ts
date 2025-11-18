@@ -34,6 +34,7 @@ export const AT_PROTO_COLLECTIONS = {
   COLUMNS: "com.shadowsky.columns",
   BOOKMARKS: "com.shadowsky.bookmarks", // Changed to plural for singleton
   DRAFTS: "com.shadowsky.drafts", // Changed to plural for singleton
+  LIST: "com.shadowsky.list", // Individual list records
 } as const;
 
 // AT Protocol record keys (for singleton records)
@@ -66,6 +67,12 @@ export function getStoragePrefKey(
     default:
       throw new Error(`Unknown data type: ${dataType}`);
   }
+}
+
+// Helper to scope storage keys by account DID
+export function getScopedStorageKey(baseKey: string, did?: string): string {
+  if (!did) return baseKey;
+  return `${baseKey}_${did}`;
 }
 
 // Type definitions for type safety
