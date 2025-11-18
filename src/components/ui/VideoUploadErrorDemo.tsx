@@ -1,11 +1,15 @@
 import React, { useState } from "react";
-import { ATProtoErrorCode, type StandardErrorResponse } from "../../services/atproto/error-handler";
+import {
+  ATProtoErrorCode,
+  type StandardErrorResponse,
+} from "../../services/atproto/error-handler";
 import { VideoUploadErrorPanel } from "./VideoUploadErrorPanel";
 
 const errorExamples: Record<string, StandardErrorResponse> = {
   networkTimeout: {
     code: ATProtoErrorCode.NETWORK_TIMEOUT,
-    message: "Network request timed out. Please check your connection and try again.",
+    message:
+      "Network request timed out. Please check your connection and try again.",
     context: {
       uploadId: "demo-upload-1",
       endpoint: "app.bsky.video.uploadVideo",
@@ -15,7 +19,8 @@ const errorExamples: Record<string, StandardErrorResponse> = {
   },
   networkConnection: {
     code: ATProtoErrorCode.NETWORK_CONNECTION,
-    message: "Network connection failed. Please check your internet connection.",
+    message:
+      "Network connection failed. Please check your internet connection.",
     context: {
       uploadId: "demo-upload-2",
       endpoint: "app.bsky.video.uploadVideo",
@@ -46,7 +51,8 @@ const errorExamples: Record<string, StandardErrorResponse> = {
   },
   videoInvalidFormat: {
     code: ATProtoErrorCode.VIDEO_INVALID_FORMAT,
-    message: "The video format is not supported. Please use MP4, MOV, MPEG, or WebM format.",
+    message:
+      "The video format is not supported. Please use MP4, MOV, MPEG, or WebM format.",
     context: {
       uploadId: "demo-upload-5",
       endpoint: "app.bsky.video.uploadVideo",
@@ -67,7 +73,8 @@ const errorExamples: Record<string, StandardErrorResponse> = {
   },
   videoProcessingTimeout: {
     code: ATProtoErrorCode.VIDEO_PROCESSING_TIMEOUT,
-    message: "Video processing timed out. The video may still be processing. Please try again later.",
+    message:
+      "Video processing timed out. The video may still be processing. Please try again later.",
     context: {
       uploadId: "demo-upload-7",
       endpoint: "app.bsky.video.getJobStatus",
@@ -112,7 +119,8 @@ const errorExamples: Record<string, StandardErrorResponse> = {
   },
   forbidden: {
     code: ATProtoErrorCode.CLIENT_FORBIDDEN,
-    message: "Access forbidden. You don't have permission to perform this action.",
+    message:
+      "Access forbidden. You don't have permission to perform this action.",
     context: {
       uploadId: "demo-upload-11",
       endpoint: "app.bsky.video.uploadVideo",
@@ -147,28 +155,31 @@ export const VideoUploadErrorDemo: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+    <div className="mx-auto max-w-4xl space-y-6 p-6">
+      <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
+        <h1 className="mb-4 text-2xl font-bold text-gray-900 dark:text-gray-100">
           Video Upload Error UI Demo
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
-          This demo showcases the different error states for video uploads with actionable recovery options.
+        <p className="mb-6 text-gray-600 dark:text-gray-400">
+          This demo showcases the different error states for video uploads with
+          actionable recovery options.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Error Type
             </label>
             <select
               value={selectedError}
               onChange={(e) => setSelectedError(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
             >
               <optgroup label="Network Errors">
                 <option value="networkTimeout">Network Timeout</option>
-                <option value="networkConnection">Network Connection Failed</option>
+                <option value="networkConnection">
+                  Network Connection Failed
+                </option>
               </optgroup>
               <optgroup label="Rate Limiting">
                 <option value="rateLimit">Rate Limit Exceeded</option>
@@ -179,8 +190,12 @@ export const VideoUploadErrorDemo: React.FC = () => {
                 <option value="validationError">Validation Error</option>
               </optgroup>
               <optgroup label="Processing Errors">
-                <option value="videoProcessingFailed">Video Processing Failed</option>
-                <option value="videoProcessingTimeout">Video Processing Timeout</option>
+                <option value="videoProcessingFailed">
+                  Video Processing Failed
+                </option>
+                <option value="videoProcessingTimeout">
+                  Video Processing Timeout
+                </option>
               </optgroup>
               <optgroup label="Server Errors">
                 <option value="serverUnavailable">Server Unavailable</option>
@@ -194,80 +209,101 @@ export const VideoUploadErrorDemo: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Layout
             </label>
-            <div className="flex items-center gap-4 h-[42px]">
-              <label className="flex items-center gap-2 cursor-pointer">
+            <div className="flex h-[42px] items-center gap-4">
+              <label className="flex cursor-pointer items-center gap-2">
                 <input
                   type="radio"
                   checked={!compact}
                   onChange={() => setCompact(false)}
-                  className="w-4 h-4"
+                  className="h-4 w-4"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">Full</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Full
+                </span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex cursor-pointer items-center gap-2">
                 <input
                   type="radio"
                   checked={compact}
                   onChange={() => setCompact(true)}
-                  className="w-4 h-4"
+                  className="h-4 w-4"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">Compact</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Compact
+                </span>
               </label>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        <div className="border-t border-gray-200 pt-6 dark:border-gray-700">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
             Preview
           </h2>
           <VideoUploadErrorPanel
             error={errorExamples[selectedError]}
             uploadId={errorExamples[selectedError].context.uploadId as string}
             fileName="my-awesome-video.mp4"
-            onRetry={errorExamples[selectedError].retryable ? handleRetry : undefined}
+            onRetry={
+              errorExamples[selectedError].retryable ? handleRetry : undefined
+            }
             onCancel={handleCancel}
             compact={compact}
           />
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+      <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
+        <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
           Error Details
         </h2>
-        <pre className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg overflow-auto text-xs">
+        <pre className="overflow-auto rounded-lg bg-gray-100 p-4 text-xs dark:bg-gray-900">
           {JSON.stringify(errorExamples[selectedError], null, 2)}
         </pre>
       </div>
 
-      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3">
+      <div className="rounded-lg bg-blue-50 p-6 dark:bg-blue-900/20">
+        <h2 className="mb-3 text-lg font-semibold text-blue-900 dark:text-blue-100">
           Accessibility Features
         </h2>
         <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
           <li className="flex items-start gap-2">
             <span className="text-blue-500">•</span>
-            <span><strong>ARIA live regions:</strong> Errors are announced with <code>role="alert"</code> and <code>aria-live="assertive"</code></span>
+            <span>
+              <strong>ARIA live regions:</strong> Errors are announced with{" "}
+              <code>role="alert"</code> and <code>aria-live="assertive"</code>
+            </span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-500">•</span>
-            <span><strong>Keyboard navigation:</strong> All buttons are focusable and have visible focus indicators</span>
+            <span>
+              <strong>Keyboard navigation:</strong> All buttons are focusable
+              and have visible focus indicators
+            </span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-500">•</span>
-            <span><strong>Screen reader support:</strong> Icons are marked <code>aria-hidden</code> with descriptive labels on buttons</span>
+            <span>
+              <strong>Screen reader support:</strong> Icons are marked{" "}
+              <code>aria-hidden</code> with descriptive labels on buttons
+            </span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-500">•</span>
-            <span><strong>Visual hierarchy:</strong> Color coding indicates error severity (red=error, orange=warning, yellow=info)</span>
+            <span>
+              <strong>Visual hierarchy:</strong> Color coding indicates error
+              severity (red=error, orange=warning, yellow=info)
+            </span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-500">•</span>
-            <span><strong>Actionable messaging:</strong> Clear recovery steps guide users to resolve issues</span>
+            <span>
+              <strong>Actionable messaging:</strong> Clear recovery steps guide
+              users to resolve issues
+            </span>
           </li>
         </ul>
       </div>

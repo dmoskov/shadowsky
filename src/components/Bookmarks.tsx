@@ -5,7 +5,6 @@ import {
   Bookmark,
   Download,
   MoreVertical,
-  Plus,
   Search,
   Tag,
   Trash2,
@@ -482,7 +481,7 @@ export const Bookmarks: React.FC = () => {
                 placeholder="e.g., coding, design, favorites"
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
-                className="mb-4 w-full rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-2 text-sm text-bsky-text-primary focus:border-bsky-accent-primary focus:outline-none"
+                className="focus:border-bsky-accent-primary mb-4 w-full rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-2 text-sm text-bsky-text-primary focus:outline-none"
               />
               <div className="flex justify-end gap-2">
                 <button
@@ -497,7 +496,7 @@ export const Bookmarks: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSaveTags}
-                  className="cursor-pointer rounded-lg border-none bg-bsky-accent-primary px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90"
+                  className="bg-bsky-accent-primary cursor-pointer rounded-lg border-none px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90"
                 >
                   Save Tags
                 </button>

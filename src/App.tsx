@@ -19,9 +19,9 @@ import { StorageErrorProvider } from "./components/providers/StorageErrorProvide
 import { RateLimitStatus } from "./components/RateLimitStatus";
 import { Sidebar } from "./components/Sidebar";
 import { SwipeIndicator } from "./components/SwipeIndicator";
-import { WebSocketStatus } from "./components/WebSocketStatus";
 import { FloatingActionButton } from "./components/ui/FloatingActionButton";
 import { PageLoader } from "./components/ui/PageLoader";
+import { WebSocketStatus } from "./components/WebSocketStatus";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { HiddenPostsProvider } from "./contexts/HiddenPostsContext";
 import { ModalProvider } from "./contexts/ModalContext";

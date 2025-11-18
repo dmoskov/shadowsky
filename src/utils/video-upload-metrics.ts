@@ -106,7 +106,7 @@ class MetricBatcher {
           batchSize: batch.length,
           metrics: batch,
           timestamp: new Date().toISOString(),
-        })
+        }),
       );
 
       // In production, send to backend endpoint:
@@ -380,7 +380,10 @@ export class VideoUploadMetricsTracker {
     }
 
     metrics.rateLimitMetrics.push(rateLimitData);
-    logger.log(`Tracked rate limit metrics for upload ${uploadId}:`, rateLimitData);
+    logger.log(
+      `Tracked rate limit metrics for upload ${uploadId}:`,
+      rateLimitData,
+    );
   }
 
   /**
@@ -723,7 +726,7 @@ export function getMetricBatcherQueueSize(): number {
  * Useful for adjusting batching behavior based on network conditions
  */
 export function updateMetricBatchConfig(
-  config: Partial<MetricBatchConfig>
+  config: Partial<MetricBatchConfig>,
 ): void {
   metricBatcher.updateConfig(config);
 }

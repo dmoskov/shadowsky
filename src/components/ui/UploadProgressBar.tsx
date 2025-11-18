@@ -1,10 +1,18 @@
 import { AlertCircle, CheckCircle, Loader, Upload } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { mapATProtoError, type StandardErrorResponse } from "../../services/atproto/error-handler";
+import {
+  mapATProtoError,
+  type StandardErrorResponse,
+} from "../../services/atproto/error-handler";
 import { getVideoUploadMetricsTracker } from "../../utils/video-upload-metrics";
 import { VideoUploadErrorPanel } from "./VideoUploadErrorPanel";
 
-export type UploadState = "queued" | "uploading" | "processing" | "complete" | "error";
+export type UploadState =
+  | "queued"
+  | "uploading"
+  | "processing"
+  | "complete"
+  | "error";
 
 export interface UploadProgressBarProps {
   uploadId: string;
@@ -82,7 +90,9 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
 
       if (!currentUpload) {
         const sessionStats = metricsTracker.getSessionStatistics();
-        currentUpload = sessionStats.uploads.find((u) => u.uploadId === uploadId);
+        currentUpload = sessionStats.uploads.find(
+          (u) => u.uploadId === uploadId,
+        );
       }
 
       if (currentUpload) {
@@ -109,26 +119,32 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
             const error: any = new Error(currentUpload.errorMessage);
 
             if (currentUpload.errorType === "Timeout") {
-              error.message = error.message.includes("timeout") ? error.message : `Timeout: ${error.message}`;
+              error.message = error.message.includes("timeout")
+                ? error.message
+                : `Timeout: ${error.message}`;
             } else if (currentUpload.errorType === "RateLimit") {
-              error.message = error.message.includes("rate limit") ? error.message : `Rate limit: ${error.message}`;
+              error.message = error.message.includes("rate limit")
+                ? error.message
+                : `Rate limit: ${error.message}`;
             } else if (currentUpload.errorType === "NetworkError") {
-              error.message = error.message.includes("network") ? error.message : `Network error: ${error.message}`;
+              error.message = error.message.includes("network")
+                ? error.message
+                : `Network error: ${error.message}`;
             } else if (currentUpload.errorType === "ProcessingError") {
-              error.message = error.message.includes("processing") ? error.message : `Processing failed: ${error.message}`;
+              error.message = error.message.includes("processing")
+                ? error.message
+                : `Processing failed: ${error.message}`;
             } else if (currentUpload.errorType === "ServerError") {
-              error.message = error.message.includes("500") ? error.message : `Server error: ${error.message}`;
+              error.message = error.message.includes("500")
+                ? error.message
+                : `Server error: ${error.message}`;
             }
 
-            errorDetails = mapATProtoError(
-              error,
-              "videoUpload",
-              {
-                uploadId,
-                errorType: currentUpload.errorType,
-                retryAttempts: currentUpload.retryAttempts,
-              }
-            );
+            errorDetails = mapATProtoError(error, "videoUpload", {
+              uploadId,
+              errorType: currentUpload.errorType,
+              retryAttempts: currentUpload.retryAttempts,
+            });
           } catch (e) {
             errorDetails = {
               code: "UNKNOWN" as any,
@@ -136,12 +152,15 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
               context: {
                 uploadId,
                 errorType: currentUpload.errorType,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
               },
               retryable: false,
             };
           }
-        } else if (currentUpload.transcodingStartTime && !currentUpload.transcodingEndTime) {
+        } else if (
+          currentUpload.transcodingStartTime &&
+          !currentUpload.transcodingEndTime
+        ) {
           state = "processing";
           percentage = 95;
           bytesUploaded = currentUpload.totalBytes;
@@ -151,10 +170,16 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
           bytesUploaded = currentUpload.totalBytes;
         } else {
           state = "uploading";
-          bytesUploaded = currentUpload.chunkSizes.reduce((sum, size) => sum + size, 0);
+          bytesUploaded = currentUpload.chunkSizes.reduce(
+            (sum, size) => sum + size,
+            0,
+          );
 
           if (currentUpload.totalBytes > 0) {
-            percentage = Math.min(95, (bytesUploaded / currentUpload.totalBytes) * 100);
+            percentage = Math.min(
+              95,
+              (bytesUploaded / currentUpload.totalBytes) * 100,
+            );
           }
 
           if (elapsedSeconds > 0) {
@@ -261,17 +286,17 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
 
     return (
       <div
-        className="flex items-center gap-2 py-1 px-2 rounded-md bg-gray-100 dark:bg-gray-800"
+        className="flex items-center gap-2 rounded-md bg-gray-100 px-2 py-1 dark:bg-gray-800"
         role="status"
         aria-label={`Upload ${progress.state}: ${progress.percentage.toFixed(0)}%`}
         aria-live="polite"
       >
         <Icon
-          className={`w-4 h-4 ${stateConfig.color} ${stateConfig.animated ? "animate-spin" : ""}`}
+          className={`h-4 w-4 ${stateConfig.color} ${stateConfig.animated ? "animate-spin" : ""}`}
           aria-hidden="true"
         />
-        <div className="flex-1 min-w-0">
-          <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="min-w-0 flex-1">
+          <div className="h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
             <div
               className={`h-full ${stateConfig.bgColor} transition-all duration-300 ease-out`}
               style={{ width: `${progress.percentage}%` }}
@@ -282,7 +307,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
             />
           </div>
         </div>
-        <span className="text-xs font-medium text-gray-700 dark:text-gray-300 tabular-nums">
+        <span className="text-xs font-medium tabular-nums text-gray-700 dark:text-gray-300">
           {progress.percentage.toFixed(0)}%
         </span>
       </div>
@@ -304,19 +329,21 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
 
   return (
     <div
-      className="w-full p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm"
+      className="w-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
       role="region"
       aria-label="Upload progress"
     >
       <div className="flex items-start gap-3">
-        <div className={`flex-shrink-0 ${stateConfig.animated ? "animate-spin" : ""}`}>
-          <Icon className={`w-5 h-5 ${stateConfig.color}`} aria-hidden="true" />
+        <div
+          className={`flex-shrink-0 ${stateConfig.animated ? "animate-spin" : ""}`}
+        >
+          <Icon className={`h-5 w-5 ${stateConfig.color}`} aria-hidden="true" />
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <h3 className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                 {fileName || "Video Upload"}
               </h3>
               <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -332,16 +359,18 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
             {onCancel && progress.state !== "complete" && (
               <button
                 onClick={onCancel}
-                className="ml-2 p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="ml-2 rounded-md p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                 aria-label="Cancel upload"
               >
-                <span className="text-xs text-gray-600 dark:text-gray-400">✕</span>
+                <span className="text-xs text-gray-600 dark:text-gray-400">
+                  ✕
+                </span>
               </button>
             )}
           </div>
 
           <div
-            className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-2"
+            className="mb-2 h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
             role="progressbar"
             aria-valuenow={progress.percentage}
             aria-valuemin={0}
@@ -363,7 +392,10 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
               {progress.state === "uploading" && progress.speed > 0 && (
                 <>
                   <span className="text-gray-400 dark:text-gray-600">•</span>
-                  <span className="tabular-nums" aria-label={`Upload speed: ${formatSpeed(progress.speed)}`}>
+                  <span
+                    className="tabular-nums"
+                    aria-label={`Upload speed: ${formatSpeed(progress.speed)}`}
+                  >
                     {formatSpeed(progress.speed)}
                   </span>
                 </>
@@ -373,20 +405,24 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
                 <>
                   <span className="text-gray-400 dark:text-gray-600">•</span>
                   <span className="tabular-nums">
-                    {formatBytes(progress.bytesUploaded)} / {formatBytes(progress.totalBytes)}
+                    {formatBytes(progress.bytesUploaded)} /{" "}
+                    {formatBytes(progress.totalBytes)}
                   </span>
                 </>
               )}
             </div>
 
             {progress.state === "uploading" && progress.timeRemaining > 0 && (
-              <span className="tabular-nums" aria-label={`Time remaining: ${formatTime(progress.timeRemaining)}`}>
+              <span
+                className="tabular-nums"
+                aria-label={`Time remaining: ${formatTime(progress.timeRemaining)}`}
+              >
                 {formatTime(progress.timeRemaining)} remaining
               </span>
             )}
 
             {progress.state === "complete" && (
-              <span className="text-green-600 dark:text-green-400 font-medium">
+              <span className="font-medium text-green-600 dark:text-green-400">
                 Upload complete
               </span>
             )}

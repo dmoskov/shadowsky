@@ -1,12 +1,11 @@
+import { debug } from "@bsky/shared";
 import { Bell, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { debug } from "@bsky/shared";
 
 export const NotificationPermissionPrompt: React.FC = () => {
   const [show, setShow] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission>(
-    "default",
-  );
+  const [permission, setPermission] =
+    useState<NotificationPermission>("default");
 
   useEffect(() => {
     if (!("Notification" in window)) {

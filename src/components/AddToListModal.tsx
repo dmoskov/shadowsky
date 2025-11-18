@@ -135,7 +135,7 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
                         {list.name}
                       </div>
                       {list.description && (
-                        <div className="mt-1 text-sm text-bsky-text-secondary line-clamp-1">
+                        <div className="mt-1 line-clamp-1 text-sm text-bsky-text-secondary">
                           {list.description}
                         </div>
                       )}

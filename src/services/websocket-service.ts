@@ -219,7 +219,8 @@ export class WebSocketService {
     this.stats.reconnectAttempts++;
 
     const delay = Math.min(
-      this.config.reconnectDelay * Math.pow(2, this.stats.reconnectAttempts - 1),
+      this.config.reconnectDelay *
+        Math.pow(2, this.stats.reconnectAttempts - 1),
       30000,
     );
 
@@ -247,7 +248,9 @@ export class WebSocketService {
         });
       }
     }, this.config.heartbeatInterval);
-    this.log(`Heartbeat started (interval: ${this.config.heartbeatInterval}ms)`);
+    this.log(
+      `Heartbeat started (interval: ${this.config.heartbeatInterval}ms)`,
+    );
   }
 
   private stopHeartbeat(): void {
@@ -283,10 +286,7 @@ export class WebSocketService {
     });
   }
 
-  private log(
-    message: string,
-    level: "log" | "warn" | "error" = "log",
-  ): void {
+  private log(message: string, level: "log" | "warn" | "error" = "log"): void {
     if (this.config.debug) {
       const prefix = "🔌 [WebSocket]";
       switch (level) {

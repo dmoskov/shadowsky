@@ -36,21 +36,66 @@ function extensionMatchesMimeType(filename, mimeType) {
 // Test cases
 const tests = [
   // Valid cases
-  { mimeType: "video/mp4", filename: "test.mp4", size: 100 * 1024 * 1024, expected: true },
-  { mimeType: "video/quicktime", filename: "test.mov", size: 100 * 1024 * 1024, expected: true },
-  { mimeType: "video/webm", filename: "test.webm", size: 100 * 1024 * 1024, expected: true },
-  { mimeType: "video/x-m4v", filename: "test.m4v", size: 100 * 1024 * 1024, expected: true },
+  {
+    mimeType: "video/mp4",
+    filename: "test.mp4",
+    size: 100 * 1024 * 1024,
+    expected: true,
+  },
+  {
+    mimeType: "video/quicktime",
+    filename: "test.mov",
+    size: 100 * 1024 * 1024,
+    expected: true,
+  },
+  {
+    mimeType: "video/webm",
+    filename: "test.webm",
+    size: 100 * 1024 * 1024,
+    expected: true,
+  },
+  {
+    mimeType: "video/x-m4v",
+    filename: "test.m4v",
+    size: 100 * 1024 * 1024,
+    expected: true,
+  },
 
   // Invalid MIME type
-  { mimeType: "video/avi", filename: "test.avi", size: 100 * 1024 * 1024, expected: false },
-  { mimeType: "video/ogg", filename: "test.ogg", size: 100 * 1024 * 1024, expected: false },
+  {
+    mimeType: "video/avi",
+    filename: "test.avi",
+    size: 100 * 1024 * 1024,
+    expected: false,
+  },
+  {
+    mimeType: "video/ogg",
+    filename: "test.ogg",
+    size: 100 * 1024 * 1024,
+    expected: false,
+  },
 
   // Extension mismatch (security issue)
-  { mimeType: "video/mp4", filename: "malware.exe", size: 100 * 1024 * 1024, expected: false },
-  { mimeType: "video/mp4", filename: "script.js", size: 100 * 1024 * 1024, expected: false },
+  {
+    mimeType: "video/mp4",
+    filename: "malware.exe",
+    size: 100 * 1024 * 1024,
+    expected: false,
+  },
+  {
+    mimeType: "video/mp4",
+    filename: "script.js",
+    size: 100 * 1024 * 1024,
+    expected: false,
+  },
 
   // File too large
-  { mimeType: "video/mp4", filename: "test.mp4", size: 600 * 1024 * 1024, expected: false },
+  {
+    mimeType: "video/mp4",
+    filename: "test.mp4",
+    size: 600 * 1024 * 1024,
+    expected: false,
+  },
 ];
 
 console.log("Running validation tests...\n");
@@ -66,10 +111,14 @@ for (const test of tests) {
   const result = valid === test.expected ? "✓ PASS" : "✗ FAIL";
   const status = valid === test.expected ? passed++ : failed++;
 
-  console.log(`${result}: ${test.mimeType} | ${test.filename} | ${Math.round(test.size / (1024*1024))}MB`);
+  console.log(
+    `${result}: ${test.mimeType} | ${test.filename} | ${Math.round(test.size / (1024 * 1024))}MB`,
+  );
   if (valid !== test.expected) {
     console.log(`  Expected: ${test.expected}, Got: ${valid}`);
-    console.log(`  MIME valid: ${mimeTypeValid}, Extension valid: ${extensionValid}, Size valid: ${sizeValid}`);
+    console.log(
+      `  MIME valid: ${mimeTypeValid}, Extension valid: ${extensionValid}, Size valid: ${sizeValid}`,
+    );
   }
 }
 

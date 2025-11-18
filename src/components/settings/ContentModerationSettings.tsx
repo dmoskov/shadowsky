@@ -555,7 +555,9 @@ export const ContentModerationSettings: React.FC = () => {
                 border: "1px solid var(--bsky-border-primary)",
               }}
             >
-              <option value="blur">Blur sensitive media (show with warning)</option>
+              <option value="blur">
+                Blur sensitive media (show with warning)
+              </option>
               <option value="hide">Hide sensitive media completely</option>
               <option value="show">Always show sensitive media</option>
             </select>

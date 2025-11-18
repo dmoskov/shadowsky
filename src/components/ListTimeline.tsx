@@ -16,7 +16,8 @@ export const ListTimeline: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [cursor, setCursor] = useState<string | undefined>();
-  const [selectedPost, setSelectedPost] = useState<AppBskyFeedDefs.PostView | null>(null);
+  const [selectedPost, setSelectedPost] =
+    useState<AppBskyFeedDefs.PostView | null>(null);
   const [showThread, setShowThread] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -159,7 +160,8 @@ export const ListTimeline: React.FC = () => {
               </p>
             )}
             <p className="mt-1 text-xs text-bsky-text-tertiary">
-              {list.members.length} {list.members.length === 1 ? "member" : "members"}
+              {list.members.length}{" "}
+              {list.members.length === 1 ? "member" : "members"}
             </p>
           </div>
           <button
@@ -199,7 +201,6 @@ export const ListTimeline: React.FC = () => {
                   onRepost={() => {}}
                   onReply={() => {}}
                   onBookmark={() => {}}
-                  isBookmarked={false}
                 />
               </div>
             ))}

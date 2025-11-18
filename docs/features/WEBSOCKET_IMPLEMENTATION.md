@@ -28,13 +28,14 @@ The core service provides:
 - **Debug Logging**: Comprehensive logging when debug mode is enabled
 
 Configuration options:
+
 ```typescript
 {
-  url: string;                    // WebSocket URL
-  reconnectDelay: 5000;          // Initial delay (exponential backoff)
-  maxReconnectAttempts: 10;      // Max reconnection attempts
-  heartbeatInterval: 30000;      // Heartbeat interval in ms
-  debug: true;                   // Enable debug logging
+  url: string; // WebSocket URL
+  reconnectDelay: 5000; // Initial delay (exponential backoff)
+  maxReconnectAttempts: 10; // Max reconnection attempts
+  heartbeatInterval: 30000; // Heartbeat interval in ms
+  debug: true; // Enable debug logging
 }
 ```
 
@@ -50,6 +51,7 @@ React context that:
 - Cleans up connections on logout
 
 Event handlers:
+
 - `NEW_NOTIFICATION`: Adds notification to cache and shows browser notification
 - `NOTIFICATION_COUNT`: Updates unread count in real-time
 - `CONNECT/DISCONNECT/RECONNECT/ERROR`: Updates connection state
@@ -57,6 +59,7 @@ Event handlers:
 #### 3. WebSocket Status Component (`WebSocketStatus.tsx`)
 
 Visual indicator showing:
+
 - Current connection state (connected, connecting, reconnecting, error, disconnected)
 - Connection statistics (messages sent/received, reconnect attempts)
 - Manual reconnect button when disconnected
@@ -77,19 +80,23 @@ The WebSocket infrastructure is integrated into the app hierarchy:
 
 ```tsx
 <AuthProvider>
-  <WebSocketProvider>  {/* Initializes after auth */}
+  <WebSocketProvider>
+    {" "}
+    {/* Initializes after auth */}
     <AppContent />
   </WebSocketProvider>
 </AuthProvider>
 ```
 
 Components added:
+
 - `<WebSocketStatus />` - Shows connection indicator
 - `<NotificationPermissionPrompt />` - Requests browser notification permission
 
 #### Notification System Integration
 
 The WebSocket context automatically updates:
+
 - React Query cache for `["notifications"]` query
 - React Query cache for `["notificationCount"]` query
 - Browser notifications (when permission granted)
@@ -99,6 +106,7 @@ No changes needed to existing notification components - they automatically recei
 ### Configuration
 
 Add to `.env` file:
+
 ```bash
 # WebSocket Configuration
 # Format: ws://localhost:3001 (local) or wss://your-domain.com (production)
@@ -122,15 +130,16 @@ A WebSocket server is required to enable real-time notifications. The server sho
 - Reject invalid/expired tokens
 
 Example:
+
 ```javascript
-wss.on('connection', (ws, req) => {
-  const url = new URL(req.url, 'ws://localhost');
-  const token = url.searchParams.get('token');
+wss.on("connection", (ws, req) => {
+  const url = new URL(req.url, "ws://localhost");
+  const token = url.searchParams.get("token");
 
   // Validate token and extract user DID
   const userDid = validateToken(token);
   if (!userDid) {
-    ws.close(1008, 'Invalid token');
+    ws.close(1008, "Invalid token");
     return;
   }
 
@@ -177,6 +186,7 @@ The server should send messages in this format:
 ```
 
 The client will respond to `ping` with:
+
 ```typescript
 {
   type: "pong",
@@ -215,6 +225,7 @@ The backend should:
 #### 5. Error Handling
 
 - Send error events to clients:
+
 ```typescript
 {
   type: "error",
@@ -234,10 +245,10 @@ The backend should:
 Simple WebSocket server:
 
 ```javascript
-const WebSocket = require('ws');
+const WebSocket = require("ws");
 const wss = new WebSocket.Server({ port: 3001 });
 
-wss.on('connection', handleConnection);
+wss.on("connection", handleConnection);
 ```
 
 **Pros**: Simple, lightweight, direct control
@@ -248,12 +259,12 @@ wss.on('connection', handleConnection);
 Feature-rich WebSocket framework:
 
 ```javascript
-const io = require('socket.io')(3001, {
-  cors: { origin: '*' }
+const io = require("socket.io")(3001, {
+  cors: { origin: "*" },
 });
 
 io.use(authMiddleware);
-io.on('connection', handleConnection);
+io.on("connection", handleConnection);
 ```
 
 **Pros**: Built-in reconnection, rooms, namespaces, fallbacks
@@ -279,15 +290,15 @@ Managed real-time services:
 A minimal Node.js server using the `ws` library:
 
 ```javascript
-const WebSocket = require('ws');
-const jwt = require('jsonwebtoken');
+const WebSocket = require("ws");
+const jwt = require("jsonwebtoken");
 
 const wss = new WebSocket.Server({ port: 3001 });
 const userConnections = new Map();
 
-wss.on('connection', (ws, req) => {
-  const url = new URL(req.url, 'ws://localhost');
-  const token = url.searchParams.get('token');
+wss.on("connection", (ws, req) => {
+  const url = new URL(req.url, "ws://localhost");
+  const token = url.searchParams.get("token");
 
   // Validate token (simplified - implement proper validation)
   let userDid;
@@ -295,7 +306,7 @@ wss.on('connection', (ws, req) => {
     const decoded = jwt.decode(token);
     userDid = decoded.sub;
   } catch (err) {
-    ws.close(1008, 'Invalid token');
+    ws.close(1008, "Invalid token");
     return;
   }
 
@@ -306,15 +317,15 @@ wss.on('connection', (ws, req) => {
   userConnections.get(userDid).add(ws);
 
   // Handle messages
-  ws.on('message', (data) => {
+  ws.on("message", (data) => {
     const message = JSON.parse(data);
-    if (message.type === 'pong') {
-      console.log('Received pong from', userDid);
+    if (message.type === "pong") {
+      console.log("Received pong from", userDid);
     }
   });
 
   // Handle disconnect
-  ws.on('close', () => {
+  ws.on("close", () => {
     const connections = userConnections.get(userDid);
     connections.delete(ws);
     if (connections.size === 0) {
@@ -325,14 +336,16 @@ wss.on('connection', (ws, req) => {
   // Send heartbeat
   const heartbeat = setInterval(() => {
     if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        type: 'ping',
-        timestamp: new Date().toISOString()
-      }));
+      ws.send(
+        JSON.stringify({
+          type: "ping",
+          timestamp: new Date().toISOString(),
+        }),
+      );
     }
   }, 30000);
 
-  ws.on('close', () => clearInterval(heartbeat));
+  ws.on("close", () => clearInterval(heartbeat));
 });
 
 // Function to broadcast notification to user
@@ -340,12 +353,12 @@ function sendNotificationToUser(userDid, notification) {
   const connections = userConnections.get(userDid);
   if (connections) {
     const message = JSON.stringify({
-      type: 'notification:new',
+      type: "notification:new",
       timestamp: new Date().toISOString(),
-      notification
+      notification,
     });
 
-    connections.forEach(ws => {
+    connections.forEach((ws) => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(message);
       }
@@ -358,12 +371,12 @@ function updateNotificationCount(userDid, count) {
   const connections = userConnections.get(userDid);
   if (connections) {
     const message = JSON.stringify({
-      type: 'notification:count',
+      type: "notification:count",
       timestamp: new Date().toISOString(),
-      count
+      count,
     });
 
-    connections.forEach(ws => {
+    connections.forEach((ws) => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(message);
       }
@@ -376,7 +389,7 @@ function updateNotificationCount(userDid, count) {
 // - Call sendNotificationToUser() when new notifications arrive
 // - Call updateNotificationCount() when count changes
 
-console.log('WebSocket server running on ws://localhost:3001');
+console.log("WebSocket server running on ws://localhost:3001");
 ```
 
 ### Testing WebSocket Implementation
@@ -389,34 +402,36 @@ Without a backend, you can test the WebSocket infrastructure:
 
 ```javascript
 // test-ws-server.js
-const WebSocket = require('ws');
+const WebSocket = require("ws");
 const wss = new WebSocket.Server({ port: 3001 });
 
-wss.on('connection', (ws) => {
-  console.log('Client connected');
+wss.on("connection", (ws) => {
+  console.log("Client connected");
 
   // Send test notification after 5 seconds
   setTimeout(() => {
-    ws.send(JSON.stringify({
-      type: 'notification:new',
-      timestamp: new Date().toISOString(),
-      notification: {
-        uri: 'at://test/app.bsky.feed.post/test',
-        cid: 'test',
-        author: {
-          did: 'did:plc:test',
-          handle: 'test.bsky.social',
-          displayName: 'Test User'
+    ws.send(
+      JSON.stringify({
+        type: "notification:new",
+        timestamp: new Date().toISOString(),
+        notification: {
+          uri: "at://test/app.bsky.feed.post/test",
+          cid: "test",
+          author: {
+            did: "did:plc:test",
+            handle: "test.bsky.social",
+            displayName: "Test User",
+          },
+          reason: "like",
+          isRead: false,
+          indexedAt: new Date().toISOString(),
         },
-        reason: 'like',
-        isRead: false,
-        indexedAt: new Date().toISOString()
-      }
-    }));
+      }),
+    );
   }, 5000);
 
-  ws.on('message', (data) => {
-    console.log('Received:', data.toString());
+  ws.on("message", (data) => {
+    console.log("Received:", data.toString());
   });
 });
 ```
@@ -467,12 +482,14 @@ window.enableDebug();
 ```
 
 This will show:
+
 - Connection attempts and state changes
 - All incoming/outgoing messages
 - Reconnection attempts
 - Error details
 
 The WebSocketStatus component provides real-time statistics:
+
 - Connection state
 - Connected timestamp
 - Messages sent/received
@@ -488,6 +505,7 @@ The frontend WebSocket infrastructure is complete and ready for integration. Onc
 3. The app will automatically connect and receive real-time notifications
 
 The implementation is production-ready with:
+
 - Robust error handling and reconnection logic
 - Type-safe event system
 - React Query integration

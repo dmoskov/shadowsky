@@ -145,7 +145,9 @@ export function ReportModal({
     } catch (err) {
       console.error("Failed to submit report:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to submit report. Please try again.",
+        err instanceof Error
+          ? err.message
+          : "Failed to submit report. Please try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -207,7 +209,8 @@ export function ReportModal({
                   Report Submitted
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Thank you for helping keep our community safe. We'll review this report and take appropriate action.
+                  Thank you for helping keep our community safe. We'll review
+                  this report and take appropriate action.
                 </p>
               </div>
               <button
@@ -225,7 +228,8 @@ export function ReportModal({
                   Block @{subjectHandle}?
                 </h4>
                 <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
-                  Blocking will prevent this user from seeing your posts and interacting with you.
+                  Blocking will prevent this user from seeing your posts and
+                  interacting with you.
                 </p>
                 <div className="flex justify-end gap-3">
                   <button
@@ -344,7 +348,9 @@ export function ReportModal({
             {/* Error Message */}
             {error && (
               <div className="border-t border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-900/20">
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {error}
+                </p>
               </div>
             )}
 

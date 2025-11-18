@@ -4,7 +4,11 @@
  */
 
 export interface VideoValidationError {
-  code: "INVALID_MIME_TYPE" | "EXTENSION_MISMATCH" | "FILE_TOO_LARGE" | "INVALID_FILE";
+  code:
+    | "INVALID_MIME_TYPE"
+    | "EXTENSION_MISMATCH"
+    | "FILE_TOO_LARGE"
+    | "INVALID_FILE";
   message: string;
   context?: Record<string, any>;
 }
@@ -79,7 +83,7 @@ function extensionMatchesMimeType(filename: string, mimeType: string): boolean {
 export function validateVideoFile(
   videoData: Uint8Array,
   mimeType: string,
-  filename: string
+  filename: string,
 ): VideoValidationResult {
   // Validate MIME type
   if (!isAllowedMimeType(mimeType)) {

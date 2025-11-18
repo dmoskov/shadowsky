@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
 import { analytics } from "../services/analytics";
 import type {
   StyleMatchedWritingFeedback,
@@ -43,7 +44,6 @@ import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { isGifFile } from "../utils/gif-to-video";
 import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { createLogger } from "../utils/logger";
-import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
 import { ReplyControls, type ReplyPermission } from "./ReplyControls";
@@ -880,21 +880,24 @@ export function Composer() {
     [media, autoGenerateAltText, isDev],
   );
 
-  const removeMedia = useCallback((id: string) => {
-    setMedia((prev) => {
-      const removed = prev.find((m) => m.id === id);
-      if (removed) {
-        URL.revokeObjectURL(removed.preview);
-        mediaUrlsRef.current.delete(removed.preview);
+  const removeMedia = useCallback(
+    (id: string) => {
+      setMedia((prev) => {
+        const removed = prev.find((m) => m.id === id);
+        if (removed) {
+          URL.revokeObjectURL(removed.preview);
+          mediaUrlsRef.current.delete(removed.preview);
 
-        // If removing a video, cancel any active upload
-        if (removed.type === "video" && videoUploadManager.isUploading) {
-          videoUploadManager.cancelUpload();
+          // If removing a video, cancel any active upload
+          if (removed.type === "video" && videoUploadManager.isUploading) {
+            videoUploadManager.cancelUpload();
+          }
         }
-      }
-      return prev.filter((m) => m.id !== id);
-    });
-  }, [videoUploadManager]);
+        return prev.filter((m) => m.id !== id);
+      });
+    },
+    [videoUploadManager],
+  );
 
   const updateMediaAlt = useCallback((id: string, alt: string) => {
     setMedia((prev) => prev.map((m) => (m.id === id ? { ...m, alt } : m)));
@@ -1410,7 +1413,7 @@ export function Composer() {
               videoMedia.file?.name || "video.mp4",
               (progress) => {
                 logger.log(`Upload progress: ${progress}%`);
-              }
+              },
             );
 
             // Check if upload was cancelled or failed
@@ -2420,7 +2423,11 @@ export function Composer() {
                     fileInputRef.current.click();
                   }
                 }}
-                disabled={isPosting || media.length > 0 || videoUploadManager.isUploading}
+                disabled={
+                  isPosting ||
+                  media.length > 0 ||
+                  videoUploadManager.isUploading
+                }
                 aria-label="Add video"
               >
                 <Video size={20} />

@@ -344,10 +344,11 @@ export class VideoUploadService {
       const serviceAuth = await retryWithBackoff(
         async () => {
           try {
-            const response =
-              await this.agent.com.atproto.server.getServiceAuth({
+            const response = await this.agent.com.atproto.server.getServiceAuth(
+              {
                 aud: "did:web:video.bsky.app",
-              });
+              },
+            );
 
             // Validate response schema
             const validatedResponse = validateResponse(

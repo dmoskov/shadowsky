@@ -26,7 +26,7 @@ export class ModerationService {
         rkey: "self",
       });
       this.preferences = response.data.value as any;
-      return this.preferences;
+      return this.preferences as ModerationPreferences;
     } catch (error: any) {
       if (error?.status === 400) {
         this.preferences = this.getDefaultPreferences();
@@ -49,7 +49,10 @@ export class ModerationService {
   }
 
   getPreferences(): ModerationPreferences {
-    return this.preferences || this.getDefaultPreferences();
+    if (!this.preferences) {
+      return this.getDefaultPreferences();
+    }
+    return this.preferences;
   }
 
   shouldFilterPost(post: any): { filtered: boolean; reason?: string } {
@@ -73,7 +76,10 @@ export class ModerationService {
   shouldFilterFeedItem(feedItem: any): { filtered: boolean; reason?: string } {
     const prefs = this.getPreferences();
 
-    if (prefs.hideReposts && feedItem.reason?.$type === "app.bsky.feed.defs#reasonRepost") {
+    if (
+      prefs.hideReposts &&
+      feedItem.reason?.$type === "app.bsky.feed.defs#reasonRepost"
+    ) {
       return { filtered: true, reason: "Reposts hidden" };
     }
 
@@ -97,7 +103,7 @@ export class ModerationService {
 
     const sensitiveLabels = ["porn", "sexual", "nudity", "graphic-media"];
     const hasSensitiveLabel = labels.some((label) =>
-      sensitiveLabels.includes(label.val)
+      sensitiveLabels.includes(label.val),
     );
 
     if (hasSensitiveLabel) {
@@ -124,7 +130,7 @@ export class ModerationService {
 
     const sensitiveLabels = ["porn", "sexual", "nudity", "graphic-media"];
     const hasSensitiveLabel = labels.some((label) =>
-      sensitiveLabels.includes(label.val)
+      sensitiveLabels.includes(label.val),
     );
 
     if (hasSensitiveLabel) {
@@ -165,7 +171,10 @@ export class ModerationService {
 let moderationServiceInstance: ModerationService | null = null;
 
 export function getModerationService(agent: BskyAgent): ModerationService {
-  if (!moderationServiceInstance || moderationServiceInstance["agent"] !== agent) {
+  if (
+    !moderationServiceInstance ||
+    moderationServiceInstance["agent"] !== agent
+  ) {
     moderationServiceInstance = new ModerationService(agent);
   }
   return moderationServiceInstance;

@@ -1,4 +1,5 @@
 const express = require("express");
+const http = require("http");
 const cors = require("cors");
 const fetch = require("node-fetch");
 const ffmpeg = require("fluent-ffmpeg");
@@ -6,12 +7,14 @@ const fs = require("fs").promises;
 const path = require("path");
 const crypto = require("crypto");
 const os = require("os");
+const { WebSocketNotificationServer } = require("./websocket-server");
 
 // Load environment variables from parent directory's .env file
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 
 const app = express();
 const PORT = process.env.PORT || 3002;
+const WS_PORT = process.env.WS_PORT || 3001;
 
 // Enable CORS for your Vite dev server and production domains
 app.use(
@@ -682,7 +685,11 @@ Start directly with { and end with }`,
   }
 });
 
-app.listen(PORT, () => {
+// Create HTTP server for Express app
+const httpServer = http.createServer(app);
+
+// Start HTTP server for API
+httpServer.listen(PORT, () => {
   console.log(`ShadowSky API server running on port ${PORT}`);
   console.log(`Available endpoints:`);
   console.log(`  - POST /api/convert-gif       : Convert GIF to MP4`);
@@ -699,4 +706,50 @@ app.listen(PORT, () => {
       ? `✓ Anthropic API key loaded`
       : `✗ Anthropic API key not found`,
   );
+});
+
+// Create separate HTTP server for WebSocket
+const wsHttpServer = http.createServer();
+
+// Initialize WebSocket server
+const wsServer = new WebSocketNotificationServer(wsHttpServer, {
+  heartbeatInterval: 30000,
+  pollInterval: 15000,
+  debug: true,
+});
+
+// Start WebSocket server
+wsHttpServer.listen(WS_PORT, () => {
+  console.log(`\n🔌 WebSocket server running on ws://localhost:${WS_PORT}`);
+  console.log(`   - Heartbeat interval: 30s`);
+  console.log(`   - Notification polling: 15s`);
+  console.log(`   - Authentication: JWT via query parameter`);
+  console.log(
+    `\nTo connect from frontend, set in .env: VITE_WS_URL=ws://localhost:${WS_PORT}`,
+  );
+});
+
+// Graceful shutdown
+process.on("SIGTERM", () => {
+  console.log("\nSIGTERM received, shutting down gracefully...");
+  wsServer.close();
+  httpServer.close(() => {
+    console.log("HTTP server closed");
+  });
+  wsHttpServer.close(() => {
+    console.log("WebSocket server closed");
+    process.exit(0);
+  });
+});
+
+process.on("SIGINT", () => {
+  console.log("\nSIGINT received, shutting down gracefully...");
+  wsServer.close();
+  httpServer.close(() => {
+    console.log("HTTP server closed");
+  });
+  wsHttpServer.close(() => {
+    console.log("WebSocket server closed");
+    process.exit(0);
+  });
 });

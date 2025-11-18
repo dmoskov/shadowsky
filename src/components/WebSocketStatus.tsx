@@ -53,10 +53,7 @@ export const WebSocketStatus: React.FC = () => {
   return (
     <div className="fixed bottom-20 right-4 z-50 lg:bottom-4">
       <div
-        className={`
-          rounded-lg border shadow-lg transition-all duration-200
-          ${isExpanded ? "w-64" : "w-auto"}
-        `}
+        className={`rounded-lg border shadow-lg transition-all duration-200 ${isExpanded ? "w-64" : "w-auto"} `}
         style={{
           background: "var(--bsky-bg-secondary)",
           borderColor: "var(--bsky-border)",
@@ -96,8 +93,7 @@ export const WebSocketStatus: React.FC = () => {
             <div className="space-y-1">
               {stats.connectedAt && (
                 <div>
-                  Connected:{" "}
-                  {new Date(stats.connectedAt).toLocaleTimeString()}
+                  Connected: {new Date(stats.connectedAt).toLocaleTimeString()}
                 </div>
               )}
               <div>Messages Sent: {stats.messagesSent}</div>

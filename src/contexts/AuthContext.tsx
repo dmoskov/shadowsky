@@ -246,38 +246,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     [],
   );
 
-  const switchAccount = useCallback(
-    async (did: string): Promise<boolean> => {
-      try {
-        const account = AccountManager.switchAccount(did);
-        if (!account) {
-          return false;
-        }
-
-        const resumedSession = await atProtoClient.resumeSession(
-          account.session,
-        );
-        setIsAuthenticated(true);
-        setSession(resumedSession);
-
-        await initializeBookmarkService(atProtoClient.agent);
-        await initializeDataServices(atProtoClient.agent);
-        dmService.setAgent(atProtoClient.agent);
-        analyticsTracker.setAgent(atProtoClient.agent, resumedSession.handle);
-
-        queryClient.clear();
-
-        analytics.setUserId(resumedSession.did);
-
-        window.location.href = "/";
-        return true;
-      } catch (error) {
-        debug.error("Failed to switch account:", error);
+  const switchAccount = useCallback(async (did: string): Promise<boolean> => {
+    try {
+      const account = AccountManager.switchAccount(did);
+      if (!account) {
         return false;
       }
-    },
-    [],
-  );
+
+      const resumedSession = await atProtoClient.resumeSession(account.session);
+      setIsAuthenticated(true);
+      setSession(resumedSession);
+
+      await initializeBookmarkService(atProtoClient.agent);
+      await initializeDataServices(atProtoClient.agent);
+      dmService.setAgent(atProtoClient.agent);
+      analyticsTracker.setAgent(atProtoClient.agent, resumedSession.handle);
+
+      queryClient.clear();
+
+      analytics.setUserId(resumedSession.did);
+
+      window.location.href = "/";
+      return true;
+    } catch (error) {
+      debug.error("Failed to switch account:", error);
+      return false;
+    }
+  }, []);
 
   return (
     <AuthContext.Provider

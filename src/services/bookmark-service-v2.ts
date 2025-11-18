@@ -196,8 +196,8 @@ class BookmarkServiceV2 {
 
   async getBookmarksByTag(tag: string): Promise<BookmarkPost[]> {
     const allBookmarks = await this.backend.getAllBookmarks();
-    const taggedBookmarks = allBookmarks.filter(
-      (bookmark) => bookmark.tags?.includes(tag),
+    const taggedBookmarks = allBookmarks.filter((bookmark) =>
+      bookmark.tags?.includes(tag),
     );
 
     const bookmarkPosts: BookmarkPost[] = [];

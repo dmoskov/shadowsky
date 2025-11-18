@@ -31,9 +31,12 @@ export class AnalyticsTracker {
       clearInterval(this.intervalId);
     }
 
-    this.intervalId = window.setInterval(() => {
-      this.checkAndSnapshot();
-    }, 60 * 60 * 1000); // Check every hour
+    this.intervalId = window.setInterval(
+      () => {
+        this.checkAndSnapshot();
+      },
+      60 * 60 * 1000,
+    ); // Check every hour
   }
 
   private stopTracking() {
@@ -57,7 +60,10 @@ export class AnalyticsTracker {
 
       if (now.getTime() - lastSnapshot.getTime() >= SNAPSHOT_INTERVAL_MS) {
         await this.takeSnapshot();
-        localStorage.setItem(`${STORAGE_KEY}_${this.userId}`, now.toISOString());
+        localStorage.setItem(
+          `${STORAGE_KEY}_${this.userId}`,
+          now.toISOString(),
+        );
         debug.log("Analytics snapshot taken successfully");
       }
     } catch (error) {

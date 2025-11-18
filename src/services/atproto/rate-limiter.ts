@@ -101,9 +101,7 @@ class TokenBucket {
         return true;
       }
 
-      await new Promise((resolve) =>
-        setTimeout(resolve, this.refillInterval),
-      );
+      await new Promise((resolve) => setTimeout(resolve, this.refillInterval));
     }
 
     return false;
@@ -171,7 +169,9 @@ export class ATProtoRateLimiter {
   private headerMetrics: Map<ATProtoEndpointType, RateLimitHeaderMetrics> =
     new Map();
 
-  constructor(configs: Partial<Record<ATProtoEndpointType, RateLimiterConfig>> = {}) {
+  constructor(
+    configs: Partial<Record<ATProtoEndpointType, RateLimiterConfig>> = {},
+  ) {
     this.buckets = new Map();
 
     for (const [type, defaultConfig] of Object.entries(DEFAULT_CONFIGS)) {

@@ -1,11 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  endOfDay,
-  format,
-  startOfDay,
-  subDays,
-  subMonths,
-} from "date-fns";
+import { endOfDay, format, startOfDay, subDays, subMonths } from "date-fns";
 import {
   BarChart3,
   Clock,
@@ -103,8 +97,7 @@ export const UserAnalytics: React.FC = () => {
         allPosts.push(...filteredPosts);
         cursor = response.data.cursor;
 
-        const oldestInBatch =
-          response.data.feed[response.data.feed.length - 1];
+        const oldestInBatch = response.data.feed[response.data.feed.length - 1];
         if (oldestInBatch) {
           const oldestDate = new Date(oldestInBatch.post.indexedAt);
           if (oldestDate < startDate || !cursor) {
@@ -244,7 +237,13 @@ export const UserAnalytics: React.FC = () => {
     if (!postsData?.dailyEngagement) return [];
 
     const days =
-      dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : dateRange === "90d" ? 90 : 365;
+      dateRange === "7d"
+        ? 7
+        : dateRange === "30d"
+          ? 30
+          : dateRange === "90d"
+            ? 90
+            : 365;
     const data = [];
 
     for (let i = days - 1; i >= 0; i--) {
@@ -393,7 +392,8 @@ export const UserAnalytics: React.FC = () => {
                 dateRange === "7d"
                   ? "var(--bsky-primary)"
                   : "var(--bsky-bg-tertiary)",
-              color: dateRange === "7d" ? "white" : "var(--bsky-text-secondary)",
+              color:
+                dateRange === "7d" ? "white" : "var(--bsky-text-secondary)",
             }}
           >
             7 days
@@ -449,10 +449,7 @@ export const UserAnalytics: React.FC = () => {
           style={{ background: "var(--bsky-bg-secondary)" }}
         >
           <div className="flex items-center gap-2 text-sm">
-            <Users
-              size={16}
-              style={{ color: "var(--bsky-text-secondary)" }}
-            />
+            <Users size={16} style={{ color: "var(--bsky-text-secondary)" }} />
             <span style={{ color: "var(--bsky-text-secondary)" }}>
               Followers
             </span>
@@ -516,7 +513,7 @@ export const UserAnalytics: React.FC = () => {
           </div>
           <div className="mt-2 text-2xl font-bold text-purple-500">
             {postsData?.totalPosts && postsData.totalPosts > 0
-              ? ((postsData.totalEngagement / postsData.totalPosts).toFixed(1))
+              ? (postsData.totalEngagement / postsData.totalPosts).toFixed(1)
               : "0.0"}
           </div>
           <div
@@ -592,11 +589,17 @@ export const UserAnalytics: React.FC = () => {
                   >
                     <stop
                       offset="0%"
-                      style={{ stopColor: "var(--bsky-primary)", stopOpacity: 0.3 }}
+                      style={{
+                        stopColor: "var(--bsky-primary)",
+                        stopOpacity: 0.3,
+                      }}
                     />
                     <stop
                       offset="100%"
-                      style={{ stopColor: "var(--bsky-primary)", stopOpacity: 0 }}
+                      style={{
+                        stopColor: "var(--bsky-primary)",
+                        stopOpacity: 0,
+                      }}
                     />
                   </linearGradient>
                 </defs>
@@ -604,13 +607,15 @@ export const UserAnalytics: React.FC = () => {
                 <polyline
                   fill="url(#followerGradient)"
                   stroke="none"
-                  points={followerGrowthData
-                    .map((d, i) => {
-                      const x = (i / (followerGrowthData.length - 1)) * 100;
-                      const y = 100 - (d.followers / maxFollowers) * 100;
-                      return `${x}%,${y}%`;
-                    })
-                    .join(" ") + ` 100%,100% 0%,100%`}
+                  points={
+                    followerGrowthData
+                      .map((d, i) => {
+                        const x = (i / (followerGrowthData.length - 1)) * 100;
+                        const y = 100 - (d.followers / maxFollowers) * 100;
+                        return `${x}%,${y}%`;
+                      })
+                      .join(" ") + ` 100%,100% 0%,100%`
+                  }
                 />
 
                 <polyline
@@ -721,8 +726,10 @@ export const UserAnalytics: React.FC = () => {
                     className="group relative"
                     style={{
                       width: barWidth,
-                      minWidth: engagementChartData.length > 30 ? "8px" : "20px",
-                      maxWidth: engagementChartData.length > 30 ? "30px" : "60px",
+                      minWidth:
+                        engagementChartData.length > 30 ? "8px" : "20px",
+                      maxWidth:
+                        engagementChartData.length > 30 ? "30px" : "60px",
                     }}
                   >
                     <div className="absolute bottom-0 left-0 right-0 flex flex-col-reverse overflow-hidden rounded-t-lg transition-all duration-300 hover:opacity-90">
@@ -798,7 +805,8 @@ export const UserAnalytics: React.FC = () => {
                           className="text-xs"
                           style={{
                             color: "var(--bsky-text-secondary)",
-                            fontSize: engagementChartData.length > 30 ? "9px" : "10px",
+                            fontSize:
+                              engagementChartData.length > 30 ? "9px" : "10px",
                           }}
                         >
                           {data.date}
@@ -960,7 +968,10 @@ export const UserAnalytics: React.FC = () => {
                   className="mt-1 text-xs"
                   style={{ color: "var(--bsky-text-secondary)" }}
                 >
-                  Avg {postingTimeAnalysis.avgEngagementByHour[postingTimeAnalysis.maxEngagementHour].toFixed(1)}{" "}
+                  Avg{" "}
+                  {postingTimeAnalysis.avgEngagementByHour[
+                    postingTimeAnalysis.maxEngagementHour
+                  ].toFixed(1)}{" "}
                   interactions per post
                 </div>
               </div>
@@ -982,7 +993,11 @@ export const UserAnalytics: React.FC = () => {
                   className="mt-1 text-xs"
                   style={{ color: "var(--bsky-text-secondary)" }}
                 >
-                  {postingTimeAnalysis.hourCounts[postingTimeAnalysis.maxPostsHour]}{" "}
+                  {
+                    postingTimeAnalysis.hourCounts[
+                      postingTimeAnalysis.maxPostsHour
+                    ]
+                  }{" "}
                   posts
                 </div>
               </div>
@@ -1053,8 +1068,8 @@ export const UserAnalytics: React.FC = () => {
                 >
                   {index + 1}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-2 flex items-center gap-2">
                     {post.author.avatar && (
                       <img
                         src={proxifyBskyImage(post.author.avatar)}
@@ -1134,7 +1149,8 @@ export const UserAnalytics: React.FC = () => {
               style={{ color: "var(--bsky-text-secondary)" }}
             >
               Showing {postsData.totalPosts.toLocaleString()} posts from{" "}
-              {format(startDate, "MMM d, yyyy")} to {format(endDate, "MMM d, yyyy")}
+              {format(startDate, "MMM d, yyyy")} to{" "}
+              {format(endDate, "MMM d, yyyy")}
             </div>
             <div className="flex items-center gap-6 text-sm">
               <div>
@@ -1155,9 +1171,9 @@ export const UserAnalytics: React.FC = () => {
                   style={{ color: "var(--bsky-text-primary)" }}
                 >
                   {postsData.totalPosts > 0
-                    ? (postsData.totalEngagement / postsData.totalPosts).toFixed(
-                        1,
-                      )
+                    ? (
+                        postsData.totalEngagement / postsData.totalPosts
+                      ).toFixed(1)
                     : 0}
                 </span>
                 <span style={{ color: "var(--bsky-text-secondary)" }}>

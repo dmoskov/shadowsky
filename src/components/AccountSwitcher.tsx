@@ -3,7 +3,10 @@ import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
-import { AccountManager, type StoredAccount } from "../services/account-manager";
+import {
+  AccountManager,
+  type StoredAccount,
+} from "../services/account-manager";
 import { proxifyBskyImage } from "../utils/image-proxy";
 
 export const AccountSwitcher: React.FC = () => {

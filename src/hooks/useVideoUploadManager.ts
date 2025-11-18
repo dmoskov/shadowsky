@@ -1,13 +1,25 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import type { BskyAgent } from "@atproto/api";
-import { VideoUploadService, type VideoUploadResult } from "../services/atproto/video-upload";
-import { createLogger } from "../utils/logger";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { StandardErrorResponse } from "../services/atproto/error-handler";
-import { validateVideoFile, isRecoverableError } from "../utils/video-validation";
+import {
+  VideoUploadService,
+  type VideoUploadResult,
+} from "../services/atproto/video-upload";
+import { createLogger } from "../utils/logger";
+import {
+  isRecoverableError,
+  validateVideoFile,
+} from "../utils/video-validation";
 
 const logger = createLogger("VideoUploadManager");
 
-export type UploadStatus = "idle" | "uploading" | "processing" | "complete" | "error" | "cancelled";
+export type UploadStatus =
+  | "idle"
+  | "uploading"
+  | "processing"
+  | "complete"
+  | "error"
+  | "cancelled";
 
 export interface VideoUploadState {
   uploadId: string | null;
@@ -46,7 +58,8 @@ const initialState: VideoUploadState = {
  * - React 18 concurrent mode compatible
  */
 export function useVideoUploadManager(agent: BskyAgent | null) {
-  const [uploadState, setUploadState] = useState<VideoUploadState>(initialState);
+  const [uploadState, setUploadState] =
+    useState<VideoUploadState>(initialState);
   const activeUploadRef = useRef<ActiveUpload | null>(null);
   const isMountedRef = useRef(true);
   const videoServiceRef = useRef<VideoUploadService | null>(null);
@@ -68,7 +81,7 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
       // Cancel any active uploads
       if (activeUploadRef.current) {
         logger.log(
-          `[${activeUploadRef.current.uploadId}] Component unmounting, cancelling upload`
+          `[${activeUploadRef.current.uploadId}] Component unmounting, cancelling upload`,
         );
         activeUploadRef.current.abortController.abort();
         activeUploadRef.current = null;
@@ -83,9 +96,11 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
    * Check if an upload is currently in progress
    */
   const isUploading = useCallback((): boolean => {
-    return activeUploadRef.current !== null ||
-           uploadState.status === "uploading" ||
-           uploadState.status === "processing";
+    return (
+      activeUploadRef.current !== null ||
+      uploadState.status === "uploading" ||
+      uploadState.status === "processing"
+    );
   }, [uploadState.status]);
 
   /**
@@ -97,7 +112,7 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
       videoData: Uint8Array,
       mimeType: string,
       fileName: string,
-      onProgress?: (progress: number) => void
+      onProgress?: (progress: number) => void,
     ): Promise<VideoUploadResult | null> => {
       // Prevent duplicate uploads
       if (isUploading()) {
@@ -108,7 +123,8 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
       if (!videoServiceRef.current) {
         const error: StandardErrorResponse = {
           code: "CLIENT_BAD_REQUEST" as any,
-          message: "Video service not initialized. Please ensure you're logged in.",
+          message:
+            "Video service not initialized. Please ensure you're logged in.",
           context: { timestamp: new Date().toISOString() },
           retryable: false,
         };
@@ -130,7 +146,10 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
       const validationResult = validateVideoFile(videoData, mimeType, fileName);
 
       if (!validationResult.valid && validationResult.error) {
-        logger.error(`Video validation failed: ${validationResult.error.message}`, validationResult.error.context);
+        logger.error(
+          `Video validation failed: ${validationResult.error.message}`,
+          validationResult.error.context,
+        );
 
         const error: StandardErrorResponse = {
           code: "CLIENT_BAD_REQUEST" as any,
@@ -160,7 +179,9 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
       let uploadId: string | null = null;
 
       try {
-        logger.log(`Starting video upload: ${fileName} (${videoData.length} bytes)`);
+        logger.log(
+          `Starting video upload: ${fileName} (${videoData.length} bytes)`,
+        );
 
         // Set optimistic uploading state
         if (isMountedRef.current) {
@@ -205,7 +226,7 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
               mimeType,
               startTime: Date.now(),
             };
-          }
+          },
         );
 
         // Check if upload was cancelled during processing
@@ -250,17 +271,18 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
         // Handle actual errors
         logger.error(`[${uploadId}] Upload failed:`, error);
 
-        const standardError: StandardErrorResponse = error.code && error.message
-          ? error
-          : {
-              code: "UNKNOWN" as any,
-              message: error.message || "Unknown upload error",
-              context: {
-                uploadId: uploadId || undefined,
-                timestamp: new Date().toISOString(),
-              },
-              retryable: true,
-            };
+        const standardError: StandardErrorResponse =
+          error.code && error.message
+            ? error
+            : {
+                code: "UNKNOWN" as any,
+                message: error.message || "Unknown upload error",
+                context: {
+                  uploadId: uploadId || undefined,
+                  timestamp: new Date().toISOString(),
+                },
+                retryable: true,
+              };
 
         if (isMountedRef.current) {
           setUploadState({
@@ -279,7 +301,7 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
         return null;
       }
     },
-    [isUploading]
+    [isUploading],
   );
 
   /**
@@ -307,12 +329,16 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
    * Returns false if no upload to retry or if an upload is already in progress
    */
   const retryUpload = useCallback(
-    async (onProgress?: (progress: number) => void): Promise<VideoUploadResult | null> => {
+    async (
+      onProgress?: (progress: number) => void,
+    ): Promise<VideoUploadResult | null> => {
       const previousUpload = activeUploadRef.current;
 
       // Can only retry if there was a previous upload and no current upload
       if (!previousUpload || isUploading()) {
-        logger.warn("Cannot retry: no previous upload or upload already in progress");
+        logger.warn(
+          "Cannot retry: no previous upload or upload already in progress",
+        );
         return null;
       }
 
@@ -322,10 +348,10 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
         previousUpload.videoData,
         previousUpload.mimeType,
         previousUpload.fileName,
-        onProgress
+        onProgress,
       );
     },
-    [isUploading, startUpload]
+    [isUploading, startUpload],
   );
 
   /**

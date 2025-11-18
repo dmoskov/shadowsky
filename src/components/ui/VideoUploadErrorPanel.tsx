@@ -12,10 +12,15 @@ import {
   XCircle,
 } from "lucide-react";
 import React from "react";
-import { ATProtoErrorCode, type StandardErrorResponse } from "../../services/atproto/error-handler";
+import {
+  ATProtoErrorCode,
+  type StandardErrorResponse,
+} from "../../services/atproto/error-handler";
 
 export interface VideoUploadErrorPanelProps {
-  error: StandardErrorResponse | { code?: string; message: string; retryable?: boolean };
+  error:
+    | StandardErrorResponse
+    | { code?: string; message: string; retryable?: boolean };
   uploadId?: string;
   fileName?: string;
   onRetry?: () => void;
@@ -210,20 +215,25 @@ function getErrorConfig(
       return {
         icon: Shield,
         title: "Authentication Required",
-        description: "Your session has expired. Please log in again to continue.",
+        description:
+          "Your session has expired. Please log in again to continue.",
         severity: "error",
         iconColor: "text-red-600 dark:text-red-400",
         bgColor: "bg-red-50 dark:bg-red-900/20",
         borderColor: "border-red-200 dark:border-red-800",
         actionLabel: "Log In Again",
-        recoverySteps: ["Log out and log back in", "Your upload will need to be retried"],
+        recoverySteps: [
+          "Log out and log back in",
+          "Your upload will need to be retried",
+        ],
       };
 
     case ATProtoErrorCode.CLIENT_FORBIDDEN:
       return {
         icon: Shield,
         title: "Access Denied",
-        description: "You don't have permission to upload videos to this account.",
+        description:
+          "You don't have permission to upload videos to this account.",
         severity: "error",
         iconColor: "text-red-600 dark:text-red-400",
         bgColor: "bg-red-50 dark:bg-red-900/20",
@@ -239,7 +249,8 @@ function getErrorConfig(
       return {
         icon: AlertCircle,
         title: "Invalid Upload Request",
-        description: message || "The upload request was invalid. Please try again.",
+        description:
+          message || "The upload request was invalid. Please try again.",
         severity: "error",
         iconColor: "text-red-600 dark:text-red-400",
         bgColor: "bg-red-50 dark:bg-red-900/20",
@@ -272,7 +283,8 @@ function getErrorConfig(
         icon: XCircle,
         title: "Upload Failed",
         description:
-          message || "An unexpected error occurred. Please try a different video.",
+          message ||
+          "An unexpected error occurred. Please try a different video.",
         severity: "error",
         iconColor: "text-red-600 dark:text-red-400",
         bgColor: "bg-red-50 dark:bg-red-900/20",
@@ -306,32 +318,35 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
   if (compact) {
     return (
       <div
-        className={`flex items-center gap-2 py-2 px-3 rounded-md border ${config.bgColor} ${config.borderColor}`}
+        className={`flex items-center gap-2 rounded-md border px-3 py-2 ${config.bgColor} ${config.borderColor}`}
         role="alert"
         aria-live="assertive"
       >
-        <Icon className={`w-4 h-4 flex-shrink-0 ${config.iconColor}`} aria-hidden="true" />
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">
+        <Icon
+          className={`h-4 w-4 flex-shrink-0 ${config.iconColor}`}
+          aria-hidden="true"
+        />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-medium text-gray-900 dark:text-gray-100">
             {config.title}
           </p>
         </div>
         {showRetryButton && (
           <button
             onClick={onRetry}
-            className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded p-1 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:hover:bg-gray-700"
             aria-label="Retry upload"
           >
-            <RefreshCw className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+            <RefreshCw className="h-4 w-4 text-gray-700 dark:text-gray-300" />
           </button>
         )}
         {showCancelButton && (
           <button
             onClick={onCancel}
-            className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded p-1 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:hover:bg-gray-700"
             aria-label="Cancel upload"
           >
-            <X className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+            <X className="h-4 w-4 text-gray-700 dark:text-gray-300" />
           </button>
         )}
       </div>
@@ -340,46 +355,48 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
 
   return (
     <div
-      className={`w-full p-4 rounded-lg border ${config.bgColor} ${config.borderColor} shadow-sm`}
+      className={`w-full rounded-lg border p-4 ${config.bgColor} ${config.borderColor} shadow-sm`}
       role="alert"
       aria-live="assertive"
       aria-atomic="true"
     >
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0">
-          <Icon className={`w-5 h-5 ${config.iconColor}`} aria-hidden="true" />
+          <Icon className={`h-5 w-5 ${config.iconColor}`} aria-hidden="true" />
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 flex items-start justify-between">
+            <div className="min-w-0 flex-1">
+              <h3 className="mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
                 {config.title}
               </h3>
               {fileName && (
-                <p className="text-xs text-gray-600 dark:text-gray-400 truncate mb-1">
+                <p className="mb-1 truncate text-xs text-gray-600 dark:text-gray-400">
                   {fileName}
                 </p>
               )}
             </div>
           </div>
 
-          <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+          <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
             {config.description}
           </p>
 
           {config.recoverySteps && config.recoverySteps.length > 0 && (
             <div className="mb-4">
-              <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <p className="mb-2 text-xs font-medium text-gray-700 dark:text-gray-300">
                 What you can do:
               </p>
               <ul className="space-y-1.5" role="list">
                 {config.recoverySteps.map((step, index) => (
                   <li
                     key={index}
-                    className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-2"
+                    className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400"
                   >
-                    <span className="text-gray-400 dark:text-gray-600 select-none">•</span>
+                    <span className="select-none text-gray-400 dark:text-gray-600">
+                      •
+                    </span>
                     <span className="flex-1">{step}</span>
                   </li>
                 ))}
@@ -391,27 +408,27 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
             {showRetryButton && (
               <button
                 onClick={onRetry}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 aria-label={config.actionLabel || "Retry upload"}
               >
-                <RefreshCw className="w-4 h-4" aria-hidden="true" />
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
                 {config.actionLabel || "Retry"}
               </button>
             )}
             {showCancelButton && (
               <button
                 onClick={onCancel}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 aria-label="Cancel upload"
               >
-                <X className="w-4 h-4" aria-hidden="true" />
+                <X className="h-4 w-4" aria-hidden="true" />
                 Cancel
               </button>
             )}
           </div>
 
           {uploadId && (
-            <p className="mt-3 text-xs text-gray-500 dark:text-gray-500 font-mono">
+            <p className="mt-3 font-mono text-xs text-gray-500 dark:text-gray-500">
               Upload ID: {uploadId}
             </p>
           )}

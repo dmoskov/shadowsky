@@ -171,7 +171,7 @@ export const Lists: React.FC = () => {
                     {list.name}
                   </h3>
                   {list.description && (
-                    <p className="mt-1 text-sm text-bsky-text-secondary line-clamp-2">
+                    <p className="mt-1 line-clamp-2 text-sm text-bsky-text-secondary">
                       {list.description}
                     </p>
                   )}
@@ -235,7 +235,10 @@ export const Lists: React.FC = () => {
                   </span>
                 </div>
                 <span className="text-xs text-bsky-text-tertiary">
-                  Updated {formatDistanceToNow(new Date(list.updatedAt), { addSuffix: true })}
+                  Updated{" "}
+                  {formatDistanceToNow(new Date(list.updatedAt), {
+                    addSuffix: true,
+                  })}
                 </span>
               </div>
             </div>

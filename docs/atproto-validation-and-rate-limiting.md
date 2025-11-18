@@ -13,6 +13,7 @@ The system provides three main features:
 ## Schema Validation
 
 ### Location
+
 `src/services/atproto/schemas.ts`
 
 ### Schemas Defined
@@ -26,7 +27,7 @@ The system provides three main features:
 ### Usage
 
 ```typescript
-import { validateResponse, serviceAuthResponseSchema } from './schemas';
+import { validateResponse, serviceAuthResponseSchema } from "./schemas";
 
 const response = await agent.com.atproto.server.getServiceAuth({
   aud: "did:web:video.bsky.app",
@@ -36,7 +37,7 @@ const response = await agent.com.atproto.server.getServiceAuth({
 const validated = validateResponse(
   serviceAuthResponseSchema,
   response,
-  "com.atproto.server.getServiceAuth"
+  "com.atproto.server.getServiceAuth",
 );
 ```
 
@@ -49,6 +50,7 @@ const validated = validateResponse(
 ## Rate Limiting
 
 ### Location
+
 `src/services/atproto/rate-limiter.ts`
 
 ### Endpoint Types
@@ -72,7 +74,7 @@ The rate limiter uses a token bucket algorithm:
 ### Usage
 
 ```typescript
-import { getGlobalRateLimiter, ATProtoEndpointType } from './rate-limiter';
+import { getGlobalRateLimiter, ATProtoEndpointType } from "./rate-limiter";
 
 const rateLimiter = getGlobalRateLimiter();
 
@@ -85,7 +87,7 @@ if (rateLimiter.canProceed(ATProtoEndpointType.UPLOAD)) {
 const allowed = await rateLimiter.waitForAllowance(
   ATProtoEndpointType.UPLOAD,
   1,
-  5000 // 5 second timeout
+  5000, // 5 second timeout
 );
 ```
 
@@ -102,6 +104,7 @@ if (rateLimitHeaders) {
 ```
 
 Headers tracked:
+
 - `x-ratelimit-limit`: Total requests allowed
 - `x-ratelimit-remaining`: Requests remaining
 - `x-ratelimit-reset`: Timestamp when limit resets
@@ -110,6 +113,7 @@ Headers tracked:
 ## Standardized Error Handling
 
 ### Location
+
 `src/services/atproto/error-handler.ts`
 
 ### Error Response Format
@@ -152,18 +156,16 @@ The system defines specific error codes for different scenarios:
 ### Usage
 
 ```typescript
-import { mapATProtoError, logError } from './error-handler';
+import { mapATProtoError, logError } from "./error-handler";
 
 try {
   // Make API call
 } catch (error) {
-  const standardError = mapATProtoError(
-    error,
-    'app.bsky.video.uploadVideo',
-    { uploadId }
-  );
+  const standardError = mapATProtoError(error, "app.bsky.video.uploadVideo", {
+    uploadId,
+  });
 
-  logError(standardError, 'videoUpload');
+  logError(standardError, "videoUpload");
 
   // Use standardError.retryable to determine if should retry
   if (standardError.retryable) {
@@ -190,7 +192,7 @@ metricsTracker.trackRateLimitMetrics(uploadId, {
   limit: 50,
   remaining: 45,
   resetTimestamp: 1234567890,
-  endpoint: "app.bsky.video.uploadVideo"
+  endpoint: "app.bsky.video.uploadVideo",
 });
 ```
 

@@ -241,7 +241,7 @@ export function ThreadModal({
           const videoBlob = await videoUploadManager.startUpload(
             videoData,
             videoFile.file.type || "video/mp4",
-            videoFile.file.name || "video.mp4"
+            videoFile.file.name || "video.mp4",
           );
 
           // Check if upload was cancelled or failed
@@ -355,7 +355,7 @@ export function ThreadModal({
           const videoBlob = await videoUploadManager.startUpload(
             videoData,
             videoFile.file.type || "video/mp4",
-            videoFile.file.name || "video.mp4"
+            videoFile.file.name || "video.mp4",
           );
 
           // Check if upload was cancelled or failed

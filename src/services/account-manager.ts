@@ -4,8 +4,8 @@
  */
 
 import type { Session } from "@bsky/shared";
-import { deleteCookie, getCookie, setCookie } from "../utils/cookies";
 import { debug } from "../shared/debug";
+import { deleteCookie, getCookie, setCookie } from "../utils/cookies";
 
 export interface StoredAccount {
   did: string;

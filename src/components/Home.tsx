@@ -23,13 +23,13 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModeration } from "../contexts/ModerationContext";
-import { useModerationPreferences } from "../hooks/useModerationPreferences";
 import {
   useFeatureTracking,
   useInteractionTracking,
 } from "../hooks/useAnalytics";
 import { useBookmarks } from "../hooks/useBookmarks";
 import { useIntersectionLoader } from "../hooks/useIntersectionLoader";
+import { useModerationPreferences } from "../hooks/useModerationPreferences";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { columnService } from "../services/column-service";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
@@ -149,7 +149,7 @@ export const Home: React.FC<HomeProps> = React.memo(
     const { toggleBookmark } = useBookmarks();
     const { isPostHidden } = useHiddenPosts();
     const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
-    const { shouldFilterPost, shouldFilterFeedItem } = useModerationPreferences();
+    const { shouldFilterFeedItem } = useModerationPreferences();
     // Removed hoveredPost state to prevent re-renders - using CSS hover instead
     // Use initialFeedUri if provided, otherwise get from column preferences
     const [selectedFeed, setSelectedFeed] = React.useState<FeedType>(() => {
@@ -497,7 +497,14 @@ export const Home: React.FC<HomeProps> = React.memo(
             _itemIndex: itemIndex,
           })),
       );
-    }, [data, isPostHidden, isUserMuted, isUserBlocked, isThreadMuted, shouldFilterFeedItem]);
+    }, [
+      data,
+      isPostHidden,
+      isUserMuted,
+      isUserBlocked,
+      isThreadMuted,
+      shouldFilterFeedItem,
+    ]);
 
     // Use progressive loading instead of full virtualization
     const {

@@ -1,7 +1,15 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { Bookmark, Cloud, Database, Search, Settings, Tag, X } from "lucide-react";
+import {
+  Bookmark,
+  Cloud,
+  Database,
+  Search,
+  Settings,
+  Tag,
+  X,
+} from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";

@@ -1,8 +1,29 @@
-# Media Processing Server
+# ShadowSky Backend Server
 
-This server provides endpoints for:
-1. Converting GIF images to MP4 videos for Bluesky uploads
-2. Proxying images from external sources to avoid CORS issues
+This server provides:
+1. **WebSocket Server**: Real-time notification delivery (port 3001)
+2. **API Endpoints**: Media processing, AI features, and image proxying (port 3002)
+
+## Features
+
+### WebSocket Server (Port 3001)
+- Real-time notification delivery without polling
+- JWT authentication via query parameter
+- Automatic reconnection support
+- Heartbeat/ping-pong mechanism
+- Multi-device support (multiple connections per user)
+
+See [WEBSOCKET.md](./WEBSOCKET.md) for detailed documentation.
+
+### API Server (Port 3002)
+- GIF to MP4 conversion for Bluesky uploads
+- Image proxying to avoid CORS issues
+- AI-powered writing feedback
+- Alt text generation
+- Style analysis
+- Tone adjustment
+- Thread optimization
+- Hashtag suggestions
 
 ## Prerequisites
 
@@ -20,14 +41,22 @@ cd server
 npm install
 ```
 
-2. Start the server:
+2. Configure environment variables:
+```bash
+# In parent directory .env file
+VITE_WS_URL=ws://localhost:3001  # Enable WebSocket in frontend
+```
+
+3. Start the server:
 ```bash
 npm start
 # or for development with auto-restart:
 npm run dev
 ```
 
-The server will run on port 3002 by default.
+This will start:
+- WebSocket server on `ws://localhost:3001`
+- API server on `http://localhost:3002`
 
 ## API Endpoints
 
@@ -73,7 +102,9 @@ This endpoint is primarily used for fetching images from Bluesky's CDN for alt t
 
 ## Environment Variables
 
-- `PORT`: Server port (default: 3002)
+- `PORT`: API server port (default: 3002)
+- `WS_PORT`: WebSocket server port (default: 3001)
+- `ANTHROPIC_API_KEY`: Required for AI features
 
 ## Notes
 

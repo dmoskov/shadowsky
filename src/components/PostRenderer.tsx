@@ -286,7 +286,6 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
       const labels = (post as any).labels;
       const hideMedia = shouldHideMedia(labels);
       const blurMedia = shouldBlurMedia(labels);
-      const isSensitive = hideMedia || blurMedia;
 
       if (hideMedia && !showSensitiveMedia) {
         return (
@@ -300,7 +299,10 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
             <div className="space-y-3">
               <AlertTriangle
                 size={32}
-                style={{ color: "var(--bsky-text-secondary)", margin: "0 auto" }}
+                style={{
+                  color: "var(--bsky-text-secondary)",
+                  margin: "0 auto",
+                }}
               />
               <div>
                 <div
@@ -348,101 +350,108 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
       return (
         <div className={`relative mt-2`}>
           <div className={`grid gap-1 ${gridClass}`}>
-          {embed.images.map((image: any, index: number) => {
-            // Special layout for 3 images: first image takes 2/3, others 1/3 each
-            const isThreeImageLayout = embed.images.length === 3;
-            const colSpan =
-              isThreeImageLayout && index === 0 ? "col-span-2 row-span-2" : "";
+            {embed.images.map((image: any, index: number) => {
+              // Special layout for 3 images: first image takes 2/3, others 1/3 each
+              const isThreeImageLayout = embed.images.length === 3;
+              const colSpan =
+                isThreeImageLayout && index === 0
+                  ? "col-span-2 row-span-2"
+                  : "";
 
-            const currentAltText = generatedAltTexts[index] || image.alt;
-            const hasAltText = currentAltText && currentAltText.length > 0;
+              const currentAltText = generatedAltTexts[index] || image.alt;
+              const hasAltText = currentAltText && currentAltText.length > 0;
 
-            return (
-              <div key={index} className={`group relative ${colSpan}`}>
-                <div
-                  className="relative w-full cursor-pointer overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
-                  style={{
-                    aspectRatio:
-                      isThreeImageLayout && index === 0 ? "1" : "16/9",
-                    maxHeight:
-                      isThreeImageLayout && index === 0 ? "500px" : "350px",
-                  }}
-                  onClick={(e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    openImageGallery(embed.images, index);
-                  }}
-                >
-                  <ProgressiveImage
-                    src={proxifyBskyImage(image.fullsize || image.thumb) || ""}
-                    placeholderSrc={proxifyBskyImage(image.thumb) || ""}
-                    alt={currentAltText || ""}
-                    className="h-full w-full object-contain hover:opacity-90"
+              return (
+                <div key={index} className={`group relative ${colSpan}`}>
+                  <div
+                    className="relative w-full cursor-pointer overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
                     style={{
-                      filter: blurMedia && !showSensitiveMedia ? "blur(20px)" : "none",
+                      aspectRatio:
+                        isThreeImageLayout && index === 0 ? "1" : "16/9",
+                      maxHeight:
+                        isThreeImageLayout && index === 0 ? "500px" : "350px",
                     }}
-                  />
-                </div>
-
-                {/* Alt text overlay */}
-                {hasAltText && showAltText[index] && (
-                  <div className="absolute bottom-0 left-0 right-0 rounded-b-lg bg-black bg-opacity-70 p-2 text-xs text-white">
-                    {currentAltText}
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      openImageGallery(embed.images, index);
+                    }}
+                  >
+                    <ProgressiveImage
+                      src={
+                        proxifyBskyImage(image.fullsize || image.thumb) || ""
+                      }
+                      placeholderSrc={proxifyBskyImage(image.thumb) || ""}
+                      alt={currentAltText || ""}
+                      className="h-full w-full object-contain hover:opacity-90"
+                      style={{
+                        filter:
+                          blurMedia && !showSensitiveMedia
+                            ? "blur(20px)"
+                            : "none",
+                      }}
+                    />
                   </div>
-                )}
 
-                {/* Alt text generation button */}
-                <button
-                  className="absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (hasAltText && !generatedAltTexts[index]) {
-                      // Toggle showing existing alt text
-                      setShowAltText((prev) => ({
-                        ...prev,
-                        [index]: !prev[index],
-                      }));
-                    } else if (!hasAltText) {
-                      // Generate new alt text
-                      handleGenerateAltText(
-                        proxifyBskyImage(image.fullsize) ||
-                          proxifyBskyImage(image.thumb) ||
-                          "",
-                        index,
-                      );
-                    }
-                  }}
-                  disabled={generatingAltText[index]}
-                  title={hasAltText ? "Toggle alt text" : "Generate alt text"}
-                >
-                  {generatingAltText[index] ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : (
-                    <Sparkles size={16} />
+                  {/* Alt text overlay */}
+                  {hasAltText && showAltText[index] && (
+                    <div className="absolute bottom-0 left-0 right-0 rounded-b-lg bg-black bg-opacity-70 p-2 text-xs text-white">
+                      {currentAltText}
+                    </div>
                   )}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-        {blurMedia && !showSensitiveMedia && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowSensitiveMedia(true);
-              }}
-              className="rounded-lg px-6 py-3 text-sm font-medium shadow-lg transition-colors"
-              style={{
-                backgroundColor: "var(--bsky-bg-primary)",
-                color: "var(--bsky-text-primary)",
-                border: "2px solid var(--bsky-border-primary)",
-              }}
-            >
-              {getSensitiveWarningText(labels)} - Click to Show
-            </button>
+
+                  {/* Alt text generation button */}
+                  <button
+                    className="absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (hasAltText && !generatedAltTexts[index]) {
+                        // Toggle showing existing alt text
+                        setShowAltText((prev) => ({
+                          ...prev,
+                          [index]: !prev[index],
+                        }));
+                      } else if (!hasAltText) {
+                        // Generate new alt text
+                        handleGenerateAltText(
+                          proxifyBskyImage(image.fullsize) ||
+                            proxifyBskyImage(image.thumb) ||
+                            "",
+                          index,
+                        );
+                      }
+                    }}
+                    disabled={generatingAltText[index]}
+                    title={hasAltText ? "Toggle alt text" : "Generate alt text"}
+                  >
+                    {generatingAltText[index] ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <Sparkles size={16} />
+                    )}
+                  </button>
+                </div>
+              );
+            })}
           </div>
-        )}
-      </div>
+          {blurMedia && !showSensitiveMedia && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowSensitiveMedia(true);
+                }}
+                className="rounded-lg px-6 py-3 text-sm font-medium shadow-lg transition-colors"
+                style={{
+                  backgroundColor: "var(--bsky-bg-primary)",
+                  color: "var(--bsky-text-primary)",
+                  border: "2px solid var(--bsky-border-primary)",
+                }}
+              >
+                {getSensitiveWarningText(labels)} - Click to Show
+              </button>
+            </div>
+          )}
+        </div>
       );
     }
 

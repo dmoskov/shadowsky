@@ -64,7 +64,9 @@ class ListStorage {
       });
 
       return response.data.records
-        .map((record) => this.recordToList(record.value as ATProtocolListRecord))
+        .map((record) =>
+          this.recordToList(record.value as unknown as ATProtocolListRecord),
+        )
         .sort((a, b) => {
           return (
             new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
@@ -89,14 +91,18 @@ class ListStorage {
         rkey: this.getRecordKey(id),
       });
 
-      return this.recordToList(response.data.value as ATProtocolListRecord);
+      return this.recordToList(
+        response.data.value as unknown as ATProtocolListRecord,
+      );
     } catch (error) {
       logger.error(`Failed to fetch list ${id}:`, error);
       return undefined;
     }
   }
 
-  async createList(list: Omit<List, "id" | "createdAt" | "updatedAt">): Promise<List> {
+  async createList(
+    list: Omit<List, "id" | "createdAt" | "updatedAt">,
+  ): Promise<List> {
     this.ensureInitialized();
 
     try {
@@ -119,7 +125,7 @@ class ListStorage {
         repo: did,
         collection: this.COLLECTION,
         rkey: this.getRecordKey(id),
-        record,
+        record: record as unknown as { [x: string]: unknown },
       });
 
       return newList;
@@ -129,7 +135,10 @@ class ListStorage {
     }
   }
 
-  async updateList(id: string, updates: Partial<Omit<List, "id" | "createdAt">>): Promise<void> {
+  async updateList(
+    id: string,
+    updates: Partial<Omit<List, "id" | "createdAt">>,
+  ): Promise<void> {
     this.ensureInitialized();
 
     try {
@@ -153,7 +162,7 @@ class ListStorage {
         repo: did,
         collection: this.COLLECTION,
         rkey: this.getRecordKey(id),
-        record,
+        record: record as unknown as { [x: string]: unknown },
       });
     } catch (error) {
       logger.error(`Failed to update list ${id}:`, error);
@@ -188,7 +197,7 @@ class ListStorage {
         throw new Error(`List ${listId} not found`);
       }
 
-      const existingMember = list.members.find(m => m.did === member.did);
+      const existingMember = list.members.find((m) => m.did === member.did);
       if (existingMember) {
         return;
       }
@@ -214,7 +223,7 @@ class ListStorage {
         throw new Error(`List ${listId} not found`);
       }
 
-      const updatedMembers = list.members.filter(m => m.did !== memberDid);
+      const updatedMembers = list.members.filter((m) => m.did !== memberDid);
       await this.updateList(listId, { members: updatedMembers });
     } catch (error) {
       logger.error(`Failed to remove member from list ${listId}:`, error);
@@ -227,8 +236,8 @@ class ListStorage {
 
     try {
       const allLists = await this.getAllLists();
-      return allLists.filter(list =>
-        list.members.some(m => m.did === memberDid)
+      return allLists.filter((list) =>
+        list.members.some((m) => m.did === memberDid),
       );
     } catch (error) {
       logger.error("Failed to get lists containing member:", error);

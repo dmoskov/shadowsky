@@ -66,9 +66,13 @@ export class AnalyticsTrackingDB {
           snapshotStore.createIndex("timestamp", "timestamp", {
             unique: false,
           });
-          snapshotStore.createIndex("userIdTimestamp", ["userId", "timestamp"], {
-            unique: false,
-          });
+          snapshotStore.createIndex(
+            "userIdTimestamp",
+            ["userId", "timestamp"],
+            {
+              unique: false,
+            },
+          );
           debug.log("Created snapshots store");
         }
 
@@ -133,10 +137,7 @@ export class AnalyticsTrackingDB {
     const index = store.index("userId");
 
     return new Promise((resolve, reject) => {
-      const request = index.openCursor(
-        IDBKeyRange.only(userId),
-        "prev",
-      );
+      const request = index.openCursor(IDBKeyRange.only(userId), "prev");
       request.onsuccess = () => {
         const cursor = request.result;
         if (cursor) {
@@ -190,7 +191,10 @@ export class AnalyticsTrackingDB {
     });
   }
 
-  async cleanOldSnapshots(userId: string, daysToKeep: number = 365): Promise<void> {
+  async cleanOldSnapshots(
+    userId: string,
+    daysToKeep: number = 365,
+  ): Promise<void> {
     if (!this.db) {
       throw new Error("Database not initialized");
     }

@@ -1,7 +1,10 @@
 import { Check, LogOut, Trash2, User } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { AccountManager, type StoredAccount } from "../../services/account-manager";
+import {
+  AccountManager,
+  type StoredAccount,
+} from "../../services/account-manager";
 import { proxifyBskyImage } from "../../utils/image-proxy";
 
 export const AccountsSettings: React.FC = () => {
@@ -102,7 +105,10 @@ export const AccountsSettings: React.FC = () => {
                   className="flex h-12 w-12 items-center justify-center rounded-full"
                   style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
                 >
-                  <User size={24} style={{ color: "var(--bsky-text-secondary)" }} />
+                  <User
+                    size={24}
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  />
                 </div>
               )}
 
@@ -203,12 +209,17 @@ export const AccountsSettings: React.FC = () => {
           color: "var(--bsky-text-secondary)",
         }}
       >
-        <p className="font-medium" style={{ color: "var(--bsky-text-primary)" }}>
+        <p
+          className="font-medium"
+          style={{ color: "var(--bsky-text-primary)" }}
+        >
           About Multi-Account Support
         </p>
         <ul className="mt-2 space-y-1 text-xs">
           <li>• Switch between accounts without re-entering credentials</li>
-          <li>• Each account maintains separate drafts, bookmarks, and settings</li>
+          <li>
+            • Each account maintains separate drafts, bookmarks, and settings
+          </li>
           <li>• Your credentials are stored securely in your browser</li>
         </ul>
       </div>
