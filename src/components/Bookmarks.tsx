@@ -5,7 +5,9 @@ import {
   Bookmark,
   Download,
   MoreVertical,
+  Plus,
   Search,
+  Tag,
   Trash2,
   Upload,
   X,
@@ -22,7 +24,13 @@ export const Bookmarks: React.FC = () => {
   const queryClient = useQueryClient();
   const { showAlert, showConfirm } = useModal();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showTagModal, setShowTagModal] = useState(false);
+  const [editingBookmarkUri, setEditingBookmarkUri] = useState<string | null>(
+    null,
+  );
+  const [tagInput, setTagInput] = useState("");
   const [selectedPost, setSelectedPost] =
     useState<AppBskyFeedDefs.PostView | null>(null);
   const [showThread, setShowThread] = useState(false);
@@ -45,16 +53,25 @@ export const Bookmarks: React.FC = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["bookmarks", searchQuery],
+    queryKey: ["bookmarks", searchQuery, selectedTag],
     queryFn: async () => {
-      if (searchQuery) {
-        const results = await bookmarkServiceV2.searchBookmarks(searchQuery);
-        return results;
+      if (selectedTag) {
+        return await bookmarkServiceV2.getBookmarksByTag(selectedTag);
       }
-      const bookmarks = await bookmarkServiceV2.getBookmarkedPosts();
-      return bookmarks;
+      if (searchQuery) {
+        return await bookmarkServiceV2.searchBookmarks(searchQuery);
+      }
+      return await bookmarkServiceV2.getBookmarkedPosts();
     },
-    staleTime: 0, // Always refetch when component mounts
+    staleTime: 0,
+  });
+
+  const { data: allTags } = useQuery({
+    queryKey: ["bookmarkTags"],
+    queryFn: async () => {
+      return await bookmarkServiceV2.getAllTags();
+    },
+    staleTime: 30000,
   });
 
   const { data: bookmarkCount } = useQuery({
@@ -135,6 +152,38 @@ export const Bookmarks: React.FC = () => {
     setShowThread(true);
   };
 
+  const handleOpenTagModal = (bookmarkUri: string, currentTags?: string[]) => {
+    setEditingBookmarkUri(bookmarkUri);
+    setTagInput(currentTags?.join(", ") || "");
+    setShowTagModal(true);
+  };
+
+  const handleSaveTags = async () => {
+    if (!editingBookmarkUri) return;
+
+    try {
+      const tags = tagInput
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
+
+      await bookmarkServiceV2.updateBookmarkTags(editingBookmarkUri, tags);
+      queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+      queryClient.invalidateQueries({ queryKey: ["bookmarkTags"] });
+      setShowTagModal(false);
+      setEditingBookmarkUri(null);
+      setTagInput("");
+    } catch (error) {
+      showAlert(
+        `Failed to update tags: ${error instanceof Error ? error.message : "Unknown error"}`,
+        {
+          variant: "error",
+          title: "Error",
+        },
+      );
+    }
+  };
+
   return (
     <div className="mx-auto flex h-full max-w-4xl flex-col bg-bsky-bg-primary">
       <div className="sticky top-0 z-10 border-b border-bsky-border-primary bg-bsky-bg-primary p-4">
@@ -159,7 +208,10 @@ export const Bookmarks: React.FC = () => {
               type="text"
               placeholder="Search bookmarks..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setSelectedTag(null);
+              }}
               className="focus:border-bsky-accent-primary w-full rounded-full border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-2 pl-10 text-sm text-bsky-text-primary transition-all duration-200 focus:outline-none"
             />
           </div>
@@ -172,6 +224,37 @@ export const Bookmarks: React.FC = () => {
             <MoreVertical className="h-4 w-4" />
           </button>
         </div>
+
+        {allTags && allTags.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedTag(null)}
+              className={`cursor-pointer rounded-full border px-3 py-1 text-xs transition-all duration-200 ${
+                !selectedTag
+                  ? "border-bsky-accent-primary bg-bsky-accent-primary text-white"
+                  : "border-bsky-border-primary bg-transparent text-bsky-text-secondary hover:bg-bsky-bg-secondary"
+              }`}
+            >
+              All
+            </button>
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => {
+                  setSelectedTag(tag);
+                  setSearchQuery("");
+                }}
+                className={`cursor-pointer rounded-full border px-3 py-1 text-xs transition-all duration-200 ${
+                  selectedTag === tag
+                    ? "border-bsky-accent-primary bg-bsky-accent-primary text-white"
+                    : "border-bsky-border-primary bg-transparent text-bsky-text-secondary hover:bg-bsky-bg-secondary"
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {isLoading && (
@@ -236,6 +319,16 @@ export const Bookmarks: React.FC = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+                  handleOpenTagModal(bookmark.postUri, bookmark.tags);
+                }}
+                className="cursor-pointer rounded-md border-none bg-transparent p-2 text-bsky-text-tertiary opacity-0 transition-all duration-200 hover:bg-bsky-bg-secondary hover:text-blue-600 group-hover:opacity-100"
+                title="Manage tags"
+              >
+                <Tag className="h-4 w-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
                   handleDeleteBookmark(bookmark.postUri);
                 }}
                 className="cursor-pointer rounded-md border-none bg-transparent p-2 text-bsky-text-tertiary opacity-0 transition-all duration-200 hover:bg-bsky-bg-secondary hover:text-red-600 group-hover:opacity-100"
@@ -244,6 +337,19 @@ export const Bookmarks: React.FC = () => {
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
+
+            {bookmark.tags && bookmark.tags.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-1 px-4">
+                {bookmark.tags.map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="rounded-full border border-bsky-border-primary bg-bsky-bg-secondary px-2 py-0.5 text-xs text-bsky-text-secondary"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {bookmark.post ? (
               <div onClick={() => openPostThread(bookmark.post!)}>
@@ -342,6 +448,61 @@ export const Bookmarks: React.FC = () => {
               onChange={handleImport}
               style={{ display: "none" }}
             />
+          </div>
+        </div>
+      )}
+
+      {showTagModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+          onClick={() => setShowTagModal(false)}
+        >
+          <div
+            className="w-11/12 max-w-md rounded-xl bg-bsky-bg-primary shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-bsky-border-primary p-6">
+              <h3 className="m-0 text-lg font-semibold text-bsky-text-primary">
+                Manage Tags
+              </h3>
+              <button
+                onClick={() => setShowTagModal(false)}
+                className="cursor-pointer rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-200 hover:bg-bsky-bg-secondary"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <label className="mb-2 block text-sm font-medium text-bsky-text-primary">
+                Tags (comma-separated)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., coding, design, favorites"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                className="mb-4 w-full rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-2 text-sm text-bsky-text-primary focus:border-bsky-accent-primary focus:outline-none"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setShowTagModal(false);
+                    setTagInput("");
+                    setEditingBookmarkUri(null);
+                  }}
+                  className="cursor-pointer rounded-lg border border-bsky-border-primary bg-transparent px-4 py-2 text-sm font-medium text-bsky-text-primary transition-all duration-200 hover:bg-bsky-bg-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveTags}
+                  className="cursor-pointer rounded-lg border-none bg-bsky-accent-primary px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90"
+                >
+                  Save Tags
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
