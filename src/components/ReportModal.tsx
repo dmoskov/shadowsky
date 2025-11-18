@@ -1,6 +1,7 @@
 import { AlertTriangle, CheckCircle, Flag, X } from "lucide-react";
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useModeration } from "../contexts/ModerationContext";
 
 export type ReportType = "post" | "account";
 
@@ -43,9 +44,15 @@ const REPORT_CATEGORIES: ReportCategory[] = [
     reasonType: "com.atproto.moderation.defs#reasonViolation",
   },
   {
+    id: "impersonation",
+    label: "Impersonation",
+    description: "Pretending to be someone else",
+    reasonType: "com.atproto.moderation.defs#reasonMisleading",
+  },
+  {
     id: "misleading",
-    label: "Misleading or Deceptive",
-    description: "False information or impersonation",
+    label: "Misleading Information",
+    description: "False information or deceptive content",
     reasonType: "com.atproto.moderation.defs#reasonMisleading",
   },
   {
@@ -78,6 +85,7 @@ export function ReportModal({
   onReportSubmitted,
 }: ReportModalProps) {
   const { agent } = useAuth();
+  const { blockUser } = useModeration();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [additionalContext, setAdditionalContext] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -160,6 +168,7 @@ export function ReportModal({
         },
       );
 
+      blockUser(subjectDid);
       handleClose();
     } catch (err) {
       console.error("Failed to block user:", err);
