@@ -3,6 +3,8 @@ import { getProfileService } from "@bsky/shared";
 import {
   Edit,
   ExternalLink,
+  Flag,
+  List,
   MoreHorizontal,
   Share2,
   UserX,
@@ -11,7 +13,9 @@ import {
 import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate, useParams } from "react-router";
+import { AddToListModal } from "../components/AddToListModal";
 import { PostCard } from "../components/PostCard";
+import { ReportModal } from "../components/ReportModal";
 import { ThreadModal } from "../components/ThreadModal";
 import { DomainVerifiedBadge } from "../components/ui/DomainVerifiedBadge";
 import { ProfileSkeleton } from "../components/ui/SkeletonLoader";
@@ -76,6 +80,8 @@ export default function ProfilePage() {
   const [showThread, setShowThread] = useState(false);
   const [openThreadToReply, setOpenThreadToReply] = useState(false);
   const [openThreadToQuote, setOpenThreadToQuote] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showAddToListModal, setShowAddToListModal] = useState(false);
 
   const profileMenuButtonRef = useRef<HTMLButtonElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -342,6 +348,16 @@ export default function ProfilePage() {
     setShowProfileMenu(false);
   };
 
+  const handleOpenReportModal = () => {
+    setShowProfileMenu(false);
+    setShowReportModal(true);
+  };
+
+  const handleOpenAddToListModal = () => {
+    setShowProfileMenu(false);
+    setShowAddToListModal(true);
+  };
+
   return (
     <div className="mx-auto w-full max-w-4xl">
       {/* Profile Header */}
@@ -491,6 +507,22 @@ export default function ProfilePage() {
                             Open in Bluesky
                           </button>
                           <button
+                            onClick={handleOpenAddToListModal}
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
+                            }
+                          >
+                            <List className="h-4 w-4" />
+                            Add to Lists
+                          </button>
+                          <button
                             onClick={handleMute}
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
@@ -506,6 +538,22 @@ export default function ProfilePage() {
                             <VolumeX className="h-4 w-4" />
                             {profile.viewer?.muted ? "Unmute" : "Mute"} @
                             {profile.handle}
+                          </button>
+                          <button
+                            onClick={handleOpenReportModal}
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
+                            }
+                          >
+                            <Flag className="h-4 w-4" />
+                            Report @{profile.handle}
                           </button>
                           <button
                             onClick={handleBlock}
@@ -759,6 +807,29 @@ export default function ProfilePage() {
             setOpenThreadToReply(false);
             setOpenThreadToQuote(false);
           }}
+        />
+      )}
+
+      {profile && (
+        <ReportModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          reportType="account"
+          subjectUri={`at://${profile.did}/app.bsky.actor.profile/self`}
+          subjectDid={profile.did}
+          subjectHandle={profile.handle}
+        />
+      )}
+
+      {showAddToListModal && profile && (
+        <AddToListModal
+          user={{
+            did: profile.did,
+            handle: profile.handle,
+            displayName: profile.displayName,
+            avatar: profile.avatar,
+          }}
+          onClose={() => setShowAddToListModal(false)}
         />
       )}
     </div>

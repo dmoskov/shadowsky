@@ -1,8 +1,6 @@
 import { AppBskyFeedDefs } from "@atproto/api";
 import {
-  AlertTriangle,
   BellOff,
-  ChevronRight,
   Code,
   ExternalLink,
   EyeOff,
@@ -19,6 +17,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModal } from "../contexts/ModalContext";
 import { useModeration } from "../contexts/ModerationContext";
+import { ReportModal } from "./ReportModal";
 
 interface PostMenuProps {
   post: AppBskyFeedDefs.PostView;
@@ -38,7 +37,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
   className = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [showReportMenu, setShowReportMenu] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [menuPosition, setMenuPosition] = useState<{
     top: number;
     left: number;
@@ -58,7 +57,6 @@ export const PostMenu: React.FC<PostMenuProps> = ({
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);
-        setShowReportMenu(false);
       }
     };
 
@@ -213,68 +211,36 @@ export const PostMenu: React.FC<PostMenuProps> = ({
     console.log(`Hidden post: ${post.uri}`);
   };
 
-  const handleReport = async (reason?: string) => {
+  const handleOpenReportModal = () => {
     setIsOpen(false);
-    setShowReportMenu(false);
     if (onReport) {
       onReport();
     } else {
-      // Default implementation with reason
-      try {
-        if (agent && post.cid) {
-          // Map our UI reasons to Bluesky API reason types
-          const reasonTypeMap: Record<string, string> = {
-            spam: "com.atproto.moderation.defs#reasonSpam",
-            abuse: "com.atproto.moderation.defs#reasonViolation",
-            misleading: "com.atproto.moderation.defs#reasonMisleading",
-            other: "com.atproto.moderation.defs#reasonOther",
-          };
-
-          const reasonType =
-            reasonTypeMap[reason || "other"] ||
-            "com.atproto.moderation.defs#reasonOther";
-
-          // Create the report
-          await agent.createModerationReport({
-            reasonType,
-            subject: {
-              $type: "com.atproto.repo.strongRef",
-              uri: post.uri,
-              cid: post.cid,
-            },
-            reason: reason ? `User reported as: ${reason}` : undefined,
-          });
-
-          console.log("Report submitted successfully");
-          // You might want to show a toast notification here
-        }
-      } catch (error) {
-        console.error("Failed to submit report:", error);
-        // You might want to show an error notification here
-      }
+      setShowReportModal(true);
     }
   };
 
   return (
-    <div className={`relative ${className}`} ref={menuRef}>
-      <button
-        ref={buttonRef}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (!isOpen && buttonRef.current) {
-            const rect = buttonRef.current.getBoundingClientRect();
-            setMenuPosition({
-              top: rect.bottom + 8,
-              left: rect.right - 224, // 224px = w-56
-            });
-          }
-          setIsOpen(!isOpen);
-        }}
-        className="rounded-full p-2 transition-opacity hover:opacity-70"
-        aria-label="More options"
-      >
-        <MoreHorizontal className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-      </button>
+    <>
+      <div className={`relative ${className}`} ref={menuRef}>
+        <button
+          ref={buttonRef}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!isOpen && buttonRef.current) {
+              const rect = buttonRef.current.getBoundingClientRect();
+              setMenuPosition({
+                top: rect.bottom + 8,
+                left: rect.right - 224, // 224px = w-56
+              });
+            }
+            setIsOpen(!isOpen);
+          }}
+          className="rounded-full p-2 transition-opacity hover:opacity-70"
+          aria-label="More options"
+        >
+          <MoreHorizontal className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+        </button>
 
       {isOpen &&
         menuPosition &&
@@ -361,49 +327,13 @@ export const PostMenu: React.FC<PostMenuProps> = ({
                     </span>
                   </button>
 
-                  {!showReportMenu ? (
-                    <button
-                      onClick={() => setShowReportMenu(true)}
-                      className="flex w-full items-center justify-between gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-                    >
-                      <span className="flex items-center gap-3">
-                        <Flag className="h-4 w-4" />
-                        Report post
-                      </span>
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  ) : (
-                    <div className="bg-gray-50 dark:bg-gray-800">
-                      <button
-                        onClick={() => handleReport("spam")}
-                        className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-                      >
-                        <AlertTriangle className="h-4 w-4" />
-                        Spam
-                      </button>
-                      <button
-                        onClick={() => handleReport("abuse")}
-                        className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-                      >
-                        <AlertTriangle className="h-4 w-4" />
-                        Abuse & Harassment
-                      </button>
-                      <button
-                        onClick={() => handleReport("misleading")}
-                        className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-                      >
-                        <AlertTriangle className="h-4 w-4" />
-                        Misleading
-                      </button>
-                      <button
-                        onClick={() => handleReport("other")}
-                        className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
-                      >
-                        <AlertTriangle className="h-4 w-4" />
-                        Other violation
-                      </button>
-                    </div>
-                  )}
+                  <button
+                    onClick={handleOpenReportModal}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
+                  >
+                    <Flag className="h-4 w-4" />
+                    Report post
+                  </button>
                 </>
               )}
 
@@ -421,6 +351,17 @@ export const PostMenu: React.FC<PostMenuProps> = ({
           </div>,
           document.body,
         )}
-    </div>
+      </div>
+
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        reportType="post"
+        subjectUri={post.uri}
+        subjectCid={post.cid}
+        subjectDid={post.author.did}
+        subjectHandle={post.author.handle}
+      />
+    </>
   );
 };
