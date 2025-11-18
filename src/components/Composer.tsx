@@ -153,7 +153,7 @@ const TONE_OPTIONS: {
 
 const MAX_POST_LENGTH = 300;
 const MAX_IMAGE_SIZE = 1000000; // 1MB (Bluesky's exact limit)
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_VIDEO_SIZE = 500 * 1024 * 1024; // 500MB
 const MAX_VIDEO_DURATION = 180; // 3 minutes in seconds
 const MAX_IMAGES_PER_POST = 4;
 const SUPPORTED_VIDEO_FORMATS = [".mp4", ".mpeg", ".webm", ".mov"];
@@ -193,6 +193,7 @@ export function Composer() {
   } | null>({ type: "idle" });
   const [media, setMedia] = useState<UploadedMedia[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaUrlsRef = useRef<Set<string>>(new Set());
 
   // Video upload manager with automatic cleanup and duplicate prevention
   const videoUploadManager = useVideoUploadManager(agent);
@@ -658,7 +659,7 @@ export function Composer() {
         if (isVideo && file.size > MAX_VIDEO_SIZE) {
           setPostStatus({
             type: "error",
-            message: `${file.name} is too large (max 50MB for videos)`,
+            message: `${file.name} is too large (max 500MB for videos)`,
           });
           return false;
         }
@@ -705,7 +706,7 @@ export function Composer() {
             if (videoBlob.size > MAX_VIDEO_SIZE) {
               setPostStatus({
                 type: "error",
-                message: `Converted video is too large (${(videoBlob.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 50MB.`,
+                message: `Converted video is too large (${(videoBlob.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 500MB.`,
               });
               setTimeout(() => setPostStatus({ type: "idle" }), 3000);
               continue;
@@ -877,6 +878,7 @@ export function Composer() {
       const removed = prev.find((m) => m.id === id);
       if (removed) {
         URL.revokeObjectURL(removed.preview);
+        mediaUrlsRef.current.delete(removed.preview);
 
         // If removing a video, cancel any active upload
         if (removed.type === "video" && videoUploadManager.isUploading) {
@@ -1252,6 +1254,7 @@ export function Composer() {
       media.forEach((m) => {
         if (m.preview && !m.preview.startsWith("data:")) {
           URL.revokeObjectURL(m.preview);
+          mediaUrlsRef.current.delete(m.preview);
         }
       });
 
@@ -1593,7 +1596,7 @@ export function Composer() {
       if (videoBlob.size > MAX_VIDEO_SIZE) {
         setPostStatus({
           type: "error",
-          message: `Converted video is too large (${(videoBlob.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 50MB.`,
+          message: `Converted video is too large (${(videoBlob.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 500MB.`,
         });
         setTimeout(() => setPostStatus({ type: "idle" }), 3000);
         return;
@@ -1972,12 +1975,24 @@ export function Composer() {
     }
   }, [text, agent]);
 
-  // Cleanup previews on unmount
+  // Track media URLs for cleanup
+  useEffect(() => {
+    media.forEach((m) => {
+      if (m.preview && !m.preview.startsWith("data:")) {
+        mediaUrlsRef.current.add(m.preview);
+      }
+    });
+  }, [media]);
+
+  // Cleanup all blob URLs on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
-      media.forEach((m) => URL.revokeObjectURL(m.preview));
+      mediaUrlsRef.current.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+      mediaUrlsRef.current.clear();
     };
-  }, [media]);
+  }, []);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 md:px-6">
@@ -2283,7 +2298,10 @@ export function Composer() {
                 setPosts([]);
                 setPostOrder([]);
                 // Clean up media previews
-                media.forEach((m) => URL.revokeObjectURL(m.preview));
+                media.forEach((m) => {
+                  URL.revokeObjectURL(m.preview);
+                  mediaUrlsRef.current.delete(m.preview);
+                });
                 setMedia([]);
                 setCurrentDraftId(null);
                 setDraftTitle("");
@@ -2409,7 +2427,7 @@ export function Composer() {
               <div className="absolute bottom-full right-0 z-10 mb-2 hidden group-hover:block">
                 <div className="whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-xs text-white">
                   <div className="mb-1 font-semibold">Add Video</div>
-                  <div>1 video per post, max 50MB, 3 min</div>
+                  <div>1 video per post, max 500MB, 3 min</div>
                   <div className="mt-1 text-gray-300">
                     Processed on Bluesky servers
                   </div>

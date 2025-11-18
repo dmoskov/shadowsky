@@ -3,6 +3,7 @@ import type { BskyAgent } from "@atproto/api";
 import { VideoUploadService, type VideoUploadResult } from "../services/atproto/video-upload";
 import { createLogger } from "../utils/logger";
 import type { StandardErrorResponse } from "../services/atproto/error-handler";
+import { validateVideoFile, isRecoverableError } from "../utils/video-validation";
 
 const logger = createLogger("VideoUploadManager");
 
@@ -110,6 +111,36 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
           message: "Video service not initialized. Please ensure you're logged in.",
           context: { timestamp: new Date().toISOString() },
           retryable: false,
+        };
+
+        if (isMountedRef.current) {
+          setUploadState({
+            uploadId: null,
+            status: "error",
+            progress: 0,
+            error,
+            result: null,
+            fileName,
+          });
+        }
+        return null;
+      }
+
+      // Validate video file before upload
+      const validationResult = validateVideoFile(videoData, mimeType, fileName);
+
+      if (!validationResult.valid && validationResult.error) {
+        logger.error(`Video validation failed: ${validationResult.error.message}`, validationResult.error.context);
+
+        const error: StandardErrorResponse = {
+          code: "CLIENT_BAD_REQUEST" as any,
+          message: validationResult.error.message,
+          context: {
+            ...validationResult.error.context,
+            validationCode: validationResult.error.code,
+            timestamp: new Date().toISOString(),
+          },
+          retryable: isRecoverableError(validationResult.error),
         };
 
         if (isMountedRef.current) {
