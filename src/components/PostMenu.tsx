@@ -6,6 +6,7 @@ import {
   EyeOff,
   Flag,
   Link,
+  List,
   MoreHorizontal,
   Trash2,
   UserX,
@@ -17,6 +18,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModal } from "../contexts/ModalContext";
 import { useModeration } from "../contexts/ModerationContext";
+import { AddToListModal } from "./AddToListModal";
 import { ReportModal } from "./ReportModal";
 
 interface PostMenuProps {
@@ -38,6 +40,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showAddToListModal, setShowAddToListModal] = useState(false);
   const [menuPosition, setMenuPosition] = useState<{
     top: number;
     left: number;
@@ -220,6 +223,11 @@ export const PostMenu: React.FC<PostMenuProps> = ({
     }
   };
 
+  const handleOpenAddToListModal = () => {
+    setIsOpen(false);
+    setShowAddToListModal(true);
+  };
+
   return (
     <>
       <div className={`relative ${className}`} ref={menuRef}>
@@ -308,6 +316,17 @@ export const PostMenu: React.FC<PostMenuProps> = ({
                   </button>
 
                   <button
+                    onClick={handleOpenAddToListModal}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
+                    title={`Add @${post.author.handle} to lists`}
+                  >
+                    <List className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">Add to Lists</span>
+                  </button>
+
+                  <div className="my-1 border-t border-gray-200 dark:border-gray-700" />
+
+                  <button
                     onClick={handleMute}
                     className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
                     title={`Mute @${post.author.handle}`}
@@ -362,6 +381,18 @@ export const PostMenu: React.FC<PostMenuProps> = ({
         subjectDid={post.author.did}
         subjectHandle={post.author.handle}
       />
+
+      {showAddToListModal && (
+        <AddToListModal
+          user={{
+            did: post.author.did,
+            handle: post.author.handle,
+            displayName: post.author.displayName,
+            avatar: post.author.avatar,
+          }}
+          onClose={() => setShowAddToListModal(false)}
+        />
+      )}
     </>
   );
 };
