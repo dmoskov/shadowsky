@@ -1,4 +1,6 @@
+import { AlertTriangle } from "lucide-react";
 import React, { useState } from "react";
+import { useModerationPreferences } from "../hooks/useModerationPreferences";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { Lightbox } from "./Lightbox";
 
@@ -12,17 +14,74 @@ interface ImageGridProps {
   images: ImageData[];
   onImageClick?: (index: number) => void;
   className?: string;
+  labels?: Array<{ val: string }>;
 }
 
 export const ImageGrid: React.FC<ImageGridProps> = ({
   images,
   onImageClick,
   className = "",
+  labels,
 }) => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [showSensitive, setShowSensitive] = useState(false);
+  const { shouldBlurMedia, shouldHideMedia, getSensitiveWarningText } =
+    useModerationPreferences();
 
   if (!images || images.length === 0) return null;
+
+  const hideMedia = shouldHideMedia(labels);
+  const blurMedia = shouldBlurMedia(labels);
+  const isSensitive = hideMedia || blurMedia;
+  const showContent = !isSensitive || showSensitive;
+
+  if (hideMedia && !showSensitive) {
+    return (
+      <div
+        className="mt-2 flex items-center justify-center rounded-lg p-8 text-center"
+        style={{
+          backgroundColor: "var(--bsky-bg-secondary)",
+          border: "1px solid var(--bsky-border-primary)",
+        }}
+      >
+        <div className="space-y-3">
+          <AlertTriangle
+            size={32}
+            style={{ color: "var(--bsky-text-secondary)", margin: "0 auto" }}
+          />
+          <div>
+            <div
+              className="font-medium"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              {getSensitiveWarningText(labels)}
+            </div>
+            <div
+              className="mt-1 text-sm"
+              style={{ color: "var(--bsky-text-secondary)" }}
+            >
+              This content has been hidden based on your settings
+            </div>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowSensitive(true);
+            }}
+            className="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+            style={{
+              backgroundColor: "var(--bsky-bg-tertiary)",
+              color: "var(--bsky-text-primary)",
+              border: "1px solid var(--bsky-border-primary)",
+            }}
+          >
+            Show Content
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleImageClick = (e: React.MouseEvent, index: number) => {
     e.stopPropagation();
@@ -32,6 +91,11 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
       setLightboxIndex(index);
       setLightboxOpen(true);
     }
+  };
+
+  const handleShowSensitive = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowSensitive(true);
   };
 
   // Determine grid layout based on image count
@@ -46,7 +110,7 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
 
   return (
     <>
-      <div className={`mt-2 grid gap-1 ${gridClass} ${className}`}>
+      <div className={`mt-2 grid gap-1 ${gridClass} ${className} relative`}>
         {images.map((img, idx) => {
           // Special layout for 3 images: first image takes 2/3, others 1/3 each
           const isThreeImageLayout = images.length === 3;
@@ -76,7 +140,10 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
                     const img = e.target as HTMLImageElement;
                     img.style.opacity = "1";
                   }}
-                  style={{ opacity: 0 }}
+                  style={{
+                    opacity: 0,
+                    filter: blurMedia && !showContent ? "blur(20px)" : "none",
+                  }}
                 />
                 {/* Loading state placeholder with blur effect */}
                 <div
@@ -92,6 +159,21 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
             </div>
           );
         })}
+        {blurMedia && !showContent && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <button
+              onClick={handleShowSensitive}
+              className="rounded-lg px-6 py-3 text-sm font-medium shadow-lg transition-colors"
+              style={{
+                backgroundColor: "var(--bsky-bg-primary)",
+                color: "var(--bsky-text-primary)",
+                border: "2px solid var(--bsky-border-primary)",
+              }}
+            >
+              {getSensitiveWarningText(labels)} - Click to Show
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Lightbox */}

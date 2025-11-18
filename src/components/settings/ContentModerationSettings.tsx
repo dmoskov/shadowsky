@@ -25,6 +25,9 @@ interface ModerationPreferences {
   hideQuotePosts: boolean;
   mutedUsers: MutedUser[];
   blockedUsers: BlockedUser[];
+  sensitiveMediaBehavior: "blur" | "hide" | "show";
+  adultContentEnabled: boolean;
+  autoModeration: boolean;
 }
 
 export const ContentModerationSettings: React.FC = () => {
@@ -36,6 +39,9 @@ export const ContentModerationSettings: React.FC = () => {
     hideQuotePosts: false,
     mutedUsers: [],
     blockedUsers: [],
+    sensitiveMediaBehavior: "blur",
+    adultContentEnabled: false,
+    autoModeration: true,
   });
   const [newKeyword, setNewKeyword] = useState("");
   const [newMuteHandle, setNewMuteHandle] = useState("");
@@ -96,6 +102,9 @@ export const ContentModerationSettings: React.FC = () => {
         hideReplies: atProtoPref.hideReplies || false,
         hideReposts: atProtoPref.hideReposts || false,
         hideQuotePosts: atProtoPref.hideQuotePosts || false,
+        sensitiveMediaBehavior: atProtoPref.sensitiveMediaBehavior || "blur",
+        adultContentEnabled: atProtoPref.adultContentEnabled || false,
+        autoModeration: atProtoPref.autoModeration !== false,
       }));
     }
   }, [atProtoPref]);
@@ -237,6 +246,9 @@ export const ContentModerationSettings: React.FC = () => {
         hideReplies: preferences.hideReplies,
         hideReposts: preferences.hideReposts,
         hideQuotePosts: preferences.hideQuotePosts,
+        sensitiveMediaBehavior: preferences.sensitiveMediaBehavior,
+        adultContentEnabled: preferences.adultContentEnabled,
+        autoModeration: preferences.autoModeration,
         version: 1,
         updatedAt: new Date().toISOString(),
       };
@@ -490,6 +502,153 @@ export const ContentModerationSettings: React.FC = () => {
             <span
               className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
                 preferences.hideQuotePosts ? "translate-x-5" : "translate-x-0.5"
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* Sensitive Media Settings */}
+      <div>
+        <label
+          className="mb-2 block text-sm font-medium"
+          style={{ color: "var(--bsky-text-primary)" }}
+        >
+          Sensitive Media
+        </label>
+        <p
+          className="mb-3 text-sm"
+          style={{ color: "var(--bsky-text-secondary)" }}
+        >
+          Control how sensitive or adult content is displayed
+        </p>
+
+        <div
+          className="space-y-3 rounded-lg p-4"
+          style={{
+            backgroundColor: "var(--bsky-bg-secondary)",
+            border: "1px solid var(--bsky-border-primary)",
+          }}
+        >
+          <div>
+            <label
+              className="mb-2 block text-sm font-medium"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              Sensitive media behavior
+            </label>
+            <select
+              value={preferences.sensitiveMediaBehavior}
+              onChange={(e) =>
+                setPreferences({
+                  ...preferences,
+                  sensitiveMediaBehavior: e.target.value as
+                    | "blur"
+                    | "hide"
+                    | "show",
+                })
+              }
+              className="w-full rounded-lg px-4 py-2 text-sm"
+              style={{
+                backgroundColor: "var(--bsky-bg-tertiary)",
+                color: "var(--bsky-text-primary)",
+                border: "1px solid var(--bsky-border-primary)",
+              }}
+            >
+              <option value="blur">Blur sensitive media (show with warning)</option>
+              <option value="hide">Hide sensitive media completely</option>
+              <option value="show">Always show sensitive media</option>
+            </select>
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <div>
+              <div
+                className="font-medium"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                Enable adult content
+              </div>
+              <div
+                className="text-sm"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                Show posts marked as adult content
+              </div>
+            </div>
+            <button
+              onClick={() =>
+                setPreferences({
+                  ...preferences,
+                  adultContentEnabled: !preferences.adultContentEnabled,
+                })
+              }
+              className={`relative h-6 w-11 rounded-full transition-colors ${
+                preferences.adultContentEnabled ? "bg-blue-500" : "bg-gray-300"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                  preferences.adultContentEnabled
+                    ? "translate-x-5"
+                    : "translate-x-0.5"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Automated Moderation */}
+      <div>
+        <label
+          className="mb-2 block text-sm font-medium"
+          style={{ color: "var(--bsky-text-primary)" }}
+        >
+          Automated Moderation
+        </label>
+        <p
+          className="mb-3 text-sm"
+          style={{ color: "var(--bsky-text-secondary)" }}
+        >
+          Use Bluesky's labeling services for automated content filtering
+        </p>
+
+        <div
+          className="flex items-center justify-between rounded-lg p-4"
+          style={{
+            backgroundColor: "var(--bsky-bg-secondary)",
+            border: "1px solid var(--bsky-border-primary)",
+          }}
+        >
+          <div>
+            <div
+              className="font-medium"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              Enable automated moderation
+            </div>
+            <div
+              className="text-sm"
+              style={{ color: "var(--bsky-text-secondary)" }}
+            >
+              Filter spam, harassment, and other harmful content automatically
+            </div>
+          </div>
+          <button
+            onClick={() =>
+              setPreferences({
+                ...preferences,
+                autoModeration: !preferences.autoModeration,
+              })
+            }
+            className={`relative h-6 w-11 rounded-full transition-colors ${
+              preferences.autoModeration ? "bg-blue-500" : "bg-gray-300"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                preferences.autoModeration ? "translate-x-5" : "translate-x-0.5"
               }`}
             />
           </button>

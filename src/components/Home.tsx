@@ -23,6 +23,7 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModeration } from "../contexts/ModerationContext";
+import { useModerationPreferences } from "../hooks/useModerationPreferences";
 import {
   useFeatureTracking,
   useInteractionTracking,
@@ -148,6 +149,7 @@ export const Home: React.FC<HomeProps> = React.memo(
     const { toggleBookmark } = useBookmarks();
     const { isPostHidden } = useHiddenPosts();
     const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
+    const { shouldFilterPost, shouldFilterFeedItem } = useModerationPreferences();
     // Removed hoveredPost state to prevent re-renders - using CSS hover instead
     // Use initialFeedUri if provided, otherwise get from column preferences
     const [selectedFeed, setSelectedFeed] = React.useState<FeedType>(() => {
@@ -485,6 +487,8 @@ export const Home: React.FC<HomeProps> = React.memo(
             if (isUserBlocked(post.author.did)) return false;
             // Filter out muted threads
             if (isThreadMuted(post.uri)) return false;
+            // Apply keyword filters and content preferences
+            if (shouldFilterFeedItem(item).filtered) return false;
             return true;
           })
           .map((item: any, itemIndex: number) => ({
@@ -493,7 +497,7 @@ export const Home: React.FC<HomeProps> = React.memo(
             _itemIndex: itemIndex,
           })),
       );
-    }, [data, isPostHidden, isUserMuted, isUserBlocked, isThreadMuted]);
+    }, [data, isPostHidden, isUserMuted, isUserBlocked, isThreadMuted, shouldFilterFeedItem]);
 
     // Use progressive loading instead of full virtualization
     const {
