@@ -224,6 +224,17 @@ export function EnhancedComposer({
     return () => clearTimeout(timer);
   }, [text, agent, quotedPost]);
 
+  // Cleanup blob URLs on unmount and when onCancel is called
+  useEffect(() => {
+    return () => {
+      media.forEach((m) => {
+        if (m.preview) {
+          URL.revokeObjectURL(m.preview);
+        }
+      });
+    };
+  }, [media]);
+
   const loadHashtagSuggestions = async () => {
     setIsLoadingHashtags(true);
     try {
