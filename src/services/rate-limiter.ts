@@ -193,6 +193,13 @@ export const notificationRateLimiter = new RateLimiter({
   slowdownAfter: 20, // Start slowing down after 20 requests
 });
 
+// Report submission rate limiter - 10 reports per hour max
+export const reportRateLimiter = new RateLimiter({
+  maxTokens: 10,
+  refillRate: 10 / 3600, // 10 tokens per hour = 0.00278 tokens per second
+  minDelay: 1000, // 1 second minimum between report submissions
+});
+
 // Export stats function for UI
 export function getRateLimiterStats() {
   return {
@@ -200,6 +207,7 @@ export function getRateLimiterStats() {
     profile: profileRateLimiter.getStats(),
     post: postRateLimiter.getStats(),
     notification: notificationRateLimiter.getStats(),
+    report: reportRateLimiter.getStats(),
   };
 }
 
@@ -231,5 +239,10 @@ export async function rateLimitedNotificationFetch<T>(
   fn: () => Promise<T>,
 ): Promise<T> {
   await notificationRateLimiter.acquire();
+  return fn();
+}
+
+export async function rateLimitedReport<T>(fn: () => Promise<T>): Promise<T> {
+  await reportRateLimiter.acquire();
   return fn();
 }

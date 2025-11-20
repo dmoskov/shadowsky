@@ -2,6 +2,10 @@ import { AlertTriangle, CheckCircle, Flag, X } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useModeration } from "../contexts/ModerationContext";
+import {
+  rateLimitedReport,
+  reportRateLimiter,
+} from "../services/rate-limiter";
 
 export type ReportType = "post" | "account";
 
@@ -96,45 +100,61 @@ export function ReportModal({
   const handleSubmit = async () => {
     if (!selectedCategory || !agent) return;
 
+    // Check rate limit before attempting submission
+    const stats = reportRateLimiter.getStats();
+    if (stats.availableTokens < 1) {
+      const minutesUntilRefill = Math.ceil(
+        (1 - stats.availableTokens) / (10 / 3600 / 60),
+      );
+      setError(
+        `Rate limit exceeded. You can submit up to 10 reports per hour. Please try again in ${minutesUntilRefill} minute${minutesUntilRefill !== 1 ? "s" : ""}.`,
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const category = REPORT_CATEGORIES.find((c) => c.id === selectedCategory);
-      if (!category) throw new Error("Invalid category selected");
+      await rateLimitedReport(async () => {
+        const category = REPORT_CATEGORIES.find(
+          (c) => c.id === selectedCategory,
+        );
+        if (!category) throw new Error("Invalid category selected");
 
-      const reasonText = additionalContext.trim()
-        ? `${category.label}: ${additionalContext.trim()}`
-        : category.label;
+        const reasonText = additionalContext.trim()
+          ? `${category.label}: ${additionalContext.trim()}`
+          : category.label;
 
-      if (reportType === "post") {
-        if (!subjectCid) {
-          throw new Error("Post CID is required for reporting posts");
+        if (reportType === "post") {
+          if (!subjectCid) {
+            throw new Error("Post CID is required for reporting posts");
+          }
+
+          await agent.createModerationReport({
+            reasonType: category.reasonType,
+            subject: {
+              $type: "com.atproto.repo.strongRef",
+              uri: subjectUri,
+              cid: subjectCid,
+            },
+            reason: reasonText,
+          });
+        } else {
+          if (!subjectDid) {
+            throw new Error("User DID is required for reporting accounts");
+          }
+
+          await agent.createModerationReport({
+            reasonType: category.reasonType,
+            subject: {
+              $type: "com.atproto.admin.defs#repoRef",
+              did: subjectDid,
+            },
+            reason: reasonText,
+          });
         }
-
-        await agent.createModerationReport({
-          reasonType: category.reasonType,
-          subject: {
-            $type: "com.atproto.repo.strongRef",
-            uri: subjectUri,
-            cid: subjectCid,
-          },
-          reason: reasonText,
-        });
-      } else {
-        if (!subjectDid) {
-          throw new Error("User DID is required for reporting accounts");
-        }
-
-        await agent.createModerationReport({
-          reasonType: category.reasonType,
-          subject: {
-            $type: "com.atproto.admin.defs#repoRef",
-            did: subjectDid,
-          },
-          reason: reasonText,
-        });
-      }
+      });
 
       setIsSubmitted(true);
       setShowBlockOption(reportType === "account");
