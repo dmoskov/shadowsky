@@ -109,7 +109,7 @@ for (const test of tests) {
   const valid = mimeTypeValid && extensionValid && sizeValid;
 
   const result = valid === test.expected ? "✓ PASS" : "✗ FAIL";
-  const status = valid === test.expected ? passed++ : failed++;
+  const _status = valid === test.expected ? passed++ : failed++;
 
   console.log(
     `${result}: ${test.mimeType} | ${test.filename} | ${Math.round(test.size / (1024 * 1024))}MB`,

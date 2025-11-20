@@ -46,7 +46,7 @@ export const ListTimeline: React.FC = () => {
       }
 
       const allPosts: AppBskyFeedDefs.FeedViewPost[] = [];
-      let fetchCursor: string | undefined = reset ? undefined : cursor;
+      const fetchCursor: string | undefined = reset ? undefined : cursor;
 
       for (const did of authorDids) {
         try {

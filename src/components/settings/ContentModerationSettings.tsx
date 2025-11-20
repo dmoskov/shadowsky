@@ -173,7 +173,7 @@ export const ContentModerationSettings: React.FC = () => {
       });
 
       await queryClient.invalidateQueries({ queryKey: ["mutedAccounts"] });
-    } catch (error) {
+    } catch (_error) {
       setMessage({
         type: "error",
         text: "Failed to mute user. Please check the handle and try again.",
@@ -198,7 +198,7 @@ export const ContentModerationSettings: React.FC = () => {
       });
 
       await queryClient.invalidateQueries({ queryKey: ["mutedAccounts"] });
-    } catch (error) {
+    } catch (_error) {
       setMessage({
         type: "error",
         text: "Failed to unmute user. Please try again.",
@@ -223,7 +223,7 @@ export const ContentModerationSettings: React.FC = () => {
       });
 
       await queryClient.invalidateQueries({ queryKey: ["blocks"] });
-    } catch (error) {
+    } catch (_error) {
       setMessage({
         type: "error",
         text: "Failed to unblock user. Please try again.",
@@ -282,7 +282,7 @@ export const ContentModerationSettings: React.FC = () => {
       });
 
       await queryClient.invalidateQueries({ queryKey: ["contentModeration"] });
-    } catch (error) {
+    } catch (_error) {
       setMessage({
         type: "error",
         text: "Failed to save settings. Please try again.",

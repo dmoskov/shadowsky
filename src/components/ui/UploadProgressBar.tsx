@@ -145,7 +145,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
               errorType: currentUpload.errorType,
               retryAttempts: currentUpload.retryAttempts,
             });
-          } catch (e) {
+          } catch (_e) {
             errorDetails = {
               code: "UNKNOWN" as any,
               message: currentUpload.errorMessage,

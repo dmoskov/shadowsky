@@ -168,7 +168,7 @@ class TokenManager {
     // Decode base64
     try {
       return atob(base64);
-    } catch (error) {
+    } catch (_error) {
       throw new Error("Invalid base64url encoding");
     }
   }

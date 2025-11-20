@@ -48,8 +48,8 @@ export class ColumnLocalStorageBackend implements ColumnStorageBackend {
               localStorage.setItem(LOCAL_STORAGE_KEYS.COLUMNS_MIGRATED, "true");
               return legacyColumns;
             }
-          } catch (e) {
-            console.error("Failed to parse legacy columns:", e);
+          } catch (_e) {
+            console.error("Failed to parse legacy columns:", _e);
           }
         }
       }
