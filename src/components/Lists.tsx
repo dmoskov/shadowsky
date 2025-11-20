@@ -2,7 +2,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
   Edit2,
+  Globe,
   List as ListIcon,
+  Lock,
   MoreVertical,
   Plus,
   Trash2,
@@ -42,7 +44,11 @@ export const Lists: React.FC = () => {
     enabled: !!agent,
   });
 
-  const handleCreateList = async (name: string, description?: string) => {
+  const handleCreateList = async (
+    name: string,
+    description?: string,
+    isPublic?: boolean,
+  ) => {
     if (!agent) return;
 
     try {
@@ -50,6 +56,7 @@ export const Lists: React.FC = () => {
       await listStorage.createList({
         name,
         description,
+        isPublic: isPublic ?? false,
         members: [],
       });
       queryClient.invalidateQueries({ queryKey: ["lists"] });
@@ -84,7 +91,7 @@ export const Lists: React.FC = () => {
 
   const handleUpdateList = async (
     listId: string,
-    updates: { name?: string; description?: string },
+    updates: { name?: string; description?: string; isPublic?: boolean },
   ) => {
     try {
       if (!agent) return;
@@ -167,9 +174,20 @@ export const Lists: React.FC = () => {
             >
               <div className="mb-3 flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-bsky-text-primary">
-                    {list.name}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-bsky-text-primary">
+                      {list.name}
+                    </h3>
+                    <span
+                      title={list.isPublic ? "Public list" : "Private list"}
+                    >
+                      {list.isPublic ? (
+                        <Globe className="h-4 w-4 text-bsky-text-tertiary" />
+                      ) : (
+                        <Lock className="h-4 w-4 text-bsky-text-tertiary" />
+                      )}
+                    </span>
+                  </div>
                   {list.description && (
                     <p className="mt-1 line-clamp-2 text-sm text-bsky-text-secondary">
                       {list.description}

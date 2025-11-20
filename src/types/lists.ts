@@ -10,6 +10,7 @@ export interface List {
   id: string;
   name: string;
   description?: string;
+  isPublic: boolean;
   members: ListMember[];
   createdAt: string;
   updatedAt: string;
@@ -20,6 +21,7 @@ export interface ATProtocolListRecord {
   id: string;
   name: string;
   description?: string;
+  isPublic: boolean;
   members: ListMember[];
   createdAt: string;
   updatedAt: string;
