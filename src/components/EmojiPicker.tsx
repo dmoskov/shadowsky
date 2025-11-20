@@ -1862,8 +1862,8 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
         const emojis = JSON.parse(stored);
         setRecentEmojis(emojis);
         EMOJI_CATEGORIES.recent.emojis = emojis;
-      } catch (e) {
-        console.error("Error loading recent emojis:", e);
+      } catch (_e) {
+        console.error("Error loading recent emojis:", _e);
       }
     }
   }, []);
