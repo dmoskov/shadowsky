@@ -18,7 +18,11 @@ describe("validateVideoFile", () => {
 
     it("should accept valid QuickTime MIME type", () => {
       const videoData = new Uint8Array(1024);
-      const result = validateVideoFile(videoData, "video/quicktime", "test.mov");
+      const result = validateVideoFile(
+        videoData,
+        "video/quicktime",
+        "test.mov",
+      );
 
       expect(result.valid).toBe(true);
       expect(result.error).toBeUndefined();
@@ -155,11 +159,7 @@ describe("validateVideoFile", () => {
 
     it("should reject double extension attempts", () => {
       const videoData = new Uint8Array(1024);
-      const result = validateVideoFile(
-        videoData,
-        "video/mp4",
-        "video.exe.mp4",
-      );
+      const result = validateVideoFile(videoData, "video/mp4", "video.exe.mp4");
 
       expect(result.valid).toBe(true);
     });
@@ -294,11 +294,7 @@ describe("validateVideoFile", () => {
 
     it("should handle special characters in filename", () => {
       const videoData = new Uint8Array(1024);
-      const result = validateVideoFile(
-        videoData,
-        "video/mp4",
-        "video@#$%.mp4",
-      );
+      const result = validateVideoFile(videoData, "video/mp4", "video@#$%.mp4");
 
       expect(result.valid).toBe(true);
       expect(result.error).toBeUndefined();
@@ -306,11 +302,7 @@ describe("validateVideoFile", () => {
 
     it("should handle unicode characters in filename", () => {
       const videoData = new Uint8Array(1024);
-      const result = validateVideoFile(
-        videoData,
-        "video/mp4",
-        "视频文件.mp4",
-      );
+      const result = validateVideoFile(videoData, "video/mp4", "视频文件.mp4");
 
       expect(result.valid).toBe(true);
       expect(result.error).toBeUndefined();
