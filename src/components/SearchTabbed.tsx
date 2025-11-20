@@ -183,6 +183,7 @@ export const SearchTabbed: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SearchTab>("posts");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [activeSearchQuery, setActiveSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<"top" | "latest">("latest");
   const [filters, setFilters] = useState<SearchFilters>({
     query: "",
     phrases: [],
@@ -204,6 +205,40 @@ export const SearchTabbed: React.FC = () => {
   const [selectedPostUri, setSelectedPostUri] = useState<string | null>(null);
   const [highlightPostUri, setHighlightPostUri] = useState<string | null>(null);
   const [isLoadingThread, setIsLoadingThread] = useState(false);
+
+  // Search history management
+  const [searchHistory, setSearchHistory] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("bsky-search-history");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const addToSearchHistory = (query: string) => {
+    if (!query.trim()) return;
+
+    setSearchHistory((prev) => {
+      const filtered = prev.filter((q) => q !== query);
+      const updated = [query, ...filtered].slice(0, 10);
+      try {
+        localStorage.setItem("bsky-search-history", JSON.stringify(updated));
+      } catch (error) {
+        debug.error("Failed to save search history:", error);
+      }
+      return updated;
+    });
+  };
+
+  const clearSearchHistory = () => {
+    setSearchHistory([]);
+    try {
+      localStorage.removeItem("bsky-search-history");
+    } catch (error) {
+      debug.error("Failed to clear search history:", error);
+    }
+  };
 
   // Build search query and debounce it for automatic search
   const searchQuery = buildSearchQuery(filters);
@@ -418,13 +453,14 @@ export const SearchTabbed: React.FC = () => {
     isLoading: isLoadingPosts,
     error: postsError,
   } = useQuery({
-    queryKey: ["searchPosts", activeSearchQuery, filters.hasMedia],
+    queryKey: ["searchPosts", activeSearchQuery, filters.hasMedia, sortOrder],
     queryFn: async () => {
       if (!activeSearchQuery.trim()) return null;
 
       const response = await atProtoClient.agent.app.bsky.feed.searchPosts({
         q: activeSearchQuery,
         limit: 50,
+        sort: sortOrder,
       });
 
       // Filter by media if needed
@@ -711,6 +747,9 @@ export const SearchTabbed: React.FC = () => {
       handleBskyUrlSubmit(trimmedQuery);
     } else {
       setActiveSearchQuery(searchQuery);
+      if (trimmedQuery) {
+        addToSearchHistory(trimmedQuery);
+      }
     }
   };
 
@@ -981,6 +1020,48 @@ export const SearchTabbed: React.FC = () => {
             </div>
           </div>
 
+          {/* Search History */}
+          {!activeSearchQuery && searchHistory.length > 0 && (
+            <div className="mb-4">
+              <div className="mb-2 flex items-center justify-between">
+                <span
+                  className="text-xs font-medium"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  Recent searches
+                </span>
+                <button
+                  onClick={clearSearchHistory}
+                  className="text-xs transition-opacity hover:opacity-70"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  Clear all
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {searchHistory.slice(0, 5).map((query, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setFilters((prev) => ({ ...prev, query }));
+                      setActiveSearchQuery(query);
+                    }}
+                    className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs transition-all hover:opacity-80"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-secondary)",
+                      color: "var(--bsky-text-secondary)",
+                      borderWidth: "1px",
+                      borderColor: "var(--bsky-border-primary)",
+                    }}
+                  >
+                    <SearchIcon size={12} />
+                    {query}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Search Tabs - Separate Layer */}
           <div className="mb-2 flex gap-2">
             <button
@@ -1096,6 +1177,66 @@ export const SearchTabbed: React.FC = () => {
                 )}
             </button>
           </div>
+
+          {/* Sort Options (for posts tab) */}
+          {activeTab === "posts" && activeSearchQuery && (
+            <div className="mb-3 flex items-center gap-2">
+              <span
+                className="text-xs font-medium"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                Sort by:
+              </span>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setSortOrder("latest")}
+                  className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
+                    sortOrder === "latest" ? "" : "opacity-60"
+                  }`}
+                  style={{
+                    backgroundColor:
+                      sortOrder === "latest"
+                        ? "var(--bsky-primary)"
+                        : "var(--bsky-bg-secondary)",
+                    color:
+                      sortOrder === "latest"
+                        ? "white"
+                        : "var(--bsky-text-secondary)",
+                    borderWidth: "1px",
+                    borderColor:
+                      sortOrder === "latest"
+                        ? "var(--bsky-primary)"
+                        : "var(--bsky-border-primary)",
+                  }}
+                >
+                  Latest
+                </button>
+                <button
+                  onClick={() => setSortOrder("top")}
+                  className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
+                    sortOrder === "top" ? "" : "opacity-60"
+                  }`}
+                  style={{
+                    backgroundColor:
+                      sortOrder === "top"
+                        ? "var(--bsky-primary)"
+                        : "var(--bsky-bg-secondary)",
+                    color:
+                      sortOrder === "top"
+                        ? "white"
+                        : "var(--bsky-text-secondary)",
+                    borderWidth: "1px",
+                    borderColor:
+                      sortOrder === "top"
+                        ? "var(--bsky-primary)"
+                        : "var(--bsky-border-primary)",
+                  }}
+                >
+                  Top
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Quick Filters (for posts tab) */}
           {activeTab === "posts" &&
@@ -2266,11 +2407,38 @@ export const SearchTabbed: React.FC = () => {
                     style={{ color: "var(--bsky-text-secondary)" }}
                   />
                   <p
-                    className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    className="mb-3 text-sm font-medium"
+                    style={{ color: "var(--bsky-text-primary)" }}
                   >
                     No posts found matching your search
                   </p>
+                  <p
+                    className="mb-4 text-xs"
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  >
+                    Try these suggestions:
+                  </p>
+                  <ul
+                    className="space-y-2 text-left text-xs"
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  >
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>Check your spelling or try different keywords</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>Try removing some filters or date restrictions</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>Search for broader terms or hashtags</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>Try switching to "Users" or "Feeds" tabs</span>
+                    </li>
+                  </ul>
                 </div>
               )}
 
@@ -2480,11 +2648,38 @@ export const SearchTabbed: React.FC = () => {
                     style={{ color: "var(--bsky-text-secondary)" }}
                   />
                   <p
-                    className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    className="mb-3 text-sm font-medium"
+                    style={{ color: "var(--bsky-text-primary)" }}
                   >
                     No users found matching your search
                   </p>
+                  <p
+                    className="mb-4 text-xs"
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  >
+                    Try these suggestions:
+                  </p>
+                  <ul
+                    className="space-y-2 text-left text-xs"
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  >
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>Check the username spelling</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>Try searching by display name instead</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>Search for related terms or interests</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>Try the "Posts" tab to find content from users</span>
+                    </li>
+                  </ul>
                 </div>
               )}
 
@@ -2594,11 +2789,38 @@ export const SearchTabbed: React.FC = () => {
                     style={{ color: "var(--bsky-text-secondary)" }}
                   />
                   <p
-                    className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    className="mb-3 text-sm font-medium"
+                    style={{ color: "var(--bsky-text-primary)" }}
                   >
                     No feeds found matching your search
                   </p>
+                  <p
+                    className="mb-4 text-xs"
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  >
+                    Try these suggestions:
+                  </p>
+                  <ul
+                    className="space-y-2 text-left text-xs"
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  >
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>Check the feed name spelling</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>Try searching for feed topics or categories</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>Browse popular feeds to discover new ones</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>•</span>
+                      <span>Try the "Posts" tab to search for content</span>
+                    </li>
+                  </ul>
                 </div>
               )}
 
