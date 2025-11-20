@@ -2,10 +2,7 @@ import { AlertTriangle, CheckCircle, Flag, X } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useModeration } from "../contexts/ModerationContext";
-import {
-  rateLimitedReport,
-  reportRateLimiter,
-} from "../services/rate-limiter";
+import { rateLimitedReport, reportRateLimiter } from "../services/rate-limiter";
 
 export type ReportType = "post" | "account";
 
