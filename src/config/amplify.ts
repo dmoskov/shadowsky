@@ -31,7 +31,12 @@ Amplify.configure({
 
 // Get API base URL
 export function getApiBaseUrl(): string {
-  // Use the API Gateway URL from amplify_outputs for both dev and prod
+  // In development, use local server
+  if (import.meta.env.DEV) {
+    return "http://localhost:3002";
+  }
+
+  // In production, use the API Gateway URL from amplify_outputs
   const customApi = outputs.custom?.API;
   if (customApi) {
     const apiName = Object.keys(customApi)[0];

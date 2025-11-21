@@ -29,20 +29,16 @@ export const DirectMessagesColumn: React.FC = () => {
     retry: 1,
   });
 
-  // Handle errors
+  // Handle errors - only set error if there's an actual error, not just undefined data
   useEffect(() => {
     if (conversationsError) {
       setChatError(
         `Error loading conversations: ${conversationsError.message || "Unknown error"}. This usually means your app password needs chat permissions.`,
       );
-    } else if (conversations === undefined && !loadingConversations) {
-      setChatError(
-        'Direct Messages require an app password with chat permissions. To use DMs: 1) Go to Settings > App Passwords on Bluesky, 2) Create a new app password with "Direct Messages" enabled, 3) Log out of shadowsky and log back in with your handle and the new app password.',
-      );
     } else {
       setChatError(null);
     }
-  }, [conversations, loadingConversations, conversationsError]);
+  }, [conversationsError]);
 
   // Fetch messages for selected conversation
   const {

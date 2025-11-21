@@ -2428,7 +2428,9 @@ export const SearchTabbed: React.FC = () => {
                     </li>
                     <li className="flex items-start gap-2">
                       <span>•</span>
-                      <span>Try removing some filters or date restrictions</span>
+                      <span>
+                        Try removing some filters or date restrictions
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span>•</span>
@@ -2677,7 +2679,9 @@ export const SearchTabbed: React.FC = () => {
                     </li>
                     <li className="flex items-start gap-2">
                       <span>•</span>
-                      <span>Try the "Posts" tab to find content from users</span>
+                      <span>
+                        Try the "Posts" tab to find content from users
+                      </span>
                     </li>
                   </ul>
                 </div>

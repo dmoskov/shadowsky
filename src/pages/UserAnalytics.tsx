@@ -4,14 +4,16 @@ import {
   BarChart3,
   Clock,
   Heart,
+  Lightbulb,
   MessageCircle,
   Repeat2,
+  Sparkles,
   TrendingUp,
   Users,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { analyticsTracker } from "../services/analytics-tracker";
+import { analyzePosts, type PostAnalysisPost } from "../services/anthropic";
 import { proxifyBskyImage } from "../utils/image-proxy";
 
 type DateRange = "7d" | "30d" | "90d" | "all";
@@ -34,6 +36,7 @@ interface PostEngagement {
 export const UserAnalytics: React.FC = () => {
   const { agent, session } = useAuth();
   const [dateRange, setDateRange] = useState<DateRange>("30d");
+  const [analysisRequested, setAnalysisRequested] = useState(false);
 
   const { startDate, endDate } = useMemo(() => {
     const now = new Date();
@@ -176,62 +179,29 @@ export const UserAnalytics: React.FC = () => {
     enabled: !!agent && !!session?.handle,
   });
 
-  const { data: historicalData } = useQuery({
-    queryKey: ["historical-analytics", session?.handle, dateRange],
+  const { data: analysisData, isLoading: isLoadingAnalysis } = useQuery({
+    queryKey: ["post-analysis", session?.handle, dateRange],
     queryFn: async () => {
-      if (!session?.handle) return null;
-      const hasData = await analyticsTracker.hasHistoricalData();
-      if (!hasData) return null;
-      const data = await analyticsTracker.getHistoricalData(startDate, endDate);
-      return data;
+      if (!postsData?.posts || postsData.posts.length === 0) {
+        throw new Error("No posts available for analysis");
+      }
+
+      const postsForAnalysis: PostAnalysisPost[] = postsData.posts.map(
+        (post) => ({
+          text: post.text,
+          createdAt: post.createdAt,
+          likes: post.likes,
+          reposts: post.reposts,
+          replies: post.replies,
+        }),
+      );
+
+      return await analyzePosts(postsForAnalysis);
     },
-    staleTime: 5 * 60 * 1000,
-    enabled: !!session?.handle && dateRange !== "all",
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+    enabled:
+      analysisRequested && !!postsData?.posts && postsData.posts.length > 0,
   });
-
-  const followerGrowthData = useMemo(() => {
-    if (!profileData || dateRange === "all") return null;
-
-    const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : 90;
-    const data = [];
-    const currentFollowers = profileData.followersCount || 0;
-
-    if (historicalData && historicalData.length > 1) {
-      const dataByDay = new Map<string, number>();
-      historicalData.forEach((snapshot) => {
-        const dateKey = format(new Date(snapshot.timestamp), "yyyy-MM-dd");
-        dataByDay.set(dateKey, snapshot.followersCount);
-      });
-
-      for (let i = days - 1; i >= 0; i--) {
-        const date = subDays(new Date(), i);
-        const dateKey = format(date, "yyyy-MM-dd");
-        const followers = dataByDay.get(dateKey) || currentFollowers;
-        data.push({
-          date: format(date, "MMM d"),
-          followers,
-        });
-      }
-
-      data[data.length - 1].followers = currentFollowers;
-    } else {
-      for (let i = days - 1; i >= 0; i--) {
-        const date = subDays(new Date(), i);
-        const estimatedFollowers = Math.max(
-          0,
-          Math.floor(currentFollowers - Math.random() * i * 5),
-        );
-        data.push({
-          date: format(date, "MMM d"),
-          followers: estimatedFollowers,
-        });
-      }
-
-      data[data.length - 1].followers = currentFollowers;
-    }
-
-    return data;
-  }, [profileData, dateRange, historicalData, startDate, endDate]);
 
   const engagementChartData = useMemo(() => {
     if (!postsData?.dailyEngagement) return [];
@@ -270,11 +240,6 @@ export const UserAnalytics: React.FC = () => {
   const maxEngagement = useMemo(() => {
     return Math.max(1, ...engagementChartData.map((d) => d.total));
   }, [engagementChartData]);
-
-  const maxFollowers = useMemo(() => {
-    if (!followerGrowthData) return 1;
-    return Math.max(1, ...followerGrowthData.map((d) => d.followers));
-  }, [followerGrowthData]);
 
   const postingTimeAnalysis = useMemo(() => {
     if (!postsData?.posts) return null;
@@ -379,7 +344,7 @@ export const UserAnalytics: React.FC = () => {
             className="text-sm"
             style={{ color: "var(--bsky-text-secondary)" }}
           >
-            Track your follower growth and post engagement over time
+            Track your post engagement over time
           </p>
         </div>
 
@@ -524,156 +489,6 @@ export const UserAnalytics: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {followerGrowthData && dateRange !== "all" && (
-        <div
-          className="bsky-card p-6"
-          style={{ background: "var(--bsky-bg-secondary)" }}
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <h2
-              className="flex items-center gap-2 text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
-            >
-              <TrendingUp size={20} className="text-blue-500" />
-              Follower Growth
-            </h2>
-            {!historicalData || historicalData.length <= 1 ? (
-              <div
-                className="text-xs"
-                style={{ color: "var(--bsky-text-secondary)" }}
-              >
-                Estimated data - Real tracking starts now
-              </div>
-            ) : null}
-          </div>
-          <div className="relative" style={{ height: "300px" }}>
-            <div
-              className="absolute bottom-0 left-0 top-0 flex flex-col justify-between text-xs"
-              style={{ width: "50px", color: "var(--bsky-text-secondary)" }}
-            >
-              <span>{maxFollowers.toLocaleString()}</span>
-              <span>{Math.round(maxFollowers * 0.75).toLocaleString()}</span>
-              <span>{Math.round(maxFollowers * 0.5).toLocaleString()}</span>
-              <span>{Math.round(maxFollowers * 0.25).toLocaleString()}</span>
-              <span>0</span>
-            </div>
-
-            <div className="relative ml-14 h-full">
-              <div className="absolute inset-0">
-                {[0, 0.25, 0.5, 0.75, 1].map((fraction) => (
-                  <div
-                    key={fraction}
-                    className="absolute w-full"
-                    style={{
-                      bottom: `${fraction * 100}%`,
-                      borderBottom: "1px solid",
-                      borderColor: "var(--bsky-border-secondary)",
-                      opacity: fraction === 0 ? 1 : 0.2,
-                    }}
-                  />
-                ))}
-              </div>
-
-              <svg
-                className="absolute inset-0"
-                style={{ width: "100%", height: "calc(100% - 30px)" }}
-              >
-                <defs>
-                  <linearGradient
-                    id="followerGradient"
-                    x1="0%"
-                    y1="0%"
-                    x2="0%"
-                    y2="100%"
-                  >
-                    <stop
-                      offset="0%"
-                      style={{
-                        stopColor: "var(--bsky-primary)",
-                        stopOpacity: 0.3,
-                      }}
-                    />
-                    <stop
-                      offset="100%"
-                      style={{
-                        stopColor: "var(--bsky-primary)",
-                        stopOpacity: 0,
-                      }}
-                    />
-                  </linearGradient>
-                </defs>
-
-                <polyline
-                  fill="url(#followerGradient)"
-                  stroke="none"
-                  points={
-                    followerGrowthData
-                      .map((d, i) => {
-                        const x = (i / (followerGrowthData.length - 1)) * 100;
-                        const y = 100 - (d.followers / maxFollowers) * 100;
-                        return `${x}%,${y}%`;
-                      })
-                      .join(" ") + ` 100%,100% 0%,100%`
-                  }
-                />
-
-                <polyline
-                  fill="none"
-                  stroke="var(--bsky-primary)"
-                  strokeWidth="2"
-                  points={followerGrowthData
-                    .map((d, i) => {
-                      const x = (i / (followerGrowthData.length - 1)) * 100;
-                      const y = 100 - (d.followers / maxFollowers) * 100;
-                      return `${x}%,${y}%`;
-                    })
-                    .join(" ")}
-                />
-
-                {followerGrowthData.map((d, i) => {
-                  const x = (i / (followerGrowthData.length - 1)) * 100;
-                  const y = 100 - (d.followers / maxFollowers) * 100;
-                  return (
-                    <circle
-                      key={i}
-                      cx={`${x}%`}
-                      cy={`${y}%`}
-                      r="3"
-                      fill="var(--bsky-primary)"
-                    />
-                  );
-                })}
-              </svg>
-
-              <div
-                className="absolute bottom-0 flex justify-between"
-                style={{ width: "100%", paddingBottom: "30px" }}
-              >
-                {followerGrowthData.map((d, i) => {
-                  const showLabel =
-                    i === 0 ||
-                    i === followerGrowthData.length - 1 ||
-                    i % Math.ceil(followerGrowthData.length / 7) === 0;
-                  return showLabel ? (
-                    <div
-                      key={i}
-                      className="absolute text-xs"
-                      style={{
-                        left: `${(i / (followerGrowthData.length - 1)) * 100}%`,
-                        transform: "translateX(-50%)",
-                        color: "var(--bsky-text-secondary)",
-                      }}
-                    >
-                      {d.date}
-                    </div>
-                  ) : null;
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div
         className="bsky-card p-6"
@@ -1183,6 +998,319 @@ export const UserAnalytics: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {postsData && postsData.totalPosts > 0 && (
+        <div
+          className="bsky-card p-6"
+          style={{ background: "var(--bsky-bg-secondary)" }}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <h2
+              className="flex items-center gap-2 text-lg font-semibold"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              <Sparkles size={20} className="text-purple-500" />
+              AI Content Analysis
+            </h2>
+            {!analysisRequested && (
+              <button
+                onClick={() => setAnalysisRequested(true)}
+                className="rounded-lg px-4 py-2 text-sm font-medium transition-all hover:opacity-90"
+                style={{
+                  backgroundColor: "var(--bsky-primary)",
+                  color: "white",
+                }}
+              >
+                Analyze My Posts
+              </button>
+            )}
+          </div>
+
+          {!analysisRequested && (
+            <div
+              className="rounded-lg p-6 text-center"
+              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+            >
+              <Sparkles
+                size={48}
+                className="mx-auto mb-3 text-purple-400 opacity-50"
+              />
+              <p
+                className="mb-2 text-lg font-medium"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                Get AI-Powered Insights
+              </p>
+              <p
+                className="mb-4 text-sm"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                Discover content themes, writing style patterns, and engagement
+                insights from your posts
+              </p>
+            </div>
+          )}
+
+          {isLoadingAnalysis && (
+            <div
+              className="rounded-lg p-8 text-center"
+              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+            >
+              <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-500" />
+              <p
+                className="text-sm font-medium"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                Analyzing your posts...
+              </p>
+              <p
+                className="mt-2 text-xs"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                This may take a moment
+              </p>
+            </div>
+          )}
+
+          {analysisData && !isLoadingAnalysis && (
+            <div className="space-y-6">
+              <div
+                className="rounded-lg p-6"
+                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              >
+                <h3
+                  className="mb-3 text-base font-semibold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  Summary
+                </h3>
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  {analysisData.summary}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div
+                  className="rounded-lg p-6"
+                  style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                >
+                  <h3
+                    className="mb-4 flex items-center gap-2 text-base font-semibold"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                  >
+                    <BarChart3 size={18} className="text-blue-500" />
+                    Content Themes
+                  </h3>
+                  <div className="space-y-4">
+                    {analysisData.contentThemes.map((theme, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4
+                            className="font-medium"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                          >
+                            {theme.theme}
+                          </h4>
+                          <span
+                            className="rounded-full px-2 py-0.5 text-xs font-medium"
+                            style={{
+                              backgroundColor:
+                                theme.frequency === "primary"
+                                  ? "#3b82f6"
+                                  : theme.frequency === "regular"
+                                    ? "#8b5cf6"
+                                    : "#6b7280",
+                              color: "white",
+                            }}
+                          >
+                            {theme.frequency}
+                          </span>
+                        </div>
+                        <p
+                          className="text-sm"
+                          style={{ color: "var(--bsky-text-secondary)" }}
+                        >
+                          {theme.description}
+                        </p>
+                        {theme.examples.length > 0 && (
+                          <div className="space-y-1 pl-4">
+                            {theme.examples.map((example, i) => (
+                              <p
+                                key={i}
+                                className="text-xs italic"
+                                style={{ color: "var(--bsky-text-secondary)" }}
+                              >
+                                "{example}"
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div
+                  className="rounded-lg p-6"
+                  style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                >
+                  <h3
+                    className="mb-4 flex items-center gap-2 text-base font-semibold"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                  >
+                    <MessageCircle size={18} className="text-green-500" />
+                    Writing Style
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <p
+                        className="mb-1 text-xs font-medium"
+                        style={{ color: "var(--bsky-text-secondary)" }}
+                      >
+                        Tone
+                      </p>
+                      <p
+                        className="text-sm font-medium"
+                        style={{ color: "var(--bsky-text-primary)" }}
+                      >
+                        {analysisData.writingStyle.tone}
+                      </p>
+                    </div>
+                    <div>
+                      <p
+                        className="mb-2 text-xs font-medium"
+                        style={{ color: "var(--bsky-text-secondary)" }}
+                      >
+                        Characteristics
+                      </p>
+                      <ul className="space-y-1">
+                        {analysisData.writingStyle.characteristics.map(
+                          (char, i) => (
+                            <li
+                              key={i}
+                              className="flex items-start gap-2 text-sm"
+                              style={{ color: "var(--bsky-text-secondary)" }}
+                            >
+                              <span className="text-green-500">•</span>
+                              {char}
+                            </li>
+                          ),
+                        )}
+                      </ul>
+                    </div>
+                    <div>
+                      <p
+                        className="mb-1 text-xs font-medium"
+                        style={{ color: "var(--bsky-text-secondary)" }}
+                      >
+                        Voice
+                      </p>
+                      <p
+                        className="text-sm"
+                        style={{ color: "var(--bsky-text-secondary)" }}
+                      >
+                        {analysisData.writingStyle.voiceDescription}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="rounded-lg p-6"
+                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              >
+                <h3
+                  className="mb-4 flex items-center gap-2 text-base font-semibold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  <Lightbulb size={18} className="text-yellow-500" />
+                  Engagement Insights
+                </h3>
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                  <div>
+                    <p
+                      className="mb-3 text-xs font-medium"
+                      style={{ color: "var(--bsky-text-secondary)" }}
+                    >
+                      Top Performers
+                    </p>
+                    <ul className="space-y-2">
+                      {analysisData.engagementPatterns.topPerformers.map(
+                        (item, i) => (
+                          <li
+                            key={i}
+                            className="text-sm"
+                            style={{ color: "var(--bsky-text-secondary)" }}
+                          >
+                            <span className="text-yellow-500">★</span> {item}
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                  <div>
+                    <p
+                      className="mb-3 text-xs font-medium"
+                      style={{ color: "var(--bsky-text-secondary)" }}
+                    >
+                      Your Strengths
+                    </p>
+                    <ul className="space-y-2">
+                      {analysisData.engagementPatterns.contentStrengths.map(
+                        (item, i) => (
+                          <li
+                            key={i}
+                            className="text-sm"
+                            style={{ color: "var(--bsky-text-secondary)" }}
+                          >
+                            <span className="text-green-500">✓</span> {item}
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                  <div>
+                    <p
+                      className="mb-3 text-xs font-medium"
+                      style={{ color: "var(--bsky-text-secondary)" }}
+                    >
+                      Suggestions
+                    </p>
+                    <ul className="space-y-2">
+                      {analysisData.engagementPatterns.suggestions.map(
+                        (item, i) => (
+                          <li
+                            key={i}
+                            className="text-sm"
+                            style={{ color: "var(--bsky-text-secondary)" }}
+                          >
+                            <span className="text-purple-500">→</span> {item}
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setAnalysisRequested(false)}
+                className="w-full rounded-lg px-4 py-2 text-sm transition-all hover:opacity-80"
+                style={{
+                  backgroundColor: "var(--bsky-bg-tertiary)",
+                  color: "var(--bsky-text-secondary)",
+                }}
+              >
+                Hide Analysis
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -73,7 +73,6 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
             savedAt: bookmarkRecord.savedAt,
             author: bookmarkRecord.author,
             text: bookmarkRecord.text,
-            tags: bookmarkRecord.tags,
             notes: bookmarkRecord.notes,
           };
           this.bookmarkCache.set(bookmark.postUri, {
@@ -141,7 +140,6 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
         savedAt: bookmark.savedAt,
         author: bookmark.author,
         text: bookmark.text,
-        tags: bookmark.tags,
         notes: bookmark.notes,
         createdAt: new Date().toISOString(),
       },
@@ -223,7 +221,6 @@ export class CustomRecordBackend implements BookmarkStorageBackend {
           savedAt: bookmark.savedAt,
           author: bookmark.author,
           text: bookmark.text,
-          tags: bookmark.tags,
           notes: bookmark.notes,
           createdAt: new Date().toISOString(),
         },

@@ -4,12 +4,13 @@ import { ArrowLeft, RefreshCw } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
-import { listStorage } from "../services/list-storage";
+import { blueskyListService } from "../services/bluesky-list-service";
 import { PostCard } from "./PostCard";
 import { ThreadModal } from "./ThreadModal";
 
 export const ListTimeline: React.FC = () => {
   const { listId } = useParams<{ listId: string }>();
+  const listUri = listId ? decodeURIComponent(listId) : undefined;
   const { agent } = useAuth();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<AppBskyFeedDefs.FeedViewPost[]>([]);
@@ -22,23 +23,35 @@ export const ListTimeline: React.FC = () => {
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const { data: list, isLoading: listLoading } = useQuery({
-    queryKey: ["list", listId],
+    queryKey: ["list", listUri],
     queryFn: async () => {
-      if (!agent || !listId) {
-        throw new Error("Not authenticated or no list ID");
+      if (!agent || !listUri) {
+        throw new Error("Not authenticated or no list URI");
       }
-      await listStorage.initialize(agent);
-      return listStorage.getList(listId);
+      await blueskyListService.initialize(agent);
+      return blueskyListService.getList(listUri);
     },
-    enabled: !!agent && !!listId,
+    enabled: !!agent && !!listUri,
+  });
+
+  const { data: members } = useQuery({
+    queryKey: ["listMembers", listUri],
+    queryFn: async () => {
+      if (!agent || !listUri) {
+        throw new Error("Not authenticated or no list URI");
+      }
+      await blueskyListService.initialize(agent);
+      return blueskyListService.getListMembers(listUri);
+    },
+    enabled: !!agent && !!listUri,
   });
 
   const loadPosts = async (reset = false) => {
-    if (!agent || !list || loading || (!hasMore && !reset)) return;
+    if (!agent || !members || loading || (!hasMore && !reset)) return;
 
     setLoading(true);
     try {
-      const authorDids = list.members.map((m) => m.did);
+      const authorDids = members.map((m) => m.subject.did);
       if (authorDids.length === 0) {
         setPosts([]);
         setHasMore(false);
@@ -84,10 +97,10 @@ export const ListTimeline: React.FC = () => {
   };
 
   useEffect(() => {
-    if (list && agent) {
+    if (members && agent) {
       loadPosts(true);
     }
-  }, [list, agent]);
+  }, [members, agent]);
 
   useEffect(() => {
     if (!loadMoreRef.current || !hasMore || loading) return;
@@ -160,8 +173,8 @@ export const ListTimeline: React.FC = () => {
               </p>
             )}
             <p className="mt-1 text-xs text-bsky-text-tertiary">
-              {list.members.length}{" "}
-              {list.members.length === 1 ? "member" : "members"}
+              {list.listItemCount || 0}{" "}
+              {list.listItemCount === 1 ? "member" : "members"}
             </p>
           </div>
           <button
@@ -175,7 +188,7 @@ export const ListTimeline: React.FC = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {list.members.length === 0 ? (
+        {!members || members.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-center">
             <p className="text-bsky-text-secondary">
               No members in this list yet. Add members from their profile pages.

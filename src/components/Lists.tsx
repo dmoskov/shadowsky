@@ -2,9 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
   Edit2,
-  Globe,
   List as ListIcon,
-  Lock,
   MoreVertical,
   Plus,
   Trash2,
@@ -14,8 +12,10 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
-import { listStorage } from "../services/list-storage";
-import { List } from "../types/lists";
+import {
+  BlueskyList,
+  blueskyListService,
+} from "../services/bluesky-list-service";
 import { CreateListModal } from "./CreateListModal";
 import { EditListModal } from "./EditListModal";
 
@@ -25,7 +25,7 @@ export const Lists: React.FC = () => {
   const queryClient = useQueryClient();
   const { showConfirm } = useModal();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingList, setEditingList] = useState<List | null>(null);
+  const [editingList, setEditingList] = useState<BlueskyList | null>(null);
   const [menuOpenForList, setMenuOpenForList] = useState<string | null>(null);
 
   const {
@@ -38,27 +38,18 @@ export const Lists: React.FC = () => {
       if (!agent) {
         throw new Error("Not authenticated");
       }
-      await listStorage.initialize(agent);
-      return listStorage.getAllLists();
+      await blueskyListService.initialize(agent);
+      return blueskyListService.getMyLists();
     },
     enabled: !!agent,
   });
 
-  const handleCreateList = async (
-    name: string,
-    description?: string,
-    isPublic?: boolean,
-  ) => {
+  const handleCreateList = async (name: string, description?: string) => {
     if (!agent) return;
 
     try {
-      await listStorage.initialize(agent);
-      await listStorage.createList({
-        name,
-        description,
-        isPublic: isPublic ?? false,
-        members: [],
-      });
+      await blueskyListService.initialize(agent);
+      await blueskyListService.createList(name, description);
       queryClient.invalidateQueries({ queryKey: ["lists"] });
       setShowCreateModal(false);
     } catch (error) {
@@ -67,14 +58,14 @@ export const Lists: React.FC = () => {
     }
   };
 
-  const handleDeleteList = async (listId: string) => {
+  const handleDeleteList = async (listUri: string) => {
     await showConfirm(
       "Are you sure you want to delete this list? This cannot be undone.",
       async () => {
         try {
           if (!agent) return;
-          await listStorage.initialize(agent);
-          await listStorage.deleteList(listId);
+          await blueskyListService.initialize(agent);
+          await blueskyListService.deleteList(listUri);
           queryClient.invalidateQueries({ queryKey: ["lists"] });
         } catch (error) {
           console.error("Failed to delete list:", error);
@@ -90,13 +81,13 @@ export const Lists: React.FC = () => {
   };
 
   const handleUpdateList = async (
-    listId: string,
-    updates: { name?: string; description?: string; isPublic?: boolean },
+    listUri: string,
+    updates: { name?: string; description?: string },
   ) => {
     try {
       if (!agent) return;
-      await listStorage.initialize(agent);
-      await listStorage.updateList(listId, updates);
+      await blueskyListService.initialize(agent);
+      await blueskyListService.updateList(listUri, updates);
       queryClient.invalidateQueries({ queryKey: ["lists"] });
       setEditingList(null);
     } catch (error) {
@@ -168,26 +159,15 @@ export const Lists: React.FC = () => {
         <div className="grid gap-4 sm:grid-cols-2">
           {lists?.map((list) => (
             <div
-              key={list.id}
+              key={list.uri}
               className="group relative cursor-pointer rounded-xl border border-bsky-border-primary bg-bsky-bg-secondary p-4 transition-all duration-200 hover:border-bsky-primary hover:shadow-lg"
-              onClick={() => navigate(`/lists/${list.id}`)}
+              onClick={() => navigate(`/lists/${encodeURIComponent(list.uri)}`)}
             >
               <div className="mb-3 flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold text-bsky-text-primary">
-                      {list.name}
-                    </h3>
-                    <span
-                      title={list.isPublic ? "Public list" : "Private list"}
-                    >
-                      {list.isPublic ? (
-                        <Globe className="h-4 w-4 text-bsky-text-tertiary" />
-                      ) : (
-                        <Lock className="h-4 w-4 text-bsky-text-tertiary" />
-                      )}
-                    </span>
-                  </div>
+                  <h3 className="text-lg font-semibold text-bsky-text-primary">
+                    {list.name}
+                  </h3>
                   {list.description && (
                     <p className="mt-1 line-clamp-2 text-sm text-bsky-text-secondary">
                       {list.description}
@@ -199,14 +179,14 @@ export const Lists: React.FC = () => {
                     onClick={(e) => {
                       e.stopPropagation();
                       setMenuOpenForList(
-                        menuOpenForList === list.id ? null : list.id,
+                        menuOpenForList === list.uri ? null : list.uri,
                       );
                     }}
                     className="cursor-pointer rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-200 hover:bg-bsky-bg-hover"
                   >
                     <MoreVertical className="h-4 w-4" />
                   </button>
-                  {menuOpenForList === list.id && (
+                  {menuOpenForList === list.uri && (
                     <>
                       <div
                         className="fixed inset-0 z-10"
@@ -230,7 +210,7 @@ export const Lists: React.FC = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteList(list.id);
+                            handleDeleteList(list.uri);
                             setMenuOpenForList(null);
                           }}
                           className="flex w-full cursor-pointer items-center gap-2 border-none bg-transparent px-4 py-2.5 text-left text-sm text-red-600 transition-all duration-200 hover:bg-red-50"
@@ -248,13 +228,13 @@ export const Lists: React.FC = () => {
                 <div className="flex items-center gap-1 text-bsky-text-secondary">
                   <Users className="h-4 w-4" />
                   <span>
-                    {list.members.length}{" "}
-                    {list.members.length === 1 ? "member" : "members"}
+                    {list.listItemCount || 0}{" "}
+                    {list.listItemCount === 1 ? "member" : "members"}
                   </span>
                 </div>
                 <span className="text-xs text-bsky-text-tertiary">
                   Updated{" "}
-                  {formatDistanceToNow(new Date(list.updatedAt), {
+                  {formatDistanceToNow(new Date(list.indexedAt), {
                     addSuffix: true,
                   })}
                 </span>

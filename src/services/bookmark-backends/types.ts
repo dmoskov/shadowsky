@@ -12,7 +12,6 @@ export interface Bookmark {
     avatar?: string;
   };
   text: string;
-  tags?: string[];
   notes?: string;
 }
 
@@ -39,14 +38,6 @@ export interface BookmarkStorageBackend {
 
   // Get count without loading all bookmarks
   getCount(): Promise<number>;
-
-  // Tag operations (optional - not all backends support this)
-  addBookmarkWithTags?(
-    post: AppBskyFeedDefs.PostView,
-    notes?: string,
-    tags?: string[],
-  ): Promise<Bookmark>;
-  updateBookmarkTags?(postUri: string, tags: string[]): Promise<void>;
 
   // Sync status for remote backends
   getSyncStatus?(): Promise<{

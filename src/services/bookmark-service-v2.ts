@@ -164,52 +164,13 @@ class BookmarkServiceV2 {
   async addBookmark(
     post: AppBskyFeedDefs.PostView,
     notes?: string,
-    tags?: string[],
   ): Promise<void> {
-    if (this.backend.addBookmarkWithTags && tags && tags.length > 0) {
-      await this.backend.addBookmarkWithTags(post, notes, tags);
-    } else {
-      await this.backend.addBookmark(post, notes);
-    }
+    await this.backend.addBookmark(post, notes);
     await this.postCacheService.cachePosts([post]);
   }
 
   async removeBookmark(postUri: string): Promise<void> {
     await this.backend.removeBookmark(postUri);
-  }
-
-  async updateBookmarkTags(postUri: string, tags: string[]): Promise<void> {
-    if (!this.backend.updateBookmarkTags) {
-      throw new Error("This storage backend does not support tag updates");
-    }
-    await this.backend.updateBookmarkTags(postUri, tags);
-  }
-
-  async getAllTags(): Promise<string[]> {
-    const bookmarks = await this.backend.getAllBookmarks();
-    const tagsSet = new Set<string>();
-    bookmarks.forEach((bookmark) => {
-      bookmark.tags?.forEach((tag) => tagsSet.add(tag));
-    });
-    return Array.from(tagsSet).sort();
-  }
-
-  async getBookmarksByTag(tag: string): Promise<BookmarkPost[]> {
-    const allBookmarks = await this.backend.getAllBookmarks();
-    const taggedBookmarks = allBookmarks.filter((bookmark) =>
-      bookmark.tags?.includes(tag),
-    );
-
-    const bookmarkPosts: BookmarkPost[] = [];
-    for (const bookmark of taggedBookmarks) {
-      const post = await this.postCacheService.getPost(bookmark.postUri);
-      bookmarkPosts.push({
-        ...bookmark,
-        post: post || undefined,
-      });
-    }
-
-    return bookmarkPosts;
   }
 
   async getBookmarkedPosts(
@@ -266,12 +227,10 @@ class BookmarkServiceV2 {
     const matchingBookmarks = allBookmarks.filter((bookmark) => {
       const searchText =
         `${bookmark.text} ${bookmark.author.handle} ${bookmark.author.displayName}`.toLowerCase();
-      const tagsText = bookmark.tags?.join(" ").toLowerCase() || "";
       const notesText = bookmark.notes?.toLowerCase() || "";
 
       return (
         searchText.includes(lowercaseQuery) ||
-        tagsText.includes(lowercaseQuery) ||
         notesText.includes(lowercaseQuery)
       );
     });

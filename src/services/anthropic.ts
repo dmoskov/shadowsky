@@ -446,3 +446,72 @@ export async function getStyleMatchedWritingFeedback(
     throw error;
   }
 }
+
+export interface PostAnalysisPost {
+  text: string;
+  createdAt: string;
+  likes: number;
+  reposts: number;
+  replies: number;
+}
+
+export interface ContentTheme {
+  theme: string;
+  description: string;
+  frequency: "primary" | "regular" | "occasional";
+  examples: string[];
+}
+
+export interface WritingStyleAnalysis {
+  tone: string;
+  characteristics: string[];
+  voiceDescription: string;
+}
+
+export interface EngagementPatterns {
+  topPerformers: string[];
+  contentStrengths: string[];
+  suggestions: string[];
+}
+
+export interface PostAnalysisResult {
+  contentThemes: ContentTheme[];
+  writingStyle: WritingStyleAnalysis;
+  engagementPatterns: EngagementPatterns;
+  summary: string;
+}
+
+export async function analyzePosts(
+  posts: PostAnalysisPost[],
+): Promise<PostAnalysisResult> {
+  try {
+    const apiBaseUrl = getApiBaseUrl();
+    const response = await fetchWithRetry(
+      `${apiBaseUrl}/api/analyze-posts`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ posts }),
+      },
+      API_RETRY_OPTIONS,
+    );
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    logger.error("Error analyzing posts:", error);
+    analytics.trackError(error as Error, "post_analysis");
+
+    if (error instanceof Error && error.message.includes("401")) {
+      throw new Error("Post analysis failed: Invalid API key");
+    } else if (error instanceof Error && error.message.includes("429")) {
+      throw new Error("Post analysis failed: Rate limit exceeded");
+    } else {
+      throw new Error(
+        `Post analysis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+}

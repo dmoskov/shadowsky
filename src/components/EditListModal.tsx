@@ -1,13 +1,13 @@
 import { X } from "lucide-react";
 import React, { useState } from "react";
-import { List } from "../types/lists";
+import { BlueskyList } from "../services/bluesky-list-service";
 
 interface EditListModalProps {
-  list: List;
+  list: BlueskyList;
   onClose: () => void;
   onUpdate: (
-    listId: string,
-    updates: { name?: string; description?: string; isPublic?: boolean },
+    listUri: string,
+    updates: { name?: string; description?: string },
   ) => Promise<void>;
 }
 
@@ -18,7 +18,6 @@ export const EditListModal: React.FC<EditListModalProps> = ({
 }) => {
   const [name, setName] = useState(list.name);
   const [description, setDescription] = useState(list.description || "");
-  const [isPublic, setIsPublic] = useState(list.isPublic);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,10 +32,9 @@ export const EditListModal: React.FC<EditListModalProps> = ({
     try {
       setIsUpdating(true);
       setError(null);
-      await onUpdate(list.id, {
+      await onUpdate(list.uri, {
         name: name.trim(),
         description: description.trim() || undefined,
-        isPublic,
       });
     } catch (error) {
       setError("Failed to update list. Please try again.");
@@ -109,25 +107,6 @@ export const EditListModal: React.FC<EditListModalProps> = ({
             <div className="mt-1 text-right text-xs text-bsky-text-tertiary">
               {description.length}/200
             </div>
-          </div>
-
-          <div className="mb-4">
-            <label className="flex cursor-pointer items-center gap-3">
-              <input
-                type="checkbox"
-                checked={isPublic}
-                onChange={(e) => setIsPublic(e.target.checked)}
-                className="h-4 w-4 rounded border-bsky-border-primary text-bsky-primary focus:ring-2 focus:ring-bsky-primary focus:ring-offset-0"
-              />
-              <div>
-                <div className="text-sm font-medium text-bsky-text-primary">
-                  Make this list public
-                </div>
-                <div className="text-xs text-bsky-text-secondary">
-                  Public lists can be discovered by others (default: private)
-                </div>
-              </div>
-            </label>
           </div>
 
           {error && (

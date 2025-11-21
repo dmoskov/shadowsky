@@ -32,41 +32,6 @@ export class LocalStorageBackend implements BookmarkStorageBackend {
     return bookmark;
   }
 
-  async addBookmarkWithTags(
-    post: AppBskyFeedDefs.PostView,
-    notes?: string,
-    tags?: string[],
-  ): Promise<Bookmark> {
-    const bookmark: Bookmark = {
-      id: post.uri,
-      postUri: post.uri,
-      postCid: post.cid,
-      savedAt: new Date().toISOString(),
-      author: {
-        did: post.author.did,
-        handle: post.author.handle,
-        displayName: post.author.displayName,
-        avatar: post.author.avatar,
-      },
-      text: (post.record as any)?.text || "",
-      notes,
-      tags: tags || [],
-    };
-
-    await bookmarkStorage.addBookmark(bookmark);
-    return bookmark;
-  }
-
-  async updateBookmarkTags(postUri: string, tags: string[]): Promise<void> {
-    const bookmark = await this.getBookmark(postUri);
-    if (!bookmark) {
-      throw new Error("Bookmark not found");
-    }
-
-    const updatedBookmark = { ...bookmark, tags };
-    await bookmarkStorage.addBookmark(updatedBookmark);
-  }
-
   async removeBookmark(postUri: string): Promise<void> {
     await bookmarkStorage.removeBookmark(postUri);
   }

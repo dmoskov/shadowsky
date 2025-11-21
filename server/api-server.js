@@ -685,6 +685,93 @@ Start directly with { and end with }`,
   }
 });
 
+// Analyze user posts endpoint
+app.post("/api/analyze-posts", async (req, res) => {
+  const { posts } = req.body;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (!posts || !Array.isArray(posts) || posts.length === 0) {
+    return res.status(400).json({ error: "Missing or invalid posts array" });
+  }
+
+  if (!apiKey) {
+    return res.status(500).json({ error: "Server API key not configured" });
+  }
+
+  try {
+    // Take a sample of posts if there are too many
+    const samplePosts = posts.slice(0, 50);
+
+    // Build the posts context with engagement metrics
+    const postsContext = samplePosts
+      .map((post, i) => {
+        const engagement = `Likes: ${post.likes}, Reposts: ${post.reposts}, Replies: ${post.replies}`;
+        return `Post ${i + 1} (${engagement}):\n"${post.text}"\nDate: ${post.createdAt}`;
+      })
+      .join("\n\n");
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5-20250929",
+        max_tokens: 3000,
+        messages: [
+          {
+            role: "user",
+            content: `You are a social media analyst. Analyze these posts from a single user to provide a qualitative characterization of their content and style.
+
+USER'S POSTS:
+${postsContext}
+
+Provide a comprehensive JSON response with:
+
+1. **contentThemes**: Array of 3-5 main themes/topics the user posts about, each with:
+   - theme: string (e.g., "Technology & AI", "Personal Development")
+   - description: string (1-2 sentences explaining this theme)
+   - frequency: "primary" | "regular" | "occasional"
+   - examples: array of 2-3 brief quotes or paraphrases from their posts
+
+2. **writingStyle**: Object describing their writing approach:
+   - tone: string (e.g., "Professional yet conversational")
+   - characteristics: array of 3-5 specific style traits (e.g., "Uses technical terminology", "Often asks questions")
+   - voiceDescription: string (2-3 sentences describing their unique voice)
+
+3. **engagementPatterns**: Object analyzing what performs well:
+   - topPerformers: array of 2-3 observations about which types of content get most engagement
+   - contentStrengths: array of 2-3 strengths in their posting strategy
+   - suggestions: array of 2-3 actionable suggestions for improvement
+
+4. **summary**: A compelling 3-4 sentence overall characterization of this user's social media presence
+
+Provide specific evidence and quotes to support your analysis. Start directly with { and end with }`,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Anthropic API error: ${error}`);
+    }
+
+    const data = await response.json();
+    const cleanedText = cleanJsonResponse(data.content[0].text);
+    const result = JSON.parse(cleanedText);
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error analyzing posts:", error);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+});
+
 // Create HTTP server for Express app
 const httpServer = http.createServer(app);
 
@@ -700,6 +787,9 @@ httpServer.listen(PORT, () => {
   console.log(`  - POST /api/adjust-tone       : Adjust post tone`);
   console.log(`  - POST /api/optimize-thread   : Optimize thread structure`);
   console.log(`  - POST /api/suggest-hashtags  : Suggest hashtags`);
+  console.log(
+    `  - POST /api/analyze-posts     : Analyze user posts qualitatively`,
+  );
   console.log(
     `\nAPI Configuration:`,
     process.env.ANTHROPIC_API_KEY

@@ -2,8 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Plus, X } from "lucide-react";
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { listStorage } from "../services/list-storage";
-import { ListMember } from "../types/lists";
+import { blueskyListService } from "../services/bluesky-list-service";
 
 interface AddToListModalProps {
   user: {
@@ -21,7 +20,7 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
 }) => {
   const { agent } = useAuth();
   const queryClient = useQueryClient();
-  const [updatingListId, setUpdatingListId] = useState<string | null>(null);
+  const [updatingListUri, setUpdatingListUri] = useState<string | null>(null);
 
   const { data: lists, isLoading } = useQuery({
     queryKey: ["lists"],
@@ -29,55 +28,53 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
       if (!agent) {
         throw new Error("Not authenticated");
       }
-      await listStorage.initialize(agent);
-      return listStorage.getAllLists();
+      await blueskyListService.initialize(agent);
+      return blueskyListService.getMyLists();
     },
     enabled: !!agent,
   });
 
-  const { data: userLists } = useQuery({
+  const { data: userListUris } = useQuery({
     queryKey: ["userLists", user.did],
     queryFn: async () => {
       if (!agent) {
         throw new Error("Not authenticated");
       }
-      await listStorage.initialize(agent);
-      return listStorage.getListsContainingMember(user.did);
+      await blueskyListService.initialize(agent);
+      return blueskyListService.getListsContainingMember(user.did);
     },
     enabled: !!agent,
   });
 
-  const isInList = (listId: string) => {
-    return userLists?.some((list) => list.id === listId) || false;
+  const isInList = (listUri: string) => {
+    return userListUris?.includes(listUri) || false;
   };
 
-  const handleToggleList = async (listId: string) => {
-    if (!agent || updatingListId) return;
+  const handleToggleList = async (listUri: string) => {
+    if (!agent || updatingListUri) return;
 
-    setUpdatingListId(listId);
+    setUpdatingListUri(listUri);
     try {
-      await listStorage.initialize(agent);
+      await blueskyListService.initialize(agent);
 
-      if (isInList(listId)) {
-        await listStorage.removeMemberFromList(listId, user.did);
+      if (isInList(listUri)) {
+        const members = await blueskyListService.getListMembers(listUri);
+        const memberItem = members.find((m) => m.subject.did === user.did);
+        if (memberItem) {
+          await blueskyListService.removeMemberFromList(memberItem.uri);
+        }
       } else {
-        const member: ListMember = {
-          did: user.did,
-          handle: user.handle,
-          displayName: user.displayName,
-          avatar: user.avatar,
-          addedAt: new Date().toISOString(),
-        };
-        await listStorage.addMemberToList(listId, member);
+        await blueskyListService.addMemberToList(listUri, user.did);
       }
 
       queryClient.invalidateQueries({ queryKey: ["lists"] });
-      queryClient.invalidateQueries({ queryKey: ["list", listId] });
+      queryClient.invalidateQueries({ queryKey: ["list", listUri] });
+      queryClient.invalidateQueries({ queryKey: ["listMembers", listUri] });
       queryClient.invalidateQueries({ queryKey: ["userLists", user.did] });
     } catch (error) {
       console.error("Failed to update list:", error);
     } finally {
-      setUpdatingListId(null);
+      setUpdatingListUri(null);
     }
   };
 
@@ -120,13 +117,13 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
           {!isLoading && lists && lists.length > 0 && (
             <div className="space-y-2">
               {lists.map((list) => {
-                const inList = isInList(list.id);
-                const isUpdating = updatingListId === list.id;
+                const inList = isInList(list.uri);
+                const isUpdating = updatingListUri === list.uri;
 
                 return (
                   <button
-                    key={list.id}
-                    onClick={() => handleToggleList(list.id)}
+                    key={list.uri}
+                    onClick={() => handleToggleList(list.uri)}
                     disabled={isUpdating}
                     className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-3 text-left transition-all duration-200 hover:border-bsky-primary disabled:cursor-not-allowed disabled:opacity-50"
                   >
@@ -140,8 +137,8 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
                         </div>
                       )}
                       <div className="mt-1 text-xs text-bsky-text-tertiary">
-                        {list.members.length}{" "}
-                        {list.members.length === 1 ? "member" : "members"}
+                        {list.listItemCount || 0}{" "}
+                        {list.listItemCount === 1 ? "member" : "members"}
                       </div>
                     </div>
                     <div className="ml-3">
