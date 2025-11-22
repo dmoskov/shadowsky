@@ -7,7 +7,7 @@
 
 import { Key, IKey } from 'aws-cdk-lib/aws-kms';
 import { Stack } from 'aws-cdk-lib';
-import { ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { ServicePrincipal, PolicyStatement, Effect, ArnPrincipal } from 'aws-cdk-lib/aws-iam';
 import { RemovalPolicy } from 'aws-cdk-lib';
 
 /**
@@ -22,25 +22,27 @@ export function createCloudWatchLogsKmsKey(stack: Stack): IKey {
   });
 
   // Grant CloudWatch Logs service permission to use the key
-  key.addToResourcePolicy({
-    sid: 'Allow CloudWatch Logs to use the key',
-    effect: 'Allow' as any,
-    principals: [new ServicePrincipal(`logs.${stack.region}.amazonaws.com`)],
-    actions: [
-      'kms:Encrypt',
-      'kms:Decrypt',
-      'kms:ReEncrypt*',
-      'kms:GenerateDataKey*',
-      'kms:CreateGrant',
-      'kms:DescribeKey',
-    ],
-    resources: ['*'],
-    conditions: {
-      ArnLike: {
-        'kms:EncryptionContext:aws:logs:arn': `arn:aws:logs:${stack.region}:${stack.account}:*`,
+  key.addToResourcePolicy(
+    new PolicyStatement({
+      sid: 'Allow CloudWatch Logs to use the key',
+      effect: Effect.ALLOW,
+      principals: [new ServicePrincipal(`logs.${stack.region}.amazonaws.com`)],
+      actions: [
+        'kms:Encrypt',
+        'kms:Decrypt',
+        'kms:ReEncrypt*',
+        'kms:GenerateDataKey*',
+        'kms:CreateGrant',
+        'kms:DescribeKey',
+      ],
+      resources: ['*'],
+      conditions: {
+        ArnLike: {
+          'kms:EncryptionContext:aws:logs:arn': `arn:aws:logs:${stack.region}:${stack.account}:*`,
+        },
       },
-    },
-  });
+    })
+  );
 
   return key;
 }

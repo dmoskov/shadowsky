@@ -7,7 +7,6 @@ import {
   RestApi,
 } from 'aws-cdk-lib/aws-apigateway';
 import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
-import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { writingFeedback } from './functions/writing-feedback/resource';
@@ -18,7 +17,7 @@ import { suggestHashtags } from './functions/suggest-hashtags/resource';
 import { styleAnalysis } from './functions/style-analysis/resource';
 import { analyzePosts } from './functions/analyze-posts/resource';
 import { createAnthropicDashboard, createAnthropicAlarms } from './functions/shared/cloudwatch-dashboard';
-import { createCloudWatchLogsKmsKey, SENSITIVE_LAMBDA_FUNCTIONS } from './functions/shared/kms-encryption';
+import { createCloudWatchLogsKmsKey } from './functions/shared/kms-encryption';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -35,11 +34,11 @@ const backend = defineBackend({
   analyzePosts,
 });
 
-// Create a stack for the API
-const apiStack = backend.createStack('api-stack');
+// Get the main backend stack
+const mainStack = backend.stack;
 
-// Create REST API
-const restApi = new RestApi(apiStack, 'RestApi', {
+// Create REST API in main stack
+const restApi = new RestApi(mainStack, 'RestApi', {
   restApiName: 'shadowsky-api',
   description: 'ShadowSky AI-powered features API',
   deploy: true,
@@ -115,7 +114,7 @@ const analyzePostsResource = apiResource.addResource('analyze-posts');
 analyzePostsResource.addMethod('POST', analyzePostsIntegration, methodOptions);
 
 // Create DynamoDB table for alt-text cache
-const altTextCacheTable = new Table(apiStack, 'AltTextCache', {
+const altTextCacheTable = new Table(mainStack, 'AltTextCache', {
   partitionKey: {
     name: 'imageHash',
     type: AttributeType.STRING,
@@ -128,9 +127,9 @@ const altTextCacheTable = new Table(apiStack, 'AltTextCache', {
 // Grant the generate-alt-text Lambda permission to read/write to the cache table
 altTextCacheTable.grantReadWriteData(backend.generateAltText.resources.lambda);
 
-// Add table name and AWS region as environment variables to the Lambda
+// Add table name as environment variable to the Lambda
+// Note: AWS_REGION is automatically provided by Lambda runtime
 backend.generateAltText.addEnvironment('ALT_TEXT_CACHE_TABLE', altTextCacheTable.tableName);
-backend.generateAltText.addEnvironment('AWS_REGION', Stack.of(apiStack).region);
 
 // Create CloudWatch Dashboard for Anthropic API monitoring
 const monitoringStack = backend.createStack('monitoring-stack');
@@ -141,28 +140,10 @@ createAnthropicAlarms(monitoringStack);
 const securityStack = backend.createStack('security-stack');
 const kmsKey = createCloudWatchLogsKmsKey(securityStack);
 
-// Configure encrypted log groups for all Lambda functions handling sensitive data
-const lambdaFunctions = {
-  'generate-alt-text': backend.generateAltText.resources.lambda,
-  'adjust-tone': backend.adjustTone.resources.lambda,
-  'writing-feedback': backend.writingFeedback.resources.lambda,
-  'optimize-thread': backend.optimizeThread.resources.lambda,
-  'suggest-hashtags': backend.suggestHashtags.resources.lambda,
-  'style-analysis': backend.styleAnalysis.resources.lambda,
-  'analyze-posts': backend.analyzePosts.resources.lambda,
-};
-
-SENSITIVE_LAMBDA_FUNCTIONS.forEach((functionName) => {
-  const lambda = lambdaFunctions[functionName];
-  if (lambda) {
-    new LogGroup(securityStack, `${functionName}-LogGroup`, {
-      logGroupName: `/aws/lambda/${lambda.functionName}`,
-      retention: RetentionDays.ONE_MONTH,
-      encryptionKey: kmsKey,
-      removalPolicy: RemovalPolicy.RETAIN,
-    });
-  }
-});
+// Note: Lambda functions will automatically create their own log groups.
+// The KMS key has been configured to allow CloudWatch Logs service to use it,
+// so encryption will work automatically for all Lambda log groups.
+// Explicit LogGroup creation is not needed and can cause circular dependencies.
 
 // Add custom stack output for the API URL
 backend.addOutput({
@@ -170,7 +151,7 @@ backend.addOutput({
     API: {
       [restApi.restApiName]: {
         endpoint: restApi.url,
-        region: Stack.of(apiStack).region,
+        region: Stack.of(mainStack).region,
         apiName: restApi.restApiName,
       },
     },

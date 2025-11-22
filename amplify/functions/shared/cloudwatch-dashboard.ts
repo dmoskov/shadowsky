@@ -5,7 +5,7 @@
  * Includes security validation to prevent injection attacks.
  */
 
-import { Dashboard, GraphWidget, SingleValueWidget, Alarm, ComparisonOperator, TreatMissingData } from 'aws-cdk-lib/aws-cloudwatch';
+import { Dashboard, GraphWidget, SingleValueWidget, Alarm, ComparisonOperator, TreatMissingData, Metric } from 'aws-cdk-lib/aws-cloudwatch';
 import { Stack } from 'aws-cdk-lib';
 import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions';
 import { Topic } from 'aws-cdk-lib/aws-sns';
@@ -51,24 +51,24 @@ export function createAnthropicDashboard(stack: Stack): Dashboard {
       width: 12,
       height: 6,
       left: [
-        {
+        new Metric({
           namespace: NAMESPACE,
           metricName: 'APILatency',
           statistic: 'p50',
           label: 'p50',
-        },
-        {
+        }),
+        new Metric({
           namespace: NAMESPACE,
           metricName: 'APILatency',
           statistic: 'p95',
           label: 'p95',
-        },
-        {
+        }),
+        new Metric({
           namespace: NAMESPACE,
           metricName: 'APILatency',
           statistic: 'p99',
           label: 'p99',
-        },
+        }),
       ],
     })
   );
@@ -80,22 +80,22 @@ export function createAnthropicDashboard(stack: Stack): Dashboard {
       width: 12,
       height: 6,
       left: [
-        {
+        new Metric({
           namespace: NAMESPACE,
           metricName: 'RequestCount',
           statistic: 'Sum',
           dimensionsMap: { Status: 'Success' },
           label: 'Success',
           color: '#2ca02c',
-        },
-        {
+        }),
+        new Metric({
           namespace: NAMESPACE,
           metricName: 'RequestCount',
           statistic: 'Sum',
           dimensionsMap: { Status: 'Error' },
           label: 'Error',
           color: '#d62728',
-        },
+        }),
       ],
     })
   );
@@ -107,20 +107,20 @@ export function createAnthropicDashboard(stack: Stack): Dashboard {
       width: 12,
       height: 6,
       left: [
-        {
+        new Metric({
           namespace: NAMESPACE,
           metricName: 'InputTokens',
           statistic: 'Sum',
           label: 'Input Tokens',
           color: '#1f77b4',
-        },
-        {
+        }),
+        new Metric({
           namespace: NAMESPACE,
           metricName: 'OutputTokens',
           statistic: 'Sum',
           label: 'Output Tokens',
           color: '#ff7f0e',
-        },
+        }),
       ],
     })
   );
@@ -132,34 +132,34 @@ export function createAnthropicDashboard(stack: Stack): Dashboard {
       width: 12,
       height: 6,
       left: [
-        {
+        new Metric({
           namespace: NAMESPACE,
           metricName: 'ErrorsByType',
           statistic: 'Sum',
           dimensionsMap: { ErrorType: 'Timeout' },
           label: 'Timeout',
-        },
-        {
+        }),
+        new Metric({
           namespace: NAMESPACE,
           metricName: 'ErrorsByType',
           statistic: 'Sum',
           dimensionsMap: { ErrorType: 'RateLimit' },
           label: 'Rate Limit',
-        },
-        {
+        }),
+        new Metric({
           namespace: NAMESPACE,
           metricName: 'ErrorsByType',
           statistic: 'Sum',
           dimensionsMap: { ErrorType: 'ServerError' },
           label: 'Server Error',
-        },
-        {
+        }),
+        new Metric({
           namespace: NAMESPACE,
           metricName: 'ErrorsByType',
           statistic: 'Sum',
           dimensionsMap: { ErrorType: 'NetworkError' },
           label: 'Network Error',
-        },
+        }),
       ],
     })
   );
@@ -171,11 +171,11 @@ export function createAnthropicDashboard(stack: Stack): Dashboard {
       width: 6,
       height: 3,
       metrics: [
-        {
+        new Metric({
           namespace: NAMESPACE,
           metricName: 'ErrorRate',
           statistic: 'Average',
-        },
+        }),
       ],
     })
   );
@@ -186,11 +186,11 @@ export function createAnthropicDashboard(stack: Stack): Dashboard {
       width: 6,
       height: 3,
       metrics: [
-        {
+        new Metric({
           namespace: NAMESPACE,
           metricName: 'Timeouts',
           statistic: 'Sum',
-        },
+        }),
       ],
     })
   );
@@ -219,6 +219,7 @@ export function createAnthropicAlarms(stack: Stack, alertTopic?: Topic): Alarm[]
     evaluationPeriods: 2,
     comparisonOperator: 'GreaterThanThreshold',
     treatMissingData: 'notBreaching',
+    actionsEnabled: true,
   };
 
   validateAlarmConfig(highLatencyConfig);
@@ -226,11 +227,11 @@ export function createAnthropicAlarms(stack: Stack, alertTopic?: Topic): Alarm[]
   const highLatencyAlarm = new Alarm(stack, 'AnthropicHighLatencyAlarm', {
     alarmName: highLatencyConfig.alarmName,
     alarmDescription: highLatencyConfig.alarmDescription,
-    metric: {
+    metric: new Metric({
       namespace: highLatencyConfig.metric.namespace,
       metricName: highLatencyConfig.metric.metricName,
       statistic: highLatencyConfig.metric.statistic,
-    },
+    }),
     threshold: highLatencyConfig.threshold,
     evaluationPeriods: highLatencyConfig.evaluationPeriods,
     comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
@@ -251,6 +252,7 @@ export function createAnthropicAlarms(stack: Stack, alertTopic?: Topic): Alarm[]
     evaluationPeriods: 3,
     comparisonOperator: 'GreaterThanThreshold',
     treatMissingData: 'notBreaching',
+    actionsEnabled: true,
   };
 
   validateAlarmConfig(highErrorRateConfig);
@@ -258,11 +260,11 @@ export function createAnthropicAlarms(stack: Stack, alertTopic?: Topic): Alarm[]
   const highErrorRateAlarm = new Alarm(stack, 'AnthropicHighErrorRateAlarm', {
     alarmName: highErrorRateConfig.alarmName,
     alarmDescription: highErrorRateConfig.alarmDescription,
-    metric: {
+    metric: new Metric({
       namespace: highErrorRateConfig.metric.namespace,
       metricName: highErrorRateConfig.metric.metricName,
       statistic: highErrorRateConfig.metric.statistic,
-    },
+    }),
     threshold: highErrorRateConfig.threshold,
     evaluationPeriods: highErrorRateConfig.evaluationPeriods,
     comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
@@ -283,6 +285,7 @@ export function createAnthropicAlarms(stack: Stack, alertTopic?: Topic): Alarm[]
     evaluationPeriods: 1,
     comparisonOperator: 'GreaterThanThreshold',
     treatMissingData: 'notBreaching',
+    actionsEnabled: true,
   };
 
   validateAlarmConfig(timeoutConfig);
@@ -290,11 +293,11 @@ export function createAnthropicAlarms(stack: Stack, alertTopic?: Topic): Alarm[]
   const timeoutAlarm = new Alarm(stack, 'AnthropicTimeoutAlarm', {
     alarmName: timeoutConfig.alarmName,
     alarmDescription: timeoutConfig.alarmDescription,
-    metric: {
+    metric: new Metric({
       namespace: timeoutConfig.metric.namespace,
       metricName: timeoutConfig.metric.metricName,
       statistic: timeoutConfig.metric.statistic,
-    },
+    }),
     threshold: timeoutConfig.threshold,
     evaluationPeriods: timeoutConfig.evaluationPeriods,
     comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,

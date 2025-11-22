@@ -326,7 +326,7 @@ describe('CloudWatch Security', () => {
 
   describe('logSecurityEvent', () => {
     it('should log security events with structured data', () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       logSecurityEvent('validation_error', {
         field: 'namespace',
