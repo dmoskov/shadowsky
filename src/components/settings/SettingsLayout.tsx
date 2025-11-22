@@ -1,6 +1,7 @@
 import {
   Bell,
   Database,
+  HardDrive,
   Palette,
   PenTool,
   Shield,
@@ -70,6 +71,12 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
       label: "Data & Storage",
       icon: Database,
       path: "/settings/data",
+    },
+    {
+      id: "media-cache",
+      label: "Media Cache",
+      icon: HardDrive,
+      path: "/settings/media-cache",
     },
   ];
 

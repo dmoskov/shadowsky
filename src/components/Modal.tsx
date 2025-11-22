@@ -1,4 +1,5 @@
 import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 export type ModalType = "alert" | "confirm";
 export type ModalVariant = "info" | "warning" | "error" | "success";
@@ -40,6 +41,8 @@ export function Modal({
   cancelText = "Cancel",
   onConfirm,
 }: ModalProps) {
+  const containerRef = useFocusTrap<HTMLDivElement>(isOpen);
+
   if (!isOpen) return null;
 
   const Icon = variantIcons[variant];
@@ -56,29 +59,36 @@ export function Modal({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
       onClick={type === "alert" ? onClose : undefined}
+      role="presentation"
     >
       <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
         className="relative w-full max-w-md overflow-hidden rounded-lg bg-white dark:bg-gray-900"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-start gap-3 p-6">
-          <Icon className={`mt-1 h-6 w-6 flex-shrink-0 ${iconColor}`} />
+          <Icon className={`mt-1 h-6 w-6 flex-shrink-0 ${iconColor}`} aria-hidden="true" />
           <div className="flex-1">
             {title && (
-              <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <h3 id="modal-title" className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
                 {title}
               </h3>
             )}
-            <div className="whitespace-pre-wrap text-gray-600 dark:text-gray-300">
+            <div id="modal-description" className="whitespace-pre-wrap text-gray-600 dark:text-gray-300">
               {message}
             </div>
           </div>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 

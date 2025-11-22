@@ -21,6 +21,7 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { useFeatureTracking } from "../hooks/useAnalytics";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 interface Command {
   id: string;
@@ -45,6 +46,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const containerRef = useFocusTrap<HTMLDivElement>(isOpen);
 
   const navigate = useNavigate();
   const { logout, session } = useAuth();
@@ -301,9 +303,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Command palette"
         className="relative z-10 w-full max-w-2xl rounded-lg shadow-2xl"
         style={{
           backgroundColor: "var(--bsky-bg-primary)",
@@ -314,13 +321,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           className="flex items-center gap-3 border-b px-4 py-3"
           style={{ borderColor: "var(--bsky-border-primary)" }}
         >
-          <Search size={20} style={{ color: "var(--bsky-text-secondary)" }} />
+          <Search size={20} style={{ color: "var(--bsky-text-secondary)" }} aria-hidden="true" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Type a command or search..."
+            aria-label="Search commands"
             className="flex-1 bg-transparent text-base outline-none placeholder:text-gray-500"
             style={{ color: "var(--bsky-text-primary)" }}
           />

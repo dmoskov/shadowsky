@@ -61,6 +61,7 @@ export const MobileTabBar: React.FC = () => {
 
   return (
     <nav
+      aria-label="Mobile navigation"
       className="bsky-glass fixed bottom-0 left-0 right-0 z-40 lg:hidden"
       style={{
         borderTop: "1px solid var(--bsky-border-primary)",
@@ -77,6 +78,8 @@ export const MobileTabBar: React.FC = () => {
               <button
                 key={tab.path}
                 onClick={handleHomeClick}
+                aria-label={`${tab.label}${isActive ? " (current)" : ""}`}
+                aria-current={isActive ? "page" : undefined}
                 className={`touch-target relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 transition-all ${
                   isActive ? "scale-105" : "opacity-70 hover:opacity-100"
                 }`}
@@ -87,7 +90,7 @@ export const MobileTabBar: React.FC = () => {
                 }}
               >
                 <div className="relative">
-                  {React.createElement(tab.icon, { size: 20 })}
+                  {React.createElement(tab.icon, { size: 20, "aria-hidden": true })}
                 </div>
               </button>
             );
@@ -98,6 +101,7 @@ export const MobileTabBar: React.FC = () => {
             <NavLink
               key={tab.path}
               to={tab.path}
+              aria-label={tab.label}
               className={({ isActive }) =>
                 `touch-target relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 transition-all ${
                   isActive ? "scale-105" : "opacity-70 hover:opacity-100"
@@ -110,7 +114,7 @@ export const MobileTabBar: React.FC = () => {
               })}
             >
               <div className="relative">
-                {React.createElement(tab.icon, { size: 20 })}
+                {React.createElement(tab.icon, { size: 20, "aria-hidden": true })}
                 {tab.path === "/notifications" &&
                   unreadCount !== undefined &&
                   unreadCount !== null &&
@@ -120,6 +124,7 @@ export const MobileTabBar: React.FC = () => {
                       style={{
                         backgroundColor: "var(--bsky-accent)",
                       }}
+                      aria-label={`${unreadCount} unread notifications`}
                     />
                   )}
               </div>

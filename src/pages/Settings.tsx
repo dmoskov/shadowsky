@@ -5,6 +5,7 @@ import { AppearanceSettings } from "../components/settings/AppearanceSettings";
 import { ComposerSettings } from "../components/settings/ComposerSettings";
 import { ContentModerationSettings } from "../components/settings/ContentModerationSettings";
 import { DataSettings } from "../components/settings/DataSettings";
+import { MediaCacheSettings } from "../components/settings/MediaCacheSettings";
 import { NotificationSettings } from "../components/settings/NotificationSettings";
 import { PrivacySettings } from "../components/settings/PrivacySettings";
 import { SettingsLayout } from "../components/settings/SettingsLayout";
@@ -30,6 +31,8 @@ export const Settings = () => {
         return <ContentModerationSettings />;
       case "data":
         return <DataSettings />;
+      case "media-cache":
+        return <MediaCacheSettings />;
       default:
         // Default to account settings
         return <AccountSettings />;

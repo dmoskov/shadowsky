@@ -12,9 +12,9 @@ export function ThemeToggle() {
       title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
     >
       {theme === "dark" ? (
-        <Sun size={20} style={{ color: "var(--bsky-text-primary)" }} />
+        <Sun size={20} style={{ color: "var(--bsky-text-primary)" }} aria-hidden="true" />
       ) : (
-        <Moon size={20} style={{ color: "var(--bsky-text-primary)" }} />
+        <Moon size={20} style={{ color: "var(--bsky-text-primary)" }} aria-hidden="true" />
       )}
     </button>
   );

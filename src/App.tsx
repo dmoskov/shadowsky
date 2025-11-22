@@ -7,12 +7,14 @@ import {
   Route,
   Routes,
   useLocation,
+  useNavigate,
 } from "react-router";
 import { BackgroundNotificationLoader } from "./components/BackgroundNotificationLoader";
 import { CommandPalette } from "./components/CommandPalette";
 import { DebugConsole } from "./components/DebugConsole";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Header } from "./components/Header";
+import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
 import { LandingPage } from "./components/LandingPage";
 import { MobileTabBar } from "./components/MobileTabBar";
 import { NotificationPermissionPrompt } from "./components/NotificationPermissionPrompt";
@@ -30,6 +32,7 @@ import { ModerationProvider } from "./contexts/ModerationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { useErrorTracking, usePageTracking } from "./hooks/useAnalytics";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
 import { analytics } from "./services/analytics";
 import { appPreferencesService } from "./services/app-preferences-service";
@@ -136,12 +139,14 @@ const queryClient = new QueryClient({
 });
 
 function AppContent() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, session } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isShortcutsHelpOpen, setIsShortcutsHelpOpen] = useState(false);
 
   // Check if we're on the home route
   const isHomeRoute =
@@ -154,19 +159,97 @@ function AppContent() {
   usePageTracking();
   useErrorTracking();
 
-  // Set up command palette keyboard shortcut
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd+K or Ctrl+K
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setIsCommandPaletteOpen(true);
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  // Set up global keyboard shortcuts
+  useKeyboardShortcuts(
+    [
+      // Command palette
+      {
+        key: "k",
+        meta: true,
+        description: "Open command palette",
+        category: "General",
+        action: () => setIsCommandPaletteOpen(true),
+      },
+      // Help
+      {
+        key: "?",
+        shift: true,
+        description: "Show keyboard shortcuts",
+        category: "General",
+        action: () => setIsShortcutsHelpOpen(true),
+      },
+      {
+        key: "/",
+        shift: false,
+        description: "Show keyboard shortcuts (alternative)",
+        category: "General",
+        action: () => setIsShortcutsHelpOpen(true),
+        preventDefault: false,
+      },
+      // Navigation shortcuts
+      {
+        key: "h",
+        meta: true,
+        description: "Go to home",
+        category: "Navigation",
+        action: () => navigate("/home"),
+      },
+      {
+        key: "n",
+        meta: true,
+        description: "Go to notifications",
+        category: "Navigation",
+        action: () => navigate("/notifications"),
+      },
+      {
+        key: "m",
+        meta: true,
+        description: "Go to messages",
+        category: "Navigation",
+        action: () => navigate("/messages"),
+      },
+      {
+        key: "b",
+        meta: true,
+        description: "Go to bookmarks",
+        category: "Navigation",
+        action: () => navigate("/bookmarks"),
+      },
+      {
+        key: "p",
+        meta: true,
+        description: "Go to profile",
+        category: "Navigation",
+        action: () => {
+          if (session?.handle) {
+            navigate(`/profile/${session.handle}`);
+          }
+        },
+      },
+      {
+        key: "/",
+        meta: true,
+        description: "Go to search",
+        category: "Navigation",
+        action: () => navigate("/search"),
+      },
+      {
+        key: ",",
+        meta: true,
+        description: "Open settings",
+        category: "Navigation",
+        action: () => navigate("/settings"),
+      },
+      // Single key shortcuts (vim-style)
+      {
+        key: "c",
+        description: "Compose new post",
+        category: "Actions",
+        action: () => navigate("/compose"),
+      },
+    ],
+    isAuthenticated,
+  );
 
   // Auto-collapse sidebar when viewport is too narrow for 3 columns
   useEffect(() => {
@@ -336,6 +419,10 @@ function AppContent() {
       <CommandPalette
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
+      />
+      <KeyboardShortcutsHelp
+        isOpen={isShortcutsHelpOpen}
+        onClose={() => setIsShortcutsHelpOpen(false)}
       />
     </div>
   );

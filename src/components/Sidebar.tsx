@@ -64,11 +64,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             backgroundColor: "rgba(0, 0, 0, 0.4)",
           }}
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
       {/* Sidebar */}
       <aside
+        role="navigation"
+        aria-label="Main navigation"
         className={`bsky-glass fixed bottom-0 top-16 z-40 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] ${isCollapsed ? "w-16" : "w-64"} max-w-[80vw] transform transition-all duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
         style={{
           borderRight: "1px solid var(--bsky-border-primary)",
@@ -79,9 +82,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <h2 className="bsky-gradient-text text-lg font-bold">Menu</h2>
           <button
             onClick={onClose}
+            aria-label="Close menu"
             className="rounded-lg p-2 transition-all hover:opacity-70"
           >
-            <X size={20} style={{ color: "var(--bsky-text-secondary)" }} />
+            <X size={20} style={{ color: "var(--bsky-text-secondary)" }} aria-hidden="true" />
           </button>
         </div>
 
