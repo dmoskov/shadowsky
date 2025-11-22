@@ -3,6 +3,63 @@ import { createLogger } from "../utils/logger";
 
 const logger = createLogger("BlueskyListService");
 
+interface RetryableError extends Error {
+  status?: number;
+}
+
+function isRetryableError(error: unknown): boolean {
+  if (!error) return false;
+
+  const err = error as RetryableError;
+
+  if (err.message?.toLowerCase().includes("network")) return true;
+  if (err.message?.toLowerCase().includes("timeout")) return true;
+  if (err.message?.toLowerCase().includes("fetch")) return true;
+  if (err.message?.toLowerCase().includes("econnrefused")) return true;
+  if (err.message?.toLowerCase().includes("etimedout")) return true;
+
+  if (err.status) {
+    if (err.status === 429) return true;
+    if (err.status >= 500 && err.status < 600) return true;
+  }
+
+  return false;
+}
+
+async function retryWithBackoff<T>(
+  operation: () => Promise<T>,
+  operationName: string,
+  maxAttempts = 5,
+  delays = [100, 500, 2000, 5000],
+): Promise<T> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+
+      if (!isRetryableError(error) || attempt === maxAttempts) {
+        logger.error(
+          `${operationName} failed after ${attempt} attempt(s):`,
+          error,
+        );
+        throw error;
+      }
+
+      const delay = delays[Math.min(attempt - 1, delays.length - 1)];
+      logger.log(
+        `${operationName} failed (attempt ${attempt}/${maxAttempts}), retrying in ${delay}ms...`,
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError;
+}
+
 export interface BlueskyList {
   uri: string;
   cid: string;
@@ -142,7 +199,7 @@ class BlueskyListService {
   ): Promise<BlueskyList> {
     this.ensureInitialized();
 
-    try {
+    return retryWithBackoff(async () => {
       const did = this.agent!.session?.did;
       if (!did) throw new Error("No session");
 
@@ -178,10 +235,7 @@ class BlueskyListService {
         listItemCount: 0,
         indexedAt: new Date().toISOString(),
       };
-    } catch (error) {
-      logger.error("Failed to create list:", error);
-      throw error;
-    }
+    }, "Create list");
   }
 
   async updateList(
@@ -190,7 +244,7 @@ class BlueskyListService {
   ): Promise<void> {
     this.ensureInitialized();
 
-    try {
+    return retryWithBackoff(async () => {
       const did = this.agent!.session?.did;
       if (!did) throw new Error("No session");
 
@@ -219,16 +273,13 @@ class BlueskyListService {
         rkey,
         record,
       });
-    } catch (error) {
-      logger.error(`Failed to update list ${uri}:`, error);
-      throw error;
-    }
+    }, `Update list ${uri}`);
   }
 
   async deleteList(uri: string): Promise<void> {
     this.ensureInitialized();
 
-    try {
+    return retryWithBackoff(async () => {
       const did = this.agent!.session?.did;
       if (!did) throw new Error("No session");
 
@@ -240,16 +291,13 @@ class BlueskyListService {
         collection: "app.bsky.graph.list",
         rkey,
       });
-    } catch (error) {
-      logger.error(`Failed to delete list ${uri}:`, error);
-      throw error;
-    }
+    }, `Delete list ${uri}`);
   }
 
   async addMemberToList(listUri: string, memberDid: string): Promise<void> {
     this.ensureInitialized();
 
-    try {
+    return retryWithBackoff(async () => {
       const did = this.agent!.session?.did;
       if (!did) throw new Error("No session");
 
@@ -265,16 +313,13 @@ class BlueskyListService {
         collection: "app.bsky.graph.listitem",
         record,
       });
-    } catch (error) {
-      logger.error(`Failed to add member to list ${listUri}:`, error);
-      throw error;
-    }
+    }, `Add member to list ${listUri}`);
   }
 
   async removeMemberFromList(listItemUri: string): Promise<void> {
     this.ensureInitialized();
 
-    try {
+    return retryWithBackoff(async () => {
       const did = this.agent!.session?.did;
       if (!did) throw new Error("No session");
 
@@ -286,10 +331,7 @@ class BlueskyListService {
         collection: "app.bsky.graph.listitem",
         rkey,
       });
-    } catch (error) {
-      logger.error(`Failed to remove member from list:`, error);
-      throw error;
-    }
+    }, "Remove member from list");
   }
 
   async getListsContainingMember(memberDid: string): Promise<string[]> {

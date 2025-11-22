@@ -1,12 +1,16 @@
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, RefreshCw } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { List, ListImperativeAPI, useDynamicRowHeight } from "react-window";
 import { useNavigate, useParams } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { blueskyListService } from "../services/bluesky-list-service";
 import { PostCard } from "./PostCard";
 import { ThreadModal } from "./ThreadModal";
+
+// Store scroll positions for each list
+const scrollPositions = new Map<string, number>();
 
 export const ListTimeline: React.FC = () => {
   const { listId } = useParams<{ listId: string }>();
@@ -20,7 +24,16 @@ export const ListTimeline: React.FC = () => {
   const [selectedPost, setSelectedPost] =
     useState<AppBskyFeedDefs.PostView | null>(null);
   const [showThread, setShowThread] = useState(false);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<ListImperativeAPI>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerHeight, setContainerHeight] = useState(600);
+  const [shouldRestoreScroll, setShouldRestoreScroll] = useState(false);
+
+  // Use dynamic row height hook
+  const dynamicRowHeight = useDynamicRowHeight({
+    defaultRowHeight: 200,
+    key: listUri,
+  });
 
   const { data: list, isLoading: listLoading } = useQuery({
     queryKey: ["list", listUri],
@@ -102,22 +115,66 @@ export const ListTimeline: React.FC = () => {
     }
   }, [members, agent]);
 
+  // Measure container height for virtual list
   useEffect(() => {
-    if (!loadMoreRef.current || !hasMore || loading) return;
+    if (!containerRef.current) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          loadPosts();
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerHeight(entry.contentRect.height);
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  // Restore scroll position when posts are loaded
+  useEffect(() => {
+    if (
+      shouldRestoreScroll &&
+      listUri &&
+      posts.length > 0 &&
+      scrollPositions.has(listUri) &&
+      listRef.current
+    ) {
+      const savedPosition = scrollPositions.get(listUri)!;
+      // Use setTimeout to ensure DOM is ready
+      setTimeout(() => {
+        if (listRef.current) {
+          listRef.current.scrollToRow({
+            index: 0,
+            behavior: "auto",
+          });
+          // Access element property safely
+          const element = listRef.current.element;
+          if (element) {
+            element.scrollTop = savedPosition;
+          }
         }
-      },
-      { threshold: 0.1 },
-    );
+      }, 0);
+      setShouldRestoreScroll(false);
+    }
+  }, [listUri, posts.length, shouldRestoreScroll]);
 
-    observer.observe(loadMoreRef.current);
+  // Mark that we should restore scroll on mount
+  useEffect(() => {
+    if (listUri && scrollPositions.has(listUri)) {
+      setShouldRestoreScroll(true);
+    }
+  }, [listUri]);
 
-    return () => observer.disconnect();
-  }, [hasMore, loading, cursor]);
+  // Save scroll position when navigating away
+  useEffect(() => {
+    return () => {
+      if (listUri && listRef.current) {
+        const element = listRef.current.element;
+        if (element) {
+          scrollPositions.set(listUri, element.scrollTop);
+        }
+      }
+    };
+  }, [listUri]);
 
   const handleRefresh = () => {
     setPosts([]);
@@ -130,6 +187,27 @@ export const ListTimeline: React.FC = () => {
     setSelectedPost(post);
     setShowThread(true);
   };
+
+  // Handle scroll for infinite loading
+  const handleRowsRendered = useCallback(
+    ({
+      visibleStopIndex,
+    }: {
+      overscanStartIndex: number;
+      overscanStopIndex: number;
+      visibleStartIndex: number;
+      visibleStopIndex: number;
+    }) => {
+      if (!hasMore || loading || posts.length === 0) return;
+
+      // Trigger load at 80% scroll position
+      const scrollPercentage = visibleStopIndex / posts.length;
+      if (scrollPercentage >= 0.8) {
+        loadPosts();
+      }
+    },
+    [hasMore, loading, posts.length]
+  );
 
   if (listLoading) {
     return (
@@ -187,7 +265,7 @@ export const ListTimeline: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div ref={containerRef} className="flex-1 overflow-hidden">
         {!members || members.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-center">
             <p className="text-bsky-text-secondary">
@@ -200,29 +278,46 @@ export const ListTimeline: React.FC = () => {
               No posts from list members yet
             </p>
           </div>
-        ) : (
-          <>
-            {posts.map((feedItem) => (
-              <div
-                key={feedItem.post.uri}
-                onClick={() => openPostThread(feedItem.post)}
-              >
-                <PostCard
-                  post={feedItem.post}
-                  reason={feedItem.reason}
-                  onLike={() => {}}
-                  onRepost={() => {}}
-                  onReply={() => {}}
-                  onBookmark={() => {}}
-                />
-              </div>
-            ))}
-            {hasMore && (
-              <div ref={loadMoreRef} className="flex justify-center p-4">
-                <div className="border-t-bsky-accent-primary h-6 w-6 animate-spin rounded-full border-2 border-bsky-border-primary" />
-              </div>
-            )}
-          </>
+        ) : posts.length > 0 ? (
+          <List
+            listRef={listRef}
+            rowCount={posts.length}
+            rowHeight={dynamicRowHeight}
+            defaultHeight={containerHeight}
+            onRowsRendered={handleRowsRendered}
+            overscanCount={5}
+            rowComponent={({ index }) => {
+              const feedItem = posts[index];
+              return (
+                <div onClick={() => openPostThread(feedItem.post)}>
+                  <PostCard
+                    post={feedItem.post}
+                    reason={feedItem.reason}
+                    onLike={() => {}}
+                    onRepost={() => {}}
+                    onReply={() => {}}
+                    onBookmark={() => {}}
+                  />
+                </div>
+              );
+            }}
+            rowProps={{}}
+          >
+            {(elements) => {
+              // Observe row elements for dynamic height measurement
+              dynamicRowHeight.observeRowElements(elements);
+              return null;
+            }}
+          </List>
+        ) : loading ? (
+          <div className="flex justify-center p-4">
+            <div className="border-t-bsky-accent-primary h-6 w-6 animate-spin rounded-full border-2 border-bsky-border-primary" />
+          </div>
+        ) : null}
+        {posts.length > 0 && loading && (
+          <div className="flex justify-center p-4">
+            <div className="border-t-bsky-accent-primary h-6 w-6 animate-spin rounded-full border-2 border-bsky-border-primary" />
+          </div>
         )}
       </div>
 

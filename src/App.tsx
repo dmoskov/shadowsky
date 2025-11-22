@@ -273,12 +273,29 @@ function AppContent() {
               />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/conversations" element={<Conversations />} />
-              <Route path="/messages" element={<DirectMessages />} />
+              <Route
+                path="/messages"
+                element={
+                  <ErrorBoundary
+                    componentName="Direct Messages"
+                    onError={(error) => {
+                      analytics.trackError(error, "DirectMessages");
+                    }}
+                  >
+                    <DirectMessages />
+                  </ErrorBoundary>
+                }
+              />
               <Route path="/bookmarks" element={<Bookmarks />} />
               <Route
                 path="/lists"
                 element={
-                  <ErrorBoundary componentName="Lists">
+                  <ErrorBoundary
+                    componentName="Lists"
+                    onError={(error) => {
+                      analytics.trackError(error, "Lists");
+                    }}
+                  >
                     <Lists />
                   </ErrorBoundary>
                 }
@@ -286,7 +303,12 @@ function AppContent() {
               <Route
                 path="/lists/:listId"
                 element={
-                  <ErrorBoundary componentName="List Timeline">
+                  <ErrorBoundary
+                    componentName="List Timeline"
+                    onError={(error) => {
+                      analytics.trackError(error, "ListTimeline");
+                    }}
+                  >
                     <ListTimeline />
                   </ErrorBoundary>
                 }

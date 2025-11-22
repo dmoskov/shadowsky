@@ -1,7 +1,7 @@
 import { debug } from "@bsky/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { dmService, type DmConversation } from "../services/dm-service";
 import { MessageReactions } from "./MessageReactions";
@@ -15,8 +15,58 @@ export const DirectMessages: React.FC = () => {
   const [messageText, setMessageText] = useState("");
   const [chatError, setChatError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastActivityRef = useRef<number>(Date.now());
+  const [isTabVisible, setIsTabVisible] = useState<boolean>(!document.hidden);
 
-  // Fetch conversations list
+  // Track user activity
+  const updateActivity = useCallback(() => {
+    lastActivityRef.current = Date.now();
+  }, []);
+
+  // Check if user is inactive (no activity for 2 minutes)
+  const isUserInactive = useCallback(() => {
+    return Date.now() - lastActivityRef.current > 2 * 60 * 1000; // 2 minutes
+  }, []);
+
+  // Calculate polling interval based on activity and visibility
+  const getPollingInterval = useCallback(() => {
+    if (!isTabVisible) {
+      return false; // Don't poll when tab is hidden
+    }
+    if (isUserInactive()) {
+      return 30000; // 30 seconds when inactive
+    }
+    return 5000; // 5 seconds when active
+  }, [isTabVisible, isUserInactive]);
+
+  // Set up visibility change handler
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsTabVisible(!document.hidden);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  // Set up activity tracking
+  useEffect(() => {
+    const events = ["mousedown", "keydown", "touchstart", "scroll"];
+
+    events.forEach((event) => {
+      window.addEventListener(event, updateActivity, { passive: true });
+    });
+
+    return () => {
+      events.forEach((event) => {
+        window.removeEventListener(event, updateActivity);
+      });
+    };
+  }, [updateActivity]);
+
+  // Fetch conversations list with dynamic polling
   const {
     data: conversations,
     isLoading: loadingConversations,
@@ -24,8 +74,8 @@ export const DirectMessages: React.FC = () => {
   } = useQuery({
     queryKey: ["dm-conversations"],
     queryFn: () => dmService.listConversations(),
-    refetchInterval: 30000, // Refresh every 30 seconds
-    refetchIntervalInBackground: true,
+    refetchInterval: getPollingInterval,
+    enabled: isTabVisible,
     retry: 1,
   });
 
@@ -40,33 +90,16 @@ export const DirectMessages: React.FC = () => {
     }
   }, [conversationsError]);
 
-  // Fetch messages for selected conversation
-  const {
-    data: conversationData,
-    isLoading: loadingMessages,
-    refetch: refetchMessages,
-  } = useQuery({
+  // Fetch messages for selected conversation with smart polling
+  const { data: conversationData, isLoading: loadingMessages } = useQuery({
     queryKey: ["dm-conversation", selectedConversation],
     queryFn: () =>
       selectedConversation
         ? dmService.getConversation(selectedConversation)
         : null,
-    enabled: !!selectedConversation,
-    refetchInterval: 5000, // Refresh every 5 seconds
-    refetchIntervalInBackground: true,
+    enabled: !!selectedConversation && isTabVisible,
+    refetchInterval: selectedConversation ? getPollingInterval : false,
   });
-
-  // Refetch messages when a new message is sent
-  useEffect(() => {
-    if (selectedConversation && conversationData) {
-      // Set up a more aggressive polling when conversation is active
-      const interval = setInterval(() => {
-        refetchMessages();
-      }, 3000);
-
-      return () => clearInterval(interval);
-    }
-  }, [selectedConversation, conversationData, refetchMessages]);
 
   // Send message mutation
   const sendMessageMutation = useMutation({
