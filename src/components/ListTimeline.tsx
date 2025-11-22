@@ -190,18 +190,14 @@ export const ListTimeline: React.FC = () => {
 
   // Handle scroll for infinite loading
   const handleRowsRendered = useCallback(
-    ({
-      visibleStopIndex,
-    }: {
-      overscanStartIndex: number;
-      overscanStopIndex: number;
-      visibleStartIndex: number;
-      visibleStopIndex: number;
-    }) => {
+    (
+      visibleRows: { startIndex: number; stopIndex: number },
+      _allRows: { startIndex: number; stopIndex: number }
+    ) => {
       if (!hasMore || loading || posts.length === 0) return;
 
       // Trigger load at 80% scroll position
-      const scrollPercentage = visibleStopIndex / posts.length;
+      const scrollPercentage = visibleRows.stopIndex / posts.length;
       if (scrollPercentage >= 0.8) {
         loadPosts();
       }
@@ -302,13 +298,7 @@ export const ListTimeline: React.FC = () => {
               );
             }}
             rowProps={{}}
-          >
-            {(elements) => {
-              // Observe row elements for dynamic height measurement
-              dynamicRowHeight.observeRowElements(elements);
-              return null;
-            }}
-          </List>
+          />
         ) : loading ? (
           <div className="flex justify-center p-4">
             <div className="border-t-bsky-accent-primary h-6 w-6 animate-spin rounded-full border-2 border-bsky-border-primary" />
