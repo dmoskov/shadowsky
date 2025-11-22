@@ -2,8 +2,8 @@ import { AppBskyFeedDefs } from "@atproto/api";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { List, ListImperativeAPI, useDynamicRowHeight } from "react-window";
 import { useNavigate, useParams } from "react-router";
+import { List, ListImperativeAPI, useDynamicRowHeight } from "react-window";
 import { useAuth } from "../contexts/AuthContext";
 import { blueskyListService } from "../services/bluesky-list-service";
 import { PostCard } from "./PostCard";
@@ -192,7 +192,7 @@ export const ListTimeline: React.FC = () => {
   const handleRowsRendered = useCallback(
     (
       visibleRows: { startIndex: number; stopIndex: number },
-      _allRows: { startIndex: number; stopIndex: number }
+      _allRows: { startIndex: number; stopIndex: number },
     ) => {
       if (!hasMore || loading || posts.length === 0) return;
 
@@ -202,7 +202,7 @@ export const ListTimeline: React.FC = () => {
         loadPosts();
       }
     },
-    [hasMore, loading, posts.length]
+    [hasMore, loading, posts.length],
   );
 
   if (listLoading) {
@@ -282,10 +282,13 @@ export const ListTimeline: React.FC = () => {
             defaultHeight={containerHeight}
             onRowsRendered={handleRowsRendered}
             overscanCount={5}
-            rowComponent={({ index }) => {
+            rowComponent={({ index, style }) => {
               const feedItem = posts[index];
               return (
-                <div onClick={() => openPostThread(feedItem.post)}>
+                <div
+                  style={style}
+                  onClick={() => openPostThread(feedItem.post)}
+                >
                   <PostCard
                     post={feedItem.post}
                     reason={feedItem.reason}
