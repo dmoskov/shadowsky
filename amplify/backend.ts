@@ -16,6 +16,7 @@ import { adjustTone } from './functions/adjust-tone/resource';
 import { optimizeThread } from './functions/optimize-thread/resource';
 import { suggestHashtags } from './functions/suggest-hashtags/resource';
 import { styleAnalysis } from './functions/style-analysis/resource';
+import { analyzePosts } from './functions/analyze-posts/resource';
 import { createAnthropicDashboard, createAnthropicAlarms } from './functions/shared/cloudwatch-dashboard';
 import { createCloudWatchLogsKmsKey, SENSITIVE_LAMBDA_FUNCTIONS } from './functions/shared/kms-encryption';
 
@@ -31,6 +32,7 @@ const backend = defineBackend({
   optimizeThread,
   suggestHashtags,
   styleAnalysis,
+  analyzePosts,
 });
 
 // Create a stack for the API
@@ -81,6 +83,9 @@ const suggestHashtagsIntegration = new LambdaIntegration(
 const styleAnalysisIntegration = new LambdaIntegration(
   backend.styleAnalysis.resources.lambda
 );
+const analyzePostsIntegration = new LambdaIntegration(
+  backend.analyzePosts.resources.lambda
+);
 
 // Add method options with NONE authorization (no authentication required)
 const methodOptions = {
@@ -105,6 +110,9 @@ suggestHashtagsResource.addMethod('POST', suggestHashtagsIntegration, methodOpti
 
 const styleAnalysisResource = apiResource.addResource('style-analysis');
 styleAnalysisResource.addMethod('POST', styleAnalysisIntegration, methodOptions);
+
+const analyzePostsResource = apiResource.addResource('analyze-posts');
+analyzePostsResource.addMethod('POST', analyzePostsIntegration, methodOptions);
 
 // Create DynamoDB table for alt-text cache
 const altTextCacheTable = new Table(apiStack, 'AltTextCache', {
@@ -141,6 +149,7 @@ const lambdaFunctions = {
   'optimize-thread': backend.optimizeThread.resources.lambda,
   'suggest-hashtags': backend.suggestHashtags.resources.lambda,
   'style-analysis': backend.styleAnalysis.resources.lambda,
+  'analyze-posts': backend.analyzePosts.resources.lambda,
 };
 
 SENSITIVE_LAMBDA_FUNCTIONS.forEach((functionName) => {

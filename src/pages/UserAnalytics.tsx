@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { endOfDay, format, startOfDay, subDays, subMonths } from "date-fns";
+import { endOfDay, format, startOfDay, subDays } from "date-fns";
 import {
   BarChart3,
   Clock,
@@ -16,7 +16,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { analyzePosts, type PostAnalysisPost } from "../services/anthropic";
 import { proxifyBskyImage } from "../utils/image-proxy";
 
-type DateRange = "7d" | "30d" | "90d" | "all";
+type DateRange = "24h" | "7d" | "30d" | "90d";
 
 interface PostEngagement {
   uri: string;
@@ -44,6 +44,9 @@ export const UserAnalytics: React.FC = () => {
     let start: Date;
 
     switch (dateRange) {
+      case "24h":
+        start = startOfDay(subDays(now, 1));
+        break;
       case "7d":
         start = startOfDay(subDays(now, 7));
         break;
@@ -52,9 +55,6 @@ export const UserAnalytics: React.FC = () => {
         break;
       case "90d":
         start = startOfDay(subDays(now, 90));
-        break;
-      case "all":
-        start = startOfDay(subMonths(now, 12));
         break;
     }
 
@@ -80,7 +80,7 @@ export const UserAnalytics: React.FC = () => {
       const allPosts: any[] = [];
       let cursor: string | undefined;
       let shouldContinue = true;
-      const maxPages = dateRange === "all" ? 20 : 10;
+      const maxPages = dateRange === "24h" ? 5 : 10;
 
       for (let page = 0; page < maxPages && shouldContinue; page++) {
         const response = await agent.getAuthorFeed({
@@ -207,13 +207,13 @@ export const UserAnalytics: React.FC = () => {
     if (!postsData?.dailyEngagement) return [];
 
     const days =
-      dateRange === "7d"
-        ? 7
-        : dateRange === "30d"
-          ? 30
-          : dateRange === "90d"
-            ? 90
-            : 365;
+      dateRange === "24h"
+        ? 1
+        : dateRange === "7d"
+          ? 7
+          : dateRange === "30d"
+            ? 30
+            : 90;
     const data = [];
 
     for (let i = days - 1; i >= 0; i--) {
@@ -281,13 +281,13 @@ export const UserAnalytics: React.FC = () => {
     if (!postsData?.dailyEngagement) return [];
 
     const days =
-      dateRange === "7d"
-        ? 7
-        : dateRange === "30d"
-          ? 30
-          : dateRange === "90d"
-            ? 90
-            : 365;
+      dateRange === "24h"
+        ? 1
+        : dateRange === "7d"
+          ? 7
+          : dateRange === "30d"
+            ? 30
+            : 90;
     const data = [];
 
     for (let i = days - 1; i >= 0; i--) {
@@ -350,6 +350,20 @@ export const UserAnalytics: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setDateRange("24h")}
+            className="rounded-lg px-3 py-1.5 text-sm transition-all hover:opacity-80"
+            style={{
+              backgroundColor:
+                dateRange === "24h"
+                  ? "var(--bsky-primary)"
+                  : "var(--bsky-bg-tertiary)",
+              color:
+                dateRange === "24h" ? "white" : "var(--bsky-text-secondary)",
+            }}
+          >
+            24 hours
+          </button>
+          <button
             onClick={() => setDateRange("7d")}
             className="rounded-lg px-3 py-1.5 text-sm transition-all hover:opacity-80"
             style={{
@@ -390,20 +404,6 @@ export const UserAnalytics: React.FC = () => {
             }}
           >
             90 days
-          </button>
-          <button
-            onClick={() => setDateRange("all")}
-            className="rounded-lg px-3 py-1.5 text-sm transition-all hover:opacity-80"
-            style={{
-              backgroundColor:
-                dateRange === "all"
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-bg-tertiary)",
-              color:
-                dateRange === "all" ? "white" : "var(--bsky-text-secondary)",
-            }}
-          >
-            All time
           </button>
         </div>
       </div>

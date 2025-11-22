@@ -56,6 +56,7 @@ export const SENSITIVE_LAMBDA_FUNCTIONS = [
   'optimize-thread',      // Contains: user thread content, optimized segments
   'suggest-hashtags',     // Contains: user post content
   'style-analysis',       // Contains: current text, historical posts
+  'analyze-posts',        // Contains: post text, engagement metrics, user patterns
 ] as const;
 
 export type SensitiveLambdaFunction = typeof SENSITIVE_LAMBDA_FUNCTIONS[number];
@@ -92,6 +93,11 @@ export const LAMBDA_DATA_CLASSIFICATION = {
   'style-analysis': {
     sensitiveFields: ['currentText', 'historicalPosts'],
     dataTypes: ['User-Generated Content', 'User Behavior Patterns', 'PII (potential)'],
+    retentionRecommendation: '30 days',
+  },
+  'analyze-posts': {
+    sensitiveFields: ['posts', 'text', 'createdAt', 'likes', 'reposts', 'replies'],
+    dataTypes: ['User-Generated Content', 'Engagement Metrics', 'User Behavior Patterns', 'PII (potential)'],
     retentionRecommendation: '30 days',
   },
 } as const;
