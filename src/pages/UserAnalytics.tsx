@@ -7,9 +7,11 @@ import {
   Lightbulb,
   MessageCircle,
   Repeat2,
+  Search,
   Sparkles,
   TrendingUp,
   Users,
+  X,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
@@ -37,6 +39,11 @@ export const UserAnalytics: React.FC = () => {
   const { agent, session } = useAuth();
   const [dateRange, setDateRange] = useState<DateRange>("30d");
   const [analysisRequested, setAnalysisRequested] = useState(false);
+  const [customHandle, setCustomHandle] = useState<string>("");
+  const [searchInput, setSearchInput] = useState<string>("");
+
+  // Use custom handle if provided, otherwise use logged-in user's handle
+  const activeHandle = customHandle || session?.handle;
 
   const { startDate, endDate } = useMemo(() => {
     const now = new Date();
@@ -62,20 +69,20 @@ export const UserAnalytics: React.FC = () => {
   }, [dateRange]);
 
   const { data: profileData, isLoading: isLoadingProfile } = useQuery({
-    queryKey: ["user-profile", session?.handle],
+    queryKey: ["user-profile", activeHandle],
     queryFn: async () => {
-      if (!agent || !session?.handle) throw new Error("Not authenticated");
-      const profile = await agent.getProfile({ actor: session.handle });
+      if (!agent || !activeHandle) throw new Error("No user to fetch");
+      const profile = await agent.getProfile({ actor: activeHandle });
       return profile.data;
     },
     staleTime: 5 * 60 * 1000,
-    enabled: !!agent && !!session?.handle,
+    enabled: !!agent && !!activeHandle,
   });
 
   const { data: postsData, isLoading: isLoadingPosts } = useQuery({
-    queryKey: ["user-posts", session?.handle, dateRange],
+    queryKey: ["user-posts", activeHandle, dateRange],
     queryFn: async () => {
-      if (!agent || !session?.handle) throw new Error("Not authenticated");
+      if (!agent || !activeHandle) throw new Error("No user to fetch");
 
       const allPosts: any[] = [];
       let cursor: string | undefined;
@@ -84,7 +91,7 @@ export const UserAnalytics: React.FC = () => {
 
       for (let page = 0; page < maxPages && shouldContinue; page++) {
         const response = await agent.getAuthorFeed({
-          actor: session.handle,
+          actor: activeHandle,
           limit: 100,
           cursor,
         });
@@ -176,11 +183,11 @@ export const UserAnalytics: React.FC = () => {
       };
     },
     staleTime: 5 * 60 * 1000,
-    enabled: !!agent && !!session?.handle,
+    enabled: !!agent && !!activeHandle,
   });
 
   const { data: analysisData, isLoading: isLoadingAnalysis } = useQuery({
-    queryKey: ["post-analysis", session?.handle, dateRange],
+    queryKey: ["post-analysis", activeHandle, dateRange],
     queryFn: async () => {
       if (!postsData?.posts || postsData.posts.length === 0) {
         throw new Error("No posts available for analysis");
@@ -330,10 +337,25 @@ export const UserAnalytics: React.FC = () => {
     );
   }
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const handle = searchInput.trim().replace(/^@/, "");
+    if (handle) {
+      setCustomHandle(handle);
+      setAnalysisRequested(false); // Reset analysis when switching users
+    }
+  };
+
+  const handleClearSearch = () => {
+    setCustomHandle("");
+    setSearchInput("");
+    setAnalysisRequested(false);
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
+        <div className="flex-1">
           <h1
             className="mb-2 text-2xl font-bold"
             style={{ color: "var(--bsky-text-primary)" }}
@@ -341,11 +363,58 @@ export const UserAnalytics: React.FC = () => {
             Performance Analytics
           </h1>
           <p
-            className="text-sm"
+            className="mb-3 text-sm"
             style={{ color: "var(--bsky-text-secondary)" }}
           >
-            Track your post engagement over time
+            {customHandle
+              ? `Viewing analytics for @${customHandle}`
+              : "Track your post engagement over time"}
           </p>
+
+          {/* User Search */}
+          <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
+            <div className="relative flex-1 max-w-md">
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Search by handle (e.g., username.bsky.social)"
+                className="w-full rounded-lg py-2 pl-10 pr-10 text-sm transition-all"
+                style={{
+                  backgroundColor: "var(--bsky-bg-tertiary)",
+                  color: "var(--bsky-text-primary)",
+                  border: "1px solid var(--bsky-border-primary)",
+                }}
+              />
+              {(searchInput || customHandle) && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-all hover:bg-opacity-80"
+                  style={{
+                    color: "var(--bsky-text-secondary)",
+                  }}
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="rounded-lg px-4 py-2 text-sm font-medium transition-all hover:opacity-90"
+              style={{
+                backgroundColor: "var(--bsky-primary)",
+                color: "white",
+              }}
+            >
+              View User
+            </button>
+          </form>
         </div>
 
         <div className="flex items-center gap-2">
