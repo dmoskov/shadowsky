@@ -1,11 +1,13 @@
 import { ArrowUp, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useErrorTracking } from "../hooks/useErrorTracking";
 import { columnService } from "../services/column-service";
 import { useStorageErrorManager } from "../services/storage/storage-error-manager";
 import { BookmarksColumn } from "./BookmarksColumn";
 import { ColumnHeader } from "./ColumnHeader";
 import { ConversationsSimple as Conversations } from "./ConversationsSimple";
 import { DirectMessagesColumn } from "./DirectMessagesColumn";
+import { ErrorBoundary } from "./ErrorBoundary";
 import { Home } from "./Home";
 import { NotificationsFeed } from "./NotificationsFeed";
 import type { Column } from "./SkyDeck";
@@ -30,6 +32,7 @@ export default function SkyColumn({
 }: SkyColumnProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { handleStorageError } = useStorageErrorManager();
+  const { logError } = useErrorTracking();
   const [hasScrollTop, setHasScrollTop] = useState(false);
   const [hasScrollBottom, setHasScrollBottom] = useState(false);
   const [currentFeedLabel, setCurrentFeedLabel] = useState<string>("");
@@ -142,41 +145,88 @@ export default function SkyColumn({
   const renderContent = () => {
     switch (column.type) {
       case "notifications":
-        return <NotificationsFeed />;
+        return (
+          <ErrorBoundary
+            componentName="Notifications"
+            onError={(error, errorInfo) =>
+              logError(error, errorInfo, "NotificationsFeed")
+            }
+          >
+            <NotificationsFeed />
+          </ErrorBoundary>
+        );
 
       case "timeline":
         return (
-          <VisualTimeline
-            hideTimeLabels={true}
-            isInSkyDeck={true}
-            isFocused={isFocused}
-          />
+          <ErrorBoundary
+            componentName="Timeline"
+            onError={(error, errorInfo) =>
+              logError(error, errorInfo, "VisualTimeline")
+            }
+          >
+            <VisualTimeline
+              hideTimeLabels={true}
+              isInSkyDeck={true}
+              isFocused={isFocused}
+            />
+          </ErrorBoundary>
         );
 
       case "conversations":
-        return <Conversations isFocused={isFocused} />;
+        return (
+          <ErrorBoundary
+            componentName="Conversations"
+            onError={(error, errorInfo) =>
+              logError(error, errorInfo, "Conversations")
+            }
+          >
+            <Conversations isFocused={isFocused} />
+          </ErrorBoundary>
+        );
 
       case "messages":
-        return <DirectMessagesColumn />;
+        return (
+          <ErrorBoundary
+            componentName="Direct Messages"
+            onError={(error, errorInfo) =>
+              logError(error, errorInfo, "DirectMessagesColumn")
+            }
+          >
+            <DirectMessagesColumn />
+          </ErrorBoundary>
+        );
 
       case "bookmarks":
-        return <BookmarksColumn isFocused={isFocused} />;
+        return (
+          <ErrorBoundary
+            componentName="Bookmarks"
+            onError={(error, errorInfo) =>
+              logError(error, errorInfo, "BookmarksColumn")
+            }
+          >
+            <BookmarksColumn isFocused={isFocused} />
+          </ErrorBoundary>
+        );
 
       case "feed":
-        // Use the Home component for all feed columns
         return (
-          <Home
-            initialFeedUri={selectedFeedUri || column.data}
-            isFocused={isFocused}
-            columnId={column.id}
-            onFeedChange={(_, label, options) => {
-              setCurrentFeedLabel(label);
-              setFeedOptions(options);
-            }}
-            onRefreshRequest={refreshCounter}
-            showFeedDiscovery={showFeedDiscovery}
-            onCloseFeedDiscovery={() => setShowFeedDiscovery(false)}
-          />
+          <ErrorBoundary
+            componentName="Feed"
+            onError={(error, errorInfo) => logError(error, errorInfo, "Home")}
+          >
+            <Home
+              initialFeedUri={selectedFeedUri || column.data}
+              isFocused={isFocused}
+              columnId={column.id}
+              onFeedChange={(_, label, options) => {
+                setCurrentFeedLabel(label);
+                setFeedOptions(options);
+              }}
+              onRefreshRequest={refreshCounter}
+              showFeedDiscovery={showFeedDiscovery}
+              onCloseFeedDiscovery={() => setShowFeedDiscovery(false)}
+            />
+          </ErrorBoundary>
         );
 
       default:

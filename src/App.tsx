@@ -11,6 +11,7 @@ import {
 import { BackgroundNotificationLoader } from "./components/BackgroundNotificationLoader";
 import { CommandPalette } from "./components/CommandPalette";
 import { DebugConsole } from "./components/DebugConsole";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Header } from "./components/Header";
 import { LandingPage } from "./components/LandingPage";
 import { MobileTabBar } from "./components/MobileTabBar";
@@ -274,8 +275,22 @@ function AppContent() {
               <Route path="/conversations" element={<Conversations />} />
               <Route path="/messages" element={<DirectMessages />} />
               <Route path="/bookmarks" element={<Bookmarks />} />
-              <Route path="/lists" element={<Lists />} />
-              <Route path="/lists/:listId" element={<ListTimeline />} />
+              <Route
+                path="/lists"
+                element={
+                  <ErrorBoundary componentName="Lists">
+                    <Lists />
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="/lists/:listId"
+                element={
+                  <ErrorBoundary componentName="List Timeline">
+                    <ListTimeline />
+                  </ErrorBoundary>
+                }
+              />
               <Route path="/compose" element={<Composer />} />
               <Route path="/search" element={<Search />} />
               <Route path="/profile/:handle" element={<ProfilePage />} />
