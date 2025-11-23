@@ -48,6 +48,7 @@ This implementation adds media caching with IndexedDB storage for offline viewin
 ### Cache Management UI
 
 Located at `/settings/media-cache`, provides:
+
 - Real-time cache usage statistics
 - Visual progress bar with color coding (green/yellow/red)
 - Breakdown by media type (images, videos, etc.)
@@ -60,7 +61,7 @@ Located at `/settings/media-cache`, provides:
 ### Basic Caching
 
 ```typescript
-import { MediaCacheService } from '../services/media-cache-service';
+import { MediaCacheService } from "../services/media-cache-service";
 
 const mediaCache = MediaCacheService.getInstance();
 await mediaCache.init();
@@ -107,7 +108,7 @@ console.log(`Total size: ${formatBytes(stats.totalSize)}`);
 await mediaCache.clearCache();
 
 // Clear specific media type
-const removedCount = await mediaCache.clearCacheByType('image/jpeg');
+const removedCount = await mediaCache.clearCacheByType("image/jpeg");
 
 // Update max size
 await mediaCache.setMaxSize(200 * 1024 * 1024); // 200MB
@@ -132,6 +133,7 @@ Users can customize max cache size via Settings > Media Cache.
 ### IndexedDB Schema
 
 **Media Store:**
+
 - Key: `url` (media URL)
 - Indexes:
   - `by_last_accessed` (for LRU eviction)
@@ -139,6 +141,7 @@ Users can customize max cache size via Settings > Media Cache.
   - `by_size` (for size-based queries)
 
 **Metadata Store:**
+
 - Key: `id` ('main')
 - Contains: totalSize, totalItems, maxSize, lastCleanup
 
@@ -158,6 +161,7 @@ Users can customize max cache size via Settings > Media Cache.
 ## Future Enhancements
 
 Potential improvements:
+
 - Service worker integration for true offline support
 - Intelligent preloading based on scroll velocity
 - Network-aware caching (disable on slow connections)

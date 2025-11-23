@@ -41,12 +41,20 @@ export function useKeyboardShortcuts(
 
         const keyMatches =
           event.key.toLowerCase() === shortcut.key.toLowerCase();
-        const ctrlMatches = !!shortcut.ctrl === (event.ctrlKey || event.metaKey);
+        const ctrlMatches =
+          !!shortcut.ctrl === (event.ctrlKey || event.metaKey);
         const shiftMatches = !!shortcut.shift === event.shiftKey;
         const altMatches = !!shortcut.alt === event.altKey;
-        const metaMatches = !!shortcut.meta === (event.metaKey || event.ctrlKey);
+        const metaMatches =
+          !!shortcut.meta === (event.metaKey || event.ctrlKey);
 
-        if (keyMatches && ctrlMatches && shiftMatches && altMatches && metaMatches) {
+        if (
+          keyMatches &&
+          ctrlMatches &&
+          shiftMatches &&
+          altMatches &&
+          metaMatches
+        ) {
           if (shortcut.preventDefault !== false) {
             event.preventDefault();
           }
@@ -62,11 +70,7 @@ export function useKeyboardShortcuts(
 }
 
 // Single key shortcuts (no modifiers)
-export function useKeyPress(
-  key: string,
-  callback: () => void,
-  enabled = true,
-) {
+export function useKeyPress(key: string, callback: () => void, enabled = true) {
   useEffect(() => {
     if (!enabled) return;
 

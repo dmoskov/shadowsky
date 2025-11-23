@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useModal } from "../../contexts/ModalContext";
 import { appPreferencesService } from "../../services/app-preferences-service";
-import { bookmarkServiceV2 } from "../../services/bookmark-service-v2";
 import { columnService } from "../../services/column-service";
 import { getStoragePrefKey } from "../../services/storage/storage-constants";
 
@@ -43,13 +42,7 @@ export const DataSettings: React.FC = () => {
   const [localColumnCount, setLocalColumnCount] = useState<number>(0);
   const [showMigrationPrompt, setShowMigrationPrompt] =
     useState<boolean>(false);
-  const [existingBookmarks, setExistingBookmarks] = useState<{
-    local: number;
-    custom: number;
-    official: number;
-  } | null>(null);
-  const [isCheckingBookmarks, setIsCheckingBookmarks] = useState(false);
-  const [isMigratingBookmarks, setIsMigratingBookmarks] = useState(false);
+  // Note: Bookmark state variables removed - bookmarks now use only official API
 
   // Get current storage preferences
   const { data: appPreferences } = useQuery({
@@ -63,25 +56,8 @@ export const DataSettings: React.FC = () => {
     enabled: !!agent,
   });
 
-  // Check for existing bookmarks in different storage types
-  useQuery({
-    queryKey: ["existingBookmarks", appPreferences?.bookmarkStorageType],
-    queryFn: async () => {
-      if (!agent || appPreferences?.bookmarkStorageType !== "official")
-        return null;
-
-      setIsCheckingBookmarks(true);
-      try {
-        bookmarkServiceV2.setAgent(agent);
-        const counts = await bookmarkServiceV2.detectExistingBookmarks();
-        setExistingBookmarks(counts);
-        return counts;
-      } finally {
-        setIsCheckingBookmarks(false);
-      }
-    },
-    enabled: !!agent && appPreferences?.bookmarkStorageType === "official",
-  });
+  // Note: Bookmarks now use only the official AT Protocol API
+  // No need to check for existing bookmarks in different storage types
 
   // Fetch record counts for AT Protocol storage
   useQuery({
@@ -92,34 +68,8 @@ export const DataSettings: React.FC = () => {
       const counts: Record<string, number> = {};
 
       try {
-        // Count bookmarks if using AT Protocol
-        if (appPreferences.bookmarkStorageType === "custom") {
-          try {
-            // Bookmarks are stored in a singleton record, not individual records
-            const bookmarkResponse = await agent.api.com.atproto.repo.getRecord(
-              {
-                repo: agent.session?.did || "",
-                collection: "com.shadowsky.bookmarks",
-                rkey: "self",
-              },
-            );
-
-            if (bookmarkResponse.data.value) {
-              const bookmarksData = bookmarkResponse.data.value as any;
-              counts.bookmarks = bookmarksData.bookmarks?.length || 0;
-              setMissingRecords((prev) => ({ ...prev, bookmarks: false }));
-            }
-          } catch (error: any) {
-            if (error?.status === 400) {
-              // Record doesn't exist yet
-              setMissingRecords((prev) => ({ ...prev, bookmarks: true }));
-              counts.bookmarks = 0;
-            } else {
-              console.error("Failed to fetch bookmark count:", error);
-              counts.bookmarks = 0;
-            }
-          }
-        }
+        // Note: Bookmarks now use only the official AT Protocol API
+        // No custom storage counting needed
 
         // Count drafts if using AT Protocol
         if (appPreferences.draftStorageType === "custom") {
@@ -277,48 +227,6 @@ export const DataSettings: React.FC = () => {
     }
   };
 
-  const handleBookmarkMigration = async (fromType: "local" | "custom") => {
-    if (!agent) return;
-
-    setIsMigratingBookmarks(true);
-    setMessage(null);
-
-    try {
-      bookmarkServiceV2.setAgent(agent);
-      const result = await bookmarkServiceV2.migrateBookmarks(
-        fromType,
-        "official",
-      );
-
-      if (result.success) {
-        setMessage({
-          type: "success",
-          text: `Successfully migrated ${result.migratedCount} bookmarks to official storage`,
-        });
-
-        // Refresh bookmark counts
-        const counts = await bookmarkServiceV2.detectExistingBookmarks();
-        setExistingBookmarks(counts);
-
-        // Refresh bookmarks query
-        queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
-      } else {
-        setMessage({
-          type: "error",
-          text: result.error || "Failed to migrate bookmarks",
-        });
-      }
-    } catch (error) {
-      console.error("Bookmark migration error:", error);
-      setMessage({
-        type: "error",
-        text: "Failed to migrate bookmarks. Please try again.",
-      });
-    } finally {
-      setIsMigratingBookmarks(false);
-    }
-  };
-
   const handleStorageToggle = async (
     dataType: "bookmarks" | "columns" | "settings",
     enabled: boolean,
@@ -331,32 +239,9 @@ export const DataSettings: React.FC = () => {
       return;
     }
 
-    // Get current storage type
-    const currentType =
-      dataType === "bookmarks"
-        ? appPreferences?.bookmarkStorageType || "local"
-        : dataType === "columns"
-          ? appPreferences?.columnStorageType || "local"
-          : appPreferences?.isStoredInAtProto
-            ? "custom"
-            : "local";
-
-    // For bookmarks, handle transitions between all three types
-    let newType: StorageType;
-    if (dataType === "bookmarks") {
-      if (!enabled) {
-        newType = "local";
-      } else if (currentType === "custom") {
-        // If currently on custom, switch to official
-        newType = "official";
-      } else {
-        // If currently on local, switch to official
-        newType = "official";
-      }
-    } else {
-      // For other data types, use custom when enabled
-      newType = enabled ? "custom" : "local";
-    }
+    // Note: Bookmarks now use only the official AT Protocol API
+    // For other data types, use custom when enabled
+    const newType: StorageType = enabled ? "custom" : "local";
 
     // Show warning for enabling custom storage (but not for official bookmarks or private APIs)
     if (enabled) {
@@ -401,26 +286,22 @@ export const DataSettings: React.FC = () => {
 
     try {
       // Get current storage type - settings always use preferences API when custom
-      let currentType: StorageType = "local";
-      if (dataType === "settings") {
-        // Settings are stored in preferences API when any preference exists
-        currentType = appPreferences ? "custom" : "local";
-      } else {
-        const rawType =
-          appPreferences?.[
-            `${dataType === "columns" ? "column" : dataType === "bookmarks" ? "bookmark" : dataType}StorageType`
-          ] || "local";
-        // Normalize atproto to custom for columns
-        currentType = (
-          dataType === "columns" && rawType === "atproto" ? "custom" : rawType
-        ) as StorageType;
-      }
+      const currentType: StorageType =
+        dataType === "settings"
+          ? appPreferences
+            ? "custom"
+            : "local"
+          : dataType === "columns"
+            ? (appPreferences?.columnStorageType === "atproto"
+              ? "custom"
+              : (appPreferences?.columnStorageType as StorageType)) || "local"
+            : "local";
 
       // Migrate data based on type
       switch (dataType) {
         case "bookmarks":
-          bookmarkServiceV2.setAgent(agent);
-          await bookmarkServiceV2.migrateStorage(currentType, newType);
+          // Bookmarks now use only the official AT Protocol API
+          // No migration needed
           break;
         case "columns":
           columnService.setAgent(agent);
@@ -525,10 +406,7 @@ export const DataSettings: React.FC = () => {
       id: "bookmarks",
       name: "Bookmarks",
       icon: BookmarkIcon,
-      storageType:
-        successfulMigrations.bookmarks ||
-        appPreferences?.bookmarkStorageType ||
-        "official",
+      storageType: "official", // Bookmarks always use official AT Protocol API
       onToggle: (enabled) => handleStorageToggle("bookmarks", enabled),
       isLoading: loadingStates.bookmarks,
       localKey: "shadowsky-bookmarks-*",
@@ -888,75 +766,17 @@ export const DataSettings: React.FC = () => {
                               : "."}
                           </p>
                         )}
-                      {/* Migration UI for bookmarks */}
+                      {/* Bookmark info UI */}
                       {item.id === "bookmarks" &&
                         item.storageType === "official" && (
-                          <div className="mt-2 space-y-2">
-                            {isCheckingBookmarks ? (
-                              <p className="text-xs text-gray-500">
-                                Checking for existing bookmarks...
+                          <div className="mt-2">
+                            <div className="rounded-lg border border-green-200 bg-green-50 p-2 dark:border-green-800 dark:bg-green-900/20">
+                              <p className="text-xs text-green-700 dark:text-green-300">
+                                ✅ Using official private bookmark storage.
+                                Your bookmarks are private and synced across
+                                devices.
                               </p>
-                            ) : existingBookmarks &&
-                              (existingBookmarks.local > 0 ||
-                                existingBookmarks.custom > 0) ? (
-                              <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-800 dark:bg-yellow-900/20">
-                                <p className="mb-2 text-xs font-medium text-yellow-800 dark:text-yellow-200">
-                                  Found existing bookmarks in other storage:
-                                </p>
-                                <div className="space-y-1 text-xs text-yellow-700 dark:text-yellow-300">
-                                  {existingBookmarks.local > 0 && (
-                                    <div className="flex items-center justify-between">
-                                      <span>
-                                        • Local storage:{" "}
-                                        {existingBookmarks.local} bookmarks
-                                      </span>
-                                      <button
-                                        onClick={() =>
-                                          handleBookmarkMigration("local")
-                                        }
-                                        disabled={isMigratingBookmarks}
-                                        className="ml-2 rounded-md bg-yellow-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-yellow-700 disabled:opacity-50"
-                                      >
-                                        {isMigratingBookmarks
-                                          ? "Migrating..."
-                                          : "Import"}
-                                      </button>
-                                    </div>
-                                  )}
-                                  {existingBookmarks.custom > 0 && (
-                                    <div className="flex items-center justify-between">
-                                      <span>
-                                        • Custom AT Protocol:{" "}
-                                        {existingBookmarks.custom} bookmarks
-                                      </span>
-                                      <button
-                                        onClick={() =>
-                                          handleBookmarkMigration("custom")
-                                        }
-                                        disabled={isMigratingBookmarks}
-                                        className="ml-2 rounded-md bg-yellow-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-yellow-700 disabled:opacity-50"
-                                      >
-                                        {isMigratingBookmarks
-                                          ? "Migrating..."
-                                          : "Import"}
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-                                <p className="mt-2 text-xs text-yellow-600 dark:text-yellow-400">
-                                  ⚠️ Importing will move bookmarks to official
-                                  storage and clear the source.
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="rounded-lg border border-green-200 bg-green-50 p-2 dark:border-green-800 dark:bg-green-900/20">
-                                <p className="text-xs text-green-700 dark:text-green-300">
-                                  ✅ Using official private bookmark storage.
-                                  Your bookmarks are private and synced across
-                                  devices.
-                                </p>
-                              </div>
-                            )}
+                            </div>
                           </div>
                         )}
                       {/* Show privacy info for non-official bookmark storage */}
@@ -1012,12 +832,6 @@ export const DataSettings: React.FC = () => {
             >
               <span className="mb-2 block font-semibold">Current Values:</span>
               <div className="space-y-2 pl-4">
-                <div className="grid grid-cols-2 gap-2">
-                  <span>bookmarkStorageType:</span>
-                  <span className="font-medium">
-                    {appPreferences.bookmarkStorageType}
-                  </span>
-                </div>
                 <div className="grid grid-cols-2 gap-2">
                   <span>columnStorageType:</span>
                   <span className="font-medium">

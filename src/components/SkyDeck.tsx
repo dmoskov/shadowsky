@@ -5,7 +5,6 @@ import {
   Clock,
   Hash,
   Mail,
-  MessageSquare,
   Plus,
   Star,
   Users,
@@ -24,7 +23,6 @@ const logger = createLogger("SkyDeck");
 export type ColumnType =
   | "notifications"
   | "timeline"
-  | "conversations"
   | "feed"
   | "messages"
   | "bookmarks";
@@ -67,12 +65,6 @@ const columnOptions = [
     label: "Messages",
     icon: Mail,
     description: "Direct messages",
-  },
-  {
-    type: "conversations" as ColumnType,
-    label: "Conversations",
-    icon: MessageSquare,
-    description: "Your conversations",
   },
   {
     type: "bookmarks" as ColumnType,

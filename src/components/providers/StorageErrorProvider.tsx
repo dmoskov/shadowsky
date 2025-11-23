@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { bookmarkServiceV2 } from "../../services/bookmark-service-v2";
 import { draftService } from "../../services/draft-service";
 import { useStorageErrorManager } from "../../services/storage/storage-error-manager";
 
@@ -20,7 +19,7 @@ export function StorageErrorProvider({
     if (isAuthenticated) {
       // Set error callbacks for all storage services
       draftService.setErrorCallback(handleStorageError);
-      bookmarkServiceV2.setErrorCallback(handleStorageError);
+      // Note: bookmarkServiceV2 uses official AT Protocol API and doesn't need error callbacks
     }
   }, [isAuthenticated, handleStorageError]);
 

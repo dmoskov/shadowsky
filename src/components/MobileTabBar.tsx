@@ -90,7 +90,10 @@ export const MobileTabBar: React.FC = () => {
                 }}
               >
                 <div className="relative">
-                  {React.createElement(tab.icon, { size: 20, "aria-hidden": true })}
+                  {React.createElement(tab.icon, {
+                    size: 20,
+                    "aria-hidden": true,
+                  })}
                 </div>
               </button>
             );
@@ -114,7 +117,10 @@ export const MobileTabBar: React.FC = () => {
               })}
             >
               <div className="relative">
-                {React.createElement(tab.icon, { size: 20, "aria-hidden": true })}
+                {React.createElement(tab.icon, {
+                  size: 20,
+                  "aria-hidden": true,
+                })}
                 {tab.path === "/notifications" &&
                   unreadCount !== undefined &&
                   unreadCount !== null &&

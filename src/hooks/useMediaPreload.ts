@@ -1,6 +1,6 @@
+import { debug } from "@bsky/shared";
 import { useEffect, useRef } from "react";
 import { MediaCacheService } from "../services/media-cache-service";
-import { debug } from "@bsky/shared";
 
 interface MediaPreloadOptions {
   enabled?: boolean; // Whether preloading is enabled
@@ -17,11 +17,7 @@ export function useMediaPreload(
   currentIndex: number, // Current scroll position/index
   options: MediaPreloadOptions = {},
 ) {
-  const {
-    enabled = true,
-    lookahead = 5,
-    preloadVideos = false,
-  } = options;
+  const { enabled = true, lookahead = 5, preloadVideos = false } = options;
 
   const preloadedIndices = useRef(new Set<number>());
   const mediaCache = useRef<MediaCacheService | null>(null);

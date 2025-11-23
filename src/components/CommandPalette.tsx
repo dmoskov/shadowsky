@@ -321,7 +321,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           className="flex items-center gap-3 border-b px-4 py-3"
           style={{ borderColor: "var(--bsky-border-primary)" }}
         >
-          <Search size={20} style={{ color: "var(--bsky-text-secondary)" }} aria-hidden="true" />
+          <Search
+            size={20}
+            style={{ color: "var(--bsky-text-secondary)" }}
+            aria-hidden="true"
+          />
           <input
             ref={inputRef}
             type="text"

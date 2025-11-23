@@ -7,12 +7,14 @@ import {
   List,
   MoreHorizontal,
   Share2,
+  Sparkles,
   UserX,
   VolumeX,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate, useParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
 import { AddToListModal } from "../components/AddToListModal";
 import { PostCard } from "../components/PostCard";
 import { ReportModal } from "../components/ReportModal";
@@ -23,6 +25,9 @@ import { UserListModal } from "../components/UserListModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
+import {
+  analyzePosts,
+} from "../services/anthropic";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { getBskyProfileUrl } from "../utils/url-helpers";
 
@@ -82,12 +87,79 @@ export default function ProfilePage() {
   const [openThreadToQuote, setOpenThreadToQuote] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showAddToListModal, setShowAddToListModal] = useState(false);
+  const [showProfileAnalysis, setShowProfileAnalysis] = useState(false);
+  const [analysisRequested, setAnalysisRequested] = useState(false);
 
   const profileMenuButtonRef = useRef<HTMLButtonElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
     useOptimisticPosts();
+
+  // Shared function to fetch posts for analysis
+  const fetchPostsForAnalysis = async () => {
+    if (!agent || !handle) throw new Error("No handle to analyze");
+
+    const allPosts: any[] = [];
+    let fetchCursor: string | undefined;
+    const maxPages = 2; // Fetch up to 100 posts
+
+    for (let page = 0; page < maxPages; page++) {
+      const response = await agent.getAuthorFeed({
+        actor: handle,
+        limit: 50,
+        cursor: fetchCursor,
+      });
+
+      const filteredPosts = response.data.feed.filter((item) => {
+        const isRepost =
+          item.reason?.$type === "app.bsky.feed.defs#reasonRepost";
+        return !isRepost;
+      });
+
+      allPosts.push(...filteredPosts);
+      fetchCursor = response.data.cursor;
+      if (!fetchCursor) break;
+    }
+
+    if (allPosts.length === 0) {
+      throw new Error("No posts available for analysis");
+    }
+
+    return allPosts.map((item) => ({
+      text: item.post.record?.text || "",
+      createdAt: item.post.indexedAt,
+      likes: item.post.likeCount || 0,
+      reposts: item.post.repostCount || 0,
+      replies: item.post.replyCount || 0,
+    }));
+  };
+
+  // Quick haiku analysis (fast, 3-sentence summary)
+  const { data: haikuAnalysis, isLoading: isLoadingHaiku } = useQuery({
+    queryKey: ["profile-analysis-haiku", handle],
+    queryFn: async () => {
+      const posts = await fetchPostsForAnalysis();
+      return await analyzePosts(posts, "haiku");
+    },
+    staleTime: 30 * 60 * 1000,
+    enabled: analysisRequested && !!handle && !!agent,
+  });
+
+  // Full sonnet analysis (detailed)
+  const { data: sonnetAnalysis, isLoading: isLoadingSonnet } = useQuery({
+    queryKey: ["profile-analysis-sonnet", handle],
+    queryFn: async () => {
+      const posts = await fetchPostsForAnalysis();
+      return await analyzePosts(posts, "sonnet");
+    },
+    staleTime: 30 * 60 * 1000,
+    enabled: analysisRequested && !!handle && !!agent,
+  });
+
+  // Use haiku if available, then upgrade to sonnet when ready
+  const analysisData = sonnetAnalysis || haikuAnalysis;
+  const isLoadingAnalysis = isLoadingHaiku && isLoadingSonnet;
 
   useEffect(() => {
     if (!handle || !agent) return;
@@ -193,7 +265,7 @@ export default function ProfilePage() {
   const handleScroll = () => {
     if (
       window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight - 100 &&
+      document.documentElement.offsetHeight - 100 &&
       hasMore &&
       !postsLoading
     ) {
@@ -399,11 +471,10 @@ export default function ProfilePage() {
               {!isOwnProfile && (
                 <button
                   onClick={handleFollow}
-                  className={`rounded-full px-6 py-2.5 font-medium transition-all ${
-                    profile.viewer?.following
-                      ? "bsky-button-secondary hover:scale-105"
-                      : "bsky-button-primary hover:scale-105"
-                  }`}
+                  className={`rounded-full px-6 py-2.5 font-medium transition-all ${profile.viewer?.following
+                    ? "bsky-button-secondary hover:scale-105"
+                    : "bsky-button-primary hover:scale-105"
+                    }`}
                 >
                   {profile.viewer?.following ? "Following" : "Follow"}
                 </button>
@@ -427,8 +498,8 @@ export default function ProfilePage() {
                     color: "var(--bsky-text-secondary)",
                   }}
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor =
-                      "var(--bsky-bg-hover)")
+                  (e.currentTarget.style.backgroundColor =
+                    "var(--bsky-bg-hover)")
                   }
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.backgroundColor = "transparent")
@@ -461,12 +532,12 @@ export default function ProfilePage() {
                           className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-all"
                           style={{ color: "var(--bsky-text-primary)" }}
                           onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                          (e.currentTarget.style.backgroundColor =
+                            "var(--bsky-bg-hover)")
                           }
                           onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                          (e.currentTarget.style.backgroundColor =
+                            "transparent")
                           }
                         >
                           <Edit className="h-4 w-4" />
@@ -479,12 +550,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 rounded-t-lg px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                             }
                           >
                             <Share2 className="h-4 w-4" />
@@ -495,12 +566,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                             }
                           >
                             <ExternalLink className="h-4 w-4" />
@@ -511,28 +582,48 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                             }
                           >
                             <List className="h-4 w-4" />
                             Add to Lists
                           </button>
                           <button
+                            onClick={() => {
+                              setShowProfileMenu(false);
+                              setAnalysisRequested(true);
+                              setShowProfileAnalysis(true);
+                            }}
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                            onMouseEnter={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
+                            }
+                          >
+                            <Sparkles className="h-4 w-4" />
+                            Analyze Profile
+                          </button>
+                          <button
                             onClick={handleMute}
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                             }
                           >
                             <VolumeX className="h-4 w-4" />
@@ -544,12 +635,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                             }
                           >
                             <Flag className="h-4 w-4" />
@@ -559,12 +650,12 @@ export default function ProfilePage() {
                             onClick={handleBlock}
                             className="flex w-full items-center gap-3 rounded-b-lg px-4 py-2.5 text-sm text-red-600 transition-all"
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                             }
                           >
                             <UserX className="h-4 w-4" />
@@ -670,9 +761,8 @@ export default function ProfilePage() {
         <div className="flex">
           <button
             onClick={() => setActiveTab("posts")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
-              activeTab === "posts" ? "" : "hover:scale-105"
-            }`}
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${activeTab === "posts" ? "" : "hover:scale-105"
+              }`}
             style={{
               color:
                 activeTab === "posts"
@@ -690,9 +780,8 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setActiveTab("replies")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
-              activeTab === "replies" ? "" : "hover:scale-105"
-            }`}
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${activeTab === "replies" ? "" : "hover:scale-105"
+              }`}
             style={{
               color:
                 activeTab === "replies"
@@ -710,9 +799,8 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setActiveTab("media")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
-              activeTab === "media" ? "" : "hover:scale-105"
-            }`}
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${activeTab === "media" ? "" : "hover:scale-105"
+              }`}
             style={{
               color:
                 activeTab === "media"
@@ -731,6 +819,168 @@ export default function ProfilePage() {
         </div>
       </div>
 
+
+      {/* Profile Analysis Section */}
+      {showProfileAnalysis && !isOwnProfile && (isLoadingAnalysis || analysisData) && (
+        <div className="mb-4">
+          <div
+            className="rounded-lg p-6"
+            style={{ background: "var(--bsky-bg-secondary)" }}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2
+                className="flex items-center gap-2 text-lg font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                <Sparkles size={20} className="text-purple-500" />
+                Profile Analysis
+              </h2>
+              <button
+                onClick={() => {
+                  setShowProfileAnalysis(false);
+                  setAnalysisRequested(false);
+                }}
+                className="rounded px-3 py-1 text-sm transition-all hover:opacity-80"
+                style={{
+                  backgroundColor: "var(--bsky-bg-tertiary)",
+                  color: "var(--bsky-text-secondary)",
+                }}
+              >
+                Hide
+              </button>
+            </div>
+
+            {isLoadingAnalysis ? (
+              <div className="py-8 text-center">
+                <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-500" />
+                <p style={{ color: "var(--bsky-text-primary)" }}>
+                  Analyzing profile...
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Show haiku if that's all we have, or sonnet if ready */}
+                {haikuAnalysis && !sonnetAnalysis && (
+                  <div
+                    className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-tertiary)",
+                      color: "var(--bsky-text-secondary)",
+                    }}
+                  >
+                    <div className="h-2 w-2 animate-pulse rounded-full bg-purple-500" />
+                    Quick analysis ready • Full analysis loading...
+                  </div>
+                )}
+                {sonnetAnalysis && haikuAnalysis && (
+                  <div
+                    className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm font-medium"
+                    style={{
+                      backgroundColor: "rgba(168, 85, 247, 0.1)",
+                      color: "var(--bsky-primary)",
+                    }}
+                  >
+                    ✨ Full analysis complete
+                  </div>
+                )}
+
+                {/* Summary (always shown) */}
+                <p style={{ color: "var(--bsky-text-secondary)" }}>
+                  {analysisData?.summary}
+                </p>
+
+                {/* Full sonnet details (only when sonnet is available) */}
+                {sonnetAnalysis && (
+                  <div className="mt-6 space-y-6">
+                    {/* Content Themes */}
+                    {sonnetAnalysis.contentThemes && sonnetAnalysis.contentThemes.length > 0 && (
+                      <div>
+                        <h3
+                          className="mb-3 text-sm font-semibold"
+                          style={{ color: "var(--bsky-text-primary)" }}
+                        >
+                          Content Themes
+                        </h3>
+                        <div className="space-y-3">
+                          {sonnetAnalysis.contentThemes.map((theme, idx) => (
+                            <div
+                              key={idx}
+                              className="rounded-lg p-3"
+                              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                            >
+                              <div className="mb-1 flex items-center gap-2">
+                                <span
+                                  className="font-medium"
+                                  style={{ color: "var(--bsky-text-primary)" }}
+                                >
+                                  {theme.theme}
+                                </span>
+                                <span
+                                  className="rounded-full px-2 py-0.5 text-xs"
+                                  style={{
+                                    backgroundColor: theme.frequency === "primary" ? "#8b5cf6" : theme.frequency === "regular" ? "#a78bfa" : "#c4b5fd",
+                                    color: "white",
+                                  }}
+                                >
+                                  {theme.frequency}
+                                </span>
+                              </div>
+                              <p
+                                className="text-sm"
+                                style={{ color: "var(--bsky-text-secondary)" }}
+                              >
+                                {theme.description}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Writing Style */}
+                    {sonnetAnalysis.writingStyle && (
+                      <div>
+                        <h3
+                          className="mb-3 text-sm font-semibold"
+                          style={{ color: "var(--bsky-text-primary)" }}
+                        >
+                          Writing Style
+                        </h3>
+                        <div
+                          className="rounded-lg p-3"
+                          style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                        >
+                          <p
+                            className="mb-2 text-sm font-medium"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                          >
+                            {sonnetAnalysis.writingStyle.tone}
+                          </p>
+                          {sonnetAnalysis.writingStyle.characteristics && (
+                            <ul className="space-y-1">
+                              {sonnetAnalysis.writingStyle.characteristics.map((char, idx) => (
+                                <li
+                                  key={idx}
+                                  className="text-sm"
+                                  style={{ color: "var(--bsky-text-secondary)" }}
+                                >
+                                  • {char}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {/* Posts */}
       <div>
         {posts.map((post) => (

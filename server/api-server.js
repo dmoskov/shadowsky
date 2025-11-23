@@ -297,8 +297,8 @@ app.post("/api/convert-gif", async (req, res) => {
     const mp4Buffer = await fs.readFile(outputPath);
 
     // Clean up temp files
-    await fs.unlink(inputPath).catch(() => {});
-    await fs.unlink(outputPath).catch(() => {});
+    await fs.unlink(inputPath).catch(() => { });
+    await fs.unlink(outputPath).catch(() => { });
 
     // Send the MP4 back as a response
     res.set({
@@ -311,8 +311,8 @@ app.post("/api/convert-gif", async (req, res) => {
     console.error("Conversion error:", error);
 
     // Clean up temp files on error
-    await fs.unlink(inputPath).catch(() => {});
-    await fs.unlink(outputPath).catch(() => {});
+    await fs.unlink(inputPath).catch(() => { });
+    await fs.unlink(outputPath).catch(() => { });
 
     res.status(500).json({
       error: "Failed to convert GIF",
@@ -687,7 +687,7 @@ Start directly with { and end with }`,
 
 // Analyze user posts endpoint
 app.post("/api/analyze-posts", async (req, res) => {
-  const { posts } = req.body;
+  const { posts, analysisType = "sonnet" } = req.body;
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!posts || !Array.isArray(posts) || posts.length === 0) {
@@ -710,20 +710,26 @@ app.post("/api/analyze-posts", async (req, res) => {
       })
       .join("\n\n");
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250929",
-        max_tokens: 3000,
-        messages: [
-          {
-            role: "user",
-            content: `You are a social media analyst. Analyze these posts from a single user to provide a qualitative characterization of their content and style.
+    // Choose prompt and token limit based on analysis type
+    const isHaiku = analysisType === "haiku";
+    const maxTokens = isHaiku ? 200 : 3000;
+
+    const prompt = isHaiku
+      ? `You are a social media analyst. Quickly analyze these posts and provide a BRIEF JSON response.
+
+USER'S POSTS:
+${postsContext}
+
+Provide a concise JSON response with ONLY:
+1. **summary**: A punchy 3-sentence characterization of this user (who they are, what they write about, their vibe)
+
+Keep it under 100 words total. Start directly with { and end with }.
+
+Example:
+{
+  "summary": "A tech enthusiast who shares insights about AI and programming. Writes in a conversational, approachable style with occasional humor. Focuses on practical applications and real-world examples."
+}`
+      : `You are a social media analyst. Analyze these posts from a single user to provide a qualitative characterization of their content and style.
 
 USER'S POSTS:
 ${postsContext}
@@ -748,7 +754,22 @@ Provide a comprehensive JSON response with:
 
 4. **summary**: A compelling 3-4 sentence overall characterization of this user's social media presence
 
-Provide specific evidence and quotes to support your analysis. Start directly with { and end with }`,
+Provide specific evidence and quotes to support your analysis. Start directly with { and end with }`;
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5-20250929",
+        max_tokens: maxTokens,
+        messages: [
+          {
+            role: "user",
+            content: prompt,
           },
         ],
       }),

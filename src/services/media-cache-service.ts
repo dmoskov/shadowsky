@@ -17,7 +17,6 @@ export class MediaCacheService {
   private db: MediaStorageDB;
   private initialized = false;
 
-
   // Trigger cleanup when cache exceeds this percentage of max
   private readonly CLEANUP_THRESHOLD = 0.9; // 90%
 
@@ -46,9 +45,7 @@ export class MediaCacheService {
 
   private ensureInitialized(): void {
     if (!this.initialized) {
-      throw new Error(
-        "MediaCacheService not initialized. Call init() first.",
-      );
+      throw new Error("MediaCacheService not initialized. Call init() first.");
     }
   }
 
@@ -121,7 +118,9 @@ export class MediaCacheService {
       await this.db.saveMedia(cachedMedia);
       await this.db.updateMetadata();
 
-      debug.log(`[MediaCache] Cached media: ${url} (${this.formatBytes(size)})`);
+      debug.log(
+        `[MediaCache] Cached media: ${url} (${this.formatBytes(size)})`,
+      );
 
       // Return blob URL
       return URL.createObjectURL(blob);

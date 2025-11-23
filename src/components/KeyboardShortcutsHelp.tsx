@@ -1,7 +1,7 @@
 import { Command, X } from "lucide-react";
 import React from "react";
-import { useFocusTrap } from "../hooks/useFocusTrap";
 import { useFeatureTracking } from "../hooks/useAnalytics";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 interface ShortcutGroup {
   category: string;
@@ -212,8 +212,11 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
           }}
         >
           <p>
-            Press <kbd className="rounded border border-gray-300 px-1.5 py-0.5 dark:border-gray-600">Esc</kbd> to
-            close this dialog
+            Press{" "}
+            <kbd className="rounded border border-gray-300 px-1.5 py-0.5 dark:border-gray-600">
+              Esc
+            </kbd>{" "}
+            to close this dialog
           </p>
         </div>
       </div>

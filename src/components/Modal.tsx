@@ -72,14 +72,23 @@ export function Modal({
       >
         {/* Header */}
         <div className="flex items-start gap-3 p-6">
-          <Icon className={`mt-1 h-6 w-6 flex-shrink-0 ${iconColor}`} aria-hidden="true" />
+          <Icon
+            className={`mt-1 h-6 w-6 flex-shrink-0 ${iconColor}`}
+            aria-hidden="true"
+          />
           <div className="flex-1">
             {title && (
-              <h3 id="modal-title" className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <h3
+                id="modal-title"
+                className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100"
+              >
                 {title}
               </h3>
             )}
-            <div id="modal-description" className="whitespace-pre-wrap text-gray-600 dark:text-gray-300">
+            <div
+              id="modal-description"
+              className="whitespace-pre-wrap text-gray-600 dark:text-gray-300"
+            >
               {message}
             </div>
           </div>

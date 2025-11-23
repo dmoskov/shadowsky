@@ -28,7 +28,11 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
             aria-label="Toggle navigation menu"
             className="rounded-lg p-2 transition-all hover:scale-110 hover:bg-white hover:bg-opacity-10 lg:hidden"
           >
-            <Menu size={24} style={{ color: "var(--bsky-text-primary)" }} aria-hidden="true" />
+            <Menu
+              size={24}
+              style={{ color: "var(--bsky-text-primary)" }}
+              aria-hidden="true"
+            />
           </button>
 
           <div className="flex items-center gap-2">

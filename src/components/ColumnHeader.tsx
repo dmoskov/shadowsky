@@ -76,8 +76,6 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
         return "Notifications";
       case "timeline":
         return "Visual Timeline";
-      case "conversations":
-        return "Conversations";
       case "messages":
         return "Messages";
       case "bookmarks":

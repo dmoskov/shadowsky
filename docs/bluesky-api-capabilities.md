@@ -46,6 +46,7 @@ These features are supported by the AT Protocol but not well-documented:
 ### 1. Trending API ❌
 
 **Status**: No dedicated endpoints exist for:
+
 - Trending hashtags
 - Trending topics
 - Trending posts
@@ -58,6 +59,7 @@ These features are supported by the AT Protocol but not well-documented:
 ### 2. Analytics API ❌
 
 **Status**: No API for analytics or metrics:
+
 - No impressions data
 - No engagement rate calculations
 - No follower growth metrics
@@ -71,6 +73,7 @@ These features are supported by the AT Protocol but not well-documented:
 ### 3. Poll API ❌
 
 **Status**: No native poll support in AT Protocol:
+
 - Polls are on the roadmap but not implemented
 - No voting mechanism in the API
 - No poll creation endpoints
@@ -82,6 +85,7 @@ These features are supported by the AT Protocol but not well-documented:
 ### 4. Background Sync / Offline Posting ❌
 
 **Status**: Not officially documented or supported:
+
 - No service worker API for offline posting
 - No background sync queue
 - AT Protocol supports data backups and server-to-server sync, but not client-side offline posting

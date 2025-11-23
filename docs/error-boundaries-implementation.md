@@ -53,18 +53,22 @@ Added ErrorBoundary wrappers around the following components with error tracking
 ## Features
 
 ### Error Containment
+
 - Errors in Lists feature are contained to the Lists section only
 - Errors in DirectMessages are contained to the DM panel only
 - Other parts of the application continue to function normally
 
 ### Fallback UI
+
 The ErrorBoundary component (src/components/ErrorBoundary.tsx) provides:
+
 - Friendly error message with component name
 - Error details in an expandable "Technical Details" section
 - Stack trace for debugging
 - "Try Again" button to retry and recover
 
 ### Error Logging
+
 - All errors are automatically logged to Google Analytics via `analytics.trackError()`
 - Error tracking includes:
   - Error message
@@ -72,7 +76,9 @@ The ErrorBoundary component (src/components/ErrorBoundary.tsx) provides:
   - Component context (DirectMessages, Lists, ListTimeline)
 
 ### Error Recovery
+
 The "Try Again" button:
+
 - Resets the error boundary state
 - Attempts to re-render the component
 - Allows users to recover without refreshing the entire page
@@ -82,6 +88,7 @@ The "Try Again" button:
 To test the error boundaries:
 
 1. **Manual Testing**: Temporarily add code that throws an error in the component:
+
    ```tsx
    // In Lists.tsx or DirectMessages.tsx
    throw new Error("Test error for error boundary");
@@ -111,6 +118,7 @@ To test the error boundaries:
 ## Analytics Integration
 
 Errors are tracked in Google Analytics with:
+
 - Category: "errors"
 - Action: "error_occurred"
 - Label: Component context (DirectMessages, Lists, ListTimeline)

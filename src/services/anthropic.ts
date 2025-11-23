@@ -483,6 +483,7 @@ export interface PostAnalysisResult {
 
 export async function analyzePosts(
   posts: PostAnalysisPost[],
+  analysisType: "haiku" | "sonnet" = "sonnet",
 ): Promise<PostAnalysisResult> {
   try {
     const apiBaseUrl = getApiBaseUrl();
@@ -493,7 +494,7 @@ export async function analyzePosts(
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ posts }),
+        body: JSON.stringify({ posts, analysisType }),
       },
       API_RETRY_OPTIONS,
     );

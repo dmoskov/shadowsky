@@ -5,7 +5,6 @@ import { AT_PROTO_COLLECTIONS } from "./storage/storage-constants";
 // Define the app preferences stored as custom record
 export interface ShadowSkyPreferences {
   $type: "com.shadowsky.preferences";
-  bookmarkStorageType: "local" | "custom" | "official";
   columnStorageType: "local" | "atproto";
   draftStorageType: "local" | "custom";
   appSettingsVersion?: number;
@@ -88,7 +87,6 @@ export interface ShadowSkyDrafts {
 // Internal interface
 export interface AppPreferencesRecord {
   $type: "app.shadowsky.preferences";
-  bookmarkStorageType: "local" | "custom" | "official";
   columnStorageType: "local" | "atproto";
   draftStorageType: "local" | "custom";
   createdAt: string;
@@ -151,7 +149,6 @@ export class AppPreferencesService {
         // Convert from stored format
         const prefs: AppPreferencesRecord = {
           $type: "app.shadowsky.preferences",
-          bookmarkStorageType: shadowSkyPref.bookmarkStorageType || "local",
           columnStorageType: shadowSkyPref.columnStorageType || "local",
           draftStorageType: shadowSkyPref.draftStorageType || "local",
           createdAt: shadowSkyPref.createdAt,
@@ -178,7 +175,6 @@ export class AppPreferencesService {
       // Ensure all required fields are present
       const validatedPrefs: AppPreferencesRecord = {
         $type: "app.shadowsky.preferences",
-        bookmarkStorageType: localPrefs.bookmarkStorageType || "local",
         columnStorageType: localPrefs.columnStorageType || "local",
         draftStorageType: localPrefs.draftStorageType || "local",
         createdAt: localPrefs.createdAt || new Date().toISOString(),
@@ -233,7 +229,6 @@ export class AppPreferencesService {
       // Save to AT Protocol as custom record
       const shadowSkyPref: ShadowSkyPreferences = {
         $type: PREFERENCES_COLLECTION,
-        bookmarkStorageType: updatedPrefs.bookmarkStorageType || "local",
         columnStorageType: updatedPrefs.columnStorageType || "local",
         draftStorageType: updatedPrefs.draftStorageType || "local",
         appSettingsVersion: 1,
@@ -300,7 +295,6 @@ export class AppPreferencesService {
 
     const defaultPrefs: AppPreferencesRecord = {
       $type: "app.shadowsky.preferences",
-      bookmarkStorageType: "official", // Default to official AT Protocol bookmarks
       columnStorageType: "local", // Default to local storage
       draftStorageType: "local", // Always local storage
       createdAt: now,
@@ -317,7 +311,6 @@ export class AppPreferencesService {
       try {
         const shadowSkyPref: ShadowSkyPreferences = {
           $type: AT_PROTO_COLLECTIONS.PREFERENCES,
-          bookmarkStorageType: defaultPrefs.bookmarkStorageType,
           columnStorageType: defaultPrefs.columnStorageType,
           draftStorageType: defaultPrefs.draftStorageType,
           createdAt: defaultPrefs.createdAt,

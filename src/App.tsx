@@ -36,7 +36,6 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
 import { analytics } from "./services/analytics";
 import { appPreferencesService } from "./services/app-preferences-service";
-import { bookmarkStorage } from "./services/bookmark-storage-db";
 import { NotificationStorageDB } from "./services/notification-storage-db";
 import { cleanupLocalStorage } from "./utils/cleanupLocalStorage";
 import "./utils/debug-control"; // Initialize debug controls
@@ -57,11 +56,6 @@ const Composer = lazy(() =>
 const CompressionTest = lazy(() =>
   import("./components/CompressionTest").then((m) => ({
     default: m.CompressionTest,
-  })),
-);
-const Conversations = lazy(() =>
-  import("./components/ConversationsSimple").then((m) => ({
-    default: m.ConversationsSimple,
   })),
 );
 const DirectMessages = lazy(() =>
@@ -281,8 +275,7 @@ function AppContent() {
   useEffect(() => {
     const runMigration = async () => {
       try {
-        // Initialize bookmark storage
-        await bookmarkStorage.init();
+        // Note: Bookmark storage now uses BookmarkServiceV2 which is initialized in AuthContext
 
         const db = NotificationStorageDB.getInstance();
         await db.init();
@@ -355,7 +348,6 @@ function AppContent() {
                 element={<NotificationsAnalytics />}
               />
               <Route path="/notifications" element={<Notifications />} />
-              <Route path="/conversations" element={<Conversations />} />
               <Route
                 path="/messages"
                 element={

@@ -1,6 +1,6 @@
 import { AppBskyFeedDefs, AppBskyFeedPost, AtpAgent } from "@atproto/api";
-import { createLogger } from "../../utils/logger";
-import { Bookmark, BookmarkStorageBackend } from "./types";
+import { createLogger } from "../utils/logger";
+import { Bookmark, BookmarkStorageBackend } from "./bookmark-backends/types";
 
 const logger = createLogger("OfficialBookmarksBackend");
 

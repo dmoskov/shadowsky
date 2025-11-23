@@ -5,7 +5,6 @@ import { columnService } from "../services/column-service";
 import { useStorageErrorManager } from "../services/storage/storage-error-manager";
 import { BookmarksColumn } from "./BookmarksColumn";
 import { ColumnHeader } from "./ColumnHeader";
-import { ConversationsSimple as Conversations } from "./ConversationsSimple";
 import { DirectMessagesColumn } from "./DirectMessagesColumn";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { Home } from "./Home";
@@ -169,18 +168,6 @@ export default function SkyColumn({
               isInSkyDeck={true}
               isFocused={isFocused}
             />
-          </ErrorBoundary>
-        );
-
-      case "conversations":
-        return (
-          <ErrorBoundary
-            componentName="Conversations"
-            onError={(error, errorInfo) =>
-              logError(error, errorInfo, "Conversations")
-            }
-          >
-            <Conversations isFocused={isFocused} />
           </ErrorBoundary>
         );
 

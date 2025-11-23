@@ -7,7 +7,6 @@ import {
   Home,
   List,
   Mail,
-  MessageSquare,
   PenSquare,
   Search,
   User,
@@ -44,7 +43,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { path: "/bookmarks", label: "Bookmarks", icon: Bookmark },
     { path: "/lists", label: "Lists", icon: List },
     { path: "/messages", label: "Direct Messages", icon: Mail },
-    { path: "/conversations", label: "Conversations", icon: MessageSquare },
     { path: "/compose", label: "Compose", icon: PenSquare },
     {
       path: `/profile/${session?.handle || ""}`,
@@ -85,7 +83,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             aria-label="Close menu"
             className="rounded-lg p-2 transition-all hover:opacity-70"
           >
-            <X size={20} style={{ color: "var(--bsky-text-secondary)" }} aria-hidden="true" />
+            <X
+              size={20}
+              style={{ color: "var(--bsky-text-secondary)" }}
+              aria-hidden="true"
+            />
           </button>
         </div>
 

@@ -7,11 +7,9 @@ import {
   Lightbulb,
   MessageCircle,
   Repeat2,
-  Search,
   Sparkles,
   TrendingUp,
   Users,
-  X,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
@@ -39,11 +37,9 @@ export const UserAnalytics: React.FC = () => {
   const { agent, session } = useAuth();
   const [dateRange, setDateRange] = useState<DateRange>("30d");
   const [analysisRequested, setAnalysisRequested] = useState(false);
-  const [customHandle, setCustomHandle] = useState<string>("");
-  const [searchInput, setSearchInput] = useState<string>("");
 
-  // Use custom handle if provided, otherwise use logged-in user's handle
-  const activeHandle = customHandle || session?.handle;
+  // Always use logged-in user's handle
+  const activeHandle = session?.handle;
 
   const { startDate, endDate } = useMemo(() => {
     const now = new Date();
@@ -337,20 +333,7 @@ export const UserAnalytics: React.FC = () => {
     );
   }
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const handle = searchInput.trim().replace(/^@/, "");
-    if (handle) {
-      setCustomHandle(handle);
-      setAnalysisRequested(false); // Reset analysis when switching users
-    }
-  };
 
-  const handleClearSearch = () => {
-    setCustomHandle("");
-    setSearchInput("");
-    setAnalysisRequested(false);
-  };
 
   return (
     <div className="space-y-6 p-6">
@@ -363,61 +346,11 @@ export const UserAnalytics: React.FC = () => {
             Performance Analytics
           </h1>
           <p
-            className="mb-3 text-sm"
+            className="text-sm"
             style={{ color: "var(--bsky-text-secondary)" }}
           >
-            {customHandle
-              ? `Viewing analytics for @${customHandle}`
-              : "Track your post engagement over time"}
+            Track your post engagement over time
           </p>
-
-          {/* User Search */}
-          <form
-            onSubmit={handleSearchSubmit}
-            className="flex items-center gap-2"
-          >
-            <div className="relative max-w-md flex-1">
-              <Search
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2"
-                style={{ color: "var(--bsky-text-secondary)" }}
-              />
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Search by handle (e.g., username.bsky.social)"
-                className="w-full rounded-lg py-2 pl-10 pr-10 text-sm transition-all"
-                style={{
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                  color: "var(--bsky-text-primary)",
-                  border: "1px solid var(--bsky-border-primary)",
-                }}
-              />
-              {(searchInput || customHandle) && (
-                <button
-                  type="button"
-                  onClick={handleClearSearch}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 transition-all hover:bg-opacity-80"
-                  style={{
-                    color: "var(--bsky-text-secondary)",
-                  }}
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </div>
-            <button
-              type="submit"
-              className="rounded-lg px-4 py-2 text-sm font-medium transition-all hover:opacity-90"
-              style={{
-                backgroundColor: "var(--bsky-primary)",
-                color: "white",
-              }}
-            >
-              View User
-            </button>
-          </form>
         </div>
 
         <div className="flex items-center gap-2">
@@ -687,19 +620,19 @@ export const UserAnalytics: React.FC = () => {
                     {(engagementChartData.length <= 30 ||
                       index % 4 === 0 ||
                       index === engagementChartData.length - 1) && (
-                      <div className="absolute left-0 right-0 top-full mt-1 text-center">
-                        <span
-                          className="text-xs"
-                          style={{
-                            color: "var(--bsky-text-secondary)",
-                            fontSize:
-                              engagementChartData.length > 30 ? "9px" : "10px",
-                          }}
-                        >
-                          {data.date}
-                        </span>
-                      </div>
-                    )}
+                        <div className="absolute left-0 right-0 top-full mt-1 text-center">
+                          <span
+                            className="text-xs"
+                            style={{
+                              color: "var(--bsky-text-secondary)",
+                              fontSize:
+                                engagementChartData.length > 30 ? "9px" : "10px",
+                            }}
+                          >
+                            {data.date}
+                          </span>
+                        </div>
+                      )}
                   </div>
                 );
               })}
@@ -803,19 +736,19 @@ export const UserAnalytics: React.FC = () => {
                       {(postFrequencyData.length <= 14 ||
                         index % 3 === 0 ||
                         index === postFrequencyData.length - 1) && (
-                        <div className="absolute left-0 right-0 top-full mt-1 text-center">
-                          <span
-                            className="text-xs"
-                            style={{
-                              color: "var(--bsky-text-secondary)",
-                              fontSize:
-                                postFrequencyData.length > 30 ? "8px" : "10px",
-                            }}
-                          >
-                            {data.date}
-                          </span>
-                        </div>
-                      )}
+                          <div className="absolute left-0 right-0 top-full mt-1 text-center">
+                            <span
+                              className="text-xs"
+                              style={{
+                                color: "var(--bsky-text-secondary)",
+                                fontSize:
+                                  postFrequencyData.length > 30 ? "8px" : "10px",
+                              }}
+                            >
+                              {data.date}
+                            </span>
+                          </div>
+                        )}
                     </div>
                   ))}
                 </div>
@@ -882,7 +815,7 @@ export const UserAnalytics: React.FC = () => {
                 >
                   {
                     postingTimeAnalysis.hourCounts[
-                      postingTimeAnalysis.maxPostsHour
+                    postingTimeAnalysis.maxPostsHour
                     ]
                   }{" "}
                   posts
@@ -1059,8 +992,8 @@ export const UserAnalytics: React.FC = () => {
                 >
                   {postsData.totalPosts > 0
                     ? (
-                        postsData.totalEngagement / postsData.totalPosts
-                      ).toFixed(1)
+                      postsData.totalEngagement / postsData.totalPosts
+                    ).toFixed(1)
                     : 0}
                 </span>
                 <span style={{ color: "var(--bsky-text-secondary)" }}>

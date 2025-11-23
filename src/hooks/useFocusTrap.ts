@@ -66,11 +66,11 @@ export function useFocusTrap<T extends HTMLElement>(isActive: boolean) {
  */
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
   const focusableSelectors = [
-    'a[href]',
-    'button:not([disabled])',
-    'textarea:not([disabled])',
-    'input:not([disabled])',
-    'select:not([disabled])',
+    "a[href]",
+    "button:not([disabled])",
+    "textarea:not([disabled])",
+    "input:not([disabled])",
+    "select:not([disabled])",
     '[tabindex]:not([tabindex="-1"])',
     '[contenteditable="true"]',
   ].join(",");

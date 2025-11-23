@@ -1,57 +1,39 @@
 import { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
 import { createLogger } from "../utils/logger";
-import { LocalStorageBackend } from "./bookmark-backends/LocalStorageBackend";
-import { OfficialBookmarksBackend } from "./bookmark-backends/OfficialBookmarksBackend";
-import { SingletonCustomRecordBackend } from "./bookmark-backends/SingletonCustomRecordBackend";
-import { Bookmark, BookmarkStorageBackend } from "./bookmark-backends/types";
+import { OfficialBookmarksBackend } from "./bookmark-backend";
+import { Bookmark } from "./bookmark-backends/types";
 import { PostCacheService } from "./post-cache-service";
 
 export type BookmarkPost = Bookmark & {
   post?: AppBskyFeedDefs.PostView;
 };
 
-const logger = createLogger("BookmarkServiceV2");
+const logger = createLogger("BookmarkService");
 
+/**
+ * Simplified bookmark service that only uses the official AT Protocol bookmarks API.
+ * All bookmarks are synced to Bluesky's servers and available across devices.
+ */
 class BookmarkServiceV2 {
-  private backend: BookmarkStorageBackend;
-  private storageType: "local" | "custom" | "official" = "local";
+  private backend: OfficialBookmarksBackend;
   public agent: BskyAgent | null = null;
   private postCacheService = PostCacheService.getInstance();
 
   constructor() {
-    // Initialize with local storage by default
-    this.backend = new LocalStorageBackend();
+    this.backend = new OfficialBookmarksBackend();
   }
 
-  async init(agent?: BskyAgent, storageType?: "local" | "custom" | "official") {
+  async init(agent?: BskyAgent) {
     if (agent) {
       this.agent = agent;
+      this.backend.setAgent(agent);
     }
 
     // Initialize post cache
     await this.postCacheService.init();
 
-    // Set storage type from preferences or default
-    if (storageType) {
-      await this.setStorageType(storageType);
-    } else {
-      // If we already have a backend but agent changed, re-create it
-      if (this.backend && agent) {
-        if (this.storageType === "custom") {
-          const customBackend = new SingletonCustomRecordBackend(agent);
-          customBackend.setErrorCallback((error: Error, action: string) => {
-            logger.error(
-              `SingletonCustomRecordBackend error during ${action}:`,
-              error,
-            );
-          });
-          this.backend = customBackend;
-        } else if (this.storageType === "official") {
-          const officialBackend = new OfficialBookmarksBackend();
-          officialBackend.setAgent(agent);
-          this.backend = officialBackend;
-        }
-      }
+    // Initialize backend
+    if (this.agent) {
       await this.backend.init();
     }
   }
@@ -59,90 +41,13 @@ class BookmarkServiceV2 {
   setAgent(agent: BskyAgent | null) {
     this.agent = agent;
 
-    // If we're using custom or official storage and the agent changed, we need to update the backend
-    if (
-      this.backend &&
-      agent &&
-      (this.storageType === "custom" || this.storageType === "official")
-    ) {
-      // Re-initialize the backend with the new agent
-      if (this.storageType === "custom") {
-        const customBackend = new SingletonCustomRecordBackend(agent);
-        customBackend.setErrorCallback((error: Error, action: string) => {
-          logger.error(
-            `SingletonCustomRecordBackend error during ${action}:`,
-            error,
-          );
-        });
-        this.backend = customBackend;
-      } else if (this.storageType === "official") {
-        const officialBackend = new OfficialBookmarksBackend();
-        officialBackend.setAgent(agent);
-        this.backend = officialBackend;
-      }
-      // Don't await here to avoid making setAgent async, but log any errors
+    if (agent) {
+      this.backend.setAgent(agent);
+      // Re-initialize backend with new agent
       this.backend.init().catch((error) => {
-        logger.error(
-          "Failed to re-initialize backend after agent change:",
-          error,
-        );
+        logger.error("Failed to re-initialize backend after agent change:", error);
       });
     }
-  }
-
-  async setStorageType(type: "local" | "custom" | "official") {
-    if (!this.agent && type !== "local") {
-      throw new Error("Agent required for non-local storage");
-    }
-
-    this.storageType = type;
-
-    // Create appropriate backend
-    switch (type) {
-      case "local":
-        this.backend = new LocalStorageBackend();
-        break;
-      case "custom": {
-        const customBackend = new SingletonCustomRecordBackend(this.agent!);
-        // Set up error callback to log any issues
-        customBackend.setErrorCallback((error: Error, action: string) => {
-          logger.error(
-            `SingletonCustomRecordBackend error during ${action}:`,
-            error,
-          );
-        });
-        this.backend = customBackend;
-        break;
-      }
-      case "official": {
-        const officialBackend = new OfficialBookmarksBackend();
-        if (this.agent) {
-          officialBackend.setAgent(this.agent);
-        }
-        this.backend = officialBackend;
-        break;
-      }
-    }
-
-    await this.backend.init();
-  }
-
-  async migrateStorage(
-    _fromType: "local" | "custom" | "official",
-    toType: "local" | "custom" | "official",
-  ): Promise<void> {
-    if (!this.agent && toType !== "local") {
-      throw new Error("Agent required for non-local storage");
-    }
-
-    // Export from current backend
-    const bookmarks = await this.backend.exportBookmarks();
-
-    // Switch to new backend
-    await this.setStorageType(toType);
-
-    // Import to new backend
-    await this.backend.importBookmarks(bookmarks);
   }
 
   async toggleBookmark(post: AppBskyFeedDefs.PostView): Promise<boolean> {
@@ -259,128 +164,9 @@ class BookmarkServiceV2 {
     await this.backend.clear();
   }
 
-  getSyncStatus() {
-    if (this.backend.getSyncStatus) {
-      return this.backend.getSyncStatus();
-    }
-    return null;
-  }
-
-  getStorageType() {
-    return this.storageType;
-  }
-
   async refreshCache(): Promise<void> {
     if (this.backend.refreshCache) {
       await this.backend.refreshCache();
-    }
-  }
-
-  setErrorCallback(_callback: (error: Error, action: string) => void) {
-    // Set error callback if backend supports it
-    if (this.backend instanceof SingletonCustomRecordBackend) {
-      this.backend.setErrorCallback(_callback);
-    }
-  }
-
-  async detectExistingBookmarks(): Promise<{
-    local: number;
-    custom: number;
-    official: number;
-  }> {
-    const counts = {
-      local: 0,
-      custom: 0,
-      official: 0,
-    };
-
-    try {
-      // Check local storage
-      const localBackend = new LocalStorageBackend();
-      await localBackend.init();
-      counts.local = await localBackend.getCount();
-    } catch (error) {
-      logger.error("Failed to check local bookmarks:", error);
-    }
-
-    if (this.agent) {
-      try {
-        // Check custom AT Protocol storage
-        const customBackend = new SingletonCustomRecordBackend(this.agent);
-        await customBackend.init();
-        counts.custom = await customBackend.getCount();
-      } catch (error) {
-        logger.error("Failed to check custom bookmarks:", error);
-      }
-
-      try {
-        // Check official bookmarks
-        const officialBackend = new OfficialBookmarksBackend();
-        officialBackend.setAgent(this.agent);
-        await officialBackend.init();
-        counts.official = await officialBackend.getCount();
-      } catch (error) {
-        logger.error("Failed to check official bookmarks:", error);
-      }
-    }
-
-    return counts;
-  }
-
-  async migrateBookmarks(
-    fromType: "local" | "custom",
-    toType: "official",
-  ): Promise<{ success: boolean; migratedCount: number; error?: string }> {
-    if (!this.agent) {
-      return {
-        success: false,
-        migratedCount: 0,
-        error: "Agent required for migration",
-      };
-    }
-
-    try {
-      let sourceBackend: BookmarkStorageBackend;
-
-      if (fromType === "local") {
-        sourceBackend = new LocalStorageBackend();
-      } else {
-        sourceBackend = new SingletonCustomRecordBackend(this.agent);
-      }
-
-      await sourceBackend.init();
-      const bookmarks = await sourceBackend.exportBookmarks();
-
-      if (bookmarks.length === 0) {
-        return {
-          success: true,
-          migratedCount: 0,
-        };
-      }
-
-      // Import to official bookmarks
-      const targetBackend = new OfficialBookmarksBackend();
-      targetBackend.setAgent(this.agent);
-      await targetBackend.init();
-      await targetBackend.importBookmarks(bookmarks);
-
-      // Clear source bookmarks after successful migration
-      await sourceBackend.clear();
-
-      return {
-        success: true,
-        migratedCount: bookmarks.length,
-      };
-    } catch (error) {
-      logger.error(
-        `Failed to migrate bookmarks from ${fromType} to ${toType}:`,
-        error,
-      );
-      return {
-        success: false,
-        migratedCount: 0,
-        error: error instanceof Error ? error.message : "Migration failed",
-      };
     }
   }
 }

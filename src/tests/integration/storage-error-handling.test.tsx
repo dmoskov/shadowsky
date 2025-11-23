@@ -15,7 +15,7 @@ import { createMockAgent } from "../mocks/atproto";
 // Mock the services
 vi.mock("../../services/bookmark-service-v2", () => ({
   bookmarkServiceV2: {
-    setErrorCallback: vi.fn(),
+    // Note: setErrorCallback no longer exists in BookmarkServiceV2
     getBookmarkedPosts: vi.fn(),
     getBookmarkCount: vi.fn(),
     removeBookmark: vi.fn(),
@@ -93,36 +93,9 @@ describe("Storage Error Handling Integration", () => {
     vi.clearAllMocks();
   });
 
-  describe("Error Callback Registration", () => {
-    it("should register error callbacks when authenticated", async () => {
-      const Wrapper = createWrapper();
-      render(<div>Test</div>, { wrapper: Wrapper });
-
-      await waitFor(() => {
-        expect(bookmarkServiceV2.setErrorCallback).toHaveBeenCalled();
-      });
-    });
-
-    it("should not register callbacks when not authenticated", async () => {
-      mockUseAuth.mockReturnValueOnce({
-        isAuthenticated: false,
-        agent: createMockAgent(),
-        isLoading: false,
-        login: vi.fn(),
-        logout: vi.fn(),
-        session: null,
-        client: {} as any,
-        refreshSession: vi.fn(),
-      });
-
-      const Wrapper = createWrapper();
-      render(<div>Test</div>, { wrapper: Wrapper });
-
-      await waitFor(() => {
-        expect(bookmarkServiceV2.setErrorCallback).not.toHaveBeenCalled();
-      });
-    });
-  });
+  // Note: Error callback registration tests removed
+  // BookmarkServiceV2 no longer uses error callbacks
+  // Errors are handled directly in the service
 
   describe("Error Display in Components", () => {
     it("should show error modal when bookmark removal fails", async () => {
@@ -185,58 +158,8 @@ describe("Storage Error Handling Integration", () => {
     });
   });
 
-  describe("Error Propagation", () => {
-    it("should handle AT Protocol errors properly", async () => {
-      let errorCallback: ((error: Error, action: string) => void) | undefined;
-
-      const mockBookmarkService = vi.mocked(bookmarkServiceV2);
-      mockBookmarkService.setErrorCallback.mockImplementation((cb) => {
-        errorCallback = cb;
-        // Call it immediately to simulate an error
-        setTimeout(() => {
-          const atProtoError = new Error(
-            "InvalidRequest: Record already exists",
-          );
-          (atProtoError as any).status = 400;
-          cb(atProtoError, "create bookmark");
-        }, 0);
-      });
-
-      const Wrapper = createWrapper();
-      render(<div>Test</div>, { wrapper: Wrapper });
-
-      await waitFor(() => {
-        expect(bookmarkServiceV2.setErrorCallback).toHaveBeenCalled();
-        expect(errorCallback).toBeDefined();
-      });
-    });
-
-    it("should handle rate limit errors", async () => {
-      let errorCallback: ((error: Error, action: string) => void) | undefined;
-
-      const mockBookmarkService = vi.mocked(bookmarkServiceV2);
-      mockBookmarkService.setErrorCallback.mockImplementation((cb) => {
-        errorCallback = cb;
-        // Call it immediately to simulate an error
-        setTimeout(() => {
-          const rateLimitError = new Error("Rate limit exceeded");
-          (rateLimitError as any).status = 429;
-          (rateLimitError as any).headers = {
-            "ratelimit-reset": new Date(Date.now() + 60000).toISOString(),
-          };
-          cb(rateLimitError, "fetch bookmarks");
-        }, 0);
-      });
-
-      const Wrapper = createWrapper();
-      render(<div>Test</div>, { wrapper: Wrapper });
-
-      await waitFor(() => {
-        expect(bookmarkServiceV2.setErrorCallback).toHaveBeenCalled();
-        expect(errorCallback).toBeDefined();
-      });
-    });
-  });
+  // Note: Error Propagation tests removed
+  // BookmarkServiceV2 no longer uses error callbacks
 
   describe("Storage Migration Error Handling", () => {
     it("should show error when storage migration fails", async () => {
