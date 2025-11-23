@@ -213,7 +213,7 @@ export class MediaCacheService {
    */
   private async performLRUCleanup(targetSize: number): Promise<void> {
     const stats = await this.getStats();
-    let currentSize = stats.totalSize;
+    const currentSize = stats.totalSize;
 
     if (currentSize <= targetSize) {
       debug.log("[MediaCache] No cleanup needed");
