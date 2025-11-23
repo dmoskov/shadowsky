@@ -626,9 +626,10 @@ export default function ProfilePage() {
                               "transparent")
                             }
                           >
-                            <VolumeX className="h-4 w-4" />
-                            {profile.viewer?.muted ? "Unmute" : "Mute"} @
-                            {profile.handle}
+                            <VolumeX className="h-4 w-4 flex-shrink-0" />
+                            <span className="truncate">
+                              {profile.viewer?.muted ? "Unmute" : "Mute"} @{profile.handle}
+                            </span>
                           </button>
                           <button
                             onClick={handleOpenReportModal}
@@ -643,8 +644,8 @@ export default function ProfilePage() {
                               "transparent")
                             }
                           >
-                            <Flag className="h-4 w-4" />
-                            Report @{profile.handle}
+                            <Flag className="h-4 w-4 flex-shrink-0" />
+                            <span className="truncate">Report @{profile.handle}</span>
                           </button>
                           <button
                             onClick={handleBlock}
@@ -658,9 +659,10 @@ export default function ProfilePage() {
                               "transparent")
                             }
                           >
-                            <UserX className="h-4 w-4" />
-                            {profile.viewer?.blocking ? "Unblock" : "Block"} @
-                            {profile.handle}
+                            <UserX className="h-4 w-4 flex-shrink-0" />
+                            <span className="truncate">
+                              {profile.viewer?.blocking ? "Unblock" : "Block"} @{profile.handle}
+                            </span>
                           </button>
                         </>
                       )}
