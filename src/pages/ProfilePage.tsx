@@ -102,7 +102,7 @@ export default function ProfilePage() {
 
       const allPosts: any[] = [];
       let fetchCursor: string | undefined;
-      const maxPages = 2; // Fetch up to 100 posts
+      const maxPages = 1; // Fetch up to 50 posts
 
       for (let page = 0; page < maxPages; page++) {
         const response = await agent.getAuthorFeed({
@@ -269,7 +269,7 @@ export default function ProfilePage() {
   const handleScroll = () => {
     if (
       window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight - 100 &&
+      document.documentElement.offsetHeight - 100 &&
       hasMore &&
       !postsLoading
     ) {
@@ -475,11 +475,10 @@ export default function ProfilePage() {
               {!isOwnProfile && (
                 <button
                   onClick={handleFollow}
-                  className={`rounded-full px-6 py-2.5 font-medium transition-all ${
-                    profile.viewer?.following
+                  className={`rounded-full px-6 py-2.5 font-medium transition-all ${profile.viewer?.following
                       ? "bsky-button-secondary hover:scale-105"
                       : "bsky-button-primary hover:scale-105"
-                  }`}
+                    }`}
                 >
                   {profile.viewer?.following ? "Following" : "Follow"}
                 </button>
@@ -503,8 +502,8 @@ export default function ProfilePage() {
                     color: "var(--bsky-text-secondary)",
                   }}
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor =
-                      "var(--bsky-bg-hover)")
+                  (e.currentTarget.style.backgroundColor =
+                    "var(--bsky-bg-hover)")
                   }
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.backgroundColor = "transparent")
@@ -538,12 +537,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                             }
                           >
                             <Edit className="h-4 w-4" />
@@ -558,12 +557,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                             }
                           >
                             <Sparkles className="h-4 w-4" />
@@ -577,12 +576,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 rounded-t-lg px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                             }
                           >
                             <Share2 className="h-4 w-4" />
@@ -593,12 +592,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                             }
                           >
                             <ExternalLink className="h-4 w-4" />
@@ -609,12 +608,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                             }
                           >
                             <List className="h-4 w-4" />
@@ -629,12 +628,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                             }
                           >
                             <Sparkles className="h-4 w-4" />
@@ -645,12 +644,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                             }
                           >
                             <VolumeX className="h-4 w-4 flex-shrink-0" />
@@ -664,12 +663,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                             }
                           >
                             <Flag className="h-4 w-4 flex-shrink-0" />
@@ -681,12 +680,12 @@ export default function ProfilePage() {
                             onClick={handleBlock}
                             className="flex w-full items-center gap-3 rounded-b-lg px-4 py-2.5 text-sm text-red-600 transition-all"
                             onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                             }
                           >
                             <UserX className="h-4 w-4 flex-shrink-0" />
@@ -794,9 +793,8 @@ export default function ProfilePage() {
         <div className="flex">
           <button
             onClick={() => setActiveTab("posts")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
-              activeTab === "posts" ? "" : "hover:scale-105"
-            }`}
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${activeTab === "posts" ? "" : "hover:scale-105"
+              }`}
             style={{
               color:
                 activeTab === "posts"
@@ -814,9 +812,8 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setActiveTab("replies")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
-              activeTab === "replies" ? "" : "hover:scale-105"
-            }`}
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${activeTab === "replies" ? "" : "hover:scale-105"
+              }`}
             style={{
               color:
                 activeTab === "replies"
@@ -834,9 +831,8 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setActiveTab("media")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
-              activeTab === "media" ? "" : "hover:scale-105"
-            }`}
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${activeTab === "media" ? "" : "hover:scale-105"
+              }`}
             style={{
               color:
                 activeTab === "media"
