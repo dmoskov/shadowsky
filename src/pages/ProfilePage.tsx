@@ -89,6 +89,12 @@ export default function ProfilePage() {
   const [showProfileAnalysis, setShowProfileAnalysis] = useState(false);
   const [analysisRequested, setAnalysisRequested] = useState(false);
 
+  // Reset analysis state when navigating to a different profile
+  useEffect(() => {
+    setShowProfileAnalysis(false);
+    setAnalysisRequested(false);
+  }, [handle]);
+
   const profileMenuButtonRef = useRef<HTMLButtonElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
