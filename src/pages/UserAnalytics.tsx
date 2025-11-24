@@ -12,6 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
+import { useSearchParams } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { analyzePosts, type PostAnalysisPost } from "../services/anthropic";
 import { proxifyBskyImage } from "../utils/image-proxy";
@@ -35,8 +36,22 @@ interface PostEngagement {
 
 export const UserAnalytics: React.FC = () => {
   const { agent, session } = useAuth();
-  const [dateRange, setDateRange] = useState<DateRange>("30d");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [analysisRequested, setAnalysisRequested] = useState(false);
+
+  // Get date range from URL, default to "30d"
+  const rangeParam = searchParams.get("range");
+  const dateRange: DateRange =
+    rangeParam === "24h" ||
+    rangeParam === "7d" ||
+    rangeParam === "30d" ||
+    rangeParam === "90d"
+      ? rangeParam
+      : "30d";
+
+  const setDateRange = (range: DateRange) => {
+    setSearchParams(range === "30d" ? {} : { range }, { replace: true });
+  };
 
   // Always use logged-in user's handle
   const activeHandle = session?.handle;

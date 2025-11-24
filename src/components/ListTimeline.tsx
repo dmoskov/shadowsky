@@ -29,17 +29,6 @@ export const ListTimeline: React.FC = () => {
   const [containerHeight, setContainerHeight] = useState(600);
   const [shouldRestoreScroll, setShouldRestoreScroll] = useState(false);
 
-  // Reset state when navigating to a different list
-  useEffect(() => {
-    setPosts([]);
-    setLoading(false);
-    setHasMore(true);
-    setCursor(undefined);
-    setSelectedPost(null);
-    setShowThread(false);
-    setShouldRestoreScroll(false);
-  }, [listUri]);
-
   // Use dynamic row height hook
   const dynamicRowHeight = useDynamicRowHeight({
     defaultRowHeight: 200,

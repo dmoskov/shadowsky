@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import { AddToListModal } from "../components/AddToListModal";
 import { PostCard } from "../components/PostCard";
 import { ReportModal } from "../components/ReportModal";
@@ -63,6 +63,7 @@ type ProfileTab = "posts" | "replies" | "media" | "top";
 export default function ProfilePage() {
   const { handle } = useParams<{ handle: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { session, agent } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [posts, setPosts] = useState<AppBskyFeedDefs.FeedViewPost[]>([]);
@@ -71,7 +72,17 @@ export default function ProfilePage() {
   const [postsLoading, setPostsLoading] = useState(false);
   const [cursor, setCursor] = useState<string | undefined>();
   const [hasMore, setHasMore] = useState(true);
-  const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
+
+  // Get active tab from URL, default to "posts"
+  const tabParam = searchParams.get("tab");
+  const activeTab: ProfileTab =
+    tabParam === "replies" || tabParam === "media" || tabParam === "top"
+      ? tabParam
+      : "posts";
+
+  const setActiveTab = (tab: ProfileTab) => {
+    setSearchParams(tab === "posts" ? {} : { tab }, { replace: true });
+  };
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [profileMenuPosition, setProfileMenuPosition] = useState<{
     top: number;
@@ -88,29 +99,6 @@ export default function ProfilePage() {
   const [showAddToListModal, setShowAddToListModal] = useState(false);
   const [showProfileAnalysis, setShowProfileAnalysis] = useState(false);
   const [analysisRequested, setAnalysisRequested] = useState(false);
-
-  // Reset all profile-specific state when navigating to a different profile
-  useEffect(() => {
-    setProfile(null);
-    setPosts([]);
-    setLoading(true);
-    setError(null);
-    setCursor(undefined);
-    setHasMore(true);
-    setActiveTab("posts");
-    setShowProfileMenu(false);
-    setProfileMenuPosition(null);
-    setShowFollowersModal(false);
-    setShowFollowingModal(false);
-    setSelectedPost(null);
-    setShowThread(false);
-    setOpenThreadToReply(false);
-    setOpenThreadToQuote(false);
-    setShowReportModal(false);
-    setShowAddToListModal(false);
-    setShowProfileAnalysis(false);
-    setAnalysisRequested(false);
-  }, [handle]);
 
   const profileMenuButtonRef = useRef<HTMLButtonElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);

@@ -8,6 +8,7 @@ import {
   Routes,
   useLocation,
   useNavigate,
+  useParams,
 } from "react-router";
 import { BackgroundNotificationLoader } from "./components/BackgroundNotificationLoader";
 import { CommandPalette } from "./components/CommandPalette";
@@ -100,6 +101,23 @@ const Settings = lazy(() =>
 const UserAnalytics = lazy(() =>
   import("./pages/UserAnalytics").then((m) => ({ default: m.UserAnalytics })),
 );
+
+// Wrapper components that use route params as keys to force remount on navigation
+// This ensures all component state resets when navigating between different items
+function ProfilePageWithKey() {
+  const { handle } = useParams<{ handle: string }>();
+  return <ProfilePage key={handle} />;
+}
+
+function ThreadPageWithKey() {
+  const { handle, postId } = useParams<{ handle: string; postId: string }>();
+  return <ThreadPage key={`${handle}/${postId}`} />;
+}
+
+function ListTimelineWithKey() {
+  const { listId } = useParams<{ listId: string }>();
+  return <ListTimeline key={listId} />;
+}
 
 // Mobile-optimized query client settings
 const isMobile = window.innerWidth < 768;
@@ -384,14 +402,17 @@ function AppContent() {
                       analytics.trackError(error, "ListTimeline");
                     }}
                   >
-                    <ListTimeline />
+                    <ListTimelineWithKey />
                   </ErrorBoundary>
                 }
               />
               <Route path="/compose" element={<Composer />} />
               <Route path="/search" element={<Search />} />
-              <Route path="/profile/:handle" element={<ProfilePage />} />
-              <Route path="/thread/:handle/:postId" element={<ThreadPage />} />
+              <Route path="/profile/:handle" element={<ProfilePageWithKey />} />
+              <Route
+                path="/thread/:handle/:postId"
+                element={<ThreadPageWithKey />}
+              />
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/:section" element={<Settings />} />
               <Route path="/compression-test" element={<CompressionTest />} />
