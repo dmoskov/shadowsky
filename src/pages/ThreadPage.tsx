@@ -11,6 +11,12 @@ export default function ThreadPage() {
   const [postUri, setPostUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Reset state when navigating to a different thread
+  useEffect(() => {
+    setPostUri(null);
+    setLoading(true);
+  }, [handle, postId]);
+
   useEffect(() => {
     const resolveHandleAndConstructUri = async () => {
       if (!handle || !postId || !agent) {
