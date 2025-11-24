@@ -522,27 +522,49 @@ export default function ProfilePage() {
                       }}
                     >
                       {isOwnProfile ? (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setShowProfileMenu(false);
-                            navigate("/settings/account");
-                          }}
-                          className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-all"
-                          style={{ color: "var(--bsky-text-primary)" }}
-                          onMouseEnter={(e) =>
-                          (e.currentTarget.style.backgroundColor =
-                            "var(--bsky-bg-hover)")
-                          }
-                          onMouseLeave={(e) =>
-                          (e.currentTarget.style.backgroundColor =
-                            "transparent")
-                          }
-                        >
-                          <Edit className="h-4 w-4" />
-                          Edit Profile
-                        </button>
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowProfileMenu(false);
+                              navigate("/settings/account");
+                            }}
+                            className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-all"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                            onMouseEnter={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
+                            }
+                          >
+                            <Edit className="h-4 w-4" />
+                            Edit Profile
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowProfileMenu(false);
+                              setAnalysisRequested(true);
+                              setShowProfileAnalysis(true);
+                            }}
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                            onMouseEnter={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--bsky-bg-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
+                            }
+                          >
+                            <Sparkles className="h-4 w-4" />
+                            Analyze Profile
+                          </button>
+                        </>
                       ) : (
                         <>
                           <button

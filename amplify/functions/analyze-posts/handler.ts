@@ -19,8 +19,21 @@ function cleanJsonResponse(text: string): string {
 }
 
 export const handler = async (event: any) => {
+  // Get the origin from the request headers
+  const origin = event.headers?.origin || event.headers?.Origin || "";
+
+  // List of allowed origins
+  const allowedOrigins = [
+    "https://main.shadowsky.io",
+    "https://shadowsky.io",
+    "http://localhost:5174",
+  ];
+
+  // Determine which origin to return (must match the request origin for credentials to work)
+  const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+
   const headers = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": corsOrigin,
     "Access-Control-Allow-Headers": "Content-Type,Authorization",
     "Access-Control-Allow-Methods": "POST,OPTIONS",
     "Content-Type": "application/json",
