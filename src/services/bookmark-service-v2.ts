@@ -45,7 +45,10 @@ class BookmarkServiceV2 {
       this.backend.setAgent(agent);
       // Re-initialize backend with new agent
       this.backend.init().catch((error) => {
-        logger.error("Failed to re-initialize backend after agent change:", error);
+        logger.error(
+          "Failed to re-initialize backend after agent change:",
+          error,
+        );
       });
     }
   }

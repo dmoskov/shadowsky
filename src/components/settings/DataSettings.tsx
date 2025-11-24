@@ -293,8 +293,8 @@ export const DataSettings: React.FC = () => {
             : "local"
           : dataType === "columns"
             ? (appPreferences?.columnStorageType === "atproto"
-              ? "custom"
-              : (appPreferences?.columnStorageType as StorageType)) || "local"
+                ? "custom"
+                : (appPreferences?.columnStorageType as StorageType)) || "local"
             : "local";
 
       // Migrate data based on type
@@ -772,9 +772,8 @@ export const DataSettings: React.FC = () => {
                           <div className="mt-2">
                             <div className="rounded-lg border border-green-200 bg-green-50 p-2 dark:border-green-800 dark:bg-green-900/20">
                               <p className="text-xs text-green-700 dark:text-green-300">
-                                ✅ Using official private bookmark storage.
-                                Your bookmarks are private and synced across
-                                devices.
+                                ✅ Using official private bookmark storage. Your
+                                bookmarks are private and synced across devices.
                               </p>
                             </div>
                           </div>

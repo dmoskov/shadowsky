@@ -1,5 +1,6 @@
 import { AppBskyFeedDefs } from "@atproto/api";
 import { getProfileService } from "@bsky/shared";
+import { useQuery } from "@tanstack/react-query";
 import {
   Edit,
   ExternalLink,
@@ -14,7 +15,6 @@ import {
 import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate, useParams } from "react-router";
-import { useQuery } from "@tanstack/react-query";
 import { AddToListModal } from "../components/AddToListModal";
 import { PostCard } from "../components/PostCard";
 import { ReportModal } from "../components/ReportModal";
@@ -24,10 +24,8 @@ import { ProfileSkeleton } from "../components/ui/SkeletonLoader";
 import { UserListModal } from "../components/UserListModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
+import { analyzePosts } from "../services/anthropic";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
-import {
-  analyzePosts,
-} from "../services/anthropic";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { getBskyProfileUrl } from "../utils/url-helpers";
 
@@ -164,7 +162,8 @@ export default function ProfilePage() {
 
   // Use haiku if available, then upgrade to sonnet when ready
   const analysisData = sonnetAnalysis || haikuAnalysis;
-  const isLoadingAnalysis = isLoadingPosts || (isLoadingHaiku && isLoadingSonnet);
+  const isLoadingAnalysis =
+    isLoadingPosts || (isLoadingHaiku && isLoadingSonnet);
 
   useEffect(() => {
     if (!handle || !agent) return;
@@ -270,7 +269,7 @@ export default function ProfilePage() {
   const handleScroll = () => {
     if (
       window.innerHeight + document.documentElement.scrollTop >=
-      document.documentElement.offsetHeight - 100 &&
+        document.documentElement.offsetHeight - 100 &&
       hasMore &&
       !postsLoading
     ) {
@@ -476,10 +475,11 @@ export default function ProfilePage() {
               {!isOwnProfile && (
                 <button
                   onClick={handleFollow}
-                  className={`rounded-full px-6 py-2.5 font-medium transition-all ${profile.viewer?.following
-                    ? "bsky-button-secondary hover:scale-105"
-                    : "bsky-button-primary hover:scale-105"
-                    }`}
+                  className={`rounded-full px-6 py-2.5 font-medium transition-all ${
+                    profile.viewer?.following
+                      ? "bsky-button-secondary hover:scale-105"
+                      : "bsky-button-primary hover:scale-105"
+                  }`}
                 >
                   {profile.viewer?.following ? "Following" : "Follow"}
                 </button>
@@ -503,8 +503,8 @@ export default function ProfilePage() {
                     color: "var(--bsky-text-secondary)",
                   }}
                   onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor =
-                    "var(--bsky-bg-hover)")
+                    (e.currentTarget.style.backgroundColor =
+                      "var(--bsky-bg-hover)")
                   }
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.backgroundColor = "transparent")
@@ -538,12 +538,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <Edit className="h-4 w-4" />
@@ -558,12 +558,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <Sparkles className="h-4 w-4" />
@@ -577,12 +577,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 rounded-t-lg px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <Share2 className="h-4 w-4" />
@@ -593,12 +593,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <ExternalLink className="h-4 w-4" />
@@ -609,12 +609,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <List className="h-4 w-4" />
@@ -629,12 +629,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <Sparkles className="h-4 w-4" />
@@ -645,17 +645,18 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <VolumeX className="h-4 w-4 flex-shrink-0" />
                             <span className="truncate">
-                              {profile.viewer?.muted ? "Unmute" : "Mute"} @{profile.handle}
+                              {profile.viewer?.muted ? "Unmute" : "Mute"} @
+                              {profile.handle}
                             </span>
                           </button>
                           <button
@@ -663,32 +664,35 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <Flag className="h-4 w-4 flex-shrink-0" />
-                            <span className="truncate">Report @{profile.handle}</span>
+                            <span className="truncate">
+                              Report @{profile.handle}
+                            </span>
                           </button>
                           <button
                             onClick={handleBlock}
                             className="flex w-full items-center gap-3 rounded-b-lg px-4 py-2.5 text-sm text-red-600 transition-all"
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <UserX className="h-4 w-4 flex-shrink-0" />
                             <span className="truncate">
-                              {profile.viewer?.blocking ? "Unblock" : "Block"} @{profile.handle}
+                              {profile.viewer?.blocking ? "Unblock" : "Block"} @
+                              {profile.handle}
                             </span>
                           </button>
                         </>
@@ -790,8 +794,9 @@ export default function ProfilePage() {
         <div className="flex">
           <button
             onClick={() => setActiveTab("posts")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${activeTab === "posts" ? "" : "hover:scale-105"
-              }`}
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+              activeTab === "posts" ? "" : "hover:scale-105"
+            }`}
             style={{
               color:
                 activeTab === "posts"
@@ -809,8 +814,9 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setActiveTab("replies")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${activeTab === "replies" ? "" : "hover:scale-105"
-              }`}
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+              activeTab === "replies" ? "" : "hover:scale-105"
+            }`}
             style={{
               color:
                 activeTab === "replies"
@@ -828,8 +834,9 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setActiveTab("media")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${activeTab === "media" ? "" : "hover:scale-105"
-              }`}
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+              activeTab === "media" ? "" : "hover:scale-105"
+            }`}
             style={{
               color:
                 activeTab === "media"
@@ -848,168 +855,188 @@ export default function ProfilePage() {
         </div>
       </div>
 
-
       {/* Profile Analysis Section */}
-      {showProfileAnalysis && !isOwnProfile && (isLoadingAnalysis || analysisData) && (
-        <div className="mb-4">
-          <div
-            className="rounded-lg p-6"
-            style={{ background: "var(--bsky-bg-secondary)" }}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h2
-                className="flex items-center gap-2 text-lg font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
-              >
-                <Sparkles size={20} className="text-purple-500" />
-                Profile Analysis
-              </h2>
-              <button
-                onClick={() => {
-                  setShowProfileAnalysis(false);
-                  setAnalysisRequested(false);
-                }}
-                className="rounded px-3 py-1 text-sm transition-all hover:opacity-80"
-                style={{
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                  color: "var(--bsky-text-secondary)",
-                }}
-              >
-                Hide
-              </button>
-            </div>
-
-            {isLoadingAnalysis ? (
-              <div className="py-8 text-center">
-                <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-500" />
-                <p style={{ color: "var(--bsky-text-primary)" }}>
-                  Analyzing profile...
-                </p>
+      {showProfileAnalysis &&
+        !isOwnProfile &&
+        (isLoadingAnalysis || analysisData) && (
+          <div className="mb-4">
+            <div
+              className="rounded-lg p-6"
+              style={{ background: "var(--bsky-bg-secondary)" }}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h2
+                  className="flex items-center gap-2 text-lg font-semibold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  <Sparkles size={20} className="text-purple-500" />
+                  Profile Analysis
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowProfileAnalysis(false);
+                    setAnalysisRequested(false);
+                  }}
+                  className="rounded px-3 py-1 text-sm transition-all hover:opacity-80"
+                  style={{
+                    backgroundColor: "var(--bsky-bg-tertiary)",
+                    color: "var(--bsky-text-secondary)",
+                  }}
+                >
+                  Hide
+                </button>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Show haiku if that's all we have, or sonnet if ready */}
-                {haikuAnalysis && !sonnetAnalysis && (
-                  <div
-                    className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm"
-                    style={{
-                      backgroundColor: "var(--bsky-bg-tertiary)",
-                      color: "var(--bsky-text-secondary)",
-                    }}
-                  >
-                    <div className="h-2 w-2 animate-pulse rounded-full bg-purple-500" />
-                    Quick analysis ready • Full analysis loading...
-                  </div>
-                )}
-                {sonnetAnalysis && haikuAnalysis && (
-                  <div
-                    className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm font-medium"
-                    style={{
-                      backgroundColor: "rgba(168, 85, 247, 0.1)",
-                      color: "var(--bsky-primary)",
-                    }}
-                  >
-                    ✨ Full analysis complete
-                  </div>
-                )}
 
-                {/* Summary (always shown) */}
-                <p style={{ color: "var(--bsky-text-secondary)" }}>
-                  {analysisData?.summary}
-                </p>
+              {isLoadingAnalysis ? (
+                <div className="py-8 text-center">
+                  <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-500" />
+                  <p style={{ color: "var(--bsky-text-primary)" }}>
+                    Analyzing profile...
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Show haiku if that's all we have, or sonnet if ready */}
+                  {haikuAnalysis && !sonnetAnalysis && (
+                    <div
+                      className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm"
+                      style={{
+                        backgroundColor: "var(--bsky-bg-tertiary)",
+                        color: "var(--bsky-text-secondary)",
+                      }}
+                    >
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-purple-500" />
+                      Quick analysis ready • Full analysis loading...
+                    </div>
+                  )}
+                  {sonnetAnalysis && haikuAnalysis && (
+                    <div
+                      className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm font-medium"
+                      style={{
+                        backgroundColor: "rgba(168, 85, 247, 0.1)",
+                        color: "var(--bsky-primary)",
+                      }}
+                    >
+                      ✨ Full analysis complete
+                    </div>
+                  )}
 
-                {/* Full sonnet details (only when sonnet is available) */}
-                {sonnetAnalysis && (
-                  <div className="mt-6 space-y-6">
-                    {/* Content Themes */}
-                    {sonnetAnalysis.contentThemes && sonnetAnalysis.contentThemes.length > 0 && (
-                      <div>
-                        <h3
-                          className="mb-3 text-sm font-semibold"
-                          style={{ color: "var(--bsky-text-primary)" }}
-                        >
-                          Content Themes
-                        </h3>
-                        <div className="space-y-3">
-                          {sonnetAnalysis.contentThemes.map((theme, idx) => (
-                            <div
-                              key={idx}
-                              className="rounded-lg p-3"
-                              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                  {/* Summary (always shown) */}
+                  <p style={{ color: "var(--bsky-text-secondary)" }}>
+                    {analysisData?.summary}
+                  </p>
+
+                  {/* Full sonnet details (only when sonnet is available) */}
+                  {sonnetAnalysis && (
+                    <div className="mt-6 space-y-6">
+                      {/* Content Themes */}
+                      {sonnetAnalysis.contentThemes &&
+                        sonnetAnalysis.contentThemes.length > 0 && (
+                          <div>
+                            <h3
+                              className="mb-3 text-sm font-semibold"
+                              style={{ color: "var(--bsky-text-primary)" }}
                             >
-                              <div className="mb-1 flex items-center gap-2">
-                                <span
-                                  className="font-medium"
-                                  style={{ color: "var(--bsky-text-primary)" }}
-                                >
-                                  {theme.theme}
-                                </span>
-                                <span
-                                  className="rounded-full px-2 py-0.5 text-xs"
-                                  style={{
-                                    backgroundColor: theme.frequency === "primary" ? "#8b5cf6" : theme.frequency === "regular" ? "#a78bfa" : "#c4b5fd",
-                                    color: "white",
-                                  }}
-                                >
-                                  {theme.frequency}
-                                </span>
-                              </div>
-                              <p
-                                className="text-sm"
-                                style={{ color: "var(--bsky-text-secondary)" }}
-                              >
-                                {theme.description}
-                              </p>
+                              Content Themes
+                            </h3>
+                            <div className="space-y-3">
+                              {sonnetAnalysis.contentThemes.map(
+                                (theme, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="rounded-lg p-3"
+                                    style={{
+                                      backgroundColor:
+                                        "var(--bsky-bg-tertiary)",
+                                    }}
+                                  >
+                                    <div className="mb-1 flex items-center gap-2">
+                                      <span
+                                        className="font-medium"
+                                        style={{
+                                          color: "var(--bsky-text-primary)",
+                                        }}
+                                      >
+                                        {theme.theme}
+                                      </span>
+                                      <span
+                                        className="rounded-full px-2 py-0.5 text-xs"
+                                        style={{
+                                          backgroundColor:
+                                            theme.frequency === "primary"
+                                              ? "#8b5cf6"
+                                              : theme.frequency === "regular"
+                                                ? "#a78bfa"
+                                                : "#c4b5fd",
+                                          color: "white",
+                                        }}
+                                      >
+                                        {theme.frequency}
+                                      </span>
+                                    </div>
+                                    <p
+                                      className="text-sm"
+                                      style={{
+                                        color: "var(--bsky-text-secondary)",
+                                      }}
+                                    >
+                                      {theme.description}
+                                    </p>
+                                  </div>
+                                ),
+                              )}
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                          </div>
+                        )}
 
-                    {/* Writing Style */}
-                    {sonnetAnalysis.writingStyle && (
-                      <div>
-                        <h3
-                          className="mb-3 text-sm font-semibold"
-                          style={{ color: "var(--bsky-text-primary)" }}
-                        >
-                          Writing Style
-                        </h3>
-                        <div
-                          className="rounded-lg p-3"
-                          style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
-                        >
-                          <p
-                            className="mb-2 text-sm font-medium"
+                      {/* Writing Style */}
+                      {sonnetAnalysis.writingStyle && (
+                        <div>
+                          <h3
+                            className="mb-3 text-sm font-semibold"
                             style={{ color: "var(--bsky-text-primary)" }}
                           >
-                            {sonnetAnalysis.writingStyle.tone}
-                          </p>
-                          {sonnetAnalysis.writingStyle.characteristics && (
-                            <ul className="space-y-1">
-                              {sonnetAnalysis.writingStyle.characteristics.map((char, idx) => (
-                                <li
-                                  key={idx}
-                                  className="text-sm"
-                                  style={{ color: "var(--bsky-text-secondary)" }}
-                                >
-                                  • {char}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
+                            Writing Style
+                          </h3>
+                          <div
+                            className="rounded-lg p-3"
+                            style={{
+                              backgroundColor: "var(--bsky-bg-tertiary)",
+                            }}
+                          >
+                            <p
+                              className="mb-2 text-sm font-medium"
+                              style={{ color: "var(--bsky-text-primary)" }}
+                            >
+                              {sonnetAnalysis.writingStyle.tone}
+                            </p>
+                            {sonnetAnalysis.writingStyle.characteristics && (
+                              <ul className="space-y-1">
+                                {sonnetAnalysis.writingStyle.characteristics.map(
+                                  (char, idx) => (
+                                    <li
+                                      key={idx}
+                                      className="text-sm"
+                                      style={{
+                                        color: "var(--bsky-text-secondary)",
+                                      }}
+                                    >
+                                      • {char}
+                                    </li>
+                                  ),
+                                )}
+                              </ul>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
-
-
-                  </div>
-                )}
-              </div>
-            )}
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
       {/* Posts */}
       <div>
         {posts.map((post) => (

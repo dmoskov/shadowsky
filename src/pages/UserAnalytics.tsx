@@ -333,8 +333,6 @@ export const UserAnalytics: React.FC = () => {
     );
   }
 
-
-
   return (
     <div className="space-y-6 p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -620,19 +618,19 @@ export const UserAnalytics: React.FC = () => {
                     {(engagementChartData.length <= 30 ||
                       index % 4 === 0 ||
                       index === engagementChartData.length - 1) && (
-                        <div className="absolute left-0 right-0 top-full mt-1 text-center">
-                          <span
-                            className="text-xs"
-                            style={{
-                              color: "var(--bsky-text-secondary)",
-                              fontSize:
-                                engagementChartData.length > 30 ? "9px" : "10px",
-                            }}
-                          >
-                            {data.date}
-                          </span>
-                        </div>
-                      )}
+                      <div className="absolute left-0 right-0 top-full mt-1 text-center">
+                        <span
+                          className="text-xs"
+                          style={{
+                            color: "var(--bsky-text-secondary)",
+                            fontSize:
+                              engagementChartData.length > 30 ? "9px" : "10px",
+                          }}
+                        >
+                          {data.date}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -736,19 +734,19 @@ export const UserAnalytics: React.FC = () => {
                       {(postFrequencyData.length <= 14 ||
                         index % 3 === 0 ||
                         index === postFrequencyData.length - 1) && (
-                          <div className="absolute left-0 right-0 top-full mt-1 text-center">
-                            <span
-                              className="text-xs"
-                              style={{
-                                color: "var(--bsky-text-secondary)",
-                                fontSize:
-                                  postFrequencyData.length > 30 ? "8px" : "10px",
-                              }}
-                            >
-                              {data.date}
-                            </span>
-                          </div>
-                        )}
+                        <div className="absolute left-0 right-0 top-full mt-1 text-center">
+                          <span
+                            className="text-xs"
+                            style={{
+                              color: "var(--bsky-text-secondary)",
+                              fontSize:
+                                postFrequencyData.length > 30 ? "8px" : "10px",
+                            }}
+                          >
+                            {data.date}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -815,7 +813,7 @@ export const UserAnalytics: React.FC = () => {
                 >
                   {
                     postingTimeAnalysis.hourCounts[
-                    postingTimeAnalysis.maxPostsHour
+                      postingTimeAnalysis.maxPostsHour
                     ]
                   }{" "}
                   posts
@@ -992,8 +990,8 @@ export const UserAnalytics: React.FC = () => {
                 >
                   {postsData.totalPosts > 0
                     ? (
-                      postsData.totalEngagement / postsData.totalPosts
-                    ).toFixed(1)
+                        postsData.totalEngagement / postsData.totalPosts
+                      ).toFixed(1)
                     : 0}
                 </span>
                 <span style={{ color: "var(--bsky-text-secondary)" }}>

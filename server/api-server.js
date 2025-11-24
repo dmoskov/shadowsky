@@ -297,8 +297,8 @@ app.post("/api/convert-gif", async (req, res) => {
     const mp4Buffer = await fs.readFile(outputPath);
 
     // Clean up temp files
-    await fs.unlink(inputPath).catch(() => { });
-    await fs.unlink(outputPath).catch(() => { });
+    await fs.unlink(inputPath).catch(() => {});
+    await fs.unlink(outputPath).catch(() => {});
 
     // Send the MP4 back as a response
     res.set({
@@ -311,8 +311,8 @@ app.post("/api/convert-gif", async (req, res) => {
     console.error("Conversion error:", error);
 
     // Clean up temp files on error
-    await fs.unlink(inputPath).catch(() => { });
-    await fs.unlink(outputPath).catch(() => { });
+    await fs.unlink(inputPath).catch(() => {});
+    await fs.unlink(outputPath).catch(() => {});
 
     res.status(500).json({
       error: "Failed to convert GIF",

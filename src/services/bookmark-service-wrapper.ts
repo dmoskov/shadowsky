@@ -10,7 +10,9 @@ const logger = createLogger("BookmarkServiceWrapper");
  */
 export async function initializeBookmarkService(agent: BskyAgent) {
   try {
-    logger.log("Initializing bookmark service with official AT Protocol storage");
+    logger.log(
+      "Initializing bookmark service with official AT Protocol storage",
+    );
 
     // Initialize the bookmark service with the agent
     await bookmarkServiceV2.init(agent);
