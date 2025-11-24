@@ -95,76 +95,93 @@ export default function ProfilePage() {
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
     useOptimisticPosts();
 
-  // Fetch posts once for analysis (shared between haiku and sonnet)
-  const { data: postsForAnalysis, isLoading: isLoadingPosts } = useQuery({
-    queryKey: ["profile-posts-for-analysis", handle],
-    queryFn: async () => {
-      if (!agent || !handle) throw new Error("No handle to analyze");
+  // Transform posts already in memory for quick haiku analysis
+  const postsInMemory = posts
+    .filter((item) => {
+      const isRepost = item.reason?.$type === "app.bsky.feed.defs#reasonRepost";
+      return !isRepost;
+    })
+    .map((item) => ({
+      text: (item.post.record as { text?: string })?.text || "",
+      createdAt: item.post.indexedAt,
+      likes: item.post.likeCount || 0,
+      reposts: item.post.repostCount || 0,
+      replies: item.post.replyCount || 0,
+    }));
 
-      const allPosts: any[] = [];
-      let fetchCursor: string | undefined;
-      const maxPages = 1; // Fetch up to 50 posts
-
-      for (let page = 0; page < maxPages; page++) {
-        const response = await agent.getAuthorFeed({
-          actor: handle,
-          limit: 50,
-          cursor: fetchCursor,
-        });
-
-        const filteredPosts = response.data.feed.filter((item) => {
-          const isRepost =
-            item.reason?.$type === "app.bsky.feed.defs#reasonRepost";
-          return !isRepost;
-        });
-
-        allPosts.push(...filteredPosts);
-        fetchCursor = response.data.cursor;
-        if (!fetchCursor) break;
-      }
-
-      if (allPosts.length === 0) {
-        throw new Error("No posts available for analysis");
-      }
-
-      return allPosts.map((item) => ({
-        text: item.post.record?.text || "",
-        createdAt: item.post.indexedAt,
-        likes: item.post.likeCount || 0,
-        reposts: item.post.repostCount || 0,
-        replies: item.post.replyCount || 0,
-      }));
-    },
-    staleTime: 30 * 60 * 1000,
-    enabled: analysisRequested && !!handle && !!agent,
-  });
-
-  // Quick haiku analysis (fast, 3-sentence summary)
+  // Quick haiku analysis using posts already in memory (instant start)
   const { data: haikuAnalysis, isLoading: isLoadingHaiku } = useQuery({
     queryKey: ["profile-analysis-haiku", handle],
     queryFn: async () => {
-      if (!postsForAnalysis) throw new Error("Posts not loaded");
-      return await analyzePosts(postsForAnalysis, "haiku");
+      if (postsInMemory.length === 0) throw new Error("No posts in memory");
+      return await analyzePosts(postsInMemory, "haiku");
     },
     staleTime: 30 * 60 * 1000,
-    enabled: !!postsForAnalysis,
+    enabled: analysisRequested && postsInMemory.length > 0,
   });
 
-  // Full sonnet analysis (detailed)
+  // Fetch more posts for deeper Sonnet analysis (in parallel)
+  const { data: postsForSonnet, isLoading: isLoadingPostsForSonnet } = useQuery(
+    {
+      queryKey: ["profile-posts-for-sonnet", handle],
+      queryFn: async () => {
+        if (!agent || !handle) throw new Error("No handle to analyze");
+
+        const allPosts: AppBskyFeedDefs.FeedViewPost[] = [];
+        let fetchCursor: string | undefined;
+        const maxPages = 4; // Fetch up to 200 posts for deeper analysis
+
+        for (let page = 0; page < maxPages; page++) {
+          const response = await agent.getAuthorFeed({
+            actor: handle,
+            limit: 50,
+            cursor: fetchCursor,
+          });
+
+          const filteredPosts = response.data.feed.filter((item) => {
+            const isRepost =
+              item.reason?.$type === "app.bsky.feed.defs#reasonRepost";
+            return !isRepost;
+          });
+
+          allPosts.push(...filteredPosts);
+          fetchCursor = response.data.cursor;
+          if (!fetchCursor) break;
+        }
+
+        if (allPosts.length === 0) {
+          throw new Error("No posts available for analysis");
+        }
+
+        return allPosts.map((item) => ({
+          text: (item.post.record as { text?: string })?.text || "",
+          createdAt: item.post.indexedAt,
+          likes: item.post.likeCount || 0,
+          reposts: item.post.repostCount || 0,
+          replies: item.post.replyCount || 0,
+        }));
+      },
+      staleTime: 30 * 60 * 1000,
+      enabled: analysisRequested && !!handle && !!agent,
+    },
+  );
+
+  // Full sonnet analysis with more posts (detailed)
   const { data: sonnetAnalysis, isLoading: isLoadingSonnet } = useQuery({
     queryKey: ["profile-analysis-sonnet", handle],
     queryFn: async () => {
-      if (!postsForAnalysis) throw new Error("Posts not loaded");
-      return await analyzePosts(postsForAnalysis, "sonnet");
+      if (!postsForSonnet) throw new Error("Posts not loaded");
+      return await analyzePosts(postsForSonnet, "sonnet");
     },
     staleTime: 30 * 60 * 1000,
-    enabled: !!postsForAnalysis,
+    enabled: !!postsForSonnet,
   });
 
   // Use haiku if available, then upgrade to sonnet when ready
   const analysisData = sonnetAnalysis || haikuAnalysis;
   const isLoadingAnalysis =
-    isLoadingPosts || (isLoadingHaiku && isLoadingSonnet);
+    (isLoadingHaiku && !haikuAnalysis) ||
+    (isLoadingPostsForSonnet && isLoadingSonnet && !haikuAnalysis);
 
   // Top posts for the "Top Posts" tab
   const { data: topPostsData, isLoading: isTopPostsLoading } = useTopPosts({
@@ -885,187 +902,186 @@ export default function ProfilePage() {
       </div>
 
       {/* Profile Analysis Section */}
-      {showProfileAnalysis &&
-        !isOwnProfile &&
-        (isLoadingAnalysis || analysisData) && (
-          <div className="mb-4">
-            <div
-              className="rounded-lg p-6"
-              style={{ background: "var(--bsky-bg-secondary)" }}
-            >
-              <div className="mb-4 flex items-center justify-between">
-                <h2
-                  className="flex items-center gap-2 text-lg font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
-                >
-                  <Sparkles size={20} className="text-purple-500" />
-                  Profile Analysis
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowProfileAnalysis(false);
-                    setAnalysisRequested(false);
-                  }}
-                  className="rounded px-3 py-1 text-sm transition-all hover:opacity-80"
-                  style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    color: "var(--bsky-text-secondary)",
-                  }}
-                >
-                  Hide
-                </button>
+      {showProfileAnalysis && (isLoadingAnalysis || analysisData) && (
+        <div className="mb-4">
+          <div
+            className="rounded-lg p-6"
+            style={{ background: "var(--bsky-bg-secondary)" }}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2
+                className="flex items-center gap-2 text-lg font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                <Sparkles size={20} className="text-purple-500" />
+                Profile Analysis
+              </h2>
+              <button
+                onClick={() => {
+                  setShowProfileAnalysis(false);
+                  setAnalysisRequested(false);
+                }}
+                className="rounded px-3 py-1 text-sm transition-all hover:opacity-80"
+                style={{
+                  backgroundColor: "var(--bsky-bg-tertiary)",
+                  color: "var(--bsky-text-secondary)",
+                }}
+              >
+                Hide
+              </button>
+            </div>
+
+            {isLoadingAnalysis ? (
+              <div className="py-8 text-center">
+                <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-500" />
+                <p style={{ color: "var(--bsky-text-primary)" }}>
+                  Analyzing profile...
+                </p>
               </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Show haiku if that's all we have, or sonnet if ready */}
+                {haikuAnalysis && !sonnetAnalysis && (
+                  <div
+                    className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-tertiary)",
+                      color: "var(--bsky-text-secondary)",
+                    }}
+                  >
+                    <div className="h-2 w-2 animate-pulse rounded-full bg-purple-500" />
+                    Quick analysis ({postsInMemory.length} posts) •{" "}
+                    {isLoadingPostsForSonnet
+                      ? "Fetching more posts..."
+                      : "Deep analysis loading..."}
+                  </div>
+                )}
+                {sonnetAnalysis && (
+                  <div
+                    className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm font-medium"
+                    style={{
+                      backgroundColor: "rgba(168, 85, 247, 0.1)",
+                      color: "var(--bsky-primary)",
+                    }}
+                  >
+                    ✨ Full analysis complete ({postsForSonnet?.length || 0}{" "}
+                    posts analyzed)
+                  </div>
+                )}
 
-              {isLoadingAnalysis ? (
-                <div className="py-8 text-center">
-                  <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-500" />
-                  <p style={{ color: "var(--bsky-text-primary)" }}>
-                    Analyzing profile...
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Show haiku if that's all we have, or sonnet if ready */}
-                  {haikuAnalysis && !sonnetAnalysis && (
-                    <div
-                      className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm"
-                      style={{
-                        backgroundColor: "var(--bsky-bg-tertiary)",
-                        color: "var(--bsky-text-secondary)",
-                      }}
-                    >
-                      <div className="h-2 w-2 animate-pulse rounded-full bg-purple-500" />
-                      Quick analysis ready • Full analysis loading...
-                    </div>
-                  )}
-                  {sonnetAnalysis && haikuAnalysis && (
-                    <div
-                      className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm font-medium"
-                      style={{
-                        backgroundColor: "rgba(168, 85, 247, 0.1)",
-                        color: "var(--bsky-primary)",
-                      }}
-                    >
-                      ✨ Full analysis complete
-                    </div>
-                  )}
+                {/* Summary (always shown) */}
+                <p style={{ color: "var(--bsky-text-secondary)" }}>
+                  {analysisData?.summary}
+                </p>
 
-                  {/* Summary (always shown) */}
-                  <p style={{ color: "var(--bsky-text-secondary)" }}>
-                    {analysisData?.summary}
-                  </p>
-
-                  {/* Full sonnet details (only when sonnet is available) */}
-                  {sonnetAnalysis && (
-                    <div className="mt-6 space-y-6">
-                      {/* Content Themes */}
-                      {sonnetAnalysis.contentThemes &&
-                        sonnetAnalysis.contentThemes.length > 0 && (
-                          <div>
-                            <h3
-                              className="mb-3 text-sm font-semibold"
-                              style={{ color: "var(--bsky-text-primary)" }}
-                            >
-                              Content Themes
-                            </h3>
-                            <div className="space-y-3">
-                              {sonnetAnalysis.contentThemes.map(
-                                (theme, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="rounded-lg p-3"
-                                    style={{
-                                      backgroundColor:
-                                        "var(--bsky-bg-tertiary)",
-                                    }}
-                                  >
-                                    <div className="mb-1 flex items-center gap-2">
-                                      <span
-                                        className="font-medium"
-                                        style={{
-                                          color: "var(--bsky-text-primary)",
-                                        }}
-                                      >
-                                        {theme.theme}
-                                      </span>
-                                      <span
-                                        className="rounded-full px-2 py-0.5 text-xs"
-                                        style={{
-                                          backgroundColor:
-                                            theme.frequency === "primary"
-                                              ? "#8b5cf6"
-                                              : theme.frequency === "regular"
-                                                ? "#a78bfa"
-                                                : "#c4b5fd",
-                                          color: "white",
-                                        }}
-                                      >
-                                        {theme.frequency}
-                                      </span>
-                                    </div>
-                                    <p
-                                      className="text-sm"
-                                      style={{
-                                        color: "var(--bsky-text-secondary)",
-                                      }}
-                                    >
-                                      {theme.description}
-                                    </p>
-                                  </div>
-                                ),
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                      {/* Writing Style */}
-                      {sonnetAnalysis.writingStyle && (
+                {/* Full sonnet details (only when sonnet is available) */}
+                {sonnetAnalysis && (
+                  <div className="mt-6 space-y-6">
+                    {/* Content Themes */}
+                    {sonnetAnalysis.contentThemes &&
+                      sonnetAnalysis.contentThemes.length > 0 && (
                         <div>
                           <h3
                             className="mb-3 text-sm font-semibold"
                             style={{ color: "var(--bsky-text-primary)" }}
                           >
-                            Writing Style
+                            Content Themes
                           </h3>
-                          <div
-                            className="rounded-lg p-3"
-                            style={{
-                              backgroundColor: "var(--bsky-bg-tertiary)",
-                            }}
-                          >
-                            <p
-                              className="mb-2 text-sm font-medium"
-                              style={{ color: "var(--bsky-text-primary)" }}
-                            >
-                              {sonnetAnalysis.writingStyle.tone}
-                            </p>
-                            {sonnetAnalysis.writingStyle.characteristics && (
-                              <ul className="space-y-1">
-                                {sonnetAnalysis.writingStyle.characteristics.map(
-                                  (char, idx) => (
-                                    <li
-                                      key={idx}
-                                      className="text-sm"
-                                      style={{
-                                        color: "var(--bsky-text-secondary)",
-                                      }}
-                                    >
-                                      • {char}
-                                    </li>
-                                  ),
-                                )}
-                              </ul>
-                            )}
+                          <div className="space-y-3">
+                            {sonnetAnalysis.contentThemes.map((theme, idx) => (
+                              <div
+                                key={idx}
+                                className="rounded-lg p-3"
+                                style={{
+                                  backgroundColor: "var(--bsky-bg-tertiary)",
+                                }}
+                              >
+                                <div className="mb-1 flex items-center gap-2">
+                                  <span
+                                    className="font-medium"
+                                    style={{
+                                      color: "var(--bsky-text-primary)",
+                                    }}
+                                  >
+                                    {theme.theme}
+                                  </span>
+                                  <span
+                                    className="rounded-full px-2 py-0.5 text-xs"
+                                    style={{
+                                      backgroundColor:
+                                        theme.frequency === "primary"
+                                          ? "#8b5cf6"
+                                          : theme.frequency === "regular"
+                                            ? "#a78bfa"
+                                            : "#c4b5fd",
+                                      color: "white",
+                                    }}
+                                  >
+                                    {theme.frequency}
+                                  </span>
+                                </div>
+                                <p
+                                  className="text-sm"
+                                  style={{
+                                    color: "var(--bsky-text-secondary)",
+                                  }}
+                                >
+                                  {theme.description}
+                                </p>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+
+                    {/* Writing Style */}
+                    {sonnetAnalysis.writingStyle && (
+                      <div>
+                        <h3
+                          className="mb-3 text-sm font-semibold"
+                          style={{ color: "var(--bsky-text-primary)" }}
+                        >
+                          Writing Style
+                        </h3>
+                        <div
+                          className="rounded-lg p-3"
+                          style={{
+                            backgroundColor: "var(--bsky-bg-tertiary)",
+                          }}
+                        >
+                          <p
+                            className="mb-2 text-sm font-medium"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                          >
+                            {sonnetAnalysis.writingStyle.tone}
+                          </p>
+                          {sonnetAnalysis.writingStyle.characteristics && (
+                            <ul className="space-y-1">
+                              {sonnetAnalysis.writingStyle.characteristics.map(
+                                (char, idx) => (
+                                  <li
+                                    key={idx}
+                                    className="text-sm"
+                                    style={{
+                                      color: "var(--bsky-text-secondary)",
+                                    }}
+                                  >
+                                    • {char}
+                                  </li>
+                                ),
+                              )}
+                            </ul>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        )}
+        </div>
+      )}
       {/* Posts */}
       <div>
         {activeTab === "top" ? (
