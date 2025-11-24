@@ -96,70 +96,75 @@ export default function ProfilePage() {
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
     useOptimisticPosts();
 
-  // Shared function to fetch posts for analysis
-  const fetchPostsForAnalysis = async () => {
-    if (!agent || !handle) throw new Error("No handle to analyze");
+  // Fetch posts once for analysis (shared between haiku and sonnet)
+  const { data: postsForAnalysis, isLoading: isLoadingPosts } = useQuery({
+    queryKey: ["profile-posts-for-analysis", handle],
+    queryFn: async () => {
+      if (!agent || !handle) throw new Error("No handle to analyze");
 
-    const allPosts: any[] = [];
-    let fetchCursor: string | undefined;
-    const maxPages = 2; // Fetch up to 100 posts
+      const allPosts: any[] = [];
+      let fetchCursor: string | undefined;
+      const maxPages = 2; // Fetch up to 100 posts
 
-    for (let page = 0; page < maxPages; page++) {
-      const response = await agent.getAuthorFeed({
-        actor: handle,
-        limit: 50,
-        cursor: fetchCursor,
-      });
+      for (let page = 0; page < maxPages; page++) {
+        const response = await agent.getAuthorFeed({
+          actor: handle,
+          limit: 50,
+          cursor: fetchCursor,
+        });
 
-      const filteredPosts = response.data.feed.filter((item) => {
-        const isRepost =
-          item.reason?.$type === "app.bsky.feed.defs#reasonRepost";
-        return !isRepost;
-      });
+        const filteredPosts = response.data.feed.filter((item) => {
+          const isRepost =
+            item.reason?.$type === "app.bsky.feed.defs#reasonRepost";
+          return !isRepost;
+        });
 
-      allPosts.push(...filteredPosts);
-      fetchCursor = response.data.cursor;
-      if (!fetchCursor) break;
-    }
+        allPosts.push(...filteredPosts);
+        fetchCursor = response.data.cursor;
+        if (!fetchCursor) break;
+      }
 
-    if (allPosts.length === 0) {
-      throw new Error("No posts available for analysis");
-    }
+      if (allPosts.length === 0) {
+        throw new Error("No posts available for analysis");
+      }
 
-    return allPosts.map((item) => ({
-      text: item.post.record?.text || "",
-      createdAt: item.post.indexedAt,
-      likes: item.post.likeCount || 0,
-      reposts: item.post.repostCount || 0,
-      replies: item.post.replyCount || 0,
-    }));
-  };
+      return allPosts.map((item) => ({
+        text: item.post.record?.text || "",
+        createdAt: item.post.indexedAt,
+        likes: item.post.likeCount || 0,
+        reposts: item.post.repostCount || 0,
+        replies: item.post.replyCount || 0,
+      }));
+    },
+    staleTime: 30 * 60 * 1000,
+    enabled: analysisRequested && !!handle && !!agent,
+  });
 
   // Quick haiku analysis (fast, 3-sentence summary)
   const { data: haikuAnalysis, isLoading: isLoadingHaiku } = useQuery({
     queryKey: ["profile-analysis-haiku", handle],
     queryFn: async () => {
-      const posts = await fetchPostsForAnalysis();
-      return await analyzePosts(posts, "haiku");
+      if (!postsForAnalysis) throw new Error("Posts not loaded");
+      return await analyzePosts(postsForAnalysis, "haiku");
     },
     staleTime: 30 * 60 * 1000,
-    enabled: analysisRequested && !!handle && !!agent,
+    enabled: !!postsForAnalysis,
   });
 
   // Full sonnet analysis (detailed)
   const { data: sonnetAnalysis, isLoading: isLoadingSonnet } = useQuery({
     queryKey: ["profile-analysis-sonnet", handle],
     queryFn: async () => {
-      const posts = await fetchPostsForAnalysis();
-      return await analyzePosts(posts, "sonnet");
+      if (!postsForAnalysis) throw new Error("Posts not loaded");
+      return await analyzePosts(postsForAnalysis, "sonnet");
     },
     staleTime: 30 * 60 * 1000,
-    enabled: analysisRequested && !!handle && !!agent,
+    enabled: !!postsForAnalysis,
   });
 
   // Use haiku if available, then upgrade to sonnet when ready
   const analysisData = sonnetAnalysis || haikuAnalysis;
-  const isLoadingAnalysis = isLoadingHaiku && isLoadingSonnet;
+  const isLoadingAnalysis = isLoadingPosts || (isLoadingHaiku && isLoadingSonnet);
 
   useEffect(() => {
     if (!handle || !agent) return;
