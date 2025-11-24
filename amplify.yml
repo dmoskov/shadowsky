@@ -9,6 +9,9 @@ frontend:
     build:
       commands:
         # Debug: Check if environment variables are available
+        # CONFIGURATION NOTE:
+        # To enable WebSockets (Sandbox): Set VITE_WS_URL environment variable in Amplify Console
+        # To disable WebSockets (Production): Remove/Unset VITE_WS_URL environment variable in Amplify Console
         - echo "Checking for VITE_ environment variables:"
         - env | grep VITE_ || echo "No VITE_ variables found"
         - npm run build

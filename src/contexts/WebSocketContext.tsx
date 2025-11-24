@@ -28,6 +28,7 @@ interface WebSocketContextType {
   connectionState: WebSocketConnectionState;
   stats: WebSocketStats;
   reconnect: () => void;
+  isEnabled: boolean;
 }
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
@@ -228,6 +229,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     connectionState,
     stats,
     reconnect,
+    isEnabled: !!import.meta.env.VITE_WS_URL,
   };
 
   return (

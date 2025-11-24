@@ -4,8 +4,12 @@ import { useWebSocket } from "../contexts/WebSocketContext";
 import { WebSocketConnectionState } from "../types/websocket";
 
 export const WebSocketStatus: React.FC = () => {
-  const { isConnected, connectionState, stats, reconnect } = useWebSocket();
+  const { isConnected, connectionState, stats, reconnect, isEnabled } = useWebSocket();
   const [isExpanded, setIsExpanded] = useState(false);
+
+  if (!isEnabled) {
+    return null;
+  }
 
   const getStatusIcon = () => {
     switch (connectionState) {
@@ -70,12 +74,11 @@ export const WebSocketStatus: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">{getStatusText()}</span>
                 <div
-                  className={`h-2 w-2 rounded-full ${getStatusColor()} ${
-                    connectionState === "connecting" ||
-                    connectionState === "reconnecting"
+                  className={`h-2 w-2 rounded-full ${getStatusColor()} ${connectionState === "connecting" ||
+                      connectionState === "reconnecting"
                       ? "animate-pulse"
                       : ""
-                  }`}
+                    }`}
                 />
               </div>
             </div>
