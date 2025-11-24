@@ -25,6 +25,7 @@ import { UserListModal } from "../components/UserListModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { analyzePosts } from "../services/anthropic";
+import { useTopPosts } from "../hooks/useTopPosts";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { getBskyProfileUrl } from "../utils/url-helpers";
@@ -57,7 +58,7 @@ interface ProfileData {
   };
 }
 
-type ProfileTab = "posts" | "replies" | "media";
+type ProfileTab = "posts" | "replies" | "media" | "top";
 
 export default function ProfilePage() {
   const { handle } = useParams<{ handle: string }>();
@@ -165,6 +166,13 @@ export default function ProfilePage() {
   const isLoadingAnalysis =
     isLoadingPosts || (isLoadingHaiku && isLoadingSonnet);
 
+  // Top posts for the "Top Posts" tab
+  const { data: topPostsData, isLoading: isTopPostsLoading } = useTopPosts({
+    handle: handle || "",
+    limit: 10,
+    enabled: activeTab === "top" && !!handle,
+  });
+
   useEffect(() => {
     if (!handle || !agent) return;
 
@@ -233,6 +241,7 @@ export default function ProfilePage() {
 
   const loadPosts = async (initial = false) => {
     if (!handle || !agent || postsLoading) return;
+    if (activeTab === "top") return;
 
     try {
       setPostsLoading(true);
@@ -476,8 +485,8 @@ export default function ProfilePage() {
                 <button
                   onClick={handleFollow}
                   className={`rounded-full px-6 py-2.5 font-medium transition-all ${profile.viewer?.following
-                      ? "bsky-button-secondary hover:scale-105"
-                      : "bsky-button-primary hover:scale-105"
+                    ? "bsky-button-secondary hover:scale-105"
+                    : "bsky-button-primary hover:scale-105"
                     }`}
                 >
                   {profile.viewer?.following ? "Following" : "Follow"}
@@ -848,6 +857,25 @@ export default function ProfilePage() {
               />
             )}
           </button>
+          <button
+            onClick={() => setActiveTab("top")}
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${activeTab === "top" ? "" : "hover:scale-105"
+              }`}
+            style={{
+              color:
+                activeTab === "top"
+                  ? "var(--bsky-primary)"
+                  : "var(--bsky-text-secondary)",
+            }}
+          >
+            Top Posts
+            {activeTab === "top" && (
+              <div
+                className="absolute bottom-0 left-0 right-0 h-0.5"
+                style={{ backgroundColor: "var(--bsky-primary)" }}
+              />
+            )}
+          </button>
         </div>
       </div>
 
@@ -1035,46 +1063,78 @@ export default function ProfilePage() {
         )}
       {/* Posts */}
       <div>
-        {posts.map((post) => (
-          <PostCard
-            key={post.post.uri}
-            post={post.post}
-            reason={post.reason}
-            onClick={() => {
-              setSelectedPost(post.post);
-              setOpenThreadToReply(false);
-              setOpenThreadToQuote(false);
-              setShowThread(true);
-            }}
-            onQuoteClick={(uri) => {
-              // Find the quoted post from our posts array or create a minimal post object
-              const quotedPost = posts.find((p) => p.post.uri === uri)?.post;
-              if (quotedPost) {
-                setSelectedPost(quotedPost);
-              } else {
-                // Create a minimal post object with just the URI for the ThreadModal to fetch
-                setSelectedPost({ uri } as AppBskyFeedDefs.PostView);
-              }
-              setOpenThreadToReply(false);
-              setOpenThreadToQuote(false);
-              setShowThread(true);
-            }}
-            onLike={() => handleLike(post.post)}
-            onRepost={() => handleRepost(post.post)}
-            onReply={() => {
-              setSelectedPost(post.post);
-              setOpenThreadToReply(true);
-              setOpenThreadToQuote(false);
-              setShowThread(true);
-            }}
-            onQuote={() => {
-              setSelectedPost(post.post);
-              setOpenThreadToReply(false);
-              setOpenThreadToQuote(true);
-              setShowThread(true);
-            }}
-          />
-        ))}
+        {activeTab === "top" ? (
+          <div className="space-y-4">
+            {isTopPostsLoading ? (
+              <div className="py-8 text-center text-gray-500">
+                Loading top posts...
+              </div>
+            ) : topPostsData?.topPosts.length === 0 ? (
+              <div className="py-8 text-center text-gray-500">
+                No top posts found.
+              </div>
+            ) : (
+              topPostsData?.topPosts.map((item) => (
+                <PostCard
+                  key={item.post.uri}
+                  post={item.post}
+                  reason={undefined}
+                  onClick={() => {
+                    setSelectedPost(item.post);
+                    setOpenThreadToReply(false);
+                    setShowThread(true);
+                  }}
+                  onReply={() => {
+                    setSelectedPost(item.post);
+                    setOpenThreadToReply(true);
+                    setShowThread(true);
+                  }}
+                />
+              ))
+            )}
+          </div>
+        ) : (
+          posts.map((post) => (
+            <PostCard
+              key={post.post.uri}
+              post={post.post}
+              reason={post.reason}
+              onClick={() => {
+                setSelectedPost(post.post);
+                setOpenThreadToReply(false);
+                setOpenThreadToQuote(false);
+                setShowThread(true);
+              }}
+              onQuoteClick={(uri) => {
+                // Find the quoted post from our posts array or create a minimal post object
+                const quotedPost = posts.find((p) => p.post.uri === uri)?.post;
+                if (quotedPost) {
+                  setSelectedPost(quotedPost);
+                } else {
+                  // Create a minimal post object with just the URI for the ThreadModal to fetch
+                  setSelectedPost({ uri } as AppBskyFeedDefs.PostView);
+                }
+                setOpenThreadToReply(false);
+                setOpenThreadToQuote(false);
+                setShowThread(true);
+              }}
+              onLike={() => handleLike(post.post)}
+              onRepost={() => handleRepost(post.post)}
+              onReply={() => {
+                setSelectedPost(post.post);
+                setOpenThreadToReply(true);
+                setOpenThreadToQuote(false);
+                setShowThread(true);
+              }}
+              onQuote={() => {
+                setSelectedPost(post.post);
+                setOpenThreadToReply(false);
+                setOpenThreadToQuote(true);
+                setShowThread(true);
+              }}
+            />
+          ))
+        )}
         {postsLoading && (
           <div className="flex justify-center p-4">
             <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"></div>
