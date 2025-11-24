@@ -99,9 +99,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 to={item.path}
                 onClick={() => onClose()}
                 className={({ isActive }) =>
-                  `group relative flex items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 ${isActive
-                    ? "scale-[1.02] text-white shadow-md"
-                    : "hover:scale-[1.02] hover:bg-blue-50"
+                  `group relative flex items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 ${
+                    isActive
+                      ? "scale-[1.02] text-white shadow-md"
+                      : "hover:scale-[1.02] hover:bg-blue-50"
                   } `
                 }
                 style={({ isActive }) => ({
