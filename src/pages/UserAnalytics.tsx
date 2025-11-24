@@ -670,7 +670,7 @@ export const UserAnalytics: React.FC = () => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {postFrequencyData.length > 0 && (
           <div
-            className="bsky-card p-6"
+            className="bsky-card min-w-0 overflow-hidden p-6"
             style={{ background: "var(--bsky-bg-secondary)" }}
           >
             <h2
@@ -757,7 +757,7 @@ export const UserAnalytics: React.FC = () => {
 
         {postingTimeAnalysis && (
           <div
-            className="bsky-card p-6"
+            className="bsky-card min-w-0 p-6"
             style={{ background: "var(--bsky-bg-secondary)" }}
           >
             <h2
