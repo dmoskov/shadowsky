@@ -89,8 +89,25 @@ export default function ProfilePage() {
   const [showProfileAnalysis, setShowProfileAnalysis] = useState(false);
   const [analysisRequested, setAnalysisRequested] = useState(false);
 
-  // Reset analysis state when navigating to a different profile
+  // Reset all profile-specific state when navigating to a different profile
   useEffect(() => {
+    setProfile(null);
+    setPosts([]);
+    setLoading(true);
+    setError(null);
+    setCursor(undefined);
+    setHasMore(true);
+    setActiveTab("posts");
+    setShowProfileMenu(false);
+    setProfileMenuPosition(null);
+    setShowFollowersModal(false);
+    setShowFollowingModal(false);
+    setSelectedPost(null);
+    setShowThread(false);
+    setOpenThreadToReply(false);
+    setOpenThreadToQuote(false);
+    setShowReportModal(false);
+    setShowAddToListModal(false);
     setShowProfileAnalysis(false);
     setAnalysisRequested(false);
   }, [handle]);
