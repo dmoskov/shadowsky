@@ -2641,7 +2641,8 @@ export function Composer() {
                 className="text-sm"
                 style={{ color: "var(--bsky-text-secondary)" }}
               >
-                Some images are missing alt text. Adding alt text improves accessibility for screen reader users.
+                Some images are missing alt text. Adding alt text improves
+                accessibility for screen reader users.
               </p>
             </div>
           )}
