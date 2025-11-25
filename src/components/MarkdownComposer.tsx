@@ -113,7 +113,6 @@ export function renderMarkdownPreview(markdown: string): React.ReactNode {
   const elements: React.ReactNode[] = [];
   let inCodeBlock = false;
   let codeBlockContent: string[] = [];
-  let codeBlockLang = "";
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -121,7 +120,6 @@ export function renderMarkdownPreview(markdown: string): React.ReactNode {
     if (line.startsWith("```")) {
       if (!inCodeBlock) {
         inCodeBlock = true;
-        codeBlockLang = line.slice(3).trim();
         codeBlockContent = [];
       } else {
         elements.push(
@@ -138,7 +136,6 @@ export function renderMarkdownPreview(markdown: string): React.ReactNode {
         );
         inCodeBlock = false;
         codeBlockContent = [];
-        codeBlockLang = "";
       }
       continue;
     }

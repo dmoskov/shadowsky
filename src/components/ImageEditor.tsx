@@ -111,10 +111,6 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
     "adjust",
   );
   const [isSaving, setIsSaving] = useState(false);
-  const [imageNaturalSize, setImageNaturalSize] = useState({
-    width: 0,
-    height: 0,
-  });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -139,14 +135,9 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
     setIsCropping(false);
   }, [currentIndex, editedImages]);
 
-  // Handle image load to get natural size
+  // Handle image load - keep for future use
   const handleImageLoad = useCallback(() => {
-    if (imageRef.current) {
-      setImageNaturalSize({
-        width: imageRef.current.naturalWidth,
-        height: imageRef.current.naturalHeight,
-      });
-    }
+    // Image loaded, ready for editing
   }, []);
 
   // Calculate CSS filter string from adjustments
@@ -984,7 +975,6 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                             adjustments.filter === key
                               ? "var(--bsky-primary)"
                               : "var(--bsky-border-primary)",
-                          ringColor: "var(--bsky-primary)",
                         }}
                       >
                         <img
@@ -1114,7 +1104,6 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                             currentIndex === index
                               ? "var(--bsky-primary)"
                               : "var(--bsky-border-primary)",
-                          ringColor: "var(--bsky-primary)",
                         }}
                       >
                         <img

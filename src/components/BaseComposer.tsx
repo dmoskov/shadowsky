@@ -20,6 +20,7 @@ import {
 } from "../utils/video-compression";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
+import { ImageEditor } from "./ImageEditor";
 import { VideoUploadProgress } from "./VideoUploadProgress";
 
 async function loadAnthropicService() {

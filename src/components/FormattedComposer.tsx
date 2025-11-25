@@ -1,17 +1,15 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import {
-  AlertCircle,
-  Edit2,
-  Hash,
+  BarChart3,
   Image,
   Loader,
   Quote,
   Send,
   Smile,
-  Sparkles,
+  Type,
   X,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useVideoCompression } from "../hooks/useVideoCompression";
 import { debug } from "../shared/debug";
@@ -24,24 +22,18 @@ import {
   shouldCompressVideo,
 } from "../utils/video-compression";
 import { EmojiPicker } from "./EmojiPicker";
-import { GiphySearch } from "./GiphySearch";
-import { ImageEditor } from "./ImageEditor";
 import {
-  MentionTypeahead,
-  type MentionTypeaheadHandle,
-} from "./MentionTypeahead";
+  MarkdownComposer,
+  type MarkdownComposerHandle,
+  parseMarkdownToPlainText,
+} from "./MarkdownComposer";
+import {
+  createEmptyPoll,
+  isPollValid,
+  PollComposer,
+  type PollData,
+} from "./PollComposer";
 import { VideoUploadProgress } from "./VideoUploadProgress";
-
-async function loadAnthropicService() {
-  return await import("../services/anthropic");
-}
-
-// Temporary type definitions until these are added to anthropic service
-interface HashtagSuggestion {
-  tag: string;
-  relevance: number;
-  isTrending?: boolean;
-}
 
 interface UploadedMedia {
   id: string;
@@ -51,63 +43,46 @@ interface UploadedMedia {
   type: "image" | "video";
 }
 
-interface EnhancedComposerProps {
-  // Core functionality
+interface FormattedComposerProps {
   onSubmit: (
     text: string,
     media?: UploadedMedia[],
     quotedPost?: AppBskyFeedDefs.PostView,
+    poll?: PollData,
   ) => Promise<void>;
   maxLength?: number;
   placeholder?: string;
   initialText?: string;
-
-  // Reply context (optional)
   replyTo?: {
     uri: string;
     cid: string;
     author: { handle: string; displayName?: string };
     text?: string;
   };
-
-  // Parent post context for better reply understanding
   parentPost?: AppBskyFeedDefs.PostView;
-
-  // Quote post context (optional)
   quotedPost?: AppBskyFeedDefs.PostView;
-
-  // Feature toggles
   features?: {
     media?: boolean;
     emoji?: boolean;
-    giphy?: boolean;
-    altTextGeneration?: boolean;
+    poll?: boolean;
+    richText?: boolean;
     shortcuts?: boolean;
-    hashtags?: boolean;
-    threadOptimization?: boolean;
-    imageEditing?: boolean;
   };
-
-  // UI customization
   showReplyContext?: boolean;
   submitLabel?: string;
-
-  // Callbacks
   onCancel?: () => void;
   onChange?: (text: string) => void;
   onFocus?: () => void;
   onBlur?: () => void;
-
-  // Auto-focus
   autoFocus?: boolean;
 }
 
-const MAX_IMAGE_SIZE = 1000000; // 1MB
-const MAX_VIDEO_SIZE = BLUESKY_MAX_VIDEO_SIZE; // 100MB recommended
+const MAX_IMAGE_SIZE = 1000000;
+const MAX_VIDEO_SIZE = BLUESKY_MAX_VIDEO_SIZE;
 const MAX_IMAGES = 4;
 const SUPPORTED_VIDEO_FORMATS = [".mp4", ".mpeg", ".webm", ".mov"];
 
-export function EnhancedComposer({
+export function FormattedComposer({
   onSubmit,
   maxLength = 300,
   placeholder = "What's happening?",
@@ -118,12 +93,9 @@ export function EnhancedComposer({
   features = {
     media: true,
     emoji: true,
-    giphy: false,
-    altTextGeneration: true,
+    poll: true,
+    richText: true,
     shortcuts: true,
-    hashtags: true,
-    threadOptimization: false,
-    imageEditing: true,
   },
   showReplyContext = true,
   submitLabel = "Post",
@@ -132,86 +104,44 @@ export function EnhancedComposer({
   onFocus,
   onBlur,
   autoFocus = false,
-}: EnhancedComposerProps) {
+}: FormattedComposerProps) {
   const { agent } = useAuth();
   const [text, setText] = useState(initialText);
   const [media, setMedia] = useState<UploadedMedia[]>([]);
+  const [poll, setPoll] = useState<PollData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [useRichText, setUseRichText] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
-  // Video compression hook
   const videoCompression = useVideoCompression({
     preset: "auto",
     generateThumbnail: true,
     thumbnailTime: 1,
   });
 
-  // UI state
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showGifSearch, setShowGifSearch] = useState(false);
-  const [showImageEditor, setShowImageEditor] = useState(false);
-  const [showHashtagSuggestions, setShowHashtagSuggestions] = useState(false);
-  const [generatingAlt, setGeneratingAlt] = useState<string | null>(null);
-
-  // AI features state
-  const [hashtagSuggestions, setHashtagSuggestions] = useState<
-    HashtagSuggestion[]
-  >([]);
-  const [, setIsLoadingHashtags] = useState(false);
-  const [enableHashtags, setEnableHashtags] = useState(false);
-
-  // Quote post detection state
   const [detectedQuotePost, setDetectedQuotePost] =
     useState<AppBskyFeedDefs.PostView | null>(null);
   const [isLoadingQuotePost, setIsLoadingQuotePost] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<MentionTypeaheadHandle>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const markdownRef = useRef<MarkdownComposerHandle>(null);
   const mediaUrlsRef = useRef<Set<string>>(new Set());
 
-  // Load AI settings
   useEffect(() => {
-    const loadSettings = async () => {
-      // TODO: Add aiSettings to AppPreferencesRecord type
-      // const prefs = await appPreferencesService.getPreferences();
-      // if (prefs?.aiSettings) {
-      //   setEnableHashtags(
-      //     features.hashtags === true &&
-      //       prefs.aiSettings.enableHashtagSuggestions === true,
-      //   );
-      // }
-      // For now, disable these features
-      setEnableHashtags(false);
-    };
-    loadSettings();
-  }, [features.hashtags]);
-
-  // Load hashtag suggestions
-  useEffect(() => {
-    if (enableHashtags && text.length > 50) {
-      const timer = setTimeout(() => {
-        loadHashtagSuggestions();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [text, enableHashtags]);
-
-  // Detect Bluesky URLs and fetch post data
-  useEffect(() => {
-    if (!agent || quotedPost) return; // Don't detect if we already have a quoted post from props
+    if (!agent || quotedPost) return;
 
     const detectAndFetchPost = async () => {
       const urls = extractBskyUrls(text);
-
       if (urls.length === 0) {
         setDetectedQuotePost(null);
         return;
       }
 
-      // Take the first URL found
       const firstUrl = urls[0];
       const parsed = parseBskyPostUrl(firstUrl);
-
       if (!parsed) {
         setDetectedQuotePost(null);
         return;
@@ -219,7 +149,6 @@ export function EnhancedComposer({
 
       setIsLoadingQuotePost(true);
       try {
-        // Fetch the post thread using the AT URI
         const response = await agent.getPostThread({
           uri: parsed.uri,
           depth: 0,
@@ -243,12 +172,11 @@ export function EnhancedComposer({
 
     const timer = setTimeout(() => {
       detectAndFetchPost();
-    }, 500); // Debounce to avoid too many API calls
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [text, agent, quotedPost]);
 
-  // Track media URLs for cleanup
   useEffect(() => {
     media.forEach((m) => {
       if (m.preview && !m.preview.startsWith("data:")) {
@@ -257,7 +185,6 @@ export function EnhancedComposer({
     });
   }, [media]);
 
-  // Cleanup all blob URLs on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
       mediaUrlsRef.current.forEach((url) => {
@@ -267,32 +194,12 @@ export function EnhancedComposer({
     };
   }, []);
 
-  const loadHashtagSuggestions = async () => {
-    setIsLoadingHashtags(true);
-    try {
-      // TODO: Implement suggestHashtags in anthropic service
-      // const result = await suggestHashtags(text);
-      // setHashtagSuggestions(result.hashtags);
-      setHashtagSuggestions([]); // Temporarily disabled
-      setShowHashtagSuggestions(true);
-    } catch (error) {
-      debug.error("Failed to suggest hashtags:", error);
-    } finally {
-      setIsLoadingHashtags(false);
-    }
+  const handleTextChange = (newText: string) => {
+    setText(newText);
+    onChange?.(newText);
+    setError(null);
   };
 
-  // Handle text change
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newText = e.target.value;
-    if (newText.length <= maxLength) {
-      setText(newText);
-      onChange?.(newText);
-      setError(null);
-    }
-  };
-
-  // Handle keyboard shortcuts
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (features.shortcuts && e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
@@ -305,7 +212,6 @@ export function EnhancedComposer({
     e.stopPropagation();
   };
 
-  // Handle file selection
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     for (const file of files) {
@@ -316,10 +222,8 @@ export function EnhancedComposer({
     }
   };
 
-  // Add media file
   const addMedia = async (file: File) => {
     try {
-      // Check if it's a video using MIME type detection
       const isVideo =
         isVideoFile(file) ||
         SUPPORTED_VIDEO_FORMATS.some((format) =>
@@ -332,7 +236,6 @@ export function EnhancedComposer({
           return;
         }
 
-        // Check if video is too large to process
         if (videoCompression.isTooLarge(file)) {
           setError("Video is too large. Maximum size is 500MB.");
           return;
@@ -340,29 +243,13 @@ export function EnhancedComposer({
 
         let processedFile = file;
 
-        // Compress video if it exceeds the recommended size
         if (shouldCompressVideo(file)) {
-          debug.log("Video needs compression:", {
-            size: file.size,
-            threshold: MAX_VIDEO_SIZE,
-          });
-
           try {
             const result = await videoCompression.compressVideo(file);
             processedFile = result.file;
-
-            if (result.wasCompressed) {
-              debug.log("Video compressed:", {
-                original: file.size,
-                compressed: processedFile.size,
-                ratio: (file.size / processedFile.size).toFixed(2),
-              });
-            }
           } catch (compressionError) {
             debug.error("Video compression failed:", compressionError);
-            // If compression fails but file is under limit, use original
             if (file.size <= MAX_VIDEO_SIZE) {
-              debug.log("Using original file as fallback");
               processedFile = file;
             } else {
               setError(
@@ -373,7 +260,6 @@ export function EnhancedComposer({
           }
         }
 
-        // Final size check
         if (processedFile.size > MAX_VIDEO_SIZE) {
           setError(
             `Video is too large (${(processedFile.size / (1024 * 1024)).toFixed(1)}MB). Maximum size is ${(MAX_VIDEO_SIZE / (1024 * 1024)).toFixed(0)}MB.`,
@@ -405,10 +291,6 @@ export function EnhancedComposer({
         if (isCompressibleImage(file) && file.size > MAX_IMAGE_SIZE) {
           try {
             processedFile = await compressImage(file);
-            debug.log("Image compressed", {
-              original: file.size,
-              compressed: processedFile.size,
-            });
           } catch (compressionError) {
             debug.error("Failed to compress image:", compressionError);
           }
@@ -439,7 +321,6 @@ export function EnhancedComposer({
     }
   };
 
-  // Remove media
   const removeMedia = (id: string) => {
     setMedia((prev) => {
       const item = prev.find((m) => m.id === id);
@@ -451,79 +332,10 @@ export function EnhancedComposer({
     });
   };
 
-  // Update alt text
   const updateAltText = (id: string, alt: string) => {
     setMedia((prev) => prev.map((m) => (m.id === id ? { ...m, alt } : m)));
   };
 
-  // Handle image editor save
-  const handleImageEditorSave = (
-    editedImages: Array<{
-      originalFile: File;
-      editedFile: File;
-      preview: string;
-    }>,
-  ) => {
-    // Update media with edited versions
-    const imageMedia = media.filter((m) => m.type === "image");
-    const videoMedia = media.filter((m) => m.type === "video");
-
-    const updatedImageMedia = imageMedia.map((item, index) => {
-      const edited = editedImages[index];
-      if (edited && edited.editedFile !== edited.originalFile) {
-        // Revoke old preview URL
-        URL.revokeObjectURL(item.preview);
-        mediaUrlsRef.current.delete(item.preview);
-        // Track new preview URL
-        mediaUrlsRef.current.add(edited.preview);
-        return {
-          ...item,
-          file: edited.editedFile,
-          preview: edited.preview,
-        };
-      }
-      return item;
-    });
-
-    setMedia([...updatedImageMedia, ...videoMedia]);
-    setShowImageEditor(false);
-  };
-
-  // Check if there are images to edit
-  const hasEditableImages = media.some((m) => m.type === "image");
-
-  // Generate alt text with AI
-  const handleGenerateAlt = async (id: string) => {
-    const item = media.find((m) => m.id === id);
-    if (!item || item.type !== "image") return;
-
-    setGeneratingAlt(id);
-    try {
-      const reader = new FileReader();
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => {
-          if (reader.result && typeof reader.result === "string") {
-            resolve(reader.result);
-          } else {
-            reject(new Error("Failed to read file"));
-          }
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(item.file);
-      });
-
-      const anthropicService = await loadAnthropicService();
-      const alt = await anthropicService.generateAltText(dataUrl);
-      updateAltText(id, alt);
-    } catch (error) {
-      debug.error("Failed to generate alt text:", error);
-      setError("Failed to generate alt text");
-    } finally {
-      setGeneratingAlt(null);
-    }
-  };
-
-  // Handle paste
   const handlePaste = async (e: React.ClipboardEvent) => {
     const items = Array.from(e.clipboardData.items);
     for (const item of items) {
@@ -537,30 +349,43 @@ export function EnhancedComposer({
     }
   };
 
-  // Handle submit
   const handleSubmit = async () => {
-    if (!agent || isSubmitting || (!text.trim() && media.length === 0)) return;
+    const plainText = useRichText ? parseMarkdownToPlainText(text) : text;
+
+    if (
+      !agent ||
+      isSubmitting ||
+      (!plainText.trim() && media.length === 0 && !poll)
+    ) {
+      return;
+    }
+
+    if (poll && !isPollValid(poll)) {
+      setError("Please fill in all poll options");
+      return;
+    }
+
+    if (plainText.length > maxLength) {
+      setError(`Text exceeds ${maxLength} characters`);
+      return;
+    }
 
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // Use either the passed quotedPost prop or the detected one
       const finalQuotedPost = quotedPost || detectedQuotePost || undefined;
+      let finalText = plainText.trim();
 
-      // If we have a detected quote post, remove the URL from the text
-      let finalText = text.trim();
       if (detectedQuotePost && !quotedPost) {
         const urls = extractBskyUrls(text);
-        // Remove all detected Bluesky URLs from the text
         urls.forEach((url) => {
           finalText = finalText.replace(url, "").trim();
         });
       }
 
-      await onSubmit(finalText, media, finalQuotedPost);
+      await onSubmit(finalText, media, finalQuotedPost, poll || undefined);
 
-      // Clean up media preview URLs after successful submission
       media.forEach((m) => {
         URL.revokeObjectURL(m.preview);
         mediaUrlsRef.current.delete(m.preview);
@@ -568,10 +393,11 @@ export function EnhancedComposer({
 
       setText("");
       setMedia([]);
+      setPoll(null);
       setShowEmojiPicker(false);
-      setShowGifSearch(false);
-      setShowHashtagSuggestions(false);
       setDetectedQuotePost(null);
+      setUseRichText(false);
+      setShowPreview(false);
     } catch (error) {
       debug.error("Failed to submit:", error);
       setError(error instanceof Error ? error.message : "Failed to post");
@@ -580,56 +406,59 @@ export function EnhancedComposer({
     }
   };
 
-  // Handle emoji selection
   const handleEmojiSelect = (emoji: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const newText = text.slice(0, start) + emoji + text.slice(end);
-
-    if (newText.length <= maxLength) {
+    if (useRichText && markdownRef.current) {
+      const start = markdownRef.current.selectionStart;
+      const end = markdownRef.current.selectionEnd;
+      const newText = text.slice(0, start) + emoji + text.slice(end);
       setText(newText);
       onChange?.(newText);
 
       setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + emoji.length, start + emoji.length);
+        markdownRef.current?.focus();
+        markdownRef.current?.setSelectionRange(
+          start + emoji.length,
+          start + emoji.length,
+        );
+      }, 0);
+    } else if (textareaRef.current) {
+      const start = textareaRef.current.selectionStart;
+      const end = textareaRef.current.selectionEnd;
+      const newText = text.slice(0, start) + emoji + text.slice(end);
+      setText(newText);
+      onChange?.(newText);
+
+      setTimeout(() => {
+        textareaRef.current?.focus();
+        textareaRef.current?.setSelectionRange(
+          start + emoji.length,
+          start + emoji.length,
+        );
       }, 0);
     }
 
     setShowEmojiPicker(false);
   };
 
-  // Handle GIF selection
-  const handleGifSelect = async (gifUrl: string) => {
-    try {
-      const response = await fetch(gifUrl);
-      const blob = await response.blob();
-      const file = new File([blob], "gif.gif", { type: "image/gif" });
-      await addMedia(file);
-      setShowGifSearch(false);
-    } catch (error) {
-      debug.error("Failed to add GIF:", error);
-      setError("Failed to add GIF");
+  const togglePoll = () => {
+    if (poll) {
+      setPoll(null);
+    } else {
+      setPoll(createEmptyPoll());
     }
   };
 
-  // Handle hashtag selection
-  const handleSelectHashtag = (tag: string) => {
-    const newText = text + " " + tag;
-    if (newText.length <= maxLength) {
-      setText(newText);
-      onChange?.(newText);
-    }
-    setShowHashtagSuggestions(false);
-    textareaRef.current?.focus();
+  const toggleRichText = () => {
+    setUseRichText(!useRichText);
+    setShowPreview(false);
   };
+
+  const plainTextLength = useRichText
+    ? parseMarkdownToPlainText(text).length
+    : text.length;
 
   return (
     <div className="w-full">
-      {/* Reply context */}
       {showReplyContext && replyTo && parentPost && (
         <div
           className="mb-4 rounded-lg border p-3"
@@ -677,7 +506,6 @@ export function EnhancedComposer({
         </div>
       )}
 
-      {/* Loading quote post indicator */}
       {isLoadingQuotePost && (
         <div
           className="mb-4 flex items-center gap-2 rounded-lg border p-3 text-sm"
@@ -692,7 +520,6 @@ export function EnhancedComposer({
         </div>
       )}
 
-      {/* Quote post preview */}
       {(quotedPost || detectedQuotePost) && (
         <div
           className="mb-4 rounded-lg border p-3"
@@ -756,33 +583,6 @@ export function EnhancedComposer({
                     >
                       {(displayPost.record as any)?.text || ""}
                     </div>
-                    {displayPost.embed &&
-                      (displayPost.embed as any).$type ===
-                        "app.bsky.embed.images#view" && (
-                        <div className="mt-2 flex gap-1">
-                          {(displayPost.embed as any).images
-                            ?.slice(0, 2)
-                            .map((img: any, idx: number) => (
-                              <img
-                                key={idx}
-                                src={proxifyBskyImage(img.thumb)}
-                                alt=""
-                                className="h-16 w-16 rounded object-cover"
-                              />
-                            ))}
-                          {(displayPost.embed as any).images?.length > 2 && (
-                            <div
-                              className="flex h-16 w-16 items-center justify-center rounded text-sm font-semibold"
-                              style={{
-                                backgroundColor: "var(--bsky-bg-tertiary)",
-                                color: "var(--bsky-text-secondary)",
-                              }}
-                            >
-                              +{(displayPost.embed as any).images.length - 2}
-                            </div>
-                          )}
-                        </div>
-                      )}
                   </div>
                 </>
               );
@@ -791,33 +591,64 @@ export function EnhancedComposer({
         </div>
       )}
 
-      {/* Main composer area */}
-      <MentionTypeahead
-        ref={textareaRef}
-        value={text}
-        onChange={(newText) => {
-          // Call the existing handler with a synthetic event-like object
-          handleTextChange({
-            target: { value: newText },
-          } as React.ChangeEvent<HTMLTextAreaElement>);
-        }}
-        onKeyDown={handleKeyDown}
-        onPaste={handlePaste}
-        autoFocus={autoFocus}
-        onFocus={() => {
-          onFocus?.();
-        }}
-        onBlur={onBlur}
-        placeholder={placeholder}
-        className="min-h-[120px] w-full resize-none rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          borderColor: "var(--bsky-border-primary)",
-          color: "var(--bsky-text-primary)",
-        }}
-      />
+      {useRichText ? (
+        <MarkdownComposer
+          ref={markdownRef}
+          value={text}
+          onChange={handleTextChange}
+          onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          placeholder={placeholder}
+          maxLength={maxLength}
+          autoFocus={autoFocus}
+          showPreview={showPreview}
+          onPreviewToggle={setShowPreview}
+        />
+      ) : (
+        <>
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={(e) => handleTextChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
+            autoFocus={autoFocus}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            placeholder={placeholder}
+            className="min-h-[120px] w-full resize-none rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            style={{
+              backgroundColor: "var(--bsky-bg-secondary)",
+              borderColor: "var(--bsky-border-primary)",
+              color: "var(--bsky-text-primary)",
+            }}
+          />
+          <div className="mt-1 flex items-center justify-end">
+            <span
+              className={`text-xs ${plainTextLength > maxLength * 0.9 ? "text-orange-500" : ""}`}
+              style={{
+                color:
+                  plainTextLength <= maxLength * 0.9
+                    ? "var(--bsky-text-secondary)"
+                    : undefined,
+              }}
+            >
+              {plainTextLength}/{maxLength}
+            </span>
+          </div>
+        </>
+      )}
 
-      {/* Media preview */}
+      {poll && (
+        <PollComposer
+          poll={poll}
+          onChange={setPoll}
+          onRemove={() => setPoll(null)}
+        />
+      )}
+
       {media.length > 0 && (
         <div className="mt-2 grid grid-cols-2 gap-2">
           {media.map((item) => (
@@ -836,7 +667,6 @@ export function EnhancedComposer({
                 />
               )}
 
-              {/* Remove button */}
               <button
                 onClick={() => removeMedia(item.id)}
                 className="absolute right-1 top-1 rounded-full bg-black/50 p-1 text-white opacity-0 transition-all group-hover:opacity-100"
@@ -844,56 +674,22 @@ export function EnhancedComposer({
                 <X size={16} />
               </button>
 
-              {/* Alt text input */}
               {item.type === "image" && (
                 <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-2 opacity-0 transition-all group-hover:opacity-100">
-                  <div className="flex gap-1">
-                    <input
-                      type="text"
-                      value={item.alt}
-                      onChange={(e) => updateAltText(item.id, e.target.value)}
-                      placeholder="Alt text"
-                      className="flex-1 rounded border bg-white/10 px-2 py-1 text-xs text-white placeholder-white/60 focus:outline-none"
-                    />
-                    {features.altTextGeneration && (
-                      <button
-                        onClick={() => handleGenerateAlt(item.id)}
-                        disabled={generatingAlt === item.id}
-                        className="rounded bg-white/20 px-2 py-1 text-xs text-white hover:bg-white/30"
-                      >
-                        {generatingAlt === item.id ? (
-                          <Loader size={12} className="animate-spin" />
-                        ) : (
-                          <Sparkles size={12} />
-                        )}
-                      </button>
-                    )}
-                  </div>
+                  <input
+                    type="text"
+                    value={item.alt}
+                    onChange={(e) => updateAltText(item.id, e.target.value)}
+                    placeholder="Alt text"
+                    className="w-full rounded border bg-white/10 px-2 py-1 text-xs text-white placeholder-white/60 focus:outline-none"
+                  />
                 </div>
               )}
             </div>
           ))}
-
-          {/* Edit images button */}
-          {features.imageEditing && hasEditableImages && (
-            <button
-              onClick={() => setShowImageEditor(true)}
-              className="flex h-32 w-full items-center justify-center rounded border-2 border-dashed transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-              style={{
-                borderColor: "var(--bsky-border-primary)",
-                color: "var(--bsky-text-secondary)",
-              }}
-            >
-              <div className="flex flex-col items-center gap-1">
-                <Edit2 size={20} />
-                <span className="text-xs">Edit All</span>
-              </div>
-            </button>
-          )}
         </div>
       )}
 
-      {/* Video compression progress */}
       {videoCompression.isCompressing && (
         <div className="mt-2">
           <VideoUploadProgress
@@ -915,42 +711,8 @@ export function EnhancedComposer({
         </div>
       )}
 
-      {/* Hashtag suggestions */}
-      {showHashtagSuggestions && hashtagSuggestions.length > 0 && (
-        <div className="mt-2">
-          <div className="mb-1 flex items-center gap-1.5">
-            <Hash size={14} style={{ color: "var(--bsky-text-tertiary)" }} />
-            <span
-              className="text-xs font-medium"
-              style={{ color: "var(--bsky-text-tertiary)" }}
-            >
-              Suggested Hashtags
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {hashtagSuggestions.map((tag, index) => (
-              <button
-                key={index}
-                onClick={() => handleSelectHashtag(tag.tag)}
-                className="rounded-full border px-2 py-0.5 text-xs transition-all hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 dark:hover:bg-opacity-20"
-                style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
-                  color: "var(--bsky-text-primary)",
-                }}
-                title={`Relevance: ${tag.relevance}${tag.isTrending ? " (Trending)" : ""}`}
-              >
-                {tag.tag}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Action bar */}
       <div className="mt-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {/* Media button */}
+        <div className="flex items-center gap-1">
           {features.media && (
             <>
               <input
@@ -973,7 +735,6 @@ export function EnhancedComposer({
             </>
           )}
 
-          {/* Emoji picker */}
           {features.emoji && (
             <div className="relative">
               <button
@@ -996,30 +757,46 @@ export function EnhancedComposer({
             </div>
           )}
 
-          {/* Character count */}
-          <span
-            className={`text-sm ${text.length > maxLength * 0.9 ? "text-orange-500" : ""}`}
-            style={{
-              color:
-                text.length <= maxLength * 0.9
-                  ? "var(--bsky-text-secondary)"
-                  : undefined,
-            }}
-          >
-            {text.length}/{maxLength}
-          </span>
+          {features.poll && (
+            <button
+              onClick={togglePoll}
+              disabled={isSubmitting || media.length > 0}
+              className={`rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-800 ${
+                poll ? "text-blue-500" : ""
+              }`}
+              style={{
+                color: poll ? undefined : "var(--bsky-text-secondary)",
+              }}
+              title={poll ? "Remove poll" : "Add poll"}
+            >
+              <BarChart3 size={20} />
+            </button>
+          )}
+
+          {features.richText && (
+            <button
+              onClick={toggleRichText}
+              disabled={isSubmitting}
+              className={`rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-800 ${
+                useRichText ? "text-blue-500" : ""
+              }`}
+              style={{
+                color: useRichText ? undefined : "var(--bsky-text-secondary)",
+              }}
+              title={useRichText ? "Plain text mode" : "Rich text mode"}
+            >
+              <Type size={20} />
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Error message */}
           {error && (
             <span className="flex items-center gap-1 text-sm text-red-500">
-              <AlertCircle size={16} />
               {error}
             </span>
           )}
 
-          {/* Cancel button */}
           {onCancel && (
             <button
               onClick={onCancel}
@@ -1034,10 +811,14 @@ export function EnhancedComposer({
             </button>
           )}
 
-          {/* Submit button */}
           <button
             onClick={handleSubmit}
-            disabled={isSubmitting || (!text.trim() && media.length === 0)}
+            disabled={
+              isSubmitting ||
+              (!text.trim() && media.length === 0 && !poll) ||
+              (poll && !isPollValid(poll)) ||
+              plainTextLength > maxLength
+            }
             className="flex items-center gap-2 rounded-full px-4 py-2 transition-all hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
             style={{
               backgroundColor: "var(--bsky-primary)",
@@ -1060,38 +841,6 @@ export function EnhancedComposer({
           </button>
         </div>
       </div>
-
-      {/* GIF search modal */}
-      {features.giphy && showGifSearch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-lg bg-white p-4 dark:bg-gray-800">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Search GIFs</h3>
-              <button
-                onClick={() => setShowGifSearch(false)}
-                className="rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <GiphySearch
-              onSelectGif={handleGifSelect}
-              onClose={() => setShowGifSearch(false)}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Image editor modal */}
-      {features.imageEditing && showImageEditor && hasEditableImages && (
-        <ImageEditor
-          images={media
-            .filter((m) => m.type === "image")
-            .map((m) => ({ file: m.file, preview: m.preview }))}
-          onSave={handleImageEditorSave}
-          onCancel={() => setShowImageEditor(false)}
-        />
-      )}
     </div>
   );
 }

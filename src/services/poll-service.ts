@@ -18,6 +18,7 @@ export interface PollRecord {
   durationHours: number;
   createdAt: string;
   endsAt: string;
+  [key: string]: unknown;
 }
 
 export interface PollVoteRecord {
@@ -25,6 +26,7 @@ export interface PollVoteRecord {
   pollUri: string;
   optionId: string;
   votedAt: string;
+  [key: string]: unknown;
 }
 
 export interface PollWithVotes {
@@ -109,7 +111,7 @@ class PollService {
 
       if (!result.data.value) return null;
 
-      const poll = result.data.value as PollRecord;
+      const poll = result.data.value as unknown as PollRecord;
       const votes = await this.getVotes(result.data.uri);
       const userVote = await this.getUserVote(result.data.uri);
       const isEnded = new Date(poll.endsAt) < new Date();
@@ -122,7 +124,7 @@ class PollService {
         userVote: userVote?.optionId,
         isEnded,
       };
-    } catch (error) {
+    } catch {
       // Poll not found is expected for posts without polls
       return null;
     }
@@ -165,7 +167,7 @@ class PollService {
     }
   }
 
-  private async getVotes(pollUri: string): Promise<Record<string, number>> {
+  private async getVotes(_pollUri: string): Promise<Record<string, number>> {
     // Note: In a real implementation, this would query an aggregation service
     // For now, we'll return empty votes as we can't easily aggregate AT Protocol records
     // A proper implementation would need a separate backend service to aggregate votes
@@ -185,12 +187,12 @@ class PollService {
       });
 
       const vote = result.data.records.find((record) => {
-        const value = record.value as PollVoteRecord;
+        const value = record.value as unknown as PollVoteRecord;
         return value.pollUri === pollUri;
       });
 
-      return vote ? (vote.value as PollVoteRecord) : null;
-    } catch (error) {
+      return vote ? (vote.value as unknown as PollVoteRecord) : null;
+    } catch {
       return null;
     }
   }
