@@ -182,7 +182,7 @@ export function useVideoCompression(options: UseVideoCompressionOptions = {}) {
           logger.log("Video does not need compression, file size:", file.size);
 
           // Generate thumbnail if requested
-          let thumbnail: ThumbnailResult | undefined;
+          let thumbnail: ThumbnailResult | null = null;
           if (generateThumbnail) {
             try {
               thumbnail = await generateVideoThumbnail(file, thumbnailTime);
@@ -199,11 +199,11 @@ export function useVideoCompression(options: UseVideoCompressionOptions = {}) {
             compressedSize: file.size,
             compressionRatio: 1,
             metadata,
-            thumbnail: thumbnail || null,
+            thumbnail,
           });
 
           processingRef.current = false;
-          return { file, wasCompressed: false, thumbnail };
+          return { file, wasCompressed: false, thumbnail: thumbnail ?? undefined };
         }
 
         // Start compression

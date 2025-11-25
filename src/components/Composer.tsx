@@ -53,6 +53,7 @@ import {
 } from "./MentionTypeahead";
 import { ReplyControls, type ReplyPermission } from "./ReplyControls";
 import { AISettingsPanel } from "./settings/AISettingsPanel";
+import { ThreadComposer } from "./ThreadComposer";
 import { UploadProgressBar } from "./ui/UploadProgressBar";
 
 const logger = createLogger("Composer");
@@ -3600,6 +3601,16 @@ export function Composer() {
           </div>
         </div>
       )}
+
+      {/* Thread Composer Modal */}
+      <ThreadComposer
+        isOpen={showThreadComposer}
+        onClose={() => setShowThreadComposer(false)}
+        onThreadPosted={() => {
+          setPostStatus({ type: "success", message: "Thread posted!" });
+          setTimeout(() => setPostStatus({ type: "idle" }), 3000);
+        }}
+      />
     </div>
   );
 }

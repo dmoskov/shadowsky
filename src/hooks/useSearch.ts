@@ -134,8 +134,8 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
       };
     },
     enabled: enabled && !!activeQuery.trim(),
-    staleTime: 30000, // 30 seconds
-    gcTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30000,
+    gcTime: 5 * 60 * 1000,
   });
 
   // Suggestions based on search history that match current query

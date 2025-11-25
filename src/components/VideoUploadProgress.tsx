@@ -242,11 +242,11 @@ export function VideoUploadProgress({
           <StageIndicator
             label="Compress"
             isActive={stage === "compressing"}
-            isComplete={stage !== "compressing"}
+            isComplete={["uploading", "processing", "complete"].includes(stage)}
             progress={
               stage === "compressing"
                 ? progress
-                : stage !== "compressing"
+                : ["uploading", "processing", "complete"].includes(stage)
                   ? 100
                   : 0
             }
@@ -258,11 +258,11 @@ export function VideoUploadProgress({
           <StageIndicator
             label="Upload"
             isActive={stage === "uploading"}
-            isComplete={stage === "processing" || stage === "complete"}
+            isComplete={["processing", "complete"].includes(stage)}
             progress={
               stage === "uploading"
                 ? progress
-                : stage === "processing" || stage === "complete"
+                : ["processing", "complete"].includes(stage)
                   ? 100
                   : 0
             }
@@ -276,7 +276,11 @@ export function VideoUploadProgress({
             isActive={stage === "processing"}
             isComplete={stage === "complete"}
             progress={
-              stage === "processing" ? progress : stage === "complete" ? 100 : 0
+              stage === "processing"
+                ? progress
+                : stage === "complete"
+                  ? 100
+                  : 0
             }
           />
         </div>
