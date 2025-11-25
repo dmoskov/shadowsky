@@ -209,7 +209,8 @@ export const Home: React.FC<HomeProps> = React.memo(
     const { trackClick } = useInteractionTracking();
 
     // Keyboard shortcuts context for L/R/B/S/C shortcuts
-    const { setFocusedPost, registerPostActions, unregisterPostActions } = useKeyboardShortcutsContext();
+    const { setFocusedPost, registerPostActions, unregisterPostActions } =
+      useKeyboardShortcutsContext();
 
     // Fetch user's saved/pinned feeds
     const { data: userPrefs } = useQuery({
@@ -1128,7 +1129,7 @@ export const Home: React.FC<HomeProps> = React.memo(
           setFocusedPost({
             post: feedItem.post,
             index: focusedPostIndex,
-            columnId: columnId || 'home',
+            columnId: columnId || "home",
           });
         }
       } else {
@@ -1138,20 +1139,26 @@ export const Home: React.FC<HomeProps> = React.memo(
 
     // Register post actions for keyboard shortcuts (L, R, B, S, C/R)
     useEffect(() => {
-      const effectiveColumnId = columnId || 'home';
+      const effectiveColumnId = columnId || "home";
       registerPostActions(effectiveColumnId, {
         onLike: (post) => {
           if (post.viewer?.like) {
-            unlikeMutation.mutate({ postUri: post.uri, likeUri: post.viewer.like });
+            unlikeMutation.mutate({
+              postUri: post.uri,
+              likeUri: post.viewer.like,
+            });
           } else {
-            likeMutation.mutate({ post, postUri: post.uri, postCid: post.cid });
+            likeMutation.mutate({ uri: post.uri, cid: post.cid });
           }
         },
         onRepost: (post) => {
           if (post.viewer?.repost) {
-            unrepostMutation.mutate({ postUri: post.uri, repostUri: post.viewer.repost });
+            unrepostMutation.mutate({
+              postUri: post.uri,
+              repostUri: post.viewer.repost,
+            });
           } else {
-            repostMutation.mutate({ post, postUri: post.uri, postCid: post.cid });
+            repostMutation.mutate({ uri: post.uri, cid: post.cid });
           }
         },
         onReply: (post) => {
@@ -1163,11 +1170,11 @@ export const Home: React.FC<HomeProps> = React.memo(
           toggleBookmark(post);
         },
         onShare: async (post) => {
-          const shareUrl = `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`;
+          const shareUrl = `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split("/").pop()}`;
           if (navigator.share) {
             try {
               await navigator.share({
-                title: 'Share post',
+                title: "Share post",
                 url: shareUrl,
               });
             } catch {

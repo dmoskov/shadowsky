@@ -19,7 +19,7 @@ import React, {
 } from "react";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModeration } from "../contexts/ModerationContext";
-import { defaultFilters, useSearch } from "../hooks/useSearch";
+import { useSearch } from "../hooks/useSearch";
 import type { SearchHistoryEntry } from "../services/search-history-db";
 import { PostCard } from "./PostCard";
 import { SearchFilterPanel } from "./SearchFilterPanel";
@@ -154,13 +154,14 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
       setQuery(entry.query);
       // Restore filters from history entry if available
       if (entry.filters) {
-        setFilters({
-          hasMedia: entry.filters.hasMedia || false,
-          fromUsers: entry.filters.fromUsers || [],
-          sinceDate: entry.filters.sinceDate || "",
-          untilDate: entry.filters.untilDate || "",
-          language: entry.filters.language || "",
-        });
+        setFilters((prev) => ({
+          ...prev,
+          hasMedia: entry.filters?.hasMedia || false,
+          fromUsers: entry.filters?.fromUsers || [],
+          sinceDate: entry.filters?.sinceDate || "",
+          untilDate: entry.filters?.untilDate || "",
+          language: entry.filters?.language || "",
+        }));
       }
       executeSearch(entry.query);
       setShowDropdown(false);
@@ -316,11 +317,6 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
     setShowDropdown(true);
     inputRef.current?.focus();
   }, [setQuery]);
-
-  // Reset filters
-  const resetFilters = useCallback(() => {
-    setFilters(defaultFilters);
-  }, [setFilters]);
 
   return (
     <div
