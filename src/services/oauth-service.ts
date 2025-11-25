@@ -64,10 +64,21 @@ class OAuthService {
       const clientId = getClientId();
       debug.log("Initializing OAuth client with clientId:", clientId);
 
-      this.client = await BrowserOAuthClient.load({
-        clientId,
-        handleResolver: "https://bsky.social",
-      });
+      // Try to load the OAuth client - this may fail if client-metadata.json isn't deployed yet
+      try {
+        this.client = await BrowserOAuthClient.load({
+          clientId,
+          handleResolver: "https://bsky.social",
+        });
+      } catch (loadError) {
+        // Client metadata not available - OAuth won't work but app-password login will
+        debug.log(
+          "OAuth client metadata not available, OAuth login disabled:",
+          loadError,
+        );
+        this.initPromise = null;
+        return null;
+      }
 
       // Listen for session deletion events (token revocation, expiry, etc.)
       this.client.addEventListener(
@@ -209,6 +220,13 @@ class OAuthService {
    */
   isAuthenticated(): boolean {
     return this.currentSession !== null;
+  }
+
+  /**
+   * Check if OAuth is available (client metadata loaded successfully)
+   */
+  isAvailable(): boolean {
+    return this.client !== null;
   }
 
   /**
