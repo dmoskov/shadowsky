@@ -47,6 +47,10 @@ import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { createLogger } from "../utils/logger";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
+import {
+  MentionTypeahead,
+  type MentionTypeaheadHandle,
+} from "./MentionTypeahead";
 import { ReplyControls, type ReplyPermission } from "./ReplyControls";
 import { AISettingsPanel } from "./settings/AISettingsPanel";
 import { UploadProgressBar } from "./ui/UploadProgressBar";
@@ -240,7 +244,7 @@ export function Composer() {
   // Giphy and emoji state
   const [showGiphySearch, setShowGiphySearch] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<MentionTypeaheadHandle>(null);
 
   // Tone adjustment state
   const [showToneOptions, setShowToneOptions] = useState(false);
@@ -2189,23 +2193,19 @@ export function Composer() {
           </button>
         </div>
 
-        <textarea
+        <MentionTypeahead
           ref={textareaRef}
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={setText}
           onPaste={handlePaste}
           placeholder="What's on your mind?"
-          className="resize-vertical font-inherit min-h-[200px] w-full rounded-lg p-4 transition-all"
+          className="resize-vertical font-inherit min-h-[200px] w-full rounded-lg p-4 transition-all focus:border-blue-500"
           style={{
             background: "var(--bsky-bg-secondary)",
             border: "1px solid var(--bsky-border-primary)",
             color: "var(--bsky-text-primary)",
             outline: "none",
           }}
-          onFocus={(e) => (e.target.style.borderColor = "var(--bsky-primary)")}
-          onBlur={(e) =>
-            (e.target.style.borderColor = "var(--bsky-border-primary)")
-          }
           disabled={isPosting}
         />
 

@@ -18,6 +18,10 @@ import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
+import {
+  MentionTypeahead,
+  type MentionTypeaheadHandle,
+} from "./MentionTypeahead";
 
 async function loadAnthropicService() {
   return await import("../services/anthropic");
@@ -143,7 +147,7 @@ export function EnhancedComposer({
   const [isLoadingQuotePost, setIsLoadingQuotePost] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<MentionTypeaheadHandle>(null);
   const mediaUrlsRef = useRef<Set<string>>(new Set());
 
   // Load AI settings
@@ -671,16 +675,20 @@ export function EnhancedComposer({
       )}
 
       {/* Main composer area */}
-      <textarea
+      <MentionTypeahead
         ref={textareaRef}
         value={text}
-        onChange={handleTextChange}
+        onChange={(newText) => {
+          // Call the existing handler with a synthetic event-like object
+          handleTextChange({
+            target: { value: newText },
+          } as React.ChangeEvent<HTMLTextAreaElement>);
+        }}
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
         autoFocus={autoFocus}
         onFocus={() => {
           onFocus?.();
-          event?.stopPropagation();
         }}
         onBlur={onBlur}
         placeholder={placeholder}

@@ -2,6 +2,10 @@ import { RichText } from "@atproto/api";
 import { Loader2, Send, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  MentionTypeahead,
+  type MentionTypeaheadHandle,
+} from "./MentionTypeahead";
 
 interface InlineReplyComposerProps {
   replyTo: {
@@ -31,7 +35,7 @@ export function InlineReplyComposer({
   const [text, setText] = useState("");
   const [isPosting, setIsPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<MentionTypeaheadHandle>(null);
 
   useEffect(() => {
     textareaRef.current?.focus();
@@ -120,10 +124,10 @@ export function InlineReplyComposer({
         </button>
       </div>
 
-      <textarea
+      <MentionTypeahead
         ref={textareaRef}
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={setText}
         onKeyDown={handleKeyDown}
         placeholder="Write your reply..."
         className="w-full resize-none rounded border p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
