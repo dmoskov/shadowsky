@@ -1,4 +1,4 @@
-import type { AppBskyFeedDefs } from "@atproto/api";
+import { RichText, type AppBskyFeedDefs } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useQuery } from "@tanstack/react-query";
 import { Loader, X } from "lucide-react";
@@ -306,8 +306,13 @@ export function ThreadModal({
           },
         };
 
+    // Detect facets (mentions, links, hashtags) in the text
+    const rt = new RichText({ text: text.trim() });
+    await rt.detectFacets(agent);
+
     const record = {
-      text: text.trim(),
+      text: rt.text,
+      facets: rt.facets,
       embed: quoteEmbed,
       createdAt: new Date().toISOString(),
     };
@@ -399,8 +404,13 @@ export function ThreadModal({
       }
     }
 
+    // Detect facets (mentions, links, hashtags) in the text
+    const rt = new RichText({ text: text.trim() });
+    await rt.detectFacets(agent);
+
     const record = {
-      text: text.trim(),
+      text: rt.text,
+      facets: rt.facets,
       reply: {
         root: { uri: rootPost, cid: rootCid },
         parent: { uri: replyPost.uri, cid: replyPost.cid },

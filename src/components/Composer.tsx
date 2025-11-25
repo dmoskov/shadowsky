@@ -1,3 +1,4 @@
+import { RichText } from "@atproto/api";
 import {
   AlertCircle,
   CheckCircle,
@@ -1376,9 +1377,13 @@ export function Composer() {
         let result: { uri: string; cid: string };
         const postMedia = postMediaMap.get(i) || [];
 
-        // Create base post object
+        // Create base post object with facet detection
+        const rt = new RichText({ text: numberedPosts[i] });
+        await rt.detectFacets(agent);
+
         const postData: any = {
-          text: numberedPosts[i],
+          text: rt.text,
+          facets: rt.facets,
         };
 
         // Add reply info for subsequent posts

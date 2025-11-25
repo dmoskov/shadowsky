@@ -1,3 +1,4 @@
+import { RichText } from "@atproto/api";
 import { Loader2, Send, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
@@ -43,9 +44,14 @@ export function InlineReplyComposer({
     setError(null);
 
     try {
+      // Detect facets (mentions, links, hashtags) in the text
+      const rt = new RichText({ text: text.trim() });
+      await rt.detectFacets(agent);
+
       // Get the reply structure from the post being replied to
       const replyRecord = {
-        text: text.trim(),
+        text: rt.text,
+        facets: rt.facets,
         reply: {
           // If a root is provided, use it. Otherwise, this post might be the root
           root: root || {
