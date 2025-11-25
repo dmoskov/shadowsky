@@ -5,16 +5,17 @@ import {
   Edit,
   ExternalLink,
   Flag,
-  List,
+  List as ListIcon,
   MoreHorizontal,
   Share2,
   Sparkles,
   UserX,
   VolumeX,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate, useParams, useSearchParams } from "react-router";
+import { List, ListImperativeAPI, useDynamicRowHeight } from "react-window";
 import { AddToListModal } from "../components/AddToListModal";
 import { PostCard } from "../components/PostCard";
 import { ReportModal } from "../components/ReportModal";
@@ -60,6 +61,9 @@ interface ProfileData {
 
 type ProfileTab = "posts" | "replies" | "media" | "top";
 
+// Store scroll positions for each profile/tab combination
+const scrollPositions = new Map<string, number>();
+
 export default function ProfilePage() {
   const { handle } = useParams<{ handle: string }>();
   const navigate = useNavigate();
@@ -102,6 +106,17 @@ export default function ProfilePage() {
 
   const profileMenuButtonRef = useRef<HTMLButtonElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const listContainerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<ListImperativeAPI>(null);
+  const [listHeight, setListHeight] = useState(600);
+  const [shouldRestoreScroll, setShouldRestoreScroll] = useState(false);
+
+  const cacheKey = `profile-${handle}-${activeTab}`;
+
+  const dynamicRowHeight = useDynamicRowHeight({
+    defaultRowHeight: 200,
+    key: cacheKey,
+  });
 
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
     useOptimisticPosts();
@@ -303,21 +318,88 @@ export default function ProfilePage() {
     }
   };
 
-  const handleScroll = () => {
-    if (
-      window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight - 100 &&
-      hasMore &&
-      !postsLoading
-    ) {
-      loadPosts();
-    }
-  };
-
+  // Measure container height for virtual list
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasMore, postsLoading, cursor]);
+    if (!listContainerRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        // Calculate height based on viewport minus header offset
+        const viewportHeight = window.innerHeight;
+        const containerRect = entry.target.getBoundingClientRect();
+        const calculatedHeight = Math.max(
+          400,
+          viewportHeight - containerRect.top - 16,
+        );
+        setListHeight(calculatedHeight);
+      }
+    });
+
+    resizeObserver.observe(listContainerRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  // Restore scroll position when posts are loaded
+  useEffect(() => {
+    if (
+      shouldRestoreScroll &&
+      cacheKey &&
+      posts.length > 0 &&
+      scrollPositions.has(cacheKey) &&
+      listRef.current
+    ) {
+      const savedPosition = scrollPositions.get(cacheKey)!;
+      setTimeout(() => {
+        if (listRef.current) {
+          listRef.current.scrollToRow({
+            index: 0,
+            behavior: "auto",
+          });
+          const element = listRef.current.element;
+          if (element) {
+            element.scrollTop = savedPosition;
+          }
+        }
+      }, 0);
+      setShouldRestoreScroll(false);
+    }
+  }, [cacheKey, posts.length, shouldRestoreScroll]);
+
+  // Mark that we should restore scroll on mount
+  useEffect(() => {
+    if (cacheKey && scrollPositions.has(cacheKey)) {
+      setShouldRestoreScroll(true);
+    }
+  }, [cacheKey]);
+
+  // Save scroll position when unmounting or changing tabs
+  useEffect(() => {
+    return () => {
+      if (cacheKey && listRef.current) {
+        const element = listRef.current.element;
+        if (element) {
+          scrollPositions.set(cacheKey, element.scrollTop);
+        }
+      }
+    };
+  }, [cacheKey]);
+
+  // Handle scroll for infinite loading
+  const handleRowsRendered = useCallback(
+    (
+      visibleRows: { startIndex: number; stopIndex: number },
+      _allRows: { startIndex: number; stopIndex: number },
+    ) => {
+      if (!hasMore || postsLoading || posts.length === 0) return;
+
+      // Trigger load at 80% scroll position
+      const scrollPercentage = visibleRows.stopIndex / posts.length;
+      if (scrollPercentage >= 0.8) {
+        loadPosts();
+      }
+    },
+    [hasMore, postsLoading, posts.length],
+  );
 
   useEffect(() => {
     if (profile) {
@@ -654,7 +736,7 @@ export default function ProfilePage() {
                                 "transparent")
                             }
                           >
-                            <List className="h-4 w-4" />
+                            <ListIcon className="h-4 w-4" />
                             Add to Lists
                           </button>
                           <button
@@ -1093,10 +1175,11 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
-      {/* Posts */}
-      <div>
+
+      {/* Posts - Virtualized */}
+      <div ref={listContainerRef}>
         {activeTab === "top" ? (
-          <div className="space-y-4">
+          <div style={{ height: listHeight }}>
             {isTopPostsLoading ? (
               <div className="py-8 text-center text-gray-500">
                 Loading top posts...
@@ -1105,71 +1188,110 @@ export default function ProfilePage() {
               <div className="py-8 text-center text-gray-500">
                 No top posts found.
               </div>
-            ) : (
-              topPostsData?.topPosts.map((item) => (
-                <PostCard
-                  key={item.post.uri}
-                  post={item.post}
-                  reason={undefined}
-                  onClick={() => {
-                    setSelectedPost(item.post);
-                    setOpenThreadToReply(false);
-                    setShowThread(true);
-                  }}
-                  onReply={() => {
-                    setSelectedPost(item.post);
-                    setOpenThreadToReply(true);
-                    setShowThread(true);
-                  }}
-                />
-              ))
-            )}
+            ) : topPostsData?.topPosts && topPostsData.topPosts.length > 0 ? (
+              <List
+                listRef={listRef}
+                rowCount={topPostsData.topPosts.length}
+                rowHeight={dynamicRowHeight}
+                defaultHeight={listHeight}
+                overscanCount={5}
+                rowComponent={({ index, style }) => {
+                  const item = topPostsData.topPosts[index];
+                  return (
+                    <div style={style}>
+                      <PostCard
+                        post={item.post}
+                        reason={undefined}
+                        onClick={() => {
+                          setSelectedPost(item.post);
+                          setOpenThreadToReply(false);
+                          setShowThread(true);
+                        }}
+                        onReply={() => {
+                          setSelectedPost(item.post);
+                          setOpenThreadToReply(true);
+                          setShowThread(true);
+                        }}
+                      />
+                    </div>
+                  );
+                }}
+                rowProps={{}}
+              />
+            ) : null}
           </div>
         ) : (
-          posts.map((post) => (
-            <PostCard
-              key={post.post.uri}
-              post={post.post}
-              reason={post.reason}
-              onClick={() => {
-                setSelectedPost(post.post);
-                setOpenThreadToReply(false);
-                setOpenThreadToQuote(false);
-                setShowThread(true);
-              }}
-              onQuoteClick={(uri) => {
-                // Find the quoted post from our posts array or create a minimal post object
-                const quotedPost = posts.find((p) => p.post.uri === uri)?.post;
-                if (quotedPost) {
-                  setSelectedPost(quotedPost);
-                } else {
-                  // Create a minimal post object with just the URI for the ThreadModal to fetch
-                  setSelectedPost({ uri } as AppBskyFeedDefs.PostView);
-                }
-                setOpenThreadToReply(false);
-                setOpenThreadToQuote(false);
-                setShowThread(true);
-              }}
-              onLike={() => handleLike(post.post)}
-              onRepost={() => handleRepost(post.post)}
-              onReply={() => {
-                setSelectedPost(post.post);
-                setOpenThreadToReply(true);
-                setOpenThreadToQuote(false);
-                setShowThread(true);
-              }}
-              onQuote={() => {
-                setSelectedPost(post.post);
-                setOpenThreadToReply(false);
-                setOpenThreadToQuote(true);
-                setShowThread(true);
-              }}
-            />
-          ))
-        )}
-        {postsLoading && (
-          <div className="flex justify-center p-4">
-            <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"></div>
+          <div style={{ height: listHeight }}>
+            {posts.length === 0 && !postsLoading ? (
+              <div className="py-8 text-center text-gray-500">
+                No posts found.
+              </div>
+            ) : posts.length > 0 ? (
+              <List
+                listRef={listRef}
+                rowCount={posts.length}
+                rowHeight={dynamicRowHeight}
+                defaultHeight={listHeight}
+                onRowsRendered={handleRowsRendered}
+                overscanCount={5}
+                rowComponent={({ index, style }) => {
+                  const post = posts[index];
+                  return (
+                    <div style={style}>
+                      <PostCard
+                        post={post.post}
+                        reason={post.reason}
+                        onClick={() => {
+                          setSelectedPost(post.post);
+                          setOpenThreadToReply(false);
+                          setOpenThreadToQuote(false);
+                          setShowThread(true);
+                        }}
+                        onQuoteClick={(uri) => {
+                          const quotedPost = posts.find(
+                            (p) => p.post.uri === uri,
+                          )?.post;
+                          if (quotedPost) {
+                            setSelectedPost(quotedPost);
+                          } else {
+                            setSelectedPost({
+                              uri,
+                            } as AppBskyFeedDefs.PostView);
+                          }
+                          setOpenThreadToReply(false);
+                          setOpenThreadToQuote(false);
+                          setShowThread(true);
+                        }}
+                        onLike={() => handleLike(post.post)}
+                        onRepost={() => handleRepost(post.post)}
+                        onReply={() => {
+                          setSelectedPost(post.post);
+                          setOpenThreadToReply(true);
+                          setOpenThreadToQuote(false);
+                          setShowThread(true);
+                        }}
+                        onQuote={() => {
+                          setSelectedPost(post.post);
+                          setOpenThreadToReply(false);
+                          setOpenThreadToQuote(true);
+                          setShowThread(true);
+                        }}
+                      />
+                    </div>
+                  );
+                }}
+                rowProps={{}}
+              />
+            ) : postsLoading ? (
+              <div className="flex justify-center p-4">
+                <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"></div>
+              </div>
+            ) : null}
+            {posts.length > 0 && postsLoading && (
+              <div className="flex justify-center p-4">
+                <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"></div>
+              </div>
+            )}
           </div>
         )}
       </div>

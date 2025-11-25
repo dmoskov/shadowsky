@@ -834,7 +834,9 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             className="mb-4"
             ref={(el) => {
               if (isHighlighted && highlightRef) {
-                (highlightRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+                (
+                  highlightRef as React.MutableRefObject<HTMLDivElement | null>
+                ).current = el;
               }
               if (node.flatIndex !== undefined && el) {
                 postRefs.current.set(node.flatIndex, el);
@@ -938,7 +940,9 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       : maxThreadDepth > 10
                         ? "0.875rem"
                         : "1rem",
-                  outline: isFocused ? "2px solid rgb(96, 165, 250)" : undefined,
+                  outline: isFocused
+                    ? "2px solid rgb(96, 165, 250)"
+                    : undefined,
                   outlineOffset: isFocused ? "2px" : undefined,
                 }}
                 onClick={(e) => {
@@ -1252,9 +1256,8 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                   onClick={(e) => {
                     e.stopPropagation();
                     // Store scroll position before expanding
-                    const scrollContainer = containerRef.current?.closest(
-                      ".bsky-scrollbar",
-                    );
+                    const scrollContainer =
+                      containerRef.current?.closest(".bsky-scrollbar");
                     const scrollTop = scrollContainer?.scrollTop || 0;
 
                     toggleBranch(nodeUri);
@@ -1296,9 +1299,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
 
                     // Scroll back to a reasonable position after collapse
                     requestAnimationFrame(() => {
-                      const postEl = postRefs.current.get(
-                        node.flatIndex || 0,
-                      );
+                      const postEl = postRefs.current.get(node.flatIndex || 0);
                       if (postEl) {
                         postEl.scrollIntoView({
                           behavior: "smooth",

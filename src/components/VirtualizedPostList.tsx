@@ -23,10 +23,7 @@ interface VirtualizedPostListProps {
   isLoading?: boolean;
   cacheKey?: string;
   emptyState?: React.ReactNode;
-  renderItem?: (
-    item: VirtualizedPostItem,
-    index: number,
-  ) => React.ReactNode;
+  renderItem?: (item: VirtualizedPostItem, index: number) => React.ReactNode;
   overscanCount?: number;
   defaultRowHeight?: number;
 }
@@ -176,7 +173,9 @@ export const VirtualizedPostList: React.FC<VirtualizedPostListProps> = ({
                     onRepost={onRepost ? () => onRepost(item.post) : undefined}
                     onReply={onReply ? () => onReply(item.post) : undefined}
                     onQuote={onQuote ? () => onQuote(item.post) : undefined}
-                    onBookmark={onBookmark ? () => onBookmark(item.post) : undefined}
+                    onBookmark={
+                      onBookmark ? () => onBookmark(item.post) : undefined
+                    }
                     onQuoteClick={onQuoteClick}
                   />
                 )}
@@ -187,12 +186,18 @@ export const VirtualizedPostList: React.FC<VirtualizedPostListProps> = ({
         />
       ) : isLoading ? (
         <div className="flex justify-center p-4">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" style={{ borderColor: "var(--bsky-primary)" }} />
+          <div
+            className="h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"
+            style={{ borderColor: "var(--bsky-primary)" }}
+          />
         </div>
       ) : null}
       {items.length > 0 && isLoading && (
         <div className="flex justify-center p-4">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" style={{ borderColor: "var(--bsky-primary)" }} />
+          <div
+            className="h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"
+            style={{ borderColor: "var(--bsky-primary)" }}
+          />
         </div>
       )}
     </div>

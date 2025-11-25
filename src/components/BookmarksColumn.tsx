@@ -2,7 +2,13 @@ import type { AppBskyFeedDefs } from "@atproto/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { Bookmark, Cloud, Search, Settings, X } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate } from "react-router";
 import { List, ListImperativeAPI, useDynamicRowHeight } from "react-window";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
@@ -18,12 +24,6 @@ import { VideoPlayer } from "./VideoPlayer";
 interface BookmarksColumnProps {
   isFocused?: boolean;
   onClose?: () => void;
-}
-
-interface BookmarkWithPost {
-  postUri: string;
-  savedAt: string;
-  post: AppBskyFeedDefs.PostView | null;
 }
 
 const scrollPositions = new Map<string, number>();
@@ -80,7 +80,7 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
   const filteredBookmarks = useMemo(() => {
     if (!bookmarks) return [];
     return bookmarks.filter(
-      (bookmark: BookmarkWithPost) =>
+      (bookmark) =>
         bookmark.post &&
         !isPostHidden(bookmark.post.uri) &&
         !isUserMuted(bookmark.post.author.did) &&
@@ -253,14 +253,20 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
     if (!embed) return null;
 
     if ((embed as { $type?: string }).$type === "app.bsky.embed.images#view") {
-      const imageEmbed = embed as { images: Array<{ thumb: string; fullsize: string; alt?: string }> };
+      const imageEmbed = embed as {
+        images: Array<{ thumb: string; fullsize: string; alt?: string }>;
+      };
       const handleImageClick = (e: React.MouseEvent, index: number) => {
         e.stopPropagation();
-        const images = imageEmbed.images.map((img) => ({
-          thumb: proxifyBskyImage(img.thumb),
-          fullsize: proxifyBskyImage(img.fullsize),
-          alt: img.alt,
-        }));
+        const images: Array<{ thumb: string; fullsize: string; alt?: string }> =
+          [];
+        for (const img of imageEmbed.images) {
+          const thumb = proxifyBskyImage(img.thumb);
+          const fullsize = proxifyBskyImage(img.fullsize);
+          if (thumb && fullsize) {
+            images.push({ thumb, fullsize, alt: img.alt });
+          }
+        }
         setGalleryImages(images);
         setGalleryIndex(index);
       };
@@ -287,7 +293,12 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
     }
 
     if ((embed as { $type?: string }).$type === "app.bsky.embed.video#view") {
-      const videoEmbed = embed as { playlist: string; thumbnail?: string; aspectRatio?: { width: number; height: number }; alt?: string };
+      const videoEmbed = embed as {
+        playlist: string;
+        thumbnail?: string;
+        aspectRatio?: { width: number; height: number };
+        alt?: string;
+      };
       return (
         <div
           className="mt-2 overflow-hidden rounded-lg"
@@ -296,7 +307,9 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
           <VideoPlayer
             src={proxifyBskyVideo(videoEmbed.playlist) || ""}
             thumbnail={
-              videoEmbed.thumbnail ? proxifyBskyVideo(videoEmbed.thumbnail) : undefined
+              videoEmbed.thumbnail
+                ? proxifyBskyVideo(videoEmbed.thumbnail)
+                : undefined
             }
             aspectRatio={videoEmbed.aspectRatio}
             alt={videoEmbed.alt}
@@ -435,7 +448,7 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
             rowComponent={({ index, style }) => {
               const bookmark = filteredBookmarks[index];
               const post = bookmark.post;
-              if (!post) return null;
+              if (!post) return <div style={style} />;
 
               const isItemFocused = focusedIndex === index;
 
