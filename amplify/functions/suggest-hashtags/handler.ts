@@ -1,55 +1,54 @@
-// Helper function to strip markdown code fences from JSON responses
-function cleanJsonResponse(text: string): string {
-  let cleaned = text.trim();
-  if (cleaned.startsWith('```json')) {
-    cleaned = cleaned.slice(7);
-  } else if (cleaned.startsWith('```')) {
-    cleaned = cleaned.slice(3);
-  }
-  if (cleaned.endsWith('```')) {
-    cleaned = cleaned.slice(0, -3);
-  }
-  return cleaned.trim();
+import {
+  cleanJsonResponse,
+  createConfigError,
+  createExternalApiError,
+  createInternalError,
+  createMissingParameterError,
+  createOptionsResponse,
+  createSuccessResponse,
+  getCorrelationId,
+  isOptionsRequest,
+  logError,
+  logInfo,
+  parseEventBody,
+} from "../shared/api-response";
+
+interface RequestBody {
+  text?: string;
+  existingTags?: string[];
 }
 
 export const handler = async (event: any) => {
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "POST,OPTIONS",
-    "Content-Type": "application/json",
-  };
+  const correlationId = getCorrelationId(event);
 
-  // Handle OPTIONS request for CORS
-  const method = event.requestContext?.http?.method || event.httpMethod;
-  if (method === "OPTIONS") {
-    return { statusCode: 200, headers, body: "" };
+  // Handle OPTIONS request for CORS preflight
+  if (isOptionsRequest(event)) {
+    return createOptionsResponse(event);
   }
 
   try {
-    const body = JSON.parse(event.body || "{}");
-    const { text, existingTags = [] } = body;
+    const body = parseEventBody<RequestBody>(event);
+    const { text, existingTags = [] } = body || {};
 
     if (!text) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: "Missing text" }),
-      };
+      return createMissingParameterError("text", event, correlationId);
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: "Server API key not configured" }),
-      };
+      return createConfigError("ANTHROPIC_API_KEY", event, correlationId);
     }
 
-    const existingTagsText = existingTags.length > 0
-      ? `\n\nExisting tags to avoid: ${existingTags.join(", ")}`
-      : "";
+    logInfo(
+      "suggest-hashtags",
+      "Generating hashtag suggestions",
+      correlationId,
+    );
+
+    const existingTagsText =
+      existingTags.length > 0
+        ? `\n\nExisting tags to avoid: ${existingTags.join(", ")}`
+        : "";
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -95,31 +94,36 @@ Your response MUST be valid JSON only.`,
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: `Anthropic API error: ${error}` }),
-      };
+      const errorText = await response.text();
+      logError(
+        "suggest-hashtags",
+        `Anthropic API error: ${response.status}`,
+        correlationId,
+        {
+          statusCode: response.status,
+        },
+      );
+      return createExternalApiError(
+        "Anthropic",
+        errorText,
+        event,
+        correlationId,
+      );
     }
 
     const data = await response.json();
     const cleanedText = cleanJsonResponse(data.content[0].text);
     const result = JSON.parse(cleanedText);
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(result),
-    };
+    logInfo(
+      "suggest-hashtags",
+      `Generated ${result.hashtags?.length || 0} hashtag suggestions`,
+      correlationId,
+    );
+
+    return createSuccessResponse(result, event, { correlationId });
   } catch (error) {
-    console.error("Error suggesting hashtags:", error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: error instanceof Error ? error.message : "Internal server error"
-      }),
-    };
+    logError("suggest-hashtags", error, correlationId);
+    return createInternalError(error, event, correlationId);
   }
 };

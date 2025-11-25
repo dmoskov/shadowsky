@@ -1,71 +1,65 @@
-// Helper function to strip markdown code fences from JSON responses
-function cleanJsonResponse(text: string): string {
-  // Remove markdown code fences if present
-  let cleaned = text.trim();
+import {
+  cleanJsonResponse,
+  createConfigError,
+  createExternalApiError,
+  createInternalError,
+  createInvalidParameterError,
+  createMissingParameterError,
+  createOptionsResponse,
+  createSuccessResponse,
+  getCorrelationId,
+  isOptionsRequest,
+  logError,
+  logInfo,
+  parseEventBody,
+} from "../shared/api-response";
 
-  // Remove ```json or ``` at the start
-  if (cleaned.startsWith('```json')) {
-    cleaned = cleaned.slice(7);
-  } else if (cleaned.startsWith('```')) {
-    cleaned = cleaned.slice(3);
-  }
-
-  // Remove ``` at the end
-  if (cleaned.endsWith('```')) {
-    cleaned = cleaned.slice(0, -3);
-  }
-
-  return cleaned.trim();
+interface RequestBody {
+  currentText?: string;
+  historicalPosts?: string[];
 }
 
 export const handler = async (event: any) => {
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "POST,OPTIONS",
-    "Content-Type": "application/json",
-  };
+  const correlationId = getCorrelationId(event);
 
-  // Handle OPTIONS request for CORS
-  const method = event.requestContext?.http?.method || event.httpMethod;
-  if (method === "OPTIONS") {
-    return { statusCode: 200, headers, body: "" };
+  // Handle OPTIONS request for CORS preflight
+  if (isOptionsRequest(event)) {
+    return createOptionsResponse(event);
   }
 
   try {
-    const body = JSON.parse(event.body || "{}");
-    const { currentText, historicalPosts } = body;
+    const body = parseEventBody<RequestBody>(event);
+    const { currentText, historicalPosts } = body || {};
 
     if (!currentText) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: "Missing currentText" }),
-      };
+      return createMissingParameterError("currentText", event, correlationId);
     }
 
     if (!historicalPosts || !Array.isArray(historicalPosts)) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: "Missing or invalid historicalPosts array" }),
-      };
+      return createInvalidParameterError(
+        "historicalPosts",
+        "Must be an array of strings",
+        event,
+        correlationId,
+      );
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: "Server API key not configured" }),
-      };
+      return createConfigError("ANTHROPIC_API_KEY", event, correlationId);
     }
+
+    logInfo(
+      "style-analysis",
+      `Analyzing style against ${historicalPosts.length} historical posts`,
+      correlationId,
+    );
 
     // Build the historical posts context
     const historicalContext = historicalPosts
       .slice(0, 20) // Limit to 20 most recent posts
-      .map((post: string, i: number) => `${i + 1}. ${post}`)
-      .join('\n');
+      .map((post, i) => `${i + 1}. ${post}`)
+      .join("\n");
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -116,31 +110,36 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: `Anthropic API error: ${error}` }),
-      };
+      const errorText = await response.text();
+      logError(
+        "style-analysis",
+        `Anthropic API error: ${response.status}`,
+        correlationId,
+        {
+          statusCode: response.status,
+        },
+      );
+      return createExternalApiError(
+        "Anthropic",
+        errorText,
+        event,
+        correlationId,
+      );
     }
 
     const data = await response.json();
     const cleanedText = cleanJsonResponse(data.content[0].text);
     const result = JSON.parse(cleanedText);
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(result),
-    };
+    logInfo(
+      "style-analysis",
+      "Style analysis completed successfully",
+      correlationId,
+    );
+
+    return createSuccessResponse(result, event, { correlationId });
   } catch (error) {
-    console.error("Error analyzing writing style:", error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: error instanceof Error ? error.message : "Internal server error"
-      }),
-    };
+    logError("style-analysis", error, correlationId);
+    return createInternalError(error, event, correlationId);
   }
 };

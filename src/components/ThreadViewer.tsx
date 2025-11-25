@@ -1,7 +1,16 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
 import { formatDistanceToNow } from "date-fns";
-import { CornerDownRight, ExternalLink, Loader2, Sparkles } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  CornerDownRight,
+  ExternalLink,
+  GitBranch,
+  Loader2,
+  Sparkles,
+  User,
+} from "lucide-react";
 import React, {
   useCallback,
   useEffect,
@@ -10,6 +19,7 @@ import React, {
   useState,
 } from "react";
 import { useNavigate } from "react-router";
+import { useAuth } from "../contexts/AuthContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
@@ -33,6 +43,8 @@ export interface ThreadNode {
   children: ThreadNode[];
   depth: number;
   isRoot?: boolean;
+  // Added for navigation tracking
+  flatIndex?: number;
 }
 
 export interface ThreadViewerProps {
@@ -43,6 +55,9 @@ export interface ThreadViewerProps {
   onPostClick?: (post: Post, action?: "reply" | "quote") => void;
   showUnreadIndicators?: boolean;
   className?: string;
+  // New props for enhanced features
+  maxInitialReplies?: number;
+  enableKeyboardNavigation?: boolean;
 }
 
 export const ThreadViewer: React.FC<ThreadViewerProps> = ({
@@ -53,8 +68,12 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   onPostClick,
   showUnreadIndicators = true,
   className = "",
+  maxInitialReplies = 5,
+  enableKeyboardNavigation = true,
 }) => {
   const navigate = useNavigate();
+  const { session } = useAuth();
+  const currentUserDid = session?.did;
   const [galleryImages, setGalleryImages] = useState<Array<{
     thumb: string;
     fullsize: string;
@@ -73,6 +92,17 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   const [showAltText, setShowAltText] = useState<
     Record<string, Record<number, boolean>>
   >({});
+
+  // State for collapsible reply branches - tracks which nodes have expanded children
+  const [expandedBranches, setExpandedBranches] = useState<Set<string>>(
+    new Set(),
+  );
+  // State for keyboard navigation - tracks currently focused post index
+  const [focusedPostIndex, setFocusedPostIndex] = useState<number>(-1);
+  // Ref to track post elements for keyboard navigation
+  const postRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  // Container ref for scroll management
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Get optimistic post mutations
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
@@ -261,6 +291,170 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     if (maxThreadDepth <= 20) return 6;
     return 4; // For very deep threads
   }, [maxThreadDepth]);
+
+  // Create flat list of nodes for keyboard navigation (depth-first order)
+  const flatNodeList = useMemo(() => {
+    const flat: ThreadNode[] = [];
+    let index = 0;
+
+    const traverse = (node: ThreadNode) => {
+      node.flatIndex = index++;
+      flat.push(node);
+      node.children.forEach(traverse);
+    };
+
+    threadTree.forEach(traverse);
+    return flat;
+  }, [threadTree]);
+
+  // Count total user participation in thread
+  const userParticipationStats = useMemo(() => {
+    if (!currentUserDid) return { count: 0, nodeIndices: [] as number[] };
+
+    const nodeIndices: number[] = [];
+    flatNodeList.forEach((node, idx) => {
+      if (node.post?.author?.did === currentUserDid) {
+        nodeIndices.push(idx);
+      }
+    });
+
+    return { count: nodeIndices.length, nodeIndices };
+  }, [flatNodeList, currentUserDid]);
+
+  // Toggle branch expansion
+  const toggleBranch = useCallback((nodeUri: string) => {
+    setExpandedBranches((prev) => {
+      const next = new Set(prev);
+      if (next.has(nodeUri)) {
+        next.delete(nodeUri);
+      } else {
+        next.add(nodeUri);
+      }
+      return next;
+    });
+  }, []);
+
+  // Keyboard navigation handler
+  const handleKeyboardNavigation = useCallback(
+    (e: KeyboardEvent) => {
+      if (!enableKeyboardNavigation) return;
+
+      // Check if user is typing in an input
+      const activeElement = document.activeElement;
+      if (
+        activeElement?.tagName === "INPUT" ||
+        activeElement?.tagName === "TEXTAREA" ||
+        (activeElement as HTMLElement)?.isContentEditable
+      ) {
+        return;
+      }
+
+      const totalNodes = flatNodeList.length;
+      if (totalNodes === 0) return;
+
+      let newIndex = focusedPostIndex;
+      let handled = false;
+
+      switch (e.key) {
+        case "ArrowDown":
+        case "j": // Vim-style navigation
+          newIndex = Math.min(focusedPostIndex + 1, totalNodes - 1);
+          if (focusedPostIndex === -1) newIndex = 0;
+          handled = true;
+          break;
+        case "ArrowUp":
+        case "k": // Vim-style navigation
+          newIndex = Math.max(focusedPostIndex - 1, 0);
+          if (focusedPostIndex === -1) newIndex = 0;
+          handled = true;
+          break;
+        case "Home":
+          newIndex = 0;
+          handled = true;
+          break;
+        case "End":
+          newIndex = totalNodes - 1;
+          handled = true;
+          break;
+        case "n": // Jump to next user post
+          if (userParticipationStats.nodeIndices.length > 0) {
+            const nextUserIndex = userParticipationStats.nodeIndices.find(
+              (idx) => idx > focusedPostIndex,
+            );
+            if (nextUserIndex !== undefined) {
+              newIndex = nextUserIndex;
+              handled = true;
+            } else {
+              // Wrap to first user post
+              newIndex = userParticipationStats.nodeIndices[0];
+              handled = true;
+            }
+          }
+          break;
+        case "p": // Jump to previous user post
+          if (userParticipationStats.nodeIndices.length > 0) {
+            const prevUserIndex = [...userParticipationStats.nodeIndices]
+              .reverse()
+              .find((idx) => idx < focusedPostIndex);
+            if (prevUserIndex !== undefined) {
+              newIndex = prevUserIndex;
+              handled = true;
+            } else {
+              // Wrap to last user post
+              newIndex =
+                userParticipationStats.nodeIndices[
+                  userParticipationStats.nodeIndices.length - 1
+                ];
+              handled = true;
+            }
+          }
+          break;
+        case "Enter":
+        case " ":
+          // Trigger reply on current post
+          if (focusedPostIndex >= 0) {
+            const node = flatNodeList[focusedPostIndex];
+            if (node?.post) {
+              onPostClick?.(node.post, e.key === " " ? "quote" : "reply");
+              handled = true;
+            }
+          }
+          break;
+      }
+
+      if (handled) {
+        e.preventDefault();
+        if (newIndex !== focusedPostIndex) {
+          setFocusedPostIndex(newIndex);
+          // Scroll the focused post into view while preserving scroll position
+          const postElement = postRefs.current.get(newIndex);
+          if (postElement) {
+            postElement.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+          }
+        }
+      }
+    },
+    [
+      enableKeyboardNavigation,
+      flatNodeList,
+      focusedPostIndex,
+      userParticipationStats.nodeIndices,
+      onPostClick,
+    ],
+  );
+
+  // Set up keyboard event listener
+  useEffect(() => {
+    if (enableKeyboardNavigation) {
+      window.addEventListener("keydown", handleKeyboardNavigation);
+      return () => {
+        window.removeEventListener("keydown", handleKeyboardNavigation);
+      };
+    }
+  }, [enableKeyboardNavigation, handleKeyboardNavigation]);
 
   // Ref for the highlighted post
   const highlightRef = useRef<HTMLDivElement>(null);
@@ -607,6 +801,24 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
           showUnreadIndicators && notification && !notification.isRead;
         const isHighlighted = highlightUri && post?.uri === highlightUri;
         const author = post?.author || notification?.author;
+        const isCurrentUser = currentUserDid && author?.did === currentUserDid;
+        const isFocused = node.flatIndex === focusedPostIndex;
+        const nodeUri = post?.uri || notification?.uri || `node-${node.depth}`;
+
+        // Calculate if this branch should be collapsed
+        const hasMultipleChildren = node.children.length > maxInitialReplies;
+        const isExpanded = expandedBranches.has(nodeUri);
+        const visibleChildren =
+          hasMultipleChildren && !isExpanded
+            ? node.children.slice(0, maxInitialReplies)
+            : node.children;
+        const hiddenCount = hasMultipleChildren
+          ? node.children.length - maxInitialReplies
+          : 0;
+
+        // Count branches at this level
+        const hasBranches = node.children.length > 1;
+
         // Generate external bsky.app URL for the external link button
         const postUrl =
           post?.uri && author?.handle
@@ -618,9 +830,16 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
 
         return (
           <div
-            key={post?.uri || notification?.uri || `node-${node.depth}`}
+            key={nodeUri}
             className="mb-4"
-            ref={isHighlighted ? highlightRef : null}
+            ref={(el) => {
+              if (isHighlighted && highlightRef) {
+                (highlightRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+              }
+              if (node.flatIndex !== undefined && el) {
+                postRefs.current.set(node.flatIndex, el);
+              }
+            }}
           >
             {/* Thread line connector for nested replies */}
             {node.depth > 0 && (
@@ -678,20 +897,40 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
               <div
                 className={`min-w-0 flex-1 ${maxThreadDepth > 15 ? "p-2" : maxThreadDepth > 10 ? "p-3" : "p-4"} cursor-pointer rounded-lg transition-all hover:bg-blue-500 hover:bg-opacity-5 ${
                   isUnread ? "ring-2 ring-blue-500 ring-opacity-30" : ""
-                } ${isHighlighted && !hasShownInitialHighlight ? "ring-2 ring-orange-500 ring-opacity-50" : ""}`}
+                } ${isHighlighted && !hasShownInitialHighlight ? "ring-2 ring-orange-500 ring-opacity-50" : ""} ${
+                  isFocused ? "ring-2 ring-blue-400 ring-opacity-70" : ""
+                } ${isCurrentUser ? "border-l-4" : ""}`}
                 style={{
-                  backgroundColor:
-                    isHighlighted && !hasShownInitialHighlight
+                  backgroundColor: isCurrentUser
+                    ? "rgba(34, 197, 94, 0.08)" // Green tint for user's posts
+                    : isHighlighted && !hasShownInitialHighlight
                       ? "rgba(251, 146, 60, 0.1)" // Orange highlight background (only initially)
                       : node.isRoot
                         ? "var(--bsky-bg-secondary)"
                         : isUnread
                           ? "var(--bsky-bg-primary)"
                           : "var(--bsky-bg-secondary)",
+                  borderColor: isCurrentUser
+                    ? "rgb(34, 197, 94)" // Green left border for user's posts
+                    : undefined,
                   border:
                     isHighlighted && !hasShownInitialHighlight
                       ? "2px solid rgba(251, 146, 60, 0.5)"
-                      : "1px solid var(--bsky-border-primary)",
+                      : isCurrentUser
+                        ? undefined
+                        : "1px solid var(--bsky-border-primary)",
+                  borderLeft: isCurrentUser
+                    ? "4px solid rgb(34, 197, 94)"
+                    : undefined,
+                  borderTop: isCurrentUser
+                    ? "1px solid var(--bsky-border-primary)"
+                    : undefined,
+                  borderRight: isCurrentUser
+                    ? "1px solid var(--bsky-border-primary)"
+                    : undefined,
+                  borderBottom: isCurrentUser
+                    ? "1px solid var(--bsky-border-primary)"
+                    : undefined,
                   overflow: "hidden",
                   fontSize:
                     maxThreadDepth > 15
@@ -699,10 +938,14 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       : maxThreadDepth > 10
                         ? "0.875rem"
                         : "1rem",
+                  outline: isFocused ? "2px solid rgb(96, 165, 250)" : undefined,
+                  outlineOffset: isFocused ? "2px" : undefined,
                 }}
                 onClick={(e) => {
-                  // Don't do anything on post click - navigation removed
-                  // Only interactive elements like buttons will trigger actions
+                  // Set focus to this post when clicked
+                  if (node.flatIndex !== undefined) {
+                    setFocusedPostIndex(node.flatIndex);
+                  }
                   e.stopPropagation();
                 }}
                 onKeyDown={(e) => {
@@ -711,9 +954,14 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     e.stopPropagation();
                   }
                 }}
+                tabIndex={0}
+                role="article"
+                aria-label={`Post by ${author?.handle || "unknown"}`}
               >
                 {(node.isRoot ||
                   node.depth > 5 ||
+                  isCurrentUser ||
+                  hasBranches ||
                   (isHighlighted && hasShownInitialHighlight)) && (
                   <div className="mb-2 flex items-center gap-2">
                     {node.isRoot && (
@@ -726,6 +974,32 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                         }}
                       >
                         Original Post
+                      </span>
+                    )}
+                    {isCurrentUser && !node.isRoot && (
+                      <span
+                        className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium"
+                        style={{
+                          backgroundColor: "rgba(34, 197, 94, 0.15)",
+                          color: "rgb(34, 197, 94)",
+                          border: "1px solid rgba(34, 197, 94, 0.3)",
+                        }}
+                      >
+                        <User size={10} />
+                        Your reply
+                      </span>
+                    )}
+                    {hasBranches && (
+                      <span
+                        className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium"
+                        style={{
+                          backgroundColor: "rgba(147, 51, 234, 0.1)",
+                          color: "rgb(147, 51, 234)",
+                          border: "1px solid rgba(147, 51, 234, 0.2)",
+                        }}
+                      >
+                        <GitBranch size={10} />
+                        {node.children.length} branches
                       </span>
                     )}
                     {node.depth > 5 && !node.isRoot && (
@@ -961,8 +1235,90 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             </div>
 
             {/* Render children */}
-            {node.children.length > 0 && (
-              <div>{renderThreadNodes(node.children)}</div>
+            {visibleChildren.length > 0 && (
+              <div>{renderThreadNodes(visibleChildren)}</div>
+            )}
+
+            {/* Load more replies button */}
+            {hasMultipleChildren && !isExpanded && hiddenCount > 0 && (
+              <div
+                className="flex"
+                style={{
+                  marginLeft: `${(node.depth + 1) * indentWidth}px`,
+                  marginTop: "8px",
+                }}
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Store scroll position before expanding
+                    const scrollContainer = containerRef.current?.closest(
+                      ".bsky-scrollbar",
+                    );
+                    const scrollTop = scrollContainer?.scrollTop || 0;
+
+                    toggleBranch(nodeUri);
+
+                    // Restore scroll position after expansion
+                    requestAnimationFrame(() => {
+                      if (scrollContainer) {
+                        scrollContainer.scrollTop = scrollTop;
+                      }
+                    });
+                  }}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10"
+                  style={{
+                    backgroundColor: "var(--bsky-bg-tertiary)",
+                    color: "var(--bsky-primary)",
+                    border: "1px solid var(--bsky-border-primary)",
+                  }}
+                >
+                  <ChevronDown size={16} />
+                  Load {hiddenCount} more{" "}
+                  {hiddenCount === 1 ? "reply" : "replies"}
+                </button>
+              </div>
+            )}
+
+            {/* Collapse button when expanded */}
+            {hasMultipleChildren && isExpanded && hiddenCount > 0 && (
+              <div
+                className="flex"
+                style={{
+                  marginLeft: `${(node.depth + 1) * indentWidth}px`,
+                  marginTop: "8px",
+                }}
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleBranch(nodeUri);
+
+                    // Scroll back to a reasonable position after collapse
+                    requestAnimationFrame(() => {
+                      const postEl = postRefs.current.get(
+                        node.flatIndex || 0,
+                      );
+                      if (postEl) {
+                        postEl.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        });
+                      }
+                    });
+                  }}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10"
+                  style={{
+                    backgroundColor: "var(--bsky-bg-tertiary)",
+                    color: "var(--bsky-text-secondary)",
+                    border: "1px solid var(--bsky-border-primary)",
+                  }}
+                >
+                  <ChevronUp size={16} />
+                  Collapse {hiddenCount}{" "}
+                  {hiddenCount === 1 ? "reply" : "replies"}
+                </button>
+              </div>
             )}
           </div>
         );
@@ -980,12 +1336,69 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       renderEmbed,
       handleLike,
       handleRepost,
+      currentUserDid,
+      focusedPostIndex,
+      expandedBranches,
+      maxInitialReplies,
+      toggleBranch,
+      setFocusedPostIndex,
     ],
   );
 
   return (
     <>
-      <div className={`thread-viewer ${className}`}>
+      <div ref={containerRef} className={`thread-viewer ${className}`}>
+        {/* Keyboard navigation hint and thread stats */}
+        {enableKeyboardNavigation && flatNodeList.length > 1 && (
+          <div
+            className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg px-3 py-2 text-xs"
+            style={{
+              backgroundColor: "var(--bsky-bg-tertiary)",
+              color: "var(--bsky-text-secondary)",
+              border: "1px solid var(--bsky-border-primary)",
+            }}
+          >
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="flex items-center gap-1">
+                <kbd className="rounded bg-gray-200 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-700">
+                  ↑↓
+                </kbd>
+                <span>Navigate</span>
+              </span>
+              {userParticipationStats.count > 0 && (
+                <span className="flex items-center gap-1">
+                  <kbd className="rounded bg-gray-200 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-700">
+                    n/p
+                  </kbd>
+                  <span>Jump to your posts</span>
+                </span>
+              )}
+              <span className="flex items-center gap-1">
+                <kbd className="rounded bg-gray-200 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-700">
+                  Enter
+                </kbd>
+                <span>Reply</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              {userParticipationStats.count > 0 && (
+                <span
+                  className="flex items-center gap-1 rounded-full px-2 py-0.5"
+                  style={{
+                    backgroundColor: "rgba(34, 197, 94, 0.15)",
+                    color: "rgb(34, 197, 94)",
+                  }}
+                >
+                  <User size={12} />
+                  {userParticipationStats.count} of your{" "}
+                  {userParticipationStats.count === 1 ? "post" : "posts"}
+                </span>
+              )}
+              <span>{flatNodeList.length} posts in thread</span>
+            </div>
+          </div>
+        )}
+
         {threadTree.length > 0 ? (
           renderThreadNodes(threadTree)
         ) : (

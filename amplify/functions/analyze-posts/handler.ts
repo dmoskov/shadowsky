@@ -1,60 +1,64 @@
-// Helper function to strip markdown code fences from JSON responses
-function cleanJsonResponse(text: string): string {
-  // Remove markdown code fences if present
-  let cleaned = text.trim();
+import {
+  cleanJsonResponse,
+  createConfigError,
+  createExternalApiError,
+  createInternalError,
+  createInvalidParameterError,
+  createMissingParameterError,
+  createOptionsResponse,
+  createSuccessResponse,
+  getCorrelationId,
+  isOptionsRequest,
+  logError,
+  logInfo,
+  parseEventBody,
+} from "../shared/api-response";
 
-  // Remove ```json or ``` at the start
-  if (cleaned.startsWith('```json')) {
-    cleaned = cleaned.slice(7);
-  } else if (cleaned.startsWith('```')) {
-    cleaned = cleaned.slice(3);
-  }
+interface PostData {
+  text: string;
+  likes?: number;
+  reposts?: number;
+  replies?: number;
+  createdAt?: string;
+}
 
-  // Remove ``` at the end
-  if (cleaned.endsWith('```')) {
-    cleaned = cleaned.slice(0, -3);
-  }
-
-  return cleaned.trim();
+interface RequestBody {
+  posts?: PostData[];
 }
 
 export const handler = async (event: any) => {
-  // Get the origin from the request headers
-  const origin = event.headers?.origin || event.headers?.Origin || "";
+  const correlationId = getCorrelationId(event);
 
-  // List of allowed origins
-  const allowedOrigins = [
-    "https://main.shadowsky.io",
-    "https://shadowsky.io",
-    "http://localhost:5174",
-  ];
-
-  // Determine which origin to return (must match the request origin for credentials to work)
-  const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
-
-  const headers = {
-    "Access-Control-Allow-Origin": corsOrigin,
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "POST,OPTIONS",
-    "Content-Type": "application/json",
-  };
-
-  // Handle OPTIONS request for CORS
-  const method = event.requestContext?.http?.method || event.httpMethod;
-  if (method === "OPTIONS") {
-    return { statusCode: 200, headers, body: "" };
+  // Handle OPTIONS request for CORS preflight
+  if (isOptionsRequest(event)) {
+    return createOptionsResponse(event);
   }
 
   try {
-    const body = JSON.parse(event.body || "{}");
+    const body = parseEventBody<RequestBody>(event);
+
+    if (!body) {
+      return createInvalidParameterError(
+        "body",
+        "Invalid JSON format",
+        event,
+        correlationId,
+      );
+    }
+
     const { posts } = body;
 
     if (!posts || !Array.isArray(posts)) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: "Missing or invalid posts array" }),
-      };
+      return createInvalidParameterError(
+        "posts",
+        "Must be a non-empty array",
+        event,
+        correlationId,
+      );
+    }
+
+    if (posts.length === 0) {
+      return createMissingParameterError("posts", event, correlationId);
     }
 
     // Limit to 50 posts for analysis
@@ -62,23 +66,26 @@ export const handler = async (event: any) => {
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: "Server API key not configured" }),
-      };
+      return createConfigError("ANTHROPIC_API_KEY", event, correlationId);
     }
+
+    logInfo(
+      "analyze-posts",
+      `Analyzing ${postsToAnalyze.length} posts`,
+      correlationId,
+    );
 
     // Build the post analysis context
     const postsContext = postsToAnalyze
-      .map((post: any, i: number) => {
-        const engagement = (post.likes || 0) + (post.reposts || 0) + (post.replies || 0);
+      .map((post: PostData, i: number) => {
+        const engagement =
+          (post.likes || 0) + (post.reposts || 0) + (post.replies || 0);
         return `Post ${i + 1}:
 Text: "${post.text}"
-Date: ${post.createdAt}
+Date: ${post.createdAt || "unknown"}
 Engagement: ${engagement} (${post.likes || 0} likes, ${post.reposts || 0} reposts, ${post.replies || 0} replies)`;
       })
-      .join('\n\n');
+      .join("\n\n");
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -137,31 +144,33 @@ IMPORTANT GUIDELINES:
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: `Anthropic API error: ${error}` }),
-      };
+      const errorText = await response.text();
+      logError(
+        "analyze-posts",
+        `Anthropic API error: ${response.status}`,
+        correlationId,
+        {
+          statusCode: response.status,
+          errorText,
+        },
+      );
+      return createExternalApiError(
+        "Anthropic",
+        errorText,
+        event,
+        correlationId,
+      );
     }
 
     const data = await response.json();
     const cleanedText = cleanJsonResponse(data.content[0].text);
     const result = JSON.parse(cleanedText);
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(result),
-    };
+    logInfo("analyze-posts", "Analysis completed successfully", correlationId);
+
+    return createSuccessResponse(result, event, { correlationId });
   } catch (error) {
-    console.error("Error analyzing posts:", error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: error instanceof Error ? error.message : "Internal server error"
-      }),
-    };
+    logError("analyze-posts", error, correlationId);
+    return createInternalError(error, event, correlationId);
   }
 };
