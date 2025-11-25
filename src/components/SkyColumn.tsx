@@ -9,6 +9,7 @@ import { DirectMessagesColumn } from "./DirectMessagesColumn";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { Home } from "./Home";
 import { NotificationsFeed } from "./NotificationsFeed";
+import { SearchColumn } from "./SearchColumn";
 import type { Column } from "./SkyDeck";
 import { VisualTimeline } from "./VisualTimeline";
 
@@ -192,6 +193,18 @@ export default function SkyColumn({
             }
           >
             <BookmarksColumn isFocused={isFocused} />
+          </ErrorBoundary>
+        );
+
+      case "search":
+        return (
+          <ErrorBoundary
+            componentName="Search"
+            onError={(error, errorInfo) =>
+              logError(error, errorInfo, "SearchColumn")
+            }
+          >
+            <SearchColumn isFocused={isFocused} />
           </ErrorBoundary>
         );
 

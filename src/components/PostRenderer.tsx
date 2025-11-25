@@ -15,6 +15,7 @@ import { useNavigate } from "react-router";
 import { useModerationPreferences } from "../hooks/useModerationPreferences";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
+import { isValidUrl } from "../utils/security";
 import { parseBskyUrl } from "../utils/url-helpers";
 import { ImageGallery } from "./ImageGallery";
 import { VideoPlayer } from "./VideoPlayer";
@@ -651,25 +652,25 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
 
     // External link
     if (embed.external) {
+      // Validate external URL to prevent XSS attacks
+      const externalUri = embed.external.uri;
+      const isUriValid = isValidUrl(externalUri);
+
       return (
         <div
           className="mt-2 cursor-pointer rounded-lg border p-2.5 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
           style={{ borderColor: "var(--bsky-border-primary)" }}
           onClick={(e) => {
             e.stopPropagation();
-            if (embed.external.uri) {
+            if (externalUri && isUriValid) {
               // Check if it's a Bluesky URL
-              const parsed = parseBskyUrl(embed.external.uri);
+              const parsed = parseBskyUrl(externalUri);
               if (parsed && parsed.postId && parsed.handle) {
                 // Navigate internally to the thread view
                 navigate(`/thread/${parsed.handle}/${parsed.postId}`);
               } else {
-                // Open external links in a new tab
-                window.open(
-                  embed.external.uri,
-                  "_blank",
-                  "noopener,noreferrer",
-                );
+                // Open external links in a new tab with security attributes
+                window.open(externalUri, "_blank", "noopener,noreferrer");
               }
             }
           }}

@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router";
+import { isValidUrl } from "../../utils/security";
 
 interface Facet {
   index: {
@@ -99,19 +100,24 @@ export const RichText: React.FC<RichTextProps> = ({
       feature.$type === "app.bsky.richtext.facet#link" &&
       feature.uri
     ) {
-      // Link - external URL
-      elements.push(
-        <a
-          key={`facet-${i}`}
-          href={feature.uri}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-500 hover:underline"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {facetText}
-        </a>,
-      );
+      // Link - external URL (validate to prevent XSS via javascript: protocol)
+      if (isValidUrl(feature.uri)) {
+        elements.push(
+          <a
+            key={`facet-${i}`}
+            href={feature.uri}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {facetText}
+          </a>,
+        );
+      } else {
+        // Invalid URL - render as plain text to prevent XSS
+        elements.push(<span key={`facet-${i}`}>{facetText}</span>);
+      }
     } else if (feature.$type === "app.bsky.richtext.facet#tag" && feature.tag) {
       // Hashtag - link to search
       elements.push(

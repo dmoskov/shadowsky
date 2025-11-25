@@ -6,6 +6,7 @@ import {
   Hash,
   Mail,
   Plus,
+  Search,
   Star,
   Users,
 } from "lucide-react";
@@ -25,7 +26,8 @@ export type ColumnType =
   | "timeline"
   | "feed"
   | "messages"
-  | "bookmarks";
+  | "bookmarks"
+  | "search";
 
 export interface Column {
   id: string;
@@ -71,6 +73,12 @@ const columnOptions = [
     label: "Bookmarks",
     icon: Bookmark,
     description: "Your saved posts",
+  },
+  {
+    type: "search" as ColumnType,
+    label: "Search",
+    icon: Search,
+    description: "Search posts on Bluesky",
   },
 ];
 

@@ -284,6 +284,9 @@ export function Composer() {
   const [replyPermission, setReplyPermission] =
     useState<ReplyPermission>("everyone");
 
+  // Thread composer modal state
+  const [showThreadComposer, setShowThreadComposer] = useState(false);
+
   // Load settings on mount
   useEffect(() => {
     const settings = getComposerSettings();
@@ -2176,7 +2179,14 @@ export function Composer() {
           </button>
         </div>
 
-        <div className="mb-4 flex justify-end">
+        <div className="mb-4 flex items-center justify-between">
+          <button
+            className="bsky-button-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium"
+            onClick={() => setShowThreadComposer(true)}
+          >
+            <MessageSquare size={16} />
+            Create Thread
+          </button>
           <button
             className="bsky-button-primary flex items-center gap-2 px-6 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleSend}

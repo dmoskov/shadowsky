@@ -11,8 +11,17 @@ import {
   isOptionsRequest,
   logError,
   logInfo,
-  parseEventBody,
 } from "../shared/api-response";
+import {
+  authenticateRequest,
+  createUnauthorizedResponse,
+  type AuthResult,
+} from "../shared/cognito-auth";
+import {
+  checkUserRateLimit,
+  createUserRateLimitResponse,
+  STRICT_USER_RATE_LIMIT,
+} from "../shared/user-rate-limiter";
 
 interface PostData {
   text: string;
@@ -35,6 +44,47 @@ export const handler = async (event: any) => {
   }
 
   try {
+    // Authenticate the request
+    const auth: AuthResult = await authenticateRequest(event);
+
+    if (!auth.authenticated) {
+      logInfo(
+        "analyze-posts",
+        `Authentication failed: ${auth.error}`,
+        correlationId
+      );
+      return createUnauthorizedResponse(
+        auth.error || "Authentication required",
+        event,
+        correlationId
+      );
+    }
+
+    const userId = auth.userId!;
+
+    // Apply per-user rate limiting
+    // Using strict rate limit (5 requests/minute) as this is an expensive operation
+    const rateLimitResult = checkUserRateLimit(userId, STRICT_USER_RATE_LIMIT);
+
+    if (!rateLimitResult.allowed) {
+      logInfo(
+        "analyze-posts",
+        `Rate limit exceeded for user: ${userId}`,
+        correlationId,
+        {
+          retryAfter: rateLimitResult.retryAfter,
+        }
+      );
+      return createUserRateLimitResponse(
+        event,
+        correlationId,
+        rateLimitResult.retryAfter,
+        STRICT_USER_RATE_LIMIT.message
+      );
+    }
+
+    logInfo("analyze-posts", `Request authenticated for user: ${userId}`, correlationId);
+
     const body = parseEventBody<RequestBody>(event);
 
     if (!body) {
@@ -71,7 +121,7 @@ export const handler = async (event: any) => {
 
     logInfo(
       "analyze-posts",
-      `Analyzing ${postsToAnalyze.length} posts`,
+      `Analyzing ${postsToAnalyze.length} posts for user ${userId}`,
       correlationId,
     );
 
@@ -166,11 +216,28 @@ IMPORTANT GUIDELINES:
     const cleanedText = cleanJsonResponse(data.content[0].text);
     const result = JSON.parse(cleanedText);
 
-    logInfo("analyze-posts", "Analysis completed successfully", correlationId);
+    logInfo("analyze-posts", `Analysis completed successfully for user ${userId}`, correlationId);
 
-    return createSuccessResponse(result, event, { correlationId });
+    // Add rate limit headers to response
+    const successResponse = createSuccessResponse(result, event, { correlationId });
+    if (successResponse.headers) {
+      successResponse.headers["X-RateLimit-Limit"] = String(STRICT_USER_RATE_LIMIT.maxRequests);
+      successResponse.headers["X-RateLimit-Remaining"] = String(rateLimitResult.remaining);
+      successResponse.headers["X-RateLimit-Window"] = String(STRICT_USER_RATE_LIMIT.windowMs / 1000);
+    }
+
+    return successResponse;
   } catch (error) {
     logError("analyze-posts", error, correlationId);
     return createInternalError(error, event, correlationId);
   }
 };
+
+// Re-export parseEventBody from api-response for local use
+function parseEventBody<T>(event: any): T | null {
+  try {
+    return JSON.parse(event.body || "{}") as T;
+  } catch {
+    return null;
+  }
+}
