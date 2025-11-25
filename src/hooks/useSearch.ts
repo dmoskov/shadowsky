@@ -1,6 +1,6 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { atProtoClient } from "../services/atproto";
 import {
   getSearchHistoryDB,
@@ -11,21 +11,44 @@ import { useDebounce } from "./useDebounce";
 const MAX_HISTORY_ITEMS = 15;
 const DEBOUNCE_MS = 300;
 
+export type MediaType = "all" | "images" | "videos" | "links" | "text-only";
+
+export type DatePreset = "today" | "week" | "month" | "year" | "custom" | null;
+
+export interface EngagementThresholds {
+  minLikes: number;
+  minReposts: number;
+  minReplies: number;
+}
+
 export interface SearchFilters {
   hasMedia: boolean;
+  mediaType: MediaType;
   fromUsers: string[];
   sinceDate: string;
   untilDate: string;
+  datePreset: DatePreset;
   language: string;
+  engagement: EngagementThresholds;
 }
 
 export const defaultFilters: SearchFilters = {
   hasMedia: false,
+  mediaType: "all",
   fromUsers: [],
   sinceDate: "",
   untilDate: "",
+  datePreset: null,
   language: "",
+  engagement: {
+    minLikes: 0,
+    minReposts: 0,
+    minReplies: 0,
+  },
 };
+
+// Storage key for persisted filter preferences
+const FILTER_STORAGE_KEY = "bsky-search-filters";
 
 interface SearchPage {
   posts: AppBskyFeedDefs.PostView[];
@@ -89,7 +112,7 @@ const buildSearchQuery = (query: string, filters: SearchFilters): string => {
   return parts.join(" ");
 };
 
-// Check if a post has media
+// Check if a post has any media
 const postHasMedia = (post: AppBskyFeedDefs.PostView): boolean => {
   if (!post.embed) return false;
 
@@ -114,6 +137,96 @@ const postHasMedia = (post: AppBskyFeedDefs.PostView): boolean => {
   return false;
 };
 
+// Check if a post has images specifically
+const postHasImages = (post: AppBskyFeedDefs.PostView): boolean => {
+  if (!post.embed) return false;
+  const embed = post.embed as Record<string, unknown>;
+
+  if (embed.$type === "app.bsky.embed.images#view") {
+    return true;
+  }
+
+  if (
+    embed.$type === "app.bsky.embed.recordWithMedia#view" &&
+    (embed.media as Record<string, unknown>)?.$type ===
+      "app.bsky.embed.images#view"
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+// Check if a post has videos specifically
+const postHasVideo = (post: AppBskyFeedDefs.PostView): boolean => {
+  if (!post.embed) return false;
+  const embed = post.embed as Record<string, unknown>;
+  return embed.$type === "app.bsky.embed.video#view";
+};
+
+// Check if a post has external links
+const postHasLinks = (post: AppBskyFeedDefs.PostView): boolean => {
+  if (!post.embed) return false;
+  const embed = post.embed as Record<string, unknown>;
+
+  if (embed.$type === "app.bsky.embed.external#view") {
+    return true;
+  }
+
+  if (
+    embed.$type === "app.bsky.embed.recordWithMedia#view" &&
+    (embed.media as Record<string, unknown>)?.$type ===
+      "app.bsky.embed.external#view"
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+// Check if a post is text-only (no embeds)
+const postIsTextOnly = (post: AppBskyFeedDefs.PostView): boolean => {
+  return !post.embed;
+};
+
+// Check if post meets engagement thresholds
+const postMeetsEngagement = (
+  post: AppBskyFeedDefs.PostView,
+  thresholds: EngagementThresholds,
+): boolean => {
+  const likes = post.likeCount || 0;
+  const reposts = post.repostCount || 0;
+  const replies = post.replyCount || 0;
+
+  return (
+    likes >= thresholds.minLikes &&
+    reposts >= thresholds.minReposts &&
+    replies >= thresholds.minReplies
+  );
+};
+
+// Load persisted filters from localStorage
+const loadPersistedFilters = (): Partial<SearchFilters> | null => {
+  try {
+    const stored = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch {
+    // Silently fail
+  }
+  return null;
+};
+
+// Save filters to localStorage
+const persistFilters = (filters: SearchFilters): void => {
+  try {
+    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
+  } catch {
+    // Silently fail
+  }
+};
+
 export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
   const { enabled = true, sortOrder: initialSortOrder = "latest" } = options;
 
@@ -122,7 +235,28 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
   const [sortOrder, setSortOrder] = useState<"top" | "latest">(
     initialSortOrder,
   );
-  const [filters, setFilters] = useState<SearchFilters>(defaultFilters);
+
+  // Initialize filters with persisted values if available
+  const [filters, setFilters] = useState<SearchFilters>(() => {
+    const persisted = loadPersistedFilters();
+    if (persisted) {
+      return {
+        ...defaultFilters,
+        ...persisted,
+        // Ensure engagement object is properly merged
+        engagement: {
+          ...defaultFilters.engagement,
+          ...(persisted.engagement || {}),
+        },
+      };
+    }
+    return defaultFilters;
+  });
+
+  // Persist filters when they change
+  useEffect(() => {
+    persistFilters(filters);
+  }, [filters]);
 
   const debouncedQuery = useDebounce(query, DEBOUNCE_MS);
 
@@ -246,13 +380,41 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
 
     let posts = searchData.pages.flatMap((page) => page.posts);
 
-    // Apply client-side media filter
-    if (filters.hasMedia) {
+    // Apply client-side media type filter
+    if (filters.mediaType !== "all") {
+      switch (filters.mediaType) {
+        case "images":
+          posts = posts.filter(postHasImages);
+          break;
+        case "videos":
+          posts = posts.filter(postHasVideo);
+          break;
+        case "links":
+          posts = posts.filter(postHasLinks);
+          break;
+        case "text-only":
+          posts = posts.filter(postIsTextOnly);
+          break;
+      }
+    } else if (filters.hasMedia) {
+      // Legacy hasMedia filter for backwards compatibility
       posts = posts.filter(postHasMedia);
     }
 
+    // Apply engagement threshold filters
+    const hasEngagementFilters =
+      filters.engagement.minLikes > 0 ||
+      filters.engagement.minReposts > 0 ||
+      filters.engagement.minReplies > 0;
+
+    if (hasEngagementFilters) {
+      posts = posts.filter((post) =>
+        postMeetsEngagement(post, filters.engagement),
+      );
+    }
+
     return posts;
-  }, [searchData, filters.hasMedia]);
+  }, [searchData, filters.hasMedia, filters.mediaType, filters.engagement]);
 
   // Filtered history based on current input
   const filteredHistory = useMemo(() => {

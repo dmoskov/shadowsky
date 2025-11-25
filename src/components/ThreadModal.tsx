@@ -1,10 +1,11 @@
 import { RichText, type AppBskyFeedDefs } from "@atproto/api";
 import { debug } from "@bsky/shared";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useModal } from "../contexts/ModalContext";
 import { useModalSwipeBack } from "../hooks/useModalSwipeBack";
 import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
 import { uploadBlobWithRetry } from "../utils/blob-upload";
@@ -36,9 +37,11 @@ export function ThreadModal({
   openToReply = false,
   openToQuote = false,
 }: ThreadModalProps) {
-  const { agent } = useAuth();
+  const { agent, session } = useAuth();
   const swipeHandlers = useModalSwipeBack({ onClose });
   const videoUploadManager = useVideoUploadManager(agent);
+  const queryClient = useQueryClient();
+  const { showConfirm } = useModal();
   const [replyState, setReplyState] = useState<ReplyState>({
     isReplying: openToReply,
     replyToPost: null,
@@ -47,6 +50,8 @@ export function ThreadModal({
     isQuoting: openToQuote,
     quotedPost: null,
   });
+  const [continueThreadPost, setContinueThreadPost] =
+    useState<AppBskyFeedDefs.PostView | null>(null);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -196,6 +201,69 @@ export function ThreadModal({
     }
     return postUri;
   }, [threadData, postUri]);
+
+  // Find the last post in the user's own thread continuation (deepest post by user in direct reply chain)
+  const findLastUserPost = useCallback(
+    (postsArr: PostView[], currentUserDid?: string): PostView | null => {
+      if (!currentUserDid || postsArr.length === 0) return null;
+
+      // Get user's posts
+      const userPosts = postsArr.filter((p) => p.author.did === currentUserDid);
+      if (userPosts.length === 0) return null;
+
+      // Find the deepest post in the thread that belongs to the user
+      // Sort by timestamp to find the latest
+      userPosts.sort(
+        (a, b) =>
+          new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime(),
+      );
+
+      return userPosts[0];
+    },
+    [],
+  );
+
+  // Handle deleting a post
+  const handleDeletePost = useCallback(
+    async (post: PostView) => {
+      if (!agent) return;
+
+      await showConfirm(
+        "Delete this post? This action cannot be undone. Note: Deleting a post in the middle of a thread may affect thread continuity.",
+        async () => {
+          try {
+            await agent.deletePost(post.uri);
+            // Invalidate and refetch the thread
+            queryClient.invalidateQueries({ queryKey: ["thread", postUri] });
+            refetch();
+          } catch (error) {
+            debug.error("Failed to delete post:", error);
+            throw error;
+          }
+        },
+        {
+          variant: "warning",
+          title: "Delete Post",
+          confirmText: "Delete",
+          cancelText: "Cancel",
+        },
+      );
+    },
+    [agent, showConfirm, queryClient, postUri, refetch],
+  );
+
+  // Handle continuing a thread from the last post
+  const handleContinueThread = useCallback((lastPost: PostView) => {
+    setContinueThreadPost(lastPost);
+    setReplyState({
+      isReplying: true,
+      replyToPost: lastPost,
+    });
+    setQuoteState({
+      isQuoting: false,
+      quotedPost: null,
+    });
+  }, []);
 
   // Set initial reply/quote state when we get the main post
   useEffect(() => {
@@ -583,6 +651,7 @@ export function ThreadModal({
                   highlightUri={postUri}
                   showUnreadIndicators={false}
                   className="w-full"
+                  currentUserDid={session?.did}
                   onPostClick={(clickedPost, action) => {
                     const post =
                       posts.find((p) => p.uri === clickedPost.uri) || null;
@@ -609,6 +678,19 @@ export function ThreadModal({
                       });
                     }
                   }}
+                  onDeletePost={handleDeletePost}
+                  onContinueThread={() => {
+                    const lastUserPost = findLastUserPost(posts, session?.did);
+                    if (lastUserPost) {
+                      handleContinueThread(lastUserPost);
+                    } else {
+                      // If no user posts, use the last post in the thread
+                      const lastPost = posts[posts.length - 1];
+                      if (lastPost) {
+                        handleContinueThread(lastPost);
+                      }
+                    }
+                  }}
                 />
               )}
             </div>
@@ -631,7 +713,9 @@ export function ThreadModal({
                     placeholder={
                       quoteState.isQuoting
                         ? "Add your thoughts..."
-                        : "Add your reply..."
+                        : continueThreadPost
+                          ? "Continue your thread..."
+                          : "Add your reply..."
                     }
                     autoFocus={true}
                     replyTo={
@@ -667,8 +751,16 @@ export function ThreadModal({
                       hashtags: true,
                       threadOptimization: false,
                     }}
-                    showReplyContext={replyState.isReplying}
-                    submitLabel={quoteState.isQuoting ? "Quote" : "Reply"}
+                    showReplyContext={
+                      replyState.isReplying && !continueThreadPost
+                    }
+                    submitLabel={
+                      quoteState.isQuoting
+                        ? "Quote"
+                        : continueThreadPost
+                          ? "Continue"
+                          : "Reply"
+                    }
                     onCancel={() => {
                       setReplyState({
                         isReplying: false,
@@ -678,6 +770,7 @@ export function ThreadModal({
                         isQuoting: false,
                         quotedPost: null,
                       });
+                      setContinueThreadPost(null);
                     }}
                   />
                 </div>

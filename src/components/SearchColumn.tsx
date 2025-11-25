@@ -1,17 +1,13 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
-import { format, formatDistanceToNow, subDays, subMonths } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import {
   ArrowDown,
   ArrowUp,
-  Calendar,
   Clock,
   Filter,
-  Globe,
-  Image,
   Search,
   Trash2,
   TrendingUp,
-  User,
   X,
 } from "lucide-react";
 import React, {
@@ -23,13 +19,10 @@ import React, {
 } from "react";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModeration } from "../contexts/ModerationContext";
-import {
-  defaultFilters,
-  useSearch,
-  type SearchFilters,
-} from "../hooks/useSearch";
+import { defaultFilters, useSearch } from "../hooks/useSearch";
 import type { SearchHistoryEntry } from "../services/search-history-db";
 import { PostCard } from "./PostCard";
+import { SearchFilterPanel } from "./SearchFilterPanel";
 import { ThreadModal } from "./ThreadModal";
 
 interface SearchColumnProps {
@@ -94,10 +87,14 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
   const hasActiveFilters = useMemo(() => {
     return (
       filters.hasMedia ||
+      filters.mediaType !== "all" ||
       filters.fromUsers.length > 0 ||
       filters.sinceDate ||
       filters.untilDate ||
-      filters.language
+      filters.language ||
+      filters.engagement.minLikes > 0 ||
+      filters.engagement.minReposts > 0 ||
+      filters.engagement.minReplies > 0
     );
   }, [filters]);
 

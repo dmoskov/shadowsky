@@ -8,7 +8,9 @@ import {
   ExternalLink,
   GitBranch,
   Loader2,
+  Plus,
   Sparkles,
+  Trash2,
   User,
 } from "lucide-react";
 import React, {
@@ -58,6 +60,10 @@ export interface ThreadViewerProps {
   // New props for enhanced features
   maxInitialReplies?: number;
   enableKeyboardNavigation?: boolean;
+  // Thread management props
+  currentUserDid?: string;
+  onDeletePost?: (post: Post) => void;
+  onContinueThread?: () => void;
 }
 
 export const ThreadViewer: React.FC<ThreadViewerProps> = ({
@@ -70,10 +76,13 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   className = "",
   maxInitialReplies = 5,
   enableKeyboardNavigation = true,
+  currentUserDid: propCurrentUserDid,
+  onDeletePost,
+  onContinueThread,
 }) => {
   const navigate = useNavigate();
   const { session } = useAuth();
-  const currentUserDid = session?.did;
+  const currentUserDid = propCurrentUserDid || session?.did;
   const [galleryImages, setGalleryImages] = useState<Array<{
     thumb: string;
     fullsize: string;
@@ -1218,22 +1227,41 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
 
                 {/* Post Action Bar */}
                 {post && (
-                  <PostActionBar
-                    post={post}
-                    onReply={() => {
-                      // Pass the post being replied to up to the ThreadModal
-                      onPostClick?.(post, "reply");
-                    }}
-                    onRepost={() => handleRepost(post)}
-                    onQuote={() => {
-                      // Pass the post being quoted to up to the ThreadModal
-                      onPostClick?.(post, "quote");
-                    }}
-                    onLike={() => handleLike(post)}
-                    showCounts={true}
-                    size={maxThreadDepth > 10 ? "small" : "medium"}
-                    isReplying={false}
-                  />
+                  <div className="flex items-center justify-between">
+                    <PostActionBar
+                      post={post}
+                      onReply={() => {
+                        // Pass the post being replied to up to the ThreadModal
+                        onPostClick?.(post, "reply");
+                      }}
+                      onRepost={() => handleRepost(post)}
+                      onQuote={() => {
+                        // Pass the post being quoted to up to the ThreadModal
+                        onPostClick?.(post, "quote");
+                      }}
+                      onLike={() => handleLike(post)}
+                      showCounts={true}
+                      size={maxThreadDepth > 10 ? "small" : "medium"}
+                      isReplying={false}
+                    />
+                    {/* Delete button for user's own posts */}
+                    {isCurrentUser && onDeletePost && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeletePost(post);
+                        }}
+                        className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all hover:bg-red-500 hover:bg-opacity-10"
+                        style={{
+                          color: "var(--bsky-error, #ef4444)",
+                        }}
+                        title="Delete this post"
+                      >
+                        <Trash2 size={14} />
+                        <span className="hidden sm:inline">Delete</span>
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -1343,6 +1371,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       maxInitialReplies,
       toggleBranch,
       setFocusedPostIndex,
+      onDeletePost,
     ],
   );
 
@@ -1409,6 +1438,54 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             </p>
           </div>
         )}
+
+        {/* Continue Thread button - shown when user has posts in the thread */}
+        {onContinueThread && userParticipationStats.count > 0 && (
+          <div className="mt-6 flex justify-center">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onContinueThread();
+              }}
+              className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-all hover:scale-105"
+              style={{
+                backgroundColor: "var(--bsky-primary)",
+                color: "white",
+                boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+              }}
+            >
+              <Plus size={18} />
+              Continue Thread
+            </button>
+          </div>
+        )}
+
+        {/* Alternative: Add reply button when user doesn't have posts yet */}
+        {onContinueThread &&
+          userParticipationStats.count === 0 &&
+          posts.length > 0 && (
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // For non-participants, clicking this will reply to the last post
+                  const lastPost = posts[posts.length - 1];
+                  if (lastPost) {
+                    onPostClick?.(lastPost, "reply");
+                  }
+                }}
+                className="flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-all hover:scale-105"
+                style={{
+                  backgroundColor: "var(--bsky-bg-secondary)",
+                  borderColor: "var(--bsky-border-primary)",
+                  color: "var(--bsky-text-primary)",
+                }}
+              >
+                <Plus size={18} />
+                Join Conversation
+              </button>
+            </div>
+          )}
       </div>
 
       {galleryImages && (

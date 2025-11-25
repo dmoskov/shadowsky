@@ -472,6 +472,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
             thumbnail={
               embed.thumbnail ? proxifyBskyImage(embed.thumbnail) : undefined
             }
+            inTimeline={true}
           />
         </div>
       );

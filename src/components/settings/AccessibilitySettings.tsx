@@ -6,6 +6,9 @@ import {
   Gauge,
   LucideIcon,
   MonitorCheck,
+  Play,
+  Video,
+  VolumeX,
 } from "lucide-react";
 import React from "react";
 import {
@@ -57,6 +60,32 @@ export const AccessibilitySettings: React.FC = () => {
       value: "enhanced",
       label: "Enhanced",
       description: "More visible focus indicators for keyboard navigation",
+    },
+  ];
+
+  const videoAutoplayOptions: {
+    value: AccessibilitySettingsType["videoAutoplay"];
+    label: string;
+    description: string;
+    icon: LucideIcon;
+  }[] = [
+    {
+      value: "off",
+      label: "Off",
+      description: "Videos require a click to play",
+      icon: Video,
+    },
+    {
+      value: "muted",
+      label: "Muted Autoplay",
+      description: "Videos autoplay muted when scrolling in feeds",
+      icon: VolumeX,
+    },
+    {
+      value: "on",
+      label: "Full Autoplay",
+      description: "Videos autoplay with sound (not recommended)",
+      icon: Play,
     },
   ];
 
@@ -346,6 +375,101 @@ export const AccessibilitySettings: React.FC = () => {
                   >
                     {option.description}
                   </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Video Autoplay */}
+      <div className="space-y-4">
+        <h3
+          className="flex items-center gap-2 text-sm font-medium"
+          style={{ color: "var(--bsky-text-primary)" }}
+        >
+          <Video size={18} />
+          Video Autoplay
+        </h3>
+        <div
+          className="rounded-lg p-4"
+          style={{
+            backgroundColor: "var(--bsky-bg-secondary)",
+            border: "1px solid var(--bsky-border-primary)",
+          }}
+        >
+          <p
+            className="mb-4 text-sm"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
+            Control how videos behave when scrolling through your feed. Muted
+            autoplay helps you preview content without sudden sounds.
+          </p>
+          <div className="space-y-2">
+            {videoAutoplayOptions.map((option) => {
+              const Icon = option.icon;
+              const isSelected = settings.videoAutoplay === option.value;
+              return (
+                <button
+                  key={option.value}
+                  onClick={() =>
+                    updateSettings({ videoAutoplay: option.value })
+                  }
+                  className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors ${
+                    isSelected ? "ring-2 ring-blue-500" : ""
+                  }`}
+                  style={{
+                    backgroundColor: isSelected
+                      ? "var(--bsky-bg-tertiary)"
+                      : "transparent",
+                    border: `1px solid ${isSelected ? "var(--bsky-primary)" : "var(--bsky-border-primary)"}`,
+                  }}
+                  aria-pressed={isSelected}
+                >
+                  <Icon
+                    size={20}
+                    style={{
+                      color: isSelected
+                        ? "var(--bsky-primary)"
+                        : "var(--bsky-text-secondary)",
+                    }}
+                  />
+                  <div className="flex-1">
+                    <p
+                      className="font-medium"
+                      style={{
+                        color: isSelected
+                          ? "var(--bsky-primary)"
+                          : "var(--bsky-text-primary)",
+                      }}
+                    >
+                      {option.label}
+                    </p>
+                    <p
+                      className="text-xs"
+                      style={{ color: "var(--bsky-text-secondary)" }}
+                    >
+                      {option.description}
+                    </p>
+                  </div>
+                  {isSelected && (
+                    <div
+                      className="flex h-5 w-5 items-center justify-center rounded-full"
+                      style={{ backgroundColor: "var(--bsky-primary)" }}
+                    >
+                      <svg
+                        className="h-3 w-3 text-white"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                  )}
                 </button>
               );
             })}

@@ -22,6 +22,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
+import { useKeyboardShortcutsContext } from "../contexts/KeyboardShortcutsContext";
 import { useModeration } from "../contexts/ModerationContext";
 import {
   useFeatureTracking,
@@ -206,6 +207,9 @@ export const Home: React.FC<HomeProps> = React.memo(
 
     const { trackFeatureAction } = useFeatureTracking("home_feed");
     const { trackClick } = useInteractionTracking();
+
+    // Keyboard shortcuts context for L/R/B/S/C shortcuts
+    const { setFocusedPost, registerPostActions, unregisterPostActions } = useKeyboardShortcutsContext();
 
     // Fetch user's saved/pinned feeds
     const { data: userPrefs } = useQuery({

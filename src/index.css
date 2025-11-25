@@ -191,6 +191,55 @@ body::-webkit-scrollbar-thumb:hover {
   scrollbar-width: none; /* Firefox */
 }
 
+/* Custom slider styling */
+.bsky-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bsky-bg-tertiary);
+  outline: none;
+  cursor: pointer;
+}
+
+.bsky-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bsky-primary);
+  cursor: pointer;
+  border: 2px solid var(--bsky-bg-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.bsky-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.bsky-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bsky-primary);
+  cursor: pointer;
+  border: 2px solid var(--bsky-bg-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.bsky-slider::-moz-range-thumb:hover {
+  transform: scale(1.1);
+}
+
+.bsky-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bsky-bg-tertiary);
+}
+
 /* Tailwind animation utilities */
 @layer utilities {
   .animate-fade-in {

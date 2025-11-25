@@ -10,6 +10,7 @@ export interface AccessibilitySettings {
   highContrast: boolean;
   reduceMotion: "system" | "on" | "off";
   focusIndicators: "default" | "enhanced";
+  videoAutoplay: "off" | "muted" | "on";
 }
 
 interface AccessibilityContextType {
@@ -29,6 +30,7 @@ const DEFAULT_SETTINGS: AccessibilitySettings = {
   highContrast: false,
   reduceMotion: "system",
   focusIndicators: "default",
+  videoAutoplay: "muted", // Default to muted autoplay for timeline videos
 };
 
 function getSystemReducedMotion(): boolean {

@@ -30,6 +30,10 @@ import { WebSocketStatus } from "./components/WebSocketStatus";
 import { AccessibilityProvider } from "./contexts/AccessibilityContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { HiddenPostsProvider } from "./contexts/HiddenPostsContext";
+import {
+  KeyboardShortcutsProvider,
+  useKeyboardShortcutsContext,
+} from "./contexts/KeyboardShortcutsContext";
 import { ModalProvider } from "./contexts/ModalContext";
 import { ModerationProvider } from "./contexts/ModerationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -171,11 +175,12 @@ function AppContent() {
   const { isAuthenticated, isLoading, session } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { isShortcutsHelpOpen, setIsShortcutsHelpOpen } =
+    useKeyboardShortcutsContext();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [isShortcutsHelpOpen, setIsShortcutsHelpOpen] = useState(false);
 
   // Check if we're on the home route
   const isHomeRoute =
@@ -199,21 +204,13 @@ function AppContent() {
         category: "General",
         action: () => setIsCommandPaletteOpen(true),
       },
-      // Help
+      // Help - Shift+? opens shortcuts help (/ without shift focuses search, handled in KeyboardShortcutsContext)
       {
         key: "?",
         shift: true,
         description: "Show keyboard shortcuts",
         category: "General",
         action: () => setIsShortcutsHelpOpen(true),
-      },
-      {
-        key: "/",
-        shift: false,
-        description: "Show keyboard shortcuts (alternative)",
-        category: "General",
-        action: () => setIsShortcutsHelpOpen(true),
-        preventDefault: false,
       },
       // Navigation shortcuts
       {
@@ -512,17 +509,19 @@ function App() {
         <ThemeProvider>
           <AccessibilityProvider>
             <AuthProvider>
-              <WebSocketProvider>
-                <ModalProvider>
-                  <HiddenPostsProvider>
-                    <ModerationProvider>
-                      <StorageErrorProvider>
-                        <AppContent />
-                      </StorageErrorProvider>
-                    </ModerationProvider>
-                  </HiddenPostsProvider>
-                </ModalProvider>
-              </WebSocketProvider>
+              <KeyboardShortcutsProvider>
+                <WebSocketProvider>
+                  <ModalProvider>
+                    <HiddenPostsProvider>
+                      <ModerationProvider>
+                        <StorageErrorProvider>
+                          <AppContent />
+                        </StorageErrorProvider>
+                      </ModerationProvider>
+                    </HiddenPostsProvider>
+                  </ModalProvider>
+                </WebSocketProvider>
+              </KeyboardShortcutsProvider>
             </AuthProvider>
           </AccessibilityProvider>
         </ThemeProvider>
