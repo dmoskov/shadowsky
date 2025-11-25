@@ -1,4 +1,12 @@
-import { AlertCircle, Image, Loader, Send, Smile, X } from "lucide-react";
+import {
+  AlertCircle,
+  Edit2,
+  Image,
+  Loader,
+  Send,
+  Smile,
+  X,
+} from "lucide-react";
 import React, { useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useVideoCompression } from "../hooks/useVideoCompression";
@@ -47,6 +55,7 @@ interface BaseComposerProps {
     giphy?: boolean;
     altTextGeneration?: boolean;
     shortcuts?: boolean;
+    imageEditing?: boolean;
   };
 
   // UI customization
@@ -82,6 +91,7 @@ export function BaseComposer({
     giphy: false,
     altTextGeneration: true,
     shortcuts: true,
+    imageEditing: true,
   },
   layout = "full",
   showCharCount = true,
@@ -100,6 +110,7 @@ export function BaseComposer({
   const [error, setError] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifSearch, setShowGifSearch] = useState(false);
+  const [showImageEditor, setShowImageEditor] = useState(false);
   const [generatingAlt, setGeneratingAlt] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -295,6 +306,39 @@ export function BaseComposer({
   const updateAltText = (id: string, alt: string) => {
     setMedia((prev) => prev.map((m) => (m.id === id ? { ...m, alt } : m)));
   };
+
+  // Handle image editor save
+  const handleImageEditorSave = (
+    editedImages: Array<{
+      originalFile: File;
+      editedFile: File;
+      preview: string;
+    }>,
+  ) => {
+    // Update media with edited versions
+    const imageMedia = media.filter((m) => m.type === "image");
+    const videoMedia = media.filter((m) => m.type === "video");
+
+    const updatedImageMedia = imageMedia.map((item, index) => {
+      const edited = editedImages[index];
+      if (edited && edited.editedFile !== edited.originalFile) {
+        // Revoke old preview URL
+        safeRevokeObjectURL(item.preview);
+        return {
+          ...item,
+          file: edited.editedFile,
+          preview: edited.preview,
+        };
+      }
+      return item;
+    });
+
+    setMedia([...updatedImageMedia, ...videoMedia]);
+    setShowImageEditor(false);
+  };
+
+  // Check if there are images to edit
+  const hasEditableImages = media.some((m) => m.type === "image");
 
   // Generate alt text with AI
   const handleGenerateAlt = async (id: string) => {
@@ -525,6 +569,23 @@ export function BaseComposer({
                   )}
                 </div>
               ))}
+
+              {/* Edit images button */}
+              {features.imageEditing && hasEditableImages && !isInline && (
+                <button
+                  onClick={() => setShowImageEditor(true)}
+                  className="flex h-32 w-full items-center justify-center rounded border-2 border-dashed transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                  style={{
+                    borderColor: "var(--bsky-border-primary)",
+                    color: "var(--bsky-text-secondary)",
+                  }}
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <Edit2 size={20} />
+                    <span className="text-xs">Edit All</span>
+                  </div>
+                </button>
+              )}
             </div>
           )}
 
@@ -697,6 +758,17 @@ export function BaseComposer({
             />
           </div>
         </div>
+      )}
+
+      {/* Image editor modal */}
+      {features.imageEditing && showImageEditor && hasEditableImages && (
+        <ImageEditor
+          images={media
+            .filter((m) => m.type === "image")
+            .map((m) => ({ file: m.file, preview: m.preview }))}
+          onSave={handleImageEditorSave}
+          onCancel={() => setShowImageEditor(false)}
+        />
       )}
     </div>
   );

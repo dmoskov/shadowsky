@@ -79,10 +79,6 @@ export function useScrollPerformance(
   };
 }
 
-/**
- * Hook to detect if user prefers reduced motion
- */
-export function usePrefersReducedMotion(): boolean {
-  const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-  return mediaQuery.matches;
-}
+// Note: usePrefersReducedMotion has moved to AccessibilityContext
+// Re-export for backward compatibility
+export { usePrefersReducedMotion } from "../contexts/AccessibilityContext";

@@ -115,3 +115,226 @@
   --bsky-primary-10: rgba(0, 133, 255, 0.15);
   --bsky-success-10: rgba(52, 211, 153, 0.15);
 }
+
+/* High Contrast Theme - Light Mode - WCAG AAA (7:1 minimum contrast ratio) */
+[data-high-contrast="true"],
+[data-high-contrast="true"][data-theme="light"] {
+  /* Primary colors - high contrast blue */
+  --bsky-primary: #0051a8;
+  --bsky-primary-rgb: 0, 81, 168;
+  --bsky-primary-dark: #003d7a;
+  --bsky-primary-light: #0051a8;
+  --bsky-accent: #5b21b6;
+
+  /* Background colors - pure white for maximum contrast */
+  --bsky-bg-primary: #ffffff;
+  --bsky-bg-secondary: #ffffff;
+  --bsky-bg-tertiary: #f5f5f5;
+  --bsky-bg-hover: #e5e5e5;
+  --bsky-bg-active: #d4d4d4;
+
+  /* Text colors - pure black for maximum contrast (21:1 on white) */
+  --bsky-text-primary: #000000;
+  --bsky-text-secondary: #1a1a1a;
+  --bsky-text-tertiary: #2d2d2d;
+  --bsky-text-link: #0051a8;
+
+  /* Border colors - high contrast borders */
+  --bsky-border-primary: #404040;
+  --bsky-border-secondary: #2d2d2d;
+  --bsky-border-light: #525252;
+
+  /* Notification type colors - adjusted for high contrast */
+  --bsky-like: #be123c;
+  --bsky-repost: #047857;
+  --bsky-follow: #0051a8;
+  --bsky-mention: #5b21b6;
+  --bsky-reply: #0e7490;
+  --bsky-quote: #4c1d95;
+
+  /* Status colors - high contrast versions */
+  --bsky-success: #047857;
+  --bsky-warning: #b45309;
+  --bsky-error: #b91c1c;
+  --bsky-info: #0051a8;
+
+  /* Shadows - more pronounced for visibility */
+  --bsky-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --bsky-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
+  --bsky-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --bsky-glow: 0 0 0 3px rgba(0, 81, 168, 0.5);
+
+  /* Landing page accent backgrounds */
+  --bsky-primary-10: rgba(0, 81, 168, 0.15);
+  --bsky-success-10: rgba(4, 120, 87, 0.15);
+}
+
+/* High Contrast Theme - Dark Mode - WCAG AAA (7:1 minimum contrast ratio) */
+[data-high-contrast="true"][data-theme="dark"],
+[data-high-contrast="true"].dark {
+  /* Primary colors - brighter for dark mode */
+  --bsky-primary: #60a5fa;
+  --bsky-primary-rgb: 96, 165, 250;
+  --bsky-primary-dark: #3b82f6;
+  --bsky-primary-light: #93c5fd;
+  --bsky-accent: #c4b5fd;
+
+  /* Background colors - pure black for maximum contrast */
+  --bsky-bg-primary: #000000;
+  --bsky-bg-secondary: #0a0a0a;
+  --bsky-bg-tertiary: #171717;
+  --bsky-bg-hover: #262626;
+  --bsky-bg-active: #404040;
+
+  /* Text colors - pure white for maximum contrast (21:1 on black) */
+  --bsky-text-primary: #ffffff;
+  --bsky-text-secondary: #f5f5f5;
+  --bsky-text-tertiary: #e5e5e5;
+  --bsky-text-link: #93c5fd;
+
+  /* Border colors - high contrast borders */
+  --bsky-border-primary: #a3a3a3;
+  --bsky-border-secondary: #d4d4d4;
+  --bsky-border-light: #737373;
+
+  /* Notification type colors - bright for dark high contrast */
+  --bsky-like: #fb7185;
+  --bsky-repost: #6ee7b7;
+  --bsky-follow: #93c5fd;
+  --bsky-mention: #c4b5fd;
+  --bsky-reply: #67e8f9;
+  --bsky-quote: #a78bfa;
+
+  /* Status colors - bright versions */
+  --bsky-success: #6ee7b7;
+  --bsky-warning: #fcd34d;
+  --bsky-error: #fca5a5;
+  --bsky-info: #93c5fd;
+
+  /* Shadows - brighter for dark mode */
+  --bsky-shadow-sm: 0 1px 3px rgba(255, 255, 255, 0.1);
+  --bsky-shadow-md: 0 4px 6px rgba(255, 255, 255, 0.1);
+  --bsky-shadow-lg: 0 10px 15px rgba(255, 255, 255, 0.1);
+  --bsky-glow: 0 0 0 3px rgba(96, 165, 250, 0.5);
+
+  /* Landing page accent backgrounds */
+  --bsky-primary-10: rgba(96, 165, 250, 0.2);
+  --bsky-success-10: rgba(110, 231, 183, 0.2);
+}
+
+/* High Contrast focus indicators */
+[data-high-contrast="true"] *:focus-visible {
+  outline: 3px solid var(--bsky-primary) !important;
+  outline-offset: 2px !important;
+}
+
+[data-high-contrast="true"] a:focus-visible,
+[data-high-contrast="true"] button:focus-visible,
+[data-high-contrast="true"] [role="button"]:focus-visible {
+  outline: 3px solid var(--bsky-primary) !important;
+  outline-offset: 2px !important;
+  box-shadow: var(--bsky-glow) !important;
+}
+
+/* Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* User preference for reduced motion (manual override) */
+[data-reduce-motion="true"] *,
+[data-reduce-motion="true"] *::before,
+[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Disable specific animations when reduced motion is enabled */
+[data-reduce-motion="true"] .animate-spin,
+[data-reduce-motion="true"] .animate-pulse,
+[data-reduce-motion="true"] .animate-bounce,
+[data-reduce-motion="true"] .animate-ping {
+  animation: none !important;
+}
+
+/* Replace spinner with static indicator in reduced motion mode */
+[data-reduce-motion="true"] .animate-spin {
+  opacity: 0.7;
+}
+
+/* Focus-visible polyfill styles for keyboard navigation */
+.focus-visible-polyfill:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.focus-visible-polyfill:focus-visible,
+:focus-visible {
+  outline: 2px solid var(--bsky-primary);
+  outline-offset: 2px;
+}
+
+/* Skip to main content link for keyboard users */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--bsky-primary);
+  color: white;
+  padding: 8px 16px;
+  z-index: 100;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Enhanced focus indicators (user preference) */
+.enhanced-focus *:focus-visible {
+  outline: 3px solid var(--bsky-primary) !important;
+  outline-offset: 3px !important;
+}
+
+.enhanced-focus a:focus-visible,
+.enhanced-focus button:focus-visible,
+.enhanced-focus [role="button"]:focus-visible,
+.enhanced-focus input:focus-visible,
+.enhanced-focus select:focus-visible,
+.enhanced-focus textarea:focus-visible {
+  outline: 3px solid var(--bsky-primary) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 6px rgba(var(--bsky-primary-rgb), 0.2) !important;
+}
+
+/* Ensure interactive elements have visible focus in all modes */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+[tabindex="0"]:focus-visible {
+  outline: 2px solid var(--bsky-primary);
+  outline-offset: 2px;
+}
+
+/* Input focus styles */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--bsky-primary);
+  outline-offset: 0;
+  border-color: var(--bsky-primary);
+}
+
+/* Remove default outline only when not using focus-visible */
+*:focus:not(:focus-visible) {
+  outline: none;
+}

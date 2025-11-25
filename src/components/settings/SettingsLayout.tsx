@@ -1,4 +1,5 @@
 import {
+  Accessibility,
   Bell,
   Database,
   HardDrive,
@@ -41,6 +42,12 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
       label: "Appearance",
       icon: Palette,
       path: "/settings/appearance",
+    },
+    {
+      id: "accessibility",
+      label: "Accessibility",
+      icon: Accessibility,
+      path: "/settings/accessibility",
     },
     {
       id: "composer",

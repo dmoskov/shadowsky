@@ -26,6 +26,10 @@ export const LOCAL_STORAGE_KEYS = {
   // Migration tracking
   COLUMNS_MIGRATED: "shadowsky_columns_migrated",
   COLUMN_MIGRATION_NOTICE_SHOWN: "shadowsky_column_migration_notice_shown",
+
+  // Collaborative lists
+  COLLABORATIVE_LISTS: "shadowsky_collaborative_lists",
+  COLLABORATIVE_LIST_ITEMS: "shadowsky_collaborative_list_items",
 } as const;
 
 // AT Protocol collections
@@ -35,6 +39,13 @@ export const AT_PROTO_COLLECTIONS = {
   BOOKMARKS: "com.shadowsky.bookmarks", // Changed to plural for singleton
   DRAFTS: "com.shadowsky.drafts", // Changed to plural for singleton
   LIST: "com.shadowsky.list", // Individual list records
+  // Collaborative lists collections
+  COLLABORATIVE_LISTS: "com.shadowsky.collaborativeList", // List metadata
+  COLLABORATIVE_LIST_ITEMS: "com.shadowsky.collaborativeListItem", // List items
+  COLLABORATIVE_LIST_COLLABORATORS:
+    "com.shadowsky.collaborativeListCollaborator", // Collaborators
+  COLLABORATIVE_LIST_FOLLOWERS: "com.shadowsky.collaborativeListFollower", // Followers
+  COLLABORATIVE_LIST_INVITATIONS: "com.shadowsky.collaborativeListInvitation", // Invitations
 } as const;
 
 // AT Protocol record keys (for singleton records)

@@ -27,6 +27,7 @@ import { SwipeIndicator } from "./components/SwipeIndicator";
 import { FloatingActionButton } from "./components/ui/FloatingActionButton";
 import { PageLoader } from "./components/ui/PageLoader";
 import { WebSocketStatus } from "./components/WebSocketStatus";
+import { AccessibilityProvider } from "./contexts/AccessibilityContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { HiddenPostsProvider } from "./contexts/HiddenPostsContext";
 import { ModalProvider } from "./contexts/ModalContext";
@@ -468,19 +469,21 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ThemeProvider>
-          <AuthProvider>
-            <WebSocketProvider>
-              <ModalProvider>
-                <HiddenPostsProvider>
-                  <ModerationProvider>
-                    <StorageErrorProvider>
-                      <AppContent />
-                    </StorageErrorProvider>
-                  </ModerationProvider>
-                </HiddenPostsProvider>
-              </ModalProvider>
-            </WebSocketProvider>
-          </AuthProvider>
+          <AccessibilityProvider>
+            <AuthProvider>
+              <WebSocketProvider>
+                <ModalProvider>
+                  <HiddenPostsProvider>
+                    <ModerationProvider>
+                      <StorageErrorProvider>
+                        <AppContent />
+                      </StorageErrorProvider>
+                    </ModerationProvider>
+                  </HiddenPostsProvider>
+                </ModalProvider>
+              </WebSocketProvider>
+            </AuthProvider>
+          </AccessibilityProvider>
         </ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>
