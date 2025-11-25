@@ -41,8 +41,11 @@ export const CollaborativeLists: React.FC = () => {
   const queryClient = useQueryClient();
   const { showConfirm } = useModal();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingList, setEditingList] = useState<CollaborativeList | null>(null);
-  const [managingCollaborators, setManagingCollaborators] = useState<CollaborativeList | null>(null);
+  const [editingList, setEditingList] = useState<CollaborativeList | null>(
+    null,
+  );
+  const [managingCollaborators, setManagingCollaborators] =
+    useState<CollaborativeList | null>(null);
   const [menuOpenForList, setMenuOpenForList] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<ListItemType | "all">("all");
 
@@ -63,7 +66,7 @@ export const CollaborativeLists: React.FC = () => {
   });
 
   const filteredLists = lists?.filter(
-    (list) => filterType === "all" || list.itemType === filterType
+    (list) => filterType === "all" || list.itemType === filterType,
   );
 
   const handleCreateList = async (request: CreateCollaborativeListRequest) => {
@@ -81,7 +84,7 @@ export const CollaborativeLists: React.FC = () => {
 
   const handleUpdateList = async (
     listId: string,
-    updates: UpdateCollaborativeListRequest
+    updates: UpdateCollaborativeListRequest,
   ) => {
     try {
       if (!agent) return;
@@ -112,7 +115,7 @@ export const CollaborativeLists: React.FC = () => {
         title: "Delete Collaborative List",
         confirmText: "Delete",
         cancelText: "Cancel",
-      }
+      },
     );
   };
 
@@ -235,7 +238,9 @@ export const CollaborativeLists: React.FC = () => {
             <div
               key={list.id}
               className="group relative cursor-pointer rounded-xl border border-bsky-border-primary bg-bsky-bg-secondary p-4 transition-all duration-200 hover:border-bsky-primary hover:shadow-lg"
-              onClick={() => navigate(`/collaborative-lists/${encodeURIComponent(list.id)}`)}
+              onClick={() =>
+                navigate(`/collaborative-lists/${encodeURIComponent(list.id)}`)
+              }
             >
               {/* Header Row */}
               <div className="mb-3 flex items-start justify-between">
@@ -274,7 +279,7 @@ export const CollaborativeLists: React.FC = () => {
                     onClick={(e) => {
                       e.stopPropagation();
                       setMenuOpenForList(
-                        menuOpenForList === list.id ? null : list.id
+                        menuOpenForList === list.id ? null : list.id,
                       );
                     }}
                     className="cursor-pointer rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-200 hover:bg-bsky-bg-hover"
@@ -355,14 +360,17 @@ export const CollaborativeLists: React.FC = () => {
                   <div className="flex items-center gap-1 text-bsky-text-secondary">
                     {ITEM_TYPE_ICONS[list.itemType]}
                     <span>
-                      {list.itemCount} {getItemTypeDisplayName(list.itemType).toLowerCase()}
+                      {list.itemCount}{" "}
+                      {getItemTypeDisplayName(list.itemType).toLowerCase()}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 text-bsky-text-secondary">
                     <Users className="h-4 w-4" />
                     <span>
                       {list.collaboratorCount}{" "}
-                      {list.collaboratorCount === 1 ? "collaborator" : "collaborators"}
+                      {list.collaboratorCount === 1
+                        ? "collaborator"
+                        : "collaborators"}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 text-bsky-text-secondary">

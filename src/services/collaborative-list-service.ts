@@ -88,8 +88,10 @@ function generateId(): string {
 
 /**
  * AT Protocol record types for collaborative lists
+ * Using index signatures for compatibility with AT Protocol API
  */
 interface ATProtoCollaborativeListRecord {
+  [key: string]: unknown;
   $type: "com.shadowsky.collaborativeList";
   id: string;
   name: string;
@@ -102,6 +104,7 @@ interface ATProtoCollaborativeListRecord {
 }
 
 interface ATProtoListItemRecord {
+  [key: string]: unknown;
   $type: "com.shadowsky.collaborativeListItem";
   id: string;
   listId: string;
@@ -113,6 +116,7 @@ interface ATProtoListItemRecord {
 }
 
 interface ATProtoCollaboratorRecord {
+  [key: string]: unknown;
   $type: "com.shadowsky.collaborativeListCollaborator";
   listId: string;
   userDid: string;
@@ -122,6 +126,7 @@ interface ATProtoCollaboratorRecord {
 }
 
 interface ATProtoFollowerRecord {
+  [key: string]: unknown;
   $type: "com.shadowsky.collaborativeListFollower";
   listId: string;
   userDid: string;
@@ -129,6 +134,7 @@ interface ATProtoFollowerRecord {
 }
 
 interface ATProtoInvitationRecord {
+  [key: string]: unknown;
   $type: "com.shadowsky.collaborativeListInvitation";
   id: string;
   listId: string;
