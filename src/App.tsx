@@ -19,6 +19,7 @@ import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
 import { LandingPage } from "./components/LandingPage";
 import { MobileTabBar } from "./components/MobileTabBar";
 import { NotificationPermissionPrompt } from "./components/NotificationPermissionPrompt";
+import { OAuthCallback } from "./components/OAuthCallback";
 import { StorageErrorProvider } from "./components/providers/StorageErrorProvider";
 import { RateLimitStatus } from "./components/RateLimitStatus";
 import { Sidebar } from "./components/Sidebar";
@@ -330,6 +331,11 @@ function AppContent() {
         </div>
       </div>
     );
+  }
+
+  // Handle OAuth callback route - this should work regardless of auth state
+  if (location.pathname === "/oauth/callback") {
+    return <OAuthCallback />;
   }
 
   if (!isAuthenticated) {
