@@ -1120,6 +1120,102 @@ export const Home: React.FC<HomeProps> = React.memo(
       }
     }, [isFocused]);
 
+    // Report focused post to keyboard shortcuts context
+    useEffect(() => {
+      if (focusedPostIndex >= 0 && focusedPostIndex < posts.length) {
+        const feedItem = posts[focusedPostIndex];
+        if (feedItem?.post) {
+          setFocusedPost({
+            post: feedItem.post,
+            index: focusedPostIndex,
+            columnId: columnId || 'home',
+          });
+        }
+      } else {
+        setFocusedPost(null);
+      }
+    }, [focusedPostIndex, posts, columnId, setFocusedPost]);
+
+    // Register post actions for keyboard shortcuts (L, R, B, S, C/R)
+    useEffect(() => {
+      const effectiveColumnId = columnId || 'home';
+      registerPostActions(effectiveColumnId, {
+        onLike: (post) => {
+          if (post.viewer?.like) {
+            unlikeMutation.mutate({ postUri: post.uri, likeUri: post.viewer.like });
+          } else {
+            likeMutation.mutate({ post, postUri: post.uri, postCid: post.cid });
+          }
+        },
+        onRepost: (post) => {
+          if (post.viewer?.repost) {
+            unrepostMutation.mutate({ postUri: post.uri, repostUri: post.viewer.repost });
+          } else {
+            repostMutation.mutate({ post, postUri: post.uri, postCid: post.cid });
+          }
+        },
+        onReply: (post) => {
+          setSelectedPost(post as unknown as Post);
+          setOpenThreadToReply(true);
+          setShowThread(true);
+        },
+        onBookmark: (post) => {
+          toggleBookmark(post);
+        },
+        onShare: async (post) => {
+          const shareUrl = `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split('/').pop()}`;
+          if (navigator.share) {
+            try {
+              await navigator.share({
+                title: 'Share post',
+                url: shareUrl,
+              });
+            } catch {
+              // User cancelled or share failed, fall back to clipboard
+              await navigator.clipboard.writeText(shareUrl);
+            }
+          } else {
+            await navigator.clipboard.writeText(shareUrl);
+          }
+        },
+        onOpen: (post) => {
+          handlePostClick(post as unknown as Post);
+        },
+        onNavigateNext: () => {
+          if (focusedPostIndex < posts.length - 1) {
+            isKeyboardNavigationRef.current = true;
+            setFocusedPostIndex((prev) => prev + 1);
+          } else if (focusedPostIndex === -1 && posts.length > 0) {
+            isKeyboardNavigationRef.current = true;
+            setFocusedPostIndex(0);
+          }
+        },
+        onNavigatePrev: () => {
+          if (focusedPostIndex > 0) {
+            isKeyboardNavigationRef.current = true;
+            setFocusedPostIndex((prev) => prev - 1);
+          } else if (focusedPostIndex === -1 && posts.length > 0) {
+            isKeyboardNavigationRef.current = true;
+            setFocusedPostIndex(posts.length - 1);
+          }
+        },
+      });
+
+      return () => unregisterPostActions(effectiveColumnId);
+    }, [
+      columnId,
+      registerPostActions,
+      unregisterPostActions,
+      likeMutation,
+      unlikeMutation,
+      repostMutation,
+      unrepostMutation,
+      toggleBookmark,
+      focusedPostIndex,
+      posts,
+      handlePostClick,
+    ]);
+
     const handleGenerateAltText = React.useCallback(
       async (imageUrl: string, postUri: string, index: number) => {
         const postKey = postUri;
