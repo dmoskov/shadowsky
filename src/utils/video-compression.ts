@@ -258,14 +258,15 @@ export async function getVideoMetadata(file: File): Promise<VideoMetadata> {
     const objectUrl = URL.createObjectURL(file);
 
     video.onloadedmetadata = () => {
-      // Check for audio tracks
+      // Check for audio tracks (browser-specific APIs)
+      const videoAny = video as any;
       const hasAudio =
-        video.mozHasAudio !== undefined
-          ? (video as any).mozHasAudio
-          : video.webkitAudioDecodedByteCount !== undefined
-            ? (video as any).webkitAudioDecodedByteCount > 0
-            : (video as any).audioTracks !== undefined
-              ? (video as any).audioTracks.length > 0
+        videoAny.mozHasAudio !== undefined
+          ? videoAny.mozHasAudio
+          : videoAny.webkitAudioDecodedByteCount !== undefined
+            ? videoAny.webkitAudioDecodedByteCount > 0
+            : videoAny.audioTracks !== undefined
+              ? videoAny.audioTracks.length > 0
               : true; // Assume audio by default
 
       const metadata: VideoMetadata = {
@@ -295,7 +296,7 @@ export async function getVideoMetadata(file: File): Promise<VideoMetadata> {
  */
 function calculateOptimalCrf(
   currentSize: number,
-  duration: number,
+  _duration: number, // Reserved for future bitrate-based calculations
   targetSize: number = BLUESKY_MAX_VIDEO_SIZE * 0.9,
 ): number {
   // If already under target, use high quality
@@ -404,7 +405,12 @@ export async function compressVideo(
     await ffmpeg.deleteFile("input.mp4");
     await ffmpeg.deleteFile("output.mp4");
 
-    const compressedBlob = new Blob([outputData], { type: "video/mp4" });
+    // Convert FileData to ArrayBuffer for Blob creation
+    const dataArray =
+      outputData instanceof Uint8Array
+        ? outputData
+        : new TextEncoder().encode(outputData as string);
+    const compressedBlob = new Blob([dataArray.buffer], { type: "video/mp4" });
     const compressedSize = compressedBlob.size;
     const compressionRatio = originalSize / compressedSize;
 

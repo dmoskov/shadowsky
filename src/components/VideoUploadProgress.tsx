@@ -274,11 +274,11 @@ export function VideoUploadProgress({
           <StageIndicator
             label="Process"
             isActive={stage === "processing"}
-            isComplete={stage === "complete"}
+            isComplete={["complete"].includes(stage)}
             progress={
               stage === "processing"
                 ? progress
-                : stage === "complete"
+                : ["complete"].includes(stage)
                   ? 100
                   : 0
             }

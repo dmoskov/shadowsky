@@ -1,14 +1,33 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 import { atProtoClient } from "../services/atproto";
+import {
+  getSearchHistoryDB,
+  type SearchHistoryEntry,
+} from "../services/search-history-db";
 import { useDebounce } from "./useDebounce";
 
-const SEARCH_HISTORY_KEY = "bsky-search-history";
-const MAX_HISTORY_ITEMS = 10;
+const MAX_HISTORY_ITEMS = 15;
 const DEBOUNCE_MS = 300;
 
-interface SearchResult {
+export interface SearchFilters {
+  hasMedia: boolean;
+  fromUsers: string[];
+  sinceDate: string;
+  untilDate: string;
+  language: string;
+}
+
+export const defaultFilters: SearchFilters = {
+  hasMedia: false,
+  fromUsers: [],
+  sinceDate: "",
+  untilDate: "",
+  language: "",
+};
+
+interface SearchPage {
   posts: AppBskyFeedDefs.PostView[];
   cursor?: string;
 }
@@ -22,36 +41,77 @@ interface UseSearchReturn {
   query: string;
   setQuery: (query: string) => void;
   debouncedQuery: string;
-  results: SearchResult | null;
+  allPosts: AppBskyFeedDefs.PostView[];
   isLoading: boolean;
+  isFetchingNextPage: boolean;
+  hasNextPage: boolean;
+  fetchNextPage: () => void;
   error: Error | null;
-  searchHistory: string[];
+  searchHistory: SearchHistoryEntry[];
   addToHistory: (query: string) => void;
-  removeFromHistory: (query: string) => void;
-  clearHistory: () => void;
+  removeFromHistory: (id: string) => Promise<void>;
+  clearHistory: () => Promise<void>;
   executeSearch: (query?: string) => void;
   activeQuery: string;
   sortOrder: "top" | "latest";
   setSortOrder: (order: "top" | "latest") => void;
+  filters: SearchFilters;
+  setFilters: React.Dispatch<React.SetStateAction<SearchFilters>>;
+  fullSearchQuery: string;
 }
 
-// Load search history from localStorage
-const loadSearchHistory = (): string[] => {
-  try {
-    const saved = localStorage.getItem(SEARCH_HISTORY_KEY);
-    return saved ? JSON.parse(saved) : [];
-  } catch {
-    return [];
+// Build search query with filters
+const buildSearchQuery = (query: string, filters: SearchFilters): string => {
+  const parts: string[] = [];
+
+  if (query.trim()) {
+    parts.push(query.trim());
   }
+
+  filters.fromUsers.forEach((user) => {
+    if (user.trim()) {
+      parts.push(`from:${user.trim().replace(/^@/, "")}`);
+    }
+  });
+
+  if (filters.language) {
+    parts.push(`lang:${filters.language}`);
+  }
+
+  if (filters.sinceDate) {
+    parts.push(`since:${filters.sinceDate}`);
+  }
+
+  if (filters.untilDate) {
+    parts.push(`until:${filters.untilDate}`);
+  }
+
+  return parts.join(" ");
 };
 
-// Save search history to localStorage
-const saveSearchHistory = (history: string[]): void => {
-  try {
-    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
-  } catch {
-    // Silently fail if localStorage is not available
+// Check if a post has media
+const postHasMedia = (post: AppBskyFeedDefs.PostView): boolean => {
+  if (!post.embed) return false;
+
+  const embed = post.embed as Record<string, unknown>;
+
+  if (embed.$type === "app.bsky.embed.images#view") {
+    return true;
   }
+
+  if (
+    embed.$type === "app.bsky.embed.recordWithMedia#view" &&
+    (embed.media as Record<string, unknown>)?.$type ===
+      "app.bsky.embed.images#view"
+  ) {
+    return true;
+  }
+
+  if (embed.$type === "app.bsky.embed.video#view") {
+    return true;
+  }
+
+  return false;
 };
 
 export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
@@ -59,44 +119,80 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
 
   const [query, setQuery] = useState("");
   const [activeQuery, setActiveQuery] = useState("");
-  const [searchHistory, setSearchHistory] =
-    useState<string[]>(loadSearchHistory);
   const [sortOrder, setSortOrder] = useState<"top" | "latest">(
     initialSortOrder,
   );
+  const [filters, setFilters] = useState<SearchFilters>(defaultFilters);
 
   const debouncedQuery = useDebounce(query, DEBOUNCE_MS);
 
+  // Build full search query with filters
+  const fullSearchQuery = useMemo(
+    () => buildSearchQuery(activeQuery, filters),
+    [activeQuery, filters],
+  );
+
+  // Fetch search history from IndexedDB
+  const { data: searchHistory = [], refetch: refetchHistory } = useQuery({
+    queryKey: ["searchHistory"],
+    queryFn: async () => {
+      try {
+        const db = await getSearchHistoryDB();
+        return db.getSearchHistory(MAX_HISTORY_ITEMS);
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 30000,
+  });
+
   // Add query to search history
-  const addToHistory = useCallback((searchQuery: string) => {
-    if (!searchQuery.trim()) return;
+  const addToHistory = useCallback(
+    async (searchQuery: string) => {
+      if (!searchQuery.trim()) return;
 
-    setSearchHistory((prev) => {
-      const filtered = prev.filter((q) => q !== searchQuery);
-      const updated = [searchQuery, ...filtered].slice(0, MAX_HISTORY_ITEMS);
-      saveSearchHistory(updated);
-      return updated;
-    });
-  }, []);
+      try {
+        const db = await getSearchHistoryDB();
+        await db.addSearchEntry(searchQuery.trim(), {
+          hasMedia: filters.hasMedia,
+          fromUsers: filters.fromUsers,
+          sinceDate: filters.sinceDate,
+          untilDate: filters.untilDate,
+          language: filters.language,
+          sort: sortOrder,
+        });
+        refetchHistory();
+      } catch {
+        // Silently fail
+      }
+    },
+    [filters, sortOrder, refetchHistory],
+  );
 
-  // Remove query from search history
-  const removeFromHistory = useCallback((searchQuery: string) => {
-    setSearchHistory((prev) => {
-      const updated = prev.filter((q) => q !== searchQuery);
-      saveSearchHistory(updated);
-      return updated;
-    });
-  }, []);
+  // Remove entry from search history
+  const removeFromHistory = useCallback(
+    async (id: string) => {
+      try {
+        const db = await getSearchHistoryDB();
+        await db.deleteEntry(id);
+        refetchHistory();
+      } catch {
+        // Silently fail
+      }
+    },
+    [refetchHistory],
+  );
 
   // Clear all search history
-  const clearHistory = useCallback(() => {
-    setSearchHistory([]);
+  const clearHistory = useCallback(async () => {
     try {
-      localStorage.removeItem(SEARCH_HISTORY_KEY);
+      const db = await getSearchHistoryDB();
+      await db.clearHistory();
+      refetchHistory();
     } catch {
       // Silently fail
     }
-  }, []);
+  }, [refetchHistory]);
 
   // Execute search (manually triggered)
   const executeSearch = useCallback(
@@ -110,21 +206,25 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
     [query, addToHistory],
   );
 
-  // Search posts query using React Query
+  // Infinite query for search results
   const {
-    data: results,
+    data: searchData,
     isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
     error,
-  } = useQuery({
-    queryKey: ["searchPosts", activeQuery, sortOrder],
-    queryFn: async (): Promise<SearchResult> => {
-      if (!activeQuery.trim()) {
-        return { posts: [] };
+  } = useInfiniteQuery({
+    queryKey: ["searchPosts", fullSearchQuery, sortOrder],
+    queryFn: async ({ pageParam }): Promise<SearchPage> => {
+      if (!fullSearchQuery.trim()) {
+        return { posts: [], cursor: undefined };
       }
 
       const response = await atProtoClient.agent.app.bsky.feed.searchPosts({
-        q: activeQuery,
-        limit: 50,
+        q: fullSearchQuery,
+        limit: 25,
+        cursor: pageParam,
         sort: sortOrder,
       });
 
@@ -133,32 +233,50 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
         cursor: response.data.cursor,
       };
     },
-    enabled: enabled && !!activeQuery.trim(),
+    getNextPageParam: (lastPage) => lastPage.cursor,
+    initialPageParam: undefined as string | undefined,
+    enabled: enabled && !!fullSearchQuery.trim(),
     staleTime: 30000,
     gcTime: 5 * 60 * 1000,
   });
 
-  // Suggestions based on search history that match current query
-  const suggestions = useMemo(() => {
+  // Flatten and filter posts
+  const allPosts = useMemo(() => {
+    if (!searchData?.pages) return [];
+
+    let posts = searchData.pages.flatMap((page) => page.posts);
+
+    // Apply client-side media filter
+    if (filters.hasMedia) {
+      posts = posts.filter(postHasMedia);
+    }
+
+    return posts;
+  }, [searchData, filters.hasMedia]);
+
+  // Filtered history based on current input
+  const filteredHistory = useMemo(() => {
     if (!debouncedQuery.trim()) {
-      return searchHistory.slice(0, 5);
+      return searchHistory;
     }
 
     const queryLower = debouncedQuery.toLowerCase();
-    return searchHistory
-      .filter((h) => h.toLowerCase().includes(queryLower))
-      .slice(0, 5);
+    return searchHistory.filter((entry) =>
+      entry.query.toLowerCase().includes(queryLower),
+    );
   }, [debouncedQuery, searchHistory]);
 
   return {
     query,
     setQuery,
     debouncedQuery,
-    results: results ?? null,
+    allPosts,
     isLoading,
+    isFetchingNextPage,
+    hasNextPage: hasNextPage ?? false,
+    fetchNextPage,
     error: error as Error | null,
-    searchHistory:
-      suggestions.length > 0 ? suggestions : searchHistory.slice(0, 5),
+    searchHistory: filteredHistory,
     addToHistory,
     removeFromHistory,
     clearHistory,
@@ -166,5 +284,8 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
     activeQuery,
     sortOrder,
     setSortOrder,
+    filters,
+    setFilters,
+    fullSearchQuery,
   };
 }
