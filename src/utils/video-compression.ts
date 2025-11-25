@@ -405,12 +405,9 @@ export async function compressVideo(
     await ffmpeg.deleteFile("input.mp4");
     await ffmpeg.deleteFile("output.mp4");
 
-    // Convert FileData to ArrayBuffer for Blob creation
-    const dataArray =
-      outputData instanceof Uint8Array
-        ? outputData
-        : new TextEncoder().encode(outputData as string);
-    const compressedBlob = new Blob([dataArray.buffer], { type: "video/mp4" });
+    // Create blob from FFmpeg output data
+    // Using 'as any' for compatibility with TypeScript's Blob type
+    const compressedBlob = new Blob([outputData as any], { type: "video/mp4" });
     const compressedSize = compressedBlob.size;
     const compressionRatio = originalSize / compressedSize;
 

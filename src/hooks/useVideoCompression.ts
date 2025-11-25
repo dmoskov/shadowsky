@@ -9,15 +9,15 @@ import { useCallback, useRef, useState } from "react";
 import { createLogger } from "../utils/logger";
 import {
   BLUESKY_MAX_VIDEO_SIZE,
-  compressVideo,
-  type CompressionProgress,
-  type CompressionResult,
   COMPRESSION_PRESETS,
+  compressVideo,
   generateVideoThumbnail,
   getRecommendedPreset,
   getVideoMetadata,
   isVideoTooLarge,
   shouldCompressVideo,
+  type CompressionProgress,
+  type CompressionResult,
   type ThumbnailResult,
   type VideoMetadata,
 } from "../utils/video-compression";
@@ -64,7 +64,11 @@ export interface UseVideoCompressionOptions {
 }
 
 export function useVideoCompression(options: UseVideoCompressionOptions = {}) {
-  const { preset = "auto", generateThumbnail = true, thumbnailTime = 1 } = options;
+  const {
+    preset = "auto",
+    generateThumbnail = true,
+    thumbnailTime = 1,
+  } = options;
 
   const [state, setState] = useState<VideoCompressionState>(initialState);
   const abortRef = useRef<boolean>(false);
@@ -110,23 +114,29 @@ export function useVideoCompression(options: UseVideoCompressionOptions = {}) {
   /**
    * Get recommended preset for a file
    */
-  const getPreset = useCallback((file: File): keyof typeof COMPRESSION_PRESETS => {
-    return getRecommendedPreset(file.size);
-  }, []);
+  const getPreset = useCallback(
+    (file: File): keyof typeof COMPRESSION_PRESETS => {
+      return getRecommendedPreset(file.size);
+    },
+    [],
+  );
 
   /**
    * Analyze a video file without compressing
    */
-  const analyzeVideo = useCallback(async (file: File): Promise<VideoMetadata | null> => {
-    try {
-      const metadata = await getVideoMetadata(file);
-      setState((prev) => ({ ...prev, metadata }));
-      return metadata;
-    } catch (error) {
-      logger.error("Failed to analyze video:", error);
-      return null;
-    }
-  }, []);
+  const analyzeVideo = useCallback(
+    async (file: File): Promise<VideoMetadata | null> => {
+      try {
+        const metadata = await getVideoMetadata(file);
+        setState((prev) => ({ ...prev, metadata }));
+        return metadata;
+      } catch (error) {
+        logger.error("Failed to analyze video:", error);
+        return null;
+      }
+    },
+    [],
+  );
 
   /**
    * Compress a video file
@@ -138,7 +148,11 @@ export function useVideoCompression(options: UseVideoCompressionOptions = {}) {
     async (
       file: File,
       presetOverride?: keyof typeof COMPRESSION_PRESETS,
-    ): Promise<{ file: File; wasCompressed: boolean; thumbnail?: ThumbnailResult }> => {
+    ): Promise<{
+      file: File;
+      wasCompressed: boolean;
+      thumbnail?: ThumbnailResult;
+    }> => {
       // Prevent concurrent processing
       if (processingRef.current) {
         logger.warn("Compression already in progress");
@@ -203,7 +217,11 @@ export function useVideoCompression(options: UseVideoCompressionOptions = {}) {
           });
 
           processingRef.current = false;
-          return { file, wasCompressed: false, thumbnail: thumbnail ?? undefined };
+          return {
+            file,
+            wasCompressed: false,
+            thumbnail: thumbnail ?? undefined,
+          };
         }
 
         // Start compression
@@ -241,7 +259,10 @@ export function useVideoCompression(options: UseVideoCompressionOptions = {}) {
             const compressedFile = new File([result.blob], file.name, {
               type: result.mimeType,
             });
-            thumbnail = await generateVideoThumbnail(compressedFile, thumbnailTime);
+            thumbnail = await generateVideoThumbnail(
+              compressedFile,
+              thumbnailTime,
+            );
           } catch (thumbError) {
             logger.warn("Failed to generate thumbnail:", thumbError);
           }
@@ -302,7 +323,8 @@ export function useVideoCompression(options: UseVideoCompressionOptions = {}) {
         return "Analyzing video...";
       case "compressing":
         if (state.stage === "analyzing") return "Analyzing video frames...";
-        if (state.stage === "compressing") return `Compressing video... ${state.progress}%`;
+        if (state.stage === "compressing")
+          return `Compressing video... ${state.progress}%`;
         if (state.stage === "finalizing") return "Finalizing output...";
         return "Compressing video...";
       case "complete":
@@ -321,7 +343,10 @@ export function useVideoCompression(options: UseVideoCompressionOptions = {}) {
    * Check if video will exceed Bluesky limits after compression (estimate)
    */
   const estimateCompressedSize = useCallback(
-    (file: File, targetPreset: keyof typeof COMPRESSION_PRESETS = "auto"): number => {
+    (
+      file: File,
+      targetPreset: keyof typeof COMPRESSION_PRESETS = "auto",
+    ): number => {
       const preset = COMPRESSION_PRESETS[targetPreset];
 
       if (preset.targetSizeMB) {
@@ -377,4 +402,9 @@ export function useVideoCompression(options: UseVideoCompressionOptions = {}) {
 }
 
 // Re-export types for convenience
-export type { CompressionProgress, CompressionResult, ThumbnailResult, VideoMetadata };
+export type {
+  CompressionProgress,
+  CompressionResult,
+  ThumbnailResult,
+  VideoMetadata,
+};

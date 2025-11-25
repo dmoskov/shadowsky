@@ -863,7 +863,9 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
               className="mx-auto mb-4"
               style={{ color: "var(--bsky-text-tertiary)" }}
             />
-            <p style={{ color: "var(--bsky-text-primary)" }}>No results found</p>
+            <p style={{ color: "var(--bsky-text-primary)" }}>
+              No results found
+            </p>
             <p
               className="mt-2 text-sm"
               style={{ color: "var(--bsky-text-secondary)" }}
