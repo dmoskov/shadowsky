@@ -85,14 +85,19 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
             isReplying ? "text-blue-500" : ""
           }`}
           onClick={(e) => handleAction(e, onReply)}
-          aria-label="Reply"
+          aria-label={`Reply to post${post.replyCount ? `, ${post.replyCount} replies` : ""}`}
+          aria-pressed={isReplying}
         >
           <MessageCircle
             size={iconSize}
             fill={isReplying ? "currentColor" : "none"}
+            aria-hidden="true"
           />
           {showCounts && (
-            <span className="min-w-[1rem] text-left text-xs font-medium">
+            <span
+              className="min-w-[1rem] text-left text-xs font-medium"
+              aria-hidden="true"
+            >
               {post.replyCount || 0}
             </span>
           )}
@@ -117,11 +122,16 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
               }
               setShowRepostMenu(!showRepostMenu);
             }}
-            aria-label="Repost or Quote"
+            aria-label={`Repost or quote post${post.repostCount ? `, ${post.repostCount} reposts` : ""}`}
+            aria-expanded={showRepostMenu}
+            aria-haspopup="menu"
           >
-            <Repeat2 size={iconSize} />
+            <Repeat2 size={iconSize} aria-hidden="true" />
             {showCounts && (
-              <span className="min-w-[1rem] text-left text-xs font-medium">
+              <span
+                className="min-w-[1rem] text-left text-xs font-medium"
+                aria-hidden="true"
+              >
                 {post.repostCount || 0}
               </span>
             )}
@@ -135,8 +145,11 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
                 <div
                   className="fixed inset-0 z-[9998]"
                   onClick={() => setShowRepostMenu(false)}
+                  aria-hidden="true"
                 />
                 <div
+                  role="menu"
+                  aria-label="Repost options"
                   className="fixed z-[9999] w-40 rounded-lg border shadow-lg"
                   style={{
                     backgroundColor: "var(--bsky-bg-secondary)",
@@ -147,6 +160,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
                   }}
                 >
                   <button
+                    role="menuitem"
                     className="flex w-full items-center gap-3 rounded-t-lg px-4 py-3 text-left text-sm transition-all"
                     style={{ color: "var(--bsky-text-primary)" }}
                     onMouseEnter={(e) =>
@@ -161,10 +175,11 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
                       setShowRepostMenu(false);
                     }}
                   >
-                    <Repeat2 size={16} />
+                    <Repeat2 size={16} aria-hidden="true" />
                     <span>Repost</span>
                   </button>
                   <button
+                    role="menuitem"
                     className="flex w-full items-center gap-3 rounded-b-lg px-4 py-3 text-left text-sm transition-all"
                     style={{ color: "var(--bsky-text-primary)" }}
                     onMouseEnter={(e) =>
@@ -179,7 +194,7 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
                       setShowRepostMenu(false);
                     }}
                   >
-                    <Quote size={16} />
+                    <Quote size={16} aria-hidden="true" />
                     <span>Quote</span>
                   </button>
                 </div>
@@ -194,11 +209,19 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
             isLiked ? "text-red-500" : ""
           }`}
           onClick={(e) => handleAction(e, onLike)}
-          aria-label="Like"
+          aria-label={`${isLiked ? "Unlike" : "Like"} post${post.likeCount ? `, ${post.likeCount} likes` : ""}`}
+          aria-pressed={isLiked}
         >
-          <Heart size={iconSize} fill={isLiked ? "currentColor" : "none"} />
+          <Heart
+            size={iconSize}
+            fill={isLiked ? "currentColor" : "none"}
+            aria-hidden="true"
+          />
           {showCounts && (
-            <span className="min-w-[1rem] text-left text-xs font-medium">
+            <span
+              className="min-w-[1rem] text-left text-xs font-medium"
+              aria-hidden="true"
+            >
               {post.likeCount || 0}
             </span>
           )}
@@ -210,12 +233,14 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
             bookmarked ? "text-amber-500" : ""
           }`}
           onClick={handleBookmark}
-          aria-label="Bookmark"
+          aria-label={bookmarked ? "Remove bookmark" : "Bookmark post"}
+          aria-pressed={bookmarked}
         >
           <Bookmark
             size={iconSize}
             fill={bookmarked ? "currentColor" : "none"}
             className={`transition-all duration-200 ease-out ${bookmarked ? "animate-bookmark-fill" : ""}`}
+            aria-hidden="true"
           />
         </button>
 
@@ -224,9 +249,9 @@ export const PostActionBar: React.FC<PostActionBarProps> = memo(
           <button
             className="touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-150 hover:scale-110 hover:text-blue-600"
             onClick={(e) => handleAction(e, onShare)}
-            aria-label="Share"
+            aria-label="Share post"
           >
-            <Share size={iconSize} />
+            <Share size={iconSize} aria-hidden="true" />
           </button>
         )}
 

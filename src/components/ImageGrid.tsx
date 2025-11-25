@@ -133,7 +133,7 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
               >
                 <img
                   src={proxifyBskyImage(img.thumb)}
-                  alt={img.alt || ""}
+                  alt={img.alt || "Image attachment"}
                   className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
                   loading="lazy"
                   onLoad={(e) => {
@@ -149,10 +149,15 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
                 <div
                   className="absolute inset-0 animate-pulse bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900"
                   style={{ zIndex: -1, filter: "blur(20px)" }}
+                  aria-hidden="true"
                 />
               </div>
               {img.alt && (
-                <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-1.5 text-xs text-white opacity-0 transition-opacity hover:opacity-100">
+                <div
+                  className="absolute bottom-0 left-0 right-0 bg-black/60 p-1.5 text-xs text-white opacity-0 transition-opacity hover:opacity-100"
+                  aria-label="Alt text available"
+                  title={`Alt text: ${img.alt}`}
+                >
                   ALT
                 </div>
               )}

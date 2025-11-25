@@ -395,7 +395,7 @@ export default function SkyDeck() {
           {columns.length > 1 && (
             <div className="pointer-events-none absolute bottom-20 left-0 right-0 flex justify-center gap-1.5 pb-2">
               <div className="pointer-events-auto flex gap-1.5 rounded-full bg-black/20 px-3 py-2 dark:bg-white/20">
-                {columns.map((_, index) => (
+                {columns.map((col, index) => (
                   <button
                     key={index}
                     onClick={() => setMobileColumnIndex(index)}
@@ -404,7 +404,10 @@ export default function SkyDeck() {
                         ? "w-6 bg-blue-500"
                         : "bg-gray-400 dark:bg-gray-500"
                     }`}
-                    aria-label={`Go to column ${index + 1}`}
+                    aria-label={`Go to ${col.title || `column ${index + 1}`}`}
+                    aria-current={
+                      index === mobileColumnIndex ? "true" : undefined
+                    }
                   />
                 ))}
               </div>
@@ -600,7 +603,11 @@ export default function SkyDeck() {
                         Add Custom Feed or List by URI
                       </h4>
                       <div className="flex gap-2 px-3">
+                        <label htmlFor="custom-feed-input" className="sr-only">
+                          Custom feed or list URL
+                        </label>
                         <input
+                          id="custom-feed-input"
                           type="text"
                           value={customFeedUri}
                           onChange={(e) => setCustomFeedUri(e.target.value)}
@@ -617,6 +624,7 @@ export default function SkyDeck() {
                             }
                           }}
                           placeholder="Paste feed/list AT-URI or bsky.app URL"
+                          aria-describedby="custom-feed-help"
                           className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
                         />
                         <button
@@ -761,10 +769,14 @@ export default function SkyDeck() {
                             !customFeedUri.trim() || isLoadingCustomFeed
                           }
                           className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-500 text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label="Add custom feed"
                           title="Add Feed"
                         >
-                          <Plus size={18} />
+                          <Plus size={18} aria-hidden="true" />
                         </button>
+                        <span id="custom-feed-help" className="sr-only">
+                          Enter an AT-URI or Bluesky app URL for a feed or list
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -782,8 +794,12 @@ export default function SkyDeck() {
               <button
                 onClick={() => setIsAddingColumn(true)}
                 className="group relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-white shadow-md transition-all duration-300 hover:border-blue-400 hover:bg-gray-50 hover:shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:hover:border-blue-500 dark:hover:bg-gray-900/50"
+                aria-label="Add new column"
               >
-                <Plus className="h-12 w-12 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
+                <Plus
+                  className="h-12 w-12 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300"
+                  aria-hidden="true"
+                />
               </button>
             )}
           </div>

@@ -2192,8 +2192,13 @@ export function Composer() {
             className="bsky-button-primary flex items-center gap-2 px-6 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleSend}
             disabled={posts.length === 0 || isPosting}
+            aria-label={
+              posts.length > 1
+                ? `Post thread with ${posts.length} posts${media.some((m) => m.type === "image" && !m.alt) ? ". Warning: some images are missing alt text" : ""}`
+                : `Post${media.some((m) => m.type === "image" && !m.alt) ? ". Warning: some images are missing alt text" : ""}`
+            }
           >
-            <Send size={20} />
+            <Send size={20} aria-hidden="true" />
             {isPosting && countdown
               ? `Sending in ${countdown}s...`
               : isPosting
@@ -2620,6 +2625,26 @@ export function Composer() {
               </p>
             </div>
           )}
+          {media.some((m) => m.type === "image" && !m.alt) && (
+            <div
+              className="mb-4 flex items-start gap-2 rounded-lg border-l-4 border-amber-400 p-3"
+              style={{ background: "var(--bsky-bg-tertiary)" }}
+              role="alert"
+              aria-live="polite"
+            >
+              <AlertCircle
+                size={16}
+                className="mt-0.5 flex-shrink-0 text-amber-500"
+                aria-hidden="true"
+              />
+              <p
+                className="text-sm"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                Some images are missing alt text. Adding alt text improves accessibility for screen reader users.
+              </p>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {media
               .filter((m) => m.postIndex === undefined || m.postIndex === 0)
@@ -2689,18 +2714,30 @@ export function Composer() {
                     className="relative border-t"
                     style={{ borderColor: "var(--bsky-border-primary)" }}
                   >
+                    <label htmlFor={`alt-text-${m.id}`} className="sr-only">
+                      Alt text for image{" "}
+                      {m.alt
+                        ? "(has alt text)"
+                        : "(no alt text - add for accessibility)"}
+                    </label>
                     <textarea
-                      placeholder="Alt text (optional)"
+                      id={`alt-text-${m.id}`}
+                      placeholder="Add alt text for accessibility"
                       value={m.alt}
                       onChange={(e) => updateMediaAlt(m.id, e.target.value)}
-                      className="w-full resize-none p-2 pr-10 text-sm focus:outline-none"
+                      className={`w-full resize-none p-2 pr-10 text-sm focus:outline-none ${!m.alt ? "border-l-2 border-l-amber-400" : ""}`}
                       rows={2}
+                      aria-describedby={`alt-text-help-${m.id}`}
                       style={{
                         background: "var(--bsky-bg-primary)",
                         color: "var(--bsky-text-primary)",
                         minHeight: "3.5rem",
                       }}
                     />
+                    <span id={`alt-text-help-${m.id}`} className="sr-only">
+                      Describe the image for screen reader users. Good alt text
+                      describes the content and function of the image.
+                    </span>
                     {m.type === "image" && (
                       <button
                         onClick={() => autoGenerateAltTextForMedia(m.id)}

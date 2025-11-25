@@ -312,6 +312,88 @@ input[type="range"]::-moz-range-thumb:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+/* Accessibility Styles */
+@layer utilities {
+  /* Screen reader only content - visible to screen readers but hidden visually */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Allow sr-only content to become visible on focus */
+  .sr-only-focusable:focus,
+  .sr-only-focusable:active {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+}
+
+/* Enhanced focus indicators for accessibility */
+html.enhanced-focus *:focus {
+  outline: 3px solid var(--bsky-primary) !important;
+  outline-offset: 2px !important;
+}
+
+html.enhanced-focus *:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+html.enhanced-focus *:focus-visible {
+  outline: 3px solid var(--bsky-primary) !important;
+  outline-offset: 2px !important;
+}
+
+/* Reduced motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Data attribute for reduced motion preference */
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] *::before,
+html[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* High contrast mode adjustments */
+html[data-high-contrast="true"] {
+  --bsky-border-primary: #374151;
+  --bsky-border-secondary: #4b5563;
+  --bsky-text-secondary: #1f2937;
+  --bsky-text-tertiary: #374151;
+}
+
+html[data-high-contrast="true"].dark,
+html[data-high-contrast="true"] .dark {
+  --bsky-border-primary: #9ca3af;
+  --bsky-border-secondary: #d1d5db;
+  --bsky-text-secondary: #f9fafb;
+  --bsky-text-tertiary: #e5e7eb;
+}
+
 /* Mobile Performance Optimizations */
 @media (max-width: 768px) {
   /* Optimize scrolling performance */

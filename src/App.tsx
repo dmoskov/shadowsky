@@ -24,6 +24,7 @@ import { StorageErrorProvider } from "./components/providers/StorageErrorProvide
 import { RateLimitStatus } from "./components/RateLimitStatus";
 import { Sidebar } from "./components/Sidebar";
 import { SwipeIndicator } from "./components/SwipeIndicator";
+import { AriaLiveProvider } from "./components/ui/AriaLiveRegion";
 import { FloatingActionButton } from "./components/ui/FloatingActionButton";
 import { PageLoader } from "./components/ui/PageLoader";
 import { WebSocketStatus } from "./components/WebSocketStatus";
@@ -361,6 +362,13 @@ function AppContent() {
       style={{ background: "var(--bsky-bg-primary)" }}
       {...swipeHandlers}
     >
+      {/* Skip navigation link for accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+      >
+        Skip to main content
+      </a>
       <BackgroundNotificationLoader />
       <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div
@@ -372,6 +380,9 @@ function AppContent() {
           isCollapsed={isSidebarCollapsed}
         />
         <main
+          id="main-content"
+          role="main"
+          aria-label="Main content"
           className={`mt-16 min-h-[calc(100vh-4rem)] flex-1 pb-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto lg:pb-0`}
         >
           <Suspense fallback={<PageLoader />}>
@@ -508,21 +519,23 @@ function App() {
       <BrowserRouter>
         <ThemeProvider>
           <AccessibilityProvider>
-            <AuthProvider>
-              <KeyboardShortcutsProvider>
-                <WebSocketProvider>
-                  <ModalProvider>
-                    <HiddenPostsProvider>
-                      <ModerationProvider>
-                        <StorageErrorProvider>
-                          <AppContent />
-                        </StorageErrorProvider>
-                      </ModerationProvider>
-                    </HiddenPostsProvider>
-                  </ModalProvider>
-                </WebSocketProvider>
-              </KeyboardShortcutsProvider>
-            </AuthProvider>
+            <AriaLiveProvider>
+              <AuthProvider>
+                <KeyboardShortcutsProvider>
+                  <WebSocketProvider>
+                    <ModalProvider>
+                      <HiddenPostsProvider>
+                        <ModerationProvider>
+                          <StorageErrorProvider>
+                            <AppContent />
+                          </StorageErrorProvider>
+                        </ModerationProvider>
+                      </HiddenPostsProvider>
+                    </ModalProvider>
+                  </WebSocketProvider>
+                </KeyboardShortcutsProvider>
+              </AuthProvider>
+            </AriaLiveProvider>
           </AccessibilityProvider>
         </ThemeProvider>
       </BrowserRouter>

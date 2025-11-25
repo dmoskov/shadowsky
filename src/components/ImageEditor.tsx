@@ -20,7 +20,7 @@ import React, {
   useState,
 } from "react";
 
-// Filter presets with CSS filter values
+// Filter presets with CSS filter values - Instagram-style filters
 const FILTER_PRESETS = {
   none: { name: "None", filter: "" },
   bw: { name: "B&W", filter: "grayscale(100%)" },
@@ -37,6 +37,50 @@ const FILTER_PRESETS = {
     filter: "contrast(90%) brightness(110%) saturate(80%)",
   },
   vivid: { name: "Vivid", filter: "saturate(150%) contrast(110%)" },
+  clarendon: {
+    name: "Clarendon",
+    filter: "contrast(120%) saturate(125%)",
+  },
+  gingham: {
+    name: "Gingham",
+    filter: "brightness(105%) hue-rotate(-10deg)",
+  },
+  moon: {
+    name: "Moon",
+    filter: "grayscale(100%) contrast(110%) brightness(110%)",
+  },
+  lark: {
+    name: "Lark",
+    filter: "contrast(90%) saturate(115%) brightness(108%)",
+  },
+  reyes: {
+    name: "Reyes",
+    filter: "sepia(22%) contrast(85%) brightness(110%) saturate(75%)",
+  },
+  juno: {
+    name: "Juno",
+    filter: "contrast(115%) saturate(180%) brightness(90%)",
+  },
+  slumber: {
+    name: "Slumber",
+    filter: "saturate(66%) brightness(105%) sepia(5%)",
+  },
+  crema: {
+    name: "Crema",
+    filter: "contrast(90%) brightness(110%) saturate(90%) sepia(10%)",
+  },
+  ludwig: {
+    name: "Ludwig",
+    filter: "contrast(105%) saturate(85%) brightness(105%)",
+  },
+  aden: {
+    name: "Aden",
+    filter: "hue-rotate(-20deg) contrast(90%) saturate(85%) brightness(120%)",
+  },
+  perpetua: {
+    name: "Perpetua",
+    filter: "contrast(110%) brightness(110%) saturate(110%)",
+  },
 } as const;
 
 type FilterPreset = keyof typeof FILTER_PRESETS;

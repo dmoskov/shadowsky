@@ -2,10 +2,12 @@ import type { AppBskyFeedDefs } from "@atproto/api";
 import {
   AlertCircle,
   Edit2,
+  FileText,
   Hash,
   Image,
   Loader,
   Quote,
+  Scissors,
   Send,
   Smile,
   Sparkles,
@@ -23,6 +25,7 @@ import {
   isVideoFile,
   shouldCompressVideo,
 } from "../utils/video-compression";
+import { AltTextEditor } from "./AltTextEditor";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
 import { ImageEditor } from "./ImageEditor";
@@ -30,6 +33,7 @@ import {
   MentionTypeahead,
   type MentionTypeaheadHandle,
 } from "./MentionTypeahead";
+import { VideoEditor } from "./VideoEditor";
 import { VideoUploadProgress } from "./VideoUploadProgress";
 
 async function loadAnthropicService() {
@@ -150,6 +154,10 @@ export function EnhancedComposer({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifSearch, setShowGifSearch] = useState(false);
   const [showImageEditor, setShowImageEditor] = useState(false);
+  const [showVideoEditor, setShowVideoEditor] = useState(false);
+  const [showAltTextEditor, setShowAltTextEditor] = useState<string | null>(
+    null,
+  );
   const [showHashtagSuggestions, setShowHashtagSuggestions] = useState(false);
   const [generatingAlt, setGeneratingAlt] = useState<string | null>(null);
 
@@ -492,6 +500,46 @@ export function EnhancedComposer({
   // Check if there are images to edit
   const hasEditableImages = media.some((m) => m.type === "image");
 
+  // Check if there's a video to edit
+  const editableVideo = media.find((m) => m.type === "video");
+
+  // Handle video editor save
+  const handleVideoEditorSave = (editedVideo: {
+    originalFile: File;
+    editedFile: File;
+    preview: string;
+    trimStart: number;
+    trimEnd: number;
+  }) => {
+    // Update media with edited video
+    setMedia((prev) =>
+      prev.map((item) => {
+        if (item.type === "video") {
+          // Revoke old preview URL
+          URL.revokeObjectURL(item.preview);
+          mediaUrlsRef.current.delete(item.preview);
+          // Track new preview URL
+          mediaUrlsRef.current.add(editedVideo.preview);
+          return {
+            ...item,
+            file: editedVideo.editedFile,
+            preview: editedVideo.preview,
+          };
+        }
+        return item;
+      }),
+    );
+    setShowVideoEditor(false);
+  };
+
+  // Handle alt text editor save
+  const handleAltTextEditorSave = (altText: string) => {
+    if (showAltTextEditor) {
+      updateAltText(showAltTextEditor, altText);
+      setShowAltTextEditor(null);
+    }
+  };
+
   // Generate alt text with AI
   const handleGenerateAlt = async (id: string) => {
     const item = media.find((m) => m.id === id);
@@ -832,19 +880,32 @@ export function EnhancedComposer({
                 <video
                   src={item.preview}
                   className="h-32 w-full rounded object-cover"
-                  controls
                 />
               )}
 
-              {/* Remove button */}
-              <button
-                onClick={() => removeMedia(item.id)}
-                className="absolute right-1 top-1 rounded-full bg-black/50 p-1 text-white opacity-0 transition-all group-hover:opacity-100"
-              >
-                <X size={16} />
-              </button>
+              {/* Action buttons overlay */}
+              <div className="absolute right-1 top-1 flex gap-1 opacity-0 transition-all group-hover:opacity-100">
+                {/* Trim video button */}
+                {item.type === "video" && (
+                  <button
+                    onClick={() => setShowVideoEditor(true)}
+                    className="rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
+                    title="Trim video"
+                  >
+                    <Scissors size={16} />
+                  </button>
+                )}
+                {/* Remove button */}
+                <button
+                  onClick={() => removeMedia(item.id)}
+                  className="rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
+                  title="Remove"
+                >
+                  <X size={16} />
+                </button>
+              </div>
 
-              {/* Alt text input */}
+              {/* Alt text controls for images */}
               {item.type === "image" && (
                 <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-2 opacity-0 transition-all group-hover:opacity-100">
                   <div className="flex gap-1">
@@ -855,11 +916,20 @@ export function EnhancedComposer({
                       placeholder="Alt text"
                       className="flex-1 rounded border bg-white/10 px-2 py-1 text-xs text-white placeholder-white/60 focus:outline-none"
                     />
+                    {/* Open full alt text editor */}
+                    <button
+                      onClick={() => setShowAltTextEditor(item.id)}
+                      className="rounded bg-white/20 px-2 py-1 text-xs text-white hover:bg-white/30"
+                      title="Edit alt text"
+                    >
+                      <FileText size={12} />
+                    </button>
                     {features.altTextGeneration && (
                       <button
                         onClick={() => handleGenerateAlt(item.id)}
                         disabled={generatingAlt === item.id}
                         className="rounded bg-white/20 px-2 py-1 text-xs text-white hover:bg-white/30"
+                        title="Generate with AI"
                       >
                         {generatingAlt === item.id ? (
                           <Loader size={12} className="animate-spin" />
@@ -869,6 +939,13 @@ export function EnhancedComposer({
                       </button>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* Video duration badge */}
+              {item.type === "video" && (
+                <div className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-xs text-white">
+                  Video
                 </div>
               )}
             </div>
@@ -886,7 +963,7 @@ export function EnhancedComposer({
             >
               <div className="flex flex-col items-center gap-1">
                 <Edit2 size={20} />
-                <span className="text-xs">Edit All</span>
+                <span className="text-xs">Edit Images</span>
               </div>
             </button>
           )}
@@ -1092,6 +1169,36 @@ export function EnhancedComposer({
           onCancel={() => setShowImageEditor(false)}
         />
       )}
+
+      {/* Video editor modal */}
+      {showVideoEditor && editableVideo && (
+        <VideoEditor
+          video={{
+            file: editableVideo.file,
+            preview: editableVideo.preview,
+          }}
+          onSave={handleVideoEditorSave}
+          onCancel={() => setShowVideoEditor(false)}
+        />
+      )}
+
+      {/* Alt text editor modal */}
+      {showAltTextEditor &&
+        (() => {
+          const item = media.find((m) => m.id === showAltTextEditor);
+          if (!item || item.type !== "image") return null;
+          return (
+            <AltTextEditor
+              image={{
+                file: item.file,
+                preview: item.preview,
+                alt: item.alt,
+              }}
+              onSave={handleAltTextEditorSave}
+              onCancel={() => setShowAltTextEditor(null)}
+            />
+          );
+        })()}
     </div>
   );
 }

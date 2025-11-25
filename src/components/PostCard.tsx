@@ -28,8 +28,13 @@ export const PostCard: React.FC<PostCardProps> = ({
   onQuoteClick,
   showBorder = true,
 }) => {
+  const authorName =
+    post.author?.displayName || post.author?.handle || "Unknown user";
+
   return (
-    <div
+    <article
+      role="article"
+      aria-label={`Post by ${authorName}`}
       className={showBorder ? "border-b" : ""}
       style={showBorder ? { borderColor: "var(--bsky-border-primary)" } : {}}
     >
@@ -51,6 +56,6 @@ export const PostCard: React.FC<PostCardProps> = ({
           showCounts={true}
         />
       </div>
-    </div>
+    </article>
   );
 };
