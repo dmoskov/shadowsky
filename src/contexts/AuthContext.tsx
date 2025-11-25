@@ -28,10 +28,18 @@ import { columnService } from "../services/column-service";
 import { initializeDataServices } from "../services/data-services-initializer";
 import { dmService } from "../services/dm-service";
 import { draftService } from "../services/draft-service";
+import { oauthService } from "../services/oauth-service";
+
+type AuthMethod = "oauth" | "app-password" | null;
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
+  authMethod: AuthMethod;
+  // OAuth methods
+  loginWithOAuth: (handle: string) => Promise<void>;
+  handleOAuthCallback: () => Promise<boolean>;
+  // Legacy app password login (kept for backwards compatibility)
   login: (
     identifier: string,
     password: string,
@@ -64,36 +72,52 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
+  const [authMethod, setAuthMethod] = useState<AuthMethod>(null);
+  const [oauthAgent, setOauthAgent] = useState<BskyAgent | null>(null);
   const initAttempts = useRef(0);
   const maxRetries = 3;
 
-  const logout = useCallback((logoutAllAccounts = false) => {
-    // Track logout event
-    analytics.trackLogout();
+  const logout = useCallback(
+    async (logoutAllAccounts = false) => {
+      // Track logout event
+      analytics.trackLogout();
 
-    // Clear all auth state
-    atProtoClient.logout();
-    setIsAuthenticated(false);
-    setSession(null);
+      // Clear OAuth session if using OAuth
+      if (authMethod === "oauth") {
+        try {
+          await oauthService.signOut();
+        } catch (error) {
+          debug.error("Error signing out of OAuth:", error);
+        }
+      }
 
-    // Clear agent from services
-    bookmarkService.setAgent(null);
-    dmService.setAgent(null);
-    appPreferencesService.setAgent(null);
-    columnService.setAgent(null);
-    draftService.setAgent(null);
+      // Clear all auth state
+      atProtoClient.logout();
+      setIsAuthenticated(false);
+      setSession(null);
+      setAuthMethod(null);
+      setOauthAgent(null);
 
-    // Clear React Query cache
-    queryClient.clear();
+      // Clear agent from services
+      bookmarkService.setAgent(null);
+      dmService.setAgent(null);
+      appPreferencesService.setAgent(null);
+      columnService.setAgent(null);
+      draftService.setAgent(null);
 
-    // Clear all accounts if specified
-    if (logoutAllAccounts) {
-      AccountManager.clearAllAccounts();
-    }
+      // Clear React Query cache
+      queryClient.clear();
 
-    // Force a page reload to ensure all state is cleared
-    window.location.href = "/";
-  }, []);
+      // Clear all accounts if specified
+      if (logoutAllAccounts) {
+        AccountManager.clearAllAccounts();
+      }
+
+      // Force a page reload to ensure all state is cleared
+      window.location.href = "/";
+    },
+    [authMethod],
+  );
 
   const refreshSession = useCallback(async (): Promise<boolean> => {
     try {
@@ -118,6 +142,54 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        // First, try to initialize OAuth and check for existing OAuth session
+        debug.log("Checking for OAuth session...");
+        const oauthState = await oauthService.init();
+
+        if (oauthState?.agent && oauthState.did) {
+          debug.log("OAuth session found, using OAuth authentication");
+
+          // Cast OAuth Agent to BskyAgent - they share the same API interface
+          const agent = oauthState.agent as unknown as BskyAgent;
+
+          // Fetch handle from profile since OAuth session doesn't include it
+          let handle = oauthState.handle || "";
+          try {
+            const { data: profile } = await agent.getProfile({
+              actor: oauthState.did,
+            });
+            handle = profile.handle;
+          } catch (err) {
+            debug.error("Failed to fetch handle for OAuth session:", err);
+          }
+
+          setIsAuthenticated(true);
+          setAuthMethod("oauth");
+          setOauthAgent(agent);
+
+          // Create a minimal session object for compatibility
+          const oauthSession: Session = {
+            did: oauthState.did,
+            handle,
+            accessJwt: "", // OAuth doesn't expose raw JWTs
+            refreshJwt: "",
+            active: true,
+          };
+          setSession(oauthSession);
+
+          // Initialize services with OAuth agent
+          await initializeBookmarkService(agent);
+          await initializeDataServices(agent);
+          dmService.setAgent(agent);
+
+          // Track login
+          analytics.setUserId(oauthState.did);
+          setIsLoading(false);
+          return;
+        }
+
+        // Fall back to legacy app password session
+        debug.log("No OAuth session, checking for app password session...");
         const savedSession = ATProtoClient.loadSavedSession(
           atProtoClient.getSessionPrefix(),
         );
@@ -128,6 +200,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const resumedSession =
               await atProtoClient.resumeSession(savedSession);
             setIsAuthenticated(true);
+            setAuthMethod("app-password");
             setSession(resumedSession);
             initAttempts.current = 0; // Reset on success
             // Initialize services with user preferences
@@ -171,8 +244,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
       } catch (error) {
-        // Error loading from localStorage
-        debug.error("Failed to load saved session:", error);
+        // Error during auth initialization
+        debug.error("Failed to initialize auth:", error);
       } finally {
         setIsLoading(false);
       }
@@ -204,6 +277,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           authFactorToken,
         );
         setIsAuthenticated(true);
+        setAuthMethod("app-password");
         setSession(newSession);
 
         // Initialize services with user preferences
@@ -239,6 +313,70 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     [],
   );
 
+  // OAuth login - redirects to authorization server
+  const loginWithOAuth = useCallback(async (handle: string): Promise<void> => {
+    try {
+      await oauthService.authorize(handle);
+      // This will redirect, so we won't reach here
+    } catch (error) {
+      debug.error("OAuth login error:", error);
+      throw error;
+    }
+  }, []);
+
+  // Handle OAuth callback after redirect
+  const handleOAuthCallback = useCallback(async (): Promise<boolean> => {
+    try {
+      const state = await oauthService.handleCallback();
+
+      if (state?.agent && state.did) {
+        // Cast OAuth Agent to BskyAgent - they share the same API interface
+        const agent = state.agent as unknown as BskyAgent;
+
+        // Fetch handle from profile since OAuth session doesn't include it
+        let handle = state.handle || "";
+        try {
+          const { data: profile } = await agent.getProfile({
+            actor: state.did,
+          });
+          handle = profile.handle;
+        } catch (err) {
+          debug.error("Failed to fetch handle for OAuth session:", err);
+        }
+
+        setIsAuthenticated(true);
+        setAuthMethod("oauth");
+        setOauthAgent(agent);
+
+        // Create a minimal session object for compatibility
+        const oauthSession: Session = {
+          did: state.did,
+          handle,
+          accessJwt: "",
+          refreshJwt: "",
+          active: true,
+        };
+        setSession(oauthSession);
+
+        // Initialize services with OAuth agent
+        await initializeBookmarkService(agent);
+        await initializeDataServices(agent);
+        dmService.setAgent(agent);
+
+        // Track successful login
+        analytics.trackLogin("oauth");
+        analytics.setUserId(state.did);
+
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      debug.error("OAuth callback error:", error);
+      throw error;
+    }
+  }, []);
+
   const switchAccount = useCallback(async (did: string): Promise<boolean> => {
     try {
       const account = AccountManager.switchAccount(did);
@@ -248,6 +386,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       const resumedSession = await atProtoClient.resumeSession(account.session);
       setIsAuthenticated(true);
+      setAuthMethod("app-password");
       setSession(resumedSession);
 
       await initializeBookmarkService(atProtoClient.agent);
@@ -266,16 +405,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
+  // Determine which agent to expose based on auth method
+  const currentAgent =
+    authMethod === "oauth" ? oauthAgent : atProtoClient.agent;
+
   return (
     <AuthContext.Provider
       value={{
         isAuthenticated,
         isLoading,
+        authMethod,
+        loginWithOAuth,
+        handleOAuthCallback,
         login,
         logout,
         session,
         client: atProtoClient,
-        agent: isAuthenticated ? atProtoClient.agent : null,
+        agent: isAuthenticated ? currentAgent : null,
         refreshSession,
         switchAccount,
       }}

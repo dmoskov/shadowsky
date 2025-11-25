@@ -3,6 +3,8 @@ import {
   BarChart3,
   Bell,
   Database,
+  ExternalLink,
+  Key,
   Mail,
   MessageSquare,
   Shield,
@@ -14,8 +16,12 @@ import { useAuth } from "../contexts/AuthContext";
 import { ATProtoError } from "../types/errors";
 import butterflyIcon from "/butterfly-icon.svg";
 
+type LoginMode = "oauth" | "app-password";
+
 export const LandingPage: React.FC = () => {
-  const { login } = useAuth();
+  const { login, loginWithOAuth } = useAuth();
+  const [loginMode, setLoginMode] = useState<LoginMode>("oauth");
+  const [handle, setHandle] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [pdsUrl, setPdsUrl] = useState("https://bsky.social");
@@ -25,7 +31,22 @@ export const LandingPage: React.FC = () => {
   const [showEmailCode, setShowEmailCode] = useState(false);
   const [emailCode, setEmailCode] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleOAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    try {
+      await loginWithOAuth(handle);
+      // This will redirect, so we won't reach here
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || "Failed to start OAuth login");
+      setIsLoading(false);
+    }
+  };
+
+  const handleAppPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
@@ -88,16 +109,66 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Login Form */}
-            <form
-              onSubmit={handleSubmit}
-              className="bsky-card mb-6 p-6 shadow-md"
-            >
+            <div className="bsky-card mb-6 p-6 shadow-md">
               <h2
                 className="mb-4 text-xl font-semibold"
                 style={{ color: "var(--bsky-text-primary)" }}
               >
                 Sign in with your Bluesky account
               </h2>
+
+              {/* Login Mode Toggle */}
+              <div
+                className="mb-4 flex rounded-lg p-1"
+                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginMode("oauth");
+                    setError("");
+                  }}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all ${
+                    loginMode === "oauth" ? "shadow-sm" : ""
+                  }`}
+                  style={{
+                    backgroundColor:
+                      loginMode === "oauth"
+                        ? "var(--bsky-bg-secondary)"
+                        : "transparent",
+                    color:
+                      loginMode === "oauth"
+                        ? "var(--bsky-text-primary)"
+                        : "var(--bsky-text-tertiary)",
+                  }}
+                >
+                  <ExternalLink size={16} />
+                  OAuth
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginMode("app-password");
+                    setError("");
+                  }}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all ${
+                    loginMode === "app-password" ? "shadow-sm" : ""
+                  }`}
+                  style={{
+                    backgroundColor:
+                      loginMode === "app-password"
+                        ? "var(--bsky-bg-secondary)"
+                        : "transparent",
+                    color:
+                      loginMode === "app-password"
+                        ? "var(--bsky-text-primary)"
+                        : "var(--bsky-text-tertiary)",
+                  }}
+                >
+                  <Key size={16} />
+                  App Password
+                </button>
+              </div>
 
               {error && (
                 <div
@@ -121,149 +192,22 @@ export const LandingPage: React.FC = () => {
                 </div>
               )}
 
-              <div className="mb-4">
-                <label
-                  htmlFor="identifier"
-                  className="mb-2 block text-sm font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
-                >
-                  Handle or Email
-                </label>
-                <input
-                  type="text"
-                  id="identifier"
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  className="w-full rounded-xl px-4 py-3 text-white transition-all focus:outline-none focus:ring-2 focus:ring-opacity-50"
-                  style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    border: "1px solid var(--bsky-border-primary)",
-                    color: "var(--bsky-text-primary)",
-                  }}
-                  onFocus={(e) =>
-                    (e.target.style.borderColor = "var(--bsky-primary)")
-                  }
-                  onBlur={(e) =>
-                    (e.target.style.borderColor = "var(--bsky-border-primary)")
-                  }
-                  placeholder="@handle.bsky.social"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label
-                  htmlFor="password"
-                  className="mb-2 block text-sm font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
-                >
-                  Password
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl px-4 py-3 text-white transition-all focus:outline-none focus:ring-2 focus:ring-opacity-50"
-                  style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    border: "1px solid var(--bsky-border-primary)",
-                    color: "var(--bsky-text-primary)",
-                  }}
-                  onFocus={(e) =>
-                    (e.target.style.borderColor = "var(--bsky-primary)")
-                  }
-                  onBlur={(e) =>
-                    (e.target.style.borderColor = "var(--bsky-border-primary)")
-                  }
-                  placeholder="Enter your password"
-                  required
-                />
-              </div>
-
-              {showEmailCode && (
-                <div className="mb-4">
-                  <label
-                    htmlFor="emailCode"
-                    className="mb-2 block text-sm font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
-                  >
-                    Email Verification Code
-                  </label>
-                  <input
-                    type="text"
-                    id="emailCode"
-                    value={emailCode}
-                    onChange={(e) => setEmailCode(e.target.value)}
-                    className="w-full rounded-xl px-4 py-3 text-white transition-all focus:outline-none focus:ring-2 focus:ring-opacity-50"
-                    style={{
-                      backgroundColor: "var(--bsky-bg-tertiary)",
-                      border: "1px solid var(--bsky-border-primary)",
-                      color: "var(--bsky-text-primary)",
-                    }}
-                    onFocus={(e) =>
-                      (e.target.style.borderColor = "var(--bsky-primary)")
-                    }
-                    onBlur={(e) =>
-                      (e.target.style.borderColor =
-                        "var(--bsky-border-primary)")
-                    }
-                    placeholder="Enter the code from your email"
-                    required
-                    autoFocus
-                  />
-                  <div className="mt-1 flex items-center justify-between">
-                    <p
-                      className="text-xs"
-                      style={{ color: "var(--bsky-text-tertiary)" }}
-                    >
-                      Check your email for the verification code
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEmailCode("");
-                        setShowEmailCode(false);
-                        setError("");
-                      }}
-                      className="text-xs hover:underline"
-                      style={{ color: "var(--bsky-primary)" }}
-                    >
-                      Try different credentials
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className="mb-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="flex items-center gap-1 text-sm transition-opacity hover:opacity-80"
-                  style={{ color: "var(--bsky-text-secondary)" }}
-                >
-                  <span
-                    className={`transition-transform ${showAdvanced ? "rotate-90" : ""}`}
-                  >
-                    ▶
-                  </span>
-                  Advanced: Use a different PDS
-                </button>
-
-                {showAdvanced && (
-                  <div className="mt-3">
+              {/* OAuth Login Form */}
+              {loginMode === "oauth" && (
+                <form onSubmit={handleOAuthSubmit}>
+                  <div className="mb-4">
                     <label
-                      htmlFor="pdsUrl"
+                      htmlFor="handle"
                       className="mb-2 block text-sm font-medium"
                       style={{ color: "var(--bsky-text-secondary)" }}
                     >
-                      PDS Server URL
+                      Handle
                     </label>
                     <input
-                      type="url"
-                      id="pdsUrl"
-                      value={pdsUrl}
-                      onChange={(e) => setPdsUrl(e.target.value)}
+                      type="text"
+                      id="handle"
+                      value={handle}
+                      onChange={(e) => setHandle(e.target.value)}
                       className="w-full rounded-xl px-4 py-3 text-white transition-all focus:outline-none focus:ring-2 focus:ring-opacity-50"
                       style={{
                         backgroundColor: "var(--bsky-bg-tertiary)",
@@ -277,31 +221,237 @@ export const LandingPage: React.FC = () => {
                         (e.target.style.borderColor =
                           "var(--bsky-border-primary)")
                       }
-                      placeholder="https://bsky.social"
+                      placeholder="@handle.bsky.social"
+                      required
                     />
                     <p
                       className="mt-1 text-xs"
                       style={{ color: "var(--bsky-text-tertiary)" }}
                     >
-                      Default is https://bsky.social. Only change if you use a
-                      different PDS.
+                      You'll be redirected to Bluesky to authorize
                     </p>
                   </div>
-                )}
-              </div>
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="bsky-button-primary w-full px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isLoading
-                  ? "Signing in..."
-                  : showEmailCode
-                    ? "Verify Code"
-                    : "Sign In"}
-              </button>
-            </form>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="bsky-button-primary flex w-full items-center justify-center gap-2 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isLoading ? (
+                      "Redirecting..."
+                    ) : (
+                      <>
+                        <ExternalLink size={18} />
+                        Sign in with Bluesky
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+
+              {/* App Password Login Form */}
+              {loginMode === "app-password" && (
+                <form onSubmit={handleAppPasswordSubmit}>
+                  <div className="mb-4">
+                    <label
+                      htmlFor="identifier"
+                      className="mb-2 block text-sm font-medium"
+                      style={{ color: "var(--bsky-text-secondary)" }}
+                    >
+                      Handle or Email
+                    </label>
+                    <input
+                      type="text"
+                      id="identifier"
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      className="w-full rounded-xl px-4 py-3 text-white transition-all focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                      style={{
+                        backgroundColor: "var(--bsky-bg-tertiary)",
+                        border: "1px solid var(--bsky-border-primary)",
+                        color: "var(--bsky-text-primary)",
+                      }}
+                      onFocus={(e) =>
+                        (e.target.style.borderColor = "var(--bsky-primary)")
+                      }
+                      onBlur={(e) =>
+                        (e.target.style.borderColor =
+                          "var(--bsky-border-primary)")
+                      }
+                      placeholder="@handle.bsky.social"
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label
+                      htmlFor="password"
+                      className="mb-2 block text-sm font-medium"
+                      style={{ color: "var(--bsky-text-secondary)" }}
+                    >
+                      App Password
+                    </label>
+                    <input
+                      type="password"
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full rounded-xl px-4 py-3 text-white transition-all focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                      style={{
+                        backgroundColor: "var(--bsky-bg-tertiary)",
+                        border: "1px solid var(--bsky-border-primary)",
+                        color: "var(--bsky-text-primary)",
+                      }}
+                      onFocus={(e) =>
+                        (e.target.style.borderColor = "var(--bsky-primary)")
+                      }
+                      onBlur={(e) =>
+                        (e.target.style.borderColor =
+                          "var(--bsky-border-primary)")
+                      }
+                      placeholder="xxxx-xxxx-xxxx-xxxx"
+                      required
+                    />
+                    <p
+                      className="mt-1 text-xs"
+                      style={{ color: "var(--bsky-text-tertiary)" }}
+                    >
+                      Create an app password at{" "}
+                      <a
+                        href="https://bsky.app/settings/app-passwords"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline"
+                        style={{ color: "var(--bsky-primary)" }}
+                      >
+                        bsky.app/settings/app-passwords
+                      </a>
+                    </p>
+                  </div>
+
+                  {showEmailCode && (
+                    <div className="mb-4">
+                      <label
+                        htmlFor="emailCode"
+                        className="mb-2 block text-sm font-medium"
+                        style={{ color: "var(--bsky-text-secondary)" }}
+                      >
+                        Email Verification Code
+                      </label>
+                      <input
+                        type="text"
+                        id="emailCode"
+                        value={emailCode}
+                        onChange={(e) => setEmailCode(e.target.value)}
+                        className="w-full rounded-xl px-4 py-3 text-white transition-all focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                        style={{
+                          backgroundColor: "var(--bsky-bg-tertiary)",
+                          border: "1px solid var(--bsky-border-primary)",
+                          color: "var(--bsky-text-primary)",
+                        }}
+                        onFocus={(e) =>
+                          (e.target.style.borderColor = "var(--bsky-primary)")
+                        }
+                        onBlur={(e) =>
+                          (e.target.style.borderColor =
+                            "var(--bsky-border-primary)")
+                        }
+                        placeholder="Enter the code from your email"
+                        required
+                        autoFocus
+                      />
+                      <div className="mt-1 flex items-center justify-between">
+                        <p
+                          className="text-xs"
+                          style={{ color: "var(--bsky-text-tertiary)" }}
+                        >
+                          Check your email for the verification code
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEmailCode("");
+                            setShowEmailCode(false);
+                            setError("");
+                          }}
+                          className="text-xs hover:underline"
+                          style={{ color: "var(--bsky-primary)" }}
+                        >
+                          Try different credentials
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowAdvanced(!showAdvanced)}
+                      className="flex items-center gap-1 text-sm transition-opacity hover:opacity-80"
+                      style={{ color: "var(--bsky-text-secondary)" }}
+                    >
+                      <span
+                        className={`transition-transform ${showAdvanced ? "rotate-90" : ""}`}
+                      >
+                        ▶
+                      </span>
+                      Advanced: Use a different PDS
+                    </button>
+
+                    {showAdvanced && (
+                      <div className="mt-3">
+                        <label
+                          htmlFor="pdsUrl"
+                          className="mb-2 block text-sm font-medium"
+                          style={{ color: "var(--bsky-text-secondary)" }}
+                        >
+                          PDS Server URL
+                        </label>
+                        <input
+                          type="url"
+                          id="pdsUrl"
+                          value={pdsUrl}
+                          onChange={(e) => setPdsUrl(e.target.value)}
+                          className="w-full rounded-xl px-4 py-3 text-white transition-all focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                          style={{
+                            backgroundColor: "var(--bsky-bg-tertiary)",
+                            border: "1px solid var(--bsky-border-primary)",
+                            color: "var(--bsky-text-primary)",
+                          }}
+                          onFocus={(e) =>
+                            (e.target.style.borderColor = "var(--bsky-primary)")
+                          }
+                          onBlur={(e) =>
+                            (e.target.style.borderColor =
+                              "var(--bsky-border-primary)")
+                          }
+                          placeholder="https://bsky.social"
+                        />
+                        <p
+                          className="mt-1 text-xs"
+                          style={{ color: "var(--bsky-text-tertiary)" }}
+                        >
+                          Default is https://bsky.social. Only change if you use
+                          a different PDS.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="bsky-button-primary w-full px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isLoading
+                      ? "Signing in..."
+                      : showEmailCode
+                        ? "Verify Code"
+                        : "Sign In"}
+                  </button>
+                </form>
+              )}
+            </div>
 
             {/* Security Info */}
             <div className="space-y-3">
