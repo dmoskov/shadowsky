@@ -16,6 +16,8 @@ import { createLogger } from "../utils/logger";
 import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
 import { VideoPlayer } from "./VideoPlayer";
+import { ProfileHoverCard } from "./ui/ProfileHoverCard";
+import { RichText } from "./ui/RichText";
 
 const logger = createLogger("ThreadViewer");
 
@@ -504,28 +506,68 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
               style={{ borderColor: "var(--bsky-border-primary)" }}
             >
               <div className="mb-1 flex items-center gap-1">
-                <img
-                  src={
-                    proxifyBskyImage(quotedPost.author.avatar) ||
-                    "/default-avatar.svg"
-                  }
-                  alt={quotedPost.author?.handle || "unknown"}
-                  className="h-4 w-4 rounded-full"
-                />
-                <span
-                  className="font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
-                >
-                  {quotedPost.author?.displayName ||
-                    quotedPost.author?.handle ||
-                    "Unknown"}
-                </span>
-                <span style={{ color: "var(--bsky-text-secondary)" }}>
-                  @{quotedPost.author?.handle || "unknown"}
-                </span>
+                {quotedPost.author?.handle ? (
+                  <ProfileHoverCard handle={quotedPost.author.handle}>
+                    <img
+                      src={
+                        proxifyBskyImage(quotedPost.author.avatar) ||
+                        "/default-avatar.svg"
+                      }
+                      alt={quotedPost.author?.handle || "unknown"}
+                      className="h-4 w-4 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+                    />
+                  </ProfileHoverCard>
+                ) : (
+                  <img
+                    src={
+                      proxifyBskyImage(quotedPost.author?.avatar) ||
+                      "/default-avatar.svg"
+                    }
+                    alt={quotedPost.author?.handle || "unknown"}
+                    className="h-4 w-4 rounded-full"
+                  />
+                )}
+                {quotedPost.author?.handle ? (
+                  <ProfileHoverCard handle={quotedPost.author.handle}>
+                    <span
+                      className="cursor-pointer font-semibold hover:underline"
+                      style={{ color: "var(--bsky-text-primary)" }}
+                    >
+                      {quotedPost.author?.displayName ||
+                        quotedPost.author?.handle ||
+                        "Unknown"}
+                    </span>
+                  </ProfileHoverCard>
+                ) : (
+                  <span
+                    className="font-semibold"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                  >
+                    {quotedPost.author?.displayName ||
+                      quotedPost.author?.handle ||
+                      "Unknown"}
+                  </span>
+                )}
+                {quotedPost.author?.handle ? (
+                  <ProfileHoverCard handle={quotedPost.author.handle}>
+                    <span
+                      className="cursor-pointer hover:underline"
+                      style={{ color: "var(--bsky-text-secondary)" }}
+                    >
+                      @{quotedPost.author?.handle || "unknown"}
+                    </span>
+                  </ProfileHoverCard>
+                ) : (
+                  <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    @{quotedPost.author?.handle || "unknown"}
+                  </span>
+                )}
               </div>
               <div style={{ color: "var(--bsky-text-primary)" }}>
-                {quotedPost.value.text}
+                <RichText
+                  text={quotedPost.value?.text || ""}
+                  facets={quotedPost.value?.facets}
+                />
               </div>
             </div>
           );
@@ -771,18 +813,50 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-center justify-between">
                       <div className="flex min-w-0 items-center gap-1">
-                        <span
-                          className="truncate text-sm font-semibold"
-                          style={{ color: "var(--bsky-text-primary)" }}
-                        >
-                          {author?.displayName || author?.handle || "Unknown"}
-                        </span>
-                        <span
-                          className="flex-shrink-0 text-xs"
-                          style={{ color: "var(--bsky-text-secondary)" }}
-                        >
-                          @{author?.handle || "unknown"}
-                        </span>
+                        {author?.handle ? (
+                          <ProfileHoverCard handle={author.handle}>
+                            <span
+                              className="cursor-pointer truncate text-sm font-semibold hover:underline"
+                              style={{ color: "var(--bsky-text-primary)" }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/profile/${author.handle}`);
+                              }}
+                            >
+                              {author?.displayName ||
+                                author?.handle ||
+                                "Unknown"}
+                            </span>
+                          </ProfileHoverCard>
+                        ) : (
+                          <span
+                            className="truncate text-sm font-semibold"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                          >
+                            {author?.displayName || author?.handle || "Unknown"}
+                          </span>
+                        )}
+                        {author?.handle ? (
+                          <ProfileHoverCard handle={author.handle}>
+                            <span
+                              className="flex-shrink-0 cursor-pointer text-xs hover:underline"
+                              style={{ color: "var(--bsky-text-secondary)" }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/profile/${author.handle}`);
+                              }}
+                            >
+                              @{author?.handle || "unknown"}
+                            </span>
+                          </ProfileHoverCard>
+                        ) : (
+                          <span
+                            className="flex-shrink-0 text-xs"
+                            style={{ color: "var(--bsky-text-secondary)" }}
+                          >
+                            @{author?.handle || "unknown"}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <time
@@ -833,7 +907,10 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       }}
                     >
                       {post ? (
-                        (post.record as any)?.text || "[No text]"
+                        <RichText
+                          text={(post.record as any)?.text || "[No text]"}
+                          facets={(post.record as any)?.facets}
+                        />
                       ) : (
                         <span style={{ color: "var(--bsky-text-secondary)" }}>
                           <Loader2

@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { dmService, type DmConversation } from "../services/dm-service";
 import { MessageReactions } from "./MessageReactions";
+import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 
 export const DirectMessagesColumn: React.FC = () => {
   const { session } = useAuth();
@@ -328,39 +329,76 @@ export const DirectMessagesColumn: React.FC = () => {
         >
           ← Back
         </button>
-        {getOtherMember(conversationData.conversation).avatar ? (
-          <img
-            src={getOtherMember(conversationData.conversation).avatar}
-            alt={getOtherMember(conversationData.conversation).handle || ""}
-            className="h-10 w-10 rounded-full object-cover"
-          />
-        ) : (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300">
-            <span className="text-lg text-gray-600">
-              {(getOtherMember(conversationData.conversation).displayName ||
-                getOtherMember(conversationData.conversation).handle ||
-                "U")[0].toUpperCase()}
-            </span>
-          </div>
-        )}
-        <div>
-          <div
-            className="font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
-          >
-            {getOtherMember(conversationData.conversation).displayName ||
-              getOtherMember(conversationData.conversation).handle ||
-              "Unknown User"}
-          </div>
-          {getOtherMember(conversationData.conversation).handle && (
-            <div
-              className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
-            >
-              @{getOtherMember(conversationData.conversation).handle}
+        {(() => {
+          const member = getOtherMember(conversationData.conversation);
+          const memberHandle = member.handle;
+          return memberHandle ? (
+            <ProfileHoverCard handle={memberHandle}>
+              {member.avatar ? (
+                <img
+                  src={member.avatar}
+                  alt={memberHandle}
+                  className="h-10 w-10 cursor-pointer rounded-full object-cover transition-opacity hover:opacity-80"
+                />
+              ) : (
+                <div className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gray-300 transition-opacity hover:opacity-80">
+                  <span className="text-lg text-gray-600">
+                    {(member.displayName ||
+                      memberHandle ||
+                      "U")[0].toUpperCase()}
+                  </span>
+                </div>
+              )}
+            </ProfileHoverCard>
+          ) : member.avatar ? (
+            <img
+              src={member.avatar}
+              alt=""
+              className="h-10 w-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300">
+              <span className="text-lg text-gray-600">
+                {(member.displayName || "U")[0].toUpperCase()}
+              </span>
             </div>
-          )}
-        </div>
+          );
+        })()}
+        {(() => {
+          const member = getOtherMember(conversationData.conversation);
+          const memberHandle = member.handle;
+          return (
+            <div>
+              {memberHandle ? (
+                <ProfileHoverCard handle={memberHandle}>
+                  <div
+                    className="cursor-pointer font-semibold hover:underline"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                  >
+                    {member.displayName || memberHandle || "Unknown User"}
+                  </div>
+                </ProfileHoverCard>
+              ) : (
+                <div
+                  className="font-semibold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  {member.displayName || "Unknown User"}
+                </div>
+              )}
+              {memberHandle && (
+                <ProfileHoverCard handle={memberHandle}>
+                  <div
+                    className="cursor-pointer text-sm hover:underline"
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  >
+                    @{memberHandle}
+                  </div>
+                </ProfileHoverCard>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Messages */}

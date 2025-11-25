@@ -41,6 +41,7 @@ import { ThreadModal } from "./ThreadModal";
 import { VideoPlayer } from "./VideoPlayer";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { ProgressiveImage } from "./ui/ProgressiveImage";
+import { RichText } from "./ui/RichText";
 import { FeedSkeleton } from "./ui/SkeletonLoader";
 
 const logger = createLogger("Home");
@@ -585,7 +586,18 @@ export const Home: React.FC<HomeProps> = React.memo(
               >
                 <Repeat2 size={12} />
                 <span>
-                  {item.reason.by.displayName || item.reason.by.handle} reposted
+                  <ProfileHoverCard handle={item.reason.by.handle}>
+                    <span
+                      className="cursor-pointer hover:underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/profile/${item.reason.by.handle}`);
+                      }}
+                    >
+                      {item.reason.by.displayName || item.reason.by.handle}
+                    </span>
+                  </ProfileHoverCard>{" "}
+                  reposted
                 </span>
               </div>
             )}
@@ -614,20 +626,24 @@ export const Home: React.FC<HomeProps> = React.memo(
                       style={{ color: "var(--bsky-text-primary)" }}
                     >
                       Replying to{" "}
-                      <button
-                        className="font-semibold hover:underline"
-                        style={{ color: "rgb(29, 155, 240)" }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Navigate to parent post
-                          const parentPost = item.reply.parent;
-                          if (parentPost) {
-                            handlePostClick(parentPost);
-                          }
-                        }}
+                      <ProfileHoverCard
+                        handle={item.reply.parent.author?.handle || "unknown"}
                       >
-                        @{item.reply.parent.author?.handle || "unknown"}
-                      </button>
+                        <button
+                          className="font-semibold hover:underline"
+                          style={{ color: "rgb(29, 155, 240)" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Navigate to parent post
+                            const parentPost = item.reply.parent;
+                            if (parentPost) {
+                              handlePostClick(parentPost);
+                            }
+                          }}
+                        >
+                          @{item.reply.parent.author?.handle || "unknown"}
+                        </button>
+                      </ProfileHoverCard>
                     </span>
                     {item.reply.parent.record?.text && (
                       <div
@@ -753,7 +769,10 @@ export const Home: React.FC<HomeProps> = React.memo(
                   className="whitespace-pre-wrap"
                   style={{ color: "var(--bsky-text-primary)" }}
                 >
-                  {post.record.text}
+                  <RichText
+                    text={post.record.text}
+                    facets={post.record.facets}
+                  />
                 </div>
 
                 {renderEmbed(post.embed, post.uri, index)}
@@ -1394,16 +1413,30 @@ export const Home: React.FC<HomeProps> = React.memo(
                           Unknown
                         </span>
                       )}
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
-                        @{quotedPost.author?.handle || "unknown"}
-                      </span>
+                      {quotedPost.author?.handle ? (
+                        <ProfileHoverCard handle={quotedPost.author.handle}>
+                          <span
+                            className="cursor-pointer hover:underline"
+                            style={{ color: "var(--bsky-text-secondary)" }}
+                          >
+                            @{quotedPost.author?.handle || "unknown"}
+                          </span>
+                        </ProfileHoverCard>
+                      ) : (
+                        <span style={{ color: "var(--bsky-text-secondary)" }}>
+                          @{quotedPost.author?.handle || "unknown"}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div
                     className="text-sm"
                     style={{ color: "var(--bsky-text-primary)" }}
                   >
-                    {quotedPost.value.text}
+                    <RichText
+                      text={quotedPost.value?.text || ""}
+                      facets={quotedPost.value?.facets}
+                    />
                   </div>
                   {quotedPost.embeds?.[0] &&
                     renderEmbed(quotedPost.embeds[0], postUri, postIndex)}

@@ -165,7 +165,11 @@ export function UserListModal({
                       </div>
                     </ProfileHoverCard>
                     <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                      <span>@{user.handle}</span>
+                      <ProfileHoverCard handle={user.handle}>
+                        <span className="cursor-pointer hover:underline">
+                          @{user.handle}
+                        </span>
+                      </ProfileHoverCard>
                       <DomainVerifiedBadgeInline handle={user.handle} />
                     </div>
                     {user.description && (

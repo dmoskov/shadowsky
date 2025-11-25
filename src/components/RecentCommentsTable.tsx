@@ -156,7 +156,13 @@ export const RecentCommentsTable: React.FC = () => {
                     {comment.author.displayName || comment.author.handle}
                   </span>
                   <span
-                    className="truncate text-xs"
+                    onClick={(e) =>
+                      handleInternalNavigation(
+                        e,
+                        getProfileUrl(comment.author.handle),
+                      )
+                    }
+                    className="cursor-pointer truncate text-xs hover:underline"
                     style={{ color: "var(--bsky-text-tertiary)" }}
                   >
                     @{comment.author.handle}
