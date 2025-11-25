@@ -36,6 +36,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   authMethod: AuthMethod;
+  isOAuthAvailable: boolean;
   // OAuth methods
   loginWithOAuth: (handle: string) => Promise<void>;
   handleOAuthCallback: () => Promise<boolean>;
@@ -74,6 +75,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [authMethod, setAuthMethod] = useState<AuthMethod>(null);
   const [oauthAgent, setOauthAgent] = useState<BskyAgent | null>(null);
+  const [isOAuthAvailable, setIsOAuthAvailable] = useState(false);
   const initAttempts = useRef(0);
   const maxRetries = 3;
 
@@ -145,6 +147,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // First, try to initialize OAuth and check for existing OAuth session
         debug.log("Checking for OAuth session...");
         const oauthState = await oauthService.init();
+
+        // Check if OAuth is available (client metadata loaded)
+        setIsOAuthAvailable(oauthService.isAvailable());
 
         if (oauthState?.agent && oauthState.did) {
           debug.log("OAuth session found, using OAuth authentication");
@@ -415,6 +420,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         isAuthenticated,
         isLoading,
         authMethod,
+        isOAuthAvailable,
         loginWithOAuth,
         handleOAuthCallback,
         login,

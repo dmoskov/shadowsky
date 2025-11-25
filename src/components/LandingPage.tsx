@@ -11,7 +11,7 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { ATProtoError } from "../types/errors";
 import butterflyIcon from "/butterfly-icon.svg";
@@ -19,8 +19,11 @@ import butterflyIcon from "/butterfly-icon.svg";
 type LoginMode = "oauth" | "app-password";
 
 export const LandingPage: React.FC = () => {
-  const { login, loginWithOAuth } = useAuth();
-  const [loginMode, setLoginMode] = useState<LoginMode>("oauth");
+  const { login, loginWithOAuth, isOAuthAvailable } = useAuth();
+  // Default to app-password if OAuth isn't available yet
+  const [loginMode, setLoginMode] = useState<LoginMode>(
+    isOAuthAvailable ? "oauth" : "app-password",
+  );
   const [handle, setHandle] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -30,6 +33,13 @@ export const LandingPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showEmailCode, setShowEmailCode] = useState(false);
   const [emailCode, setEmailCode] = useState("");
+
+  // Switch to app-password mode if OAuth becomes unavailable
+  useEffect(() => {
+    if (!isOAuthAvailable && loginMode === "oauth") {
+      setLoginMode("app-password");
+    }
+  }, [isOAuthAvailable, loginMode]);
 
   const handleOAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,12 +135,15 @@ export const LandingPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setLoginMode("oauth");
-                    setError("");
+                    if (isOAuthAvailable) {
+                      setLoginMode("oauth");
+                      setError("");
+                    }
                   }}
+                  disabled={!isOAuthAvailable}
                   className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all ${
                     loginMode === "oauth" ? "shadow-sm" : ""
-                  }`}
+                  } ${!isOAuthAvailable ? "cursor-not-allowed opacity-50" : ""}`}
                   style={{
                     backgroundColor:
                       loginMode === "oauth"
@@ -141,6 +154,7 @@ export const LandingPage: React.FC = () => {
                         ? "var(--bsky-text-primary)"
                         : "var(--bsky-text-tertiary)",
                   }}
+                  title={!isOAuthAvailable ? "OAuth not available yet" : ""}
                 >
                   <ExternalLink size={16} />
                   OAuth
