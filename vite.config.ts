@@ -11,7 +11,13 @@ export default defineConfig({
     VitePWA({
       registerType: "prompt",
       injectRegister: null, // We'll handle registration manually
+      // Include push notification service worker code
+      injectManifest: {
+        injectionPoint: undefined,
+      },
       workbox: {
+        // Import push notification handler
+        importScripts: ["/push-sw.js"],
         // Cache static assets with stale-while-revalidate
         runtimeCaching: [
           {

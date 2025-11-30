@@ -20,7 +20,9 @@ import React, {
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModeration } from "../contexts/ModerationContext";
 import { useSearch } from "../hooks/useSearch";
+import { useTrendingData } from "../hooks/useTrending";
 import type { SearchHistoryEntry } from "../services/search-history-db";
+import { ExploreEmptyState } from "./ExploreEmptyState";
 import { PostCard } from "./PostCard";
 import { SearchFilterPanel } from "./SearchFilterPanel";
 import { ThreadModal } from "./ThreadModal";
@@ -36,6 +38,9 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
 }) => {
   const { isPostHidden } = useHiddenPosts();
   const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
+
+  // Fetch trending data for autocomplete suggestions
+  const { topics: trendingTopics, trends } = useTrendingData({ limit: 5 });
 
   const {
     query,
@@ -428,115 +433,186 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
           </div>
 
           {/* Autocomplete Dropdown */}
-          {showDropdown && searchHistory.length > 0 && (
-            <div
-              ref={dropdownRef}
-              id="search-history-dropdown"
-              role="listbox"
-              aria-label="Search history"
-              className="absolute left-4 right-4 top-full z-30 mt-1 max-h-80 overflow-y-auto rounded-lg border shadow-lg"
-              style={{
-                backgroundColor: "var(--bsky-bg-primary)",
-                borderColor: "var(--bsky-border-primary)",
-              }}
-            >
+          {showDropdown &&
+            (searchHistory.length > 0 ||
+              trends.length > 0 ||
+              trendingTopics.length > 0) && (
               <div
-                className="flex items-center justify-between border-b px-3 py-2"
-                style={{ borderColor: "var(--bsky-border-primary)" }}
-              >
-                <span
-                  className="flex items-center gap-1.5 text-xs font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
-                >
-                  <Clock size={12} />
-                  Recent Searches
-                </span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    clearHistory();
-                  }}
-                  className="flex items-center gap-1 text-xs transition-colors hover:text-red-500"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
-                  aria-label="Clear search history"
-                >
-                  <Trash2 size={12} aria-hidden="true" />
-                  Clear
-                </button>
-              </div>
-
-              <div className="py-1" role="group">
-                {searchHistory.map((entry, index) => (
-                  <button
-                    key={entry.id}
-                    id={`search-history-item-${index}`}
-                    type="button"
-                    role="option"
-                    aria-selected={selectedSuggestionIndex === index}
-                    onClick={() => handleSelectSuggestion(entry)}
-                    className={`group flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                      selectedSuggestionIndex === index
-                        ? "bg-blue-50 dark:bg-blue-900/20"
-                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                    }`}
-                  >
-                    <div className="flex min-w-0 flex-1 items-center gap-2">
-                      <Clock
-                        size={14}
-                        className="shrink-0"
-                        style={{ color: "var(--bsky-text-tertiary)" }}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <span
-                          className="block truncate"
-                          style={{ color: "var(--bsky-text-primary)" }}
-                        >
-                          {entry.query}
-                        </span>
-                        <span
-                          className="text-xs"
-                          style={{ color: "var(--bsky-text-tertiary)" }}
-                        >
-                          {formatDistanceToNow(new Date(entry.timestamp))} ago
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeFromHistory(entry.id);
-                      }}
-                      className="shrink-0 rounded p-1 opacity-0 transition-opacity hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
-                      style={{ color: "var(--bsky-text-tertiary)" }}
-                      aria-label={`Remove "${entry.query}" from search history`}
-                    >
-                      <X size={12} aria-hidden="true" />
-                    </button>
-                  </button>
-                ))}
-              </div>
-
-              {/* Keyboard hints */}
-              <div
-                className="flex items-center gap-3 border-t px-3 py-2 text-xs"
+                ref={dropdownRef}
+                id="search-history-dropdown"
+                role="listbox"
+                aria-label="Search suggestions"
+                className="absolute left-4 right-4 top-full z-30 mt-1 max-h-80 overflow-y-auto rounded-lg border shadow-lg"
                 style={{
+                  backgroundColor: "var(--bsky-bg-primary)",
                   borderColor: "var(--bsky-border-primary)",
-                  color: "var(--bsky-text-tertiary)",
                 }}
-                aria-hidden="true"
               >
-                <span className="flex items-center gap-1">
-                  <ArrowUp size={10} />
-                  <ArrowDown size={10} />
-                  navigate
-                </span>
-                <span>Enter to select</span>
-                <span>Esc to close</span>
+                {/* Trending Suggestions */}
+                {(trends.length > 0 || trendingTopics.length > 0) && (
+                  <>
+                    <div
+                      className="flex items-center gap-1.5 border-b px-3 py-2"
+                      style={{ borderColor: "var(--bsky-border-primary)" }}
+                    >
+                      <TrendingUp
+                        size={12}
+                        style={{ color: "var(--bsky-primary)" }}
+                      />
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: "var(--bsky-text-secondary)" }}
+                      >
+                        Trending
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 px-3 py-2">
+                      {trends.length > 0
+                        ? trends.slice(0, 5).map((trend, index) => (
+                            <button
+                              key={`trending-${index}`}
+                              type="button"
+                              onClick={() => {
+                                setQuery(trend.topic);
+                                executeSearch(trend.topic);
+                                setShowDropdown(false);
+                              }}
+                              className="rounded-full border px-2.5 py-1 text-xs transition-all hover:border-blue-400"
+                              style={{
+                                backgroundColor: "var(--bsky-bg-secondary)",
+                                borderColor: "var(--bsky-border-primary)",
+                                color: "var(--bsky-text-primary)",
+                              }}
+                            >
+                              {trend.displayName || trend.topic}
+                            </button>
+                          ))
+                        : trendingTopics.slice(0, 5).map((topic, index) => (
+                            <button
+                              key={`trending-topic-${index}`}
+                              type="button"
+                              onClick={() => {
+                                setQuery(topic.topic);
+                                executeSearch(topic.topic);
+                                setShowDropdown(false);
+                              }}
+                              className="rounded-full border px-2.5 py-1 text-xs transition-all hover:border-blue-400"
+                              style={{
+                                backgroundColor: "var(--bsky-bg-secondary)",
+                                borderColor: "var(--bsky-border-primary)",
+                                color: "var(--bsky-text-primary)",
+                              }}
+                            >
+                              {topic.topic}
+                            </button>
+                          ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Recent Searches */}
+                {searchHistory.length > 0 && (
+                  <>
+                    <div
+                      className="flex items-center justify-between border-b px-3 py-2"
+                      style={{ borderColor: "var(--bsky-border-primary)" }}
+                    >
+                      <span
+                        className="flex items-center gap-1.5 text-xs font-medium"
+                        style={{ color: "var(--bsky-text-secondary)" }}
+                      >
+                        <Clock size={12} />
+                        Recent Searches
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          clearHistory();
+                        }}
+                        className="flex items-center gap-1 text-xs transition-colors hover:text-red-500"
+                        style={{ color: "var(--bsky-text-tertiary)" }}
+                        aria-label="Clear search history"
+                      >
+                        <Trash2 size={12} aria-hidden="true" />
+                        Clear
+                      </button>
+                    </div>
+
+                    <div className="py-1" role="group">
+                      {searchHistory.map((entry, index) => (
+                        <button
+                          key={entry.id}
+                          id={`search-history-item-${index}`}
+                          type="button"
+                          role="option"
+                          aria-selected={selectedSuggestionIndex === index}
+                          onClick={() => handleSelectSuggestion(entry)}
+                          className={`group flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors ${
+                            selectedSuggestionIndex === index
+                              ? "bg-blue-50 dark:bg-blue-900/20"
+                              : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                          }`}
+                        >
+                          <div className="flex min-w-0 flex-1 items-center gap-2">
+                            <Clock
+                              size={14}
+                              className="shrink-0"
+                              style={{ color: "var(--bsky-text-tertiary)" }}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <span
+                                className="block truncate"
+                                style={{ color: "var(--bsky-text-primary)" }}
+                              >
+                                {entry.query}
+                              </span>
+                              <span
+                                className="text-xs"
+                                style={{ color: "var(--bsky-text-tertiary)" }}
+                              >
+                                {formatDistanceToNow(new Date(entry.timestamp))}{" "}
+                                ago
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeFromHistory(entry.id);
+                            }}
+                            className="shrink-0 rounded p-1 opacity-0 transition-opacity hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
+                            style={{ color: "var(--bsky-text-tertiary)" }}
+                            aria-label={`Remove "${entry.query}" from search history`}
+                          >
+                            <X size={12} aria-hidden="true" />
+                          </button>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Keyboard hints */}
+                <div
+                  className="flex items-center gap-3 border-t px-3 py-2 text-xs"
+                  style={{
+                    borderColor: "var(--bsky-border-primary)",
+                    color: "var(--bsky-text-tertiary)",
+                  }}
+                  aria-hidden="true"
+                >
+                  <span className="flex items-center gap-1">
+                    <ArrowUp size={10} />
+                    <ArrowDown size={10} />
+                    navigate
+                  </span>
+                  <span>Enter to select</span>
+                  <span>Esc to close</span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </form>
 
         {/* Advanced Filters Panel */}
@@ -628,33 +704,18 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
           </div>
         )}
 
-        {/* Empty State - No Query */}
+        {/* Empty State - No Query: Show Explore/Trending */}
         {!activeQuery && !isLoading && (
-          <div className="p-8 text-center">
-            <Search
-              size={48}
-              className="mx-auto mb-4"
-              style={{ color: "var(--bsky-text-tertiary)" }}
-            />
-            <p style={{ color: "var(--bsky-text-primary)" }}>
-              Search Bluesky posts
-            </p>
-            <p
-              className="mt-2 text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
-            >
-              Type a query and press Enter to search
-            </p>
-            <div
-              className="mt-4 text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
-            >
-              <p className="mb-1">Keyboard shortcuts:</p>
-              <p>/ or s - Focus search</p>
-              <p>j/k or arrows - Navigate results</p>
-              <p>Enter - Open post</p>
-            </div>
-          </div>
+          <ExploreEmptyState
+            onTopicClick={(topic) => {
+              setQuery(topic);
+              executeSearch(topic);
+            }}
+            onAccountClick={(handle) => {
+              setQuery(`from:${handle}`);
+              executeSearch(`from:${handle}`);
+            }}
+          />
         )}
 
         {/* Empty State - No Results */}
