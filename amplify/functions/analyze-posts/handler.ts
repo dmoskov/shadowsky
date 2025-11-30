@@ -31,6 +31,127 @@ interface PostData {
   createdAt?: string;
 }
 
+interface TimeSlotAnalysis {
+  hour: number;
+  dayOfWeek: number;
+  postCount: number;
+  totalEngagement: number;
+  avgEngagement: number;
+}
+
+function analyzePostingTimes(posts: PostData[]): {
+  timeSlots: TimeSlotAnalysis[];
+  optimalTimes: {
+    hour: number;
+    dayOfWeek: number;
+    avgEngagement: number;
+    confidence: string;
+  }[];
+  hourlyEngagement: number[];
+  weekdayEngagement: number[];
+} {
+  // Initialize hourly and day-of-week tracking
+  const hourlyData: { count: number; engagement: number }[] = Array(24)
+    .fill(null)
+    .map(() => ({ count: 0, engagement: 0 }));
+  const weekdayData: { count: number; engagement: number }[] = Array(7)
+    .fill(null)
+    .map(() => ({ count: 0, engagement: 0 }));
+  const timeSlotMap = new Map<string, TimeSlotAnalysis>();
+
+  for (const post of posts) {
+    if (!post.createdAt) continue;
+
+    const date = new Date(post.createdAt);
+    const hour = date.getHours();
+    const dayOfWeek = date.getDay(); // 0 = Sunday
+    const engagement =
+      (post.likes || 0) + (post.reposts || 0) + (post.replies || 0);
+
+    // Track hourly data
+    hourlyData[hour].count++;
+    hourlyData[hour].engagement += engagement;
+
+    // Track weekday data
+    weekdayData[dayOfWeek].count++;
+    weekdayData[dayOfWeek].engagement += engagement;
+
+    // Track time slot (hour + day combination)
+    const key = `${dayOfWeek}-${hour}`;
+    if (!timeSlotMap.has(key)) {
+      timeSlotMap.set(key, {
+        hour,
+        dayOfWeek,
+        postCount: 0,
+        totalEngagement: 0,
+        avgEngagement: 0,
+      });
+    }
+    const slot = timeSlotMap.get(key)!;
+    slot.postCount++;
+    slot.totalEngagement += engagement;
+    slot.avgEngagement = slot.totalEngagement / slot.postCount;
+  }
+
+  // Calculate average engagement by hour
+  const hourlyEngagement = hourlyData.map((d) =>
+    d.count > 0 ? d.engagement / d.count : 0,
+  );
+
+  // Calculate average engagement by weekday
+  const weekdayEngagement = weekdayData.map((d) =>
+    d.count > 0 ? d.engagement / d.count : 0,
+  );
+
+  // Find optimal times (top 3 time slots with enough data)
+  const timeSlots = Array.from(timeSlotMap.values())
+    .filter((slot) => slot.postCount >= 2) // Need at least 2 posts for statistical significance
+    .sort((a, b) => b.avgEngagement - a.avgEngagement);
+
+  // Determine confidence based on sample size
+  const getConfidence = (postCount: number): string => {
+    if (postCount >= 10) return "high";
+    if (postCount >= 5) return "medium";
+    return "low";
+  };
+
+  const optimalTimes = timeSlots.slice(0, 3).map((slot) => ({
+    hour: slot.hour,
+    dayOfWeek: slot.dayOfWeek,
+    avgEngagement: Math.round(slot.avgEngagement * 10) / 10,
+    confidence: getConfidence(slot.postCount),
+  }));
+
+  // If we don't have enough time slot data, fall back to best hours
+  if (optimalTimes.length < 3) {
+    const bestHours = hourlyData
+      .map((d, hour) => ({
+        hour,
+        count: d.count,
+        avg: d.count > 0 ? d.engagement / d.count : 0,
+      }))
+      .filter((h) => h.count >= 2)
+      .sort((a, b) => b.avg - a.avg)
+      .slice(0, 3 - optimalTimes.length);
+
+    for (const h of bestHours) {
+      optimalTimes.push({
+        hour: h.hour,
+        dayOfWeek: -1, // -1 indicates "any day"
+        avgEngagement: Math.round(h.avg * 10) / 10,
+        confidence: getConfidence(h.count),
+      });
+    }
+  }
+
+  return {
+    timeSlots,
+    optimalTimes,
+    hourlyEngagement: hourlyEngagement.map((e) => Math.round(e * 10) / 10),
+    weekdayEngagement: weekdayEngagement.map((e) => Math.round(e * 10) / 10),
+  };
+}
+
 interface RequestBody {
   posts?: PostData[];
 }
@@ -51,12 +172,12 @@ export const handler = async (event: any) => {
       logInfo(
         "analyze-posts",
         `Authentication failed: ${auth.error}`,
-        correlationId
+        correlationId,
       );
       return createUnauthorizedResponse(
         auth.error || "Authentication required",
         event,
-        correlationId
+        correlationId,
       );
     }
 
@@ -73,17 +194,21 @@ export const handler = async (event: any) => {
         correlationId,
         {
           retryAfter: rateLimitResult.retryAfter,
-        }
+        },
       );
       return createUserRateLimitResponse(
         event,
         correlationId,
         rateLimitResult.retryAfter,
-        STRICT_USER_RATE_LIMIT.message
+        STRICT_USER_RATE_LIMIT.message,
       );
     }
 
-    logInfo("analyze-posts", `Request authenticated for user: ${userId}`, correlationId);
+    logInfo(
+      "analyze-posts",
+      `Request authenticated for user: ${userId}`,
+      correlationId,
+    );
 
     const body = parseEventBody<RequestBody>(event);
 
@@ -214,16 +339,42 @@ IMPORTANT GUIDELINES:
 
     const data = await response.json();
     const cleanedText = cleanJsonResponse(data.content[0].text);
-    const result = JSON.parse(cleanedText);
+    const aiResult = JSON.parse(cleanedText);
 
-    logInfo("analyze-posts", `Analysis completed successfully for user ${userId}`, correlationId);
+    // Calculate optimal posting times from the raw data
+    const postingTimeData = analyzePostingTimes(postsToAnalyze);
+
+    // Merge AI analysis with posting time analysis
+    const result = {
+      ...aiResult,
+      optimalPostingTimes: {
+        recommendations: postingTimeData.optimalTimes,
+        hourlyEngagement: postingTimeData.hourlyEngagement,
+        weekdayEngagement: postingTimeData.weekdayEngagement,
+        lastCalculated: new Date().toISOString(),
+      },
+    };
+
+    logInfo(
+      "analyze-posts",
+      `Analysis completed successfully for user ${userId}`,
+      correlationId,
+    );
 
     // Add rate limit headers to response
-    const successResponse = createSuccessResponse(result, event, { correlationId });
+    const successResponse = createSuccessResponse(result, event, {
+      correlationId,
+    });
     if (successResponse.headers) {
-      successResponse.headers["X-RateLimit-Limit"] = String(STRICT_USER_RATE_LIMIT.maxRequests);
-      successResponse.headers["X-RateLimit-Remaining"] = String(rateLimitResult.remaining);
-      successResponse.headers["X-RateLimit-Window"] = String(STRICT_USER_RATE_LIMIT.windowMs / 1000);
+      successResponse.headers["X-RateLimit-Limit"] = String(
+        STRICT_USER_RATE_LIMIT.maxRequests,
+      );
+      successResponse.headers["X-RateLimit-Remaining"] = String(
+        rateLimitResult.remaining,
+      );
+      successResponse.headers["X-RateLimit-Window"] = String(
+        STRICT_USER_RATE_LIMIT.windowMs / 1000,
+      );
     }
 
     return successResponse;

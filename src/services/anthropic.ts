@@ -474,11 +474,26 @@ export interface EngagementPatterns {
   suggestions: string[];
 }
 
+export interface OptimalTimeRecommendation {
+  hour: number;
+  dayOfWeek: number; // 0 = Sunday, -1 = any day
+  avgEngagement: number;
+  confidence: "high" | "medium" | "low";
+}
+
+export interface OptimalPostingTimes {
+  recommendations: OptimalTimeRecommendation[];
+  hourlyEngagement: number[];
+  weekdayEngagement: number[];
+  lastCalculated: string;
+}
+
 export interface PostAnalysisResult {
   contentThemes: ContentTheme[];
   writingStyle: WritingStyleAnalysis;
   engagementPatterns: EngagementPatterns;
   summary: string;
+  optimalPostingTimes?: OptimalPostingTimes;
 }
 
 export async function analyzePosts(

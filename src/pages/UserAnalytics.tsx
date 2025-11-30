@@ -14,7 +14,11 @@ import {
 import React, { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
-import { analyzePosts, type PostAnalysisPost } from "../services/anthropic";
+import {
+  analyzePosts,
+  type OptimalTimeRecommendation,
+  type PostAnalysisPost,
+} from "../services/anthropic";
 import { proxifyBskyImage } from "../utils/image-proxy";
 
 type DateRange = "24h" | "7d" | "30d" | "90d";
@@ -1400,6 +1404,118 @@ export const UserAnalytics: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {analysisData.optimalPostingTimes &&
+                analysisData.optimalPostingTimes.recommendations.length > 0 && (
+                  <div
+                    className="rounded-lg p-6"
+                    style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                  >
+                    <h3
+                      className="mb-4 flex items-center gap-2 text-base font-semibold"
+                      style={{ color: "var(--bsky-text-primary)" }}
+                    >
+                      <Clock size={18} className="text-blue-500" />
+                      Optimal Posting Times
+                    </h3>
+                    <p
+                      className="mb-4 text-sm"
+                      style={{ color: "var(--bsky-text-secondary)" }}
+                    >
+                      Based on your last{" "}
+                      {dateRange === "90d"
+                        ? "90 days"
+                        : dateRange === "30d"
+                          ? "30 days"
+                          : dateRange === "7d"
+                            ? "7 days"
+                            : "24 hours"}{" "}
+                      of engagement data
+                    </p>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                      {analysisData.optimalPostingTimes.recommendations.map(
+                        (rec: OptimalTimeRecommendation, i: number) => {
+                          const dayNames = [
+                            "Sunday",
+                            "Monday",
+                            "Tuesday",
+                            "Wednesday",
+                            "Thursday",
+                            "Friday",
+                            "Saturday",
+                          ];
+                          const formatHour = (hour: number) => {
+                            if (hour === 0) return "12:00 AM";
+                            if (hour === 12) return "12:00 PM";
+                            return hour < 12
+                              ? `${hour}:00 AM`
+                              : `${hour - 12}:00 PM`;
+                          };
+                          const confidenceColor =
+                            rec.confidence === "high"
+                              ? "#22c55e"
+                              : rec.confidence === "medium"
+                                ? "#eab308"
+                                : "#94a3b8";
+
+                          return (
+                            <div
+                              key={i}
+                              className="flex flex-col rounded-lg p-4"
+                              style={{
+                                backgroundColor: "var(--bsky-bg-secondary)",
+                                border:
+                                  i === 0
+                                    ? "2px solid var(--bsky-primary)"
+                                    : "1px solid var(--bsky-border-primary)",
+                              }}
+                            >
+                              <div className="mb-2 flex items-center justify-between">
+                                <span
+                                  className="text-xs font-medium"
+                                  style={{
+                                    color: "var(--bsky-text-secondary)",
+                                  }}
+                                >
+                                  {i === 0 ? "Best Time" : `#${i + 1}`}
+                                </span>
+                                <span
+                                  className="rounded-full px-2 py-0.5 text-xs"
+                                  style={{
+                                    backgroundColor: confidenceColor,
+                                    color: "white",
+                                  }}
+                                >
+                                  {rec.confidence}
+                                </span>
+                              </div>
+                              <div
+                                className="text-lg font-bold"
+                                style={{ color: "var(--bsky-text-primary)" }}
+                              >
+                                {formatHour(rec.hour)}
+                              </div>
+                              <div
+                                className="text-sm"
+                                style={{ color: "var(--bsky-text-secondary)" }}
+                              >
+                                {rec.dayOfWeek === -1
+                                  ? "Any day"
+                                  : dayNames[rec.dayOfWeek]}
+                              </div>
+                              <div
+                                className="mt-2 text-xs"
+                                style={{ color: "var(--bsky-primary)" }}
+                              >
+                                ~{rec.avgEngagement} avg engagement
+                              </div>
+                            </div>
+                          );
+                        },
+                      )}
+                    </div>
+                  </div>
+                )}
 
               <button
                 onClick={() => setAnalysisRequested(false)}
