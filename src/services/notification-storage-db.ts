@@ -14,17 +14,21 @@ export class NotificationStorageDB {
   private static instance: NotificationStorageDB;
   private db: IDBDatabase | null = null;
   private readonly DB_NAME = "bsky_notifications_db";
-  private readonly DB_VERSION = 1;
+  private readonly DB_VERSION = 2; // Bumped for compound indexes
 
   // Store names
   private readonly NOTIFICATIONS_STORE = "notifications";
   private readonly META_STORE = "metadata";
 
-  // Index names
+  // Index names (version 1)
   private readonly INDEXED_AT_INDEX = "by_indexed_at";
   private readonly REASON_INDEX = "by_reason";
   private readonly AUTHOR_INDEX = "by_author";
   private readonly IS_READ_INDEX = "by_is_read";
+
+  // Compound index names (version 2)
+  private readonly AUTHOR_INDEXED_AT_INDEX = "by_author_indexed_at";
+  private readonly REASON_INDEXED_AT_INDEX = "by_reason_indexed_at";
 
   private constructor() {}
 

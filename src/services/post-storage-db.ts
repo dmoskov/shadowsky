@@ -54,8 +54,9 @@ export class PostStorageDB {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
+        const oldVersion = event.oldVersion;
 
-        // Create posts store
+        // Create posts store (version 1)
         if (!db.objectStoreNames.contains(POST_STORE)) {
           const postStore = db.createObjectStore(POST_STORE, {
             keyPath: "uri",
@@ -65,9 +66,35 @@ export class PostStorageDB {
           postStore.createIndex("authorDid", "author.did", { unique: false });
         }
 
-        // Create metadata store
+        // Create metadata store (version 1)
         if (!db.objectStoreNames.contains(METADATA_STORE)) {
           db.createObjectStore(METADATA_STORE, { keyPath: "id" });
+        }
+
+        // Version 2: Add compound indexes for O(log n) query performance
+        if (oldVersion < 2) {
+          const transaction = (event.target as IDBOpenDBRequest).transaction;
+          if (transaction) {
+            const postStore = transaction.objectStore(POST_STORE);
+
+            // Compound index: (authorDid, indexedAt) - for author queries sorted by time
+            // Enables efficient "get all posts by author X sorted by date" queries
+            if (!postStore.indexNames.contains(INDEX_AUTHOR_INDEXED_AT)) {
+              postStore.createIndex(
+                INDEX_AUTHOR_INDEXED_AT,
+                ["author.did", "indexedAt"],
+                { unique: false },
+              );
+            }
+
+            // Index: cachedAt - for cache cleanup queries
+            // Enables efficient "delete posts cached before X" queries
+            if (!postStore.indexNames.contains(INDEX_CACHED_AT)) {
+              postStore.createIndex(INDEX_CACHED_AT, "_cachedAt", {
+                unique: false,
+              });
+            }
+          }
         }
       };
     });
@@ -250,7 +277,7 @@ export class PostStorageDB {
     });
   }
 
-  // Delete posts older than a specific date
+  // Delete posts older than a specific date (uses cachedAt index for O(log n) performance)
   async deletePostsOlderThan(date: Date): Promise<number> {
     const db = this.ensureDb();
     const transaction = db.transaction([POST_STORE], "readwrite");
@@ -260,26 +287,167 @@ export class PostStorageDB {
     const cutoffTime = date.getTime();
 
     return new Promise((resolve, reject) => {
-      const request = store.openCursor();
+      // Use cachedAt index if available for O(log n) performance
+      const hasIndex = store.indexNames.contains(INDEX_CACHED_AT);
+      const cursorSource = hasIndex
+        ? store.index(INDEX_CACHED_AT).openCursor(IDBKeyRange.upperBound(cutoffTime))
+        : store.openCursor();
 
-      request.onsuccess = (event) => {
+      cursorSource.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest).result;
 
         if (cursor) {
-          const post = cursor.value;
-          const cachedAt = post._cachedAt || new Date(post.indexedAt).getTime();
-
-          if (cachedAt < cutoffTime) {
+          if (hasIndex) {
+            // Index already filtered, delete all cursor results
             cursor.delete();
             deletedCount++;
+            cursor.continue();
+          } else {
+            // Fallback: manual filtering
+            const post = cursor.value;
+            const cachedAt = post._cachedAt || new Date(post.indexedAt).getTime();
+
+            if (cachedAt < cutoffTime) {
+              cursor.delete();
+              deletedCount++;
+            }
+            cursor.continue();
           }
-          cursor.continue();
         } else {
           resolve(deletedCount);
         }
       };
 
-      request.onerror = () => reject(request.error);
+      cursorSource.onerror = () => reject(cursorSource.error);
+    });
+  }
+
+  // Get posts by author, sorted by indexedAt (uses compound index for O(log n) performance)
+  async getPostsByAuthor(
+    authorDid: string,
+    limit = 100,
+    direction: "prev" | "next" = "prev",
+  ): Promise<Post[]> {
+    const db = this.ensureDb();
+    const transaction = db.transaction([POST_STORE], "readonly");
+    const store = transaction.objectStore(POST_STORE);
+
+    const posts: Post[] = [];
+
+    return new Promise((resolve, reject) => {
+      // Use compound index if available for O(log n) performance
+      const hasCompoundIndex = store.indexNames.contains(INDEX_AUTHOR_INDEXED_AT);
+
+      if (hasCompoundIndex) {
+        // Use compound index: range query on authorDid with natural sorting by indexedAt
+        const index = store.index(INDEX_AUTHOR_INDEXED_AT);
+        // Create a key range that matches all entries for this author
+        const range = IDBKeyRange.bound(
+          [authorDid, ""],
+          [authorDid, "\uffff"],
+        );
+
+        const request = index.openCursor(range, direction);
+
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+
+          if (cursor && posts.length < limit) {
+            const post = cursor.value;
+            delete post._cachedAt;
+            posts.push(post);
+            cursor.continue();
+          } else {
+            resolve(posts);
+          }
+        };
+
+        request.onerror = () => reject(request.error);
+      } else {
+        // Fallback: use single authorDid index (O(n) in worst case)
+        const index = store.index("authorDid");
+        const request = index.openCursor(IDBKeyRange.only(authorDid));
+
+        const allPosts: Post[] = [];
+
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+
+          if (cursor) {
+            const post = cursor.value;
+            delete post._cachedAt;
+            allPosts.push(post);
+            cursor.continue();
+          } else {
+            // Sort manually and return
+            allPosts.sort((a, b) => {
+              const dateA = new Date(a.indexedAt).getTime();
+              const dateB = new Date(b.indexedAt).getTime();
+              return direction === "prev" ? dateB - dateA : dateA - dateB;
+            });
+            resolve(allPosts.slice(0, limit));
+          }
+        };
+
+        request.onerror = () => reject(request.error);
+      }
+    });
+  }
+
+  // Get posts by author within a date range (uses compound index for O(log n) performance)
+  async getPostsByAuthorInRange(
+    authorDid: string,
+    startDate: Date,
+    endDate: Date,
+    limit = 100,
+  ): Promise<Post[]> {
+    const db = this.ensureDb();
+    const transaction = db.transaction([POST_STORE], "readonly");
+    const store = transaction.objectStore(POST_STORE);
+
+    const posts: Post[] = [];
+    const startIso = startDate.toISOString();
+    const endIso = endDate.toISOString();
+
+    return new Promise((resolve, reject) => {
+      const hasCompoundIndex = store.indexNames.contains(INDEX_AUTHOR_INDEXED_AT);
+
+      if (hasCompoundIndex) {
+        // Use compound index with precise date range
+        const index = store.index(INDEX_AUTHOR_INDEXED_AT);
+        const range = IDBKeyRange.bound(
+          [authorDid, startIso],
+          [authorDid, endIso],
+        );
+
+        const request = index.openCursor(range, "prev");
+
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+
+          if (cursor && posts.length < limit) {
+            const post = cursor.value;
+            delete post._cachedAt;
+            posts.push(post);
+            cursor.continue();
+          } else {
+            resolve(posts);
+          }
+        };
+
+        request.onerror = () => reject(request.error);
+      } else {
+        // Fallback: get all posts by author and filter by date
+        this.getPostsByAuthor(authorDid, Infinity)
+          .then((allPosts) => {
+            const filtered = allPosts.filter((post) => {
+              const postDate = post.indexedAt;
+              return postDate >= startIso && postDate <= endIso;
+            });
+            resolve(filtered.slice(0, limit));
+          })
+          .catch(reject);
+      }
     });
   }
 
