@@ -4,21 +4,32 @@ import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow, subDays, subMonths } from "date-fns";
 import {
   ArrowLeft,
+  Bookmark,
+  BookmarkPlus,
   Calendar,
+  Clock,
   ExternalLink,
   FileText,
   Filter,
+  Flame,
   Globe,
   Hash,
   Image,
   Link,
   List,
   Search as SearchIcon,
+  TrendingUp,
   User,
   Users,
   X,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
@@ -55,6 +66,12 @@ interface UserSuggestion {
   displayName?: string;
   avatar?: string;
   interactionScore?: number;
+}
+
+interface SavedSearch {
+  id: string;
+  query: string;
+  createdAt: number;
 }
 
 // Use AppBskyFeedDefs.GeneratorView for feeds
@@ -239,6 +256,61 @@ export const SearchTabbed: React.FC = () => {
       debug.error("Failed to clear search history:", error);
     }
   };
+
+  // Saved searches management
+  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>(() => {
+    try {
+      const saved = localStorage.getItem("bsky-saved-searches");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const saveSearch = useCallback((query: string) => {
+    if (!query.trim()) return;
+
+    setSavedSearches((prev) => {
+      // Don't add duplicates
+      if (prev.some((s) => s.query === query)) return prev;
+
+      const newSearch: SavedSearch = {
+        id: `saved-${Date.now()}`,
+        query: query.trim(),
+        createdAt: Date.now(),
+      };
+      const updated = [newSearch, ...prev].slice(0, 20);
+      try {
+        localStorage.setItem("bsky-saved-searches", JSON.stringify(updated));
+      } catch (error) {
+        debug.error("Failed to save search:", error);
+      }
+      return updated;
+    });
+  }, []);
+
+  const removeSavedSearch = useCallback((id: string) => {
+    setSavedSearches((prev) => {
+      const updated = prev.filter((s) => s.id !== id);
+      try {
+        localStorage.setItem("bsky-saved-searches", JSON.stringify(updated));
+      } catch (error) {
+        debug.error("Failed to remove saved search:", error);
+      }
+      return updated;
+    });
+  }, []);
+
+  const isSearchSaved = useMemo(() => {
+    return savedSearches.some((s) => s.query === filters.query.trim());
+  }, [savedSearches, filters.query]);
+
+  // Main search bar typeahead state
+  const [showMainTypeahead, setShowMainTypeahead] = useState(false);
+  const [mainSearchInputFocused, setMainSearchInputFocused] = useState(false);
+  const mainSearchInputRef = useRef<HTMLInputElement>(null);
+  const mainTypeaheadRef = useRef<HTMLDivElement>(null);
+  const debouncedMainSearch = useDebounce(filters.query, 300);
 
   // Build search query and debounce it for automatic search
   const searchQuery = buildSearchQuery(filters);
@@ -446,6 +518,91 @@ export const SearchTabbed: React.FC = () => {
       setActiveSearchQuery("");
     }
   }, [searchQuery]);
+
+  // Trending topics query for empty state
+  const { data: trendingTopics, isLoading: isLoadingTrending } = useQuery({
+    queryKey: ["trendingTopics"],
+    queryFn: async () => {
+      try {
+        const response =
+          await atProtoClient.agent.app.bsky.unspecced.getTrendingTopics({
+            limit: 10,
+          });
+        return response.data;
+      } catch (error) {
+        debug.error("Error fetching trending topics:", error);
+        return null;
+      }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000,
+  });
+
+  // Main search typeahead query for user suggestions
+  const { data: mainTypeaheadUsers } = useQuery({
+    queryKey: ["mainSearchTypeahead", debouncedMainSearch],
+    queryFn: async () => {
+      if (!debouncedMainSearch || debouncedMainSearch.length < 2) return [];
+
+      try {
+        const response =
+          await atProtoClient.agent.app.bsky.actor.searchActorsTypeahead({
+            q: debouncedMainSearch,
+            limit: 5,
+          });
+
+        return response.data.actors.map((actor) => ({
+          did: actor.did,
+          handle: actor.handle,
+          displayName: actor.displayName,
+          avatar: actor.avatar,
+        }));
+      } catch (error) {
+        debug.error("Error in main search typeahead:", error);
+        return [];
+      }
+    },
+    enabled:
+      !!debouncedMainSearch &&
+      debouncedMainSearch.length >= 2 &&
+      mainSearchInputFocused,
+  });
+
+  // Handle click outside main typeahead
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        mainTypeaheadRef.current &&
+        !mainTypeaheadRef.current.contains(event.target as Node) &&
+        mainSearchInputRef.current &&
+        !mainSearchInputRef.current.contains(event.target as Node)
+      ) {
+        setShowMainTypeahead(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Show typeahead when input is focused and has content or history
+  useEffect(() => {
+    if (
+      mainSearchInputFocused &&
+      (searchHistory.length > 0 ||
+        savedSearches.length > 0 ||
+        (mainTypeaheadUsers && mainTypeaheadUsers.length > 0))
+    ) {
+      setShowMainTypeahead(true);
+    }
+  }, [
+    mainSearchInputFocused,
+    searchHistory,
+    savedSearches,
+    mainTypeaheadUsers,
+  ]);
 
   // Search posts query
   const {
@@ -948,15 +1105,16 @@ export const SearchTabbed: React.FC = () => {
       ) : (
         <>
           {/* Search Input Box */}
-          <div className="bsky-glass mb-6 rounded-xl p-3 sm:p-4">
+          <div className="bsky-glass relative mb-6 rounded-xl p-3 sm:p-4">
             <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-              <div className="flex flex-1 items-center gap-2">
+              <div className="relative flex flex-1 items-center gap-2">
                 <SearchIcon
                   size={20}
                   style={{ color: "var(--bsky-text-secondary)" }}
                   className="hidden sm:block"
                 />
                 <input
+                  ref={mainSearchInputRef}
                   type="text"
                   placeholder={
                     activeTab === "posts"
@@ -969,9 +1127,29 @@ export const SearchTabbed: React.FC = () => {
                   onChange={(e) =>
                     setFilters((prev) => ({ ...prev, query: e.target.value }))
                   }
+                  onFocus={() => {
+                    setMainSearchInputFocused(true);
+                    if (
+                      searchHistory.length > 0 ||
+                      savedSearches.length > 0 ||
+                      filters.query.length >= 2
+                    ) {
+                      setShowMainTypeahead(true);
+                    }
+                  }}
+                  onBlur={() => {
+                    setMainSearchInputFocused(false);
+                    // Delay hiding to allow clicks on typeahead
+                    setTimeout(() => {
+                      setShowMainTypeahead(false);
+                    }, 200);
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
+                      setShowMainTypeahead(false);
                       handleSearch();
+                    } else if (e.key === "Escape") {
+                      setShowMainTypeahead(false);
                     }
                   }}
                   className="flex-1 rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2"
@@ -981,9 +1159,245 @@ export const SearchTabbed: React.FC = () => {
                     color: "var(--bsky-text-primary)",
                     ["--tw-ring-color" as any]: "var(--bsky-primary)",
                   }}
+                  aria-label="Search"
+                  aria-autocomplete="list"
+                  aria-expanded={showMainTypeahead}
                 />
+
+                {/* Typeahead Dropdown */}
+                {showMainTypeahead &&
+                  (searchHistory.length > 0 ||
+                    savedSearches.length > 0 ||
+                    (mainTypeaheadUsers && mainTypeaheadUsers.length > 0)) && (
+                    <div
+                      ref={mainTypeaheadRef}
+                      className="absolute left-0 right-0 top-full z-50 mt-1 max-h-80 overflow-y-auto rounded-lg border shadow-lg sm:left-8"
+                      style={{
+                        backgroundColor: "var(--bsky-bg-secondary)",
+                        borderColor: "var(--bsky-border-primary)",
+                      }}
+                      role="listbox"
+                    >
+                      {/* Saved Searches Section */}
+                      {savedSearches.length > 0 && (
+                        <div
+                          className="border-b"
+                          style={{ borderColor: "var(--bsky-border-primary)" }}
+                        >
+                          <div className="flex items-center justify-between px-3 py-2">
+                            <span
+                              className="flex items-center gap-1.5 text-xs font-medium"
+                              style={{ color: "var(--bsky-text-secondary)" }}
+                            >
+                              <Bookmark size={12} />
+                              Saved Searches
+                            </span>
+                          </div>
+                          {savedSearches.slice(0, 5).map((saved) => (
+                            <div
+                              key={saved.id}
+                              className="flex cursor-pointer items-center justify-between px-3 py-2 transition-colors hover:bg-white hover:bg-opacity-5"
+                              role="option"
+                            >
+                              <button
+                                className="flex flex-1 items-center gap-2 text-left"
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    query: saved.query,
+                                  }));
+                                  setActiveSearchQuery(saved.query);
+                                  setShowMainTypeahead(false);
+                                }}
+                              >
+                                <Bookmark
+                                  size={14}
+                                  style={{ color: "var(--bsky-primary)" }}
+                                />
+                                <span
+                                  className="text-sm"
+                                  style={{ color: "var(--bsky-text-primary)" }}
+                                >
+                                  {saved.query}
+                                </span>
+                              </button>
+                              <button
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  removeSavedSearch(saved.id);
+                                }}
+                                className="rounded p-1 transition-opacity hover:opacity-70"
+                                style={{ color: "var(--bsky-text-secondary)" }}
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Recent Searches Section */}
+                      {searchHistory.length > 0 && (
+                        <div
+                          className="border-b"
+                          style={{ borderColor: "var(--bsky-border-primary)" }}
+                        >
+                          <div className="flex items-center justify-between px-3 py-2">
+                            <span
+                              className="flex items-center gap-1.5 text-xs font-medium"
+                              style={{ color: "var(--bsky-text-secondary)" }}
+                            >
+                              <Clock size={12} />
+                              Recent
+                            </span>
+                            <button
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                clearSearchHistory();
+                              }}
+                              className="text-xs transition-opacity hover:opacity-70"
+                              style={{ color: "var(--bsky-text-secondary)" }}
+                            >
+                              Clear
+                            </button>
+                          </div>
+                          {searchHistory.slice(0, 5).map((query, idx) => (
+                            <button
+                              key={idx}
+                              className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-white hover:bg-opacity-5"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setFilters((prev) => ({ ...prev, query }));
+                                setActiveSearchQuery(query);
+                                setShowMainTypeahead(false);
+                              }}
+                              role="option"
+                            >
+                              <Clock
+                                size={14}
+                                style={{ color: "var(--bsky-text-tertiary)" }}
+                              />
+                              <span
+                                className="text-sm"
+                                style={{ color: "var(--bsky-text-primary)" }}
+                              >
+                                {query}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* User Suggestions Section */}
+                      {mainTypeaheadUsers && mainTypeaheadUsers.length > 0 && (
+                        <div>
+                          <div className="px-3 py-2">
+                            <span
+                              className="flex items-center gap-1.5 text-xs font-medium"
+                              style={{ color: "var(--bsky-text-secondary)" }}
+                            >
+                              <User size={12} />
+                              Users
+                            </span>
+                          </div>
+                          {mainTypeaheadUsers.map((user) => (
+                            <button
+                              key={user.did}
+                              className="flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-white hover:bg-opacity-5"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                navigate(`/profile/${user.handle}`);
+                                setShowMainTypeahead(false);
+                              }}
+                              role="option"
+                            >
+                              {user.avatar ? (
+                                <img
+                                  src={proxifyBskyImage(user.avatar)}
+                                  alt=""
+                                  className="h-8 w-8 rounded-full"
+                                />
+                              ) : (
+                                <div
+                                  className="flex h-8 w-8 items-center justify-center rounded-full"
+                                  style={{
+                                    backgroundColor: "var(--bsky-bg-tertiary)",
+                                  }}
+                                >
+                                  <User
+                                    size={16}
+                                    style={{
+                                      color: "var(--bsky-text-secondary)",
+                                    }}
+                                  />
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <div
+                                  className="truncate text-sm font-medium"
+                                  style={{ color: "var(--bsky-text-primary)" }}
+                                >
+                                  {user.displayName || user.handle}
+                                </div>
+                                <div
+                                  className="truncate text-xs"
+                                  style={{
+                                    color: "var(--bsky-text-secondary)",
+                                  }}
+                                >
+                                  @{user.handle}
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
               </div>
               <div className="flex gap-2">
+                {/* Save Search Button */}
+                {filters.query.trim() && (
+                  <button
+                    onClick={() => {
+                      if (isSearchSaved) {
+                        const saved = savedSearches.find(
+                          (s) => s.query === filters.query.trim(),
+                        );
+                        if (saved) removeSavedSearch(saved.id);
+                      } else {
+                        saveSearch(filters.query.trim());
+                      }
+                    }}
+                    className="flex items-center justify-center rounded-lg px-2 py-2 transition-all hover:opacity-80"
+                    style={{
+                      backgroundColor: isSearchSaved
+                        ? "var(--bsky-primary)"
+                        : "var(--bsky-bg-secondary)",
+                      color: isSearchSaved
+                        ? "white"
+                        : "var(--bsky-text-secondary)",
+                      borderWidth: "1px",
+                      borderColor: isSearchSaved
+                        ? "var(--bsky-primary)"
+                        : "var(--bsky-border-primary)",
+                    }}
+                    title={isSearchSaved ? "Remove from saved" : "Save search"}
+                    aria-label={
+                      isSearchSaved
+                        ? "Remove from saved searches"
+                        : "Save this search"
+                    }
+                  >
+                    {isSearchSaved ? (
+                      <Bookmark size={16} />
+                    ) : (
+                      <BookmarkPlus size={16} />
+                    )}
+                  </button>
+                )}
                 <button
                   onClick={handleSearch}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all sm:flex-none sm:px-4"
@@ -1059,6 +1473,160 @@ export const SearchTabbed: React.FC = () => {
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Trending Topics Section - Show when no active search */}
+          {!activeSearchQuery && trendingTopics && (
+            <div className="bsky-glass mb-6 rounded-xl p-4">
+              <div className="mb-4 flex items-center gap-2">
+                <TrendingUp
+                  size={20}
+                  style={{ color: "var(--bsky-primary)" }}
+                />
+                <h2
+                  className="text-base font-semibold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  Trending on Bluesky
+                </h2>
+              </div>
+
+              {isLoadingTrending ? (
+                <div className="flex items-center justify-center py-4">
+                  <div
+                    className="h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"
+                    style={{ borderColor: "var(--bsky-primary)" }}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Main trending topics */}
+                  {trendingTopics.topics &&
+                    trendingTopics.topics.length > 0 && (
+                      <div>
+                        <div className="mb-2 flex items-center gap-1.5">
+                          <Flame
+                            size={14}
+                            style={{ color: "var(--bsky-error)" }}
+                          />
+                          <span
+                            className="text-xs font-medium"
+                            style={{ color: "var(--bsky-text-secondary)" }}
+                          >
+                            Hot right now
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {trendingTopics.topics
+                            .slice(0, 8)
+                            .map((topic, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => {
+                                  const searchTerm =
+                                    topic.displayName || topic.topic;
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    query: searchTerm,
+                                  }));
+                                  setActiveSearchQuery(searchTerm);
+                                  addToSearchHistory(searchTerm);
+                                }}
+                                className="group flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-all hover:shadow-md"
+                                style={{
+                                  backgroundColor: "var(--bsky-bg-secondary)",
+                                  borderWidth: "1px",
+                                  borderColor: "var(--bsky-border-primary)",
+                                }}
+                              >
+                                <Hash
+                                  size={14}
+                                  className="transition-colors group-hover:text-[var(--bsky-primary)]"
+                                  style={{ color: "var(--bsky-text-tertiary)" }}
+                                />
+                                <span
+                                  className="font-medium transition-colors group-hover:text-[var(--bsky-primary)]"
+                                  style={{ color: "var(--bsky-text-primary)" }}
+                                >
+                                  {topic.displayName || topic.topic}
+                                </span>
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Suggested topics */}
+                  {trendingTopics.suggested &&
+                    trendingTopics.suggested.length > 0 && (
+                      <div className="mt-4">
+                        <div className="mb-2 flex items-center gap-1.5">
+                          <TrendingUp
+                            size={14}
+                            style={{ color: "var(--bsky-text-secondary)" }}
+                          />
+                          <span
+                            className="text-xs font-medium"
+                            style={{ color: "var(--bsky-text-secondary)" }}
+                          >
+                            Suggested for you
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {trendingTopics.suggested
+                            .slice(0, 6)
+                            .map((topic, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => {
+                                  const searchTerm =
+                                    topic.displayName || topic.topic;
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    query: searchTerm,
+                                  }));
+                                  setActiveSearchQuery(searchTerm);
+                                  addToSearchHistory(searchTerm);
+                                }}
+                                className="group flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-all hover:opacity-80"
+                                style={{
+                                  backgroundColor: "transparent",
+                                  borderWidth: "1px",
+                                  borderColor: "var(--bsky-border-primary)",
+                                }}
+                              >
+                                <Hash
+                                  size={12}
+                                  style={{ color: "var(--bsky-text-tertiary)" }}
+                                />
+                                <span
+                                  style={{
+                                    color: "var(--bsky-text-secondary)",
+                                  }}
+                                >
+                                  {topic.displayName || topic.topic}
+                                </span>
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Empty state if no topics */}
+                  {(!trendingTopics.topics ||
+                    trendingTopics.topics.length === 0) &&
+                    (!trendingTopics.suggested ||
+                      trendingTopics.suggested.length === 0) && (
+                      <div
+                        className="py-4 text-center text-sm"
+                        style={{ color: "var(--bsky-text-secondary)" }}
+                      >
+                        No trending topics available right now
+                      </div>
+                    )}
+                </div>
+              )}
             </div>
           )}
 

@@ -64,6 +64,70 @@ export default defineConfig({
               },
             },
           },
+          // AT Protocol API - Network first with offline fallback
+          {
+            urlPattern:
+              /^https:\/\/(bsky\.social|public\.api\.bsky\.app)\/xrpc\/(app\.bsky\.feed|app\.bsky\.actor|app\.bsky\.notification|app\.bsky\.graph)\..*/i,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "bsky-api-cache",
+              networkTimeoutSeconds: 10,
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60, // 1 hour
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          // Bluesky Chat API - Network first with shorter cache for DMs
+          {
+            urlPattern:
+              /^https:\/\/api\.bsky\.chat\/xrpc\/chat\.bsky\.convo\..*/i,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "bsky-chat-cache",
+              networkTimeoutSeconds: 10,
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 15, // 15 minutes for DMs
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          // Bluesky CDN images - Cache first (immutable content)
+          {
+            urlPattern: /^https:\/\/cdn\.bsky\.app\/img\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "bsky-cdn-images",
+              expiration: {
+                maxEntries: 500,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          // Bluesky avatar images - Stale while revalidate (may change)
+          {
+            urlPattern: /^https:\/\/cdn\.bsky\.app\/img\/avatar.*/i,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "bsky-avatar-cache",
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
         ],
         // Precache static assets from build
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],

@@ -2,15 +2,23 @@
  * Service Worker Registration Utility
  *
  * Handles PWA service worker registration, updates, and lifecycle events.
- * Uses Workbox for caching strategies with stale-while-revalidate for static assets.
+ * Uses Workbox for caching strategies with network-first for API responses
+ * and stale-while-revalidate for static assets.
  *
  * Features:
  * - Manual registration with update prompts
  * - Cache size monitoring (50MB limit)
  * - Graceful update handling
  * - Event callbacks for UI integration
+ * - Offline-first API response caching
+ * - Cache eviction policy management
  */
 
+import {
+  apiCacheService,
+  type OfflineStatus,
+} from "../services/api-cache-service";
+import { offlineStorageDB } from "../services/offline-storage-db";
 import { createLogger } from "./logger";
 
 const logger = createLogger("ServiceWorker");
@@ -18,10 +26,14 @@ const logger = createLogger("ServiceWorker");
 // Cache size limit: 50MB
 const CACHE_SIZE_LIMIT = 50 * 1024 * 1024;
 
+// Cache eviction interval: run every 30 minutes
+const EVICTION_INTERVAL_MS = 30 * 60 * 1000;
+
 export interface ServiceWorkerCallbacks {
   onUpdate?: (registration: ServiceWorkerRegistration) => void;
   onSuccess?: (registration: ServiceWorkerRegistration) => void;
   onOfflineReady?: () => void;
+  onOfflineStatusChange?: (status: OfflineStatus) => void;
   onError?: (error: Error) => void;
 }
 
@@ -29,16 +41,93 @@ export interface ServiceWorkerState {
   isSupported: boolean;
   isRegistered: boolean;
   isUpdateAvailable: boolean;
+  isOnline: boolean;
+  hasCachedContent: boolean;
   registration: ServiceWorkerRegistration | null;
 }
 
 let swRegistration: ServiceWorkerRegistration | null = null;
+let evictionIntervalId: ReturnType<typeof setInterval> | null = null;
+let hasCachedContent = false;
 
 /**
  * Check if service workers are supported in this browser
  */
 export function isServiceWorkerSupported(): boolean {
   return "serviceWorker" in navigator;
+}
+
+/**
+ * Initialize offline storage services
+ */
+async function initOfflineServices(): Promise<void> {
+  try {
+    await Promise.all([apiCacheService.init(), offlineStorageDB.init()]);
+    logger.info("Offline services initialized");
+  } catch (error) {
+    logger.error("Failed to initialize offline services:", error);
+  }
+}
+
+/**
+ * Run cache eviction policies periodically
+ */
+async function runEvictionPolicies(): Promise<void> {
+  try {
+    // Run API cache eviction
+    const apiResults = await apiCacheService.runEvictionPolicies();
+    if (apiResults.length > 0) {
+      const totalRemoved = apiResults.reduce(
+        (sum, r) => sum + r.entriesRemoved,
+        0,
+      );
+      logger.info(`API cache eviction: removed ${totalRemoved} entries`);
+    }
+
+    // Run offline storage eviction
+    await offlineStorageDB.enforceStorageLimits();
+  } catch (error) {
+    logger.error("Cache eviction failed:", error);
+  }
+}
+
+/**
+ * Start periodic cache eviction
+ */
+function startEvictionScheduler(): void {
+  if (evictionIntervalId) {
+    clearInterval(evictionIntervalId);
+  }
+
+  // Run initial eviction
+  runEvictionPolicies();
+
+  // Schedule periodic eviction
+  evictionIntervalId = setInterval(runEvictionPolicies, EVICTION_INTERVAL_MS);
+  logger.info("Cache eviction scheduler started");
+}
+
+/**
+ * Stop periodic cache eviction
+ */
+function stopEvictionScheduler(): void {
+  if (evictionIntervalId) {
+    clearInterval(evictionIntervalId);
+    evictionIntervalId = null;
+    logger.info("Cache eviction scheduler stopped");
+  }
+}
+
+/**
+ * Update cached content status
+ */
+async function updateCachedContentStatus(): Promise<void> {
+  const [hasFeeds, hasDMs, hasOfflineFeeds] = await Promise.all([
+    apiCacheService.hasCachedFeeds(),
+    apiCacheService.hasCachedDMs(),
+    offlineStorageDB.hasFeedItems(),
+  ]);
+  hasCachedContent = hasFeeds || hasDMs || hasOfflineFeeds;
 }
 
 /**
@@ -53,6 +142,9 @@ export async function registerServiceWorker(
   }
 
   try {
+    // Initialize offline services first
+    await initOfflineServices();
+
     // Import workbox-window for registration handling
     const { Workbox } = await import("workbox-window");
 
@@ -90,6 +182,9 @@ export async function registerServiceWorker(
       } else {
         logger.info("Service worker activated");
       }
+
+      // Update cached content status after activation
+      updateCachedContentStatus();
     });
 
     // Handle controlling
@@ -102,6 +197,11 @@ export async function registerServiceWorker(
       logger.warn("Service worker became redundant");
     });
 
+    // Set up offline status change listener
+    if (callbacks.onOfflineStatusChange) {
+      apiCacheService.onOfflineStatusChange(callbacks.onOfflineStatusChange);
+    }
+
     // Register the service worker
     const registration = await wb.register();
     swRegistration = registration ?? null;
@@ -109,6 +209,12 @@ export async function registerServiceWorker(
     if (registration) {
       logger.info("Service worker registered successfully");
       callbacks.onSuccess?.(registration);
+
+      // Start cache eviction scheduler
+      startEvictionScheduler();
+
+      // Update cached content status
+      await updateCachedContentStatus();
 
       // Check for updates periodically (every hour)
       setInterval(
@@ -139,6 +245,9 @@ export async function unregisterServiceWorker(): Promise<boolean> {
   }
 
   try {
+    // Stop eviction scheduler
+    stopEvictionScheduler();
+
     const registrations = await navigator.serviceWorker.getRegistrations();
     await Promise.all(registrations.map((reg) => reg.unregister()));
     logger.info("All service workers unregistered");
@@ -285,6 +394,64 @@ export function getServiceWorkerState(): ServiceWorkerState {
     isSupported: isServiceWorkerSupported(),
     isRegistered: swRegistration !== null,
     isUpdateAvailable: isUpdateAvailable(),
+    isOnline: navigator.onLine,
+    hasCachedContent,
     registration: swRegistration,
   };
 }
+
+/**
+ * Get offline status including cache availability
+ */
+export async function getOfflineStatus(): Promise<OfflineStatus> {
+  return apiCacheService.getOfflineStatus();
+}
+
+/**
+ * Get detailed cache statistics
+ */
+export async function getAPICacheStats(): Promise<
+  Array<{ name: string; entryCount: number; estimatedSize: number }>
+> {
+  return apiCacheService.getCacheStats();
+}
+
+/**
+ * Get offline storage statistics
+ */
+export async function getOfflineStorageStats(): Promise<{
+  feedItemCount: number;
+  conversationCount: number;
+  messageCount: number;
+  lastFeedSync: number | null;
+  lastDMSync: number | null;
+  storageEstimate: number;
+}> {
+  return offlineStorageDB.getStats();
+}
+
+/**
+ * Manually trigger cache eviction
+ */
+export async function triggerCacheEviction(): Promise<void> {
+  await runEvictionPolicies();
+}
+
+/**
+ * Clear API-related caches (preserves static assets)
+ */
+export async function clearAPICaches(): Promise<boolean> {
+  return apiCacheService.clearAllAPICaches();
+}
+
+/**
+ * Clear offline storage data
+ */
+export async function clearOfflineStorage(): Promise<void> {
+  await offlineStorageDB.clearAll();
+  hasCachedContent = false;
+}
+
+// Re-export types and constants for convenience
+export { CACHE_NAMES, type OfflineStatus } from "../services/api-cache-service";
+export { offlineStorageDB } from "../services/offline-storage-db";
