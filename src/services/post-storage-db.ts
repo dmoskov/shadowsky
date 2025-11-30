@@ -10,9 +10,13 @@ interface PostMetadata {
 }
 
 const DB_NAME = "BskyPostCache";
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Bumped for compound indexes
 const POST_STORE = "posts";
 const METADATA_STORE = "metadata";
+
+// Index names for compound indexes
+const INDEX_AUTHOR_INDEXED_AT = "authorDid_indexedAt";
+const INDEX_CACHED_AT = "cachedAt";
 
 // localStorage keys for migration
 const POST_CACHE_KEY = "bsky_notification_posts_";

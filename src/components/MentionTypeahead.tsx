@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import React, {
   forwardRef,
   useEffect,
+  useId,
   useImperativeHandle,
   useRef,
   useState,
@@ -104,6 +105,11 @@ export const MentionTypeahead = forwardRef<
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
+
+    // Generate unique IDs for ARIA attributes
+    const instanceId = useId();
+    const listboxId = `mention-listbox-${instanceId}`;
+    const getOptionId = (index: number) => `mention-option-${instanceId}-${index}`;
 
     const [mentionQuery, setMentionQuery] = useState("");
     const [mentionStartPos, setMentionStartPos] = useState<number | null>(null);
@@ -316,6 +322,16 @@ export const MentionTypeahead = forwardRef<
           rows={rows}
           autoFocus={autoFocus}
           maxLength={maxLength}
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={showSuggestions && suggestions.length > 0}
+          aria-controls={showSuggestions ? listboxId : undefined}
+          aria-activedescendant={
+            showSuggestions && suggestions.length > 0
+              ? getOptionId(selectedIndex)
+              : undefined
+          }
+          aria-haspopup="listbox"
         />
 
         {/* Suggestions dropdown - rendered via portal to avoid overflow clipping */}
@@ -324,6 +340,9 @@ export const MentionTypeahead = forwardRef<
           ReactDOM.createPortal(
             <div
               ref={suggestionsRef}
+              id={listboxId}
+              role="listbox"
+              aria-label="User suggestions"
               className="fixed z-[9999] max-h-[240px] w-[280px] overflow-y-auto rounded-lg border shadow-lg"
               style={{
                 top: dropdownPosition.top,
@@ -343,6 +362,9 @@ export const MentionTypeahead = forwardRef<
               {suggestions.map((suggestion, index) => (
                 <button
                   key={suggestion.did}
+                  id={getOptionId(index)}
+                  role="option"
+                  aria-selected={index === selectedIndex}
                   data-index={index}
                   onClick={() => selectSuggestion(suggestion)}
                   className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors"

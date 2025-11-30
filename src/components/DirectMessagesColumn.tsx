@@ -53,6 +53,7 @@ export const DirectMessagesColumn: React.FC = () => {
   }, []);
 
   // Set up activity tracking
+  // Cleanup and re-add listeners when selectedConversation changes to prevent accumulation
   useEffect(() => {
     const events = ["mousedown", "keydown", "touchstart", "scroll"];
 
@@ -65,7 +66,7 @@ export const DirectMessagesColumn: React.FC = () => {
         window.removeEventListener(event, updateActivity);
       });
     };
-  }, [updateActivity]);
+  }, [updateActivity, selectedConversation]);
 
   // Fetch conversations list with dynamic polling
   const {

@@ -23,7 +23,8 @@ interface RichTextProps {
 }
 
 // Convert byte offset to character offset for proper slicing
-function byteToCharOffset(text: string, byteOffset: number): number {
+// Exported for testing purposes
+export function byteToCharOffset(text: string, byteOffset: number): number {
   const encoder = new TextEncoder();
   let byteCount = 0;
   let charCount = 0;
