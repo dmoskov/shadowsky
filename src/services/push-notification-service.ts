@@ -128,14 +128,17 @@ class PushNotificationService {
       };
     }
 
-    const permission = Notification.permission as
-      | "prompt"
-      | "granted"
-      | "denied";
+    // Notification.permission returns "default" | "granted" | "denied"
+    // Map "default" to "prompt" for our internal state
+    const rawPermission = Notification.permission;
+    const permission =
+      rawPermission === "default"
+        ? "prompt"
+        : (rawPermission as "granted" | "denied");
 
     return {
       isSupported: true,
-      permission: permission === "default" ? "prompt" : permission,
+      permission,
       isSubscribed: !!this.subscription,
       subscription: this.subscription,
     };
@@ -190,10 +193,12 @@ class PushNotificationService {
 
     try {
       // Subscribe to push manager
+      const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
       const subscription =
         await this.serviceWorkerRegistration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+          // Cast to unknown first to handle TypeScript's strict ArrayBuffer typing
+          applicationServerKey: applicationServerKey as unknown as BufferSource,
         });
 
       this.subscription = subscription;
@@ -306,7 +311,14 @@ class PushNotificationService {
       silent = false,
     } = payload;
 
-    const options: NotificationOptions = {
+    // Extended NotificationOptions for service worker showNotification
+    // These properties are supported but not in TypeScript's lib.dom.d.ts
+    interface ExtendedNotificationOptions extends NotificationOptions {
+      actions?: Array<{ action: string; title: string; icon?: string }>;
+      vibrate?: number[];
+    }
+
+    const options: ExtendedNotificationOptions = {
       body,
       icon,
       badge,
@@ -324,7 +336,10 @@ class PushNotificationService {
       options.vibrate = [200, 100, 200];
     }
 
-    await this.serviceWorkerRegistration.showNotification(title, options);
+    await this.serviceWorkerRegistration.showNotification(
+      title,
+      options as NotificationOptions,
+    );
   }
 
   /**
