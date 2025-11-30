@@ -52,8 +52,6 @@ export async function registerServiceWorker(
     return null;
   }
 
-  updateCallback = callbacks.onUpdate ?? null;
-
   try {
     // Import workbox-window for registration handling
     const { Workbox } = await import("workbox-window");
@@ -179,7 +177,9 @@ export function getRegistration(): ServiceWorkerRegistration | null {
  * Check if there's an update available
  */
 export function isUpdateAvailable(): boolean {
-  return swRegistration?.waiting !== null && swRegistration?.waiting !== undefined;
+  return (
+    swRegistration?.waiting !== null && swRegistration?.waiting !== undefined
+  );
 }
 
 /**

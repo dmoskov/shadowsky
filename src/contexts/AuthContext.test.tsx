@@ -1,7 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import React from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "./AuthContext";
 
 // Mock dependencies
@@ -147,6 +146,7 @@ const mockSession = {
   active: true,
 };
 
+// Mock OAuth state - using type assertion since we're mocking the interface
 const mockOAuthState = {
   agent: {
     getProfile: vi.fn().mockResolvedValue({
@@ -156,10 +156,10 @@ const mockOAuthState = {
   did: "did:plc:oauth123",
   handle: "oauth.test.bsky.social",
   session: { did: "did:plc:oauth123" },
-};
+} as any;
 
-// Original location.href
-const originalLocation = window.location;
+// Store original location
+const originalLocationHref = window.location.href;
 
 describe("AuthContext", () => {
   beforeEach(() => {
@@ -170,13 +170,29 @@ describe("AuthContext", () => {
     vi.mocked(oauthService.isAvailable).mockReturnValue(false);
     vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(null);
 
-    // Mock window.location
-    delete (window as any).location;
-    window.location = { ...originalLocation, href: "/" } as Location;
+    // Mock window.location.href setter - replaceProperty doesn't work well with location
+    // so we just set it directly since we're in jsdom
+    Object.defineProperty(window, "location", {
+      value: {
+        ...window.location,
+        href: "/",
+        assign: vi.fn(),
+        replace: vi.fn(),
+        reload: vi.fn(),
+      },
+      writable: true,
+    });
   });
 
   afterEach(() => {
-    window.location = originalLocation;
+    // Reset location
+    Object.defineProperty(window, "location", {
+      value: {
+        ...window.location,
+        href: originalLocationHref,
+      },
+      writable: true,
+    });
   });
 
   describe("useAuth hook", () => {
@@ -191,8 +207,7 @@ describe("AuthContext", () => {
     it("should start with loading state", async () => {
       // Delay the init to observe loading state
       vi.mocked(oauthService.init).mockImplementation(
-        () =>
-          new Promise((resolve) => setTimeout(() => resolve(null), 100)),
+        () => new Promise((resolve) => setTimeout(() => resolve(null), 100)),
       );
 
       const { result } = renderHook(() => useAuth(), {
@@ -289,10 +304,15 @@ describe("AuthContext", () => {
     });
 
     it("should fetch handle from profile when not provided by OAuth state", async () => {
+      const mockGetProfile = vi.fn().mockResolvedValue({
+        data: { handle: "oauth.test.bsky.social", displayName: "OAuth User" },
+      });
       const stateWithoutHandle = {
-        ...mockOAuthState,
+        agent: { getProfile: mockGetProfile },
+        did: "did:plc:oauth123",
         handle: undefined,
-      };
+        session: { did: "did:plc:oauth123" },
+      } as any;
       vi.mocked(oauthService.handleCallback).mockResolvedValue(
         stateWithoutHandle,
       );
@@ -309,7 +329,7 @@ describe("AuthContext", () => {
         await result.current.handleOAuthCallback();
       });
 
-      expect(stateWithoutHandle.agent.getProfile).toHaveBeenCalledWith({
+      expect(mockGetProfile).toHaveBeenCalledWith({
         actor: "did:plc:oauth123",
       });
       expect(result.current.session?.handle).toBe("oauth.test.bsky.social");
@@ -662,7 +682,10 @@ describe("AuthContext", () => {
     it("should login with app password successfully", async () => {
       vi.mocked(atProtoClient.login).mockResolvedValue(mockSession);
       vi.mocked(atProtoClient.agent.getProfile).mockResolvedValue({
-        data: { displayName: "Test User", avatar: "https://example.com/avatar.jpg" },
+        data: {
+          displayName: "Test User",
+          avatar: "https://example.com/avatar.jpg",
+        },
       } as any);
 
       const { result } = renderHook(() => useAuth(), {
