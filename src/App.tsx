@@ -22,6 +22,7 @@ import { NotificationPermissionPrompt } from "./components/NotificationPermissio
 import { OAuthCallback } from "./components/OAuthCallback";
 import { StorageErrorProvider } from "./components/providers/StorageErrorProvider";
 import { RateLimitStatus } from "./components/RateLimitStatus";
+import { ServiceWorkerUpdatePrompt } from "./components/ServiceWorkerUpdatePrompt";
 import { Sidebar } from "./components/Sidebar";
 import { SwipeIndicator } from "./components/SwipeIndicator";
 import { AriaLiveProvider } from "./components/ui/AriaLiveRegion";
@@ -493,6 +494,7 @@ function AppContent() {
         isOpen={isShortcutsHelpOpen}
         onClose={() => setIsShortcutsHelpOpen(false)}
       />
+      <ServiceWorkerUpdatePrompt />
     </div>
   );
 }
