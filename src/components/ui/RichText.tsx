@@ -22,20 +22,24 @@ interface RichTextProps {
   style?: React.CSSProperties;
 }
 
-// Convert byte offset to character offset for proper slicing
+// Convert byte offset to JavaScript string index for proper slicing
+// This handles UTF-8 multi-byte characters (emoji, CJK, etc.) correctly.
+// Returns the string index (compatible with String.slice()) not codepoint count.
 // Exported for testing purposes
 export function byteToCharOffset(text: string, byteOffset: number): number {
   const encoder = new TextEncoder();
   let byteCount = 0;
-  let charCount = 0;
+  let stringIndex = 0;
 
-  for (const char of text) {
+  // Iterate by codepoint (handles surrogate pairs as single units)
+  for (const codepoint of text) {
     if (byteCount >= byteOffset) break;
-    byteCount += encoder.encode(char).length;
-    charCount++;
+    byteCount += encoder.encode(codepoint).length;
+    // codepoint.length gives the actual JS string length (1 for BMP, 2 for surrogate pairs)
+    stringIndex += codepoint.length;
   }
 
-  return charCount;
+  return stringIndex;
 }
 
 export const RichText: React.FC<RichTextProps> = ({

@@ -98,6 +98,7 @@ Consequences:
 Date: 2025-11-29
 Status: Accepted
 Context: The trending topics feature required a decision on data source. Options were:
+
 1. Global ATProto firehose processing (build our own trending aggregation)
 2. User's network only (trends from followed accounts)
 3. Hybrid approach with both
@@ -108,6 +109,7 @@ The firehose approach would require significant bandwidth, processing resources,
 Decision: Use Bluesky's existing public trending API endpoints instead of building custom firehose processing.
 
 Available endpoints:
+
 - `app.bsky.unspecced.getTrendingTopics` - Returns trending topics and suggested feeds
   - Public endpoint: `https://public.api.bsky.app/xrpc/app.bsky.unspecced.getTrendingTopics`
   - Parameters: `limit` (1-25, default 10), `viewer` (DID for personalized ranking)
@@ -123,6 +125,7 @@ Available endpoints:
 Note: These endpoints are in the `unspecced` namespace, indicating they may change without formal API stability guarantees. However, they are actively used by the official Bluesky client.
 
 Consequences:
+
 - Significantly reduced implementation complexity (no firehose processing needed)
 - No additional infrastructure or storage requirements
 - Real-time trending data maintained by Bluesky
@@ -132,6 +135,7 @@ Consequences:
 - Can still add personalized trending from user's network as enhancement later
 
 References:
+
 - User decision: "Try to find an available api resource for this rather than creating our own source"
 - GitHub Discussion: https://github.com/bluesky-social/atproto/discussions/3822
 - Lexicon: https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/unspecced/getTrendingTopics.json

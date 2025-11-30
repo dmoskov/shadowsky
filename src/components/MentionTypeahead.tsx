@@ -109,7 +109,8 @@ export const MentionTypeahead = forwardRef<
     // Generate unique IDs for ARIA attributes
     const instanceId = useId();
     const listboxId = `mention-listbox-${instanceId}`;
-    const getOptionId = (index: number) => `mention-option-${instanceId}-${index}`;
+    const getOptionId = (index: number) =>
+      `mention-option-${instanceId}-${index}`;
 
     const [mentionQuery, setMentionQuery] = useState("");
     const [mentionStartPos, setMentionStartPos] = useState<number | null>(null);

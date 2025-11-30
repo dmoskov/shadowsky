@@ -55,8 +55,9 @@ export class NotificationStorageDB {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
+        const oldVersion = event.oldVersion;
 
-        // Create notifications store
+        // Create notifications store (version 1)
         if (!db.objectStoreNames.contains(this.NOTIFICATIONS_STORE)) {
           const notificationsStore = db.createObjectStore(
             this.NOTIFICATIONS_STORE,
@@ -80,9 +81,45 @@ export class NotificationStorageDB {
           });
         }
 
-        // Create metadata store
+        // Create metadata store (version 1)
         if (!db.objectStoreNames.contains(this.META_STORE)) {
           db.createObjectStore(this.META_STORE, { keyPath: "id" });
+        }
+
+        // Version 2: Add compound indexes for O(log n) query performance
+        if (oldVersion < 2) {
+          const transaction = (event.target as IDBOpenDBRequest).transaction;
+          if (transaction) {
+            const notificationsStore = transaction.objectStore(
+              this.NOTIFICATIONS_STORE,
+            );
+
+            // Compound index: (authorDid, indexedAt) - for author queries sorted by time
+            if (
+              !notificationsStore.indexNames.contains(
+                this.AUTHOR_INDEXED_AT_INDEX,
+              )
+            ) {
+              notificationsStore.createIndex(
+                this.AUTHOR_INDEXED_AT_INDEX,
+                ["author.did", "indexedAt"],
+                { unique: false },
+              );
+            }
+
+            // Compound index: (reason, indexedAt) - for reason queries sorted by time
+            if (
+              !notificationsStore.indexNames.contains(
+                this.REASON_INDEXED_AT_INDEX,
+              )
+            ) {
+              notificationsStore.createIndex(
+                this.REASON_INDEXED_AT_INDEX,
+                ["reason", "indexedAt"],
+                { unique: false },
+              );
+            }
+          }
         }
       };
     });
@@ -198,10 +235,11 @@ export class NotificationStorageDB {
     });
   }
 
-  // Get notifications by reason
+  // Get notifications by reason, sorted by indexedAt (uses compound index for O(log n) performance)
   async getNotificationsByReason(
     reason: string,
     limit = 100,
+    direction: "prev" | "next" = "prev",
   ): Promise<Notification[]> {
     this.ensureDB();
 
@@ -210,24 +248,129 @@ export class NotificationStorageDB {
       "readonly",
     );
     const store = transaction.objectStore(this.NOTIFICATIONS_STORE);
-    const index = store.index(this.REASON_INDEX);
 
     return new Promise((resolve, reject) => {
       const notifications: Notification[] = [];
-      const request = index.openCursor(IDBKeyRange.only(reason));
 
-      request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest).result;
+      // Use compound index if available for O(log n) performance
+      const hasCompoundIndex = store.indexNames.contains(
+        this.REASON_INDEXED_AT_INDEX,
+      );
 
-        if (cursor && notifications.length < limit) {
-          notifications.push(cursor.value);
-          cursor.continue();
-        } else {
-          resolve(notifications);
-        }
-      };
+      if (hasCompoundIndex) {
+        const index = store.index(this.REASON_INDEXED_AT_INDEX);
+        // Create a key range that matches all entries for this reason
+        const range = IDBKeyRange.bound([reason, ""], [reason, "\uffff"]);
 
-      request.onerror = () => reject(request.error);
+        const request = index.openCursor(range, direction);
+
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+
+          if (cursor && notifications.length < limit) {
+            notifications.push(cursor.value);
+            cursor.continue();
+          } else {
+            resolve(notifications);
+          }
+        };
+
+        request.onerror = () => reject(request.error);
+      } else {
+        // Fallback: use single reason index and sort manually
+        const index = store.index(this.REASON_INDEX);
+        const request = index.openCursor(IDBKeyRange.only(reason));
+
+        const allNotifications: Notification[] = [];
+
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+
+          if (cursor) {
+            allNotifications.push(cursor.value);
+            cursor.continue();
+          } else {
+            // Sort manually and return
+            allNotifications.sort((a, b) => {
+              const dateA = new Date(a.indexedAt).getTime();
+              const dateB = new Date(b.indexedAt).getTime();
+              return direction === "prev" ? dateB - dateA : dateA - dateB;
+            });
+            resolve(allNotifications.slice(0, limit));
+          }
+        };
+
+        request.onerror = () => reject(request.error);
+      }
+    });
+  }
+
+  // Get notifications by author, sorted by indexedAt (uses compound index for O(log n) performance)
+  async getNotificationsByAuthor(
+    authorDid: string,
+    limit = 100,
+    direction: "prev" | "next" = "prev",
+  ): Promise<Notification[]> {
+    this.ensureDB();
+
+    const transaction = this.db!.transaction(
+      [this.NOTIFICATIONS_STORE],
+      "readonly",
+    );
+    const store = transaction.objectStore(this.NOTIFICATIONS_STORE);
+
+    return new Promise((resolve, reject) => {
+      const notifications: Notification[] = [];
+
+      // Use compound index if available for O(log n) performance
+      const hasCompoundIndex = store.indexNames.contains(
+        this.AUTHOR_INDEXED_AT_INDEX,
+      );
+
+      if (hasCompoundIndex) {
+        const index = store.index(this.AUTHOR_INDEXED_AT_INDEX);
+        const range = IDBKeyRange.bound([authorDid, ""], [authorDid, "\uffff"]);
+
+        const request = index.openCursor(range, direction);
+
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+
+          if (cursor && notifications.length < limit) {
+            notifications.push(cursor.value);
+            cursor.continue();
+          } else {
+            resolve(notifications);
+          }
+        };
+
+        request.onerror = () => reject(request.error);
+      } else {
+        // Fallback: use single author index and sort manually
+        const index = store.index(this.AUTHOR_INDEX);
+        const request = index.openCursor(IDBKeyRange.only(authorDid));
+
+        const allNotifications: Notification[] = [];
+
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+
+          if (cursor) {
+            allNotifications.push(cursor.value);
+            cursor.continue();
+          } else {
+            // Sort manually and return
+            allNotifications.sort((a, b) => {
+              const dateA = new Date(a.indexedAt).getTime();
+              const dateB = new Date(b.indexedAt).getTime();
+              return direction === "prev" ? dateB - dateA : dateA - dateB;
+            });
+            resolve(allNotifications.slice(0, limit));
+          }
+        };
+
+        request.onerror = () => reject(request.error);
+      }
     });
   }
 

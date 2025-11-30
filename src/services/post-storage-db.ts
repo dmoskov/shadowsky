@@ -1,5 +1,6 @@
 import { AppBskyFeedDefs } from "@atproto/api";
 import { debug } from "@bsky/shared";
+import { createQueryTimer, isMonitoring } from "../utils/indexeddb-performance";
 
 type Post = AppBskyFeedDefs.PostView;
 
@@ -186,6 +187,7 @@ export class PostStorageDB {
     const posts: Post[] = [];
     let count = 0;
     let skipped = 0;
+    const timer = isMonitoring() ? createQueryTimer("getAllPosts") : null;
 
     return new Promise((resolve, reject) => {
       const request = index.openCursor(null, "prev"); // Most recent first
@@ -206,6 +208,7 @@ export class PostStorageDB {
           count++;
           cursor.continue();
         } else {
+          timer?.end(posts.length, "indexedAt", false);
           resolve(posts);
         }
       };
@@ -290,7 +293,9 @@ export class PostStorageDB {
       // Use cachedAt index if available for O(log n) performance
       const hasIndex = store.indexNames.contains(INDEX_CACHED_AT);
       const cursorSource = hasIndex
-        ? store.index(INDEX_CACHED_AT).openCursor(IDBKeyRange.upperBound(cutoffTime))
+        ? store
+            .index(INDEX_CACHED_AT)
+            .openCursor(IDBKeyRange.upperBound(cutoffTime))
         : store.openCursor();
 
       cursorSource.onsuccess = (event) => {
@@ -305,7 +310,8 @@ export class PostStorageDB {
           } else {
             // Fallback: manual filtering
             const post = cursor.value;
-            const cachedAt = post._cachedAt || new Date(post.indexedAt).getTime();
+            const cachedAt =
+              post._cachedAt || new Date(post.indexedAt).getTime();
 
             if (cachedAt < cutoffTime) {
               cursor.delete();
@@ -333,19 +339,19 @@ export class PostStorageDB {
     const store = transaction.objectStore(POST_STORE);
 
     const posts: Post[] = [];
+    const timer = isMonitoring() ? createQueryTimer("getPostsByAuthor") : null;
 
     return new Promise((resolve, reject) => {
       // Use compound index if available for O(log n) performance
-      const hasCompoundIndex = store.indexNames.contains(INDEX_AUTHOR_INDEXED_AT);
+      const hasCompoundIndex = store.indexNames.contains(
+        INDEX_AUTHOR_INDEXED_AT,
+      );
 
       if (hasCompoundIndex) {
         // Use compound index: range query on authorDid with natural sorting by indexedAt
         const index = store.index(INDEX_AUTHOR_INDEXED_AT);
         // Create a key range that matches all entries for this author
-        const range = IDBKeyRange.bound(
-          [authorDid, ""],
-          [authorDid, "\uffff"],
-        );
+        const range = IDBKeyRange.bound([authorDid, ""], [authorDid, "\uffff"]);
 
         const request = index.openCursor(range, direction);
 
@@ -358,6 +364,7 @@ export class PostStorageDB {
             posts.push(post);
             cursor.continue();
           } else {
+            timer?.end(posts.length, INDEX_AUTHOR_INDEXED_AT, true);
             resolve(posts);
           }
         };
@@ -385,7 +392,9 @@ export class PostStorageDB {
               const dateB = new Date(b.indexedAt).getTime();
               return direction === "prev" ? dateB - dateA : dateA - dateB;
             });
-            resolve(allPosts.slice(0, limit));
+            const result = allPosts.slice(0, limit);
+            timer?.end(result.length, "authorDid", false);
+            resolve(result);
           }
         };
 
@@ -410,7 +419,9 @@ export class PostStorageDB {
     const endIso = endDate.toISOString();
 
     return new Promise((resolve, reject) => {
-      const hasCompoundIndex = store.indexNames.contains(INDEX_AUTHOR_INDEXED_AT);
+      const hasCompoundIndex = store.indexNames.contains(
+        INDEX_AUTHOR_INDEXED_AT,
+      );
 
       if (hasCompoundIndex) {
         // Use compound index with precise date range
