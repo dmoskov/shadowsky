@@ -168,30 +168,41 @@ export const DirectMessages: React.FC = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden bg-bsky-bg-primary lg:h-[calc(100vh-4rem)]">
+    <div
+      className="flex h-[calc(100vh-8rem)] w-full overflow-hidden bg-bsky-bg-primary lg:h-[calc(100vh-4rem)]"
+      role="main"
+      aria-label="Direct Messages"
+    >
       {/* Conversations list */}
-      <div
+      <nav
         className={`flex h-full flex-col overflow-hidden border-r border-bsky-border-primary ${selectedConversation ? "hidden md:flex" : "flex"}`}
         style={{
           width: selectedConversation ? "320px" : "100%",
           maxWidth: selectedConversation ? "320px" : "100%",
         }}
+        aria-label="Conversations"
       >
         <div className="border-b border-bsky-border-primary p-4">
-          <h2
+          <h1
             className="text-xl font-semibold"
             style={{ color: "var(--bsky-text-primary)" }}
+            id="messages-heading"
           >
             Messages
-          </h2>
+          </h1>
         </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div
+          className="flex-1 overflow-y-auto overflow-x-hidden"
+          role="list"
+          aria-label="Conversation list"
+        >
           {chatError ? (
             <div className="p-4">
               <div
                 className="relative rounded-lg border border-amber-400 bg-amber-50 p-4 text-amber-900 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200"
                 role="alert"
+                aria-live="polite"
               >
                 <h3 className="mb-2 font-bold">
                   App Password Required for DMs
@@ -236,6 +247,8 @@ export const DirectMessages: React.FC = () => {
             <div
               className="p-4 text-center"
               style={{ color: "var(--bsky-text-secondary)" }}
+              role="status"
+              aria-label="Loading conversations"
             >
               Loading conversations...
             </div>
@@ -250,10 +263,17 @@ export const DirectMessages: React.FC = () => {
             conversations.map((conversation: DmConversation) => {
               const otherMember = getOtherMember(conversation);
               return (
-                <div
+                <button
                   key={conversation.id}
                   onClick={() => setSelectedConversation(conversation.id)}
-                  className={`cursor-pointer overflow-hidden border-b border-bsky-border-primary p-4 transition-colors duration-200 hover:bg-bsky-bg-secondary ${selectedConversation === conversation.id ? "bg-bsky-bg-secondary" : ""}`}
+                  className={`w-full cursor-pointer overflow-hidden border-b border-bsky-border-primary p-4 text-left transition-colors duration-200 hover:bg-bsky-bg-secondary ${selectedConversation === conversation.id ? "bg-bsky-bg-secondary" : ""}`}
+                  role="listitem"
+                  aria-label={`Conversation with ${otherMember.displayName || otherMember.handle || "Unknown User"}${conversation.unreadCount > 0 ? `, ${conversation.unreadCount} unread messages` : ""}`}
+                  aria-current={
+                    selectedConversation === conversation.id
+                      ? "true"
+                      : undefined
+                  }
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
                     <div className="flex-shrink-0">
@@ -291,27 +311,38 @@ export const DirectMessages: React.FC = () => {
                       )}
                     </div>
                     {conversation.unreadCount > 0 && (
-                      <div className="flex-shrink-0 rounded-full bg-bsky-primary px-2 py-0.5 text-center text-xs text-white">
+                      <div
+                        className="flex-shrink-0 rounded-full bg-bsky-primary px-2 py-0.5 text-center text-xs text-white"
+                        aria-hidden="true"
+                      >
                         {conversation.unreadCount}
                       </div>
                     )}
                   </div>
-                </div>
+                </button>
               );
             })
           )}
         </div>
-      </div>
+      </nav>
 
       {/* Chat view */}
-      <div className="flex h-full flex-1 flex-col overflow-hidden">
+      <section
+        className="flex h-full flex-1 flex-col overflow-hidden"
+        aria-label={
+          selectedConversation && conversationData
+            ? `Chat with ${getOtherMember(conversationData.conversation).displayName || getOtherMember(conversationData.conversation).handle || "Unknown User"}`
+            : "Select a conversation"
+        }
+      >
         {selectedConversation && conversationData ? (
           <>
             {/* Chat header */}
-            <div className="flex items-center gap-3 border-b border-bsky-border-primary p-4">
+            <header className="flex items-center gap-3 border-b border-bsky-border-primary p-4">
               <button
                 className="mr-4 inline-flex cursor-pointer items-center gap-2 border-none bg-transparent p-2 text-bsky-primary md:hidden"
                 onClick={() => setSelectedConversation(null)}
+                aria-label="Back to conversations list"
               >
                 ← Back
               </button>
@@ -351,14 +382,21 @@ export const DirectMessages: React.FC = () => {
                   </div>
                 )}
               </div>
-            </div>
+            </header>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div
+              className="flex-1 overflow-y-auto p-4"
+              role="log"
+              aria-label="Message history"
+              aria-live="polite"
+            >
               {loadingMessages ? (
                 <div
                   className="text-center"
                   style={{ color: "var(--bsky-text-secondary)" }}
+                  role="status"
+                  aria-label="Loading messages"
                 >
                   Loading messages...
                 </div>
@@ -406,13 +444,18 @@ export const DirectMessages: React.FC = () => {
 
             {/* Message input */}
             <div className="border-t border-bsky-border-primary p-4">
-              <form onSubmit={handleSendMessage} className="flex gap-2">
+              <form
+                onSubmit={handleSendMessage}
+                className="flex gap-2"
+                aria-label="Send message"
+              >
                 <input
                   type="text"
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
                   placeholder="Type a message..."
                   className="flex-1 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-4 py-2 text-base text-bsky-text-primary focus:border-bsky-primary focus:shadow-sm focus:outline-none"
+                  aria-label="Message text"
                 />
                 <button
                   type="submit"
@@ -420,6 +463,11 @@ export const DirectMessages: React.FC = () => {
                     !messageText.trim() || sendMessageMutation.isPending
                   }
                   className="cursor-pointer rounded-lg border-none bg-bsky-primary px-6 py-2 font-semibold text-white transition-colors duration-200 hover:bg-bsky-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label={
+                    sendMessageMutation.isPending
+                      ? "Sending message..."
+                      : "Send message"
+                  }
                 >
                   Send
                 </button>
@@ -434,7 +482,7 @@ export const DirectMessages: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 };

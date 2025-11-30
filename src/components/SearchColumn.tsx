@@ -362,7 +362,7 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
               />
               <input
                 ref={inputRef}
-                type="text"
+                type="search"
                 placeholder="Search posts..."
                 value={query}
                 onChange={handleInputChange}
@@ -375,14 +375,28 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
                   color: "var(--bsky-text-primary)",
                 }}
                 autoComplete="off"
+                aria-label="Search posts"
+                aria-expanded={showDropdown && searchHistory.length > 0}
+                aria-controls="search-history-dropdown"
+                aria-autocomplete="list"
+                aria-activedescendant={
+                  selectedSuggestionIndex >= 0
+                    ? `search-history-item-${selectedSuggestionIndex}`
+                    : undefined
+                }
               />
               {query && (
                 <button
                   type="button"
                   onClick={handleClearSearch}
                   className="absolute right-3 top-1/2 -translate-y-1/2 transform rounded-full p-1 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  aria-label="Clear search"
                 >
-                  <X size={14} style={{ color: "var(--bsky-text-tertiary)" }} />
+                  <X
+                    size={14}
+                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    aria-hidden="true"
+                  />
                 </button>
               )}
             </div>
@@ -399,10 +413,16 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
                   ? "white"
                   : "var(--bsky-text-secondary)",
               }}
+              aria-label={`${showFilters ? "Hide" : "Show"} search filters${hasActiveFilters ? " (filters active)" : ""}`}
+              aria-expanded={showFilters}
+              aria-controls="search-filter-panel"
             >
-              <Filter size={18} />
+              <Filter size={18} aria-hidden="true" />
               {hasActiveFilters && (
-                <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-red-500" />
+                <span
+                  className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-red-500"
+                  aria-hidden="true"
+                />
               )}
             </button>
           </div>
@@ -411,6 +431,9 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
           {showDropdown && searchHistory.length > 0 && (
             <div
               ref={dropdownRef}
+              id="search-history-dropdown"
+              role="listbox"
+              aria-label="Search history"
               className="absolute left-4 right-4 top-full z-30 mt-1 max-h-80 overflow-y-auto rounded-lg border shadow-lg"
               style={{
                 backgroundColor: "var(--bsky-bg-primary)",
@@ -436,17 +459,21 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
                   }}
                   className="flex items-center gap-1 text-xs transition-colors hover:text-red-500"
                   style={{ color: "var(--bsky-text-tertiary)" }}
+                  aria-label="Clear search history"
                 >
-                  <Trash2 size={12} />
+                  <Trash2 size={12} aria-hidden="true" />
                   Clear
                 </button>
               </div>
 
-              <div className="py-1">
+              <div className="py-1" role="group">
                 {searchHistory.map((entry, index) => (
                   <button
                     key={entry.id}
+                    id={`search-history-item-${index}`}
                     type="button"
+                    role="option"
+                    aria-selected={selectedSuggestionIndex === index}
                     onClick={() => handleSelectSuggestion(entry)}
                     className={`group flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors ${
                       selectedSuggestionIndex === index
@@ -483,8 +510,9 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
                       }}
                       className="shrink-0 rounded p-1 opacity-0 transition-opacity hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
                       style={{ color: "var(--bsky-text-tertiary)" }}
+                      aria-label={`Remove "${entry.query}" from search history`}
                     >
-                      <X size={12} />
+                      <X size={12} aria-hidden="true" />
                     </button>
                   </button>
                 ))}
@@ -497,6 +525,7 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
                   borderColor: "var(--bsky-border-primary)",
                   color: "var(--bsky-text-tertiary)",
                 }}
+                aria-hidden="true"
               >
                 <span className="flex items-center gap-1">
                   <ArrowUp size={10} />
@@ -548,8 +577,10 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
                     ? { color: "var(--bsky-text-secondary)" }
                     : {}
                 }
+                aria-label="Sort by latest"
+                aria-pressed={sortOrder === "latest"}
               >
-                <Clock size={12} />
+                <Clock size={12} aria-hidden="true" />
                 Latest
               </button>
               <button
@@ -564,8 +595,10 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
                     ? { color: "var(--bsky-text-secondary)" }
                     : {}
                 }
+                aria-label="Sort by top engagement"
+                aria-pressed={sortOrder === "top"}
               >
-                <TrendingUp size={12} />
+                <TrendingUp size={12} aria-hidden="true" />
                 Top
               </button>
             </div>
@@ -574,11 +607,24 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
       </div>
 
       {/* Results */}
-      <div ref={resultsContainerRef} className="flex-1 overflow-y-auto">
+      <div
+        ref={resultsContainerRef}
+        className="flex-1 overflow-y-auto"
+        role="feed"
+        aria-label="Search results"
+      >
         {/* Loading State */}
         {isLoading && (
-          <div className="flex items-center justify-center p-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+          <div
+            className="flex items-center justify-center p-8"
+            role="status"
+            aria-label="Loading search results"
+          >
+            <div
+              className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"
+              aria-hidden="true"
+            />
+            <span className="sr-only">Loading search results...</span>
           </div>
         )}
 

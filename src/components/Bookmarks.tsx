@@ -134,16 +134,26 @@ export const Bookmarks: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto flex h-full max-w-4xl flex-col bg-bsky-bg-primary">
+    <div
+      className="mx-auto flex h-full max-w-4xl flex-col bg-bsky-bg-primary"
+      role="main"
+      aria-label="Bookmarks"
+    >
       <div className="sticky top-0 z-10 border-b border-bsky-border-primary bg-bsky-bg-primary p-4">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Bookmark className="h-5 w-5" />
-            <h2 className="m-0 text-xl font-semibold text-bsky-text-primary">
+            <Bookmark className="h-5 w-5" aria-hidden="true" />
+            <h2
+              className="m-0 text-xl font-semibold text-bsky-text-primary"
+              id="bookmarks-heading"
+            >
               Bookmarks
             </h2>
             {bookmarkCount !== undefined && (
-              <span className="rounded-full bg-bsky-bg-secondary px-2 py-0.5 text-sm text-bsky-text-secondary">
+              <span
+                className="rounded-full bg-bsky-bg-secondary px-2 py-0.5 text-sm text-bsky-text-secondary"
+                aria-label={`${bookmarkCount} bookmarks`}
+              >
                 {bookmarkCount}
               </span>
             )}
@@ -152,35 +162,47 @@ export const Bookmarks: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-bsky-text-tertiary" />
+            <Search
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-bsky-text-tertiary"
+              aria-hidden="true"
+            />
             <input
-              type="text"
+              type="search"
               placeholder="Search bookmarks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="focus:border-bsky-accent-primary w-full rounded-full border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-2 pl-10 text-sm text-bsky-text-primary transition-all duration-200 focus:outline-none"
+              aria-label="Search bookmarks"
             />
           </div>
 
           <button
             onClick={() => setShowExportModal(true)}
             className="cursor-pointer rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-200 hover:bg-bsky-bg-secondary hover:text-bsky-text-primary"
-            title="Export/Import"
+            aria-label="Manage bookmarks menu"
+            aria-haspopup="dialog"
           >
-            <MoreVertical className="h-4 w-4" />
+            <MoreVertical className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       </div>
 
       {isLoading && (
-        <div className="flex flex-col items-center justify-center px-8 py-16">
-          <div className="border-t-bsky-accent-primary h-8 w-8 animate-spin rounded-full border-2 border-bsky-border-primary" />
+        <div
+          className="flex flex-col items-center justify-center px-8 py-16"
+          role="status"
+          aria-label="Loading bookmarks"
+        >
+          <div
+            className="border-t-bsky-accent-primary h-8 w-8 animate-spin rounded-full border-2 border-bsky-border-primary"
+            aria-hidden="true"
+          />
           <p>Loading bookmarks...</p>
         </div>
       )}
 
       {error && (
-        <div className="error-state p-4 text-center">
+        <div className="error-state p-4 text-center" role="alert">
           <p className="text-red-500">
             Error loading bookmarks: {(error as Error).message}
           </p>
@@ -201,11 +223,16 @@ export const Bookmarks: React.FC = () => {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div
+        className="flex-1 overflow-y-auto p-4"
+        role="feed"
+        aria-label="Bookmarked posts"
+      >
         {bookmarks?.map((bookmark) => (
-          <div
+          <article
             key={bookmark.id}
             className="group -mx-4 border-b border-bsky-border-primary px-4 transition-colors duration-200 hover:bg-bsky-bg-hover"
+            aria-label={`Bookmarked post by ${bookmark.author?.displayName || bookmark.author?.handle || "unknown"}`}
           >
             <div className="flex items-center gap-3 px-4 py-3">
               <img
@@ -237,9 +264,9 @@ export const Bookmarks: React.FC = () => {
                   handleDeleteBookmark(bookmark.postUri);
                 }}
                 className="cursor-pointer rounded-md border-none bg-transparent p-2 text-bsky-text-tertiary opacity-0 transition-all duration-200 hover:bg-bsky-bg-secondary hover:text-red-600 group-hover:opacity-100"
-                title="Delete bookmark"
+                aria-label={`Delete bookmark for post by ${bookmark.author?.displayName || bookmark.author?.handle || "unknown"}`}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
 
@@ -281,7 +308,7 @@ export const Bookmarks: React.FC = () => {
                 </p>
               </div>
             )}
-          </div>
+          </article>
         ))}
       </div>
 
@@ -291,29 +318,41 @@ export const Bookmarks: React.FC = () => {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
           onClick={() => setShowExportModal(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="manage-bookmarks-title"
         >
           <div
             className="w-11/12 max-w-sm rounded-xl bg-bsky-bg-primary shadow-xl"
             onClick={(e) => e.stopPropagation()}
+            role="document"
           >
             <div className="flex items-center justify-between border-b border-bsky-border-primary p-6">
-              <h3 className="m-0 text-lg font-semibold text-bsky-text-primary">
+              <h3
+                id="manage-bookmarks-title"
+                className="m-0 text-lg font-semibold text-bsky-text-primary"
+              >
                 Manage Bookmarks
               </h3>
               <button
                 onClick={() => setShowExportModal(false)}
                 className="cursor-pointer rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-200 hover:bg-bsky-bg-secondary"
+                aria-label="Close manage bookmarks dialog"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
 
-            <div className="flex flex-col gap-3 p-6">
+            <div
+              className="flex flex-col gap-3 p-6"
+              role="group"
+              aria-label="Bookmark management options"
+            >
               <button
                 onClick={handleExport}
                 className="flex cursor-pointer items-center gap-2 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-4 py-3 text-sm font-medium text-bsky-text-primary transition-all duration-200 hover:bg-bsky-bg-hover"
               >
-                <Download className="h-4 w-4" />
+                <Download className="h-4 w-4" aria-hidden="true" />
                 Export Bookmarks
               </button>
 
@@ -321,7 +360,7 @@ export const Bookmarks: React.FC = () => {
                 onClick={() => fileInputRef.current?.click()}
                 className="flex cursor-pointer items-center gap-2 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-4 py-3 text-sm font-medium text-bsky-text-primary transition-all duration-200 hover:bg-bsky-bg-hover"
               >
-                <Upload className="h-4 w-4" />
+                <Upload className="h-4 w-4" aria-hidden="true" />
                 Import Bookmarks
               </button>
 
@@ -329,7 +368,7 @@ export const Bookmarks: React.FC = () => {
                 onClick={handleClearAll}
                 className="flex cursor-pointer items-center gap-2 rounded-lg border border-red-600 bg-bsky-bg-secondary px-4 py-3 text-sm font-medium text-red-600 transition-all duration-200 hover:bg-red-50"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
                 Clear All Bookmarks
               </button>
             </div>
@@ -340,6 +379,7 @@ export const Bookmarks: React.FC = () => {
               accept=".json"
               onChange={handleImport}
               style={{ display: "none" }}
+              aria-label="Select bookmark file to import"
             />
           </div>
         </div>
