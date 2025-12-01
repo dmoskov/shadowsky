@@ -128,17 +128,19 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       };
 
       // Use push notification service for settings-aware notifications
-      pushNotificationService.showLocalNotification(pushPayload).catch((err) => {
-        debug.warn("Failed to show push notification:", err);
-        // Fallback to basic notification API
-        if (window.Notification?.permission === "granted") {
-          new window.Notification("New Bluesky Notification", {
-            body: getNotificationBody(event.notification),
-            icon: event.notification.author.avatar,
-            tag: event.notification.uri,
-          });
-        }
-      });
+      pushNotificationService
+        .showLocalNotification(pushPayload)
+        .catch((err) => {
+          debug.warn("Failed to show push notification:", err);
+          // Fallback to basic notification API
+          if (window.Notification?.permission === "granted") {
+            new window.Notification("New Bluesky Notification", {
+              body: getNotificationBody(event.notification),
+              icon: event.notification.author.avatar,
+              tag: event.notification.uri,
+            });
+          }
+        });
     },
     [queryClient],
   );
@@ -287,4 +289,23 @@ function getNotificationBody(notification: Notification): string {
     default:
       return `${author} interacted with your post`;
   }
+}
+
+function getNotificationUrl(notification: Notification): string {
+  // For follows, link to the profile
+  if (notification.reason === "follow") {
+    return `/profile/${notification.author.handle}`;
+  }
+
+  // For post-related notifications, link to the notification tab
+  // which will show the context
+  return "/notifications";
+}
+
+function getPostUri(notification: Notification): string | undefined {
+  // Extract post URI from the notification if available
+  const record = notification.record as
+    | { subject?: { uri?: string } }
+    | undefined;
+  return record?.subject?.uri || notification.reasonSubject;
 }
