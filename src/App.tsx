@@ -91,6 +91,11 @@ const WebSocketStatus = lazy(() =>
     default: m.WebSocketStatus,
   })),
 );
+const MutationQueueStatus = lazy(() =>
+  import("./components/MutationQueueStatus").then((m) => ({
+    default: m.MutationQueueStatus,
+  })),
+);
 
 // Lazy load route components for better performance
 const Bookmarks = lazy(() =>
@@ -529,6 +534,7 @@ function AppContent() {
         <SwipeIndicator />
         <RateLimitStatus />
         <WebSocketStatus />
+        <MutationQueueStatus />
         <NotificationPermissionPrompt />
         <DebugConsole />
         <ColumnMigrationNotice />

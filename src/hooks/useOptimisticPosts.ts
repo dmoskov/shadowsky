@@ -1,6 +1,11 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
+import { debug } from "@bsky/shared";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  mutationQueueDB,
+  type MutationType,
+} from "../services/mutation-queue-db";
 
 export function useOptimisticPosts() {
   const { agent } = useAuth();
@@ -106,6 +111,43 @@ export function useOptimisticPosts() {
     });
   };
 
+  // Helper to check if error is a network error (should queue for retry)
+  const isNetworkError = (error: unknown): boolean => {
+    if (!navigator.onLine) return true;
+    if (error instanceof TypeError && error.message.includes("fetch")) {
+      return true;
+    }
+    if (error instanceof Error) {
+      const networkIndicators = [
+        "network",
+        "fetch",
+        "timeout",
+        "ECONNREFUSED",
+        "ENOTFOUND",
+        "offline",
+      ];
+      return networkIndicators.some((indicator) =>
+        error.message.toLowerCase().includes(indicator.toLowerCase()),
+      );
+    }
+    return false;
+  };
+
+  // Helper to queue a mutation for retry
+  const queueMutation = async (
+    type: MutationType,
+    payload: Record<string, unknown>,
+  ): Promise<void> => {
+    try {
+      // Initialize queue DB if not already done
+      await mutationQueueDB.init();
+      await mutationQueueDB.enqueue(type, payload);
+      debug.log(`Queued ${type} mutation for retry when online`);
+    } catch (queueError) {
+      debug.error("Failed to queue mutation:", queueError);
+    }
+  };
+
   const likeMutation = useMutation({
     mutationFn: async ({ uri, cid }: { uri: string; cid: string }) => {
       if (!agent) throw new Error("Not authenticated");
@@ -137,8 +179,15 @@ export function useOptimisticPosts() {
         },
       }));
     },
-    onError: (_, { uri }) => {
-      // Revert optimistic update on error
+    onError: (error, { uri, cid }) => {
+      // If it's a network error, queue for retry and keep optimistic update
+      if (isNetworkError(error)) {
+        queueMutation("like", { uri, cid });
+        // Keep the optimistic update - it will be retried
+        return;
+      }
+
+      // Revert optimistic update on non-network error
       updatePostInCaches(uri, (post) => ({
         ...post,
         likeCount: Math.max(0, (post.likeCount || 0) - 1),
@@ -169,6 +218,13 @@ export function useOptimisticPosts() {
         },
       }));
     },
+    onError: (error, { likeUri }) => {
+      // If it's a network error, queue for retry
+      if (isNetworkError(error)) {
+        queueMutation("unlike", { likeUri });
+      }
+      // Optimistic update already applied in onMutate - no need to revert for network errors
+    },
   });
 
   const repostMutation = useMutation({
@@ -198,7 +254,14 @@ export function useOptimisticPosts() {
         },
       }));
     },
-    onError: (_, { uri }) => {
+    onError: (error, { uri, cid }) => {
+      // If it's a network error, queue for retry and keep optimistic update
+      if (isNetworkError(error)) {
+        queueMutation("repost", { uri, cid });
+        return;
+      }
+
+      // Revert optimistic update on non-network error
       updatePostInCaches(uri, (post) => ({
         ...post,
         repostCount: Math.max(0, (post.repostCount || 0) - 1),
@@ -233,6 +296,13 @@ export function useOptimisticPosts() {
           repost: undefined,
         },
       }));
+    },
+    onError: (error, { repostUri }) => {
+      // If it's a network error, queue for retry
+      if (isNetworkError(error)) {
+        queueMutation("unrepost", { repostUri });
+      }
+      // Optimistic update already applied in onMutate
     },
   });
 
