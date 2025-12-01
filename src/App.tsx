@@ -10,25 +10,15 @@ import {
   useNavigate,
   useParams,
 } from "react-router";
-import { BackgroundNotificationLoader } from "./components/BackgroundNotificationLoader";
-import { CommandPalette } from "./components/CommandPalette";
-import { DebugConsole } from "./components/DebugConsole";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Header } from "./components/Header";
-import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
 import { LandingPage } from "./components/LandingPage";
 import { MobileTabBar } from "./components/MobileTabBar";
-import { NotificationPermissionPrompt } from "./components/NotificationPermissionPrompt";
 import { OAuthCallback } from "./components/OAuthCallback";
 import { StorageErrorProvider } from "./components/providers/StorageErrorProvider";
-import { RateLimitStatus } from "./components/RateLimitStatus";
-import { ServiceWorkerUpdatePrompt } from "./components/ServiceWorkerUpdatePrompt";
 import { Sidebar } from "./components/Sidebar";
-import { SwipeIndicator } from "./components/SwipeIndicator";
 import { AriaLiveProvider } from "./components/ui/AriaLiveRegion";
-import { FloatingActionButton } from "./components/ui/FloatingActionButton";
 import { PageLoader } from "./components/ui/PageLoader";
-import { WebSocketStatus } from "./components/WebSocketStatus";
 import { AccessibilityProvider } from "./contexts/AccessibilityContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { HiddenPostsProvider } from "./contexts/HiddenPostsContext";
@@ -49,6 +39,58 @@ import { NotificationStorageDB } from "./services/notification-storage-db";
 import { cleanupLocalStorage } from "./utils/cleanupLocalStorage";
 import "./utils/debug-control"; // Initialize debug controls
 import { removeTrailingSlash } from "./utils/removeTrailingSlash";
+
+// Lazy load non-critical components that are conditionally rendered
+const BackgroundNotificationLoader = lazy(() =>
+  import("./components/BackgroundNotificationLoader").then((m) => ({
+    default: m.BackgroundNotificationLoader,
+  })),
+);
+const CommandPalette = lazy(() =>
+  import("./components/CommandPalette").then((m) => ({
+    default: m.CommandPalette,
+  })),
+);
+const DebugConsole = lazy(() =>
+  import("./components/DebugConsole").then((m) => ({
+    default: m.DebugConsole,
+  })),
+);
+const KeyboardShortcutsHelp = lazy(() =>
+  import("./components/KeyboardShortcutsHelp").then((m) => ({
+    default: m.KeyboardShortcutsHelp,
+  })),
+);
+const NotificationPermissionPrompt = lazy(() =>
+  import("./components/NotificationPermissionPrompt").then((m) => ({
+    default: m.NotificationPermissionPrompt,
+  })),
+);
+const RateLimitStatus = lazy(() =>
+  import("./components/RateLimitStatus").then((m) => ({
+    default: m.RateLimitStatus,
+  })),
+);
+const ServiceWorkerUpdatePrompt = lazy(() =>
+  import("./components/ServiceWorkerUpdatePrompt").then((m) => ({
+    default: m.ServiceWorkerUpdatePrompt,
+  })),
+);
+const SwipeIndicator = lazy(() =>
+  import("./components/SwipeIndicator").then((m) => ({
+    default: m.SwipeIndicator,
+  })),
+);
+const FloatingActionButton = lazy(() =>
+  import("./components/ui/FloatingActionButton").then((m) => ({
+    default: m.FloatingActionButton,
+  })),
+);
+const WebSocketStatus = lazy(() =>
+  import("./components/WebSocketStatus").then((m) => ({
+    default: m.WebSocketStatus,
+  })),
+);
 
 // Lazy load route components for better performance
 const Bookmarks = lazy(() =>
@@ -370,7 +412,9 @@ function AppContent() {
       >
         Skip to main content
       </a>
-      <BackgroundNotificationLoader />
+      <Suspense fallback={null}>
+        <BackgroundNotificationLoader />
+      </Suspense>
       <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div
         className={`relative flex ${isHomeRoute ? "" : "mx-auto 2xl:max-w-[1536px]"}`}
@@ -479,22 +523,25 @@ function AppContent() {
         </main>
       </div>
       <MobileTabBar />
-      <FloatingActionButton />
-      <SwipeIndicator />
-      <RateLimitStatus />
-      <WebSocketStatus />
-      <NotificationPermissionPrompt />
-      <DebugConsole />
-      <ColumnMigrationNotice />
-      <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        onClose={() => setIsCommandPaletteOpen(false)}
-      />
-      <KeyboardShortcutsHelp
-        isOpen={isShortcutsHelpOpen}
-        onClose={() => setIsShortcutsHelpOpen(false)}
-      />
-      <ServiceWorkerUpdatePrompt />
+      {/* Lazy loaded UI components */}
+      <Suspense fallback={null}>
+        <FloatingActionButton />
+        <SwipeIndicator />
+        <RateLimitStatus />
+        <WebSocketStatus />
+        <NotificationPermissionPrompt />
+        <DebugConsole />
+        <ColumnMigrationNotice />
+        <CommandPalette
+          isOpen={isCommandPaletteOpen}
+          onClose={() => setIsCommandPaletteOpen(false)}
+        />
+        <KeyboardShortcutsHelp
+          isOpen={isShortcutsHelpOpen}
+          onClose={() => setIsShortcutsHelpOpen(false)}
+        />
+        <ServiceWorkerUpdatePrompt />
+      </Suspense>
     </div>
   );
 }

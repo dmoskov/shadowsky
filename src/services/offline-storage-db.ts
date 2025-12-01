@@ -14,7 +14,7 @@
 import { debug } from "@bsky/shared";
 
 const DB_NAME = "BskyOfflineStorage";
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Bumped for compound indexes
 
 // Store names
 const STORES = {
@@ -133,6 +133,7 @@ export class OfflineStorageDB {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
+        const oldVersion = event.oldVersion;
 
         // Feed items store
         if (!db.objectStoreNames.contains(STORES.FEED_ITEMS)) {
@@ -181,6 +182,35 @@ export class OfflineStorageDB {
         // Metadata store
         if (!db.objectStoreNames.contains(STORES.METADATA)) {
           db.createObjectStore(STORES.METADATA, { keyPath: "key" });
+        }
+
+        // Version 2: Add compound indexes for O(log n) timeline query performance
+        if (oldVersion < 2) {
+          const transaction = (event.target as IDBOpenDBRequest).transaction;
+          if (transaction) {
+            const feedStore = transaction.objectStore(STORES.FEED_ITEMS);
+
+            // Compound index: (feedType, indexedAt) - for timeline queries sorted by time
+            // Enables efficient "get all timeline posts sorted by date" queries
+            // Performance: O(log n + k) instead of O(n) where k is result count
+            if (!feedStore.indexNames.contains("feedType_indexedAt")) {
+              feedStore.createIndex(
+                "feedType_indexedAt",
+                ["_feedType", "indexedAt"],
+                { unique: false },
+              );
+            }
+
+            // Compound index: (authorDid, indexedAt) - for author feed queries sorted by time
+            // Enables efficient "get all posts by author X sorted by date" queries
+            if (!feedStore.indexNames.contains("authorDid_indexedAt")) {
+              feedStore.createIndex(
+                "authorDid_indexedAt",
+                ["author.did", "indexedAt"],
+                { unique: false },
+              );
+            }
+          }
         }
       };
     });
@@ -248,28 +278,55 @@ export class OfflineStorageDB {
     const db = this.ensureDb();
     const transaction = db.transaction([STORES.FEED_ITEMS], "readonly");
     const store = transaction.objectStore(STORES.FEED_ITEMS);
-    const index = store.index("indexedAt");
 
     const items: OfflineFeedItem[] = [];
 
     return new Promise((resolve, reject) => {
-      const request = index.openCursor(null, "prev");
+      // Use compound index if feedType is specified for O(log n + k) performance
+      // Otherwise fall back to indexedAt index
+      const hasCompoundIndex = store.indexNames.contains("feedType_indexedAt");
 
-      request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest).result;
+      if (feedType && hasCompoundIndex) {
+        // Use compound index: range query on feedType with natural sorting by indexedAt
+        const index = store.index("feedType_indexedAt");
+        // Create a key range that matches all entries for this feed type
+        const range = IDBKeyRange.bound([feedType, ""], [feedType, "\uffff"]);
 
-        if (cursor && items.length < limit) {
-          const item = cursor.value as OfflineFeedItem;
-          if (!feedType || item._feedType === feedType) {
-            items.push(item);
+        const request = index.openCursor(range, "prev");
+
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+
+          if (cursor && items.length < limit) {
+            items.push(cursor.value as OfflineFeedItem);
+            cursor.continue();
+          } else {
+            resolve(items);
           }
-          cursor.continue();
-        } else {
-          resolve(items);
-        }
-      };
+        };
 
-      request.onerror = () => reject(request.error);
+        request.onerror = () => reject(request.error);
+      } else {
+        // Fallback: use indexedAt index and filter manually
+        const index = store.index("indexedAt");
+        const request = index.openCursor(null, "prev");
+
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+
+          if (cursor && items.length < limit) {
+            const item = cursor.value as OfflineFeedItem;
+            if (!feedType || item._feedType === feedType) {
+              items.push(item);
+            }
+            cursor.continue();
+          } else {
+            resolve(items);
+          }
+        };
+
+        request.onerror = () => reject(request.error);
+      }
     });
   }
 

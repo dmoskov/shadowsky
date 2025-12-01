@@ -14,7 +14,7 @@ export class NotificationStorageDB {
   private static instance: NotificationStorageDB;
   private db: IDBDatabase | null = null;
   private readonly DB_NAME = "bsky_notifications_db";
-  private readonly DB_VERSION = 2; // Bumped for compound indexes
+  private readonly DB_VERSION = 3; // Bumped for additional compound indexes
 
   // Store names
   private readonly NOTIFICATIONS_STORE = "notifications";
@@ -29,6 +29,9 @@ export class NotificationStorageDB {
   // Compound index names (version 2)
   private readonly AUTHOR_INDEXED_AT_INDEX = "by_author_indexed_at";
   private readonly REASON_INDEXED_AT_INDEX = "by_reason_indexed_at";
+
+  // Compound index names (version 3)
+  private readonly IS_READ_INDEXED_AT_INDEX = "by_is_read_indexed_at";
 
   private constructor() {}
 
@@ -116,6 +119,31 @@ export class NotificationStorageDB {
               notificationsStore.createIndex(
                 this.REASON_INDEXED_AT_INDEX,
                 ["reason", "indexedAt"],
+                { unique: false },
+              );
+            }
+          }
+        }
+
+        // Version 3: Add compound index for unread notifications sorted by time
+        if (oldVersion < 3) {
+          const transaction = (event.target as IDBOpenDBRequest).transaction;
+          if (transaction) {
+            const notificationsStore = transaction.objectStore(
+              this.NOTIFICATIONS_STORE,
+            );
+
+            // Compound index: (isRead, indexedAt) - for unread notification queries sorted by time
+            // Enables efficient "get all unread notifications sorted by date" queries
+            // Performance: O(log n + k) instead of O(n) where k is result count
+            if (
+              !notificationsStore.indexNames.contains(
+                this.IS_READ_INDEXED_AT_INDEX,
+              )
+            ) {
+              notificationsStore.createIndex(
+                this.IS_READ_INDEXED_AT_INDEX,
+                ["isRead", "indexedAt"],
                 { unique: false },
               );
             }
@@ -374,8 +402,11 @@ export class NotificationStorageDB {
     });
   }
 
-  // Get unread notifications
-  async getUnreadNotifications(limit = 100): Promise<Notification[]> {
+  // Get unread notifications (uses compound index for O(log n) performance)
+  async getUnreadNotifications(
+    limit = 100,
+    direction: "prev" | "next" = "prev",
+  ): Promise<Notification[]> {
     this.ensureDB();
 
     const transaction = this.db!.transaction(
@@ -383,24 +414,52 @@ export class NotificationStorageDB {
       "readonly",
     );
     const store = transaction.objectStore(this.NOTIFICATIONS_STORE);
-    const index = store.index(this.IS_READ_INDEX);
 
     return new Promise((resolve, reject) => {
       const notifications: Notification[] = [];
-      const request = index.openCursor(IDBKeyRange.only(false));
 
-      request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest).result;
+      // Use compound index if available for O(log n + k) performance
+      const hasCompoundIndex = store.indexNames.contains(
+        this.IS_READ_INDEXED_AT_INDEX,
+      );
 
-        if (cursor && notifications.length < limit) {
-          notifications.push(cursor.value);
-          cursor.continue();
-        } else {
-          resolve(notifications);
-        }
-      };
+      if (hasCompoundIndex) {
+        const index = store.index(this.IS_READ_INDEXED_AT_INDEX);
+        // Create a key range that matches all unread notifications (isRead = false)
+        const range = IDBKeyRange.bound([false, ""], [false, "\uffff"]);
 
-      request.onerror = () => reject(request.error);
+        const request = index.openCursor(range, direction);
+
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+
+          if (cursor && notifications.length < limit) {
+            notifications.push(cursor.value);
+            cursor.continue();
+          } else {
+            resolve(notifications);
+          }
+        };
+
+        request.onerror = () => reject(request.error);
+      } else {
+        // Fallback: use single isRead index
+        const index = store.index(this.IS_READ_INDEX);
+        const request = index.openCursor(IDBKeyRange.only(false));
+
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+
+          if (cursor && notifications.length < limit) {
+            notifications.push(cursor.value);
+            cursor.continue();
+          } else {
+            resolve(notifications);
+          }
+        };
+
+        request.onerror = () => reject(request.error);
+      }
     });
   }
 

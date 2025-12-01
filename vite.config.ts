@@ -6,6 +6,62 @@ import { VitePWA } from "vite-plugin-pwa";
 // https://vitejs.dev/config/
 export default defineConfig({
   base: "/",
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Core React - always needed first
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
+            return "vendor-react-core";
+          }
+          // React Router - needed for navigation
+          if (id.includes("node_modules/react-router")) {
+            return "vendor-react-router";
+          }
+          // AT Protocol core types and basic client
+          if (id.includes("node_modules/@atproto/api")) {
+            return "vendor-atproto";
+          }
+          // OAuth client - separate chunk, loaded on demand
+          if (id.includes("node_modules/@atproto/oauth-client-browser")) {
+            return "vendor-atproto-oauth";
+          }
+          // AWS Amplify - only needed for certain features
+          if (id.includes("node_modules/aws-amplify") || id.includes("node_modules/@aws-amplify")) {
+            return "vendor-amplify";
+          }
+          // Date utilities - used across the app
+          if (id.includes("node_modules/date-fns")) {
+            return "vendor-date-fns";
+          }
+          // Query management
+          if (id.includes("node_modules/@tanstack/react-query")) {
+            return "vendor-query";
+          }
+          // Media/video handling - only needed when viewing videos
+          if (id.includes("node_modules/hls.js")) {
+            return "vendor-media";
+          }
+          // Database utilities
+          if (id.includes("node_modules/idb")) {
+            return "vendor-idb";
+          }
+          // Sanitization
+          if (id.includes("node_modules/dompurify")) {
+            return "vendor-security";
+          }
+          // Lucide icons - tree shaken but still grouped
+          if (id.includes("node_modules/lucide-react")) {
+            return "vendor-icons";
+          }
+        },
+      },
+    },
+    // Target modern browsers for smaller bundle
+    target: "es2020",
+    // Increase warning limit since we have route splitting
+    chunkSizeWarningLimit: 300,
+  },
   plugins: [
     react(),
     VitePWA({
