@@ -1054,7 +1054,9 @@ httpServer.listen(PORT, () => {
     `  - POST /api/analyze-posts     : Analyze user posts qualitatively`,
   );
   console.log(`  - POST /api/push-subscription : Register push subscription`);
-  console.log(`  - DELETE /api/push-subscription/:id : Remove push subscription`);
+  console.log(
+    `  - DELETE /api/push-subscription/:id : Remove push subscription`,
+  );
   console.log(`  - GET  /api/push-subscriptions : List user subscriptions`);
   console.log(`  - POST /api/push-notification/send : Send push notification`);
   console.log(`  - GET  /api/push/vapid-public-key : Get VAPID public key`);
