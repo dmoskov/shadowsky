@@ -1,4 +1,4 @@
-import Hls from "hls.js";
+import type Hls from "hls.js";
 import {
   AlertCircle,
   Loader2,
@@ -22,6 +22,16 @@ import { MediaCacheService } from "../services/media-cache-service";
 import { createLogger } from "../utils/logger";
 
 const logger = createLogger("VideoPlayer");
+
+// Lazy load HLS.js only when needed for HLS streams
+let HlsModule: typeof Hls | null = null;
+async function getHls(): Promise<typeof Hls> {
+  if (!HlsModule) {
+    const module = await import("hls.js");
+    HlsModule = module.default;
+  }
+  return HlsModule;
+}
 
 interface VideoPlayerProps {
   src: string;
@@ -253,102 +263,124 @@ export function VideoPlayer({
     if (!src || !videoRef.current || !isVideoLoaded) return;
 
     const videoSrc = cachedSrc || src;
+    let hlsInstance: Hls | null = null;
+    let isCancelled = false;
 
     // Check if this is an HLS stream
     if (src.endsWith(".m3u8")) {
-      if (Hls.isSupported()) {
-        // Initialize HLS with bandwidth-adaptive streaming
-        const hls = new Hls({
-          enableWorker: true,
-          lowLatencyMode: false,
-          // Bandwidth estimation settings
-          abrEwmaDefaultEstimate: 500000, // 500kbps default
-          abrEwmaFastLive: 3,
-          abrEwmaSlowLive: 9,
-          // Buffer settings
-          maxBufferLength: 30,
-          maxMaxBufferLength: 600,
-          maxBufferSize: 60 * 1000 * 1000, // 60MB
-          // Start with low quality and let ABR adjust
-          startLevel: -1,
-        });
+      // Dynamically load HLS.js only when needed
+      const initHls = async () => {
+        try {
+          const Hls = await getHls();
 
-        hlsRef.current = hls;
-        hls.loadSource(src);
-        hls.attachMedia(videoRef.current);
+          if (isCancelled || !videoRef.current) return;
 
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          setIsLoading(false);
-          if (isPlaying) {
-            videoRef.current?.play().catch((error) => {
-              logger.error("HLS autoplay failed:", error);
-              setIsPlaying(false);
+          if (Hls.isSupported()) {
+            // Initialize HLS with bandwidth-adaptive streaming
+            const hls = new Hls({
+              enableWorker: true,
+              lowLatencyMode: false,
+              // Bandwidth estimation settings
+              abrEwmaDefaultEstimate: 500000, // 500kbps default
+              abrEwmaFastLive: 3,
+              abrEwmaSlowLive: 9,
+              // Buffer settings
+              maxBufferLength: 30,
+              maxMaxBufferLength: 600,
+              maxBufferSize: 60 * 1000 * 1000, // 60MB
+              // Start with low quality and let ABR adjust
+              startLevel: -1,
+            });
+
+            hlsInstance = hls;
+            hlsRef.current = hls;
+            hls.loadSource(src);
+            hls.attachMedia(videoRef.current);
+
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+              setIsLoading(false);
+              if (isPlaying) {
+                videoRef.current?.play().catch((error) => {
+                  logger.error("HLS autoplay failed:", error);
+                  setIsPlaying(false);
+                });
+              }
+            });
+
+            hls.on(Hls.Events.ERROR, (event, data) => {
+              logger.error("HLS error:", event, data);
+              if (data.fatal) {
+                switch (data.type) {
+                  case Hls.ErrorTypes.NETWORK_ERROR:
+                    if (retryCount < MAX_RETRIES) {
+                      logger.log("HLS network error, attempting recovery...");
+                      hls.startLoad();
+                      setRetryCount((prev) => prev + 1);
+                    } else {
+                      setVideoError({
+                        code: 2,
+                        message: "Network error loading video",
+                        recoverable: false,
+                      });
+                    }
+                    break;
+                  case Hls.ErrorTypes.MEDIA_ERROR:
+                    if (retryCount < MAX_RETRIES) {
+                      logger.log("HLS media error, attempting recovery...");
+                      hls.recoverMediaError();
+                      setRetryCount((prev) => prev + 1);
+                    } else {
+                      setVideoError({
+                        code: 3,
+                        message: "Media error playing video",
+                        recoverable: false,
+                      });
+                    }
+                    break;
+                  default:
+                    setVideoError({
+                      code: 0,
+                      message: "Fatal error loading video",
+                      recoverable: false,
+                    });
+                    hls.destroy();
+                    break;
+                }
+              }
+            });
+          } else if (
+            videoRef.current.canPlayType("application/vnd.apple.mpegurl")
+          ) {
+            // Native HLS support (Safari)
+            videoRef.current.src = src;
+          } else {
+            logger.error("HLS is not supported in this browser");
+            setVideoError({
+              code: 4,
+              message: "HLS video not supported in this browser",
+              recoverable: false,
             });
           }
-        });
+        } catch (error) {
+          logger.error("Failed to load HLS.js:", error);
+          setVideoError({
+            code: 0,
+            message: "Failed to load video player",
+            recoverable: true,
+          });
+        }
+      };
 
-        hls.on(Hls.Events.ERROR, (event, data) => {
-          logger.error("HLS error:", event, data);
-          if (data.fatal) {
-            switch (data.type) {
-              case Hls.ErrorTypes.NETWORK_ERROR:
-                if (retryCount < MAX_RETRIES) {
-                  logger.log("HLS network error, attempting recovery...");
-                  hls.startLoad();
-                  setRetryCount((prev) => prev + 1);
-                } else {
-                  setVideoError({
-                    code: 2,
-                    message: "Network error loading video",
-                    recoverable: false,
-                  });
-                }
-                break;
-              case Hls.ErrorTypes.MEDIA_ERROR:
-                if (retryCount < MAX_RETRIES) {
-                  logger.log("HLS media error, attempting recovery...");
-                  hls.recoverMediaError();
-                  setRetryCount((prev) => prev + 1);
-                } else {
-                  setVideoError({
-                    code: 3,
-                    message: "Media error playing video",
-                    recoverable: false,
-                  });
-                }
-                break;
-              default:
-                setVideoError({
-                  code: 0,
-                  message: "Fatal error loading video",
-                  recoverable: false,
-                });
-                hls.destroy();
-                break;
-            }
-          }
-        });
-
-        return () => {
-          hls.destroy();
-        };
-      } else if (
-        videoRef.current.canPlayType("application/vnd.apple.mpegurl")
-      ) {
-        // Native HLS support (Safari)
-        videoRef.current.src = src;
-      } else {
-        logger.error("HLS is not supported in this browser");
-        setVideoError({
-          code: 4,
-          message: "HLS video not supported in this browser",
-          recoverable: false,
-        });
-      }
+      initHls();
     } else {
       // Regular video file - use cached version if available
       videoRef.current.src = videoSrc;
     }
+
+    return () => {
+      isCancelled = true;
+      hlsInstance?.destroy();
+    };
   }, [src, cachedSrc, isVideoLoaded, isPlaying, retryCount]);
 
   // Auto-play video after it's loaded on user click

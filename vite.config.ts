@@ -11,7 +11,10 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           // Core React - always needed first
-          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
+          if (
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-dom/")
+          ) {
             return "vendor-react-core";
           }
           // React Router - needed for navigation
@@ -27,7 +30,10 @@ export default defineConfig({
             return "vendor-atproto-oauth";
           }
           // AWS Amplify - only needed for certain features
-          if (id.includes("node_modules/aws-amplify") || id.includes("node_modules/@aws-amplify")) {
+          if (
+            id.includes("node_modules/aws-amplify") ||
+            id.includes("node_modules/@aws-amplify")
+          ) {
             return "vendor-amplify";
           }
           // Date utilities - used across the app
@@ -38,10 +44,7 @@ export default defineConfig({
           if (id.includes("node_modules/@tanstack/react-query")) {
             return "vendor-query";
           }
-          // Media/video handling - only needed when viewing videos
-          if (id.includes("node_modules/hls.js")) {
-            return "vendor-media";
-          }
+          // HLS.js is dynamically imported - let Vite handle its chunking
           // Database utilities
           if (id.includes("node_modules/idb")) {
             return "vendor-idb";
