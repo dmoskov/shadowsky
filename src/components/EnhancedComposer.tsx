@@ -510,6 +510,19 @@ export function EnhancedComposer({
     preview: string;
     trimStart: number;
     trimEnd: number;
+    playbackSpeed: number;
+    filter: string;
+    textOverlays: Array<{
+      id: string;
+      text: string;
+      position: string;
+      fontSize: number;
+      color: string;
+      backgroundColor: string;
+      bold: boolean;
+      italic: boolean;
+      align: "left" | "center" | "right";
+    }>;
   }) => {
     // Update media with edited video
     setMedia((prev) =>
