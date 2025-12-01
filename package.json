@@ -31,6 +31,7 @@
     "@types/react-window": "^1.8.8",
     "aws-amplify": "^6.15.7",
     "date-fns": "^3.0.0",
+    "dexie": "^4.2.1",
     "dompurify": "3.3.0",
     "hls.js": "^1.6.7",
     "idb": "^8.0.3",

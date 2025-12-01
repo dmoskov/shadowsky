@@ -8,9 +8,13 @@ const path = require("path");
 const crypto = require("crypto");
 const os = require("os");
 const { WebSocketNotificationServer } = require("./websocket-server");
+const pushSubscriptions = require("./push-subscriptions");
 
 // Load environment variables from parent directory's .env file
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
+
+// Initialize Web Push with VAPID keys
+const pushEnabled = pushSubscriptions.initWebPush();
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -806,6 +810,231 @@ Provide specific evidence and quotes to support your analysis. Start directly wi
   }
 });
 
+// =============================================================================
+// Push Notification Subscription Endpoints
+// =============================================================================
+
+/**
+ * Helper to get client IP address
+ */
+function getClientIp(req) {
+  return (
+    req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+    req.connection?.remoteAddress ||
+    req.ip ||
+    "unknown"
+  );
+}
+
+/**
+ * Helper to extract user DID from Authorization header
+ * Supports: Bearer <jwt> or DID:<did>
+ */
+function extractUserDid(req) {
+  const auth = req.headers.authorization;
+  if (!auth) {
+    return null;
+  }
+
+  // Support DID directly in header (e.g., "DID:did:plc:...")
+  if (auth.startsWith("DID:")) {
+    return auth.slice(4);
+  }
+
+  // Support Bearer token (would need JWT verification in production)
+  // For now, client can pass DID in x-user-did header as fallback
+  return req.headers["x-user-did"] || null;
+}
+
+/**
+ * POST /api/push-subscription
+ *
+ * Register a new push subscription for the authenticated user.
+ *
+ * Request body:
+ * {
+ *   endpoint: string,
+ *   keys: { p256dh: string, auth: string },
+ *   expirationTime?: number | null,
+ *   userAgent?: string,
+ *   createdAt?: number
+ * }
+ *
+ * Response:
+ * {
+ *   subscriptionId: string
+ * }
+ */
+app.post("/api/push-subscription", async (req, res) => {
+  if (!pushEnabled) {
+    return res.status(503).json({
+      error: "Push notifications are not configured on this server",
+    });
+  }
+
+  const subscription = req.body;
+  const userDid = extractUserDid(req);
+  const clientIp = getClientIp(req);
+
+  try {
+    const result = await pushSubscriptions.createSubscription(
+      subscription,
+      userDid,
+      clientIp,
+    );
+
+    if (!result.success) {
+      return res.status(400).json({
+        error: result.error,
+        details: result.details,
+      });
+    }
+
+    res.status(201).json({
+      subscriptionId: result.subscriptionId,
+    });
+  } catch (error) {
+    console.error("Error creating push subscription:", error);
+    res.status(500).json({
+      error: "Failed to create push subscription",
+    });
+  }
+});
+
+/**
+ * DELETE /api/push-subscription/:subscriptionId
+ *
+ * Delete a push subscription.
+ */
+app.delete("/api/push-subscription/:subscriptionId", async (req, res) => {
+  const { subscriptionId } = req.params;
+  const userDid = extractUserDid(req);
+
+  try {
+    const result = await pushSubscriptions.deleteSubscription(
+      subscriptionId,
+      userDid,
+    );
+
+    if (!result.success) {
+      return res.status(403).json({
+        error: result.error,
+      });
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    console.error("Error deleting push subscription:", error);
+    res.status(500).json({
+      error: "Failed to delete push subscription",
+    });
+  }
+});
+
+/**
+ * GET /api/push-subscriptions
+ *
+ * Get all push subscriptions for the authenticated user.
+ */
+app.get("/api/push-subscriptions", async (req, res) => {
+  const userDid = extractUserDid(req);
+
+  if (!userDid) {
+    return res.status(401).json({
+      error: "Authentication required",
+    });
+  }
+
+  try {
+    const subscriptions =
+      await pushSubscriptions.getSubscriptionsForUser(userDid);
+    res.json({ subscriptions });
+  } catch (error) {
+    console.error("Error fetching push subscriptions:", error);
+    res.status(500).json({
+      error: "Failed to fetch push subscriptions",
+    });
+  }
+});
+
+/**
+ * POST /api/push-notification/send
+ *
+ * Send a push notification to a user (internal/admin endpoint).
+ * In production, this should be protected with proper authentication.
+ *
+ * Request body:
+ * {
+ *   userDid: string,
+ *   notification: {
+ *     type: 'notification' | 'message' | 'system',
+ *     title: string,
+ *     body: string,
+ *     icon?: string,
+ *     badge?: string,
+ *     data?: object
+ *   }
+ * }
+ */
+app.post("/api/push-notification/send", async (req, res) => {
+  if (!pushEnabled) {
+    return res.status(503).json({
+      error: "Push notifications are not configured on this server",
+    });
+  }
+
+  const { userDid, notification } = req.body;
+
+  if (!userDid || !notification) {
+    return res.status(400).json({
+      error: "userDid and notification are required",
+    });
+  }
+
+  try {
+    const result = await pushSubscriptions.sendPushNotification(
+      userDid,
+      notification,
+    );
+
+    if (!result.success) {
+      return res.status(404).json({
+        error: result.error,
+      });
+    }
+
+    res.json({
+      sent: result.sent,
+      failed: result.failed,
+    });
+  } catch (error) {
+    console.error("Error sending push notification:", error);
+    res.status(500).json({
+      error: "Failed to send push notification",
+    });
+  }
+});
+
+/**
+ * GET /api/push/vapid-public-key
+ *
+ * Get the VAPID public key for client subscription.
+ * This allows the frontend to retrieve the key dynamically.
+ */
+app.get("/api/push/vapid-public-key", (req, res) => {
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
+
+  if (!publicKey) {
+    return res.status(503).json({
+      error: "Push notifications are not configured",
+    });
+  }
+
+  res.json({
+    publicKey,
+  });
+});
+
 // Create HTTP server for Express app
 const httpServer = http.createServer(app);
 
@@ -824,11 +1053,22 @@ httpServer.listen(PORT, () => {
   console.log(
     `  - POST /api/analyze-posts     : Analyze user posts qualitatively`,
   );
+  console.log(`  - POST /api/push-subscription : Register push subscription`);
+  console.log(`  - DELETE /api/push-subscription/:id : Remove push subscription`);
+  console.log(`  - GET  /api/push-subscriptions : List user subscriptions`);
+  console.log(`  - POST /api/push-notification/send : Send push notification`);
+  console.log(`  - GET  /api/push/vapid-public-key : Get VAPID public key`);
   console.log(
     `\nAPI Configuration:`,
     process.env.ANTHROPIC_API_KEY
       ? `✓ Anthropic API key loaded`
       : `✗ Anthropic API key not found`,
+  );
+  console.log(
+    `Push Notifications:`,
+    pushEnabled
+      ? `✓ VAPID keys configured`
+      : `✗ VAPID keys not found (set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY)`,
   );
 });
 
