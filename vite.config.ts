@@ -246,10 +246,16 @@ export default defineConfig({
     fs: {
       strict: false,
     },
-    // Headers required for FFmpeg with SharedArrayBuffer
+    // Security and feature headers
     headers: {
+      // Required for FFmpeg with SharedArrayBuffer
       "Cross-Origin-Embedder-Policy": "credentialless",
       "Cross-Origin-Opener-Policy": "same-origin",
+      // Security headers
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "SAMEORIGIN",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      // Note: CSP is configured loosely for dev; production should be stricter via hosting config
     },
     // Proxy configuration for Bluesky CDN images to avoid CORS issues
     proxy: {
@@ -295,6 +301,14 @@ export default defineConfig({
   },
   preview: {
     port: 5174,
+    // Security headers for preview builds (production-like)
+    headers: {
+      "Cross-Origin-Embedder-Policy": "credentialless",
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "SAMEORIGIN",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+    },
   },
   // Handle SPA routing - return index.html for all routes
   appType: "spa",

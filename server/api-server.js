@@ -53,6 +53,19 @@ app.use(
 // Increase JSON payload size limit for base64-encoded images
 app.use(express.json({ limit: "50mb" }));
 
+// Security headers middleware
+app.use((req, res, next) => {
+  // Prevent clickjacking
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  // Prevent MIME type sniffing
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  // Control referrer information
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  // XSS protection (legacy but still useful for older browsers)
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  next();
+});
+
 // Generate alt text for an image URL
 app.post("/api/generate-alt-text", async (req, res) => {
   const { imageUrl } = req.body;
