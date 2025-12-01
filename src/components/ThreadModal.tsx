@@ -1,8 +1,8 @@
 import { RichText, type AppBskyFeedDefs } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader, X } from "lucide-react";
-import React, { useCallback, useEffect, useState } from "react";
+import { BarChart3, Loader, X } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import ReactDOM from "react-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
@@ -10,6 +10,8 @@ import { useModalSwipeBack } from "../hooks/useModalSwipeBack";
 import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
 import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { EnhancedComposer } from "./EnhancedComposer";
+import { ThreadEngagementAnalytics } from "./ThreadEngagementAnalytics";
+import { ThreadNavigationBar } from "./ThreadNavigationBar";
 import { ThreadViewer } from "./ThreadViewer";
 
 interface ThreadModalProps {
@@ -52,6 +54,8 @@ export function ThreadModal({
   });
   const [continueThreadPost, setContinueThreadPost] =
     useState<AppBskyFeedDefs.PostView | null>(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [focusedPostIndex, setFocusedPostIndex] = useState(0);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -201,6 +205,95 @@ export function ThreadModal({
     }
     return postUri;
   }, [threadData, postUri]);
+
+  // Get the actual root post object
+  const rootPostObject = useMemo(() => {
+    return posts.find((p) => p.uri === rootPost);
+  }, [posts, rootPost]);
+
+  // Get current focused post and its navigation context
+  const navigationContext = useMemo(() => {
+    if (posts.length === 0) return null;
+
+    const currentPost = posts[focusedPostIndex] || posts[0];
+    if (!currentPost) return null;
+
+    // Find parent post
+    const postRecord = currentPost.record as {
+      reply?: { parent?: { uri: string } };
+    };
+    const parentUri = postRecord?.reply?.parent?.uri;
+    const parentPost = parentUri
+      ? posts.find((p) => p.uri === parentUri)
+      : undefined;
+
+    // Find siblings (posts with same parent)
+    let siblingPosts:
+      | { prev?: PostView; next?: PostView; current: number; total: number }
+      | undefined;
+    if (parentPost) {
+      const siblings = posts.filter((p) => {
+        const record = p.record as { reply?: { parent?: { uri: string } } };
+        return record?.reply?.parent?.uri === parentUri;
+      });
+      if (siblings.length > 1) {
+        const currentIdx = siblings.findIndex((p) => p.uri === currentPost.uri);
+        siblingPosts = {
+          prev: currentIdx > 0 ? siblings[currentIdx - 1] : undefined,
+          next:
+            currentIdx < siblings.length - 1
+              ? siblings[currentIdx + 1]
+              : undefined,
+          current: currentIdx,
+          total: siblings.length,
+        };
+      }
+    }
+
+    return {
+      currentPost,
+      parentPost,
+      siblingPosts,
+    };
+  }, [posts, focusedPostIndex]);
+
+  // Navigation handlers
+  const handleJumpToRoot = useCallback(() => {
+    setFocusedPostIndex(0);
+  }, []);
+
+  const handleJumpToParent = useCallback(() => {
+    if (navigationContext?.parentPost) {
+      const parentIdx = posts.findIndex(
+        (p) => p.uri === navigationContext.parentPost?.uri,
+      );
+      if (parentIdx >= 0) {
+        setFocusedPostIndex(parentIdx);
+      }
+    }
+  }, [navigationContext, posts]);
+
+  const handleJumpToPrevSibling = useCallback(() => {
+    if (navigationContext?.siblingPosts?.prev) {
+      const idx = posts.findIndex(
+        (p) => p.uri === navigationContext.siblingPosts?.prev?.uri,
+      );
+      if (idx >= 0) {
+        setFocusedPostIndex(idx);
+      }
+    }
+  }, [navigationContext, posts]);
+
+  const handleJumpToNextSibling = useCallback(() => {
+    if (navigationContext?.siblingPosts?.next) {
+      const idx = posts.findIndex(
+        (p) => p.uri === navigationContext.siblingPosts?.next?.uri,
+      );
+      if (idx >= 0) {
+        setFocusedPostIndex(idx);
+      }
+    }
+  }, [navigationContext, posts]);
 
   // Find the last post in the user's own thread continuation (deepest post by user in direct reply chain)
   const findLastUserPost = useCallback(
@@ -511,30 +604,65 @@ export function ThreadModal({
         >
           {/* Header with close button */}
           <div
-            className="flex flex-shrink-0 items-center justify-between border-b p-6"
+            className="flex flex-shrink-0 items-center justify-between border-b px-4 py-3 md:px-6 md:py-4"
             style={{
               backgroundColor: "var(--bsky-bg-primary)",
               borderColor: "var(--bsky-border-primary)",
             }}
           >
-            <h2
-              className="text-xl font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
-            >
-              Thread
-            </h2>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onClose();
-              }}
-              className="rounded-full p-2 transition-all hover:scale-110 hover:bg-gray-100 dark:hover:bg-gray-800"
-              style={{ color: "var(--bsky-text-secondary)" }}
-              aria-label="Close"
-            >
-              <X size={24} />
-            </button>
+            <div className="flex items-center gap-3">
+              <h2
+                className="text-lg font-semibold md:text-xl"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                Thread
+              </h2>
+              {posts.length > 0 && (
+                <span
+                  className="rounded-full px-2 py-0.5 text-xs"
+                  style={{
+                    backgroundColor: "var(--bsky-bg-tertiary)",
+                    color: "var(--bsky-text-secondary)",
+                  }}
+                >
+                  {posts.length} posts
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Analytics toggle */}
+              {posts.length > 0 && (
+                <button
+                  onClick={() => setShowAnalytics(!showAnalytics)}
+                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                    showAnalytics
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                  style={
+                    !showAnalytics
+                      ? { color: "var(--bsky-text-secondary)" }
+                      : {}
+                  }
+                  title="Toggle thread analytics"
+                >
+                  <BarChart3 size={16} />
+                  <span className="hidden sm:inline">Analytics</span>
+                </button>
+              )}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onClose();
+                }}
+                className="rounded-full p-2 transition-all hover:scale-110 hover:bg-gray-100 dark:hover:bg-gray-800"
+                style={{ color: "var(--bsky-text-secondary)" }}
+                aria-label="Close"
+              >
+                <X size={24} />
+              </button>
+            </div>
           </div>
 
           {/* Scrollable content */}
@@ -645,53 +773,91 @@ export function ThreadModal({
               )}
 
               {posts.length > 0 && (
-                <ThreadViewer
-                  posts={posts}
-                  rootUri={rootPost}
-                  highlightUri={postUri}
-                  showUnreadIndicators={false}
-                  className="w-full"
-                  currentUserDid={session?.did}
-                  onPostClick={(clickedPost, action) => {
-                    const post =
-                      posts.find((p) => p.uri === clickedPost.uri) || null;
+                <>
+                  {/* Thread Navigation Bar */}
+                  <ThreadNavigationBar
+                    rootPost={rootPostObject}
+                    currentPost={navigationContext?.currentPost}
+                    parentPost={navigationContext?.parentPost}
+                    siblingPosts={navigationContext?.siblingPosts}
+                    totalPosts={posts.length}
+                    currentIndex={focusedPostIndex}
+                    onJumpToRoot={handleJumpToRoot}
+                    onJumpToParent={handleJumpToParent}
+                    onJumpToPrevSibling={handleJumpToPrevSibling}
+                    onJumpToNextSibling={handleJumpToNextSibling}
+                    className="mb-4"
+                  />
 
-                    if (action === "reply") {
-                      // When user clicks reply on a post in the thread
-                      setReplyState({
-                        isReplying: true,
-                        replyToPost: post,
-                      });
-                      setQuoteState({
-                        isQuoting: false,
-                        quotedPost: null,
-                      });
-                    } else if (action === "quote") {
-                      // When user clicks quote on a post in the thread
-                      setQuoteState({
-                        isQuoting: true,
-                        quotedPost: post,
-                      });
-                      setReplyState({
-                        isReplying: false,
-                        replyToPost: null,
-                      });
-                    }
-                  }}
-                  onDeletePost={handleDeletePost}
-                  onContinueThread={() => {
-                    const lastUserPost = findLastUserPost(posts, session?.did);
-                    if (lastUserPost) {
-                      handleContinueThread(lastUserPost);
-                    } else {
-                      // If no user posts, use the last post in the thread
-                      const lastPost = posts[posts.length - 1];
-                      if (lastPost) {
-                        handleContinueThread(lastPost);
+                  {/* Thread Analytics (collapsible) */}
+                  {showAnalytics && (
+                    <ThreadEngagementAnalytics
+                      posts={posts}
+                      className="mb-4"
+                      collapsed={false}
+                    />
+                  )}
+
+                  {/* Thread Viewer */}
+                  <ThreadViewer
+                    posts={posts}
+                    rootUri={rootPost}
+                    highlightUri={postUri}
+                    showUnreadIndicators={false}
+                    className="w-full"
+                    currentUserDid={session?.did}
+                    onPostClick={(clickedPost, action) => {
+                      const post =
+                        posts.find((p) => p.uri === clickedPost.uri) || null;
+
+                      // Update focused index when clicking a post
+                      const clickedIdx = posts.findIndex(
+                        (p) => p.uri === clickedPost.uri,
+                      );
+                      if (clickedIdx >= 0) {
+                        setFocusedPostIndex(clickedIdx);
                       }
-                    }
-                  }}
-                />
+
+                      if (action === "reply") {
+                        // When user clicks reply on a post in the thread
+                        setReplyState({
+                          isReplying: true,
+                          replyToPost: post,
+                        });
+                        setQuoteState({
+                          isQuoting: false,
+                          quotedPost: null,
+                        });
+                      } else if (action === "quote") {
+                        // When user clicks quote on a post in the thread
+                        setQuoteState({
+                          isQuoting: true,
+                          quotedPost: post,
+                        });
+                        setReplyState({
+                          isReplying: false,
+                          replyToPost: null,
+                        });
+                      }
+                    }}
+                    onDeletePost={handleDeletePost}
+                    onContinueThread={() => {
+                      const lastUserPost = findLastUserPost(
+                        posts,
+                        session?.did,
+                      );
+                      if (lastUserPost) {
+                        handleContinueThread(lastUserPost);
+                      } else {
+                        // If no user posts, use the last post in the thread
+                        const lastPost = posts[posts.length - 1];
+                        if (lastPost) {
+                          handleContinueThread(lastPost);
+                        }
+                      }
+                    }}
+                  />
+                </>
               )}
             </div>
           </div>
