@@ -127,16 +127,6 @@ const ListTimeline = lazy(() =>
     default: m.ListTimeline,
   })),
 );
-const CollaborativeLists = lazy(() =>
-  import("./components/collaborative-lists").then((m) => ({
-    default: m.CollaborativeLists,
-  })),
-);
-const CollaborativeListDetail = lazy(() =>
-  import("./components/collaborative-lists").then((m) => ({
-    default: m.CollaborativeListDetail,
-  })),
-);
 const Notifications = lazy(() =>
   import("./components/Notifications").then((m) => ({
     default: m.Notifications,
@@ -182,11 +172,6 @@ function ThreadPageWithKey() {
 function ListTimelineWithKey() {
   const { listId } = useParams<{ listId: string }>();
   return <ListTimeline key={listId} />;
-}
-
-function CollaborativeListDetailWithKey() {
-  const { listId } = useParams<{ listId: string }>();
-  return <CollaborativeListDetail key={listId} />;
 }
 
 // Mobile-optimized query client settings
@@ -483,32 +468,6 @@ function AppContent() {
                     }}
                   >
                     <ListTimelineWithKey />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/collaborative-lists"
-                element={
-                  <ErrorBoundary
-                    componentName="Collaborative Lists"
-                    onError={(error) => {
-                      analytics.trackError(error, "CollaborativeLists");
-                    }}
-                  >
-                    <CollaborativeLists />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/collaborative-lists/:listId"
-                element={
-                  <ErrorBoundary
-                    componentName="Collaborative List Detail"
-                    onError={(error) => {
-                      analytics.trackError(error, "CollaborativeListDetail");
-                    }}
-                  >
-                    <CollaborativeListDetailWithKey />
                   </ErrorBoundary>
                 }
               />

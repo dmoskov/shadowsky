@@ -10,7 +10,6 @@ import {
   PenSquare,
   Search,
   User,
-  Users,
   X,
 } from "lucide-react";
 import React from "react";
@@ -43,7 +42,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { path: "/timeline", label: "Timeline", icon: Clock },
     { path: "/bookmarks", label: "Bookmarks", icon: Bookmark },
     { path: "/lists", label: "Lists", icon: List },
-    { path: "/collaborative-lists", label: "Collab Lists", icon: Users },
     { path: "/messages", label: "Direct Messages", icon: Mail },
     { path: "/compose", label: "Compose", icon: PenSquare },
     {
