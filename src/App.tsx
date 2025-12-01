@@ -471,7 +471,19 @@ function AppContent() {
                   </ErrorBoundary>
                 }
               />
-              <Route path="/compose" element={<Composer />} />
+              <Route
+                path="/compose"
+                element={
+                  <ErrorBoundary
+                    componentName="Composer"
+                    onError={(error) => {
+                      analytics.trackError(error, "Composer");
+                    }}
+                  >
+                    <Composer />
+                  </ErrorBoundary>
+                }
+              />
               <Route path="/search" element={<Search />} />
               <Route path="/profile/:handle" element={<ProfilePageWithKey />} />
               <Route
@@ -541,7 +553,14 @@ function App() {
                       <HiddenPostsProvider>
                         <ModerationProvider>
                           <StorageErrorProvider>
-                            <AppContent />
+                            <ErrorBoundary
+                              componentName="Application"
+                              onError={(error) => {
+                                analytics.trackError(error, "App");
+                              }}
+                            >
+                              <AppContent />
+                            </ErrorBoundary>
                           </StorageErrorProvider>
                         </ModerationProvider>
                       </HiddenPostsProvider>

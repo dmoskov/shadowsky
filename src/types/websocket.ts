@@ -7,6 +7,11 @@ export enum WebSocketEventType {
   ERROR = "error",
   RECONNECT = "reconnect",
 
+  // Authentication events
+  AUTH = "auth",
+  AUTH_SUCCESS = "auth:success",
+  AUTH_FAILURE = "auth:failure",
+
   // Notification events
   NEW_NOTIFICATION = "notification:new",
   NOTIFICATION_READ = "notification:read",
@@ -44,11 +49,28 @@ export interface WebSocketErrorEvent extends WebSocketEvent {
   code?: string;
 }
 
+export interface AuthEvent extends WebSocketEvent {
+  type: WebSocketEventType.AUTH;
+  token: string;
+}
+
+export interface AuthSuccessEvent extends WebSocketEvent {
+  type: WebSocketEventType.AUTH_SUCCESS;
+}
+
+export interface AuthFailureEvent extends WebSocketEvent {
+  type: WebSocketEventType.AUTH_FAILURE;
+  error: string;
+}
+
 export type WebSocketMessage =
   | NewNotificationEvent
   | NotificationCountEvent
   | NotificationReadEvent
   | WebSocketErrorEvent
+  | AuthEvent
+  | AuthSuccessEvent
+  | AuthFailureEvent
   | WebSocketEvent;
 
 export enum WebSocketConnectionState {
@@ -61,6 +83,8 @@ export enum WebSocketConnectionState {
 
 export interface WebSocketConfig {
   url: string;
+  accessToken?: string;
+  authTimeout?: number;
   reconnectDelay?: number;
   maxReconnectAttempts?: number;
   heartbeatInterval?: number;

@@ -9,20 +9,27 @@ import {
 
 type EventHandler = (event: WebSocketMessage) => void;
 
+type RequiredWebSocketConfig = Required<
+  Omit<WebSocketConfig, "accessToken">
+> & { accessToken?: string };
+
 export class WebSocketService {
   private ws: WebSocket | null = null;
-  private config: Required<WebSocketConfig>;
+  private config: RequiredWebSocketConfig;
   private eventHandlers: Map<WebSocketEventType, Set<EventHandler>> = new Map();
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+  private authTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
   private stats: WebSocketStats;
   private isIntentionallyClosed = false;
+  private isAuthenticated = false;
 
   constructor(config: WebSocketConfig) {
     this.config = {
       reconnectDelay: 5000,
       maxReconnectAttempts: 10,
       heartbeatInterval: 30000,
+      authTimeout: 10000,
       debug: false,
       ...config,
     };
@@ -50,6 +57,7 @@ export class WebSocketService {
     }
 
     this.isIntentionallyClosed = false;
+    this.isAuthenticated = false;
     this.updateConnectionState(WebSocketConnectionState.CONNECTING);
     this.log(`Connecting to WebSocket: ${this.config.url}`);
 
@@ -127,15 +135,25 @@ export class WebSocketService {
     if (!this.ws) return;
 
     this.ws.onopen = () => {
-      this.log("WebSocket connected");
+      this.log("WebSocket transport connected, sending authentication...");
       this.stats.reconnectAttempts = 0;
       this.stats.connectedAt = new Date();
-      this.updateConnectionState(WebSocketConnectionState.CONNECTED);
-      this.startHeartbeat();
-      this.emit({
-        type: WebSocketEventType.CONNECT,
-        timestamp: new Date().toISOString(),
-      });
+
+      // Send authentication message immediately after connection
+      if (this.config.accessToken) {
+        this.sendAuthMessage(this.config.accessToken);
+        this.startAuthTimeout();
+      } else {
+        // No token provided, emit connect event immediately
+        this.log("No access token configured, skipping authentication");
+        this.isAuthenticated = true;
+        this.updateConnectionState(WebSocketConnectionState.CONNECTED);
+        this.startHeartbeat();
+        this.emit({
+          type: WebSocketEventType.CONNECT,
+          timestamp: new Date().toISOString(),
+        });
+      }
     };
 
     this.ws.onclose = (event) => {
@@ -170,6 +188,19 @@ export class WebSocketService {
       const message: WebSocketMessage = JSON.parse(data);
       this.log(`Received message: ${message.type}`);
 
+      // Handle authentication responses
+      if (message.type === WebSocketEventType.AUTH_SUCCESS) {
+        this.handleAuthSuccess();
+        return;
+      }
+
+      if (message.type === WebSocketEventType.AUTH_FAILURE) {
+        this.handleAuthFailure(
+          (message as { error?: string }).error || "Authentication failed",
+        );
+        return;
+      }
+
       if (message.type === WebSocketEventType.PING) {
         this.send({
           type: WebSocketEventType.PONG,
@@ -182,6 +213,87 @@ export class WebSocketService {
     } catch (error) {
       this.handleError("Failed to parse WebSocket message", error);
     }
+  }
+
+  private sendAuthMessage(token: string): void {
+    if (this.ws?.readyState !== WebSocket.OPEN) {
+      this.handleError("Cannot send auth message: WebSocket not open", null);
+      return;
+    }
+
+    try {
+      const authMessage = {
+        type: WebSocketEventType.AUTH,
+        token,
+        timestamp: new Date().toISOString(),
+      };
+      this.ws.send(JSON.stringify(authMessage));
+      this.stats.messagesSent++;
+      this.log("Authentication message sent");
+    } catch (error) {
+      this.handleError("Failed to send authentication message", error);
+      this.scheduleReconnect();
+    }
+  }
+
+  private startAuthTimeout(): void {
+    if (this.authTimeoutTimer) {
+      clearTimeout(this.authTimeoutTimer);
+    }
+
+    this.authTimeoutTimer = setTimeout(() => {
+      if (!this.isAuthenticated) {
+        this.handleAuthFailure("Authentication timeout - no response received");
+      }
+    }, this.config.authTimeout);
+
+    this.log(`Authentication timeout started (${this.config.authTimeout}ms)`);
+  }
+
+  private handleAuthSuccess(): void {
+    if (this.authTimeoutTimer) {
+      clearTimeout(this.authTimeoutTimer);
+      this.authTimeoutTimer = null;
+    }
+
+    this.isAuthenticated = true;
+    this.log("Authentication successful");
+    this.updateConnectionState(WebSocketConnectionState.CONNECTED);
+    this.startHeartbeat();
+
+    this.emit({
+      type: WebSocketEventType.AUTH_SUCCESS,
+      timestamp: new Date().toISOString(),
+    });
+
+    this.emit({
+      type: WebSocketEventType.CONNECT,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  private handleAuthFailure(error: string): void {
+    if (this.authTimeoutTimer) {
+      clearTimeout(this.authTimeoutTimer);
+      this.authTimeoutTimer = null;
+    }
+
+    this.isAuthenticated = false;
+    this.stats.lastError = `Authentication failed: ${error}`;
+    this.log(`Authentication failed: ${error}`, "error");
+
+    this.emit({
+      type: WebSocketEventType.AUTH_FAILURE,
+      error,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Close the connection and schedule reconnect
+    if (this.ws) {
+      this.ws.close(4001, "Authentication failed");
+    }
+    this.updateConnectionState(WebSocketConnectionState.ERROR);
+    this.scheduleReconnect();
   }
 
   private emit(event: WebSocketMessage): void {
@@ -265,6 +377,10 @@ export class WebSocketService {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
+    }
+    if (this.authTimeoutTimer) {
+      clearTimeout(this.authTimeoutTimer);
+      this.authTimeoutTimer = null;
     }
     this.stopHeartbeat();
   }
