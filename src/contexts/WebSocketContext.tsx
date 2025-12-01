@@ -209,11 +209,13 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       return;
     }
 
-    const fullWsUrl = `${wsUrl}?token=${session.accessJwt}`;
-
-    debug.log("🔌 [WebSocket] Initializing service");
+    // Pass token via config for initial message authentication
+    // This prevents token exposure in URL (browser history, logs, referrer headers)
+    debug.log("🔌 [WebSocket] Initializing service with secure authentication");
     const service = initializeWebSocketService({
-      url: fullWsUrl,
+      url: wsUrl,
+      accessToken: session.accessJwt,
+      authTimeout: 10000,
       reconnectDelay: 5000,
       maxReconnectAttempts: 10,
       heartbeatInterval: 30000,
