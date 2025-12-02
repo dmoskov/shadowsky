@@ -107,9 +107,7 @@ export interface BatchConfig {
 /**
  * Get rate limit configuration for operation type
  */
-function getRateLimitForOperation(
-  operationType: BatchOperationType
-): {
+function getRateLimitForOperation(operationType: BatchOperationType): {
   perMinute: number;
   perHour: number;
   endpointType: ATProtoEndpointType;
@@ -178,7 +176,7 @@ function formatDuration(seconds: number): string {
 function calculateRiskLevel(
   count: number,
   safeLimit: number,
-  hourlyLimit: number
+  hourlyLimit: number,
 ): RiskLevel {
   const safeRatio = count / safeLimit;
   const hourlyRatio = count / hourlyLimit;
@@ -201,7 +199,7 @@ function calculateRiskLevel(
 function generateWarningMessage(
   riskLevel: RiskLevel,
   count: number,
-  operationType: BatchOperationType
+  operationType: BatchOperationType,
 ): string | undefined {
   const opName =
     operationType === "follow"
@@ -228,7 +226,7 @@ function generateWarningMessage(
 function generateSuggestions(
   riskLevel: RiskLevel,
   count: number,
-  recommendedBatchSize: number
+  recommendedBatchSize: number,
 ): string[] | undefined {
   if (riskLevel === "safe") {
     return undefined;
@@ -238,23 +236,21 @@ function generateSuggestions(
 
   if (riskLevel === "high" || riskLevel === "dangerous") {
     suggestions.push(
-      `Consider processing in batches of ${recommendedBatchSize} at a time`
+      `Consider processing in batches of ${recommendedBatchSize} at a time`,
     );
     suggestions.push("Wait a few minutes between batches to avoid rate limits");
   }
 
   if (riskLevel === "dangerous") {
     suggestions.push(
-      "Large batch operations may trigger Bluesky's anti-spam measures"
+      "Large batch operations may trigger Bluesky's anti-spam measures",
     );
-    suggestions.push(
-      "If rate limited, wait 5-10 minutes before trying again"
-    );
+    suggestions.push("If rate limited, wait 5-10 minutes before trying again");
   }
 
   if (count > 500) {
     suggestions.push(
-      "For very large batches, consider spreading operations over multiple sessions"
+      "For very large batches, consider spreading operations over multiple sessions",
     );
   }
 
@@ -299,24 +295,21 @@ export function estimateBatchOperation(config: BatchConfig): BatchEstimation {
 
   // Calculate safe limits with safety margin
   const safePerMinute = Math.floor(
-    rateLimits.perMinute * BLUESKY_RATE_LIMITS.SAFETY_MARGIN
+    rateLimits.perMinute * BLUESKY_RATE_LIMITS.SAFETY_MARGIN,
   );
   const safePerHour = Math.floor(
-    rateLimits.perHour * BLUESKY_RATE_LIMITS.SAFETY_MARGIN
+    rateLimits.perHour * BLUESKY_RATE_LIMITS.SAFETY_MARGIN,
   );
 
   // Calculate recommended batch size (50% of per-minute limit for safety)
-  const recommendedBatchSize = Math.max(
-    10,
-    Math.floor(safePerMinute * 0.5)
-  );
+  const recommendedBatchSize = Math.max(10, Math.floor(safePerMinute * 0.5));
 
   // Calculate estimated time
   // Time = (count * delay) + (count / perMinute * 60) for rate limit waits
   const baseTimeSeconds = (count * delayBetweenOps) / 1000;
   const rateLimitWaitSeconds = Math.max(
     0,
-    ((count - safePerMinute) / safePerMinute) * 60
+    ((count - safePerMinute) / safePerMinute) * 60,
   );
   const estimatedTimeSeconds = baseTimeSeconds + rateLimitWaitSeconds;
 
@@ -327,8 +320,16 @@ export function estimateBatchOperation(config: BatchConfig): BatchEstimation {
   const canProceed = riskLevel !== "dangerous" || count <= safePerHour;
 
   // Generate warning and suggestions
-  const warningMessage = generateWarningMessage(riskLevel, count, operationType);
-  const suggestions = generateSuggestions(riskLevel, count, recommendedBatchSize);
+  const warningMessage = generateWarningMessage(
+    riskLevel,
+    count,
+    operationType,
+  );
+  const suggestions = generateSuggestions(
+    riskLevel,
+    count,
+    recommendedBatchSize,
+  );
 
   // Require confirmation for moderate risk and above
   const requiresConfirmation =
@@ -360,11 +361,11 @@ export function estimateBatchOperation(config: BatchConfig): BatchEstimation {
  */
 export function canStartBatchOperation(
   operationType: BatchOperationType,
-  count: number
+  count: number,
 ): boolean {
   const rateLimits = getRateLimitForOperation(operationType);
   const safePerMinute = Math.floor(
-    rateLimits.perMinute * BLUESKY_RATE_LIMITS.SAFETY_MARGIN
+    rateLimits.perMinute * BLUESKY_RATE_LIMITS.SAFETY_MARGIN,
   );
 
   // Allow if count is within safe per-minute limit or if it's a small batch
@@ -380,11 +381,11 @@ export function canStartBatchOperation(
  */
 export function calculateOptimalDelay(
   operationType: BatchOperationType,
-  batchSize: number
+  batchSize: number,
 ): number {
   const rateLimits = getRateLimitForOperation(operationType);
   const safePerMinute = Math.floor(
-    rateLimits.perMinute * BLUESKY_RATE_LIMITS.SAFETY_MARGIN
+    rateLimits.perMinute * BLUESKY_RATE_LIMITS.SAFETY_MARGIN,
   );
 
   // If batch is small enough, use minimum delay

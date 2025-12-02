@@ -28,8 +28,8 @@ import {
   generateDraftId,
   getComposerSettings,
   getDrafts,
-  saveDraft,
   saveComposerSettings,
+  saveDraft,
   type ComposerSettings,
   type ThreadDraft,
 } from "../services/drafts";
@@ -143,10 +143,22 @@ const THREAD_TEMPLATES: ThreadTemplate[] = [
 // Numbering format options
 const NUMBERING_FORMATS = {
   none: { label: "None", format: () => "" },
-  simple: { label: "1/5", format: (i: number, total: number) => `${i}/${total}` },
-  brackets: { label: "[1/5]", format: (i: number, total: number) => `[${i}/${total}]` },
-  thread: { label: "🧵 1/5", format: (i: number, total: number) => `🧵 ${i}/${total}` },
-  dots: { label: "• 1 of 5", format: (i: number, total: number) => `• ${i} of ${total}` },
+  simple: {
+    label: "1/5",
+    format: (i: number, total: number) => `${i}/${total}`,
+  },
+  brackets: {
+    label: "[1/5]",
+    format: (i: number, total: number) => `[${i}/${total}]`,
+  },
+  thread: {
+    label: "🧵 1/5",
+    format: (i: number, total: number) => `🧵 ${i}/${total}`,
+  },
+  dots: {
+    label: "• 1 of 5",
+    format: (i: number, total: number) => `• ${i} of ${total}`,
+  },
 } as const;
 
 interface ThreadPlannerComposerProps {
@@ -178,7 +190,9 @@ export function ThreadPlannerComposer({
   const [draftTitle, setDraftTitle] = useState("");
 
   // Settings state
-  const [settings, setSettings] = useState<ComposerSettings>(getComposerSettings());
+  const [settings, setSettings] = useState<ComposerSettings>(
+    getComposerSettings(),
+  );
   const [showSettings, setShowSettings] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
 
@@ -260,7 +274,7 @@ export function ThreadPlannerComposer({
           id: generatePostId(),
           text: text.trim(),
           media: [],
-        }))
+        })),
       );
     }
   }, []);
@@ -290,10 +304,14 @@ export function ThreadPlannerComposer({
   useEffect(() => {
     if (!isOpen) return;
 
-    const hasContent = posts.some((p) => p.text.trim().length > 0 || p.media.length > 0);
+    const hasContent = posts.some(
+      (p) => p.text.trim().length > 0 || p.media.length > 0,
+    );
     if (!hasContent) return;
 
-    const currentContent = JSON.stringify(posts.map((p) => ({ text: p.text, mediaCount: p.media.length })));
+    const currentContent = JSON.stringify(
+      posts.map((p) => ({ text: p.text, mediaCount: p.media.length })),
+    );
     if (currentContent === lastSavedContentRef.current) return;
 
     if (autosaveTimerRef.current) {
@@ -326,7 +344,9 @@ export function ThreadPlannerComposer({
 
   // Perform autosave
   const performAutosave = useCallback(async () => {
-    const hasContent = posts.some((p) => p.text.trim().length > 0 || p.media.length > 0);
+    const hasContent = posts.some(
+      (p) => p.text.trim().length > 0 || p.media.length > 0,
+    );
     if (!hasContent) return;
 
     setIsSaving(true);
@@ -336,7 +356,8 @@ export function ThreadPlannerComposer({
       const id = draftId || generateDraftId();
       const title =
         draftTitle ||
-        posts[0].text.substring(0, 50) + (posts[0].text.length > 50 ? "..." : "") ||
+        posts[0].text.substring(0, 50) +
+          (posts[0].text.length > 50 ? "..." : "") ||
         "Untitled Thread";
 
       // Convert media to storable format
@@ -365,7 +386,7 @@ export function ThreadPlannerComposer({
       saveDraft(draft);
       setDraftId(id);
       lastSavedContentRef.current = JSON.stringify(
-        posts.map((p) => ({ text: p.text, mediaCount: p.media.length }))
+        posts.map((p) => ({ text: p.text, mediaCount: p.media.length })),
       );
 
       setStatus({ type: "saved", message: "Draft saved" });
@@ -389,11 +410,14 @@ export function ThreadPlannerComposer({
   }, [performAutosave]);
 
   // Save settings
-  const handleSaveSettings = useCallback((newSettings: Partial<ComposerSettings>) => {
-    const updated = { ...settings, ...newSettings };
-    setSettings(updated);
-    saveComposerSettings(updated);
-  }, [settings]);
+  const handleSaveSettings = useCallback(
+    (newSettings: Partial<ComposerSettings>) => {
+      const updated = { ...settings, ...newSettings };
+      setSettings(updated);
+      saveComposerSettings(updated);
+    },
+    [settings],
+  );
 
   // Apply template
   const applyTemplate = useCallback((template: ThreadTemplate) => {
@@ -469,7 +493,7 @@ export function ThreadPlannerComposer({
   // Update post text
   const updatePost = useCallback((index: number, text: string) => {
     setPosts((prev) =>
-      prev.map((post, i) => (i === index ? { ...post, text } : post))
+      prev.map((post, i) => (i === index ? { ...post, text } : post)),
     );
   }, []);
 
@@ -492,7 +516,10 @@ export function ThreadPlannerComposer({
       const newIndex = direction === "up" ? index - 1 : index + 1;
       if (newIndex < 0 || newIndex >= prev.length) return prev;
       const newPosts = [...prev];
-      [newPosts[index], newPosts[newIndex]] = [newPosts[newIndex], newPosts[index]];
+      [newPosts[index], newPosts[newIndex]] = [
+        newPosts[newIndex],
+        newPosts[index],
+      ];
       return newPosts;
     });
   }, []);
@@ -508,7 +535,12 @@ export function ThreadPlannerComposer({
       }
 
       // Backspace on empty post to delete and focus previous
-      if (e.key === "Backspace" && posts[index].text === "" && posts[index].media.length === 0 && index > 0) {
+      if (
+        e.key === "Backspace" &&
+        posts[index].text === "" &&
+        posts[index].media.length === 0 &&
+        index > 0
+      ) {
         e.preventDefault();
         removePost(index);
         // Focus previous post
@@ -525,7 +557,7 @@ export function ThreadPlannerComposer({
         }, 0);
       }
     },
-    [posts, addPost, removePost]
+    [posts, addPost, removePost],
   );
 
   // Media handling
@@ -534,11 +566,16 @@ export function ThreadPlannerComposer({
       if (!files) return;
 
       const post = posts[postIndex];
-      const currentImageCount = post.media.filter((m) => m.type === "image").length;
+      const currentImageCount = post.media.filter(
+        (m) => m.type === "image",
+      ).length;
 
       for (const file of Array.from(files)) {
         if (currentImageCount >= MAX_IMAGES_PER_POST) {
-          setStatus({ type: "error", message: `Maximum ${MAX_IMAGES_PER_POST} images per post` });
+          setStatus({
+            type: "error",
+            message: `Maximum ${MAX_IMAGES_PER_POST} images per post`,
+          });
           break;
         }
 
@@ -555,7 +592,10 @@ export function ThreadPlannerComposer({
           }
 
           if (processedFile.size > MAX_IMAGE_SIZE) {
-            setStatus({ type: "error", message: "Image must be less than 1MB" });
+            setStatus({
+              type: "error",
+              message: "Image must be less than 1MB",
+            });
             continue;
           }
 
@@ -575,8 +615,8 @@ export function ThreadPlannerComposer({
 
           setPosts((prev) =>
             prev.map((p, i) =>
-              i === postIndex ? { ...p, media: [...p.media, newMedia] } : p
-            )
+              i === postIndex ? { ...p, media: [...p.media, newMedia] } : p,
+            ),
           );
         } catch (error) {
           logger.error("Failed to add media:", error);
@@ -590,7 +630,7 @@ export function ThreadPlannerComposer({
         fileInput.value = "";
       }
     },
-    [posts]
+    [posts],
   );
 
   const removeMedia = useCallback((postIndex: number, mediaId: string) => {
@@ -605,21 +645,26 @@ export function ThreadPlannerComposer({
           ...post,
           media: post.media.filter((m) => m.id !== mediaId),
         };
-      })
+      }),
     );
   }, []);
 
-  const updateMediaAlt = useCallback((postIndex: number, mediaId: string, alt: string) => {
-    setPosts((prev) =>
-      prev.map((post, i) => {
-        if (i !== postIndex) return post;
-        return {
-          ...post,
-          media: post.media.map((m) => (m.id === mediaId ? { ...m, alt } : m)),
-        };
-      })
-    );
-  }, []);
+  const updateMediaAlt = useCallback(
+    (postIndex: number, mediaId: string, alt: string) => {
+      setPosts((prev) =>
+        prev.map((post, i) => {
+          if (i !== postIndex) return post;
+          return {
+            ...post,
+            media: post.media.map((m) =>
+              m.id === mediaId ? { ...m, alt } : m,
+            ),
+          };
+        }),
+      );
+    },
+    [],
+  );
 
   // Drag handlers
   const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
@@ -646,7 +691,7 @@ export function ThreadPlannerComposer({
         setDragOverIndex(index);
       }
     },
-    [draggedIndex]
+    [draggedIndex],
   );
 
   const handleDragLeave = useCallback(() => {
@@ -673,7 +718,7 @@ export function ThreadPlannerComposer({
       setDraggedIndex(null);
       setDragOverIndex(null);
     },
-    [draggedIndex]
+    [draggedIndex],
   );
 
   // Format post with numbering
@@ -690,7 +735,7 @@ export function ThreadPlannerComposer({
         return `${text} ${numbering}`;
       }
     },
-    [settings.numberingFormat, settings.numberingPosition]
+    [settings.numberingFormat, settings.numberingPosition],
   );
 
   // Post the thread
@@ -700,7 +745,9 @@ export function ThreadPlannerComposer({
       return;
     }
 
-    const validPosts = posts.filter((p) => p.text.trim().length > 0 || p.media.length > 0);
+    const validPosts = posts.filter(
+      (p) => p.text.trim().length > 0 || p.media.length > 0,
+    );
     if (validPosts.length === 0) {
       setStatus({ type: "error", message: "No content to post" });
       return;
@@ -708,7 +755,11 @@ export function ThreadPlannerComposer({
 
     // Check for posts exceeding limit
     const overLimitPosts = validPosts.filter((p) => {
-      const formattedText = formatPostWithNumbering(p.text, posts.indexOf(p), validPosts.length);
+      const formattedText = formatPostWithNumbering(
+        p.text,
+        posts.indexOf(p),
+        validPosts.length,
+      );
       return formattedText.length > MAX_POST_LENGTH;
     });
     if (overLimitPosts.length > 0) {
@@ -733,7 +784,11 @@ export function ThreadPlannerComposer({
         });
 
         // Format text with numbering
-        const formattedText = formatPostWithNumbering(post.text, i, validPosts.length);
+        const formattedText = formatPostWithNumbering(
+          post.text,
+          i,
+          validPosts.length,
+        );
 
         // Create rich text with facet detection
         const rt = new RichText({ text: formattedText });
@@ -756,7 +811,10 @@ export function ThreadPlannerComposer({
         const postData: {
           text: string;
           facets?: typeof rt.facets;
-          embed?: { $type: string; images: Array<{ alt: string; image: unknown }> };
+          embed?: {
+            $type: string;
+            images: Array<{ alt: string; image: unknown }>;
+          };
           reply?: {
             root: { uri: string; cid: string };
             parent: { uri: string; cid: string };
@@ -820,7 +878,8 @@ export function ThreadPlannerComposer({
       logger.error("Failed to post thread:", error);
       setStatus({
         type: "error",
-        message: error instanceof Error ? error.message : "Failed to post thread",
+        message:
+          error instanceof Error ? error.message : "Failed to post thread",
       });
     } finally {
       setIsPosting(false);
@@ -828,7 +887,9 @@ export function ThreadPlannerComposer({
   }, [agent, posts, draftId, formatPostWithNumbering, onThreadPosted, onClose]);
 
   // Calculate stats
-  const validPosts = posts.filter((p) => p.text.trim().length > 0 || p.media.length > 0);
+  const validPosts = posts.filter(
+    (p) => p.text.trim().length > 0 || p.media.length > 0,
+  );
   const totalChars = posts.reduce((sum, p) => sum + p.text.length, 0);
   const totalMedia = posts.reduce((sum, p) => sum + p.media.length, 0);
 
@@ -876,7 +937,9 @@ export function ThreadPlannerComposer({
                         : "var(--bsky-text-secondary)",
                 }}
               >
-                {status.type === "saving" && <Loader size={14} className="animate-spin" />}
+                {status.type === "saving" && (
+                  <Loader size={14} className="animate-spin" />
+                )}
                 {status.type === "saved" && <CheckCircle size={14} />}
                 {status.type === "error" && <AlertCircle size={14} />}
                 {status.type === "success" && <Check size={14} />}
@@ -890,7 +953,9 @@ export function ThreadPlannerComposer({
               onClick={() => setShowTemplates(!showTemplates)}
               className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors"
               style={{
-                background: showTemplates ? "var(--bsky-primary)" : "var(--bsky-bg-secondary)",
+                background: showTemplates
+                  ? "var(--bsky-primary)"
+                  : "var(--bsky-bg-secondary)",
                 color: showTemplates ? "white" : "var(--bsky-text-secondary)",
               }}
               title="Thread templates"
@@ -903,7 +968,9 @@ export function ThreadPlannerComposer({
               onClick={() => setShowSettings(!showSettings)}
               className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors"
               style={{
-                background: showSettings ? "var(--bsky-primary)" : "var(--bsky-bg-secondary)",
+                background: showSettings
+                  ? "var(--bsky-primary)"
+                  : "var(--bsky-bg-secondary)",
                 color: showSettings ? "white" : "var(--bsky-text-secondary)",
               }}
               title="Numbering settings"
@@ -915,7 +982,9 @@ export function ThreadPlannerComposer({
               onClick={() => setShowPreview(!showPreview)}
               className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors"
               style={{
-                background: showPreview ? "var(--bsky-primary)" : "var(--bsky-bg-secondary)",
+                background: showPreview
+                  ? "var(--bsky-primary)"
+                  : "var(--bsky-bg-secondary)",
                 color: showPreview ? "white" : "var(--bsky-text-secondary)",
               }}
             >
@@ -937,9 +1006,15 @@ export function ThreadPlannerComposer({
         {showTemplates && (
           <div
             className="border-b px-4 py-3 md:px-6"
-            style={{ borderColor: "var(--bsky-border-primary)", background: "var(--bsky-bg-secondary)" }}
+            style={{
+              borderColor: "var(--bsky-border-primary)",
+              background: "var(--bsky-bg-secondary)",
+            }}
           >
-            <h3 className="mb-3 text-sm font-medium" style={{ color: "var(--bsky-text-primary)" }}>
+            <h3
+              className="mb-3 text-sm font-medium"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
               Choose a template to get started
             </h3>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
@@ -954,10 +1029,16 @@ export function ThreadPlannerComposer({
                   }}
                 >
                   <span className="mb-1 text-lg">{template.icon}</span>
-                  <span className="text-sm font-medium" style={{ color: "var(--bsky-text-primary)" }}>
+                  <span
+                    className="text-sm font-medium"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                  >
                     {template.name}
                   </span>
-                  <span className="text-xs" style={{ color: "var(--bsky-text-secondary)" }}>
+                  <span
+                    className="text-xs"
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  >
                     {template.description}
                   </span>
                 </button>
@@ -970,20 +1051,34 @@ export function ThreadPlannerComposer({
         {showSettings && (
           <div
             className="border-b px-4 py-3 md:px-6"
-            style={{ borderColor: "var(--bsky-border-primary)", background: "var(--bsky-bg-secondary)" }}
+            style={{
+              borderColor: "var(--bsky-border-primary)",
+              background: "var(--bsky-bg-secondary)",
+            }}
           >
-            <h3 className="mb-3 text-sm font-medium" style={{ color: "var(--bsky-text-primary)" }}>
+            <h3
+              className="mb-3 text-sm font-medium"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
               Numbering Settings
             </h3>
             <div className="flex flex-wrap gap-4">
               {/* Format selection */}
               <div>
-                <label className="mb-1 block text-xs" style={{ color: "var(--bsky-text-secondary)" }}>
+                <label
+                  className="mb-1 block text-xs"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
                   Format
                 </label>
                 <select
                   value={settings.numberingFormat}
-                  onChange={(e) => handleSaveSettings({ numberingFormat: e.target.value as ComposerSettings["numberingFormat"] })}
+                  onChange={(e) =>
+                    handleSaveSettings({
+                      numberingFormat: e.target
+                        .value as ComposerSettings["numberingFormat"],
+                    })
+                  }
                   className="rounded-lg border px-3 py-1.5 text-sm"
                   style={{
                     background: "var(--bsky-bg-primary)",
@@ -1000,12 +1095,19 @@ export function ThreadPlannerComposer({
               </div>
               {/* Position selection */}
               <div>
-                <label className="mb-1 block text-xs" style={{ color: "var(--bsky-text-secondary)" }}>
+                <label
+                  className="mb-1 block text-xs"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
                   Position
                 </label>
                 <select
                   value={settings.numberingPosition}
-                  onChange={(e) => handleSaveSettings({ numberingPosition: e.target.value as "beginning" | "end" })}
+                  onChange={(e) =>
+                    handleSaveSettings({
+                      numberingPosition: e.target.value as "beginning" | "end",
+                    })
+                  }
                   className="rounded-lg border px-3 py-1.5 text-sm"
                   style={{
                     background: "var(--bsky-bg-primary)",
@@ -1021,7 +1123,10 @@ export function ThreadPlannerComposer({
               {/* Preview */}
               {settings.numberingFormat !== "none" && (
                 <div>
-                  <label className="mb-1 block text-xs" style={{ color: "var(--bsky-text-secondary)" }}>
+                  <label
+                    className="mb-1 block text-xs"
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  >
                     Example
                   </label>
                   <div
@@ -1032,7 +1137,11 @@ export function ThreadPlannerComposer({
                       color: "var(--bsky-text-primary)",
                     }}
                   >
-                    {formatPostWithNumbering("Your post text here", 0, validPosts.length || 1)}
+                    {formatPostWithNumbering(
+                      "Your post text here",
+                      0,
+                      validPosts.length || 1,
+                    )}
                   </div>
                 </div>
               )}
@@ -1046,13 +1155,21 @@ export function ThreadPlannerComposer({
             // Preview mode
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium" style={{ color: "var(--bsky-text-secondary)" }}>
-                  Thread Preview ({validPosts.length} {validPosts.length === 1 ? "post" : "posts"})
+                <h3
+                  className="text-sm font-medium"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  Thread Preview ({validPosts.length}{" "}
+                  {validPosts.length === 1 ? "post" : "posts"})
                 </h3>
                 {settings.numberingFormat !== "none" && (
-                  <span className="text-xs" style={{ color: "var(--bsky-text-tertiary)" }}>
+                  <span
+                    className="text-xs"
+                    style={{ color: "var(--bsky-text-tertiary)" }}
+                  >
                     <Hash size={12} className="mr-1 inline" />
-                    Auto-numbering: {NUMBERING_FORMATS[settings.numberingFormat].label}
+                    Auto-numbering:{" "}
+                    {NUMBERING_FORMATS[settings.numberingFormat].label}
                   </span>
                 )}
               </div>
@@ -1060,7 +1177,11 @@ export function ThreadPlannerComposer({
                 {posts
                   .filter((p) => p.text.trim().length > 0 || p.media.length > 0)
                   .map((post, index, filteredPosts) => {
-                    const formattedText = formatPostWithNumbering(post.text, index, filteredPosts.length);
+                    const formattedText = formatPostWithNumbering(
+                      post.text,
+                      index,
+                      filteredPosts.length,
+                    );
                     const isOverLimit = formattedText.length > MAX_POST_LENGTH;
 
                     return (
@@ -1068,7 +1189,9 @@ export function ThreadPlannerComposer({
                         key={post.id}
                         className="rounded-lg border p-4"
                         style={{
-                          borderColor: isOverLimit ? "var(--bsky-error)" : "var(--bsky-border-primary)",
+                          borderColor: isOverLimit
+                            ? "var(--bsky-error)"
+                            : "var(--bsky-border-primary)",
                           background: "var(--bsky-bg-secondary)",
                         }}
                       >
@@ -1082,7 +1205,9 @@ export function ThreadPlannerComposer({
                           <span
                             className="font-mono text-xs"
                             style={{
-                              color: isOverLimit ? "var(--bsky-error)" : "var(--bsky-text-tertiary)",
+                              color: isOverLimit
+                                ? "var(--bsky-error)"
+                                : "var(--bsky-text-tertiary)",
                             }}
                           >
                             {formattedText.length}/{MAX_POST_LENGTH}
@@ -1109,7 +1234,10 @@ export function ThreadPlannerComposer({
                           </div>
                         )}
                         {isOverLimit && (
-                          <p className="mt-2 text-xs" style={{ color: "var(--bsky-error)" }}>
+                          <p
+                            className="mt-2 text-xs"
+                            style={{ color: "var(--bsky-error)" }}
+                          >
                             This post exceeds the character limit
                           </p>
                         )}
@@ -1124,7 +1252,11 @@ export function ThreadPlannerComposer({
               {posts.map((post, index) => {
                 const isExpanded = expandedPosts.has(post.id);
                 const charCount = post.text.length;
-                const formattedLength = formatPostWithNumbering(post.text, index, validPosts.length).length;
+                const formattedLength = formatPostWithNumbering(
+                  post.text,
+                  index,
+                  validPosts.length,
+                ).length;
                 const isNearLimit = formattedLength > MAX_POST_LENGTH * 0.9;
                 const isOverLimit = formattedLength > MAX_POST_LENGTH;
 
@@ -1235,7 +1367,11 @@ export function ThreadPlannerComposer({
                           style={{ color: "var(--bsky-text-secondary)" }}
                           title={isExpanded ? "Collapse" : "Expand"}
                         >
-                          {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          {isExpanded ? (
+                            <ChevronUp size={14} />
+                          ) : (
+                            <ChevronDown size={14} />
+                          )}
                         </button>
                         {/* Delete button */}
                         {posts.length > 1 && (
@@ -1252,7 +1388,9 @@ export function ThreadPlannerComposer({
                     </div>
 
                     {/* Post card body */}
-                    <div className={`p-3 ${!isExpanded && post.text ? "max-h-20 overflow-hidden" : ""}`}>
+                    <div
+                      className={`p-3 ${!isExpanded && post.text ? "max-h-20 overflow-hidden" : ""}`}
+                    >
                       <textarea
                         ref={(el) => {
                           if (el) {
@@ -1264,7 +1402,11 @@ export function ThreadPlannerComposer({
                         value={post.text}
                         onChange={(e) => updatePost(index, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(e, index)}
-                        onFocus={() => setExpandedPosts((prev) => new Set([...prev, post.id]))}
+                        onFocus={() =>
+                          setExpandedPosts(
+                            (prev) => new Set([...prev, post.id]),
+                          )
+                        }
                         placeholder={
                           index === 0
                             ? "Start your thread..."
@@ -1295,7 +1437,13 @@ export function ThreadPlannerComposer({
                               <input
                                 type="text"
                                 value={media.alt}
-                                onChange={(e) => updateMediaAlt(index, media.id, e.target.value)}
+                                onChange={(e) =>
+                                  updateMediaAlt(
+                                    index,
+                                    media.id,
+                                    e.target.value,
+                                  )
+                                }
                                 placeholder="Alt text"
                                 className="absolute bottom-0 left-0 right-0 rounded-b bg-black/70 px-1 py-0.5 text-xs text-white placeholder-white/60 opacity-0 transition-opacity focus:opacity-100 group-hover:opacity-100"
                               />
@@ -1306,7 +1454,10 @@ export function ThreadPlannerComposer({
 
                       {/* Action bar (visible when expanded) */}
                       {isExpanded && (
-                        <div className="mt-3 flex items-center gap-2 border-t pt-3" style={{ borderColor: "var(--bsky-border-primary)" }}>
+                        <div
+                          className="mt-3 flex items-center gap-2 border-t pt-3"
+                          style={{ borderColor: "var(--bsky-border-primary)" }}
+                        >
                           {/* Add image button */}
                           <input
                             ref={(el) => {
@@ -1319,11 +1470,15 @@ export function ThreadPlannerComposer({
                             type="file"
                             accept="image/*"
                             multiple
-                            onChange={(e) => handleFileSelect(index, e.target.files)}
+                            onChange={(e) =>
+                              handleFileSelect(index, e.target.files)
+                            }
                             className="hidden"
                           />
                           <button
-                            onClick={() => fileInputRefs.current.get(post.id)?.click()}
+                            onClick={() =>
+                              fileInputRefs.current.get(post.id)?.click()
+                            }
                             disabled={post.media.length >= MAX_IMAGES_PER_POST}
                             className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-black/10 disabled:opacity-50"
                             style={{ color: "var(--bsky-text-secondary)" }}
@@ -1332,7 +1487,10 @@ export function ThreadPlannerComposer({
                             <Image size={14} />
                             Add Image
                           </button>
-                          <span className="text-xs" style={{ color: "var(--bsky-text-tertiary)" }}>
+                          <span
+                            className="text-xs"
+                            style={{ color: "var(--bsky-text-tertiary)" }}
+                          >
                             Ctrl/Cmd + Enter to add post
                           </span>
                         </div>
@@ -1344,7 +1502,8 @@ export function ThreadPlannerComposer({
                       <div
                         className="absolute bottom-0 left-0 right-0 h-8 rounded-b-lg"
                         style={{
-                          background: "linear-gradient(to bottom, transparent, var(--bsky-bg-secondary))",
+                          background:
+                            "linear-gradient(to bottom, transparent, var(--bsky-bg-secondary))",
                         }}
                       />
                     )}
@@ -1394,7 +1553,10 @@ export function ThreadPlannerComposer({
             background: "var(--bsky-bg-primary)",
           }}
         >
-          <div className="flex items-center gap-4 text-sm" style={{ color: "var(--bsky-text-secondary)" }}>
+          <div
+            className="flex items-center gap-4 text-sm"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
             <span>
               {validPosts.length} {validPosts.length === 1 ? "post" : "posts"}
             </span>
@@ -1409,7 +1571,12 @@ export function ThreadPlannerComposer({
           <div className="flex items-center gap-2">
             <button
               onClick={handleSave}
-              disabled={isSaving || !posts.some((p) => p.text.trim().length > 0 || p.media.length > 0)}
+              disabled={
+                isSaving ||
+                !posts.some(
+                  (p) => p.text.trim().length > 0 || p.media.length > 0,
+                )
+              }
               className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
               style={{
                 background: "var(--bsky-bg-secondary)",

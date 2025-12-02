@@ -925,6 +925,7 @@ Context: The thread complexity detection hook uses a configurable threshold for 
 ### Implementation Requirements
 
 **ThreadHaikuSummary Component:**
+
 - Trigger summary generation only when `ThreadViewer` component is mounted/opened
 - Do NOT trigger on:
   - Thread preview hover cards
@@ -934,6 +935,7 @@ Context: The thread complexity detection hook uses a configurable threshold for 
 - Display loading skeleton during generation
 
 **Thread Complexity Detection Hook:**
+
 - Use `totalPosts >= 5` as the complexity threshold for showing summaries
 - Calculate: `totalPosts`, `maxDepth`, `branchCount`, `uniqueAuthors`
 - Return complexity level enum: Simple/Medium/Complex/VeryComplex

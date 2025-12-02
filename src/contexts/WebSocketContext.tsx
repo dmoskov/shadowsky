@@ -440,7 +440,10 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         if (handlers.connect)
           currentService.off(WebSocketEventType.CONNECT, handlers.connect);
         if (handlers.disconnect)
-          currentService.off(WebSocketEventType.DISCONNECT, handlers.disconnect);
+          currentService.off(
+            WebSocketEventType.DISCONNECT,
+            handlers.disconnect,
+          );
         if (handlers.reconnect)
           currentService.off(WebSocketEventType.RECONNECT, handlers.reconnect);
         if (handlers.error)

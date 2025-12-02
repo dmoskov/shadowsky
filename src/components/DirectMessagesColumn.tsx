@@ -234,7 +234,10 @@ export const DirectMessagesColumn: React.FC = () => {
       setTimeout(() => {
         const messageElement = messageRefs.current.get(messageId);
         if (messageElement) {
-          messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
+          messageElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
         }
       }, 100);
 

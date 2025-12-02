@@ -235,7 +235,10 @@ export const DirectMessages: React.FC = () => {
       setTimeout(() => {
         const messageElement = messageRefs.current.get(messageId);
         if (messageElement) {
-          messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
+          messageElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
         }
       }, 100);
 
@@ -309,7 +312,11 @@ export const DirectMessages: React.FC = () => {
             aria-label={showSearch ? "Close search" : "Search messages"}
             title="Search messages"
           >
-            {showSearch ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+            {showSearch ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Search className="h-5 w-5" />
+            )}
           </button>
         </div>
 

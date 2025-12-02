@@ -199,7 +199,10 @@ export const DmSearch: React.FC<DmSearchProps> = ({
               <select
                 value={filters.senderDid || ""}
                 onChange={(e) =>
-                  setFilters({ ...filters, senderDid: e.target.value || undefined })
+                  setFilters({
+                    ...filters,
+                    senderDid: e.target.value || undefined,
+                  })
                 }
                 className="w-full rounded border border-bsky-border-primary bg-bsky-bg-primary px-2 py-1.5 text-sm text-bsky-text-primary focus:border-bsky-primary focus:outline-none"
               >
@@ -245,9 +248,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
                 <input
                   type="date"
                   value={
-                    filters.endDate
-                      ? format(filters.endDate, "yyyy-MM-dd")
-                      : ""
+                    filters.endDate ? format(filters.endDate, "yyyy-MM-dd") : ""
                   }
                   onChange={(e) =>
                     setFilters({
@@ -285,7 +286,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
                     className={`flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors ${
                       (filters.contentType || "all") === value
                         ? "bg-bsky-primary text-white"
-                        : "bg-bsky-bg-primary text-bsky-text-secondary hover:bg-bsky-bg-primary/80"
+                        : "hover:bg-bsky-bg-primary/80 bg-bsky-bg-primary text-bsky-text-secondary"
                     }`}
                   >
                     {Icon && <Icon className="h-3 w-3" />}
