@@ -1,5 +1,5 @@
 import { AtpAgent } from "@atproto/api";
-import type { Column } from "../../components/SkyDeck";
+import type { Column } from "../../types/column";
 
 export type StorageType = "local" | "custom" | "official";
 

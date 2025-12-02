@@ -1,6 +1,9 @@
 # Logs
 logs
 *.log
+
+# Push notification subscriptions (user data)
+server/.push-subscriptions.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
