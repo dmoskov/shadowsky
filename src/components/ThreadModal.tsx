@@ -56,6 +56,12 @@ export function ThreadModal({
     useState<AppBskyFeedDefs.PostView | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [focusedPostIndex, setFocusedPostIndex] = useState(0);
+  const [highlightedPostUri, setHighlightedPostUri] = useState(postUri);
+
+  // Reset highlighted post when postUri changes
+  useEffect(() => {
+    setHighlightedPostUri(postUri);
+  }, [postUri]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -795,6 +801,19 @@ export function ThreadModal({
                       posts={posts}
                       className="mb-4"
                       collapsed={false}
+                      onPostClick={(post) => {
+                        setHighlightedPostUri(post.uri);
+                        // Scroll to the post
+                        const postElement = document.querySelector(
+                          `[data-post-uri="${post.uri}"]`,
+                        );
+                        if (postElement) {
+                          postElement.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          });
+                        }
+                      }}
                     />
                   )}
 
@@ -802,7 +821,7 @@ export function ThreadModal({
                   <ThreadViewer
                     posts={posts}
                     rootUri={rootPost}
-                    highlightUri={postUri}
+                    highlightUri={highlightedPostUri}
                     showUnreadIndicators={false}
                     className="w-full"
                     currentUserDid={session?.did}

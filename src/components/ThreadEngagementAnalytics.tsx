@@ -4,7 +4,6 @@ import {
   BarChart3,
   ChevronDown,
   ChevronUp,
-  ExternalLink,
   Heart,
   MessageCircle,
   Repeat2,
@@ -12,6 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
+import { Link } from "react-router";
 import { proxifyBskyImage } from "../utils/image-proxy";
 
 type Post = AppBskyFeedDefs.PostView;
@@ -31,6 +31,7 @@ interface ThreadEngagementAnalyticsProps {
   className?: string;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  onPostClick?: (post: Post) => void;
 }
 
 export const ThreadEngagementAnalytics: React.FC<
@@ -40,6 +41,7 @@ export const ThreadEngagementAnalytics: React.FC<
   className = "",
   collapsed: controlledCollapsed,
   onToggleCollapse,
+  onPostClick,
 }) => {
   const [internalCollapsed, setInternalCollapsed] = useState(true);
   const collapsed = controlledCollapsed ?? internalCollapsed;
@@ -329,10 +331,6 @@ export const ThreadEngagementAnalytics: React.FC<
             </div>
             <div className="max-h-64 space-y-2 overflow-y-auto">
               {analytics.postEngagements.map((pe) => {
-                // Extract post ID from URI for linking
-                const postId = pe.post.uri.split("/").pop();
-                const postUrl = `https://bsky.app/profile/${pe.post.author.handle}/post/${postId}`;
-                const profileUrl = `https://bsky.app/profile/${pe.post.author.handle}`;
                 const postText =
                   (pe.post.record as { text?: string })?.text || "";
 
@@ -366,10 +364,8 @@ export const ThreadEngagementAnalytics: React.FC<
                         >
                           #{pe.rank}
                         </span>
-                        <a
-                          href={profileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <Link
+                          to={`/profile/${pe.post.author.handle}`}
                           className="flex items-center gap-2 transition-opacity hover:opacity-70"
                           title={`View ${pe.post.author.displayName || pe.post.author.handle}'s profile`}
                         >
@@ -388,7 +384,7 @@ export const ThreadEngagementAnalytics: React.FC<
                             {pe.post.author.displayName ||
                               pe.post.author.handle}
                           </span>
-                        </a>
+                        </Link>
                         <span
                           className="text-xs"
                           style={{ color: "var(--bsky-text-tertiary)" }}
@@ -411,31 +407,19 @@ export const ThreadEngagementAnalytics: React.FC<
                           <MessageCircle size={10} />
                           {pe.replies}
                         </span>
-                        <a
-                          href={postUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 transition-opacity hover:opacity-70"
-                          style={{ color: "var(--bsky-text-tertiary)" }}
-                          title="Open post in Bluesky"
-                        >
-                          <ExternalLink size={10} />
-                        </a>
                       </div>
                     </div>
 
                     {/* Post content preview */}
                     {postText && (
-                      <a
-                        href={postUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mb-1 mt-2 line-clamp-2 block text-xs transition-opacity hover:opacity-70"
+                      <button
+                        onClick={() => onPostClick?.(pe.post)}
+                        className="mb-1 mt-2 line-clamp-2 block w-full cursor-pointer text-left text-xs transition-opacity hover:opacity-70"
                         style={{ color: "var(--bsky-text-secondary)" }}
-                        title="View this post"
+                        title="View this post in thread"
                       >
                         {postText}
-                      </a>
+                      </button>
                     )}
 
                     <div className="mt-1">
