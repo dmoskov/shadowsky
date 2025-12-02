@@ -67,6 +67,7 @@
     "esbuild": "^0.25.11",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "fake-indexeddb": "^6.2.5",
     "globals": "^16.3.0",
     "jsdom": "^26.1.0",
     "postcss": "^8.4.32",
