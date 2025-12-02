@@ -740,7 +740,7 @@ export function ThreadPlannerComposer({
         await rt.detectFacets(agent);
 
         // Upload images if any
-        const images: Array<{ alt: string; image: { $type: string; ref: { $link: string }; mimeType: string; size: number } }> = [];
+        const images: Array<{ alt: string; image: unknown }> = [];
         for (const media of post.media) {
           if (media.type === "image") {
             const response = await agent.uploadBlob(media.file, {
@@ -756,7 +756,7 @@ export function ThreadPlannerComposer({
         const postData: {
           text: string;
           facets?: typeof rt.facets;
-          embed?: { $type: string; images: typeof images };
+          embed?: { $type: string; images: Array<{ alt: string; image: unknown }> };
           reply?: {
             root: { uri: string; cid: string };
             parent: { uri: string; cid: string };
