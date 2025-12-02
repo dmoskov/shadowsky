@@ -142,6 +142,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [logout]);
 
   useEffect(() => {
+    // Safety timeout to prevent infinite spinner - if auth takes more than 10s, stop loading
+    const safetyTimeout = setTimeout(() => {
+      setIsLoading((current) => {
+        if (current) {
+          debug.error("Auth initialization timeout - forcing loading to false");
+        }
+        return false;
+      });
+    }, 10000);
+
     const initializeAuth = async () => {
       try {
         // First, try to initialize OAuth and check for existing OAuth session
@@ -257,6 +267,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     initializeAuth();
+
+    return () => {
+      clearTimeout(safetyTimeout);
+    };
   }, []);
 
   const login = useCallback(
