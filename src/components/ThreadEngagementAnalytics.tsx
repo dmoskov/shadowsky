@@ -417,7 +417,7 @@ export const ThreadEngagementAnalytics: React.FC<
                     {/* Post content preview */}
                     {postText && (
                       <div
-                        className="mb-1 mt-2 text-xs line-clamp-2"
+                        className="mb-1 mt-2 line-clamp-2 text-xs"
                         style={{ color: "var(--bsky-text-secondary)" }}
                       >
                         {postText}
