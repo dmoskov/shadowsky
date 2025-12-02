@@ -120,6 +120,77 @@
     @apply animate-pulse;
   }
 
+  /* Thread collapse responsive styles */
+  .thread-tree-view {
+    /* CSS custom properties for responsive thread indentation */
+    --thread-indent-shallow: clamp(16px, 4vw, 32px);
+    --thread-indent-medium: clamp(12px, 3vw, 24px);
+    --thread-indent-deep: clamp(8px, 2vw, 16px);
+    --thread-indent-minimal: clamp(4px, 1vw, 8px);
+  }
+
+  /* Mobile: More aggressive collapse styling */
+  @media (max-width: 767px) {
+    .thread-tree-view {
+      --thread-indent-shallow: 16px;
+      --thread-indent-medium: 12px;
+      --thread-indent-deep: 8px;
+      --thread-indent-minimal: 4px;
+    }
+
+    .thread-tree-view [role="treeitem"] {
+      @apply p-2;
+    }
+
+    .thread-branch-control {
+      @apply px-1.5 py-0.5 text-xs;
+    }
+
+    .thread-branch-badge {
+      @apply px-1 text-xs;
+    }
+  }
+
+  /* Tablet: Medium thresholds */
+  @media (min-width: 768px) and (max-width: 1200px) {
+    .thread-tree-view {
+      --thread-indent-shallow: 24px;
+      --thread-indent-medium: 18px;
+      --thread-indent-deep: 12px;
+      --thread-indent-minimal: 6px;
+    }
+  }
+
+  /* Desktop: More permissive styling */
+  @media (min-width: 1201px) {
+    .thread-tree-view {
+      --thread-indent-shallow: 32px;
+      --thread-indent-medium: 24px;
+      --thread-indent-deep: 16px;
+      --thread-indent-minimal: 8px;
+    }
+  }
+
+  /* Thread branch color animation */
+  .thread-branch-line {
+    transition: background-color 0.2s ease-in-out;
+  }
+
+  /* Collapsed branch indicator animation */
+  .thread-branch-collapsed {
+    animation: pulse-subtle 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-subtle {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+
   /* Responsive tabs container */
   .bsky-tabs-container {
     @apply scrollbar-hide relative max-w-full flex-shrink-0;

@@ -21,8 +21,8 @@ import React, {
   useState,
 } from "react";
 import {
-  useResponsiveCollapseThresholds,
   countDescendants,
+  useResponsiveCollapseThresholds,
   type CollapseThresholds,
   type ScreenSize,
 } from "../hooks/useResponsiveCollapseThresholds";
@@ -424,28 +424,22 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
   );
 
   // Collapse a specific branch (and optionally its children)
-  const collapseBranch = useCallback(
-    (uri: string) => {
-      setCollapsedNodes((prev) => {
-        const next = new Set(prev);
-        next.add(uri);
-        return next;
-      });
-    },
-    [],
-  );
+  const collapseBranch = useCallback((uri: string) => {
+    setCollapsedNodes((prev) => {
+      const next = new Set(prev);
+      next.add(uri);
+      return next;
+    });
+  }, []);
 
   // Expand a specific branch
-  const expandBranch = useCallback(
-    (uri: string) => {
-      setCollapsedNodes((prev) => {
-        const next = new Set(prev);
-        next.delete(uri);
-        return next;
-      });
-    },
-    [],
-  );
+  const expandBranch = useCallback((uri: string) => {
+    setCollapsedNodes((prev) => {
+      const next = new Set(prev);
+      next.delete(uri);
+      return next;
+    });
+  }, []);
 
   // ========================================================================
   // Navigation state handlers

@@ -21,8 +21,8 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { ThreadProvider } from "../contexts/ThreadContext";
 import {
-  useResponsiveCollapseThresholds,
   countDescendants as countNodeDescendants,
+  useResponsiveCollapseThresholds,
 } from "../hooks/useResponsiveCollapseThresholds";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
@@ -93,13 +93,8 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
   const currentUserDid = propCurrentUserDid || session?.did;
 
   // Get responsive collapse thresholds
-  const {
-    thresholds: collapseThresholds,
-    screenSize,
-    shouldAutoCollapse,
-    getBranchBorderColor,
-    getBranchBackgroundColor,
-  } = useResponsiveCollapseThresholds();
+  const { shouldAutoCollapse, getBranchBorderColor, getBranchBackgroundColor } =
+    useResponsiveCollapseThresholds();
 
   // State for collapsed branches
   const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
@@ -486,38 +481,44 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
       };
       const hiddenCount = isCollapsed ? countDescendants(node) : 0;
 
+      // Get depth-based colors for visual branch grouping
+      const branchBorderColor = getBranchBorderColor(node.depth);
+      const branchBgColor = getBranchBackgroundColor(node.depth);
+
       return (
         <div key={node.post.uri} className="relative">
-          {/* Branch visualization line */}
+          {/* Branch visualization line with HSL color based on depth */}
           {node.depth > 0 && (
             <div
-              className="absolute left-0 top-0 h-full"
+              className="absolute left-0 top-0 h-full transition-colors"
               style={{
                 marginLeft: `calc(${node.depth - 1} * ${indentCssVar} + ${indentCssVar} / 2)`,
-                width: "2px",
+                width: "3px",
                 backgroundColor: isLastChild
                   ? "transparent"
-                  : "var(--bsky-border-primary)",
+                  : branchBorderColor,
                 height: isLastChild ? "24px" : "100%",
+                borderRadius: "1.5px",
               }}
             />
           )}
 
-          {/* Horizontal connector */}
+          {/* Horizontal connector with matching color */}
           {node.depth > 0 && (
             <div
-              className="absolute"
+              className="absolute transition-colors"
               style={{
                 left: `calc(${node.depth - 1} * ${indentCssVar} + ${indentCssVar} / 2)`,
                 top: "24px",
                 width: `calc(${indentCssVar} / 2)`,
-                height: "2px",
-                backgroundColor: "var(--bsky-border-primary)",
+                height: "3px",
+                backgroundColor: branchBorderColor,
+                borderRadius: "1.5px",
               }}
             />
           )}
 
-          {/* Node content */}
+          {/* Node content with subtle depth-based background */}
           <div
             ref={(el) => {
               if (node.flatIndex !== undefined && el) {
@@ -528,17 +529,25 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
               isFocused ? "ring-2 ring-blue-400" : ""
             } ${isHighlighted ? "ring-2 ring-orange-400" : ""} ${
               isHovered ? "bg-blue-500 bg-opacity-5" : ""
-            } ${isCurrentUser ? "border-l-4 border-l-green-500" : ""}`}
+            }`}
             style={{
               marginLeft: `calc(${node.depth} * ${indentCssVar})`,
               backgroundColor: node.isRoot
                 ? "var(--bsky-bg-secondary)"
                 : isCurrentUser
                   ? "rgba(34, 197, 94, 0.05)"
-                  : "transparent",
+                  : node.depth > 0
+                    ? branchBgColor
+                    : "transparent",
               border: node.isRoot
                 ? "1px solid var(--bsky-border-primary)"
                 : "none",
+              // Left border color based on depth for visual grouping
+              borderLeft: isCurrentUser
+                ? "4px solid rgb(34, 197, 94)"
+                : node.depth > 0
+                  ? `3px solid ${branchBorderColor}`
+                  : "none",
             }}
             onClick={() => onPostClick?.(node.post, "view")}
             onMouseEnter={() => setHoveredNodeUri(node.post.uri)}
@@ -588,22 +597,40 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
                     e.stopPropagation();
                     toggleCollapse(node.post.uri);
                   }}
-                  className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
-                  style={{ color: "var(--bsky-text-secondary)" }}
-                  aria-label={isCollapsed ? "Expand" : "Collapse"}
+                  className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-all hover:scale-105"
+                  style={{
+                    backgroundColor: isCollapsed
+                      ? `${branchBorderColor}20`
+                      : "var(--bsky-bg-tertiary)",
+                    color: isCollapsed
+                      ? branchBorderColor
+                      : "var(--bsky-text-secondary)",
+                    border: `1px solid ${isCollapsed ? branchBorderColor : "var(--bsky-border-primary)"}`,
+                  }}
+                  aria-label={isCollapsed ? "Expand branch" : "Collapse branch"}
                 >
                   {isCollapsed ? (
-                    <ChevronRight size={12} />
+                    <ChevronRight size={14} />
                   ) : (
-                    <ChevronDown size={12} />
+                    <ChevronDown size={14} />
                   )}
-                  {node.children.length}{" "}
-                  {node.children.length === 1 ? "reply" : "replies"}
-                  {isCollapsed && hiddenCount > 0 && (
-                    <span className="ml-1 opacity-60">
-                      ({hiddenCount} hidden)
-                    </span>
-                  )}
+                  <span>{isCollapsed ? "Expand" : "Collapse"} branch</span>
+                  {/* Reply count badge */}
+                  <span
+                    className="ml-0.5 rounded-full px-1.5 py-0.5 text-xs font-bold"
+                    style={{
+                      backgroundColor: isCollapsed
+                        ? branchBorderColor
+                        : "var(--bsky-bg-secondary)",
+                      color: isCollapsed
+                        ? "white"
+                        : "var(--bsky-text-tertiary)",
+                    }}
+                  >
+                    {isCollapsed && hiddenCount > 0
+                      ? `+${hiddenCount}`
+                      : node.children.length}
+                  </span>
                 </button>
               )}
             </div>
@@ -735,6 +762,8 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
       navigate,
       onPostClick,
       toggleCollapse,
+      getBranchBorderColor,
+      getBranchBackgroundColor,
     ],
   );
 

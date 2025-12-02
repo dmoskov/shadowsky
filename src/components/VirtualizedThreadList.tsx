@@ -59,13 +59,21 @@ export interface VirtualizedThreadListProps {
  */
 export interface VirtualizedThreadListHandle {
   /** Scroll to a specific index */
-  scrollToIndex: (index: number, options?: { align?: "start" | "center" | "end"; behavior?: "auto" | "smooth" }) => void;
+  scrollToIndex: (
+    index: number,
+    options?: {
+      align?: "start" | "center" | "end";
+      behavior?: "auto" | "smooth";
+    },
+  ) => void;
   /** Get the current scroll offset */
   getScrollOffset: () => number;
   /** Measure a specific item (trigger re-measurement) */
   measureItem: (index: number) => void;
   /** Get the virtualizer instance for advanced control */
-  getVirtualizer: () => ReturnType<typeof useVirtualizer<HTMLDivElement, Element>> | null;
+  getVirtualizer: () => ReturnType<
+    typeof useVirtualizer<HTMLDivElement, Element>
+  > | null;
 }
 
 /**
@@ -129,7 +137,7 @@ export const VirtualizedThreadList = forwardRef<
   {
     nodes,
     focusedIndex,
-    onFocusedIndexChange,
+    onFocusedIndexChange: _onFocusedIndexChange,
     renderNode,
     config = DEFAULT_VIRTUAL_SCROLL_CONFIG,
     className = "",
@@ -196,7 +204,10 @@ export const VirtualizedThreadList = forwardRef<
     () => ({
       scrollToIndex: (
         index: number,
-        options?: { align?: "start" | "center" | "end"; behavior?: "auto" | "smooth" },
+        options?: {
+          align?: "start" | "center" | "end";
+          behavior?: "auto" | "smooth";
+        },
       ) => {
         if (shouldVirtualize) {
           virtualizer.scrollToIndex(index, {
@@ -218,13 +229,15 @@ export const VirtualizedThreadList = forwardRef<
       },
       getScrollOffset: () => {
         return shouldVirtualize
-          ? virtualizer.scrollOffset ?? 0
-          : parentRef.current?.scrollTop ?? 0;
+          ? (virtualizer.scrollOffset ?? 0)
+          : (parentRef.current?.scrollTop ?? 0);
       },
       measureItem: (index: number) => {
         if (shouldVirtualize) {
           virtualizer.measureElement(
-            parentRef.current?.querySelector(`[data-index="${index}"]`) as Element,
+            parentRef.current?.querySelector(
+              `[data-index="${index}"]`,
+            ) as Element,
           );
         }
       },

@@ -130,7 +130,8 @@ export function useResponsiveCollapseThresholds(): UseResponsiveCollapseThreshol
       const depthExceeded = depth >= thresholds.depthThreshold;
 
       // Collapse if branch has too many posts (regardless of depth, but above min)
-      const branchTooLarge = branchPostCount >= thresholds.branchPostCountThreshold;
+      const branchTooLarge =
+        branchPostCount >= thresholds.branchPostCountThreshold;
 
       return depthExceeded || branchTooLarge;
     },
