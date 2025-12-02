@@ -1038,6 +1038,8 @@ export function ThreadModal({
                     className="w-full"
                     currentUserDid={session?.did}
                     contextBarSentinelRef={contextBarSentinelRef}
+                    focusedIndex={focusedPostIndex}
+                    onFocusedIndexChange={setFocusedPostIndex}
                     onPostClick={(clickedPost, action) => {
                       const post =
                         posts.find((p) => p.uri === clickedPost.uri) || null;

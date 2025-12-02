@@ -1,0 +1,20 @@
+{
+  "name": "shadowsky-og-meta-edge",
+  "version": "1.0.0",
+  "description": "Lambda@Edge function for ShadowSky OG meta tag generation",
+  "private": true,
+  "scripts": {
+    "build": "esbuild og-meta-edge.ts --bundle --platform=node --target=node20 --outfile=dist/index.js --external:aws-sdk",
+    "deploy": "npm run build && cdk deploy --require-approval never",
+    "synth": "npm run build && cdk synth"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^20.0.0",
+    "aws-cdk": "^2.170.0",
+    "aws-cdk-lib": "^2.170.0",
+    "constructs": "^10.0.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.0.0"
+  }
+}

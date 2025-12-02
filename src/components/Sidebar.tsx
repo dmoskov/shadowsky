@@ -2,7 +2,6 @@ import {
   BarChart3,
   Bell,
   Bookmark,
-  CalendarClock,
   Clock,
   ExternalLink,
   Home,
@@ -44,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { path: "/bookmarks", label: "Bookmarks", icon: Bookmark },
     { path: "/lists", label: "Lists", icon: List },
     { path: "/messages", label: "Direct Messages", icon: Mail },
-    { path: "/scheduled", label: "Scheduled", icon: CalendarClock },
+    // Scheduled posts disabled for testing
     { path: "/compose", label: "Compose", icon: PenSquare },
     {
       path: `/profile/${session?.handle || ""}`,

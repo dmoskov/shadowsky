@@ -34,7 +34,6 @@ import { RichText } from "./ui/RichText";
 import { VideoPlayer } from "./VideoPlayer";
 import {
   DEFAULT_VIRTUAL_SCROLL_CONFIG,
-  VirtualizedThreadList,
   type VirtualizedThreadListHandle,
   type VirtualScrollConfig,
 } from "./VirtualizedThreadList";
@@ -89,6 +88,9 @@ export interface ThreadViewerProps {
   threadSummary?: React.ReactNode;
   // Ref for sticky context bar sentinel element
   contextBarSentinelRef?: React.RefObject<HTMLDivElement | null>;
+  // Controlled focus index for external navigation (e.g., minimap)
+  focusedIndex?: number;
+  onFocusedIndexChange?: (index: number) => void;
 }
 
 export const ThreadViewer: React.FC<ThreadViewerProps> = ({
@@ -109,6 +111,8 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   rootPostObject,
   threadSummary,
   contextBarSentinelRef,
+  focusedIndex: controlledFocusedIndex,
+  onFocusedIndexChange,
 }) => {
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -139,7 +143,16 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   // State for showing replies section (progressive reveal) - start expanded
   const [showReplies, setShowReplies] = useState(true);
   // State for keyboard navigation - tracks currently focused post index
-  const [focusedPostIndex, setFocusedPostIndex] = useState<number>(-1);
+  // Use controlled value if provided, otherwise use internal state
+  const [internalFocusedIndex, setInternalFocusedIndex] = useState<number>(-1);
+  const focusedPostIndex = controlledFocusedIndex ?? internalFocusedIndex;
+  const setFocusedPostIndex = useCallback(
+    (index: number) => {
+      setInternalFocusedIndex(index);
+      onFocusedIndexChange?.(index);
+    },
+    [onFocusedIndexChange],
+  );
   // Ref to track post elements for keyboard navigation
   const postRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   // Container ref for scroll management
@@ -551,6 +564,19 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       return () => clearTimeout(timer);
     }
   }, [highlightUri, hasShownInitialHighlight]);
+
+  // Scroll to post when controlled focus index changes (e.g., from minimap navigation)
+  useEffect(() => {
+    if (controlledFocusedIndex !== undefined && controlledFocusedIndex >= 0) {
+      const postElement = postRefs.current.get(controlledFocusedIndex);
+      if (postElement) {
+        postElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+    }
+  }, [controlledFocusedIndex]);
 
   const handleGenerateAltText = useCallback(
     async (imageUrl: string, postUri: string, index: number) => {
@@ -2073,27 +2099,15 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
         )}
 
         {/* Replies section - progressive reveal */}
-        {(showReplies || !rootPostObject) && flatNodeList.length > 1 && (
+        {(showReplies || !rootPostObject) && threadTree.length > 0 && (
           <div
             className={rootPostObject ? "border-t pt-4" : ""}
             style={{ borderColor: "var(--bsky-border-primary)" }}
           >
-            {shouldVirtualize ? (
-              <VirtualizedThreadList
-                ref={virtualListRef}
-                nodes={flatNodeList.filter((n) => !n.isRoot)}
-                focusedIndex={focusedPostIndex}
-                onFocusedIndexChange={setFocusedPostIndex}
-                renderNode={renderSingleNode}
-                config={mergedVirtualConfig}
-                className="thread-list-virtualized"
-              />
-            ) : (
-              // Render all non-root nodes
-              renderThreadNodes(
-                threadTree.flatMap((rootNode) => rootNode.children),
-              )
-            )}
+            {/* Render non-root nodes only when we have a hero root */}
+            {rootPostObject
+              ? renderThreadNodes(threadTree[0]?.children || [])
+              : renderThreadNodes(threadTree)}
           </div>
         )}
 

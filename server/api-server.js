@@ -706,6 +706,7 @@ Start directly with { and end with }`,
 // Analyze user posts endpoint
 app.post("/api/analyze-posts", async (req, res) => {
   const { posts, analysisType = "sonnet" } = req.body;
+  const forceRefresh = req.query.forceRefresh === "true";
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!posts || !Array.isArray(posts) || posts.length === 0) {
@@ -714,6 +715,19 @@ app.post("/api/analyze-posts", async (req, res) => {
 
   if (!apiKey) {
     return res.status(500).json({ error: "Server API key not configured" });
+  }
+
+  // Check cache first (unless force refresh)
+  const cacheKey = generateProfileCacheKey(posts, analysisType);
+  if (!forceRefresh) {
+    const cached = getCachedProfileAnalysis(cacheKey);
+    if (cached) {
+      return res.json({
+        ...cached,
+        cached: true,
+        generatedAt: new Date(cached.generatedAt).toISOString(),
+      });
+    }
   }
 
   try {
@@ -802,7 +816,14 @@ Provide specific evidence and quotes to support your analysis. Start directly wi
     const cleanedText = cleanJsonResponse(data.content[0].text);
     const result = JSON.parse(cleanedText);
 
-    res.json(result);
+    // Cache the result
+    setCachedProfileAnalysis(cacheKey, result);
+
+    res.json({
+      ...result,
+      cached: false,
+      generatedAt: new Date().toISOString(),
+    });
   } catch (error) {
     console.error("Error analyzing posts:", error);
     res.status(500).json({
@@ -857,6 +878,54 @@ setInterval(
     }
   },
   5 * 60 * 1000,
+);
+
+// =============================================================================
+// Profile Analysis Cache (48-hour TTL)
+// =============================================================================
+const profileAnalysisCache = new Map();
+const PROFILE_ANALYSIS_CACHE_TTL = 48 * 60 * 60 * 1000; // 48 hours in milliseconds
+
+function generateProfileCacheKey(posts, analysisType) {
+  // Create a stable cache key from posts content and analysis type
+  const postsHash = crypto
+    .createHash("sha256")
+    .update(JSON.stringify(posts.map((p) => p.text).sort()))
+    .digest("hex")
+    .slice(0, 16);
+  return `profile:${analysisType}:${postsHash}`;
+}
+
+function getCachedProfileAnalysis(cacheKey) {
+  const cached = profileAnalysisCache.get(cacheKey);
+  if (cached && Date.now() - cached.generatedAt < PROFILE_ANALYSIS_CACHE_TTL) {
+    return cached;
+  }
+  // Clean up expired entry
+  if (cached) {
+    profileAnalysisCache.delete(cacheKey);
+  }
+  return null;
+}
+
+function setCachedProfileAnalysis(cacheKey, result) {
+  profileAnalysisCache.set(cacheKey, {
+    ...result,
+    generatedAt: Date.now(),
+  });
+}
+
+// Periodic cache cleanup for profile analysis (every hour)
+setInterval(
+  () => {
+    const now = Date.now();
+    for (const [key, value] of profileAnalysisCache.entries()) {
+      if (now - value.generatedAt >= PROFILE_ANALYSIS_CACHE_TTL) {
+        profileAnalysisCache.delete(key);
+      }
+    }
+  },
+  60 * 60 * 1000,
 );
 
 // Thread summary endpoint
@@ -948,8 +1017,9 @@ Return ONLY the haiku, three lines, no additional text or formatting.`;
         maxTokens = 100;
         break;
       case "tldr":
-        formatPrompt = `Write a concise TL;DR summary of this thread in 1-2 sentences (max 280 characters).
-Focus on the main point or takeaway from the discussion.
+        formatPrompt = `Write a concise TL;DR summary of this thread conversation in 1-2 sentences (max 280 characters).
+Summarize both the original post AND what the replies discuss - capture the conversation, not just the original point.
+If there's debate or different viewpoints, mention that. If people agree or add context, note that.
 Return ONLY the summary text, no labels or prefixes.`;
         maxTokens = 150;
         break;
@@ -973,7 +1043,7 @@ Return ONLY the bullet points, no headers or additional formatting.`;
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250929",
+        model: "claude-haiku-4-5-20250929",
         max_tokens: maxTokens,
         messages: [
           {

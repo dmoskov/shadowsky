@@ -1,0 +1,6 @@
+{
+  "app": "npx ts-node deploy-stack.ts",
+  "context": {
+    "@aws-cdk/core:enablePartitionLiterals": true
+  }
+}
