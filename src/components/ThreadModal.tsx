@@ -1015,6 +1015,7 @@ export function ThreadModal({
             ((replyState.isReplying && replyState.replyToPost) ||
               (quoteState.isQuoting && quoteState.quotedPost)) && (
               <div
+                ref={composerRef}
                 className="flex-shrink-0 border-t"
                 style={{
                   backgroundColor: "var(--bsky-bg-secondary)",

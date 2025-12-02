@@ -282,6 +282,60 @@ class WebSocketNotificationServer {
     }
   }
 
+  /**
+   * Poll notifications for users who are NOT connected via WebSocket
+   * This is called periodically for push notification delivery when browser is closed
+   */
+  async pollNotificationsForPush(userDid, agent) {
+    try {
+      const lastCursor = this.userLastSeenCursors.get(userDid);
+      const params = {
+        limit: 50,
+      };
+
+      if (lastCursor) {
+        params.cursor = lastCursor;
+      }
+
+      const response = await agent.listNotifications(params);
+
+      if (response.success && response.data.notifications) {
+        const notifications = response.data.notifications;
+
+        // Filter for new notifications only
+        const newNotifications = lastCursor
+          ? notifications.filter(
+              (n) => new Date(n.indexedAt) > new Date(lastCursor),
+            )
+          : notifications.slice(0, 5);
+
+        if (newNotifications.length > 0) {
+          this.log(
+            `[Push] Found ${newNotifications.length} new notifications for ${userDid}`,
+          );
+
+          // Send push notifications
+          await pushNotificationService.handleNotifications(
+            userDid,
+            newNotifications,
+          );
+
+          // Update cursor
+          if (notifications.length > 0) {
+            this.userLastSeenCursors.set(userDid, notifications[0].indexedAt);
+          }
+        }
+      }
+    } catch (err) {
+      if (err.status !== 429) {
+        this.logError(
+          `[Push] Error polling notifications for ${userDid}:`,
+          err.message,
+        );
+      }
+    }
+  }
+
   sendNotificationToUser(userDid, notification) {
     this.sendToUser(userDid, {
       type: "notification:new",
@@ -331,6 +385,7 @@ class WebSocketNotificationServer {
   }
 
   getStats() {
+    const pushStats = pushNotificationService.getStats();
     return {
       connectedUsers: this.userConnections.size,
       totalConnections: Array.from(this.userConnections.values()).reduce(
@@ -338,6 +393,7 @@ class WebSocketNotificationServer {
         0,
       ),
       activePolling: this.userPollingIntervals.size,
+      pushNotifications: pushStats,
     };
   }
 
@@ -347,6 +403,9 @@ class WebSocketNotificationServer {
     // Clear all polling intervals
     this.userPollingIntervals.forEach((interval) => clearInterval(interval));
     this.userPollingIntervals.clear();
+
+    // Shutdown push notification service
+    pushNotificationService.shutdown();
 
     // Close all connections
     this.wss.clients.forEach((ws) => {
