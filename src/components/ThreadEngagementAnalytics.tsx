@@ -332,6 +332,7 @@ export const ThreadEngagementAnalytics: React.FC<
                 // Extract post ID from URI for linking
                 const postId = pe.post.uri.split("/").pop();
                 const postUrl = `https://bsky.app/profile/${pe.post.author.handle}/post/${postId}`;
+                const profileUrl = `https://bsky.app/profile/${pe.post.author.handle}`;
                 const postText =
                   (pe.post.record as { text?: string })?.text || "";
 
@@ -365,20 +366,28 @@ export const ThreadEngagementAnalytics: React.FC<
                         >
                           #{pe.rank}
                         </span>
-                        <img
-                          src={
-                            proxifyBskyImage(pe.post.author.avatar) ||
-                            "/default-avatar.svg"
-                          }
-                          alt=""
-                          className="h-5 w-5 rounded-full"
-                        />
-                        <span
-                          className="truncate text-xs font-medium"
-                          style={{ color: "var(--bsky-text-primary)" }}
+                        <a
+                          href={profileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 transition-opacity hover:opacity-70"
+                          title={`View ${pe.post.author.displayName || pe.post.author.handle}'s profile`}
                         >
-                          {pe.post.author.displayName || pe.post.author.handle}
-                        </span>
+                          <img
+                            src={
+                              proxifyBskyImage(pe.post.author.avatar) ||
+                              "/default-avatar.svg"
+                            }
+                            alt=""
+                            className="h-5 w-5 rounded-full"
+                          />
+                          <span
+                            className="truncate text-xs font-medium"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                          >
+                            {pe.post.author.displayName || pe.post.author.handle}
+                          </span>
+                        </a>
                         <span
                           className="text-xs"
                           style={{ color: "var(--bsky-text-tertiary)" }}
@@ -416,12 +425,16 @@ export const ThreadEngagementAnalytics: React.FC<
 
                     {/* Post content preview */}
                     {postText && (
-                      <div
-                        className="mb-1 mt-2 line-clamp-2 text-xs"
+                      <a
+                        href={postUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mb-1 mt-2 block line-clamp-2 text-xs transition-opacity hover:opacity-70"
                         style={{ color: "var(--bsky-text-secondary)" }}
+                        title="View this post"
                       >
                         {postText}
-                      </div>
+                      </a>
                     )}
 
                     <div className="mt-1">
