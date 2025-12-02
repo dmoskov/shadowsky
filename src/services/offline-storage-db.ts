@@ -13,6 +13,7 @@
  */
 
 import { debug } from "@bsky/shared";
+import { withIndexedDBRetry } from "../utils/storage-retry";
 
 const DB_NAME = "BskyOfflineStorage";
 const DB_VERSION = 3; // Bumped for thread summaries store
@@ -277,44 +278,46 @@ export class OfflineStorageDB {
     items: Omit<OfflineFeedItem, "_offlineCachedAt">[],
     feedType: "timeline" | "author" | "list" = "timeline",
   ): Promise<void> {
-    const db = this.ensureDb();
-    const transaction = db.transaction(
-      [STORES.FEED_ITEMS, STORES.METADATA],
-      "readwrite",
-    );
-    const store = transaction.objectStore(STORES.FEED_ITEMS);
-    const metaStore = transaction.objectStore(STORES.METADATA);
+    return withIndexedDBRetry(async () => {
+      const db = this.ensureDb();
+      const transaction = db.transaction(
+        [STORES.FEED_ITEMS, STORES.METADATA],
+        "readwrite",
+      );
+      const store = transaction.objectStore(STORES.FEED_ITEMS);
+      const metaStore = transaction.objectStore(STORES.METADATA);
 
-    const now = Date.now();
+      const now = Date.now();
 
-    for (const item of items) {
-      const offlineItem: OfflineFeedItem = {
-        ...item,
-        _offlineCachedAt: now,
-        _feedType: feedType,
+      for (const item of items) {
+        const offlineItem: OfflineFeedItem = {
+          ...item,
+          _offlineCachedAt: now,
+          _feedType: feedType,
+        };
+        store.put(offlineItem);
+      }
+
+      // Update metadata
+      const metaKey = `feed_${feedType}`;
+      const existingMeta = await this.getMetadataInTransaction(
+        metaStore,
+        metaKey,
+      );
+      const newMeta: OfflineMetadata = {
+        key: metaKey,
+        lastSyncAt: now,
+        itemCount: (existingMeta?.itemCount || 0) + items.length,
+        newestItemAt: items[0]?.indexedAt,
+        oldestItemAt: items[items.length - 1]?.indexedAt,
       };
-      store.put(offlineItem);
-    }
+      metaStore.put(newMeta);
 
-    // Update metadata
-    const metaKey = `feed_${feedType}`;
-    const existingMeta = await this.getMetadataInTransaction(
-      metaStore,
-      metaKey,
-    );
-    const newMeta: OfflineMetadata = {
-      key: metaKey,
-      lastSyncAt: now,
-      itemCount: (existingMeta?.itemCount || 0) + items.length,
-      newestItemAt: items[0]?.indexedAt,
-      oldestItemAt: items[items.length - 1]?.indexedAt,
-    };
-    metaStore.put(newMeta);
-
-    return new Promise((resolve, reject) => {
-      transaction.oncomplete = () => resolve();
-      transaction.onerror = () => reject(transaction.error);
-    });
+      return new Promise<void>((resolve, reject) => {
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+      });
+    }, "saveFeedItems");
   }
 
   async getFeedItems(
@@ -393,35 +396,37 @@ export class OfflineStorageDB {
   async saveConversations(
     conversations: Omit<OfflineDMConversation, "_offlineCachedAt">[],
   ): Promise<void> {
-    const db = this.ensureDb();
-    const transaction = db.transaction(
-      [STORES.DM_CONVERSATIONS, STORES.METADATA],
-      "readwrite",
-    );
-    const store = transaction.objectStore(STORES.DM_CONVERSATIONS);
-    const metaStore = transaction.objectStore(STORES.METADATA);
+    return withIndexedDBRetry(async () => {
+      const db = this.ensureDb();
+      const transaction = db.transaction(
+        [STORES.DM_CONVERSATIONS, STORES.METADATA],
+        "readwrite",
+      );
+      const store = transaction.objectStore(STORES.DM_CONVERSATIONS);
+      const metaStore = transaction.objectStore(STORES.METADATA);
 
-    const now = Date.now();
+      const now = Date.now();
 
-    for (const convo of conversations) {
-      const offlineConvo: OfflineDMConversation = {
-        ...convo,
-        _offlineCachedAt: now,
-      };
-      store.put(offlineConvo);
-    }
+      for (const convo of conversations) {
+        const offlineConvo: OfflineDMConversation = {
+          ...convo,
+          _offlineCachedAt: now,
+        };
+        store.put(offlineConvo);
+      }
 
-    // Update metadata
-    metaStore.put({
-      key: "dm_conversations",
-      lastSyncAt: now,
-      itemCount: conversations.length,
-    });
+      // Update metadata
+      metaStore.put({
+        key: "dm_conversations",
+        lastSyncAt: now,
+        itemCount: conversations.length,
+      });
 
-    return new Promise((resolve, reject) => {
-      transaction.oncomplete = () => resolve();
-      transaction.onerror = () => reject(transaction.error);
-    });
+      return new Promise<void>((resolve, reject) => {
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+      });
+    }, "saveConversations");
   }
 
   async getConversations(): Promise<OfflineDMConversation[]> {
@@ -466,25 +471,27 @@ export class OfflineStorageDB {
     conversationId: string,
     messages: Omit<OfflineDMMessage, "_offlineCachedAt" | "conversationId">[],
   ): Promise<void> {
-    const db = this.ensureDb();
-    const transaction = db.transaction([STORES.DM_MESSAGES], "readwrite");
-    const store = transaction.objectStore(STORES.DM_MESSAGES);
+    return withIndexedDBRetry(async () => {
+      const db = this.ensureDb();
+      const transaction = db.transaction([STORES.DM_MESSAGES], "readwrite");
+      const store = transaction.objectStore(STORES.DM_MESSAGES);
 
-    const now = Date.now();
+      const now = Date.now();
 
-    for (const msg of messages) {
-      const offlineMsg: OfflineDMMessage = {
-        ...msg,
-        conversationId,
-        _offlineCachedAt: now,
-      };
-      store.put(offlineMsg);
-    }
+      for (const msg of messages) {
+        const offlineMsg: OfflineDMMessage = {
+          ...msg,
+          conversationId,
+          _offlineCachedAt: now,
+        };
+        store.put(offlineMsg);
+      }
 
-    return new Promise((resolve, reject) => {
-      transaction.oncomplete = () => resolve();
-      transaction.onerror = () => reject(transaction.error);
-    });
+      return new Promise<void>((resolve, reject) => {
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject(transaction.error);
+      });
+    }, "saveMessages");
   }
 
   async getMessages(
@@ -526,42 +533,44 @@ export class OfflineStorageDB {
   async saveThreadSummary(
     summary: Omit<OfflineThreadSummary, "_offlineCachedAt" | "_lastAccessedAt">,
   ): Promise<void> {
-    const db = this.ensureDb();
-    const transaction = db.transaction(
-      [STORES.THREAD_SUMMARIES, STORES.METADATA],
-      "readwrite",
-    );
-    const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
-    const metaStore = transaction.objectStore(STORES.METADATA);
+    return withIndexedDBRetry(async () => {
+      const db = this.ensureDb();
+      const transaction = db.transaction(
+        [STORES.THREAD_SUMMARIES, STORES.METADATA],
+        "readwrite",
+      );
+      const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
+      const metaStore = transaction.objectStore(STORES.METADATA);
 
-    const now = Date.now();
+      const now = Date.now();
 
-    const offlineSummary: OfflineThreadSummary = {
-      ...summary,
-      _offlineCachedAt: now,
-      _lastAccessedAt: now,
-    };
-    store.put(offlineSummary);
-
-    // Update metadata
-    const existingMeta = await this.getMetadataInTransaction(
-      metaStore,
-      "thread_summaries",
-    );
-    const newMeta: OfflineMetadata = {
-      key: "thread_summaries",
-      lastSyncAt: now,
-      itemCount: (existingMeta?.itemCount || 0) + 1,
-    };
-    metaStore.put(newMeta);
-
-    return new Promise((resolve, reject) => {
-      transaction.oncomplete = () => {
-        debug.log(`Cached thread summary for: ${summary.threadUri}`);
-        resolve();
+      const offlineSummary: OfflineThreadSummary = {
+        ...summary,
+        _offlineCachedAt: now,
+        _lastAccessedAt: now,
       };
-      transaction.onerror = () => reject(transaction.error);
-    });
+      store.put(offlineSummary);
+
+      // Update metadata
+      const existingMeta = await this.getMetadataInTransaction(
+        metaStore,
+        "thread_summaries",
+      );
+      const newMeta: OfflineMetadata = {
+        key: "thread_summaries",
+        lastSyncAt: now,
+        itemCount: (existingMeta?.itemCount || 0) + 1,
+      };
+      metaStore.put(newMeta);
+
+      return new Promise<void>((resolve, reject) => {
+        transaction.oncomplete = () => {
+          debug.log(`Cached thread summary for: ${summary.threadUri}`);
+          resolve();
+        };
+        transaction.onerror = () => reject(transaction.error);
+      });
+    }, "saveThreadSummary");
   }
 
   async getThreadSummary(
@@ -653,15 +662,17 @@ export class OfflineStorageDB {
   }
 
   async deleteThreadSummary(threadUri: string): Promise<void> {
-    const db = this.ensureDb();
-    const transaction = db.transaction([STORES.THREAD_SUMMARIES], "readwrite");
-    const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
+    return withIndexedDBRetry(async () => {
+      const db = this.ensureDb();
+      const transaction = db.transaction([STORES.THREAD_SUMMARIES], "readwrite");
+      const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
 
-    return new Promise((resolve, reject) => {
-      const request = store.delete(threadUri);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+      return new Promise<void>((resolve, reject) => {
+        const request = store.delete(threadUri);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }, "deleteThreadSummary");
   }
 
   async getThreadSummaryCount(): Promise<number> {
@@ -1027,31 +1038,33 @@ export class OfflineStorageDB {
   }
 
   async clearAll(): Promise<void> {
-    const db = this.ensureDb();
-    const transaction = db.transaction(
-      [
-        STORES.FEED_ITEMS,
-        STORES.DM_CONVERSATIONS,
-        STORES.DM_MESSAGES,
-        STORES.THREAD_SUMMARIES,
-        STORES.METADATA,
-      ],
-      "readwrite",
-    );
+    return withIndexedDBRetry(async () => {
+      const db = this.ensureDb();
+      const transaction = db.transaction(
+        [
+          STORES.FEED_ITEMS,
+          STORES.DM_CONVERSATIONS,
+          STORES.DM_MESSAGES,
+          STORES.THREAD_SUMMARIES,
+          STORES.METADATA,
+        ],
+        "readwrite",
+      );
 
-    transaction.objectStore(STORES.FEED_ITEMS).clear();
-    transaction.objectStore(STORES.DM_CONVERSATIONS).clear();
-    transaction.objectStore(STORES.DM_MESSAGES).clear();
-    transaction.objectStore(STORES.THREAD_SUMMARIES).clear();
-    transaction.objectStore(STORES.METADATA).clear();
+      transaction.objectStore(STORES.FEED_ITEMS).clear();
+      transaction.objectStore(STORES.DM_CONVERSATIONS).clear();
+      transaction.objectStore(STORES.DM_MESSAGES).clear();
+      transaction.objectStore(STORES.THREAD_SUMMARIES).clear();
+      transaction.objectStore(STORES.METADATA).clear();
 
-    return new Promise((resolve, reject) => {
-      transaction.oncomplete = () => {
-        debug.log("Cleared all offline storage");
-        resolve();
-      };
-      transaction.onerror = () => reject(transaction.error);
-    });
+      return new Promise<void>((resolve, reject) => {
+        transaction.oncomplete = () => {
+          debug.log("Cleared all offline storage");
+          resolve();
+        };
+        transaction.onerror = () => reject(transaction.error);
+      });
+    }, "clearAll");
   }
 }
 

@@ -35,6 +35,7 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
 import { analytics } from "./services/analytics";
 import { appPreferencesService } from "./services/app-preferences-service";
+import { initializeCoreStorage } from "./services/data-services-initializer";
 import { NotificationStorageDB } from "./services/notification-storage-db";
 import { cleanupLocalStorage } from "./utils/cleanupLocalStorage";
 import "./utils/debug-control"; // Initialize debug controls
@@ -342,14 +343,17 @@ function AppContent() {
     return () => window.removeEventListener("resize", checkViewportWidth);
   }, [isAuthenticated]);
 
-  // Run one-time migration on app load
+  // Initialize core storage backends and run one-time migration on app load
   useEffect(() => {
-    const runMigration = async () => {
+    const initializeStorage = async () => {
       try {
-        // Note: Bookmark storage now uses BookmarkServiceV2 which is initialized in AuthContext
+        // Initialize core storage via StorageManager (api-cache, offline-storage, notification-storage)
+        // This replaces scattered individual initializations with coordinated error handling
+        await initializeCoreStorage();
+        debug.log("✅ Core storage backends initialized");
 
+        // Run notification migration after core storage is ready
         const db = NotificationStorageDB.getInstance();
-        await db.init();
         const migrated = await db.migrateFromLocalStorage();
         if (migrated) {
           debug.log(
@@ -359,11 +363,11 @@ function AppContent() {
           cleanupLocalStorage();
         }
       } catch (error) {
-        debug.error("Failed to run migration:", error);
+        debug.error("Failed to initialize core storage:", error);
       }
     };
 
-    runMigration();
+    initializeStorage();
   }, []);
 
   if (isLoading) {

@@ -8,9 +8,16 @@ import {
   HardDrive,
   Package,
   RefreshCw,
+  Server,
   Trash2,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import {
+  getStorageHealth,
+  getStorageHealthReport,
+  onStorageHealthChange,
+  StorageSystemHealth,
+} from "../services/data-services-initializer";
 import { NotificationCacheService } from "../services/notification-cache-service";
 import { PostCacheService } from "../services/post-cache-service";
 import { NotificationCache } from "../utils/notificationCache";
@@ -39,8 +46,13 @@ export function DebugConsole() {
     typeof StorageManager.getStorageHealth
   > | null>(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [activeTab, setActiveTab] = useState<"cache" | "storage">("cache");
+  const [activeTab, setActiveTab] = useState<
+    "cache" | "storage" | "backends"
+  >("cache");
   const [indexedDBStats, setIndexedDBStats] = useState<any>(null);
+  const [systemHealth, setSystemHealth] = useState<StorageSystemHealth | null>(
+    null,
+  );
   const [indexedDBReady, setIndexedDBReady] = useState(false);
   const [postIndexedDBStats, setPostIndexedDBStats] = useState<any>(null);
   const [postIndexedDBReady, setPostIndexedDBReady] = useState(false);
@@ -55,6 +67,14 @@ export function DebugConsole() {
     setPostCacheInfo(PostCache.getCacheInfo());
     setStorageMetrics(StorageManager.getStorageMetrics());
     setStorageHealth(StorageManager.getStorageHealth());
+
+    // Get storage system health from StorageManager
+    try {
+      const health = getStorageHealth();
+      setSystemHealth(health);
+    } catch (error) {
+      debug.error("Failed to get storage system health:", error);
+    }
 
     // Get IndexedDB stats if available
     if (indexedDBReady) {
@@ -106,6 +126,14 @@ export function DebugConsole() {
       return () => clearInterval(interval);
     }
   }, [showDetails, indexedDBReady, postIndexedDBReady, updateMetrics]);
+
+  // Subscribe to storage health changes
+  useEffect(() => {
+    const unsubscribe = onStorageHealthChange((health) => {
+      setSystemHealth(health);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleClearCache = (
     type: "priority" | "all" | "posts" | "notifications" | "everything",

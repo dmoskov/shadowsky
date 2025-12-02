@@ -1,7 +1,7 @@
 import { AtpAgent } from "@atproto/api";
 import type { Column } from "../types/column";
 import { ColumnAtProtoBackend } from "./storage/column-atproto-backend";
-import { ColumnLocalStorageBackend } from "./storage/column-local-storage-backend";
+import { ColumnDexieBackend } from "./storage/column-dexie-backend";
 import { ColumnStorageBackend } from "./storage/column-storage-backend";
 import { StorageType } from "./storage/types";
 
@@ -11,8 +11,8 @@ export class ColumnService {
   private agent?: AtpAgent | null;
 
   constructor() {
-    // Default to local storage
-    this.backend = new ColumnLocalStorageBackend();
+    // Default to Dexie-based local storage (async, non-blocking)
+    this.backend = new ColumnDexieBackend();
   }
 
   async initialize(agent: AtpAgent, storageType: StorageType | string) {
@@ -27,7 +27,8 @@ export class ColumnService {
       this.backend = new ColumnAtProtoBackend();
       this.backend.setAgent(agent);
     } else {
-      this.backend = new ColumnLocalStorageBackend();
+      // Use Dexie-based backend for local storage (async, non-blocking)
+      this.backend = new ColumnDexieBackend();
     }
   }
 
@@ -91,7 +92,8 @@ export class ColumnService {
         newBackend.setAgent(this.agent);
       }
     } else {
-      newBackend = new ColumnLocalStorageBackend();
+      // Use Dexie-based backend for local storage
+      newBackend = new ColumnDexieBackend();
     }
 
     // Migrate data

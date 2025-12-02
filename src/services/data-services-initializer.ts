@@ -1,107 +1,90 @@
 import { BskyAgent } from "@atproto/api";
 import { createLogger } from "../utils/logger";
-import { appPreferencesService } from "./app-preferences-service";
-import { columnService } from "./column-service";
-import { draftService } from "./draft-service";
+import { storageManager, StorageSystemHealth } from "./storage-manager";
 
 const logger = createLogger("DataServicesInitializer");
 
 /**
- * Initialize column service with the correct storage type based on user preferences
+ * Initialize all data services using the unified StorageManager.
+ *
+ * This replaces the previous scattered initialization with coordinated
+ * error handling and health monitoring.
+ *
+ * @param agent - The authenticated BskyAgent
+ * @returns The storage system health status
  */
-export async function initializeColumnService(agent: BskyAgent) {
+export async function initializeDataServices(
+  agent: BskyAgent,
+): Promise<StorageSystemHealth> {
+  logger.log("Initializing data services via StorageManager...");
+
   try {
-    // Set agent for preferences service
-    appPreferencesService.setAgent(agent);
+    const health = await storageManager.initialize(agent);
 
-    // Get storage type from PDS record
-    const preferences = await appPreferencesService.getPreferences();
-    const storageType = preferences?.columnStorageType || "local";
-
-    logger.log(
-      `Attempting to initialize column service with ${storageType} storage`,
-    );
-
-    // Initialize the column service with the correct storage type
-    await columnService.initialize(agent, storageType);
-
-    logger.log(
-      `Column service successfully initialized with ${storageType} storage`,
-    );
-  } catch (error) {
-    logger.error(
-      "Failed to initialize column service with saved storage type:",
-      error,
-    );
-    logger.error("Falling back to local storage");
-
-    // Only update preferences if we're not in a force switch scenario
-    // Check if the preference was just updated (within last 5 seconds)
-    const prefs = await appPreferencesService.getPreferences();
-    const lastUpdate = prefs?.updatedAt ? new Date(prefs.updatedAt) : null;
-    const recentlyUpdated =
-      lastUpdate && Date.now() - lastUpdate.getTime() < 5000;
-
-    if (!recentlyUpdated) {
-      // Update preferences to local storage if custom storage fails
-      await appPreferencesService.updatePreferences({
-        columnStorageType: "local",
-      });
+    // Log health status
+    if (health.overall === "healthy") {
+      logger.log("✅ All data services initialized successfully");
+    } else if (health.overall === "degraded") {
+      const degraded = storageManager.getDegradedBackends();
+      logger.warn(
+        `⚠️ Data services initialized with degradation: ${degraded.join(", ")}`,
+      );
+    } else if (health.overall === "failed") {
+      const failed = storageManager.getFailedBackends();
+      logger.error(
+        `❌ Data services initialization failed for: ${failed.join(", ")}`,
+      );
     }
 
-    // Fall back to local storage
-    await columnService.initialize(agent, "local");
-  }
-}
-
-/**
- * Initialize draft service with the correct storage type based on user preferences
- */
-export async function initializeDraftService(agent: BskyAgent) {
-  try {
-    // Set agent for preferences service
-    appPreferencesService.setAgent(agent);
-
-    // Get storage type from PDS record
-    const preferences = await appPreferencesService.getPreferences();
-    const storageType = preferences?.draftStorageType || "local";
-
-    logger.log(
-      `Attempting to initialize draft service with ${storageType} storage`,
-    );
-
-    // Initialize the draft service with the correct storage type
-    await draftService.initialize(agent, storageType);
-
-    logger.log(
-      `Draft service successfully initialized with ${storageType} storage`,
-    );
+    return health;
   } catch (error) {
-    logger.error(
-      "Failed to initialize draft service with saved storage type:",
-      error,
-    );
-    logger.error("Falling back to local storage");
-
-    // Update preferences to local storage if custom storage fails
-    await appPreferencesService.updatePreferences({
-      draftStorageType: "local",
-    });
-
-    // Fall back to local storage
-    await draftService.initialize(agent, "local");
+    logger.error("Failed to initialize data services:", error);
+    throw error;
   }
 }
 
 /**
- * Initialize all data services (columns and drafts) with the correct storage types
+ * Initialize core storage backends (no auth required).
+ * Call this early in the app lifecycle before authentication.
  */
-export async function initializeDataServices(agent: BskyAgent) {
-  const initPromises = [
-    initializeColumnService(agent),
-    initializeDraftService(agent),
-  ];
+export async function initializeCoreStorage(): Promise<void> {
+  logger.log("Initializing core storage...");
+  await storageManager.initializeCoreStorage();
+}
 
-  // Initialize services in parallel
-  await Promise.allSettled(initPromises);
+/**
+ * Get the current storage system health status.
+ */
+export function getStorageHealth(): StorageSystemHealth {
+  return storageManager.getHealth();
+}
+
+/**
+ * Check if all storage backends are healthy.
+ */
+export function isStorageHealthy(): boolean {
+  return storageManager.isFullyHealthy();
+}
+
+/**
+ * Subscribe to storage health changes.
+ */
+export function onStorageHealthChange(
+  callback: (health: StorageSystemHealth) => void,
+): () => void {
+  return storageManager.onHealthChange(callback);
+}
+
+/**
+ * Get a human-readable health report.
+ */
+export function getStorageHealthReport(): string {
+  return storageManager.getHealthReport();
+}
+
+/**
+ * Reset storage manager state (useful after logout).
+ */
+export function resetStorageManager(): void {
+  storageManager.reset();
 }

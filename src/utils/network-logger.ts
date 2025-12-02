@@ -10,6 +10,7 @@
  */
 
 import { createLogger } from "./logger";
+import { getErrorMessage, getErrorStatus } from "../types/errors";
 
 const logger = createLogger("NetworkRequest");
 
@@ -125,7 +126,7 @@ function extractHeaders(headers?: HeadersInit): Record<string, string> {
 /**
  * Categorize error types
  */
-function categorizeError(error: any): string {
+function categorizeError(error: unknown): string {
   if (error instanceof TypeError) {
     if (error.message.includes("fetch")) {
       return "NETWORK_ERROR";
@@ -133,25 +134,25 @@ function categorizeError(error: any): string {
     return "TYPE_ERROR";
   }
 
-  if (error instanceof Error) {
-    if (error.message.toLowerCase().includes("timeout")) {
-      return "TIMEOUT_ERROR";
-    }
-    if (error.message.includes("429")) {
-      return "RATE_LIMIT_ERROR";
-    }
-    if (error.message.includes("401")) {
-      return "AUTH_ERROR";
-    }
-    if (error.message.includes("403")) {
-      return "FORBIDDEN_ERROR";
-    }
-    if (error.message.includes("404")) {
-      return "NOT_FOUND_ERROR";
-    }
-    if (error.message.includes("500") || error.message.includes("503")) {
-      return "SERVER_ERROR";
-    }
+  const message = getErrorMessage(error);
+
+  if (message.toLowerCase().includes("timeout")) {
+    return "TIMEOUT_ERROR";
+  }
+  if (message.includes("429")) {
+    return "RATE_LIMIT_ERROR";
+  }
+  if (message.includes("401")) {
+    return "AUTH_ERROR";
+  }
+  if (message.includes("403")) {
+    return "FORBIDDEN_ERROR";
+  }
+  if (message.includes("404")) {
+    return "NOT_FOUND_ERROR";
+  }
+  if (message.includes("500") || message.includes("503")) {
+    return "SERVER_ERROR";
   }
 
   return "UNKNOWN_ERROR";
@@ -245,7 +246,7 @@ export function logRequestSuccess(
  */
 export function logRequestFailure(
   context: NetworkLogContext,
-  error: any,
+  error: unknown,
 ): void {
   const endTime = performance.now();
   const duration = Math.round(endTime - context.startTime);
@@ -254,13 +255,14 @@ export function logRequestFailure(
     ...context,
     endTime,
     duration,
-    error: error instanceof Error ? error.message : String(error),
+    error: getErrorMessage(error),
     errorType: categorizeError(error),
     success: false,
   };
 
-  if (error?.status) {
-    updatedContext.status = error.status;
+  const status = getErrorStatus(error);
+  if (status !== undefined) {
+    updatedContext.status = status;
   }
 
   logger.error(formatStructuredLog(updatedContext));
@@ -273,12 +275,12 @@ export function logRetryAttempt(
   context: NetworkLogContext,
   attempt: number,
   delayMs: number,
-  error: any,
+  error: unknown,
 ): void {
   const retryContext: NetworkLogContext = {
     ...context,
     retryAttempt: attempt,
-    error: error instanceof Error ? error.message : String(error),
+    error: getErrorMessage(error),
     errorType: categorizeError(error),
   };
 

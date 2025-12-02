@@ -1,3 +1,4 @@
+import { getErrorMessage, getErrorStatus } from "../types/errors";
 import { createLogger } from "./logger";
 import {
   logRequestFailure,
@@ -14,8 +15,37 @@ export interface RetryOptions {
   initialDelayMs?: number;
   maxDelayMs?: number;
   backoffFactor?: number;
-  retryableErrors?: (error: any) => boolean;
-  onRetry?: (error: any, attempt: number) => void;
+  retryableErrors?: (error: unknown) => boolean;
+  onRetry?: (error: unknown, attempt: number) => void;
+}
+
+/**
+ * Default function to determine if an error is retryable
+ */
+function isDefaultRetryableError(error: unknown): boolean {
+  // Retry on network errors
+  if (error instanceof TypeError && error.message.includes("fetch")) {
+    return true;
+  }
+
+  const message = getErrorMessage(error);
+
+  // Retry on rate limits (429)
+  if (message.includes("429")) {
+    return true;
+  }
+
+  // Retry on server errors (500, 503)
+  if (message.includes("500") || message.includes("503")) {
+    return true;
+  }
+
+  // Retry on timeout errors
+  if (message.toLowerCase().includes("timeout")) {
+    return true;
+  }
+
+  return false;
 }
 
 const DEFAULT_OPTIONS: Required<RetryOptions> = {
@@ -23,35 +53,7 @@ const DEFAULT_OPTIONS: Required<RetryOptions> = {
   initialDelayMs: 1000,
   maxDelayMs: 10000,
   backoffFactor: 2,
-  retryableErrors: (error: any) => {
-    // Retry on network errors
-    if (error instanceof TypeError && error.message.includes("fetch")) {
-      return true;
-    }
-
-    // Retry on rate limits (429)
-    if (error instanceof Error && error.message.includes("429")) {
-      return true;
-    }
-
-    // Retry on server errors (500, 503)
-    if (
-      error instanceof Error &&
-      (error.message.includes("500") || error.message.includes("503"))
-    ) {
-      return true;
-    }
-
-    // Retry on timeout errors
-    if (
-      error instanceof Error &&
-      error.message.toLowerCase().includes("timeout")
-    ) {
-      return true;
-    }
-
-    return false;
-  },
+  retryableErrors: isDefaultRetryableError,
   onRetry: () => {},
 };
 
@@ -69,12 +71,12 @@ export async function retryWithBackoff<T>(
   options: RetryOptions = {},
 ): Promise<T> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
-  let lastError: any;
+  let lastError: unknown;
 
   for (let attempt = 1; attempt <= opts.maxAttempts; attempt++) {
     try {
       return await fn();
-    } catch (error) {
+    } catch (error: unknown) {
       lastError = error;
 
       // Check if this is the last attempt
@@ -113,12 +115,12 @@ export const BLOB_RETRY_OPTIONS: RetryOptions = {
   maxAttempts: 2,
   initialDelayMs: 500,
   maxDelayMs: 2000,
-  retryableErrors: (error: any) => {
+  retryableErrors: (error: unknown) => {
     // Retry on blob fetch failures
     if (error instanceof TypeError) {
       return true;
     }
-    return DEFAULT_OPTIONS.retryableErrors(error);
+    return isDefaultRetryableError(error);
   },
 };
 
@@ -130,21 +132,20 @@ export const API_RETRY_OPTIONS: RetryOptions = {
   initialDelayMs: 1000,
   maxDelayMs: 10000,
   backoffFactor: 2,
-  retryableErrors: (error: any) => {
+  retryableErrors: (error: unknown) => {
+    const message = getErrorMessage(error);
+
     // Don't retry on authentication errors (401)
-    if (error instanceof Error && error.message.includes("401")) {
+    if (message.includes("401")) {
       return false;
     }
 
     // Don't retry on client errors (400, 403)
-    if (
-      error instanceof Error &&
-      (error.message.includes("400") || error.message.includes("403"))
-    ) {
+    if (message.includes("400") || message.includes("403")) {
       return false;
     }
 
-    return DEFAULT_OPTIONS.retryableErrors(error);
+    return isDefaultRetryableError(error);
   },
 };
 
@@ -155,9 +156,11 @@ export const AT_PROTO_RETRY_OPTIONS: RetryOptions = {
   maxAttempts: 3,
   initialDelayMs: 1000,
   maxDelayMs: 5000,
-  retryableErrors: (error: any) => {
+  retryableErrors: (error: unknown) => {
+    const status = getErrorStatus(error);
+
     // Don't retry on 400 (record not found is expected)
-    if (error?.status === 400) {
+    if (status === 400) {
       return false;
     }
 
@@ -167,7 +170,7 @@ export const AT_PROTO_RETRY_OPTIONS: RetryOptions = {
     }
 
     // Retry on server errors
-    if (error?.status >= 500) {
+    if (status !== undefined && status >= 500) {
       return true;
     }
 
@@ -188,30 +191,28 @@ export const ALT_TEXT_RETRY_OPTIONS: RetryOptions = {
   initialDelayMs: 1000,
   maxDelayMs: 2000,
   backoffFactor: 2,
-  retryableErrors: (error: any) => {
+  retryableErrors: (error: unknown) => {
+    const message = getErrorMessage(error);
+
     // Don't retry on authentication errors (401)
-    if (error instanceof Error && error.message.includes("401")) {
+    if (message.includes("401")) {
       return false;
     }
 
     // Don't retry on client errors (400, 403)
-    if (
-      error instanceof Error &&
-      (error.message.includes("400") || error.message.includes("403"))
-    ) {
+    if (message.includes("400") || message.includes("403")) {
       return false;
     }
 
     // Retry on timeout errors
     if (
-      error instanceof Error &&
-      (error.message.toLowerCase().includes("timeout") ||
-        error.message.includes("TIMEOUT_ERROR"))
+      message.toLowerCase().includes("timeout") ||
+      message.includes("TIMEOUT_ERROR")
     ) {
       return true;
     }
 
-    return DEFAULT_OPTIONS.retryableErrors(error);
+    return isDefaultRetryableError(error);
   },
 };
 
@@ -271,6 +272,21 @@ export async function blobUrlToDataUrl(
 }
 
 /**
+ * HTTP error with status code and optional response
+ */
+export class HttpError extends Error {
+  status: number;
+  response?: Response;
+
+  constructor(message: string, status: number, response?: Response) {
+    super(message);
+    this.name = "HttpError";
+    this.status = status;
+    this.response = response;
+  }
+}
+
+/**
  * Fetch with retry and structured logging
  */
 export async function fetchWithRetry(
@@ -279,7 +295,7 @@ export async function fetchWithRetry(
   options: RetryOptions = API_RETRY_OPTIONS,
 ): Promise<Response> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
-  let lastError: any;
+  let lastError: unknown;
   let logContext: NetworkLogContext | undefined;
 
   for (let attempt = 1; attempt <= opts.maxAttempts; attempt++) {
@@ -289,11 +305,11 @@ export async function fetchWithRetry(
 
       // Throw on HTTP errors to trigger retry logic
       if (!response.ok) {
-        const error: any = new Error(
+        const error = new HttpError(
           `HTTP ${response.status}: ${response.statusText}`,
+          response.status,
+          response,
         );
-        error.status = response.status;
-        error.response = response;
 
         // Log failure
         logRequestFailure(logContext, error);
@@ -316,13 +332,10 @@ export async function fetchWithRetry(
 
       logRequestSuccess(logContext, response);
       return response;
-    } catch (error) {
+    } catch (error: unknown) {
       lastError = error;
 
-      if (
-        logContext &&
-        !(error && typeof error === "object" && "response" in error)
-      ) {
+      if (logContext && !(error instanceof HttpError)) {
         logRequestFailure(logContext, error);
       }
 
