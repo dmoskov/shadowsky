@@ -248,27 +248,29 @@ export class AppPreferencesService {
         const did = this.agent.session?.did;
         if (!did) throw new Error("No DID available");
 
-        // Try to update existing record
-        try {
-          await this.agent.api.com.atproto.repo.putRecord({
-            repo: did,
-            collection: PREFERENCES_COLLECTION,
-            rkey: PREFERENCES_RKEY,
-            record: shadowSkyPref as any,
-          });
-        } catch (putError: any) {
-          // If record doesn't exist, create it
-          if (putError?.status === 400) {
-            await this.agent.api.com.atproto.repo.createRecord({
+        // Try to update existing record with retry
+        await withAtProtoRetry(async () => {
+          try {
+            await this.agent!.api.com.atproto.repo.putRecord({
               repo: did,
               collection: PREFERENCES_COLLECTION,
               rkey: PREFERENCES_RKEY,
               record: shadowSkyPref as any,
             });
-          } else {
-            throw putError;
+          } catch (putError: any) {
+            // If record doesn't exist, create it
+            if (putError?.status === 400) {
+              await this.agent!.api.com.atproto.repo.createRecord({
+                repo: did,
+                collection: PREFERENCES_COLLECTION,
+                rkey: PREFERENCES_RKEY,
+                record: shadowSkyPref as any,
+              });
+            } else {
+              throw putError;
+            }
           }
-        }
+        }, "updatePreferences");
 
         logger.log("Successfully saved preferences to AT Protocol");
       } catch (atProtoError) {

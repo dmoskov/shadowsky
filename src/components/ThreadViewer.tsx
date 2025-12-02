@@ -1906,75 +1906,193 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     ],
   );
 
+  // Calculate reply count (excluding root)
+  const replyCount = posts.length - 1;
+
+  // Get non-root posts for replies section
+  const replyPosts = useMemo(() => {
+    if (!rootPostObject) return posts;
+    return posts.filter((p) => p.uri !== rootPostObject.uri);
+  }, [posts, rootPostObject]);
+
   return (
     <>
       <div ref={containerRef} className={`thread-viewer ${className}`}>
-        {/* Keyboard navigation hint and thread stats */}
-        {enableKeyboardNavigation && flatNodeList.length > 1 && (
-          <div
-            className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg px-3 py-2 text-xs"
-            style={{
-              backgroundColor: "var(--bsky-bg-tertiary)",
-              color: "var(--bsky-text-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
-            }}
-          >
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="flex items-center gap-1">
-                <kbd className="rounded bg-gray-200 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-700">
-                  ↑↓
-                </kbd>
-                <span>Navigate</span>
-              </span>
-              {userParticipationStats.count > 0 && (
-                <span className="flex items-center gap-1">
-                  <kbd className="rounded bg-gray-200 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-700">
-                    n/p
-                  </kbd>
-                  <span>Jump to your posts</span>
-                </span>
-              )}
-              <span className="flex items-center gap-1">
-                <kbd className="rounded bg-gray-200 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-700">
-                  Enter
-                </kbd>
-                <span>Reply</span>
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              {userParticipationStats.count > 0 && (
-                <span
-                  className="flex items-center gap-1 rounded-full px-2 py-0.5"
-                  style={{
-                    backgroundColor: "rgba(34, 197, 94, 0.15)",
-                    color: "rgb(34, 197, 94)",
-                  }}
+        {/* Hero Root Post */}
+        {rootPostObject && (
+          <div className="mb-6">
+            {/* Author header */}
+            <div className="mb-4 flex items-center gap-3">
+              {rootPostObject.author?.avatar ? (
+                <img
+                  src={proxifyBskyImage(rootPostObject.author.avatar)}
+                  alt={rootPostObject.author.handle}
+                  className="h-12 w-12 cursor-pointer rounded-full object-cover transition-opacity hover:opacity-80"
+                  onClick={() =>
+                    navigate(`/profile/${rootPostObject.author.handle}`)
+                  }
+                />
+              ) : (
+                <div
+                  className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full"
+                  style={{ background: "var(--bsky-bg-tertiary)" }}
+                  onClick={() =>
+                    navigate(`/profile/${rootPostObject.author?.handle}`)
+                  }
                 >
-                  <User size={12} />
-                  {userParticipationStats.count} of your{" "}
-                  {userParticipationStats.count === 1 ? "post" : "posts"}
-                </span>
+                  <span className="text-lg font-semibold">
+                    {rootPostObject.author?.handle?.charAt(0).toUpperCase() ||
+                      "U"}
+                  </span>
+                </div>
               )}
-              <span>{flatNodeList.length} posts in thread</span>
+              <div className="min-w-0 flex-1">
+                <ProfileHoverCard handle={rootPostObject.author?.handle || ""}>
+                  <div
+                    className="cursor-pointer truncate font-semibold hover:underline"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                    onClick={() =>
+                      navigate(`/profile/${rootPostObject.author?.handle}`)
+                    }
+                  >
+                    {rootPostObject.author?.displayName ||
+                      rootPostObject.author?.handle}
+                  </div>
+                </ProfileHoverCard>
+                <div
+                  className="text-sm"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  @{rootPostObject.author?.handle} ·{" "}
+                  {formatDistanceToNow(
+                    new Date(
+                      (rootPostObject.record as { createdAt?: string })
+                        ?.createdAt || rootPostObject.indexedAt,
+                    ),
+                    { addSuffix: true },
+                  )}
+                </div>
+              </div>
             </div>
+
+            {/* Post content - large typography */}
+            <div
+              className="mb-4 text-lg leading-relaxed"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              <RichText
+                text={
+                  (rootPostObject.record as { text?: string })?.text ||
+                  "[No text]"
+                }
+                facets={
+                  (
+                    rootPostObject.record as {
+                      facets?: {
+                        index: { byteStart: number; byteEnd: number };
+                        features: Array<{
+                          $type: string;
+                          did?: string;
+                          uri?: string;
+                          tag?: string;
+                        }>;
+                      }[];
+                    }
+                  )?.facets
+                }
+              />
+            </div>
+
+            {/* Embeds */}
+            {rootPostObject.embed && renderEmbed(rootPostObject.embed, rootPostObject.uri)}
+
+            {/* Action bar */}
+            <div className="mt-4">
+              <PostActionBar
+                post={rootPostObject}
+                onReply={() => onPostClick?.(rootPostObject, "reply")}
+                onRepost={() => handleRepost(rootPostObject)}
+                onQuote={() => onPostClick?.(rootPostObject, "quote")}
+                onLike={() => handleLike(rootPostObject)}
+                showCounts={true}
+                size="medium"
+                isReplying={false}
+              />
+            </div>
+
+            {/* Thread summary */}
+            {threadSummary && replyCount > 0 && (
+              <div className="mt-4">{threadSummary}</div>
+            )}
+
+            {/* Replies toggle */}
+            {replyCount > 0 && (
+              <button
+                onClick={() => setShowReplies(!showReplies)}
+                className="mt-4 flex w-full items-center justify-between rounded-lg px-4 py-3 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
+                style={{
+                  backgroundColor: "var(--bsky-bg-secondary)",
+                  border: "1px solid var(--bsky-border-primary)",
+                }}
+              >
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  {replyCount} {replyCount === 1 ? "reply" : "replies"}
+                  {userParticipationStats.count > 0 && (
+                    <span
+                      className="ml-2"
+                      style={{ color: "rgb(34, 197, 94)" }}
+                    >
+                      · {userParticipationStats.count} from you
+                    </span>
+                  )}
+                </span>
+                {showReplies ? (
+                  <ChevronUp
+                    size={20}
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  />
+                ) : (
+                  <ChevronDown
+                    size={20}
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  />
+                )}
+              </button>
+            )}
           </div>
         )}
 
-        {threadTree.length > 0 ? (
-          shouldVirtualize ? (
-            <VirtualizedThreadList
-              ref={virtualListRef}
-              nodes={flatNodeList}
-              focusedIndex={focusedPostIndex}
-              onFocusedIndexChange={setFocusedPostIndex}
-              renderNode={renderSingleNode}
-              config={mergedVirtualConfig}
-              className="thread-list-virtualized"
-            />
-          ) : (
-            renderThreadNodes(threadTree)
-          )
-        ) : (
+        {/* Replies section - progressive reveal */}
+        {(showReplies || !rootPostObject) && threadTree.length > 0 && (
+          <div className={rootPostObject ? "border-t pt-4" : ""} style={{ borderColor: "var(--bsky-border-primary)" }}>
+            {shouldVirtualize ? (
+              <VirtualizedThreadList
+                ref={virtualListRef}
+                nodes={flatNodeList.filter((n) => !n.isRoot)}
+                focusedIndex={focusedPostIndex}
+                onFocusedIndexChange={setFocusedPostIndex}
+                renderNode={renderSingleNode}
+                config={mergedVirtualConfig}
+                className="thread-list-virtualized"
+              />
+            ) : (
+              // Render only non-root nodes when we have a hero root
+              rootPostObject
+                ? threadTree.flatMap((rootNode) =>
+                    rootNode.children.length > 0
+                      ? renderThreadNodes(rootNode.children)
+                      : [],
+                  )
+                : renderThreadNodes(threadTree)
+            )}
+          </div>
+        )}
+
+        {/* No posts fallback */}
+        {!rootPostObject && threadTree.length === 0 && (
           <div className="p-8 text-center">
             <p style={{ color: "var(--bsky-text-secondary)" }}>
               No posts to display
@@ -1983,7 +2101,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
         )}
 
         {/* Continue Thread button - shown when user has posts in the thread */}
-        {onContinueThread && userParticipationStats.count > 0 && (
+        {showReplies && onContinueThread && userParticipationStats.count > 0 && (
           <div className="mt-6 flex justify-center">
             <button
               onClick={(e) => {
@@ -2003,15 +2121,15 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
           </div>
         )}
 
-        {/* Alternative: Add reply button when user doesn't have posts yet */}
-        {onContinueThread &&
+        {/* Join conversation button */}
+        {showReplies &&
+          onContinueThread &&
           userParticipationStats.count === 0 &&
           posts.length > 0 && (
             <div className="mt-6 flex justify-center">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  // For non-participants, clicking this will reply to the last post
                   const lastPost = posts[posts.length - 1];
                   if (lastPost) {
                     onPostClick?.(lastPost, "reply");
