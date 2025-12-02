@@ -336,7 +336,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
         setCropArea((prev) => {
           if (!prev || !rect) return prev;
 
-          let newArea = { ...prev };
+          const newArea = { ...prev };
           const handle = resizeHandleRef.current;
           const aspectRatio = ASPECT_RATIOS[selectedAspectRatio].ratio;
 
@@ -425,8 +425,8 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
         // Calculate final dimensions based on rotation
         const isRotated90or270 =
           adjustments.rotation === 90 || adjustments.rotation === 270;
-        let sourceWidth = img.width;
-        let sourceHeight = img.height;
+        const sourceWidth = img.width;
+        const sourceHeight = img.height;
 
         // If cropped, calculate crop in original image coordinates
         let cropX = 0;
@@ -529,28 +529,24 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
 
   // Save current image edits
   const saveCurrentImage = async () => {
-    try {
-      const editedFile = await exportImage(currentImage.file);
-      const preview = URL.createObjectURL(editedFile);
+    const editedFile = await exportImage(currentImage.file);
+    const preview = URL.createObjectURL(editedFile);
 
-      const edited: EditedImage = {
-        originalFile: currentImage.file,
-        editedFile,
-        preview,
-        adjustments: { ...adjustments },
-        cropArea: cropArea ? { ...cropArea } : null,
-      };
+    const edited: EditedImage = {
+      originalFile: currentImage.file,
+      editedFile,
+      preview,
+      adjustments: { ...adjustments },
+      cropArea: cropArea ? { ...cropArea } : null,
+    };
 
-      setEditedImages((prev) => {
-        const newMap = new Map(prev);
-        newMap.set(currentIndex, edited);
-        return newMap;
-      });
+    setEditedImages((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(currentIndex, edited);
+      return newMap;
+    });
 
-      return edited;
-    } catch (error) {
-      throw error;
-    }
+    return edited;
   };
 
   // Save all and close
@@ -567,7 +563,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
         adjustments.filter !== "none" ||
         cropArea !== null;
 
-      let finalEditedImages = new Map(editedImages);
+      const finalEditedImages = new Map(editedImages);
 
       if (hasChanges && !editedImages.has(currentIndex)) {
         const edited = await saveCurrentImage();
@@ -593,7 +589,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
       }
 
       onSave(result);
-    } catch (error) {
+    } catch (_error) {
       // Error handled silently
     } finally {
       setIsSaving(false);

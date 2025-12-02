@@ -105,7 +105,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(altText);
-    } catch (err) {
+    } catch (_err) {
       // Clipboard API might not be available
     }
   };
