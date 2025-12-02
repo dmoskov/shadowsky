@@ -9,6 +9,7 @@
 ### Context
 
 Two implementation tasks had conflicting error handling philosophies:
+
 - "Implement fail-loudly error handling" - storage errors should propagate with clear messages
 - "Add Dexie error boundary for IndexedDB failures" - app should continue in network-only mode
 
@@ -16,11 +17,11 @@ Two implementation tasks had conflicting error handling philosophies:
 
 The chosen approach uses different handling strategies based on error severity:
 
-| Error Type | Behavior | UI Feedback |
-|------------|----------|-------------|
-| **Transient** | Retry with backoff | Toast notification |
-| **Permanent** | Graceful degradation | Persistent banner |
-| **Critical** | Fail loudly | Modal dialog |
+| Error Type    | Behavior             | UI Feedback        |
+| ------------- | -------------------- | ------------------ |
+| **Transient** | Retry with backoff   | Toast notification |
+| **Permanent** | Graceful degradation | Persistent banner  |
+| **Critical**  | Fail loudly          | Modal dialog       |
 
 ---
 
@@ -31,6 +32,7 @@ The chosen approach uses different handling strategies based on error severity:
 Errors that are temporary and likely to resolve with retry.
 
 **Examples:**
+
 - Lock contention (database busy)
 - Quota temporarily exceeded (user clearing space)
 - Network timeout during sync
@@ -38,12 +40,14 @@ Errors that are temporary and likely to resolve with retry.
 - Temporary file system issues
 
 **Handling:**
+
 - Automatic retry with exponential backoff (3 attempts)
 - Show toast notification after first failure
 - Update toast with retry progress
 - If all retries fail, escalate to permanent error
 
 **Toast Format:**
+
 ```
 "Storage temporarily unavailable. Retrying... (1/3)"
 "Storage temporarily unavailable. Retrying... (2/3)"
@@ -55,6 +59,7 @@ Errors that are temporary and likely to resolve with retry.
 Errors that cannot be automatically resolved but allow partial functionality.
 
 **Examples:**
+
 - IndexedDB not available (private browsing mode)
 - Database corruption detected
 - Persistent quota exceeded (user at storage limit)
@@ -62,6 +67,7 @@ Errors that cannot be automatically resolved but allow partial functionality.
 - Unsupported browser version
 
 **Handling:**
+
 - Continue with degraded functionality (network-only mode)
 - Show persistent banner at top of screen
 - Disable features that require local storage
@@ -69,6 +75,7 @@ Errors that cannot be automatically resolved but allow partial functionality.
 - Provide user guidance for resolution
 
 **Banner Format:**
+
 ```
 "Local storage unavailable. Some features may be limited. [Learn more]"
 "Storage full. Clear browser data to restore full functionality. [Help]"
@@ -80,6 +87,7 @@ Errors that cannot be automatically resolved but allow partial functionality.
 Errors that prevent core functionality and require immediate user attention.
 
 **Examples:**
+
 - Authentication/session storage failure
 - Encryption key storage failure
 - User preferences corruption (causes loop)
@@ -87,6 +95,7 @@ Errors that prevent core functionality and require immediate user attention.
 - Data integrity violations
 
 **Handling:**
+
 - Show modal dialog immediately
 - Block further operations until acknowledged
 - Provide clear explanation and recovery steps
@@ -94,6 +103,7 @@ Errors that prevent core functionality and require immediate user attention.
 - Track error for support escalation
 
 **Modal Format:**
+
 ```
 Title: "Storage Error"
 Message: "Unable to save authentication data. This may affect your session."
@@ -110,30 +120,30 @@ Actions: [Retry] [Log Out]
 // src/types/storage-errors.ts
 
 export enum StorageErrorSeverity {
-  TRANSIENT = 'transient',
-  PERMANENT = 'permanent',
-  CRITICAL = 'critical'
+  TRANSIENT = "transient",
+  PERMANENT = "permanent",
+  CRITICAL = "critical",
 }
 
 export enum StorageErrorCode {
   // Transient
-  LOCK_CONTENTION = 'LOCK_CONTENTION',
-  QUOTA_TEMPORARY = 'QUOTA_TEMPORARY',
-  NETWORK_TIMEOUT = 'NETWORK_TIMEOUT',
-  DB_BUSY = 'DB_BUSY',
+  LOCK_CONTENTION = "LOCK_CONTENTION",
+  QUOTA_TEMPORARY = "QUOTA_TEMPORARY",
+  NETWORK_TIMEOUT = "NETWORK_TIMEOUT",
+  DB_BUSY = "DB_BUSY",
 
   // Permanent
-  INDEXEDDB_UNAVAILABLE = 'INDEXEDDB_UNAVAILABLE',
-  DB_CORRUPTION = 'DB_CORRUPTION',
-  QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
-  PERMISSION_DENIED = 'PERMISSION_DENIED',
-  PRIVATE_BROWSING = 'PRIVATE_BROWSING',
+  INDEXEDDB_UNAVAILABLE = "INDEXEDDB_UNAVAILABLE",
+  DB_CORRUPTION = "DB_CORRUPTION",
+  QUOTA_EXCEEDED = "QUOTA_EXCEEDED",
+  PERMISSION_DENIED = "PERMISSION_DENIED",
+  PRIVATE_BROWSING = "PRIVATE_BROWSING",
 
   // Critical
-  AUTH_STORAGE_FAILURE = 'AUTH_STORAGE_FAILURE',
-  ENCRYPTION_FAILURE = 'ENCRYPTION_FAILURE',
-  PREFERENCES_CORRUPTION = 'PREFERENCES_CORRUPTION',
-  DATA_INTEGRITY = 'DATA_INTEGRITY'
+  AUTH_STORAGE_FAILURE = "AUTH_STORAGE_FAILURE",
+  ENCRYPTION_FAILURE = "ENCRYPTION_FAILURE",
+  PREFERENCES_CORRUPTION = "PREFERENCES_CORRUPTION",
+  DATA_INTEGRITY = "DATA_INTEGRITY",
 }
 
 export interface StorageError extends Error {
@@ -155,58 +165,65 @@ export function classifyStorageError(error: Error): StorageError {
 ```typescript
 export function classifyStorageError(error: unknown): StorageError {
   const message = error instanceof Error ? error.message : String(error);
-  const name = error instanceof Error ? error.name : 'Error';
+  const name = error instanceof Error ? error.name : "Error";
 
   // IndexedDB specific errors
-  if (name === 'QuotaExceededError' || message.includes('quota')) {
+  if (name === "QuotaExceededError" || message.includes("quota")) {
     // Check if user can clear space (transient) vs hard limit (permanent)
     return {
       code: StorageErrorCode.QUOTA_EXCEEDED,
       severity: StorageErrorSeverity.PERMANENT,
       recoverable: true,
-      userMessage: 'Storage full. Clear browser data to restore functionality.',
+      userMessage: "Storage full. Clear browser data to restore functionality.",
     };
   }
 
-  if (message.includes('lock') || message.includes('busy')) {
+  if (message.includes("lock") || message.includes("busy")) {
     return {
       code: StorageErrorCode.LOCK_CONTENTION,
       severity: StorageErrorSeverity.TRANSIENT,
       recoverable: true,
-      userMessage: 'Storage temporarily busy.',
+      userMessage: "Storage temporarily busy.",
     };
   }
 
   // Private browsing detection
-  if (message.includes('InvalidStateError') ||
-      message.includes('A mutation operation was attempted on a database')) {
+  if (
+    message.includes("InvalidStateError") ||
+    message.includes("A mutation operation was attempted on a database")
+  ) {
     return {
       code: StorageErrorCode.PRIVATE_BROWSING,
       severity: StorageErrorSeverity.PERMANENT,
       recoverable: false,
-      userMessage: 'Private browsing mode detected. Offline features disabled.',
+      userMessage: "Private browsing mode detected. Offline features disabled.",
     };
   }
 
   // Database not available
-  if (typeof indexedDB === 'undefined' ||
-      message.includes('indexedDB is not defined')) {
+  if (
+    typeof indexedDB === "undefined" ||
+    message.includes("indexedDB is not defined")
+  ) {
     return {
       code: StorageErrorCode.INDEXEDDB_UNAVAILABLE,
       severity: StorageErrorSeverity.PERMANENT,
       recoverable: false,
-      userMessage: 'Local storage not available in this browser.',
+      userMessage: "Local storage not available in this browser.",
     };
   }
 
   // Auth-related storage
-  if (message.includes('auth') || message.includes('session') ||
-      message.includes('token')) {
+  if (
+    message.includes("auth") ||
+    message.includes("session") ||
+    message.includes("token")
+  ) {
     return {
       code: StorageErrorCode.AUTH_STORAGE_FAILURE,
       severity: StorageErrorSeverity.CRITICAL,
       recoverable: false,
-      userMessage: 'Unable to save authentication data.',
+      userMessage: "Unable to save authentication data.",
     };
   }
 
@@ -215,7 +232,7 @@ export function classifyStorageError(error: unknown): StorageError {
     code: StorageErrorCode.DB_BUSY,
     severity: StorageErrorSeverity.TRANSIENT,
     recoverable: true,
-    userMessage: 'Storage operation failed. Retrying...',
+    userMessage: "Storage operation failed. Retrying...",
   };
 }
 ```
@@ -231,35 +248,38 @@ export function useStorageErrorHandler() {
   const [degradedMode, setDegradedMode] = useState(false);
   const [storageBanner, setStorageBanner] = useState<string | null>(null);
 
-  const handleStorageError = useCallback((error: Error, action: string) => {
-    const classified = classifyStorageError(error);
+  const handleStorageError = useCallback(
+    (error: Error, action: string) => {
+      const classified = classifyStorageError(error);
 
-    trackError(error, `storage:${classified.code}`);
+      trackError(error, `storage:${classified.code}`);
 
-    switch (classified.severity) {
-      case StorageErrorSeverity.TRANSIENT:
-        // Toast notification, handled by retry logic
-        toast.warning(classified.userMessage);
-        break;
+      switch (classified.severity) {
+        case StorageErrorSeverity.TRANSIENT:
+          // Toast notification, handled by retry logic
+          toast.warning(classified.userMessage);
+          break;
 
-      case StorageErrorSeverity.PERMANENT:
-        // Set degraded mode and show banner
-        setDegradedMode(true);
-        setStorageBanner(classified.userMessage);
-        debug.warn('Entering degraded storage mode:', classified);
-        break;
+        case StorageErrorSeverity.PERMANENT:
+          // Set degraded mode and show banner
+          setDegradedMode(true);
+          setStorageBanner(classified.userMessage);
+          debug.warn("Entering degraded storage mode:", classified);
+          break;
 
-      case StorageErrorSeverity.CRITICAL:
-        // Modal dialog, block operations
-        showAlert(classified.userMessage, {
-          variant: 'error',
-          title: 'Storage Error'
-        });
-        break;
-    }
+        case StorageErrorSeverity.CRITICAL:
+          // Modal dialog, block operations
+          showAlert(classified.userMessage, {
+            variant: "error",
+            title: "Storage Error",
+          });
+          break;
+      }
 
-    return classified;
-  }, [showAlert]);
+      return classified;
+    },
+    [showAlert],
+  );
 
   return { handleStorageError, degradedMode, storageBanner };
 }
@@ -334,7 +354,7 @@ const RETRY_CONFIG = {
 
 async function withStorageRetry<T>(
   operation: () => Promise<T>,
-  onRetry?: (attempt: number, error: Error) => void
+  onRetry?: (attempt: number, error: Error) => void,
 ): Promise<T> {
   let lastError: Error;
 
@@ -352,12 +372,13 @@ async function withStorageRetry<T>(
 
       if (attempt < RETRY_CONFIG.maxRetries) {
         const delay = Math.min(
-          RETRY_CONFIG.baseDelay * Math.pow(RETRY_CONFIG.backoffFactor, attempt - 1),
-          RETRY_CONFIG.maxDelay
+          RETRY_CONFIG.baseDelay *
+            Math.pow(RETRY_CONFIG.backoffFactor, attempt - 1),
+          RETRY_CONFIG.maxDelay,
         );
 
         onRetry?.(attempt, lastError);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }
@@ -371,21 +392,25 @@ async function withStorageRetry<T>(
 ## Migration Path
 
 ### Phase 1: Error Classification (Current)
+
 - [x] Document hybrid strategy decision
 - [ ] Create storage error types
 - [ ] Implement classification logic
 
 ### Phase 2: UI Components
+
 - [ ] Create StorageBanner component
 - [ ] Create StorageContext provider
 - [ ] Add toast notifications for transient errors
 
 ### Phase 3: Integration
+
 - [ ] Update useStorageErrorManager to use classification
 - [ ] Integrate retry logic with storage services
 - [ ] Add degraded mode handling to affected components
 
 ### Phase 4: Testing & Validation
+
 - [ ] Test transient error scenarios
 - [ ] Test permanent error scenarios
 - [ ] Test critical error scenarios

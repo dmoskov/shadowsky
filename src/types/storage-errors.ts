@@ -86,7 +86,7 @@ export interface StorageErrorOptions {
  */
 export function createStorageError(
   message: string,
-  options: StorageErrorOptions
+  options: StorageErrorOptions,
 ): StorageError {
   const error = new Error(message) as StorageError;
   error.code = options.code;
@@ -329,7 +329,7 @@ export const DEFAULT_RETRY_CONFIG: RetryConfig = {
  */
 export function calculateRetryDelay(
   attempt: number,
-  config: RetryConfig = DEFAULT_RETRY_CONFIG
+  config: RetryConfig = DEFAULT_RETRY_CONFIG,
 ): number {
   const delay =
     config.baseDelayMs * Math.pow(config.backoffFactor, attempt - 1);
@@ -340,7 +340,5 @@ export function calculateRetryDelay(
  * Determines if an error should be retried based on severity
  */
 export function shouldRetryStorageError(error: StorageError): boolean {
-  return (
-    error.severity === StorageErrorSeverity.TRANSIENT && error.recoverable
-  );
+  return error.severity === StorageErrorSeverity.TRANSIENT && error.recoverable;
 }

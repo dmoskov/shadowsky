@@ -4,17 +4,17 @@
 
 // Re-export storage error types for convenience
 export {
-  StorageErrorSeverity,
+  DEFAULT_RETRY_CONFIG,
   StorageErrorCode,
-  type StorageError,
-  type StorageErrorOptions,
-  type RetryConfig,
+  StorageErrorSeverity,
+  calculateRetryDelay,
+  classifyStorageError,
   createStorageError,
   isStorageError,
-  classifyStorageError,
   shouldRetryStorageError,
-  calculateRetryDelay,
-  DEFAULT_RETRY_CONFIG,
+  type RetryConfig,
+  type StorageError,
+  type StorageErrorOptions,
 } from "./storage-errors";
 
 export interface ErrorWithStatus {

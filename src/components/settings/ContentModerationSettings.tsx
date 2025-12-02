@@ -1,25 +1,18 @@
-import { getProfileService, queryClient } from "@bsky/shared";
 import type { AppBskyActorDefs } from "@atproto/api";
+import { getProfileService } from "@bsky/shared";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Plus,
-  Shield,
-  Tag as _Tag,
-  X,
-  Clock as _Clock,
-  Users as _Users,
-} from "lucide-react";
+import { Clock, Plus, Shield, Tag, Users, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 
-interface _MutedUser {
+// Muted/blocked user interfaces
+interface MutedUser {
   did: string;
   handle: string;
   displayName?: string;
-  mutedUntil?: string;
 }
 
-interface _BlockedUser {
+interface BlockedUser {
   did: string;
   handle: string;
   displayName?: string;
@@ -30,7 +23,7 @@ interface _BlockedUser {
 type MutedWordTarget = "content" | "tag";
 type ActorTarget = "all" | "exclude-following";
 
-interface _NativeMutedWord {
+interface NativeMutedWord {
   id?: string;
   value: string;
   targets: MutedWordTarget[];
@@ -39,16 +32,11 @@ interface _NativeMutedWord {
 }
 
 // Native AT Protocol content label preferences
-type LabelVisibility = "ignore" | "show" | "warn" | "hide";
-
-interface _ContentLabelPref {
-  labelerDid?: string;
-  label: string;
-  visibility: LabelVisibility;
-}
+// Note: AT Protocol uses 'ignore' | 'warn' | 'hide' for LabelPreference
+type LabelVisibility = "ignore" | "warn" | "hide";
 
 // Known content labels from AT Protocol
-const _CONTENT_LABELS = [
+const CONTENT_LABELS = [
   { id: "porn", name: "Pornography", description: "Explicit sexual content" },
   {
     id: "sexual",
@@ -71,36 +59,31 @@ const _CONTENT_LABELS = [
     name: "NSFL",
     description: "Not safe for life content",
   },
-  {
-    id: "!warn",
-    name: "Content Warning",
-    description: "Content with explicit warnings",
-  },
 ];
 
 export const ContentModerationSettings: React.FC = () => {
   const { agent } = useAuth();
 
   // Native AT Protocol muted words state
-  const [_mutedWords, setMutedWords] = useState<_NativeMutedWord[]>([]);
-  const [_newMutedWord, _setNewMutedWord] = useState("");
-  const [_newWordTargets, _setNewWordTargets] = useState<MutedWordTarget[]>([
+  const [mutedWords, setMutedWords] = useState<NativeMutedWord[]>([]);
+  const [newMutedWord, setNewMutedWord] = useState("");
+  const [newWordTargets, setNewWordTargets] = useState<MutedWordTarget[]>([
     "content",
     "tag",
   ]);
-  const [_newWordActorTarget, _setNewWordActorTarget] =
+  const [newWordActorTarget, setNewWordActorTarget] =
     useState<ActorTarget>("all");
-  const [_newWordExpiration, _setNewWordExpiration] = useState<string>("never");
+  const [newWordExpiration, setNewWordExpiration] = useState<string>("never");
 
   // Content label preferences state
-  const [_labelPrefs, setLabelPrefs] = useState<Map<string, LabelVisibility>>(
+  const [labelPrefs, setLabelPrefs] = useState<Map<string, LabelVisibility>>(
     new Map(),
   );
-  const [_adultContentEnabled, setAdultContentEnabled] = useState(false);
+  const [adultContentEnabled, setAdultContentEnabled] = useState(false);
 
   // Muted/blocked users state
-  const [_mutedUsers, setMutedUsers] = useState<_MutedUser[]>([]);
-  const [_blockedUsers, setBlockedUsers] = useState<_BlockedUser[]>([]);
+  const [mutedUsers, setMutedUsers] = useState<MutedUser[]>([]);
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [newMuteHandle, setNewMuteHandle] = useState("");
 
   // UI state
@@ -111,7 +94,7 @@ export const ContentModerationSettings: React.FC = () => {
   } | null>(null);
 
   // Fetch native AT Protocol preferences
-  const { data: preferences, refetch: _refetchPreferences } = useQuery({
+  const { data: preferences, refetch: refetchPreferences } = useQuery({
     queryKey: ["nativePreferences"],
     queryFn: async () => {
       if (!agent) return null;
@@ -122,7 +105,7 @@ export const ContentModerationSettings: React.FC = () => {
   });
 
   // Fetch muted users from AT Protocol
-  const { data: mutedAccounts, refetch: _refetchMutes } = useQuery({
+  const { data: mutedAccounts, refetch: refetchMutes } = useQuery({
     queryKey: ["mutedAccounts"],
     queryFn: async () => {
       if (!agent) return [];
@@ -133,7 +116,7 @@ export const ContentModerationSettings: React.FC = () => {
   });
 
   // Fetch blocked users from AT Protocol
-  const { data: blocks, refetch: _refetchBlocks } = useQuery({
+  const { data: blocks, refetch: refetchBlocks } = useQuery({
     queryKey: ["blocks"],
     queryFn: async () => {
       if (!agent) return [];
@@ -149,7 +132,9 @@ export const ContentModerationSettings: React.FC = () => {
 
     // Extract muted words
     const mutedWordsPref = preferences.find(
-      (p: any) => p.$type === "app.bsky.actor.defs#mutedWordsPref",
+      (p: unknown) =>
+        (p as { $type?: string }).$type ===
+        "app.bsky.actor.defs#mutedWordsPref",
     ) as AppBskyActorDefs.MutedWordsPref | undefined;
 
     if (mutedWordsPref?.items) {
@@ -166,7 +151,9 @@ export const ContentModerationSettings: React.FC = () => {
 
     // Extract adult content preference
     const adultContentPref = preferences.find(
-      (p: any) => p.$type === "app.bsky.actor.defs#adultContentPref",
+      (p: unknown) =>
+        (p as { $type?: string }).$type ===
+        "app.bsky.actor.defs#adultContentPref",
     ) as AppBskyActorDefs.AdultContentPref | undefined;
 
     if (adultContentPref) {
@@ -175,9 +162,18 @@ export const ContentModerationSettings: React.FC = () => {
 
     // Extract content label preferences
     const newLabelPrefs = new Map<string, LabelVisibility>();
-    preferences.forEach((p: any) => {
-      if (p.$type === "app.bsky.actor.defs#contentLabelPref" && !p.labelerDid) {
-        newLabelPrefs.set(p.label, p.visibility as LabelVisibility);
+    preferences.forEach((p: unknown) => {
+      const pref = p as {
+        $type?: string;
+        labelerDid?: string;
+        label?: string;
+        visibility?: string;
+      };
+      if (
+        pref.$type === "app.bsky.actor.defs#contentLabelPref" &&
+        !pref.labelerDid
+      ) {
+        newLabelPrefs.set(pref.label || "", pref.visibility as LabelVisibility);
       }
     });
     setLabelPrefs(newLabelPrefs);
@@ -210,24 +206,178 @@ export const ContentModerationSettings: React.FC = () => {
     }
   }, [blocks]);
 
-  const handleAddKeyword = () => {
-    const trimmed = newKeyword.trim().toLowerCase();
-    if (trimmed && !preferences.keywordFilters.includes(trimmed)) {
-      setPreferences({
-        ...preferences,
-        keywordFilters: [...preferences.keywordFilters, trimmed],
+  // Calculate expiration date based on selection
+  const getExpirationDate = (duration: string): string | undefined => {
+    if (duration === "never") return undefined;
+    const now = new Date();
+    switch (duration) {
+      case "1h":
+        now.setHours(now.getHours() + 1);
+        break;
+      case "24h":
+        now.setHours(now.getHours() + 24);
+        break;
+      case "7d":
+        now.setDate(now.getDate() + 7);
+        break;
+      case "30d":
+        now.setDate(now.getDate() + 30);
+        break;
+      default:
+        return undefined;
+    }
+    return now.toISOString();
+  };
+
+  // Add a new muted word using native AT Protocol
+  const handleAddMutedWord = async () => {
+    if (!agent || !newMutedWord.trim()) return;
+
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      const wordToAdd: Pick<
+        AppBskyActorDefs.MutedWord,
+        "value" | "targets" | "actorTarget" | "expiresAt"
+      > = {
+        value: newMutedWord.trim().toLowerCase(),
+        targets: newWordTargets,
+        actorTarget: newWordActorTarget,
+        expiresAt: getExpirationDate(newWordExpiration),
+      };
+
+      await agent.addMutedWord(wordToAdd);
+
+      setNewMutedWord("");
+      setNewWordTargets(["content", "tag"]);
+      setNewWordActorTarget("all");
+      setNewWordExpiration("never");
+
+      setMessage({
+        type: "success",
+        text: `Added muted word: "${wordToAdd.value}"`,
       });
-      setNewKeyword("");
+
+      await refetchPreferences();
+    } catch (_error) {
+      setMessage({
+        type: "error",
+        text: "Failed to add muted word. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRemoveKeyword = (keyword: string) => {
-    setPreferences({
-      ...preferences,
-      keywordFilters: preferences.keywordFilters.filter((k) => k !== keyword),
-    });
+  // Remove a muted word using native AT Protocol
+  const handleRemoveMutedWord = async (word: NativeMutedWord) => {
+    if (!agent) return;
+
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      await agent.removeMutedWord({
+        value: word.value,
+        targets: word.targets,
+        actorTarget: word.actorTarget,
+      } as AppBskyActorDefs.MutedWord);
+
+      setMessage({
+        type: "success",
+        text: `Removed muted word: "${word.value}"`,
+      });
+
+      await refetchPreferences();
+    } catch (_error) {
+      setMessage({
+        type: "error",
+        text: "Failed to remove muted word. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  // Update a content label preference using native AT Protocol
+  const handleUpdateLabelPref = async (
+    label: string,
+    visibility: LabelVisibility,
+  ) => {
+    if (!agent) return;
+
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      await agent.setContentLabelPref(label, visibility);
+
+      setLabelPrefs((prev) => new Map(prev).set(label, visibility));
+
+      setMessage({
+        type: "success",
+        text: `Updated "${label}" preference`,
+      });
+
+      await refetchPreferences();
+    } catch (_error) {
+      setMessage({
+        type: "error",
+        text: "Failed to update content label preference.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update adult content setting
+  const handleToggleAdultContent = async () => {
+    if (!agent) return;
+
+    setIsLoading(true);
+    setMessage(null);
+
+    try {
+      // Get current preferences and update adult content setting
+      const currentPrefs = await agent.app.bsky.actor.getPreferences();
+      const otherPrefs = currentPrefs.data.preferences.filter(
+        (p: unknown) =>
+          (p as { $type?: string }).$type !==
+          "app.bsky.actor.defs#adultContentPref",
+      );
+
+      const newEnabled = !adultContentEnabled;
+      const updatedPrefs = [
+        ...otherPrefs,
+        {
+          $type: "app.bsky.actor.defs#adultContentPref",
+          enabled: newEnabled,
+        },
+      ];
+
+      await agent.app.bsky.actor.putPreferences({
+        preferences: updatedPrefs,
+      });
+
+      setAdultContentEnabled(newEnabled);
+      setMessage({
+        type: "success",
+        text: `Adult content ${newEnabled ? "enabled" : "disabled"}`,
+      });
+
+      await refetchPreferences();
+    } catch (_error) {
+      setMessage({
+        type: "error",
+        text: "Failed to update adult content setting.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Mute a user
   const handleMuteUser = async () => {
     if (!agent || !newMuteHandle.trim()) return;
 
@@ -246,7 +396,7 @@ export const ContentModerationSettings: React.FC = () => {
         text: `Muted @${profile.handle}`,
       });
 
-      await queryClient.invalidateQueries({ queryKey: ["mutedAccounts"] });
+      await refetchMutes();
     } catch (_error) {
       setMessage({
         type: "error",
@@ -257,6 +407,7 @@ export const ContentModerationSettings: React.FC = () => {
     }
   };
 
+  // Unmute a user
   const handleUnmuteUser = async (did: string, handle: string) => {
     if (!agent) return;
 
@@ -271,7 +422,7 @@ export const ContentModerationSettings: React.FC = () => {
         text: `Unmuted @${handle}`,
       });
 
-      await queryClient.invalidateQueries({ queryKey: ["mutedAccounts"] });
+      await refetchMutes();
     } catch (_error) {
       setMessage({
         type: "error",
@@ -282,6 +433,7 @@ export const ContentModerationSettings: React.FC = () => {
     }
   };
 
+  // Unblock a user
   const handleUnblockUser = async (blockUri: string, handle: string) => {
     if (!agent) return;
 
@@ -296,7 +448,7 @@ export const ContentModerationSettings: React.FC = () => {
         text: `Unblocked @${handle}`,
       });
 
-      await queryClient.invalidateQueries({ queryKey: ["blocks"] });
+      await refetchBlocks();
     } catch (_error) {
       setMessage({
         type: "error",
@@ -307,63 +459,26 @@ export const ContentModerationSettings: React.FC = () => {
     }
   };
 
-  const handleSave = async () => {
-    if (!agent) return;
+  // Helper to get label visibility
+  const getLabelVisibility = (label: string): LabelVisibility => {
+    return labelPrefs.get(label) || "warn";
+  };
 
-    setIsLoading(true);
-    setMessage(null);
+  // Helper to format expiration
+  const formatExpiration = (expiresAt?: string): string => {
+    if (!expiresAt) return "Never";
+    const expDate = new Date(expiresAt);
+    if (expDate < new Date()) return "Expired";
+    return expDate.toLocaleDateString();
+  };
 
-    try {
-      const moderationPref = {
-        $type: "com.shadowsky.moderation",
-        keywordFilters: preferences.keywordFilters,
-        hideReplies: preferences.hideReplies,
-        hideReposts: preferences.hideReposts,
-        hideQuotePosts: preferences.hideQuotePosts,
-        sensitiveMediaBehavior: preferences.sensitiveMediaBehavior,
-        adultContentEnabled: preferences.adultContentEnabled,
-        autoModeration: preferences.autoModeration,
-        version: 1,
-        updatedAt: new Date().toISOString(),
-      };
-
-      const did = agent.session?.did;
-      if (!did) throw new Error("No DID available");
-
-      try {
-        await agent.api.com.atproto.repo.putRecord({
-          repo: did,
-          collection: "com.shadowsky.moderation",
-          rkey: "self",
-          record: moderationPref,
-        });
-      } catch (putError: any) {
-        if (putError?.status === 400) {
-          await agent.api.com.atproto.repo.createRecord({
-            repo: did,
-            collection: "com.shadowsky.moderation",
-            rkey: "self",
-            record: moderationPref,
-          });
-        } else {
-          throw putError;
-        }
-      }
-
-      setMessage({
-        type: "success",
-        text: "Content moderation settings saved successfully!",
-      });
-
-      await queryClient.invalidateQueries({ queryKey: ["contentModeration"] });
-    } catch (_error) {
-      setMessage({
-        type: "error",
-        text: "Failed to save settings. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  // Toggle target in selection
+  const toggleTarget = (target: MutedWordTarget) => {
+    setNewWordTargets((prev) =>
+      prev.includes(target)
+        ? prev.filter((t) => t !== target)
+        : [...prev, target],
+    );
   };
 
   return (
@@ -379,69 +494,192 @@ export const ContentModerationSettings: React.FC = () => {
           className="mt-1 text-sm"
           style={{ color: "var(--bsky-text-secondary)" }}
         >
-          Control what content you see in your feeds
+          Manage your content filtering using AT Protocol native features
         </p>
       </div>
 
-      {/* Keyword Filters */}
+      {/* Muted Words Section */}
       <div>
         <label
           className="mb-2 flex items-center gap-2 text-sm font-medium"
           style={{ color: "var(--bsky-text-primary)" }}
         >
           <Shield size={16} />
-          Keyword Filters
+          Muted Words
         </label>
         <p
           className="mb-3 text-sm"
           style={{ color: "var(--bsky-text-secondary)" }}
         >
-          Hide posts containing these keywords or phrases
+          Hide posts containing these words or phrases. Syncs across all Bluesky
+          apps.
         </p>
 
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newKeyword}
-            onChange={(e) => setNewKeyword(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAddKeyword()}
-            placeholder="Add keyword or phrase"
-            className="flex-1 rounded-lg px-4 py-2 text-sm"
+        {/* Add new muted word */}
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newMutedWord}
+              onChange={(e) => setNewMutedWord(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAddMutedWord()}
+              placeholder="Add word or phrase to mute"
+              className="flex-1 rounded-lg px-4 py-2 text-sm"
+              style={{
+                backgroundColor: "var(--bsky-bg-secondary)",
+                color: "var(--bsky-text-primary)",
+                border: "1px solid var(--bsky-border-primary)",
+              }}
+            />
+            <button
+              onClick={handleAddMutedWord}
+              disabled={!newMutedWord.trim() || isLoading}
+              className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
+              style={{
+                backgroundColor: "var(--bsky-primary)",
+              }}
+            >
+              <Plus size={16} />
+            </button>
+          </div>
+
+          {/* Muted word options */}
+          <div
+            className="rounded-lg p-3"
             style={{
               backgroundColor: "var(--bsky-bg-secondary)",
-              color: "var(--bsky-text-primary)",
               border: "1px solid var(--bsky-border-primary)",
             }}
-          />
-          <button
-            onClick={handleAddKeyword}
-            disabled={!newKeyword.trim()}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
-            style={{
-              backgroundColor: "var(--bsky-primary)",
-            }}
           >
-            <Plus size={16} />
-          </button>
+            <div className="flex flex-wrap gap-4">
+              {/* Target options */}
+              <div className="flex items-center gap-2">
+                <Tag
+                  size={14}
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                />
+                <span
+                  className="text-xs"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  Match in:
+                </span>
+                <button
+                  onClick={() => toggleTarget("content")}
+                  className={`rounded-full px-2 py-0.5 text-xs ${
+                    newWordTargets.includes("content")
+                      ? "bg-blue-500 text-white"
+                      : ""
+                  }`}
+                  style={
+                    !newWordTargets.includes("content")
+                      ? {
+                          backgroundColor: "var(--bsky-bg-tertiary)",
+                          color: "var(--bsky-text-secondary)",
+                        }
+                      : {}
+                  }
+                >
+                  Text
+                </button>
+                <button
+                  onClick={() => toggleTarget("tag")}
+                  className={`rounded-full px-2 py-0.5 text-xs ${
+                    newWordTargets.includes("tag")
+                      ? "bg-blue-500 text-white"
+                      : ""
+                  }`}
+                  style={
+                    !newWordTargets.includes("tag")
+                      ? {
+                          backgroundColor: "var(--bsky-bg-tertiary)",
+                          color: "var(--bsky-text-secondary)",
+                        }
+                      : {}
+                  }
+                >
+                  Tags
+                </button>
+              </div>
+
+              {/* Actor target */}
+              <div className="flex items-center gap-2">
+                <Users
+                  size={14}
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                />
+                <select
+                  value={newWordActorTarget}
+                  onChange={(e) =>
+                    setNewWordActorTarget(e.target.value as ActorTarget)
+                  }
+                  className="rounded px-2 py-0.5 text-xs"
+                  style={{
+                    backgroundColor: "var(--bsky-bg-tertiary)",
+                    color: "var(--bsky-text-primary)",
+                    border: "1px solid var(--bsky-border-primary)",
+                  }}
+                >
+                  <option value="all">Everyone</option>
+                  <option value="exclude-following">
+                    Except people I follow
+                  </option>
+                </select>
+              </div>
+
+              {/* Expiration */}
+              <div className="flex items-center gap-2">
+                <Clock
+                  size={14}
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                />
+                <select
+                  value={newWordExpiration}
+                  onChange={(e) => setNewWordExpiration(e.target.value)}
+                  className="rounded px-2 py-0.5 text-xs"
+                  style={{
+                    backgroundColor: "var(--bsky-bg-tertiary)",
+                    color: "var(--bsky-text-primary)",
+                    border: "1px solid var(--bsky-border-primary)",
+                  }}
+                >
+                  <option value="never">Forever</option>
+                  <option value="1h">1 hour</option>
+                  <option value="24h">24 hours</option>
+                  <option value="7d">7 days</option>
+                  <option value="30d">30 days</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {preferences.keywordFilters.length > 0 && (
+        {/* List of muted words */}
+        {mutedWords.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
-            {preferences.keywordFilters.map((keyword) => (
+            {mutedWords.map((word, index) => (
               <div
-                key={keyword}
+                key={word.id || `${word.value}-${index}`}
                 className="flex items-center gap-2 rounded-full px-3 py-1 text-sm"
                 style={{
                   backgroundColor: "var(--bsky-bg-secondary)",
                   border: "1px solid var(--bsky-border-primary)",
                 }}
+                title={`Targets: ${word.targets.join(", ")} | Applies to: ${word.actorTarget === "all" ? "Everyone" : "Except following"} | Expires: ${formatExpiration(word.expiresAt)}`}
               >
                 <span style={{ color: "var(--bsky-text-primary)" }}>
-                  {keyword}
+                  {word.value}
                 </span>
+                {word.expiresAt && (
+                  <Clock
+                    size={12}
+                    style={{ color: "var(--bsky-text-tertiary)" }}
+                  />
+                )}
                 <button
-                  onClick={() => handleRemoveKeyword(keyword)}
-                  className="transition-colors hover:text-red-500"
+                  onClick={() => handleRemoveMutedWord(word)}
+                  disabled={isLoading}
+                  className="transition-colors hover:text-red-500 disabled:opacity-50"
                   style={{ color: "var(--bsky-text-secondary)" }}
                 >
                   <X size={14} />
@@ -452,244 +690,73 @@ export const ContentModerationSettings: React.FC = () => {
         )}
       </div>
 
-      {/* Content Warning Preferences */}
-      <div className="space-y-3">
-        <label
-          className="mb-2 block text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
-        >
-          Content Preferences
-        </label>
-
-        <div
-          className="flex items-center justify-between rounded-lg p-4"
-          style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
-          }}
-        >
-          <div>
-            <div
-              className="font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
-            >
-              Hide replies
-            </div>
-            <div
-              className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
-            >
-              Don't show reply posts in your feed
-            </div>
-          </div>
-          <button
-            onClick={() =>
-              setPreferences({
-                ...preferences,
-                hideReplies: !preferences.hideReplies,
-              })
-            }
-            className={`relative h-6 w-11 rounded-full transition-colors ${
-              preferences.hideReplies ? "bg-blue-500" : "bg-gray-300"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                preferences.hideReplies ? "translate-x-5" : "translate-x-0.5"
-              }`}
-            />
-          </button>
-        </div>
-
-        <div
-          className="flex items-center justify-between rounded-lg p-4"
-          style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
-          }}
-        >
-          <div>
-            <div
-              className="font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
-            >
-              Hide reposts
-            </div>
-            <div
-              className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
-            >
-              Don't show reposted content in your feed
-            </div>
-          </div>
-          <button
-            onClick={() =>
-              setPreferences({
-                ...preferences,
-                hideReposts: !preferences.hideReposts,
-              })
-            }
-            className={`relative h-6 w-11 rounded-full transition-colors ${
-              preferences.hideReposts ? "bg-blue-500" : "bg-gray-300"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                preferences.hideReposts ? "translate-x-5" : "translate-x-0.5"
-              }`}
-            />
-          </button>
-        </div>
-
-        <div
-          className="flex items-center justify-between rounded-lg p-4"
-          style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
-          }}
-        >
-          <div>
-            <div
-              className="font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
-            >
-              Hide quote posts
-            </div>
-            <div
-              className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
-            >
-              Don't show quote posts in your feed
-            </div>
-          </div>
-          <button
-            onClick={() =>
-              setPreferences({
-                ...preferences,
-                hideQuotePosts: !preferences.hideQuotePosts,
-              })
-            }
-            className={`relative h-6 w-11 rounded-full transition-colors ${
-              preferences.hideQuotePosts ? "bg-blue-500" : "bg-gray-300"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                preferences.hideQuotePosts ? "translate-x-5" : "translate-x-0.5"
-              }`}
-            />
-          </button>
-        </div>
-      </div>
-
-      {/* Sensitive Media Settings */}
+      {/* Content Label Preferences */}
       <div>
         <label
           className="mb-2 block text-sm font-medium"
           style={{ color: "var(--bsky-text-primary)" }}
         >
-          Sensitive Media
+          Content Labels
         </label>
         <p
           className="mb-3 text-sm"
           style={{ color: "var(--bsky-text-secondary)" }}
         >
-          Control how sensitive or adult content is displayed
+          Control how labeled content is displayed. These settings sync with
+          Bluesky.
         </p>
 
-        <div
-          className="space-y-3 rounded-lg p-4"
-          style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
-          }}
-        >
-          <div>
-            <label
-              className="mb-2 block text-sm font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
-            >
-              Sensitive media behavior
-            </label>
-            <select
-              value={preferences.sensitiveMediaBehavior}
-              onChange={(e) =>
-                setPreferences({
-                  ...preferences,
-                  sensitiveMediaBehavior: e.target.value as
-                    | "blur"
-                    | "hide"
-                    | "show",
-                })
-              }
-              className="w-full rounded-lg px-4 py-2 text-sm"
+        <div className="space-y-2">
+          {CONTENT_LABELS.map((label) => (
+            <div
+              key={label.id}
+              className="flex items-center justify-between rounded-lg p-3"
               style={{
-                backgroundColor: "var(--bsky-bg-tertiary)",
-                color: "var(--bsky-text-primary)",
+                backgroundColor: "var(--bsky-bg-secondary)",
                 border: "1px solid var(--bsky-border-primary)",
               }}
             >
-              <option value="blur">
-                Blur sensitive media (show with warning)
-              </option>
-              <option value="hide">Hide sensitive media completely</option>
-              <option value="show">Always show sensitive media</option>
-            </select>
-          </div>
-
-          <div className="flex items-center justify-between pt-2">
-            <div>
-              <div
-                className="font-medium"
-                style={{ color: "var(--bsky-text-primary)" }}
-              >
-                Enable adult content
+              <div>
+                <div
+                  className="font-medium"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  {label.name}
+                </div>
+                <div
+                  className="text-sm"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  {label.description}
+                </div>
               </div>
-              <div
-                className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+              <select
+                value={getLabelVisibility(label.id)}
+                onChange={(e) =>
+                  handleUpdateLabelPref(
+                    label.id,
+                    e.target.value as LabelVisibility,
+                  )
+                }
+                disabled={isLoading}
+                className="rounded-lg px-3 py-1.5 text-sm"
+                style={{
+                  backgroundColor: "var(--bsky-bg-tertiary)",
+                  color: "var(--bsky-text-primary)",
+                  border: "1px solid var(--bsky-border-primary)",
+                }}
               >
-                Show posts marked as adult content
-              </div>
+                <option value="hide">Hide</option>
+                <option value="warn">Warn (blur)</option>
+                <option value="ignore">Show</option>
+              </select>
             </div>
-            <button
-              onClick={() =>
-                setPreferences({
-                  ...preferences,
-                  adultContentEnabled: !preferences.adultContentEnabled,
-                })
-              }
-              className={`relative h-6 w-11 rounded-full transition-colors ${
-                preferences.adultContentEnabled ? "bg-blue-500" : "bg-gray-300"
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                  preferences.adultContentEnabled
-                    ? "translate-x-5"
-                    : "translate-x-0.5"
-                }`}
-              />
-            </button>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Automated Moderation */}
+      {/* Adult Content Toggle */}
       <div>
-        <label
-          className="mb-2 block text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
-        >
-          Automated Moderation
-        </label>
-        <p
-          className="mb-3 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
-        >
-          Use Bluesky's labeling services for automated content filtering
-        </p>
-
         <div
           className="flex items-center justify-between rounded-lg p-4"
           style={{
@@ -702,29 +769,25 @@ export const ContentModerationSettings: React.FC = () => {
               className="font-medium"
               style={{ color: "var(--bsky-text-primary)" }}
             >
-              Enable automated moderation
+              Enable Adult Content
             </div>
             <div
               className="text-sm"
               style={{ color: "var(--bsky-text-secondary)" }}
             >
-              Filter spam, harassment, and other harmful content automatically
+              Allow viewing of adult-only content (you must be 18+)
             </div>
           </div>
           <button
-            onClick={() =>
-              setPreferences({
-                ...preferences,
-                autoModeration: !preferences.autoModeration,
-              })
-            }
-            className={`relative h-6 w-11 rounded-full transition-colors ${
-              preferences.autoModeration ? "bg-blue-500" : "bg-gray-300"
+            onClick={handleToggleAdultContent}
+            disabled={isLoading}
+            className={`relative h-6 w-11 rounded-full transition-colors disabled:opacity-50 ${
+              adultContentEnabled ? "bg-blue-500" : "bg-gray-300"
             }`}
           >
             <span
               className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                preferences.autoModeration ? "translate-x-5" : "translate-x-0.5"
+                adultContentEnabled ? "translate-x-5" : "translate-x-0.5"
               }`}
             />
           </button>
@@ -743,7 +806,7 @@ export const ContentModerationSettings: React.FC = () => {
           className="mb-3 text-sm"
           style={{ color: "var(--bsky-text-secondary)" }}
         >
-          You won't see posts from muted users in your feeds
+          You won&apos;t see posts from muted users in your feeds
         </p>
 
         <div className="mb-3 flex gap-2">
@@ -760,21 +823,6 @@ export const ContentModerationSettings: React.FC = () => {
               border: "1px solid var(--bsky-border-primary)",
             }}
           />
-          <select
-            value={muteDuration}
-            onChange={(e) => setMuteDuration(e.target.value)}
-            className="rounded-lg px-4 py-2 text-sm"
-            style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              color: "var(--bsky-text-primary)",
-              border: "1px solid var(--bsky-border-primary)",
-            }}
-          >
-            <option value="forever">Forever</option>
-            <option value="24h">24 hours</option>
-            <option value="7d">7 days</option>
-            <option value="30d">30 days</option>
-          </select>
           <button
             onClick={handleMuteUser}
             disabled={!newMuteHandle.trim() || isLoading}
@@ -787,9 +835,9 @@ export const ContentModerationSettings: React.FC = () => {
           </button>
         </div>
 
-        {preferences.mutedUsers.length > 0 ? (
+        {mutedUsers.length > 0 ? (
           <div className="space-y-2">
-            {preferences.mutedUsers.map((user) => (
+            {mutedUsers.map((user) => (
               <div
                 key={user.did}
                 className="flex items-center justify-between rounded-lg p-3"
@@ -852,9 +900,9 @@ export const ContentModerationSettings: React.FC = () => {
           Blocked users cannot see your posts or interact with you
         </p>
 
-        {preferences.blockedUsers.length > 0 ? (
+        {blockedUsers.length > 0 ? (
           <div className="space-y-2">
-            {preferences.blockedUsers.map((user) => (
+            {blockedUsers.map((user) => (
               <div
                 key={user.did}
                 className="flex items-center justify-between rounded-lg p-3"
@@ -905,6 +953,7 @@ export const ContentModerationSettings: React.FC = () => {
         )}
       </div>
 
+      {/* Status Message */}
       {message && (
         <div
           className="rounded-lg p-3 text-sm"
@@ -920,19 +969,6 @@ export const ContentModerationSettings: React.FC = () => {
           {message.text}
         </div>
       )}
-
-      <div className="flex justify-end">
-        <button
-          onClick={handleSave}
-          disabled={isLoading}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
-          style={{
-            backgroundColor: "var(--bsky-primary)",
-          }}
-        >
-          {isLoading ? "Saving..." : "Save Settings"}
-        </button>
-      </div>
     </div>
   );
 };
