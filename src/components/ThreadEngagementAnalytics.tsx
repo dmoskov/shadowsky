@@ -385,7 +385,8 @@ export const ThreadEngagementAnalytics: React.FC<
                             className="truncate text-xs font-medium"
                             style={{ color: "var(--bsky-text-primary)" }}
                           >
-                            {pe.post.author.displayName || pe.post.author.handle}
+                            {pe.post.author.displayName ||
+                              pe.post.author.handle}
                           </span>
                         </a>
                         <span
@@ -429,7 +430,7 @@ export const ThreadEngagementAnalytics: React.FC<
                         href={postUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mb-1 mt-2 block line-clamp-2 text-xs transition-opacity hover:opacity-70"
+                        className="mb-1 mt-2 line-clamp-2 block text-xs transition-opacity hover:opacity-70"
                         style={{ color: "var(--bsky-text-secondary)" }}
                         title="View this post"
                       >
