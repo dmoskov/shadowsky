@@ -408,6 +408,27 @@ export function DebugConsole() {
             >
               Storage Analytics
             </button>
+            <button
+              onClick={() => setActiveTab("backends")}
+              style={{
+                padding: "4px 12px",
+                fontSize: "14px",
+                border: "none",
+                background:
+                  activeTab === "backends"
+                    ? "var(--bsky-primary)"
+                    : "transparent",
+                color:
+                  activeTab === "backends"
+                    ? "white"
+                    : "var(--bsky-text-secondary)",
+                borderRadius: "4px",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+            >
+              Backends Health
+            </button>
           </div>
 
           {/* Cache Tab */}
