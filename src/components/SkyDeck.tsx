@@ -16,25 +16,14 @@ import { useModal } from "../contexts/ModalContext";
 import { useColumnSwipe } from "../hooks/useColumnSwipe";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { columnService } from "../services/column-service";
+import type { Column, ColumnType } from "../types/column";
 import { createLogger } from "../utils/logger";
 import SkyColumn from "./SkyColumn";
 
+// Re-export types for backwards compatibility
+export type { Column, ColumnType } from "../types/column";
+
 const logger = createLogger("SkyDeck");
-
-export type ColumnType =
-  | "notifications"
-  | "timeline"
-  | "feed"
-  | "messages"
-  | "bookmarks"
-  | "search";
-
-export interface Column {
-  id: string;
-  type: ColumnType;
-  title?: string;
-  data?: string; // Can be threadUri, feedUri, profileHandle, listUri etc
-}
 
 interface FeedGenerator {
   uri: string;

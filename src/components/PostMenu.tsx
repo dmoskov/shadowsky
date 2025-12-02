@@ -237,9 +237,42 @@ export const PostMenu: React.FC<PostMenuProps> = ({
             e.stopPropagation();
             if (!isOpen && buttonRef.current) {
               const rect = buttonRef.current.getBoundingClientRect();
+              const menuWidth = 224; // 224px = w-56
+              const menuHeight = 400; // Approximate max height of menu
+              const viewportHeight = window.innerHeight;
+              const viewportWidth = window.innerWidth;
+
+              // Calculate horizontal position (prefer right-aligned to button)
+              let left = rect.right - menuWidth;
+              // Ensure menu doesn't overflow left edge
+              if (left < 8) {
+                left = 8;
+              }
+              // Ensure menu doesn't overflow right edge
+              if (left + menuWidth > viewportWidth - 8) {
+                left = viewportWidth - menuWidth - 8;
+              }
+
+              // Calculate vertical position (check if there's space below)
+              const spaceBelow = viewportHeight - rect.bottom;
+              const spaceAbove = rect.top;
+
+              let top;
+              if (spaceBelow >= menuHeight || spaceBelow > spaceAbove) {
+                // Position below the button
+                top = rect.bottom + 8;
+              } else {
+                // Position above the button
+                top = rect.top - menuHeight - 8;
+                // Ensure menu doesn't overflow top edge
+                if (top < 8) {
+                  top = 8;
+                }
+              }
+
               setMenuPosition({
-                top: rect.bottom + 8,
-                left: rect.right - 224, // 224px = w-56
+                top,
+                left,
               });
             }
             setIsOpen(!isOpen);
@@ -255,7 +288,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
           ReactDOM.createPortal(
             <div
               ref={menuRef}
-              className="fixed z-[9999] w-56 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
+              className="fixed z-[9999] max-h-[calc(100vh-16px)] w-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
               style={{
                 top: `${menuPosition.top}px`,
                 left: `${menuPosition.left}px`,

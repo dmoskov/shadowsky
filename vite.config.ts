@@ -246,6 +246,16 @@ export default defineConfig({
     fs: {
       strict: false,
     },
+    // Fix for ENOTSUP socket errors on macOS
+    watch: {
+      usePolling: false,
+      // Ignore node_modules and large directories to prevent socket exhaustion
+      ignored: ["**/node_modules/**", "**/.git/**", "**/dist/**"],
+    },
+    // Configure HMR to use a specific port and avoid conflicts
+    hmr: {
+      overlay: true,
+    },
     // Security and feature headers
     headers: {
       // Required for FFmpeg with SharedArrayBuffer

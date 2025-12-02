@@ -1,5 +1,5 @@
 import { AtpAgent } from "@atproto/api";
-import { Column } from "../components/SkyDeck";
+import type { Column } from "../types/column";
 import { ColumnAtProtoBackend } from "./storage/column-atproto-backend";
 import { ColumnLocalStorageBackend } from "./storage/column-local-storage-backend";
 import { ColumnStorageBackend } from "./storage/column-storage-backend";

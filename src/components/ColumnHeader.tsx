@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import React from "react";
 import ReactDOM from "react-dom";
-import type { Column } from "./SkyDeck";
+import type { Column } from "../types/column";
 
 interface ColumnHeaderProps {
   column: Column;

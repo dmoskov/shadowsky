@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useErrorTracking } from "../hooks/useErrorTracking";
 import { columnService } from "../services/column-service";
 import { useStorageErrorManager } from "../services/storage/storage-error-manager";
+import type { Column } from "../types/column";
 import { BookmarksColumn } from "./BookmarksColumn";
 import { ColumnHeader } from "./ColumnHeader";
 import { DirectMessagesColumn } from "./DirectMessagesColumn";
@@ -10,7 +11,6 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import { Home } from "./Home";
 import { NotificationsFeed } from "./NotificationsFeed";
 import { SearchColumn } from "./SearchColumn";
-import type { Column } from "./SkyDeck";
 import { VisualTimeline } from "./VisualTimeline";
 
 interface SkyColumnProps {
