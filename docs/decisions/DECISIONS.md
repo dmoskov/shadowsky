@@ -891,3 +891,93 @@ References:
 - Umami: https://umami.is/
 - Plausible CE: https://plausible.io/self-hosted-web-analytics
 - Decision made by: Dustin Moskovitz (2025-12-01) - "let's do self hosted"
+
+## Decision: Thread Haiku Summary Complexity Threshold and Trigger
+
+Date: 2025-12-02
+Status: Accepted
+Context: The thread complexity detection hook uses a configurable threshold for showing AI-generated haiku summaries. This decision defines:
+
+1. What post count threshold triggers summary generation
+2. When the summary generation should be triggered (UI interaction context)
+
+### Options Evaluated for Threshold
+
+1. **5 posts (current proposal)** - Low barrier, more summaries generated, higher API costs
+2. **10 posts** - More conservative, summaries only for moderately complex threads
+3. **Dynamic threshold** - Based on depth + branch count, not just post count (e.g., 5 posts OR depth > 3)
+4. **User configurable** - Let users set their own threshold in settings
+
+### Decision
+
+**Option 1: 5-post threshold**, with an important constraint: **summaries are only generated when the ThreadViewer is explicitly opened**, not on hover/preview.
+
+### Rationale
+
+1. **5-post threshold** provides value early without being too noisy
+2. **Explicit open trigger** prevents unnecessary API calls from:
+   - Hover previews
+   - Accidental mouse-overs
+   - Rapid thread navigation
+3. **Cost control** through user intent - summary only generated when user commits to viewing the thread
+4. **UX clarity** - user action triggers visible summary, creating clear cause-effect relationship
+
+### Implementation Requirements
+
+**ThreadHaikuSummary Component:**
+- Trigger summary generation only when `ThreadViewer` component is mounted/opened
+- Do NOT trigger on:
+  - Thread preview hover cards
+  - Post hover states
+  - Thread list item rendering
+- Show summary in collapsible card at thread top with 'AI Summary' badge
+- Display loading skeleton during generation
+
+**Thread Complexity Detection Hook:**
+- Use `totalPosts >= 5` as the complexity threshold for showing summaries
+- Calculate: `totalPosts`, `maxDepth`, `branchCount`, `uniqueAuthors`
+- Return complexity level enum: Simple/Medium/Complex/VeryComplex
+- Summary eligibility: `totalPosts >= 5` AND user explicitly opened thread
+
+### Technical Architecture
+
+```typescript
+// In ThreadViewer.tsx or ThreadModal.tsx
+const { isComplex, shouldShowSummary } = useThreadComplexity(thread);
+
+// shouldShowSummary = totalPosts >= 5
+// Only render ThreadHaikuSummary when component mounts (explicit open)
+
+if (shouldShowSummary) {
+  return <ThreadHaikuSummary threadUri={thread.uri} />;
+}
+```
+
+### Cost Implications
+
+- 5-post threshold with explicit-open-only trigger balances feature visibility with cost control
+- Estimated API calls: Only on intentional thread viewing, not passive browsing
+- Caching via React Query with key `['thread-summary', threadUri]` prevents regeneration
+
+Consequences:
+
+- ThreadHaikuSummary only appears when ThreadViewer is explicitly opened
+- 5-post threshold maintained for broad feature visibility
+- API costs controlled through user intent requirement
+- Blocked tasks can now proceed with these specifications
+- Clear contract between complexity detection and summary generation
+
+### Blocked Tasks Now Unblocked
+
+1. **Create thread complexity detection hook with configurable thresholds**
+   - Threshold confirmed: 5 posts
+   - Hook should expose `shouldShowSummary` boolean
+
+2. **Build ThreadHaikuSummary component with React Query caching**
+   - Trigger: Only on explicit ThreadViewer open
+   - Not triggered by hover/preview interactions
+
+References:
+
+- Asana Task: https://app.asana.com/0/1211710875848660/1212272159738730
+- Decision made by: Dustin Moskovitz (2025-12-02) - "Option 1, but only do it when you open the thread viewer explicitly"
