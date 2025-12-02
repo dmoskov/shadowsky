@@ -323,12 +323,14 @@ export class AppPreferencesService {
           version: 1,
         };
 
-        await this.agent.api.com.atproto.repo.createRecord({
-          repo: this.agent.session?.did || "",
-          collection: PREFERENCES_COLLECTION,
-          rkey: PREFERENCES_RKEY,
-          record: shadowSkyPref as any,
-        });
+        await withAtProtoRetry(async () => {
+          await this.agent!.api.com.atproto.repo.createRecord({
+            repo: this.agent!.session?.did || "",
+            collection: PREFERENCES_COLLECTION,
+            rkey: PREFERENCES_RKEY,
+            record: shadowSkyPref as any,
+          });
+        }, "createDefaultPreferences");
 
         (defaultPrefs as any).isStoredInAtProto = true;
         logger.log("Created default preferences in AT Protocol");
@@ -376,11 +378,13 @@ export class AppPreferencesService {
     }
 
     try {
-      const response = await this.agent.api.com.atproto.repo.getRecord({
-        repo: this.agent.session?.did || "",
-        collection: COLUMNS_COLLECTION,
-        rkey: COLUMNS_RKEY,
-      });
+      const response = await withAtProtoRetry(async () => {
+        return this.agent!.api.com.atproto.repo.getRecord({
+          repo: this.agent!.session?.did || "",
+          collection: COLUMNS_COLLECTION,
+          rkey: COLUMNS_RKEY,
+        });
+      }, "getColumns");
 
       if (response.data.value) {
         return response.data.value as unknown as ShadowSkyColumns;
@@ -416,27 +420,29 @@ export class AppPreferencesService {
       const did = this.agent.session?.did;
       if (!did) throw new Error("No DID available");
 
-      // Try to update existing record
-      try {
-        await this.agent.api.com.atproto.repo.putRecord({
-          repo: did,
-          collection: COLUMNS_COLLECTION,
-          rkey: COLUMNS_RKEY,
-          record: columnsPref as any,
-        });
-      } catch (putError: any) {
-        // If record doesn't exist, create it
-        if (putError?.status === 400) {
-          await this.agent.api.com.atproto.repo.createRecord({
+      // Try to update existing record with retry
+      await withAtProtoRetry(async () => {
+        try {
+          await this.agent!.api.com.atproto.repo.putRecord({
             repo: did,
             collection: COLUMNS_COLLECTION,
             rkey: COLUMNS_RKEY,
             record: columnsPref as any,
           });
-        } else {
-          throw putError;
+        } catch (putError: any) {
+          // If record doesn't exist, create it
+          if (putError?.status === 400) {
+            await this.agent!.api.com.atproto.repo.createRecord({
+              repo: did,
+              collection: COLUMNS_COLLECTION,
+              rkey: COLUMNS_RKEY,
+              record: columnsPref as any,
+            });
+          } else {
+            throw putError;
+          }
         }
-      }
+      }, "updateColumns");
 
       logger.log("Successfully saved columns to AT Protocol");
       return true;

@@ -409,7 +409,6 @@ export function ThreadModal({
 
   // Get the thread author (root post author) for filtering
   const threadAuthorDid = rootPostObject?.author?.did;
-  const threadAuthorHandle = rootPostObject?.author?.handle;
 
   // Find next branch point (a post with multiple children)
   const handleJumpToNextBranch = useCallback(() => {

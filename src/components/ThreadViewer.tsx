@@ -1909,12 +1909,6 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   // Calculate reply count (excluding root)
   const replyCount = posts.length - 1;
 
-  // Get non-root posts for replies section
-  const replyPosts = useMemo(() => {
-    if (!rootPostObject) return posts;
-    return posts.filter((p) => p.uri !== rootPostObject.uri);
-  }, [posts, rootPostObject]);
-
   return (
     <>
       <div ref={containerRef} className={`thread-viewer ${className}`}>
