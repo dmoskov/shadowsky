@@ -1,9 +1,12 @@
 import { debug } from "@bsky/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
+import { Search, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { getDmSearchDB } from "../services/dm-search-db";
 import { dmService, type DmConversation } from "../services/dm-service";
+import { DmSearch } from "./DmSearch";
 import { MessageReactions } from "./MessageReactions";
 
 export const DirectMessages: React.FC = () => {
@@ -15,8 +18,17 @@ export const DirectMessages: React.FC = () => {
   const [messageText, setMessageText] = useState("");
   const [chatError, setChatError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const lastActivityRef = useRef<number>(Date.now());
   const [isTabVisible, setIsTabVisible] = useState<boolean>(!document.hidden);
+  const [showSearch, setShowSearch] = useState(false);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    string | null
+  >(null);
+  const [indexedSenders, setIndexedSenders] = useState<
+    Array<{ did: string; handle?: string; displayName?: string }>
+  >([]);
+  const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   // Track user activity
   const updateActivity = useCallback(() => {
@@ -101,6 +113,57 @@ export const DirectMessages: React.FC = () => {
     refetchInterval: selectedConversation ? getPollingInterval : false,
   });
 
+  // Index messages when conversation data changes (real-time indexing)
+  useEffect(() => {
+    const indexMessages = async () => {
+      if (!conversationData?.messages || !selectedConversation) return;
+
+      try {
+        const db = await getDmSearchDB();
+        const messagesToIndex = conversationData.messages.map((msg) => {
+          // Get sender info from conversation members
+          const sender = conversationData.conversation.members.find(
+            (m) => m.did === msg.sender.did,
+          );
+          return {
+            id: msg.id,
+            conversationId: selectedConversation,
+            text: msg.text,
+            senderDid: msg.sender.did,
+            senderHandle: sender?.handle,
+            senderDisplayName: sender?.displayName,
+            sentAt: msg.sentAt,
+          };
+        });
+
+        await db.indexMessages(messagesToIndex);
+
+        // Update indexed senders
+        const senders = await db.getIndexedSenders();
+        setIndexedSenders(senders);
+      } catch (error) {
+        debug.error("Failed to index DM messages:", error);
+      }
+    };
+
+    indexMessages();
+  }, [conversationData?.messages, selectedConversation]);
+
+  // Load indexed senders on mount
+  useEffect(() => {
+    const loadSenders = async () => {
+      try {
+        const db = await getDmSearchDB();
+        const senders = await db.getIndexedSenders();
+        setIndexedSenders(senders);
+      } catch (error) {
+        debug.error("Failed to load indexed senders:", error);
+      }
+    };
+
+    loadSenders();
+  }, []);
+
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: ({
@@ -122,10 +185,12 @@ export const DirectMessages: React.FC = () => {
     },
   });
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom when messages change (unless highlighted)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
-  }, [conversationData?.messages]);
+    if (!highlightedMessageId) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+    }
+  }, [conversationData?.messages, highlightedMessageId]);
 
   // Mark conversation as read when selected
   useEffect(() => {
@@ -150,6 +215,38 @@ export const DirectMessages: React.FC = () => {
     queryClient,
   ]);
 
+  // Handle search result click - jump to message
+  const handleSearchResultClick = useCallback(
+    (messageId: string, conversationId: string) => {
+      // If different conversation, switch to it first
+      if (conversationId !== selectedConversation) {
+        setSelectedConversation(conversationId);
+      }
+
+      // Highlight the message
+      setHighlightedMessageId(messageId);
+
+      // Close search panel on mobile
+      if (window.innerWidth < 768) {
+        setShowSearch(false);
+      }
+
+      // Scroll to the message after a short delay to allow rendering
+      setTimeout(() => {
+        const messageElement = messageRefs.current.get(messageId);
+        if (messageElement) {
+          messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 100);
+
+      // Clear highlight after 3 seconds
+      setTimeout(() => {
+        setHighlightedMessageId(null);
+      }, 3000);
+    },
+    [selectedConversation],
+  );
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedConversation || !messageText.trim()) return;
@@ -167,6 +264,18 @@ export const DirectMessages: React.FC = () => {
     );
   };
 
+  // Register message ref for scroll-to functionality
+  const setMessageRef = useCallback(
+    (messageId: string, element: HTMLDivElement | null) => {
+      if (element) {
+        messageRefs.current.set(messageId, element);
+      } else {
+        messageRefs.current.delete(messageId);
+      }
+    },
+    [],
+  );
+
   return (
     <div
       className="flex h-[calc(100vh-8rem)] w-full overflow-hidden bg-bsky-bg-primary lg:h-[calc(100vh-4rem)]"
@@ -182,7 +291,7 @@ export const DirectMessages: React.FC = () => {
         }}
         aria-label="Conversations"
       >
-        <div className="border-b border-bsky-border-primary p-4">
+        <div className="flex items-center justify-between border-b border-bsky-border-primary p-4">
           <h1
             className="text-xl font-semibold"
             style={{ color: "var(--bsky-text-primary)" }}
@@ -190,7 +299,30 @@ export const DirectMessages: React.FC = () => {
           >
             Messages
           </h1>
+          <button
+            onClick={() => setShowSearch(!showSearch)}
+            className={`rounded-lg p-2 transition-colors ${
+              showSearch
+                ? "bg-bsky-primary text-white"
+                : "text-bsky-text-secondary hover:bg-bsky-bg-secondary"
+            }`}
+            aria-label={showSearch ? "Close search" : "Search messages"}
+            title="Search messages"
+          >
+            {showSearch ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+          </button>
         </div>
+
+        {/* Search panel */}
+        {showSearch && (
+          <div className="h-80 border-b border-bsky-border-primary">
+            <DmSearch
+              conversationId={selectedConversation || undefined}
+              onResultClick={handleSearchResultClick}
+              senders={indexedSenders}
+            />
+          </div>
+        )}
 
         <div
           className="flex-1 overflow-y-auto overflow-x-hidden"
@@ -364,7 +496,7 @@ export const DirectMessages: React.FC = () => {
                   </span>
                 </div>
               )}
-              <div>
+              <div className="flex-1">
                 <div
                   className="font-semibold"
                   style={{ color: "var(--bsky-text-primary)" }}
@@ -382,10 +514,38 @@ export const DirectMessages: React.FC = () => {
                   </div>
                 )}
               </div>
+              {/* Search button in chat header for mobile */}
+              <button
+                onClick={() => setShowSearch(!showSearch)}
+                className={`rounded-lg p-2 transition-colors md:hidden ${
+                  showSearch
+                    ? "bg-bsky-primary text-white"
+                    : "text-bsky-text-secondary hover:bg-bsky-bg-secondary"
+                }`}
+                aria-label={showSearch ? "Close search" : "Search messages"}
+              >
+                {showSearch ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Search className="h-5 w-5" />
+                )}
+              </button>
             </header>
+
+            {/* Mobile search panel */}
+            {showSearch && (
+              <div className="h-64 border-b border-bsky-border-primary md:hidden">
+                <DmSearch
+                  conversationId={selectedConversation}
+                  onResultClick={handleSearchResultClick}
+                  senders={indexedSenders}
+                />
+              </div>
+            )}
 
             {/* Messages */}
             <div
+              ref={messagesContainerRef}
               className="flex-1 overflow-y-auto p-4"
               role="log"
               aria-label="Message history"
@@ -411,10 +571,17 @@ export const DirectMessages: React.FC = () => {
                 <>
                   {conversationData.messages.map((message) => {
                     const isOwnMessage = message.sender.did === session?.did;
+                    const isHighlighted = highlightedMessageId === message.id;
                     return (
                       <div
                         key={message.id}
-                        className={`mb-4 flex ${isOwnMessage ? "justify-end" : ""}`}
+                        ref={(el) => setMessageRef(message.id, el)}
+                        className={`mb-4 flex transition-all duration-500 ${isOwnMessage ? "justify-end" : ""} ${
+                          isHighlighted
+                            ? "rounded-lg bg-yellow-100 p-2 ring-2 ring-yellow-400 dark:bg-yellow-900/30 dark:ring-yellow-600"
+                            : ""
+                        }`}
+                        data-message-id={message.id}
                       >
                         <div className="max-w-[70%]">
                           <div

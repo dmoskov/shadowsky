@@ -492,7 +492,7 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
               isHovered ? "bg-blue-500 bg-opacity-5" : ""
             } ${isCurrentUser ? "border-l-4 border-l-green-500" : ""}`}
             style={{
-              marginLeft: `${node.depth * indentWidth}px`,
+              marginLeft: `calc(${node.depth} * ${indentCssVar})`,
               backgroundColor: node.isRoot
                 ? "var(--bsky-bg-secondary)"
                 : isCurrentUser
@@ -692,7 +692,7 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
       highlightUri,
       hoveredNodeUri,
       currentUserDid,
-      indentWidth,
+      indentCssVar,
       showEngagementStats,
       navigate,
       onPostClick,
