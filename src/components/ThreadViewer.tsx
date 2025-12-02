@@ -87,6 +87,8 @@ export interface ThreadViewerProps {
   // Hero root post props
   rootPostObject?: Post;
   threadSummary?: React.ReactNode;
+  // Ref for sticky context bar sentinel element
+  contextBarSentinelRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export const ThreadViewer: React.FC<ThreadViewerProps> = ({
@@ -106,6 +108,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   virtualScrollConfig,
   rootPostObject,
   threadSummary,
+  contextBarSentinelRef,
 }) => {
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -133,8 +136,8 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   const [expandedBranches, setExpandedBranches] = useState<Set<string>>(
     new Set(),
   );
-  // State for showing replies section (progressive reveal)
-  const [showReplies, setShowReplies] = useState(false);
+  // State for showing replies section (progressive reveal) - start expanded
+  const [showReplies, setShowReplies] = useState(true);
   // State for keyboard navigation - tracks currently focused post index
   const [focusedPostIndex, setFocusedPostIndex] = useState<number>(-1);
   // Ref to track post elements for keyboard navigation
@@ -2019,6 +2022,15 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
               <div className="mt-4">{threadSummary}</div>
             )}
 
+            {/* Sentinel element for sticky context bar intersection observer */}
+            {contextBarSentinelRef && (
+              <div
+                ref={contextBarSentinelRef as React.RefObject<HTMLDivElement>}
+                className="pointer-events-none h-0"
+                aria-hidden="true"
+              />
+            )}
+
             {/* Replies toggle */}
             {replyCount > 0 && (
               <button
@@ -2060,7 +2072,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
         )}
 
         {/* Replies section - progressive reveal */}
-        {(showReplies || !rootPostObject) && threadTree.length > 0 && (
+        {(showReplies || !rootPostObject) && flatNodeList.length > 1 && (
           <div className={rootPostObject ? "border-t pt-4" : ""} style={{ borderColor: "var(--bsky-border-primary)" }}>
             {shouldVirtualize ? (
               <VirtualizedThreadList
@@ -2073,14 +2085,10 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                 className="thread-list-virtualized"
               />
             ) : (
-              // Render only non-root nodes when we have a hero root
-              rootPostObject
-                ? threadTree.flatMap((rootNode) =>
-                    rootNode.children.length > 0
-                      ? renderThreadNodes(rootNode.children)
-                      : [],
-                  )
-                : renderThreadNodes(threadTree)
+              // Render all non-root nodes
+              renderThreadNodes(
+                threadTree.flatMap((rootNode) => rootNode.children),
+              )
             )}
           </div>
         )}

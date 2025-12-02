@@ -1037,6 +1037,7 @@ export function ThreadModal({
                     showUnreadIndicators={false}
                     className="w-full"
                     currentUserDid={session?.did}
+                    contextBarSentinelRef={contextBarSentinelRef}
                     onPostClick={(clickedPost, action) => {
                       const post =
                         posts.find((p) => p.uri === clickedPost.uri) || null;

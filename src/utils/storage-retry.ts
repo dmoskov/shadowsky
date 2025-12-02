@@ -16,6 +16,7 @@
  */
 
 import { createLogger } from "./logger";
+import { recordStorageOperation, recordStorageError } from "./error-monitoring";
 
 const logger = createLogger("StorageRetry");
 
@@ -445,14 +446,20 @@ export async function withStorageRetry<T>(
       const result = await operation();
 
       // Record success
+      const durationMs = Date.now() - startTime;
       circuitBreaker?.recordSuccess();
       recordTelemetry({
         operationName,
         attemptNumber: attempt + 1,
         timestamp: startTime,
         success: true,
-        durationMs: Date.now() - startTime,
+        durationMs,
         circuitBreakerState: circuitBreaker?.getState() ?? CircuitState.CLOSED,
+      });
+
+      // Record to error monitor for unified metrics
+      recordStorageOperation(operationName, true, durationMs, {
+        attempts: attempt + 1,
       });
 
       if (attempt > 0) {
@@ -481,6 +488,17 @@ export async function withStorageRetry<T>(
       const isLastAttempt = attempt === config.maxAttempts - 1;
       if (isLastAttempt || !isRetryable(error)) {
         circuitBreaker?.recordFailure();
+
+        // Record final failure to error monitor
+        recordStorageOperation(operationName, false, durationMs, {
+          attempts: attempt + 1,
+          errorType: error instanceof Error ? error.name : "unknown",
+        });
+        recordStorageError(error, operationName, {
+          attempts: attempt + 1,
+          circuitBreakerState: circuitBreaker?.getState() ?? CircuitState.CLOSED,
+        });
+
         throw error;
       }
 

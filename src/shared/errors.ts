@@ -123,8 +123,33 @@ export function categorizeError(error: any): ErrorCategory {
   return "unknown";
 }
 
-export function trackError(error: any, context?: string) {
-  // Error tracking implementation would go here
-  // For now, just log to console
-  console.error(`Error in ${context || "unknown context"}:`, error);
+export function trackError(
+  error: unknown,
+  context?: string,
+  metadata?: Record<string, string | number | boolean>,
+): void {
+  // Use lazy import to avoid circular dependencies
+  import("../utils/error-monitoring").then(({ getErrorMonitor }) => {
+    const category = categorizeError(error);
+
+    // Map our ErrorCategory to the monitoring ErrorCategory
+    const monitorCategory =
+      category === "rate-limit"
+        ? "rate_limit"
+        : category === "auth"
+          ? "auth"
+          : category === "network"
+            ? "network"
+            : category === "validation"
+              ? "validation"
+              : "unknown";
+
+    getErrorMonitor().recordError(error, {
+      operation: context || "unknown",
+      component: "error-handler",
+      category: monitorCategory as import("../utils/error-monitoring").ErrorCategory,
+      severity: category === "auth" || category === "network" ? "error" : "warning",
+      metadata,
+    });
+  });
 }
