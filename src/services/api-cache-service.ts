@@ -15,6 +15,7 @@
 
 import Dexie, { type Table } from "dexie";
 import { createLogger } from "../utils/logger";
+import { withIndexedDBRetry } from "../utils/storage-retry";
 
 const logger = createLogger("APICacheService");
 
@@ -329,32 +330,34 @@ class APICacheService {
     };
 
     try {
-      const db = this.ensureDB();
-      const now = Date.now();
-      const cutoffTime = now - maxAgeMs;
+      await withIndexedDBRetry(async () => {
+        const db = this.ensureDB();
+        const now = Date.now();
+        const cutoffTime = now - maxAgeMs;
 
-      // Find expired entries
-      const expiredEntries = await db.cacheEntries
-        .where("cacheType")
-        .equals(cacheType)
-        .and((entry) => entry.createdAt < cutoffTime)
-        .toArray();
+        // Find expired entries
+        const expiredEntries = await db.cacheEntries
+          .where("cacheType")
+          .equals(cacheType)
+          .and((entry) => entry.createdAt < cutoffTime)
+          .toArray();
 
-      if (expiredEntries.length > 0) {
-        // Calculate bytes freed
-        result.bytesFreed = expiredEntries.reduce(
-          (sum, entry) => sum + entry.size,
-          0,
-        );
-        result.entriesRemoved = expiredEntries.length;
+        if (expiredEntries.length > 0) {
+          // Calculate bytes freed
+          result.bytesFreed = expiredEntries.reduce(
+            (sum, entry) => sum + entry.size,
+            0,
+          );
+          result.entriesRemoved = expiredEntries.length;
 
-        // Delete expired entries
-        await db.cacheEntries.bulkDelete(expiredEntries.map((e) => e.id));
+          // Delete expired entries
+          await db.cacheEntries.bulkDelete(expiredEntries.map((e) => e.id));
 
-        logger.info(
-          `Evicted ${result.entriesRemoved} expired entries from ${cacheType}`,
-        );
-      }
+          logger.info(
+            `Evicted ${result.entriesRemoved} expired entries from ${cacheType}`,
+          );
+        }
+      }, "evictOldEntries");
     } catch (error) {
       logger.error(`Failed to evict old entries from ${cacheType}:`, error);
     }
@@ -376,37 +379,39 @@ class APICacheService {
     };
 
     try {
-      const db = this.ensureDB();
+      await withIndexedDBRetry(async () => {
+        const db = this.ensureDB();
 
-      // Get count of entries for this cache type
-      const count = await db.cacheEntries
-        .where("cacheType")
-        .equals(cacheType)
-        .count();
-
-      if (count > maxEntries) {
-        const entriesToRemove = count - maxEntries;
-
-        // Get the oldest accessed entries (LRU)
-        const oldestEntries = await db.cacheEntries
+        // Get count of entries for this cache type
+        const count = await db.cacheEntries
           .where("cacheType")
           .equals(cacheType)
-          .sortBy("lastAccessedAt");
+          .count();
 
-        const toDelete = oldestEntries.slice(0, entriesToRemove);
+        if (count > maxEntries) {
+          const entriesToRemove = count - maxEntries;
 
-        result.bytesFreed = toDelete.reduce(
-          (sum, entry) => sum + entry.size,
-          0,
-        );
-        result.entriesRemoved = toDelete.length;
+          // Get the oldest accessed entries (LRU)
+          const oldestEntries = await db.cacheEntries
+            .where("cacheType")
+            .equals(cacheType)
+            .sortBy("lastAccessedAt");
 
-        await db.cacheEntries.bulkDelete(toDelete.map((e) => e.id));
+          const toDelete = oldestEntries.slice(0, entriesToRemove);
 
-        logger.info(
-          `Evicted ${result.entriesRemoved} LRU entries from ${cacheType}`,
-        );
-      }
+          result.bytesFreed = toDelete.reduce(
+            (sum, entry) => sum + entry.size,
+            0,
+          );
+          result.entriesRemoved = toDelete.length;
+
+          await db.cacheEntries.bulkDelete(toDelete.map((e) => e.id));
+
+          logger.info(
+            `Evicted ${result.entriesRemoved} LRU entries from ${cacheType}`,
+          );
+        }
+      }, "evictBySize");
     } catch (error) {
       logger.error(`Failed to evict entries by size from ${cacheType}:`, error);
     }
@@ -430,35 +435,37 @@ class APICacheService {
           `Storage threshold exceeded. Total: ${(totalSize / 1024 / 1024).toFixed(2)}MB, freeing ${(bytesToFree / 1024 / 1024).toFixed(2)}MB`,
         );
 
-        const db = this.ensureDB();
-        let freedBytes = 0;
+        await withIndexedDBRetry(async () => {
+          const db = this.ensureDB();
+          let freedBytes = 0;
 
-        // Get all entries sorted by last access time (LRU)
-        const allEntries = await db.cacheEntries
-          .orderBy("lastAccessedAt")
-          .toArray();
+          // Get all entries sorted by last access time (LRU)
+          const allEntries = await db.cacheEntries
+            .orderBy("lastAccessedAt")
+            .toArray();
 
-        const idsToDelete: string[] = [];
+          const idsToDelete: string[] = [];
 
-        for (const entry of allEntries) {
-          if (freedBytes >= bytesToFree) break;
-          idsToDelete.push(entry.id);
-          freedBytes += entry.size;
-        }
+          for (const entry of allEntries) {
+            if (freedBytes >= bytesToFree) break;
+            idsToDelete.push(entry.id);
+            freedBytes += entry.size;
+          }
 
-        if (idsToDelete.length > 0) {
-          await db.cacheEntries.bulkDelete(idsToDelete);
+          if (idsToDelete.length > 0) {
+            await db.cacheEntries.bulkDelete(idsToDelete);
 
-          results.push({
-            cacheName: "all",
-            entriesRemoved: idsToDelete.length,
-            bytesFreed: freedBytes,
-          });
+            results.push({
+              cacheName: "all",
+              entriesRemoved: idsToDelete.length,
+              bytesFreed: freedBytes,
+            });
 
-          logger.info(
-            `Evicted ${idsToDelete.length} entries via storage threshold LRU`,
-          );
-        }
+            logger.info(
+              `Evicted ${idsToDelete.length} entries via storage threshold LRU`,
+            );
+          }
+        }, "evictByStorageThreshold");
       }
     } catch (error) {
       logger.error("Failed to evict by storage threshold:", error);
@@ -500,9 +507,11 @@ class APICacheService {
    */
   async clearCache(cacheType: CacheType): Promise<boolean> {
     try {
-      const db = this.ensureDB();
-      await db.cacheEntries.where("cacheType").equals(cacheType).delete();
-      logger.info(`Cleared cache: ${cacheType}`);
+      await withIndexedDBRetry(async () => {
+        const db = this.ensureDB();
+        await db.cacheEntries.where("cacheType").equals(cacheType).delete();
+        logger.info(`Cleared cache: ${cacheType}`);
+      }, "clearCache");
       return true;
     } catch (error) {
       logger.error(`Failed to clear cache ${cacheType}:`, error);
@@ -515,9 +524,11 @@ class APICacheService {
    */
   async clearAllAPICaches(): Promise<boolean> {
     try {
-      const db = this.ensureDB();
-      await db.cacheEntries.clear();
-      logger.info("Cleared all API caches");
+      await withIndexedDBRetry(async () => {
+        const db = this.ensureDB();
+        await db.cacheEntries.clear();
+        logger.info("Cleared all API caches");
+      }, "clearAllAPICaches");
       return true;
     } catch (error) {
       logger.error("Failed to clear all API caches:", error);
@@ -534,34 +545,36 @@ class APICacheService {
     response: Response,
   ): Promise<void> {
     try {
-      const db = this.ensureDB();
-      const id = generateCacheId(cacheType, url);
-      const now = Date.now();
+      await withIndexedDBRetry(async () => {
+        const db = this.ensureDB();
+        const id = generateCacheId(cacheType, url);
+        const now = Date.now();
 
-      // Clone response and read body
-      const clonedResponse = response.clone();
-      const body = await clonedResponse.blob();
+        // Clone response and read body
+        const clonedResponse = response.clone();
+        const body = await clonedResponse.blob();
 
-      // Serialize headers
-      const headers: Record<string, string> = {};
-      clonedResponse.headers.forEach((value, key) => {
-        headers[key] = value;
-      });
+        // Serialize headers
+        const headers: Record<string, string> = {};
+        clonedResponse.headers.forEach((value, key) => {
+          headers[key] = value;
+        });
 
-      const entry: CacheEntry = {
-        id,
-        cacheType,
-        url,
-        createdAt: now,
-        lastAccessedAt: now,
-        status: clonedResponse.status,
-        statusText: clonedResponse.statusText,
-        headers: JSON.stringify(headers),
-        body,
-        size: body.size,
-      };
+        const entry: CacheEntry = {
+          id,
+          cacheType,
+          url,
+          createdAt: now,
+          lastAccessedAt: now,
+          status: clonedResponse.status,
+          statusText: clonedResponse.statusText,
+          headers: JSON.stringify(headers),
+          body,
+          size: body.size,
+        };
 
-      await db.cacheEntries.put(entry);
+        await db.cacheEntries.put(entry);
+      }, "cacheResponse");
     } catch (error) {
       logger.error(`Failed to cache response for ${url}:`, error);
     }
@@ -684,9 +697,11 @@ class APICacheService {
    */
   async deleteCachedEntry(url: string, cacheType: CacheType): Promise<boolean> {
     try {
-      const db = this.ensureDB();
-      const id = generateCacheId(cacheType, url);
-      await db.cacheEntries.delete(id);
+      await withIndexedDBRetry(async () => {
+        const db = this.ensureDB();
+        const id = generateCacheId(cacheType, url);
+        await db.cacheEntries.delete(id);
+      }, "deleteCachedEntry");
       return true;
     } catch (error) {
       logger.error(`Failed to delete cached entry for ${url}:`, error);

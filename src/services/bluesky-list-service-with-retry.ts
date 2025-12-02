@@ -10,6 +10,7 @@
  */
 
 import { AppBskyGraphList, AtpAgent } from "@atproto/api";
+import { getErrorMessage } from "../types/errors";
 import { createLogger } from "../utils/logger";
 import { RetryClient } from "../utils/retry-client";
 
@@ -25,7 +26,7 @@ const retryClient = new RetryClient(
     onRetry: (error, attempt, delayMs) => {
       logger.log(
         `Retrying API call (attempt ${attempt}/3) after ${Math.round(delayMs / 1000)}s`,
-        error?.message || error,
+        getErrorMessage(error),
       );
     },
   },

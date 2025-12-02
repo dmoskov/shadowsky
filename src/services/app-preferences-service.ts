@@ -1,5 +1,6 @@
 import { BskyAgent } from "@atproto/api";
 import { createLogger } from "../utils/logger";
+import { withAtProtoRetry } from "../utils/storage-retry";
 import { AT_PROTO_COLLECTIONS } from "./storage/storage-constants";
 
 // Define the app preferences stored as custom record
@@ -135,12 +136,14 @@ export class AppPreferencesService {
     }
 
     try {
-      // Try to get preferences from AT Protocol custom record
-      const response = await this.agent.api.com.atproto.repo.getRecord({
-        repo: this.agent.session?.did || "",
-        collection: PREFERENCES_COLLECTION,
-        rkey: PREFERENCES_RKEY,
-      });
+      // Try to get preferences from AT Protocol custom record with retry
+      const response = await withAtProtoRetry(async () => {
+        return this.agent!.api.com.atproto.repo.getRecord({
+          repo: this.agent!.session?.did || "",
+          collection: PREFERENCES_COLLECTION,
+          rkey: PREFERENCES_RKEY,
+        });
+      }, "getPreferences");
 
       if (response.data.value) {
         const shadowSkyPref = response.data

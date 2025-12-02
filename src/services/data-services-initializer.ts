@@ -1,6 +1,9 @@
 import { BskyAgent } from "@atproto/api";
 import { createLogger } from "../utils/logger";
-import { storageManager, StorageSystemHealth } from "./storage-manager";
+import { storageManager, type StorageSystemHealth } from "./storage-manager";
+
+// Re-export the type for consumers
+export type { StorageSystemHealth } from "./storage-manager";
 
 const logger = createLogger("DataServicesInitializer");
 

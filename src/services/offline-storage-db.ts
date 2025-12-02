@@ -664,7 +664,10 @@ export class OfflineStorageDB {
   async deleteThreadSummary(threadUri: string): Promise<void> {
     return withIndexedDBRetry(async () => {
       const db = this.ensureDb();
-      const transaction = db.transaction([STORES.THREAD_SUMMARIES], "readwrite");
+      const transaction = db.transaction(
+        [STORES.THREAD_SUMMARIES],
+        "readwrite",
+      );
       const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
 
       return new Promise<void>((resolve, reject) => {

@@ -9,8 +9,8 @@
  * - Structured log format for easy parsing
  */
 
-import { createLogger } from "./logger";
 import { getErrorMessage, getErrorStatus } from "../types/errors";
+import { createLogger } from "./logger";
 
 const logger = createLogger("NetworkRequest");
 
@@ -303,7 +303,7 @@ export async function fetchWithStructuredLogging(
     const response = await fetch(url, init);
     logRequestSuccess(context, response);
     return response;
-  } catch (error) {
+  } catch (error: unknown) {
     logRequestFailure(context, error);
     throw error;
   }

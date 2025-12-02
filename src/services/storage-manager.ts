@@ -44,19 +44,6 @@ export interface StorageSystemHealth {
 }
 
 /**
- * Storage initialization result for individual backend
- */
-interface InitResult {
-  success: boolean;
-  error?: Error;
-}
-
-/**
- * Backend groups for dependency ordering
- */
-type BackendGroup = "core" | "data" | "user";
-
-/**
  * Storage Manager - orchestrates storage initialization
  */
 class StorageManager {

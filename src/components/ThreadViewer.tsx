@@ -84,6 +84,9 @@ export interface ThreadViewerProps {
   // Virtual scrolling props for performance with large threads
   enableVirtualization?: boolean;
   virtualScrollConfig?: Partial<VirtualScrollConfig>;
+  // Hero root post props
+  rootPostObject?: Post;
+  threadSummary?: React.ReactNode;
 }
 
 export const ThreadViewer: React.FC<ThreadViewerProps> = ({
@@ -101,6 +104,8 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   onContinueThread,
   enableVirtualization = true,
   virtualScrollConfig,
+  rootPostObject,
+  threadSummary,
 }) => {
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -128,6 +133,8 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   const [expandedBranches, setExpandedBranches] = useState<Set<string>>(
     new Set(),
   );
+  // State for showing replies section (progressive reveal)
+  const [showReplies, setShowReplies] = useState(false);
   // State for keyboard navigation - tracks currently focused post index
   const [focusedPostIndex, setFocusedPostIndex] = useState<number>(-1);
   // Ref to track post elements for keyboard navigation

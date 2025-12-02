@@ -1,5 +1,6 @@
 import { AppBskyNotificationListNotifications } from "@atproto/api";
 import { debug } from "@bsky/shared";
+import { withIndexedDBRetry } from "../utils/storage-retry";
 
 type Notification = AppBskyNotificationListNotifications.Notification;
 
@@ -161,51 +162,55 @@ export class NotificationStorageDB {
 
   // Save individual notification
   async saveNotification(notification: Notification): Promise<void> {
-    this.ensureDB();
+    return withIndexedDBRetry(async () => {
+      this.ensureDB();
 
-    const transaction = this.db!.transaction(
-      [this.NOTIFICATIONS_STORE],
-      "readwrite",
-    );
-    const store = transaction.objectStore(this.NOTIFICATIONS_STORE);
+      const transaction = this.db!.transaction(
+        [this.NOTIFICATIONS_STORE],
+        "readwrite",
+      );
+      const store = transaction.objectStore(this.NOTIFICATIONS_STORE);
 
-    return new Promise((resolve, reject) => {
-      const request = store.put(notification);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+      return new Promise<void>((resolve, reject) => {
+        const request = store.put(notification);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }, "saveNotification");
   }
 
   // Batch save notifications
   async saveNotifications(notifications: Notification[]): Promise<void> {
-    this.ensureDB();
+    return withIndexedDBRetry(async () => {
+      this.ensureDB();
 
-    const transaction = this.db!.transaction(
-      [this.NOTIFICATIONS_STORE],
-      "readwrite",
-    );
-    const store = transaction.objectStore(this.NOTIFICATIONS_STORE);
+      const transaction = this.db!.transaction(
+        [this.NOTIFICATIONS_STORE],
+        "readwrite",
+      );
+      const store = transaction.objectStore(this.NOTIFICATIONS_STORE);
 
-    return new Promise((resolve, reject) => {
-      let completed = 0;
+      return new Promise<void>((resolve, reject) => {
+        let completed = 0;
 
-      notifications.forEach((notification) => {
-        const request = store.put(notification);
+        notifications.forEach((notification) => {
+          const request = store.put(notification);
 
-        request.onsuccess = () => {
-          completed++;
-          if (completed === notifications.length) {
-            resolve();
-          }
-        };
+          request.onsuccess = () => {
+            completed++;
+            if (completed === notifications.length) {
+              resolve();
+            }
+          };
 
-        request.onerror = () => reject(request.error);
+          request.onerror = () => reject(request.error);
+        });
+
+        if (notifications.length === 0) {
+          resolve();
+        }
       });
-
-      if (notifications.length === 0) {
-        resolve();
-      }
-    });
+    }, "saveNotifications");
   }
 
   // Get notification by URI
@@ -474,16 +479,18 @@ export class NotificationStorageDB {
 
   // Save metadata
   async saveMetadata(meta: NotificationMeta): Promise<void> {
-    this.ensureDB();
+    return withIndexedDBRetry(async () => {
+      this.ensureDB();
 
-    const transaction = this.db!.transaction([this.META_STORE], "readwrite");
-    const store = transaction.objectStore(this.META_STORE);
+      const transaction = this.db!.transaction([this.META_STORE], "readwrite");
+      const store = transaction.objectStore(this.META_STORE);
 
-    return new Promise((resolve, reject) => {
-      const request = store.put(meta);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+      return new Promise<void>((resolve, reject) => {
+        const request = store.put(meta);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }, "saveMetadata");
   }
 
   // Get metadata
@@ -502,31 +509,33 @@ export class NotificationStorageDB {
 
   // Clear all data
   async clearAll(): Promise<void> {
-    this.ensureDB();
+    return withIndexedDBRetry(async () => {
+      this.ensureDB();
 
-    const transaction = this.db!.transaction(
-      [this.NOTIFICATIONS_STORE, this.META_STORE],
-      "readwrite",
-    );
+      const transaction = this.db!.transaction(
+        [this.NOTIFICATIONS_STORE, this.META_STORE],
+        "readwrite",
+      );
 
-    return new Promise((resolve, reject) => {
-      let completed = 0;
-      const stores = [this.NOTIFICATIONS_STORE, this.META_STORE];
+      return new Promise<void>((resolve, reject) => {
+        let completed = 0;
+        const stores = [this.NOTIFICATIONS_STORE, this.META_STORE];
 
-      stores.forEach((storeName) => {
-        const store = transaction.objectStore(storeName);
-        const request = store.clear();
+        stores.forEach((storeName) => {
+          const store = transaction.objectStore(storeName);
+          const request = store.clear();
 
-        request.onsuccess = () => {
-          completed++;
-          if (completed === stores.length) {
-            resolve();
-          }
-        };
+          request.onsuccess = () => {
+            completed++;
+            if (completed === stores.length) {
+              resolve();
+            }
+          };
 
-        request.onerror = () => reject(request.error);
+          request.onerror = () => reject(request.error);
+        });
       });
-    });
+    }, "clearAll");
   }
 
   // Get storage stats

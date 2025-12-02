@@ -222,7 +222,7 @@ export const ALT_TEXT_RETRY_OPTIONS: RetryOptions = {
 export function safeCreateObjectURL(blob: Blob): string | null {
   try {
     return URL.createObjectURL(blob);
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error("Failed to create object URL:", error);
     return null;
   }
@@ -236,7 +236,7 @@ export function safeRevokeObjectURL(url: string): void {
     if (url && url.startsWith("blob:")) {
       URL.revokeObjectURL(url);
     }
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error("Failed to revoke object URL:", error);
   }
 }

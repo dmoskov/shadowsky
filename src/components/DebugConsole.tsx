@@ -16,10 +16,11 @@ import {
   getStorageHealth,
   getStorageHealthReport,
   onStorageHealthChange,
-  StorageSystemHealth,
+  type StorageSystemHealth,
 } from "../services/data-services-initializer";
 import { NotificationCacheService } from "../services/notification-cache-service";
 import { PostCacheService } from "../services/post-cache-service";
+import type { StorageBackendHealth } from "../services/storage-manager";
 import { NotificationCache } from "../utils/notificationCache";
 import { NotificationObjectCache } from "../utils/notificationObjectCache";
 import { PostCache } from "../utils/postCache";
@@ -46,9 +47,9 @@ export function DebugConsole() {
     typeof StorageManager.getStorageHealth
   > | null>(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [activeTab, setActiveTab] = useState<
-    "cache" | "storage" | "backends"
-  >("cache");
+  const [activeTab, setActiveTab] = useState<"cache" | "storage" | "backends">(
+    "cache",
+  );
   const [indexedDBStats, setIndexedDBStats] = useState<any>(null);
   const [systemHealth, setSystemHealth] = useState<StorageSystemHealth | null>(
     null,
@@ -1148,6 +1149,250 @@ export function DebugConsole() {
                   Refresh
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Backends Health Tab */}
+          {activeTab === "backends" && systemHealth && (
+            <div>
+              {/* Overall Status */}
+              <div
+                style={{
+                  padding: "8px",
+                  background: "var(--bsky-bg-primary)",
+                  borderRadius: "4px",
+                  marginBottom: "12px",
+                  border: `1px solid ${
+                    systemHealth.overall === "healthy"
+                      ? "var(--bsky-success)"
+                      : systemHealth.overall === "degraded"
+                        ? "#f59e0b"
+                        : systemHealth.overall === "failed"
+                          ? "var(--bsky-error)"
+                          : "var(--bsky-border)"
+                  }20`,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginBottom: "4px",
+                  }}
+                >
+                  <Server
+                    size={16}
+                    style={{
+                      color:
+                        systemHealth.overall === "healthy"
+                          ? "var(--bsky-success)"
+                          : systemHealth.overall === "degraded"
+                            ? "#f59e0b"
+                            : systemHealth.overall === "failed"
+                              ? "var(--bsky-error)"
+                              : "var(--bsky-text-secondary)",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color:
+                        systemHealth.overall === "healthy"
+                          ? "var(--bsky-success)"
+                          : systemHealth.overall === "degraded"
+                            ? "#f59e0b"
+                            : systemHealth.overall === "failed"
+                              ? "var(--bsky-error)"
+                              : "var(--bsky-text-secondary)",
+                    }}
+                  >
+                    Overall:{" "}
+                    {systemHealth.overall.charAt(0).toUpperCase() +
+                      systemHealth.overall.slice(1)}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--bsky-text-secondary)",
+                  }}
+                >
+                  Initialization:{" "}
+                  {systemHealth.initializationComplete
+                    ? "Complete"
+                    : "In Progress"}
+                </div>
+                <div
+                  style={{
+                    fontSize: "11px",
+                    color: "var(--bsky-text-tertiary)",
+                    marginTop: "4px",
+                  }}
+                >
+                  Last check:{" "}
+                  {new Date(systemHealth.lastHealthCheck).toLocaleTimeString()}
+                </div>
+              </div>
+
+              {/* Backend Status List */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                  marginBottom: "12px",
+                }}
+              >
+                {Object.entries(systemHealth.backends).map(
+                  ([name, backend]: [string, StorageBackendHealth]) => (
+                    <div
+                      key={name}
+                      style={{
+                        padding: "8px",
+                        background: "var(--bsky-bg-primary)",
+                        borderRadius: "4px",
+                        border: `1px solid ${
+                          backend.status === "healthy"
+                            ? "var(--bsky-success)"
+                            : backend.status === "degraded"
+                              ? "#f59e0b"
+                              : backend.status === "failed"
+                                ? "var(--bsky-error)"
+                                : "var(--bsky-border)"
+                        }30`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          {backend.status === "healthy" && (
+                            <CheckCircle
+                              size={14}
+                              style={{ color: "var(--bsky-success)" }}
+                            />
+                          )}
+                          {backend.status === "degraded" && (
+                            <AlertCircle
+                              size={14}
+                              style={{ color: "#f59e0b" }}
+                            />
+                          )}
+                          {backend.status === "failed" && (
+                            <AlertCircle
+                              size={14}
+                              style={{ color: "var(--bsky-error)" }}
+                            />
+                          )}
+                          {backend.status === "pending" && (
+                            <RefreshCw
+                              size={14}
+                              style={{ color: "var(--bsky-text-secondary)" }}
+                              className="animate-spin"
+                            />
+                          )}
+                          <span
+                            style={{
+                              fontSize: "12px",
+                              color: "var(--bsky-text-primary)",
+                              fontWeight: 500,
+                            }}
+                          >
+                            {name}
+                          </span>
+                        </div>
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color:
+                              backend.status === "healthy"
+                                ? "var(--bsky-success)"
+                                : backend.status === "degraded"
+                                  ? "#f59e0b"
+                                  : backend.status === "failed"
+                                    ? "var(--bsky-error)"
+                                    : "var(--bsky-text-secondary)",
+                          }}
+                        >
+                          {backend.status}
+                        </span>
+                      </div>
+                      {backend.lastError && (
+                        <div
+                          style={{
+                            fontSize: "10px",
+                            color: "var(--bsky-error)",
+                            marginTop: "4px",
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          Error: {backend.lastError}
+                        </div>
+                      )}
+                      {backend.retryCount > 0 && (
+                        <div
+                          style={{
+                            fontSize: "10px",
+                            color: "var(--bsky-text-tertiary)",
+                            marginTop: "2px",
+                          }}
+                        >
+                          Retry count: {backend.retryCount}
+                        </div>
+                      )}
+                    </div>
+                  ),
+                )}
+              </div>
+
+              {/* Full Health Report Button */}
+              <button
+                onClick={() => {
+                  const report = getStorageHealthReport();
+                  debug.log(report);
+                  console.log(report);
+                  alert("Health report logged to console. Press F12 to view.");
+                }}
+                style={{
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  border: "1px solid var(--bsky-border)",
+                  borderRadius: "4px",
+                  background: "transparent",
+                  color: "var(--bsky-text-secondary)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                <Database size={14} />
+                Log Full Report
+              </button>
+            </div>
+          )}
+
+          {activeTab === "backends" && !systemHealth && (
+            <div
+              style={{
+                padding: "16px",
+                textAlign: "center",
+                color: "var(--bsky-text-secondary)",
+              }}
+            >
+              No storage health data available yet.
             </div>
           )}
         </>

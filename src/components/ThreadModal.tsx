@@ -18,16 +18,11 @@ import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
 import type { ThreadSummaryResult } from "../services/anthropic";
 import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { EnhancedComposer } from "./EnhancedComposer";
-import { ThreadBreadcrumb } from "./ThreadBreadcrumb";
 import { ThreadContextBar } from "./ThreadContextBar";
 import { ThreadEngagementAnalytics } from "./ThreadEngagementAnalytics";
 import { ThreadHaikuSummary } from "./ThreadHaikuSummary";
 import { ThreadMinimap } from "./ThreadMinimap";
-import { ThreadNavigationBar } from "./ThreadNavigationBar";
-import {
-  ThreadShortcutsHelp,
-  ThreadShortcutsHintBar,
-} from "./ThreadShortcutsHelp";
+import { ThreadShortcutsHelp } from "./ThreadShortcutsHelp";
 import { ThreadViewer } from "./ThreadViewer";
 
 interface ThreadModalProps {
@@ -1006,51 +1001,7 @@ export function ThreadModal({
 
               {posts.length > 0 && (
                 <>
-                  {/* Thread Breadcrumb - path from root to current */}
-                  <ThreadBreadcrumb
-                    posts={posts}
-                    currentIndex={focusedPostIndex}
-                    onNavigate={handleBreadcrumbNavigate}
-                    className="mb-2"
-                  />
-
-                  {/* Thread Navigation Bar */}
-                  <ThreadNavigationBar
-                    rootPost={rootPostObject}
-                    currentPost={navigationContext?.currentPost}
-                    parentPost={navigationContext?.parentPost}
-                    siblingPosts={navigationContext?.siblingPosts}
-                    totalPosts={posts.length}
-                    currentIndex={focusedPostIndex}
-                    onJumpToRoot={handleJumpToRoot}
-                    onJumpToParent={handleJumpToParent}
-                    onJumpToPrevSibling={handleJumpToPrevSibling}
-                    onJumpToNextSibling={handleJumpToNextSibling}
-                    className="mb-2"
-                  />
-
-                  {/* Keyboard shortcuts hint bar */}
-                  <ThreadShortcutsHintBar
-                    onShowHelp={() => setShowHelpPanel(true)}
-                    showAuthorOnly={showAuthorOnly}
-                    authorHandle={threadAuthorHandle}
-                  />
-
-                  {/* AI Haiku Summary - shown for threads with 5+ posts */}
-                  <ThreadHaikuSummary
-                    posts={posts}
-                    threadUri={rootPost || postUri}
-                    className="mb-4"
-                  />
-
-                  {/* Sentinel element for ThreadContextBar intersection observer */}
-                  <div
-                    ref={contextBarSentinelRef}
-                    className="h-0"
-                    aria-hidden="true"
-                  />
-
-                  {/* Thread Analytics (collapsible) */}
+                  {/* Thread Analytics (collapsible) - only when toggled */}
                   {showAnalytics && (
                     <ThreadEngagementAnalytics
                       posts={posts}
@@ -1074,6 +1025,13 @@ export function ThreadModal({
 
                   {/* Thread Viewer - uses displayPosts for author-only filter */}
                   <ThreadViewer
+                    rootPostObject={rootPostObject}
+                    threadSummary={
+                      <ThreadHaikuSummary
+                        posts={posts}
+                        threadUri={rootPost || postUri}
+                      />
+                    }
                     posts={displayPosts}
                     rootUri={rootPost}
                     highlightUri={highlightedPostUri}

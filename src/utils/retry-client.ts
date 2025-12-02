@@ -65,7 +65,7 @@ class CircuitBreaker {
       const result = await fn();
       this.onSuccess();
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       this.onFailure();
       throw error;
     }
