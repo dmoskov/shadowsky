@@ -69,13 +69,17 @@ const Toggle: React.FC<ToggleProps> = ({
     <button
       role="switch"
       aria-checked={enabled}
+      aria-label={label}
       onClick={() => onChange(!enabled)}
       disabled={disabled}
-      className={`relative h-6 w-11 rounded-full transition-colors ${
+      className={`relative h-6 w-11 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
         disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
       }`}
       style={{
         background: enabled ? "var(--bsky-primary)" : "var(--bsky-bg-tertiary)",
+        // @ts-expect-error CSS custom property for focus ring
+        "--tw-ring-color": "var(--bsky-primary)",
+        "--tw-ring-offset-color": "var(--bsky-bg-secondary)",
       }}
     >
       <span

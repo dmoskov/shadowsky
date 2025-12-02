@@ -1,6 +1,6 @@
 import { debug } from "@bsky/shared";
 import { Bell, BellOff, Loader2, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { usePushNotifications } from "../hooks/usePushNotifications";
 
 export const NotificationPermissionPrompt: React.FC = () => {
@@ -9,6 +9,10 @@ export const NotificationPermissionPrompt: React.FC = () => {
 
   const [show, setShow] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
+
+  // Ref to track the previously focused element for focus restoration
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const enableButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     // Don't show if not supported or already subscribed/denied
@@ -34,11 +38,33 @@ export const NotificationPermissionPrompt: React.FC = () => {
 
     // Show prompt after delay
     const timer = setTimeout(() => {
+      // Capture the currently focused element before showing the dialog
+      previousFocusRef.current = document.activeElement as HTMLElement;
       setShow(true);
     }, 5000);
 
     return () => clearTimeout(timer);
   }, [status, isDismissed, isLoading]);
+
+  // Focus the enable button when the prompt becomes visible
+  useEffect(() => {
+    if (show && enableButtonRef.current) {
+      enableButtonRef.current.focus();
+    }
+  }, [show]);
+
+  // Restore focus to the previously focused element
+  const restoreFocus = useCallback(() => {
+    if (
+      previousFocusRef.current &&
+      typeof previousFocusRef.current.focus === "function"
+    ) {
+      // Check if element is still in the DOM and focusable
+      if (document.body.contains(previousFocusRef.current)) {
+        previousFocusRef.current.focus();
+      }
+    }
+  }, []);
 
   const handleEnable = async () => {
     setIsSubscribing(true);
@@ -48,6 +74,7 @@ export const NotificationPermissionPrompt: React.FC = () => {
       if (success) {
         debug.log("Push notifications enabled successfully");
         setShow(false);
+        restoreFocus();
       }
     } catch (error) {
       debug.error("Error enabling push notifications:", error);
@@ -59,6 +86,7 @@ export const NotificationPermissionPrompt: React.FC = () => {
   const handleDismiss = () => {
     setShow(false);
     setDismissed(true);
+    restoreFocus();
   };
 
   // Don't render if loading, not showing, or not supported
@@ -114,12 +142,16 @@ export const NotificationPermissionPrompt: React.FC = () => {
 
             <div className="flex gap-2">
               <button
+                ref={enableButtonRef}
                 onClick={handleEnable}
                 disabled={isSubscribing}
-                className="flex flex-1 items-center justify-center gap-2 rounded px-3 py-2 text-sm font-medium transition-colors hover:opacity-90 disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded px-3 py-2 text-sm font-medium transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50"
                 style={{
                   background: "var(--bsky-primary)",
                   color: "white",
+                  // @ts-expect-error CSS custom property for focus ring
+                  "--tw-ring-color": "var(--bsky-primary)",
+                  "--tw-ring-offset-color": "var(--bsky-bg-secondary)",
                 }}
                 aria-busy={isSubscribing}
               >
@@ -135,10 +167,13 @@ export const NotificationPermissionPrompt: React.FC = () => {
               <button
                 onClick={handleDismiss}
                 disabled={isSubscribing}
-                className="rounded px-3 py-2 text-sm font-medium transition-colors hover:opacity-80"
+                className="rounded px-3 py-2 text-sm font-medium transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2"
                 style={{
                   background: "var(--bsky-bg-tertiary)",
                   color: "var(--bsky-text-secondary)",
+                  // @ts-expect-error CSS custom property for focus ring
+                  "--tw-ring-color": "var(--bsky-primary)",
+                  "--tw-ring-offset-color": "var(--bsky-bg-secondary)",
                 }}
               >
                 Not Now
@@ -148,8 +183,13 @@ export const NotificationPermissionPrompt: React.FC = () => {
 
           <button
             onClick={handleDismiss}
-            className="text-gray-400 hover:text-gray-600"
+            className="rounded text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2"
             aria-label="Dismiss notification prompt"
+            style={{
+              // @ts-expect-error CSS custom property for focus ring
+              "--tw-ring-color": "var(--bsky-primary)",
+              "--tw-ring-offset-color": "var(--bsky-bg-secondary)",
+            }}
           >
             <X className="h-4 w-4" />
           </button>

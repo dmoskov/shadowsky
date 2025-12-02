@@ -22,6 +22,7 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
+import { ThreadProvider } from "../contexts/ThreadContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
@@ -30,6 +31,12 @@ import { PostActionBar } from "./PostActionBar";
 import { VideoPlayer } from "./VideoPlayer";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { RichText } from "./ui/RichText";
+export {
+  useThread,
+  useThreadComplexity,
+  useThreadNavigation,
+  useThreadUserPosts,
+} from "../contexts/ThreadContext";
 
 const logger = createLogger("ThreadViewer");
 
@@ -39,13 +46,16 @@ async function loadAnthropicService() {
 
 type Post = AppBskyFeedDefs.PostView;
 
+/**
+ * @deprecated Use ThreadNode from ThreadContext instead
+ * Kept for backwards compatibility
+ */
 export interface ThreadNode {
   notification?: Notification;
   post?: Post;
   children: ThreadNode[];
   depth: number;
   isRoot?: boolean;
-  // Added for navigation tracking
   flatIndex?: number;
 }
 
@@ -1492,3 +1502,25 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     </>
   );
 };
+
+/**
+ * ThreadViewerWithContext - Wrapper that provides ThreadContext
+ *
+ * Use this component when you need access to shared thread state across multiple components.
+ * The ThreadViewer component can be used directly for simple cases where context sharing
+ * is not needed.
+ */
+export const ThreadViewerWithContext: React.FC<ThreadViewerProps> = (props) => {
+  return (
+    <ThreadProvider
+      posts={props.posts}
+      notifications={props.notifications}
+      rootUri={props.rootUri}
+      initialHighlightUri={props.highlightUri}
+    >
+      <ThreadViewer {...props} />
+    </ThreadProvider>
+  );
+};
+
+// Hooks re-exported at top of file from "../contexts/ThreadContext"

@@ -811,6 +811,224 @@ Provide specific evidence and quotes to support your analysis. Start directly wi
 });
 
 // =============================================================================
+// Thread Summary Cache (10-minute TTL)
+// =============================================================================
+const threadSummaryCache = new Map();
+const THREAD_SUMMARY_CACHE_TTL = 10 * 60 * 1000; // 10 minutes in milliseconds
+
+function generateCacheKey(posts, format) {
+  // Create a stable cache key from posts content and format
+  const postsHash = crypto
+    .createHash("sha256")
+    .update(JSON.stringify(posts.map((p) => p.text).sort()))
+    .digest("hex")
+    .slice(0, 16);
+  return `${format}:${postsHash}`;
+}
+
+function getCachedSummary(cacheKey) {
+  const cached = threadSummaryCache.get(cacheKey);
+  if (cached && Date.now() - cached.generatedAt < THREAD_SUMMARY_CACHE_TTL) {
+    return cached;
+  }
+  // Clean up expired entry
+  if (cached) {
+    threadSummaryCache.delete(cacheKey);
+  }
+  return null;
+}
+
+function setCachedSummary(cacheKey, result) {
+  threadSummaryCache.set(cacheKey, {
+    ...result,
+    generatedAt: Date.now(),
+  });
+}
+
+// Periodic cache cleanup (every 5 minutes)
+setInterval(
+  () => {
+    const now = Date.now();
+    for (const [key, value] of threadSummaryCache.entries()) {
+      if (now - value.generatedAt >= THREAD_SUMMARY_CACHE_TTL) {
+        threadSummaryCache.delete(key);
+      }
+    }
+  },
+  5 * 60 * 1000,
+);
+
+// Thread summary endpoint
+app.post("/api/thread-summary", async (req, res) => {
+  const { posts, format = "haiku" } = req.body;
+  const forceRefresh = req.query.forceRefresh === "true";
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  // Input validation
+  if (!posts || !Array.isArray(posts)) {
+    return res.status(400).json({ error: "Missing or invalid posts array" });
+  }
+
+  if (posts.length === 0) {
+    return res.status(400).json({ error: "Posts array cannot be empty" });
+  }
+
+  // Maximum 500 posts per request
+  if (posts.length > 500) {
+    return res.status(400).json({
+      error: "Too many posts",
+      details: "Maximum 500 posts per request",
+    });
+  }
+
+  // Validate format
+  const validFormats = ["haiku", "tldr", "keypoints"];
+  if (!validFormats.includes(format)) {
+    return res.status(400).json({
+      error: "Invalid format",
+      details: `Format must be one of: ${validFormats.join(", ")}`,
+    });
+  }
+
+  if (!apiKey) {
+    return res.status(500).json({ error: "Server API key not configured" });
+  }
+
+  // Truncate individual post texts to 10,000 characters
+  const sanitizedPosts = posts.map((post) => ({
+    text:
+      typeof post.text === "string"
+        ? post.text.slice(0, 10000)
+        : String(post.text || "").slice(0, 10000),
+    author: String(post.author || "unknown").slice(0, 200),
+    likes: Number(post.likes) || 0,
+    replies: Number(post.replies) || 0,
+  }));
+
+  // Check cache (unless forceRefresh is true)
+  const cacheKey = generateCacheKey(sanitizedPosts, format);
+  if (!forceRefresh) {
+    const cached = getCachedSummary(cacheKey);
+    if (cached) {
+      return res.json({
+        summary: cached.summary,
+        format: cached.format,
+        metadata: {
+          ...cached.metadata,
+          cached: true,
+          generatedAt: new Date(cached.generatedAt).toISOString(),
+        },
+      });
+    }
+  }
+
+  try {
+    // Build the posts context with author and engagement info
+    const postsContext = sanitizedPosts
+      .map((post, i) => {
+        return `<post index="${i + 1}" author="${post.author}" likes="${post.likes}" replies="${post.replies}">
+${post.text}
+</post>`;
+      })
+      .join("\n\n");
+
+    // Get unique authors
+    const authors = [...new Set(sanitizedPosts.map((p) => p.author))];
+
+    // Build format-specific prompts
+    let formatPrompt;
+    let maxTokens;
+
+    switch (format) {
+      case "haiku":
+        formatPrompt = `Write a haiku (5-7-5 syllable structure) that captures the essence of this thread discussion.
+The haiku should be poetic and insightful, distilling the main theme or emotional core of the conversation.
+Return ONLY the haiku, three lines, no additional text or formatting.`;
+        maxTokens = 100;
+        break;
+      case "tldr":
+        formatPrompt = `Write a concise TL;DR summary of this thread in 1-2 sentences (max 280 characters).
+Focus on the main point or takeaway from the discussion.
+Return ONLY the summary text, no labels or prefixes.`;
+        maxTokens = 150;
+        break;
+      case "keypoints":
+        formatPrompt = `Extract 3-5 key points from this thread discussion.
+Format as a simple bullet list with each point on its own line, starting with "• ".
+Keep each point concise (under 100 characters).
+Return ONLY the bullet points, no headers or additional formatting.`;
+        maxTokens = 300;
+        break;
+      default:
+        formatPrompt = `Write a haiku (5-7-5 syllable structure) that captures the essence of this thread.`;
+        maxTokens = 100;
+    }
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5-20250929",
+        max_tokens: maxTokens,
+        messages: [
+          {
+            role: "user",
+            content: `<system>
+You are a thread summarizer. Analyze the following thread posts and provide a summary in the requested format.
+</system>
+
+<thread>
+${postsContext}
+</thread>
+
+<task>
+${formatPrompt}
+</task>`,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Anthropic API error: ${error}`);
+    }
+
+    const data = await response.json();
+    const summary = data.content[0].text.trim();
+
+    const now = Date.now();
+    const result = {
+      summary,
+      format,
+      metadata: {
+        postCount: sanitizedPosts.length,
+        authors,
+        generatedAt: new Date(now).toISOString(),
+      },
+    };
+
+    // Cache the result
+    setCachedSummary(cacheKey, {
+      summary,
+      format,
+      metadata: result.metadata,
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error generating thread summary:", error);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+});
+
+// =============================================================================
 // Push Notification Subscription Endpoints
 // =============================================================================
 
@@ -1052,6 +1270,9 @@ httpServer.listen(PORT, () => {
   console.log(`  - POST /api/suggest-hashtags  : Suggest hashtags`);
   console.log(
     `  - POST /api/analyze-posts     : Analyze user posts qualitatively`,
+  );
+  console.log(
+    `  - POST /api/thread-summary    : Generate thread summary (haiku/tldr/keypoints)`,
   );
   console.log(`  - POST /api/push-subscription : Register push subscription`);
   console.log(

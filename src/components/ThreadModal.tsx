@@ -2,7 +2,7 @@ import { RichText, type AppBskyFeedDefs } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BarChart3, Loader, X } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
@@ -10,6 +10,7 @@ import { useModalSwipeBack } from "../hooks/useModalSwipeBack";
 import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
 import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { EnhancedComposer } from "./EnhancedComposer";
+import { ThreadBreadcrumb } from "./ThreadBreadcrumb";
 import { ThreadEngagementAnalytics } from "./ThreadEngagementAnalytics";
 import { ThreadNavigationBar } from "./ThreadNavigationBar";
 import { ThreadViewer } from "./ThreadViewer";
@@ -300,6 +301,119 @@ export function ThreadModal({
       }
     }
   }, [navigationContext, posts]);
+
+  // Handler for breadcrumb navigation
+  const handleBreadcrumbNavigate = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < posts.length) {
+        setFocusedPostIndex(index);
+      }
+    },
+    [posts.length],
+  );
+
+  // Ref for composer focus
+  const composerRef = useRef<HTMLDivElement>(null);
+
+  // State for author-only filter mode
+  const [showAuthorOnly, setShowAuthorOnly] = useState(false);
+
+  // Get the thread author (root post author) for filtering
+  const threadAuthorDid = rootPostObject?.author?.did;
+  const threadAuthorHandle = rootPostObject?.author?.handle;
+
+  // Find next branch point (a post with multiple children)
+  const handleJumpToNextBranch = useCallback(() => {
+    // Find the first post after current that has multiple replies
+    for (let i = focusedPostIndex + 1; i < posts.length; i++) {
+      const post = posts[i];
+      // Check if this post has multiple direct replies
+      const childCount = posts.filter((p) => {
+        const record = p.record as { reply?: { parent?: { uri: string } } };
+        return record?.reply?.parent?.uri === post.uri;
+      }).length;
+      if (childCount > 1) {
+        setFocusedPostIndex(i);
+        return;
+      }
+    }
+    // Wrap around to find from beginning
+    for (let i = 0; i < focusedPostIndex; i++) {
+      const post = posts[i];
+      const childCount = posts.filter((p) => {
+        const record = p.record as { reply?: { parent?: { uri: string } } };
+        return record?.reply?.parent?.uri === post.uri;
+      }).length;
+      if (childCount > 1) {
+        setFocusedPostIndex(i);
+        return;
+      }
+    }
+  }, [posts, focusedPostIndex]);
+
+  // Handle toggle author-only view
+  const handleToggleAuthorOnly = useCallback(() => {
+    setShowAuthorOnly((prev) => !prev);
+  }, []);
+
+  // Focus reply composer
+  const handleFocusReply = useCallback(() => {
+    // Open reply to currently focused post
+    if (posts.length > 0) {
+      const currentPost = posts[focusedPostIndex] || posts[0];
+      if (currentPost) {
+        setReplyState({
+          isReplying: true,
+          replyToPost: currentPost,
+        });
+        // Focus composer after state update
+        setTimeout(() => {
+          composerRef.current?.querySelector("textarea")?.focus();
+        }, 100);
+      }
+    }
+  }, [posts, focusedPostIndex]);
+
+  // Navigate down in thread
+  const handleNavigateDown = useCallback(() => {
+    if (focusedPostIndex < posts.length - 1) {
+      setFocusedPostIndex(focusedPostIndex + 1);
+    }
+  }, [focusedPostIndex, posts.length]);
+
+  // Navigate up in thread
+  const handleNavigateUp = useCallback(() => {
+    if (focusedPostIndex > 0) {
+      setFocusedPostIndex(focusedPostIndex - 1);
+    }
+  }, [focusedPostIndex]);
+
+  // Thread keyboard shortcuts
+  const { shortcuts, showHelpPanel, setShowHelpPanel } =
+    useThreadKeyboardShortcuts({
+      enabled: posts.length > 0,
+      authorDid: threadAuthorDid,
+      actions: {
+        jumpToSummary: handleJumpToRoot,
+        jumpToNextBranch: handleJumpToNextBranch,
+        jumpToOriginalPost: handleJumpToRoot,
+        toggleAuthorOnlyView: handleToggleAuthorOnly,
+        jumpToParent: handleJumpToParent,
+        jumpToPrevSibling: handleJumpToPrevSibling,
+        jumpToNextSibling: handleJumpToNextSibling,
+        navigateUp: handleNavigateUp,
+        navigateDown: handleNavigateDown,
+        focusReply: handleFocusReply,
+      },
+    });
+
+  // Filter posts for author-only view
+  const displayPosts = useMemo(() => {
+    if (!showAuthorOnly || !threadAuthorDid) {
+      return posts;
+    }
+    return posts.filter((p) => p.author.did === threadAuthorDid);
+  }, [posts, showAuthorOnly, threadAuthorDid]);
 
   // Find the last post in the user's own thread continuation (deepest post by user in direct reply chain)
   const findLastUserPost = useCallback(
@@ -780,6 +894,14 @@ export function ThreadModal({
 
               {posts.length > 0 && (
                 <>
+                  {/* Thread Breadcrumb - path from root to current */}
+                  <ThreadBreadcrumb
+                    posts={posts}
+                    currentIndex={focusedPostIndex}
+                    onNavigate={handleBreadcrumbNavigate}
+                    className="mb-2"
+                  />
+
                   {/* Thread Navigation Bar */}
                   <ThreadNavigationBar
                     rootPost={rootPostObject}
@@ -792,7 +914,14 @@ export function ThreadModal({
                     onJumpToParent={handleJumpToParent}
                     onJumpToPrevSibling={handleJumpToPrevSibling}
                     onJumpToNextSibling={handleJumpToNextSibling}
-                    className="mb-4"
+                    className="mb-2"
+                  />
+
+                  {/* Keyboard shortcuts hint bar */}
+                  <ThreadShortcutsHintBar
+                    onShowHelp={() => setShowHelpPanel(true)}
+                    showAuthorOnly={showAuthorOnly}
+                    authorHandle={threadAuthorHandle}
                   />
 
                   {/* Thread Analytics (collapsible) */}
@@ -817,9 +946,9 @@ export function ThreadModal({
                     />
                   )}
 
-                  {/* Thread Viewer */}
+                  {/* Thread Viewer - uses displayPosts for author-only filter */}
                   <ThreadViewer
-                    posts={posts}
+                    posts={displayPosts}
                     rootUri={rootPost}
                     highlightUri={highlightedPostUri}
                     showUnreadIndicators={false}
@@ -963,6 +1092,13 @@ export function ThreadModal({
             )}
         </div>
       </div>
+
+      {/* Keyboard shortcuts help panel */}
+      <ThreadShortcutsHelp
+        shortcuts={shortcuts}
+        isOpen={showHelpPanel}
+        onClose={() => setShowHelpPanel(false)}
+      />
     </>,
     document.body,
   );

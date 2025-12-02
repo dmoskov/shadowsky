@@ -19,12 +19,23 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
+import { ThreadProvider } from "../contexts/ThreadContext";
+export {
+  useCollapsedNodes,
+  useThread,
+  useThreadComplexity,
+  useThreadNavigation,
+} from "../contexts/ThreadContext";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { RichText } from "./ui/RichText";
 
 type Post = AppBskyFeedDefs.PostView;
 
+/**
+ * @deprecated Use ThreadNode from ThreadContext instead
+ * Kept for backwards compatibility
+ */
 export interface ThreadNode {
   post: Post;
   children: ThreadNode[];
@@ -36,6 +47,10 @@ export interface ThreadNode {
   totalSiblings?: number;
 }
 
+/**
+ * @deprecated Use ThreadMetrics from ThreadContext instead
+ * Kept for backwards compatibility
+ */
 export interface ThreadStats {
   totalPosts: number;
   totalReplies: number;
@@ -877,5 +892,27 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
         )}
       </div>
     </div>
+  );
+};
+
+/**
+ * ThreadTreeViewWithContext - Wrapper that provides ThreadContext
+ *
+ * Use this component when you need access to shared thread state across multiple components.
+ * The ThreadTreeView component can be used directly for simple cases where context sharing
+ * is not needed.
+ */
+export const ThreadTreeViewWithContext: React.FC<ThreadTreeViewProps> = (
+  props,
+) => {
+  return (
+    <ThreadProvider
+      posts={props.posts}
+      rootUri={props.rootUri}
+      initialHighlightUri={props.highlightUri}
+      initialFoldDepth={props.initialFoldDepth}
+    >
+      <ThreadTreeView {...props} />
+    </ThreadProvider>
   );
 };

@@ -1,6 +1,7 @@
 const WebSocket = require("ws");
 const jwt = require("jsonwebtoken");
 const { BskyAgent } = require("@atproto/api");
+const pushNotificationService = require("./push-notification-service");
 
 /**
  * WebSocket Server for Real-Time Notifications
@@ -11,6 +12,7 @@ const { BskyAgent } = require("@atproto/api");
  * - User connection management (supports multiple connections per user)
  * - Heartbeat/ping-pong keep-alive mechanism
  * - AT Protocol integration for notification polling
+ * - Web Push notification delivery when browser is closed
  * - Graceful error handling and reconnection support
  */
 
@@ -21,6 +23,7 @@ class WebSocketNotificationServer {
     this.userAgents = new Map(); // Map<userDid, BskyAgent>
     this.userPollingIntervals = new Map(); // Map<userDid, NodeJS.Timeout>
     this.userLastSeenCursors = new Map(); // Map<userDid, string>
+    this.usersWithPushEnabled = new Map(); // Map<userDid, boolean> - Track who has push subscriptions
 
     this.config = {
       heartbeatInterval: options.heartbeatInterval || 30000,
@@ -75,6 +78,9 @@ class WebSocketNotificationServer {
       this.userConnections.set(userDid, new Set());
     }
     this.userConnections.get(userDid).add(ws);
+
+    // Register user as active (disables push notifications while connected)
+    pushNotificationService.registerActiveUser(userDid);
 
     // Store agent for this user if not already present
     if (!this.userAgents.has(userDid)) {
@@ -155,6 +161,9 @@ class WebSocketNotificationServer {
       if (connections.size === 0) {
         this.userConnections.delete(userDid);
         this.userAgents.delete(userDid);
+
+        // Unregister user as active (enables push notifications when disconnected)
+        pushNotificationService.unregisterActiveUser(userDid);
 
         // Stop polling for this user
         const interval = this.userPollingIntervals.get(userDid);
