@@ -147,8 +147,10 @@ export function trackError(
     getErrorMonitor().recordError(error, {
       operation: context || "unknown",
       component: "error-handler",
-      category: monitorCategory as import("../utils/error-monitoring").ErrorCategory,
-      severity: category === "auth" || category === "network" ? "error" : "warning",
+      category:
+        monitorCategory as import("../utils/error-monitoring").ErrorCategory,
+      severity:
+        category === "auth" || category === "network" ? "error" : "warning",
       metadata,
     });
   });

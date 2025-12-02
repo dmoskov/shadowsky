@@ -13,14 +13,14 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { resetAllCircuitBreakers } from "../utils/storage-retry";
 import {
-  OfflineFeedItem,
   OfflineDMConversation,
   OfflineDMMessage,
-  OfflineThreadSummary,
+  OfflineFeedItem,
   OfflineStorageDB,
+  OfflineThreadSummary,
 } from "./offline-storage-db";
-import { resetAllCircuitBreakers } from "../utils/storage-retry";
 
 // Helper to create a fresh OfflineStorageDB instance for each test
 function createFreshDB(): OfflineStorageDB {
@@ -102,7 +102,8 @@ function createMockThreadSummary(
 ): Omit<OfflineThreadSummary, "_offlineCachedAt" | "_lastAccessedAt"> {
   return {
     threadUri: `at://did:plc:test/app.bsky.feed.post/${Date.now()}`,
-    summary: "Spring breeze flows\nThrough cherry blossoms dancing\nPeace in every word",
+    summary:
+      "Spring breeze flows\nThrough cherry blossoms dancing\nPeace in every word",
     format: "haiku",
     metadata: {
       postCount: 5,
@@ -272,9 +273,7 @@ describe("OfflineStorageDB", () => {
         createMockFeedItem({ uri: "at://test/timeline1" }),
         createMockFeedItem({ uri: "at://test/timeline2" }),
       ];
-      const authorItems = [
-        createMockFeedItem({ uri: "at://test/author1" }),
-      ];
+      const authorItems = [createMockFeedItem({ uri: "at://test/author1" })];
 
       await db.saveFeedItems(timelineItems, "timeline");
       await db.saveFeedItems(authorItems, "author");
@@ -288,9 +287,18 @@ describe("OfflineStorageDB", () => {
 
     it("should return feed items sorted by indexedAt descending", async () => {
       const items = [
-        createMockFeedItem({ uri: "at://test/1", indexedAt: "2024-01-01T00:00:00Z" }),
-        createMockFeedItem({ uri: "at://test/2", indexedAt: "2024-01-03T00:00:00Z" }),
-        createMockFeedItem({ uri: "at://test/3", indexedAt: "2024-01-02T00:00:00Z" }),
+        createMockFeedItem({
+          uri: "at://test/1",
+          indexedAt: "2024-01-01T00:00:00Z",
+        }),
+        createMockFeedItem({
+          uri: "at://test/2",
+          indexedAt: "2024-01-03T00:00:00Z",
+        }),
+        createMockFeedItem({
+          uri: "at://test/3",
+          indexedAt: "2024-01-02T00:00:00Z",
+        }),
       ];
 
       await db.saveFeedItems(items, "timeline");
@@ -380,9 +388,18 @@ describe("OfflineStorageDB", () => {
 
     it("should return conversations sorted by lastMessageAt descending", async () => {
       const convos = [
-        createMockConversation({ id: "convo1", lastMessageAt: "2024-01-01T00:00:00Z" }),
-        createMockConversation({ id: "convo2", lastMessageAt: "2024-01-03T00:00:00Z" }),
-        createMockConversation({ id: "convo3", lastMessageAt: "2024-01-02T00:00:00Z" }),
+        createMockConversation({
+          id: "convo1",
+          lastMessageAt: "2024-01-01T00:00:00Z",
+        }),
+        createMockConversation({
+          id: "convo2",
+          lastMessageAt: "2024-01-03T00:00:00Z",
+        }),
+        createMockConversation({
+          id: "convo3",
+          lastMessageAt: "2024-01-02T00:00:00Z",
+        }),
       ];
 
       await db.saveConversations(convos);
@@ -541,8 +558,14 @@ describe("OfflineStorageDB", () => {
 
     it("should get all summaries without filter", async () => {
       const summaries = [
-        createMockThreadSummary({ threadUri: "at://test/1", source: "bookmarked" }),
-        createMockThreadSummary({ threadUri: "at://test/2", source: "followed" }),
+        createMockThreadSummary({
+          threadUri: "at://test/1",
+          source: "bookmarked",
+        }),
+        createMockThreadSummary({
+          threadUri: "at://test/2",
+          source: "followed",
+        }),
         createMockThreadSummary({ threadUri: "at://test/3", source: "viewed" }),
       ];
 
@@ -556,9 +579,18 @@ describe("OfflineStorageDB", () => {
 
     it("should filter summaries by source", async () => {
       const summaries = [
-        createMockThreadSummary({ threadUri: "at://test/1", source: "bookmarked" }),
-        createMockThreadSummary({ threadUri: "at://test/2", source: "bookmarked" }),
-        createMockThreadSummary({ threadUri: "at://test/3", source: "followed" }),
+        createMockThreadSummary({
+          threadUri: "at://test/1",
+          source: "bookmarked",
+        }),
+        createMockThreadSummary({
+          threadUri: "at://test/2",
+          source: "bookmarked",
+        }),
+        createMockThreadSummary({
+          threadUri: "at://test/3",
+          source: "followed",
+        }),
       ];
 
       for (const s of summaries) {
@@ -618,7 +650,8 @@ describe("OfflineStorageDB", () => {
 
       const updatedSummary = {
         ...summary,
-        summary: "New haiku text\nDifferent words flowing here\nUpdated version",
+        summary:
+          "New haiku text\nDifferent words flowing here\nUpdated version",
       };
       await db.saveThreadSummary(updatedSummary);
 

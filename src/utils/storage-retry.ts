@@ -15,8 +15,8 @@
  * @module storage-retry
  */
 
+import { recordStorageError, recordStorageOperation } from "./error-monitoring";
 import { createLogger } from "./logger";
-import { recordStorageOperation, recordStorageError } from "./error-monitoring";
 
 const logger = createLogger("StorageRetry");
 
@@ -496,7 +496,8 @@ export async function withStorageRetry<T>(
         });
         recordStorageError(error, operationName, {
           attempts: attempt + 1,
-          circuitBreakerState: circuitBreaker?.getState() ?? CircuitState.CLOSED,
+          circuitBreakerState:
+            circuitBreaker?.getState() ?? CircuitState.CLOSED,
         });
 
         throw error;

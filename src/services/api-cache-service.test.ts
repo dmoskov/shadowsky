@@ -26,7 +26,6 @@ import {
   apiCacheService,
   CACHE_LIMITS,
   CACHE_NAMES,
-  type CacheType,
 } from "./api-cache-service";
 
 // Mock the logger to suppress output during tests
@@ -50,7 +49,7 @@ vi.mock("../utils/storage-retry", () => ({
 function createMockResponse(
   body: string | object,
   status = 200,
-  headers: Record<string, string> = {}
+  headers: Record<string, string> = {},
 ): Response {
   const bodyString = typeof body === "string" ? body : JSON.stringify(body);
   return new Response(bodyString, {
@@ -156,7 +155,7 @@ describe("APICacheService", () => {
     it("should throw error when accessing DB without init", async () => {
       // @ts-expect-error - accessing private method for testing
       expect(() => apiCacheService.ensureDB()).toThrow(
-        "APICacheService not initialized. Call init() first."
+        "APICacheService not initialized. Call init() first.",
       );
     });
   });
@@ -177,7 +176,7 @@ describe("APICacheService", () => {
 
         const cached = await apiCacheService.getCachedResponse(
           url,
-          CACHE_NAMES.API
+          CACHE_NAMES.API,
         );
         expect(cached).toBeDefined();
         expect(cached?.status).toBe(200);
@@ -192,7 +191,7 @@ describe("APICacheService", () => {
 
         // @ts-expect-error - accessing private property for testing
         const entry = await apiCacheService.db.cacheEntries.get(
-          `${CACHE_NAMES.API}:${url}`
+          `${CACHE_NAMES.API}:${url}`,
         );
         expect(entry?.createdAt).toBeGreaterThanOrEqual(beforeCache);
         expect(entry?.lastAccessedAt).toBeGreaterThanOrEqual(beforeCache);
@@ -200,17 +199,15 @@ describe("APICacheService", () => {
 
       it("should store response headers correctly", async () => {
         const url = "https://api.example.com/headers-test";
-        const response = createMockResponse(
-          { data: "headers" },
-          200,
-          { "X-Custom-Header": "test-value" }
-        );
+        const response = createMockResponse({ data: "headers" }, 200, {
+          "X-Custom-Header": "test-value",
+        });
 
         await apiCacheService.cacheResponse(CACHE_NAMES.API, url, response);
 
         const cached = await apiCacheService.getCachedResponse(
           url,
-          CACHE_NAMES.API
+          CACHE_NAMES.API,
         );
         expect(cached?.headers.get("X-Custom-Header")).toBe("test-value");
       });
@@ -225,7 +222,7 @@ describe("APICacheService", () => {
 
         const cached = await apiCacheService.getCachedResponse(
           url,
-          CACHE_NAMES.API
+          CACHE_NAMES.API,
         );
         const body = await cached?.json();
         expect(body.version).toBe(2);
@@ -237,15 +234,19 @@ describe("APICacheService", () => {
         const chatResponse = createMockResponse({ type: "chat" });
 
         await apiCacheService.cacheResponse(CACHE_NAMES.API, url, apiResponse);
-        await apiCacheService.cacheResponse(CACHE_NAMES.CHAT, url, chatResponse);
+        await apiCacheService.cacheResponse(
+          CACHE_NAMES.CHAT,
+          url,
+          chatResponse,
+        );
 
         const cachedApi = await apiCacheService.getCachedResponse(
           url,
-          CACHE_NAMES.API
+          CACHE_NAMES.API,
         );
         const cachedChat = await apiCacheService.getCachedResponse(
           url,
-          CACHE_NAMES.CHAT
+          CACHE_NAMES.CHAT,
         );
 
         const apiBody = await cachedApi?.json();
@@ -260,7 +261,7 @@ describe("APICacheService", () => {
       it("should return undefined for non-existent entry", async () => {
         const cached = await apiCacheService.getCachedResponse(
           "https://api.example.com/nonexistent",
-          CACHE_NAMES.API
+          CACHE_NAMES.API,
         );
         expect(cached).toBeUndefined();
       });
@@ -273,7 +274,7 @@ describe("APICacheService", () => {
 
         // @ts-expect-error - accessing private property for testing
         const entryBefore = await apiCacheService.db.cacheEntries.get(
-          `${CACHE_NAMES.API}:${url}`
+          `${CACHE_NAMES.API}:${url}`,
         );
         const accessedBefore = entryBefore?.lastAccessedAt;
 
@@ -284,7 +285,7 @@ describe("APICacheService", () => {
 
         // @ts-expect-error - accessing private property for testing
         const entryAfter = await apiCacheService.db.cacheEntries.get(
-          `${CACHE_NAMES.API}:${url}`
+          `${CACHE_NAMES.API}:${url}`,
         );
         expect(entryAfter?.lastAccessedAt).toBeGreaterThan(accessedBefore!);
       });
@@ -308,14 +309,14 @@ describe("APICacheService", () => {
         await apiCacheService.cacheResponse(CACHE_NAMES.API, url, response);
         const result = await apiCacheService.deleteCachedEntry(
           url,
-          CACHE_NAMES.API
+          CACHE_NAMES.API,
         );
 
         expect(result).toBe(true);
 
         const cached = await apiCacheService.getCachedResponse(
           url,
-          CACHE_NAMES.API
+          CACHE_NAMES.API,
         );
         expect(cached).toBeUndefined();
       });
@@ -323,7 +324,7 @@ describe("APICacheService", () => {
       it("should return true even for non-existent entry", async () => {
         const result = await apiCacheService.deleteCachedEntry(
           "https://nonexistent.com",
-          CACHE_NAMES.API
+          CACHE_NAMES.API,
         );
         expect(result).toBe(true);
       });
@@ -343,7 +344,7 @@ describe("APICacheService", () => {
       it("should return false for non-existent entry", async () => {
         const isCached = await apiCacheService.isCached(
           "https://nonexistent.com",
-          CACHE_NAMES.API
+          CACHE_NAMES.API,
         );
         expect(isCached).toBe(false);
       });
@@ -367,23 +368,23 @@ describe("APICacheService", () => {
         await apiCacheService.cacheResponse(
           CACHE_NAMES.API,
           url1,
-          createMockResponse({ data: "1" })
+          createMockResponse({ data: "1" }),
         );
         await apiCacheService.cacheResponse(
           CACHE_NAMES.CHAT,
           url2,
-          createMockResponse({ data: "2" })
+          createMockResponse({ data: "2" }),
         );
 
         await apiCacheService.clearCache(CACHE_NAMES.API);
 
         const cached1 = await apiCacheService.getCachedResponse(
           url1,
-          CACHE_NAMES.API
+          CACHE_NAMES.API,
         );
         const cached2 = await apiCacheService.getCachedResponse(
           url2,
-          CACHE_NAMES.CHAT
+          CACHE_NAMES.CHAT,
         );
 
         expect(cached1).toBeUndefined();
@@ -404,7 +405,7 @@ describe("APICacheService", () => {
           await apiCacheService.cacheResponse(
             type,
             url,
-            createMockResponse({ data: url })
+            createMockResponse({ data: url }),
           );
         }
 
@@ -433,20 +434,23 @@ describe("APICacheService", () => {
 
       // Manually set createdAt to past (expired)
       // @ts-expect-error - accessing private property for testing
-      await apiCacheService.db.cacheEntries.update(`${CACHE_NAMES.API}:${url}`, {
-        createdAt: Date.now() - CACHE_LIMITS.API_MAX_AGE_MS - 1000,
-      });
+      await apiCacheService.db.cacheEntries.update(
+        `${CACHE_NAMES.API}:${url}`,
+        {
+          createdAt: Date.now() - CACHE_LIMITS.API_MAX_AGE_MS - 1000,
+        },
+      );
 
       const cached = await apiCacheService.getCachedResponse(
         url,
-        CACHE_NAMES.API
+        CACHE_NAMES.API,
       );
       expect(cached).toBeUndefined();
 
       // Entry should be deleted
       // @ts-expect-error - accessing private property for testing
       const entry = await apiCacheService.db.cacheEntries.get(
-        `${CACHE_NAMES.API}:${url}`
+        `${CACHE_NAMES.API}:${url}`,
       );
       expect(entry).toBeUndefined();
     });
@@ -459,7 +463,7 @@ describe("APICacheService", () => {
 
       const cached = await apiCacheService.getCachedResponse(
         url,
-        CACHE_NAMES.API
+        CACHE_NAMES.API,
       );
       expect(cached).toBeDefined();
     });
@@ -472,9 +476,12 @@ describe("APICacheService", () => {
 
       // Manually set createdAt to past (expired)
       // @ts-expect-error - accessing private property for testing
-      await apiCacheService.db.cacheEntries.update(`${CACHE_NAMES.API}:${url}`, {
-        createdAt: Date.now() - CACHE_LIMITS.API_MAX_AGE_MS - 1000,
-      });
+      await apiCacheService.db.cacheEntries.update(
+        `${CACHE_NAMES.API}:${url}`,
+        {
+          createdAt: Date.now() - CACHE_LIMITS.API_MAX_AGE_MS - 1000,
+        },
+      );
 
       const isCached = await apiCacheService.isCached(url, CACHE_NAMES.API);
       expect(isCached).toBe(false);
@@ -488,13 +495,16 @@ describe("APICacheService", () => {
 
       // Manually set createdAt to past
       // @ts-expect-error - accessing private property for testing
-      await apiCacheService.db.cacheEntries.update(`${CACHE_NAMES.API}:${url}`, {
-        createdAt: Date.now() - CACHE_LIMITS.API_MAX_AGE_MS - 1000,
-      });
+      await apiCacheService.db.cacheEntries.update(
+        `${CACHE_NAMES.API}:${url}`,
+        {
+          createdAt: Date.now() - CACHE_LIMITS.API_MAX_AGE_MS - 1000,
+        },
+      );
 
       const result = await apiCacheService.evictOldEntries(
         CACHE_NAMES.API,
-        CACHE_LIMITS.API_MAX_AGE_MS
+        CACHE_LIMITS.API_MAX_AGE_MS,
       );
 
       expect(result.entriesRemoved).toBe(1);
@@ -516,7 +526,7 @@ describe("APICacheService", () => {
         await apiCacheService.cacheResponse(
           CACHE_NAMES.API,
           url,
-          createMockResponse({ index: i })
+          createMockResponse({ index: i }),
         );
         // Set different lastAccessedAt times
         // @ts-expect-error - accessing private property for testing
@@ -524,7 +534,7 @@ describe("APICacheService", () => {
           `${CACHE_NAMES.API}:${url}`,
           {
             lastAccessedAt: Date.now() - (5 - i) * 1000, // Older entries have smaller timestamps
-          }
+          },
         );
       }
 
@@ -536,15 +546,15 @@ describe("APICacheService", () => {
       // Oldest entries (0 and 1) should be removed
       const cached0 = await apiCacheService.getCachedResponse(
         "https://api.example.com/lru-0",
-        CACHE_NAMES.API
+        CACHE_NAMES.API,
       );
       const cached1 = await apiCacheService.getCachedResponse(
         "https://api.example.com/lru-1",
-        CACHE_NAMES.API
+        CACHE_NAMES.API,
       );
       const cached4 = await apiCacheService.getCachedResponse(
         "https://api.example.com/lru-4",
-        CACHE_NAMES.API
+        CACHE_NAMES.API,
       );
 
       expect(cached0).toBeUndefined();
@@ -558,7 +568,7 @@ describe("APICacheService", () => {
         await apiCacheService.cacheResponse(
           CACHE_NAMES.API,
           url,
-          createMockResponse({ index: i })
+          createMockResponse({ index: i }),
         );
       }
 
@@ -575,7 +585,7 @@ describe("APICacheService", () => {
         await apiCacheService.cacheResponse(
           CACHE_NAMES.API,
           url,
-          createMockResponse({ data: largeData, index: i })
+          createMockResponse({ data: largeData, index: i }),
         );
         // Set different lastAccessedAt times
         // @ts-expect-error - accessing private property for testing
@@ -583,7 +593,7 @@ describe("APICacheService", () => {
           `${CACHE_NAMES.API}:${url}`,
           {
             lastAccessedAt: Date.now() - (3 - i) * 1000,
-          }
+          },
         );
       }
 
@@ -600,7 +610,7 @@ describe("APICacheService", () => {
         await apiCacheService.cacheResponse(
           CACHE_NAMES.API,
           url,
-          createMockResponse({ index: i })
+          createMockResponse({ index: i }),
         );
       }
 
@@ -666,7 +676,7 @@ describe("APICacheService", () => {
       expect(callback).toHaveBeenCalledWith(
         expect.objectContaining({
           isOnline: expect.any(Boolean),
-        })
+        }),
       );
     });
 
@@ -686,7 +696,7 @@ describe("APICacheService", () => {
       await apiCacheService.cacheResponse(
         CACHE_NAMES.API,
         "https://api.bsky.app/xrpc/app.bsky.feed.getTimeline",
-        createMockResponse({ feed: [] })
+        createMockResponse({ feed: [] }),
       );
 
       const available = await apiCacheService.hasCachedFeeds();
@@ -703,7 +713,7 @@ describe("APICacheService", () => {
       await apiCacheService.cacheResponse(
         CACHE_NAMES.CHAT,
         "https://api.bsky.app/xrpc/chat.bsky.convo.listConvos",
-        createMockResponse({ convos: [] })
+        createMockResponse({ convos: [] }),
       );
 
       const available = await apiCacheService.hasCachedDMs();
@@ -739,7 +749,7 @@ describe("APICacheService", () => {
         await apiCacheService.cacheResponse(
           CACHE_NAMES.API,
           `https://api.example.com/stats-${i}`,
-          createMockResponse({ index: i })
+          createMockResponse({ index: i }),
         );
       }
 
@@ -754,7 +764,7 @@ describe("APICacheService", () => {
       await apiCacheService.cacheResponse(
         CACHE_NAMES.API,
         "https://api.example.com/size-test",
-        createMockResponse({ data: largeData })
+        createMockResponse({ data: largeData }),
       );
 
       const stats = await apiCacheService.getCacheStats();
@@ -767,12 +777,12 @@ describe("APICacheService", () => {
       await apiCacheService.cacheResponse(
         CACHE_NAMES.API,
         "https://api.example.com/total1",
-        createMockResponse({ data: "test1" })
+        createMockResponse({ data: "test1" }),
       );
       await apiCacheService.cacheResponse(
         CACHE_NAMES.CHAT,
         "https://api.example.com/total2",
-        createMockResponse({ data: "test2" })
+        createMockResponse({ data: "test2" }),
       );
 
       const totalSize = await apiCacheService.getTotalCacheSize();
@@ -797,8 +807,8 @@ describe("APICacheService", () => {
         apiCacheService.cacheResponse(
           CACHE_NAMES.API,
           `https://api.example.com/concurrent-${i}`,
-          createMockResponse({ index: i })
-        )
+          createMockResponse({ index: i }),
+        ),
       );
 
       await Promise.all(writes);
@@ -807,7 +817,7 @@ describe("APICacheService", () => {
       for (let i = 0; i < 10; i++) {
         const cached = await apiCacheService.getCachedResponse(
           `https://api.example.com/concurrent-${i}`,
-          CACHE_NAMES.API
+          CACHE_NAMES.API,
         );
         expect(cached).toBeDefined();
       }
@@ -819,8 +829,8 @@ describe("APICacheService", () => {
         apiCacheService.cacheResponse(
           CACHE_NAMES.API,
           url,
-          createMockResponse({ version: i })
-        )
+          createMockResponse({ version: i }),
+        ),
       );
 
       await Promise.all(writes);
@@ -838,7 +848,7 @@ describe("APICacheService", () => {
       await apiCacheService.cacheResponse(
         CACHE_NAMES.API,
         url,
-        createMockResponse({ initial: true })
+        createMockResponse({ initial: true }),
       );
 
       // Concurrent reads and writes
@@ -847,7 +857,7 @@ describe("APICacheService", () => {
         apiCacheService.cacheResponse(
           CACHE_NAMES.API,
           url,
-          createMockResponse({ updated: true })
+          createMockResponse({ updated: true }),
         ),
         apiCacheService.getCachedResponse(url, CACHE_NAMES.API),
         apiCacheService.isCached(url, CACHE_NAMES.API),
@@ -865,7 +875,7 @@ describe("APICacheService", () => {
         await apiCacheService.cacheResponse(
           CACHE_NAMES.API,
           `https://api.example.com/evict-read-${i}`,
-          createMockResponse({ index: i })
+          createMockResponse({ index: i }),
         );
       }
 
@@ -874,11 +884,11 @@ describe("APICacheService", () => {
         apiCacheService.evictBySize(CACHE_NAMES.API, 3),
         apiCacheService.getCachedResponse(
           "https://api.example.com/evict-read-4",
-          CACHE_NAMES.API
+          CACHE_NAMES.API,
         ),
         apiCacheService.getCachedResponse(
           "https://api.example.com/evict-read-3",
-          CACHE_NAMES.API
+          CACHE_NAMES.API,
         ),
       ];
 
@@ -907,8 +917,8 @@ describe("APICacheService", () => {
         apiCacheService.cacheResponse(
           CACHE_NAMES.API,
           "https://api.example.com/bad",
-          badResponse
-        )
+          badResponse,
+        ),
       ).resolves.toBeUndefined();
     });
 
@@ -924,11 +934,11 @@ describe("APICacheService", () => {
           update: () => Promise.reject(new Error("DB error")),
           delete: () => Promise.reject(new Error("DB error")),
         },
-      };
+      } as unknown;
 
       const result = await apiCacheService.getCachedResponse(
         "https://api.example.com/error",
-        CACHE_NAMES.API
+        CACHE_NAMES.API,
       );
       expect(result).toBeUndefined();
 
@@ -952,7 +962,7 @@ describe("APICacheService", () => {
             }),
           }),
         },
-      };
+      } as unknown;
 
       const result = await apiCacheService.hasCachedFeeds();
       expect(result).toBe(false);
@@ -976,7 +986,7 @@ describe("APICacheService", () => {
             }),
           }),
         },
-      };
+      } as unknown;
 
       const result = await apiCacheService.hasCachedDMs();
       expect(result).toBe(false);
@@ -994,11 +1004,11 @@ describe("APICacheService", () => {
         cacheEntries: {
           get: () => Promise.reject(new Error("DB error")),
         },
-      };
+      } as unknown;
 
       const result = await apiCacheService.isCached(
         "https://api.example.com/error",
-        CACHE_NAMES.API
+        CACHE_NAMES.API,
       );
       expect(result).toBe(false);
 
@@ -1009,18 +1019,22 @@ describe("APICacheService", () => {
     it("should handle deleteCachedEntry errors gracefully", async () => {
       // Mock withIndexedDBRetry to throw
       const { withIndexedDBRetry } = await import("../utils/storage-retry");
-      (withIndexedDBRetry as Mock).mockRejectedValueOnce(new Error("Delete failed"));
+      (withIndexedDBRetry as Mock).mockRejectedValueOnce(
+        new Error("Delete failed"),
+      );
 
       const result = await apiCacheService.deleteCachedEntry(
         "https://api.example.com/delete-error",
-        CACHE_NAMES.API
+        CACHE_NAMES.API,
       );
       expect(result).toBe(false);
     });
 
     it("should handle clearCache errors gracefully", async () => {
       const { withIndexedDBRetry } = await import("../utils/storage-retry");
-      (withIndexedDBRetry as Mock).mockRejectedValueOnce(new Error("Clear failed"));
+      (withIndexedDBRetry as Mock).mockRejectedValueOnce(
+        new Error("Clear failed"),
+      );
 
       const result = await apiCacheService.clearCache(CACHE_NAMES.API);
       expect(result).toBe(false);
@@ -1029,7 +1043,7 @@ describe("APICacheService", () => {
     it("should handle clearAllAPICaches errors gracefully", async () => {
       const { withIndexedDBRetry } = await import("../utils/storage-retry");
       (withIndexedDBRetry as Mock).mockRejectedValueOnce(
-        new Error("Clear all failed")
+        new Error("Clear all failed"),
       );
 
       const result = await apiCacheService.clearAllAPICaches();
@@ -1050,7 +1064,7 @@ describe("APICacheService", () => {
         new Response(JSON.stringify({ data: "prefetched" }), {
           status: 200,
           headers: { "Content-Type": "application/json" },
-        })
+        }),
       );
 
       await apiCacheService.prefetchForOffline([
@@ -1072,16 +1086,16 @@ describe("APICacheService", () => {
       await expect(
         apiCacheService.prefetchForOffline([
           "https://api.example.com/fail-prefetch",
-        ])
+        ]),
       ).resolves.toBeUndefined();
 
       mockFetch.mockRestore();
     });
 
     it("should skip caching non-ok responses", async () => {
-      const mockFetch = vi.spyOn(global, "fetch").mockResolvedValue(
-        new Response(null, { status: 404 })
-      );
+      const mockFetch = vi
+        .spyOn(global, "fetch")
+        .mockResolvedValue(new Response(null, { status: 404 }));
 
       await apiCacheService.prefetchForOffline([
         "https://api.example.com/not-found",
@@ -1089,7 +1103,7 @@ describe("APICacheService", () => {
 
       const cached = await apiCacheService.getCachedResponse(
         "https://api.example.com/not-found",
-        CACHE_NAMES.API
+        CACHE_NAMES.API,
       );
       expect(cached).toBeUndefined();
 

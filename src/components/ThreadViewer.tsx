@@ -2001,7 +2001,8 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             </div>
 
             {/* Embeds */}
-            {rootPostObject.embed && renderEmbed(rootPostObject.embed, rootPostObject.uri)}
+            {rootPostObject.embed &&
+              renderEmbed(rootPostObject.embed, rootPostObject.uri)}
 
             {/* Action bar */}
             <div className="mt-4">
@@ -2073,7 +2074,10 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
 
         {/* Replies section - progressive reveal */}
         {(showReplies || !rootPostObject) && flatNodeList.length > 1 && (
-          <div className={rootPostObject ? "border-t pt-4" : ""} style={{ borderColor: "var(--bsky-border-primary)" }}>
+          <div
+            className={rootPostObject ? "border-t pt-4" : ""}
+            style={{ borderColor: "var(--bsky-border-primary)" }}
+          >
             {shouldVirtualize ? (
               <VirtualizedThreadList
                 ref={virtualListRef}
@@ -2103,25 +2107,27 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
         )}
 
         {/* Continue Thread button - shown when user has posts in the thread */}
-        {showReplies && onContinueThread && userParticipationStats.count > 0 && (
-          <div className="mt-6 flex justify-center">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onContinueThread();
-              }}
-              className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-all hover:scale-105"
-              style={{
-                backgroundColor: "var(--bsky-primary)",
-                color: "white",
-                boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
-              }}
-            >
-              <Plus size={18} />
-              Continue Thread
-            </button>
-          </div>
-        )}
+        {showReplies &&
+          onContinueThread &&
+          userParticipationStats.count > 0 && (
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onContinueThread();
+                }}
+                className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-all hover:scale-105"
+                style={{
+                  backgroundColor: "var(--bsky-primary)",
+                  color: "white",
+                  boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+                }}
+              >
+                <Plus size={18} />
+                Continue Thread
+              </button>
+            </div>
+          )}
 
         {/* Join conversation button */}
         {showReplies &&

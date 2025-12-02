@@ -133,7 +133,10 @@ export interface OperationStats {
   /** P99 latency */
   p99DurationMs: number;
   /** Stats by operation name */
-  byOperation: Record<string, { success: number; failure: number; avgMs: number }>;
+  byOperation: Record<
+    string,
+    { success: number; failure: number; avgMs: number }
+  >;
 }
 
 // ==================== PII Sanitization ====================
@@ -196,16 +199,15 @@ export function sanitizeMessage(message: string): string {
 /**
  * Sanitize stack trace to remove file paths and PII
  */
-export function sanitizeStackTrace(stack: string | undefined): string | undefined {
+export function sanitizeStackTrace(
+  stack: string | undefined,
+): string | undefined {
   if (!stack) return undefined;
 
   let sanitized = stack;
 
   // Remove full file paths, keep only filename and line number
-  sanitized = sanitized.replace(
-    /at\s+.*\(([^\/\\]+:\d+:\d+)\)/g,
-    "at $1"
-  );
+  sanitized = sanitized.replace(/at\s+.*\(([^\/\\]+:\d+:\d+)\)/g, "at $1");
 
   // Remove file:// URLs
   sanitized = sanitized.replace(/file:\/\/[^\s)]+/g, "[FILE]");
@@ -224,7 +226,7 @@ export function sanitizeStackTrace(stack: string | undefined): string | undefine
  * Sanitize metadata object
  */
 export function sanitizeMetadata(
-  metadata: Record<string, unknown> | undefined
+  metadata: Record<string, unknown> | undefined,
 ): Record<string, string | number | boolean> | undefined {
   if (!metadata) return undefined;
 
@@ -232,7 +234,7 @@ export function sanitizeMetadata(
 
   for (const [key, value] of Object.entries(metadata)) {
     // Skip sensitive keys
-    if (SENSITIVE_KEYS.some(k => key.toLowerCase().includes(k))) {
+    if (SENSITIVE_KEYS.some((k) => key.toLowerCase().includes(k))) {
       continue;
     }
 
@@ -268,9 +270,9 @@ export function isDoNotTrackEnabled(): boolean {
     navigator.doNotTrack === "1" ||
     navigator.doNotTrack === "yes" ||
     // @ts-expect-error - msDoNotTrack is IE-specific
-    (window.doNotTrack === "1") ||
+    window.doNotTrack === "1" ||
     // @ts-expect-error - msDoNotTrack is IE-specific
-    (navigator.msDoNotTrack === "1");
+    navigator.msDoNotTrack === "1";
 
   // Check Global Privacy Control
   // @ts-expect-error - GPC is a newer standard
@@ -326,10 +328,7 @@ class ErrorMonitor {
   /**
    * Record an error with context
    */
-  recordError(
-    error: unknown,
-    context: ErrorContext
-  ): MonitoredError | null {
+  recordError(error: unknown, context: ErrorContext): MonitoredError | null {
     // Apply sampling for non-critical errors
     if (
       context.severity !== "critical" &&
@@ -378,7 +377,9 @@ class ErrorMonitor {
     const fullMetric: OperationMetric = {
       ...metric,
       timestamp: Date.now(),
-      metadata: isDoNotTrackEnabled() ? undefined : sanitizeMetadata(metric.metadata),
+      metadata: isDoNotTrackEnabled()
+        ? undefined
+        : sanitizeMetadata(metric.metadata),
     };
 
     this.operationBuffer.push(fullMetric);
@@ -390,7 +391,7 @@ class ErrorMonitor {
     if (!fullMetric.success) {
       logger.warn(
         `Operation failed: ${fullMetric.operation} (${fullMetric.durationMs}ms)`,
-        fullMetric.metadata
+        fullMetric.metadata,
       );
     }
   }
@@ -402,7 +403,7 @@ class ErrorMonitor {
     operation: string,
     category: ErrorCategory,
     fn: () => Promise<T>,
-    metadata?: Record<string, string | number | boolean>
+    metadata?: Record<string, string | number | boolean>,
   ): Promise<T> {
     const startTime = performance.now();
     let success = true;
@@ -429,7 +430,7 @@ class ErrorMonitor {
    */
   getErrorStats(): ErrorStats {
     const hourAgo = Date.now() - 3600000;
-    const recentErrors = this.errorBuffer.filter(e => e.timestamp > hourAgo);
+    const recentErrors = this.errorBuffer.filter((e) => e.timestamp > hourAgo);
 
     const byCategory: Record<ErrorCategory, number> = {
       storage: 0,
@@ -493,12 +494,12 @@ class ErrorMonitor {
       };
     }
 
-    const successCount = this.operationBuffer.filter(o => o.success).length;
+    const successCount = this.operationBuffer.filter((o) => o.success).length;
     const failureCount = this.operationBuffer.length - successCount;
 
     // Calculate percentiles
     const sortedDurations = this.operationBuffer
-      .map(o => o.durationMs)
+      .map((o) => o.durationMs)
       .sort((a, b) => a - b);
 
     const percentile = (arr: number[], p: number): number => {
@@ -507,7 +508,10 @@ class ErrorMonitor {
     };
 
     // Group by operation
-    const byOperation: Record<string, { success: number; failure: number; avgMs: number }> = {};
+    const byOperation: Record<
+      string,
+      { success: number; failure: number; avgMs: number }
+    > = {};
     for (const op of this.operationBuffer) {
       if (!byOperation[op.operation]) {
         byOperation[op.operation] = { success: 0, failure: 0, avgMs: 0 };
@@ -521,18 +525,25 @@ class ErrorMonitor {
 
     // Calculate average duration per operation
     for (const opName of Object.keys(byOperation)) {
-      const opsForName = this.operationBuffer.filter(o => o.operation === opName);
+      const opsForName = this.operationBuffer.filter(
+        (o) => o.operation === opName,
+      );
       const totalMs = opsForName.reduce((sum, o) => sum + o.durationMs, 0);
       byOperation[opName].avgMs = Math.round(totalMs / opsForName.length);
     }
 
-    const totalDuration = this.operationBuffer.reduce((sum, o) => sum + o.durationMs, 0);
+    const totalDuration = this.operationBuffer.reduce(
+      (sum, o) => sum + o.durationMs,
+      0,
+    );
 
     return {
       totalOperations: this.operationBuffer.length,
       successCount,
       failureCount,
-      successRate: Math.round((successCount / this.operationBuffer.length) * 100),
+      successRate: Math.round(
+        (successCount / this.operationBuffer.length) * 100,
+      ),
       avgDurationMs: Math.round(totalDuration / this.operationBuffer.length),
       p50DurationMs: percentile(sortedDurations, 0.5),
       p95DurationMs: percentile(sortedDurations, 0.95),
@@ -545,7 +556,9 @@ class ErrorMonitor {
    * Get storage-specific operation stats
    */
   getStorageStats(): OperationStats {
-    const storageOps = this.operationBuffer.filter(o => o.category === "storage");
+    const storageOps = this.operationBuffer.filter(
+      (o) => o.category === "storage",
+    );
 
     if (storageOps.length === 0) {
       return {
@@ -561,15 +574,20 @@ class ErrorMonitor {
       };
     }
 
-    const successCount = storageOps.filter(o => o.success).length;
-    const sortedDurations = storageOps.map(o => o.durationMs).sort((a, b) => a - b);
+    const successCount = storageOps.filter((o) => o.success).length;
+    const sortedDurations = storageOps
+      .map((o) => o.durationMs)
+      .sort((a, b) => a - b);
 
     const percentile = (arr: number[], p: number): number => {
       const index = Math.ceil(arr.length * p) - 1;
       return arr[Math.max(0, index)];
     };
 
-    const byOperation: Record<string, { success: number; failure: number; avgMs: number }> = {};
+    const byOperation: Record<
+      string,
+      { success: number; failure: number; avgMs: number }
+    > = {};
     for (const op of storageOps) {
       if (!byOperation[op.operation]) {
         byOperation[op.operation] = { success: 0, failure: 0, avgMs: 0 };
@@ -582,7 +600,7 @@ class ErrorMonitor {
     }
 
     for (const opName of Object.keys(byOperation)) {
-      const opsForName = storageOps.filter(o => o.operation === opName);
+      const opsForName = storageOps.filter((o) => o.operation === opName);
       const totalMs = opsForName.reduce((sum, o) => sum + o.durationMs, 0);
       byOperation[opName].avgMs = Math.round(totalMs / opsForName.length);
     }
@@ -688,7 +706,7 @@ export function getErrorMonitor(): ErrorMonitor {
  * Initialize error monitor with custom config
  */
 export function initializeErrorMonitor(
-  config?: Partial<ErrorMonitoringConfig>
+  config?: Partial<ErrorMonitoringConfig>,
 ): ErrorMonitor {
   monitorInstance = new ErrorMonitor(config);
   return monitorInstance;
@@ -710,7 +728,7 @@ export function resetErrorMonitor(): void {
 export function recordStorageError(
   error: unknown,
   operation: string,
-  metadata?: Record<string, string | number | boolean>
+  metadata?: Record<string, string | number | boolean>,
 ): void {
   getErrorMonitor().recordError(error, {
     operation,
@@ -727,7 +745,7 @@ export function recordStorageError(
 export function recordNetworkError(
   error: unknown,
   operation: string,
-  metadata?: Record<string, string | number | boolean>
+  metadata?: Record<string, string | number | boolean>,
 ): void {
   getErrorMonitor().recordError(error, {
     operation,
@@ -744,7 +762,7 @@ export function recordNetworkError(
 export function recordAuthError(
   error: unknown,
   operation: string,
-  metadata?: Record<string, string | number | boolean>
+  metadata?: Record<string, string | number | boolean>,
 ): void {
   getErrorMonitor().recordError(error, {
     operation,
@@ -762,7 +780,7 @@ export function recordStorageOperation(
   operation: string,
   success: boolean,
   durationMs: number,
-  metadata?: Record<string, string | number | boolean>
+  metadata?: Record<string, string | number | boolean>,
 ): void {
   getErrorMonitor().recordOperation({
     operation,
@@ -779,7 +797,7 @@ export function recordStorageOperation(
 export async function timeStorageOperation<T>(
   operation: string,
   fn: () => Promise<T>,
-  metadata?: Record<string, string | number | boolean>
+  metadata?: Record<string, string | number | boolean>,
 ): Promise<T> {
   return getErrorMonitor().timeOperation(operation, "storage", fn, metadata);
 }
@@ -790,7 +808,7 @@ export async function timeStorageOperation<T>(
 export async function timeNetworkOperation<T>(
   operation: string,
   fn: () => Promise<T>,
-  metadata?: Record<string, string | number | boolean>
+  metadata?: Record<string, string | number | boolean>,
 ): Promise<T> {
   return getErrorMonitor().timeOperation(operation, "network", fn, metadata);
 }
