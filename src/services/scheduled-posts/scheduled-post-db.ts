@@ -498,7 +498,7 @@ class ScheduledPostDB {
     const db = this.ensureDb();
     const userDid = this.ensureUser();
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const transaction = db.transaction([STORE_NAME], "readwrite");
       const store = transaction.objectStore(STORE_NAME);
 
@@ -573,7 +573,7 @@ class ScheduledPostDB {
     const posts = await this.getAll();
     const db = this.ensureDb();
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const transaction = db.transaction([STORE_NAME], "readwrite");
       const store = transaction.objectStore(STORE_NAME);
 
