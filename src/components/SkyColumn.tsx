@@ -10,7 +10,6 @@ import { DirectMessagesColumn } from "./DirectMessagesColumn";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { Home } from "./Home";
 import { NotificationsFeed } from "./NotificationsFeed";
-import { SearchColumn } from "./SearchColumn";
 import { VisualTimeline } from "./VisualTimeline";
 
 interface SkyColumnProps {
