@@ -1,5 +1,5 @@
 import { getProfileService, queryClient } from "@bsky/shared";
-import type { AppBskyActorDefs as _AppBskyActorDefs } from "@atproto/api";
+import type { AppBskyActorDefs } from "@atproto/api";
 import { useQuery } from "@tanstack/react-query";
 import {
   Plus,
@@ -82,25 +82,25 @@ export const ContentModerationSettings: React.FC = () => {
   const { agent } = useAuth();
 
   // Native AT Protocol muted words state
-  const [mutedWords, setMutedWords] = useState<NativeMutedWord[]>([]);
-  const [newMutedWord, setNewMutedWord] = useState("");
-  const [newWordTargets, setNewWordTargets] = useState<MutedWordTarget[]>([
+  const [_mutedWords, setMutedWords] = useState<_NativeMutedWord[]>([]);
+  const [_newMutedWord, _setNewMutedWord] = useState("");
+  const [_newWordTargets, _setNewWordTargets] = useState<MutedWordTarget[]>([
     "content",
     "tag",
   ]);
-  const [newWordActorTarget, setNewWordActorTarget] =
+  const [_newWordActorTarget, _setNewWordActorTarget] =
     useState<ActorTarget>("all");
-  const [newWordExpiration, setNewWordExpiration] = useState<string>("never");
+  const [_newWordExpiration, _setNewWordExpiration] = useState<string>("never");
 
   // Content label preferences state
-  const [labelPrefs, setLabelPrefs] = useState<Map<string, LabelVisibility>>(
+  const [_labelPrefs, setLabelPrefs] = useState<Map<string, LabelVisibility>>(
     new Map(),
   );
-  const [adultContentEnabled, setAdultContentEnabled] = useState(false);
+  const [_adultContentEnabled, setAdultContentEnabled] = useState(false);
 
   // Muted/blocked users state
-  const [mutedUsers, setMutedUsers] = useState<MutedUser[]>([]);
-  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  const [_mutedUsers, setMutedUsers] = useState<_MutedUser[]>([]);
+  const [_blockedUsers, setBlockedUsers] = useState<_BlockedUser[]>([]);
   const [newMuteHandle, setNewMuteHandle] = useState("");
 
   // UI state
@@ -111,7 +111,7 @@ export const ContentModerationSettings: React.FC = () => {
   } | null>(null);
 
   // Fetch native AT Protocol preferences
-  const { data: preferences, refetch: refetchPreferences } = useQuery({
+  const { data: preferences, refetch: _refetchPreferences } = useQuery({
     queryKey: ["nativePreferences"],
     queryFn: async () => {
       if (!agent) return null;
@@ -122,7 +122,7 @@ export const ContentModerationSettings: React.FC = () => {
   });
 
   // Fetch muted users from AT Protocol
-  const { data: mutedAccounts, refetch: refetchMutes } = useQuery({
+  const { data: mutedAccounts, refetch: _refetchMutes } = useQuery({
     queryKey: ["mutedAccounts"],
     queryFn: async () => {
       if (!agent) return [];
@@ -133,7 +133,7 @@ export const ContentModerationSettings: React.FC = () => {
   });
 
   // Fetch blocked users from AT Protocol
-  const { data: blocks, refetch: refetchBlocks } = useQuery({
+  const { data: blocks, refetch: _refetchBlocks } = useQuery({
     queryKey: ["blocks"],
     queryFn: async () => {
       if (!agent) return [];
