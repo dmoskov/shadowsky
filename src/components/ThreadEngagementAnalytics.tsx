@@ -4,6 +4,7 @@ import {
   BarChart3,
   ChevronDown,
   ChevronUp,
+  ExternalLink,
   Heart,
   MessageCircle,
   Repeat2,
@@ -311,96 +312,134 @@ export const ThreadEngagementAnalytics: React.FC<
 
           {/* Per-post breakdown */}
           <div className="mb-4">
-            <h4
-              className="mb-2 flex items-center gap-2 text-sm font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
-            >
-              <BarChart3 size={14} />
-              Per-Post Engagement
-            </h4>
+            <div className="mb-2">
+              <h4
+                className="flex items-center gap-2 text-sm font-medium"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                <BarChart3 size={14} />
+                Posts in Thread
+              </h4>
+              <p
+                className="mt-0.5 text-xs"
+                style={{ color: "var(--bsky-text-tertiary)" }}
+              >
+                Ranked by engagement (likes + reposts + replies)
+              </p>
+            </div>
             <div className="max-h-64 space-y-2 overflow-y-auto">
-              {analytics.postEngagements.map((pe) => (
-                <div
-                  key={pe.post.uri}
-                  className="rounded-lg p-2"
-                  style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
-                >
-                  <div className="mb-1 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${
-                          pe.rank === 1
-                            ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
-                            : pe.rank === 2
-                              ? "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                              : pe.rank === 3
-                                ? "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
-                                : ""
-                        }`}
-                        style={
-                          pe.rank > 3
-                            ? {
-                                backgroundColor: "var(--bsky-bg-secondary)",
-                                color: "var(--bsky-text-tertiary)",
-                              }
-                            : {}
-                        }
-                      >
-                        #{pe.rank}
-                      </span>
-                      <img
-                        src={
-                          proxifyBskyImage(pe.post.author.avatar) ||
-                          "/default-avatar.svg"
-                        }
-                        alt=""
-                        className="h-5 w-5 rounded-full"
-                      />
-                      <span
-                        className="truncate text-xs font-medium"
-                        style={{ color: "var(--bsky-text-primary)" }}
-                      >
-                        {pe.post.author.displayName || pe.post.author.handle}
-                      </span>
-                      <span
-                        className="text-xs"
-                        style={{ color: "var(--bsky-text-tertiary)" }}
-                      >
-                        {formatDistanceToNow(new Date(pe.post.indexedAt), {
-                          addSuffix: true,
-                        })}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs">
-                      <span className="flex items-center gap-1 text-red-500">
-                        <Heart size={10} />
-                        {pe.likes}
-                      </span>
-                      <span className="flex items-center gap-1 text-green-500">
-                        <Repeat2 size={10} />
-                        {pe.reposts}
-                      </span>
-                      <span className="flex items-center gap-1 text-blue-500">
-                        <MessageCircle size={10} />
-                        {pe.replies}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mt-1">
-                    {renderEngagementBar(
-                      pe.total,
-                      maxEngagement,
-                      "var(--bsky-primary)",
-                    )}
-                  </div>
+              {analytics.postEngagements.map((pe) => {
+                // Extract post ID from URI for linking
+                const postId = pe.post.uri.split("/").pop();
+                const postUrl = `https://bsky.app/profile/${pe.post.author.handle}/post/${postId}`;
+                const postText =
+                  (pe.post.record as { text?: string })?.text || "";
+
+                return (
                   <div
-                    className="mt-1 text-right text-xs"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    key={pe.post.uri}
+                    className="rounded-lg p-2"
+                    style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
                   >
-                    {pe.percentOfTotal.toFixed(1)}% of thread engagement
+                    <div className="mb-1 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${
+                            pe.rank === 1
+                              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
+                              : pe.rank === 2
+                                ? "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                                : pe.rank === 3
+                                  ? "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
+                                  : ""
+                          }`}
+                          style={
+                            pe.rank > 3
+                              ? {
+                                  backgroundColor: "var(--bsky-bg-secondary)",
+                                  color: "var(--bsky-text-tertiary)",
+                                }
+                              : {}
+                          }
+                          title={`Rank ${pe.rank} by engagement`}
+                        >
+                          #{pe.rank}
+                        </span>
+                        <img
+                          src={
+                            proxifyBskyImage(pe.post.author.avatar) ||
+                            "/default-avatar.svg"
+                          }
+                          alt=""
+                          className="h-5 w-5 rounded-full"
+                        />
+                        <span
+                          className="truncate text-xs font-medium"
+                          style={{ color: "var(--bsky-text-primary)" }}
+                        >
+                          {pe.post.author.displayName || pe.post.author.handle}
+                        </span>
+                        <span
+                          className="text-xs"
+                          style={{ color: "var(--bsky-text-tertiary)" }}
+                        >
+                          {formatDistanceToNow(new Date(pe.post.indexedAt), {
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className="flex items-center gap-1 text-red-500">
+                          <Heart size={10} />
+                          {pe.likes}
+                        </span>
+                        <span className="flex items-center gap-1 text-green-500">
+                          <Repeat2 size={10} />
+                          {pe.reposts}
+                        </span>
+                        <span className="flex items-center gap-1 text-blue-500">
+                          <MessageCircle size={10} />
+                          {pe.replies}
+                        </span>
+                        <a
+                          href={postUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 transition-opacity hover:opacity-70"
+                          style={{ color: "var(--bsky-text-tertiary)" }}
+                          title="Open post in Bluesky"
+                        >
+                          <ExternalLink size={10} />
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Post content preview */}
+                    {postText && (
+                      <div
+                        className="mb-1 mt-2 text-xs line-clamp-2"
+                        style={{ color: "var(--bsky-text-secondary)" }}
+                      >
+                        {postText}
+                      </div>
+                    )}
+
+                    <div className="mt-1">
+                      {renderEngagementBar(
+                        pe.total,
+                        maxEngagement,
+                        "var(--bsky-primary)",
+                      )}
+                    </div>
+                    <div
+                      className="mt-1 text-right text-xs"
+                      style={{ color: "var(--bsky-text-tertiary)" }}
+                    >
+                      {pe.percentOfTotal.toFixed(1)}% of thread engagement
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
