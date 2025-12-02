@@ -19,6 +19,7 @@ import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { EnhancedComposer } from "./EnhancedComposer";
 import { ThreadBreadcrumb } from "./ThreadBreadcrumb";
 import { ThreadEngagementAnalytics } from "./ThreadEngagementAnalytics";
+import { ThreadHaikuSummary } from "./ThreadHaikuSummary";
 import { ThreadNavigationBar } from "./ThreadNavigationBar";
 import {
   ThreadShortcutsHelp,
@@ -933,6 +934,13 @@ export function ThreadModal({
                     onShowHelp={() => setShowHelpPanel(true)}
                     showAuthorOnly={showAuthorOnly}
                     authorHandle={threadAuthorHandle}
+                  />
+
+                  {/* AI Haiku Summary - shown for threads with 5+ posts */}
+                  <ThreadHaikuSummary
+                    posts={posts}
+                    threadUri={rootPost || postUri}
+                    className="mb-4"
                   />
 
                   {/* Thread Analytics (collapsible) */}

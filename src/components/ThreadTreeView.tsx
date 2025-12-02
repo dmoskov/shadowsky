@@ -20,6 +20,10 @@ import React, {
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { ThreadProvider } from "../contexts/ThreadContext";
+import {
+  useResponsiveCollapseThresholds,
+  countDescendants as countNodeDescendants,
+} from "../hooks/useResponsiveCollapseThresholds";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { RichText } from "./ui/RichText";
@@ -87,6 +91,15 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
   const navigate = useNavigate();
   const { session } = useAuth();
   const currentUserDid = propCurrentUserDid || session?.did;
+
+  // Get responsive collapse thresholds
+  const {
+    thresholds: collapseThresholds,
+    screenSize,
+    shouldAutoCollapse,
+    getBranchBorderColor,
+    getBranchBackgroundColor,
+  } = useResponsiveCollapseThresholds();
 
   // State for collapsed branches
   const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
@@ -211,18 +224,28 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
     return { threadTree: rootNodes, flatList: flat, stats };
   }, [posts, rootUri]);
 
-  // Auto-fold deep branches on initial render
+  // Auto-fold branches using adaptive collapse logic
   useEffect(() => {
-    if (initialFoldDepth > 0) {
-      const nodesToCollapse = new Set<string>();
-      flatList.forEach((node) => {
-        if (node.depth >= initialFoldDepth && node.children.length > 0) {
+    const nodesToCollapse = new Set<string>();
+    flatList.forEach((node) => {
+      if (node.children.length > 0) {
+        const branchPostCount = countNodeDescendants(node);
+        // Use adaptive collapse logic OR fallback to initialFoldDepth
+        const shouldCollapseAdaptive = shouldAutoCollapse(
+          node.depth,
+          branchPostCount,
+          true,
+        );
+        const shouldCollapseLegacy =
+          initialFoldDepth > 0 && node.depth >= initialFoldDepth;
+
+        if (shouldCollapseAdaptive || shouldCollapseLegacy) {
           nodesToCollapse.add(node.post.uri);
         }
-      });
-      setCollapsedNodes(nodesToCollapse);
-    }
-  }, [flatList, initialFoldDepth]);
+      }
+    });
+    setCollapsedNodes(nodesToCollapse);
+  }, [flatList, shouldAutoCollapse, initialFoldDepth]);
 
   // Toggle node collapse
   const toggleCollapse = useCallback((uri: string) => {

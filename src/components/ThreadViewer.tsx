@@ -1,5 +1,6 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { VirtualItem } from "@tanstack/react-virtual";
 import { formatDistanceToNow } from "date-fns";
 import {
   ChevronDown,
@@ -31,6 +32,12 @@ import { PostActionBar } from "./PostActionBar";
 import { VideoPlayer } from "./VideoPlayer";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { RichText } from "./ui/RichText";
+import {
+  DEFAULT_VIRTUAL_SCROLL_CONFIG,
+  VirtualizedThreadList,
+  type VirtualizedThreadListHandle,
+  type VirtualScrollConfig,
+} from "./VirtualizedThreadList";
 export {
   useThread,
   useThreadComplexity,
@@ -74,6 +81,9 @@ export interface ThreadViewerProps {
   currentUserDid?: string;
   onDeletePost?: (post: Post) => void;
   onContinueThread?: () => void;
+  // Virtual scrolling props for performance with large threads
+  enableVirtualization?: boolean;
+  virtualScrollConfig?: Partial<VirtualScrollConfig>;
 }
 
 export const ThreadViewer: React.FC<ThreadViewerProps> = ({
@@ -89,6 +99,8 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   currentUserDid: propCurrentUserDid,
   onDeletePost,
   onContinueThread,
+  enableVirtualization = true,
+  virtualScrollConfig,
 }) => {
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -122,6 +134,17 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   const postRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   // Container ref for scroll management
   const containerRef = useRef<HTMLDivElement>(null);
+  // Ref for virtualized thread list
+  const virtualListRef = useRef<VirtualizedThreadListHandle>(null);
+
+  // Merged virtual scroll configuration
+  const mergedVirtualConfig = useMemo<VirtualScrollConfig>(
+    () => ({
+      ...DEFAULT_VIRTUAL_SCROLL_CONFIG,
+      ...virtualScrollConfig,
+    }),
+    [virtualScrollConfig],
+  );
 
   // Get optimistic post mutations
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
@@ -329,6 +352,15 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     return { count: nodeIndices.length, nodeIndices };
   }, [flatNodeList, currentUserDid]);
 
+  // Determine if virtualization should be active
+  const shouldVirtualize = useMemo(() => {
+    return (
+      enableVirtualization &&
+      mergedVirtualConfig.enabled &&
+      flatNodeList.length >= mergedVirtualConfig.threshold
+    );
+  }, [enableVirtualization, mergedVirtualConfig, flatNodeList.length]);
+
   // Toggle branch expansion
   const toggleBranch = useCallback((nodeUri: string) => {
     setExpandedBranches((prev) => {
@@ -434,13 +466,21 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
         e.preventDefault();
         if (newIndex !== focusedPostIndex) {
           setFocusedPostIndex(newIndex);
-          // Scroll the focused post into view while preserving scroll position
-          const postElement = postRefs.current.get(newIndex);
-          if (postElement) {
-            postElement.scrollIntoView({
+          // Use virtualized list scrolling if available, otherwise fall back to DOM
+          if (virtualListRef.current) {
+            virtualListRef.current.scrollToIndex(newIndex, {
+              align: "center",
               behavior: "smooth",
-              block: "center",
             });
+          } else {
+            // Scroll the focused post into view while preserving scroll position
+            const postElement = postRefs.current.get(newIndex);
+            if (postElement) {
+              postElement.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            }
           }
         }
       }

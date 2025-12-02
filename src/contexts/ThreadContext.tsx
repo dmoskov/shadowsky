@@ -16,9 +16,16 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
+import {
+  useResponsiveCollapseThresholds,
+  countDescendants,
+  type CollapseThresholds,
+  type ScreenSize,
+} from "../hooks/useResponsiveCollapseThresholds";
 
 // ============================================================================
 // Types
@@ -92,6 +99,14 @@ export interface ThreadContextValue {
   collapseAll: () => void;
   expandAll: () => void;
   isCollapsed: (uri: string) => boolean;
+
+  // Adaptive collapse
+  collapseThresholds: CollapseThresholds;
+  screenSize: ScreenSize;
+  getBranchBorderColor: (depth: number) => string;
+  getBranchBackgroundColor: (depth: number) => string;
+  collapseBranch: (uri: string) => void;
+  expandBranch: (uri: string) => void;
 
   // Navigation state
   navigationState: ThreadNavigationState;
@@ -323,24 +338,46 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
   initialFoldDepth = 3,
   children,
 }) => {
+  // Get responsive collapse thresholds
+  const {
+    thresholds: collapseThresholds,
+    screenSize,
+    shouldAutoCollapse,
+    getBranchBorderColor,
+    getBranchBackgroundColor,
+  } = useResponsiveCollapseThresholds();
+
   // Build thread tree structure (memoized)
   const { threadTree, flatList, nodeMap, metrics } = useMemo(
     () => buildThreadTree(posts, notifications, rootUri),
     [posts, notifications, rootUri],
   );
 
-  // Collapse state - initialize with nodes at or beyond fold depth
-  const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(() => {
+  // Collapse state - initialize with adaptive thresholds
+  const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
+
+  // Apply adaptive collapse when thresholds change or thread changes
+  useEffect(() => {
     const initial = new Set<string>();
-    if (initialFoldDepth > 0) {
-      flatList.forEach((node) => {
-        if (node.depth >= initialFoldDepth && node.children.length > 0) {
+    flatList.forEach((node) => {
+      if (node.children.length > 0) {
+        const branchPostCount = countDescendants(node);
+        // Use adaptive collapse logic OR fallback to initialFoldDepth
+        const shouldCollapseAdaptive = shouldAutoCollapse(
+          node.depth,
+          branchPostCount,
+          true,
+        );
+        const shouldCollapseLegacy =
+          initialFoldDepth > 0 && node.depth >= initialFoldDepth;
+
+        if (shouldCollapseAdaptive || shouldCollapseLegacy) {
           initial.add(node.post.uri);
         }
-      });
-    }
-    return initial;
-  });
+      }
+    });
+    setCollapsedNodes(initial);
+  }, [flatList, shouldAutoCollapse, initialFoldDepth]);
 
   // Navigation state
   const [navigationState, setNavigationState] = useState<ThreadNavigationState>(
@@ -384,6 +421,30 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
   const isCollapsed = useCallback(
     (uri: string) => collapsedNodes.has(uri),
     [collapsedNodes],
+  );
+
+  // Collapse a specific branch (and optionally its children)
+  const collapseBranch = useCallback(
+    (uri: string) => {
+      setCollapsedNodes((prev) => {
+        const next = new Set(prev);
+        next.add(uri);
+        return next;
+      });
+    },
+    [],
+  );
+
+  // Expand a specific branch
+  const expandBranch = useCallback(
+    (uri: string) => {
+      setCollapsedNodes((prev) => {
+        const next = new Set(prev);
+        next.delete(uri);
+        return next;
+      });
+    },
+    [],
   );
 
   // ========================================================================
@@ -525,6 +586,14 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
       expandAll,
       isCollapsed,
 
+      // Adaptive collapse
+      collapseThresholds,
+      screenSize,
+      getBranchBorderColor,
+      getBranchBackgroundColor,
+      collapseBranch,
+      expandBranch,
+
       // Navigation state
       navigationState,
       setFocusedIndex,
@@ -554,6 +623,12 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
       collapseAll,
       expandAll,
       isCollapsed,
+      collapseThresholds,
+      screenSize,
+      getBranchBorderColor,
+      getBranchBackgroundColor,
+      collapseBranch,
+      expandBranch,
       navigationState,
       setFocusedIndex,
       setHighlightUri,
@@ -636,6 +711,7 @@ export function useThreadComplexity() {
 /**
  * Hook specifically for collapse state management
  * Returns collapse state and handlers for tree view components
+ * Now includes adaptive collapse features
  */
 export function useCollapsedNodes() {
   const {
@@ -645,6 +721,12 @@ export function useCollapsedNodes() {
     expandAll,
     isCollapsed,
     getDescendantCount,
+    collapseThresholds,
+    screenSize,
+    getBranchBorderColor,
+    getBranchBackgroundColor,
+    collapseBranch,
+    expandBranch,
   } = useThread();
 
   return useMemo(
@@ -655,6 +737,13 @@ export function useCollapsedNodes() {
       expandAll,
       isCollapsed,
       getDescendantCount,
+      // Adaptive collapse
+      collapseThresholds,
+      screenSize,
+      getBranchBorderColor,
+      getBranchBackgroundColor,
+      collapseBranch,
+      expandBranch,
     }),
     [
       collapsedNodes,
@@ -663,6 +752,12 @@ export function useCollapsedNodes() {
       expandAll,
       isCollapsed,
       getDescendantCount,
+      collapseThresholds,
+      screenSize,
+      getBranchBorderColor,
+      getBranchBackgroundColor,
+      collapseBranch,
+      expandBranch,
     ],
   );
 }
