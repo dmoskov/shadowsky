@@ -413,15 +413,20 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
     }
   }, [enableKeyboardNav, handleKeyDown]);
 
-  // Calculate indent width based on max depth
-  const indentWidth = useMemo(() => {
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
-    if (stats.maxDepth <= 3) return isMobile ? 24 : 40;
-    if (stats.maxDepth <= 5) return isMobile ? 20 : 32;
-    if (stats.maxDepth <= 7) return isMobile ? 16 : 24;
-    if (stats.maxDepth <= 10) return isMobile ? 12 : 20;
-    return isMobile ? 8 : 16;
-  }, [stats.maxDepth]);
+  // Get the CSS custom property name based on thread depth
+  // This allows CSS clamp() to handle responsive scaling automatically
+  const getIndentCssVar = useCallback((depth: number): string => {
+    if (depth <= 3) return "var(--thread-indent-shallow)";
+    if (depth <= 7) return "var(--thread-indent-medium)";
+    if (depth <= 10) return "var(--thread-indent-deep)";
+    return "var(--thread-indent-minimal)";
+  }, []);
+
+  // Get the CSS variable name for the current thread depth
+  const indentCssVar = useMemo(
+    () => getIndentCssVar(stats.maxDepth),
+    [stats.maxDepth, getIndentCssVar],
+  );
 
   // Render a single node
   const renderNode = useCallback(
@@ -450,7 +455,7 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
             <div
               className="absolute left-0 top-0 h-full"
               style={{
-                marginLeft: `${(node.depth - 1) * indentWidth + indentWidth / 2}px`,
+                marginLeft: `calc(${node.depth - 1} * ${indentCssVar} + ${indentCssVar} / 2)`,
                 width: "2px",
                 backgroundColor: isLastChild
                   ? "transparent"
@@ -465,9 +470,9 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
             <div
               className="absolute"
               style={{
-                left: `${(node.depth - 1) * indentWidth + indentWidth / 2}px`,
+                left: `calc(${node.depth - 1} * ${indentCssVar} + ${indentCssVar} / 2)`,
                 top: "24px",
-                width: `${indentWidth / 2}px`,
+                width: `calc(${indentCssVar} / 2)`,
                 height: "2px",
                 backgroundColor: "var(--bsky-border-primary)",
               }}

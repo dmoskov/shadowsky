@@ -91,6 +91,20 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Thread indentation CSS custom properties - responsive values */
+  /* Base indent unit scales with viewport, clamped between 4px and 48px */
+  --thread-indent-base: clamp(4px, 2vw, 48px);
+
+  /* Depth-specific indent values for different thread depths */
+  /* Shallow threads (depth <= 3): larger indents */
+  --thread-indent-shallow: clamp(24px, 6vw, 48px);
+  /* Medium threads (depth 4-7): moderate indents */
+  --thread-indent-medium: clamp(16px, 4vw, 32px);
+  /* Deep threads (depth 8-12): smaller indents */
+  --thread-indent-deep: clamp(8px, 2vw, 20px);
+  /* Very deep threads (depth > 12): minimal indents */
+  --thread-indent-minimal: clamp(4px, 1vw, 12px);
 }
 
 html {

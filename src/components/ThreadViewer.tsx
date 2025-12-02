@@ -275,31 +275,20 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     return maxDepth;
   }, [threadTree]);
 
-  // Calculate dynamic indentation based on maximum thread depth
-  const indentWidth = useMemo(() => {
-    // Use viewport width for responsive scaling on mobile
-    const isMobile = window.innerWidth < 640;
+  // Get the CSS custom property name based on thread depth
+  // This allows CSS clamp() to handle responsive scaling automatically
+  const getIndentCssVar = useCallback((depth: number): string => {
+    if (depth <= 3) return "var(--thread-indent-shallow)";
+    if (depth <= 7) return "var(--thread-indent-medium)";
+    if (depth <= 12) return "var(--thread-indent-deep)";
+    return "var(--thread-indent-minimal)";
+  }, []);
 
-    if (isMobile) {
-      // On mobile, use percentage-based indentation
-      if (maxThreadDepth <= 3) return Math.min(32, window.innerWidth * 0.08);
-      if (maxThreadDepth <= 5) return Math.min(24, window.innerWidth * 0.06);
-      if (maxThreadDepth <= 7) return Math.min(16, window.innerWidth * 0.04);
-      if (maxThreadDepth <= 9) return Math.min(12, window.innerWidth * 0.03);
-      if (maxThreadDepth <= 12) return Math.min(8, window.innerWidth * 0.02);
-      return Math.min(4, window.innerWidth * 0.01);
-    }
-
-    // Desktop sizes remain the same
-    if (maxThreadDepth <= 3) return 48;
-    if (maxThreadDepth <= 5) return 32;
-    if (maxThreadDepth <= 7) return 24;
-    if (maxThreadDepth <= 9) return 16;
-    if (maxThreadDepth <= 12) return 12;
-    if (maxThreadDepth <= 15) return 8;
-    if (maxThreadDepth <= 20) return 6;
-    return 4; // For very deep threads
-  }, [maxThreadDepth]);
+  // Get the CSS variable name for the current thread depth
+  const indentCssVar = useMemo(
+    () => getIndentCssVar(maxThreadDepth),
+    [maxThreadDepth, getIndentCssVar],
+  );
 
   // Create flat list of nodes for keyboard navigation (depth-first order)
   const flatNodeList = useMemo(() => {
@@ -857,7 +846,9 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
               <div className="flex">
                 <div
                   className="flex w-8 flex-shrink-0 justify-center"
-                  style={{ marginLeft: `${(node.depth - 1) * indentWidth}px` }}
+                  style={{
+                    marginLeft: `calc(${node.depth - 1} * ${indentCssVar})`,
+                  }}
                 >
                   <div
                     className="-mt-6 h-6 w-0.5"
@@ -871,7 +862,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             {/* Post content */}
             <div
               className="flex"
-              style={{ marginLeft: `${node.depth * indentWidth}px` }}
+              style={{ marginLeft: `calc(${node.depth} * ${indentCssVar})` }}
             >
               {/* Branch indicator */}
               {node.depth > 0 && (maxThreadDepth <= 15 || node.depth < 10) && (
@@ -1276,7 +1267,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
               <div
                 className="flex"
                 style={{
-                  marginLeft: `${(node.depth + 1) * indentWidth}px`,
+                  marginLeft: `calc(${node.depth + 1} * ${indentCssVar})`,
                   marginTop: "8px",
                 }}
               >
@@ -1316,7 +1307,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
               <div
                 className="flex"
                 style={{
-                  marginLeft: `${(node.depth + 1) * indentWidth}px`,
+                  marginLeft: `calc(${node.depth + 1} * ${indentCssVar})`,
                   marginTop: "8px",
                 }}
               >
@@ -1358,7 +1349,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       highlightUri,
       highlightRef,
       hasShownInitialHighlight,
-      indentWidth,
+      indentCssVar,
       maxThreadDepth,
       navigate,
       onPostClick,

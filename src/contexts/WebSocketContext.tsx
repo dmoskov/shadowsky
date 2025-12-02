@@ -21,9 +21,17 @@ import {
   WebSocketEventType,
   type NewNotificationEvent,
   type NotificationCountEvent,
+  type WebSocketMessage,
   type WebSocketStats,
 } from "../types/websocket";
 import { useAuth } from "./AuthContext";
+
+// Polling intervals based on connection state
+const STATS_POLLING_INTERVAL_CONNECTED = 30000; // 30 seconds when connected
+const STATS_POLLING_INTERVAL_DISCONNECTED = 5000; // 5 seconds when disconnected/reconnecting
+
+// Debounce delay for batching notification updates
+const NOTIFICATION_DEBOUNCE_MS = 100;
 
 interface WebSocketContextType {
   isConnected: boolean;
@@ -65,6 +73,35 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   const reconnectAttemptTimer = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const statsIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Refs for debounced notification updates
+  const pendingNotificationsRef = useRef<Notification[]>([]);
+  const notificationDebounceTimerRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+  const pendingCountRef = useRef<number | null>(null);
+  const countDebounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  // Handler refs for cleanup - using refs to avoid effect re-runs
+  type EventHandler = (event: WebSocketMessage) => void;
+  const handlersRef = useRef<{
+    newNotification: EventHandler | null;
+    notificationCount: EventHandler | null;
+    connect: EventHandler | null;
+    disconnect: EventHandler | null;
+    reconnect: EventHandler | null;
+    error: EventHandler | null;
+  }>({
+    newNotification: null,
+    notificationCount: null,
+    connect: null,
+    disconnect: null,
+    reconnect: null,
+    error: null,
+  });
 
   const updateStats = useCallback(() => {
     const service = getWebSocketService();
@@ -75,6 +112,77 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     }
   }, []);
 
+  // Update polling interval based on connection state
+  const updatePollingInterval = useCallback(
+    (isConnected: boolean) => {
+      // Clear existing interval
+      if (statsIntervalRef.current) {
+        clearInterval(statsIntervalRef.current);
+      }
+
+      // Set new interval based on connection state
+      const interval = isConnected
+        ? STATS_POLLING_INTERVAL_CONNECTED
+        : STATS_POLLING_INTERVAL_DISCONNECTED;
+
+      debug.log(`📊 [WebSocket] Stats polling interval: ${interval / 1000}s`);
+      statsIntervalRef.current = setInterval(updateStats, interval);
+    },
+    [updateStats],
+  );
+
+  // Flush pending notifications to React Query (batched)
+  const flushPendingNotifications = useCallback(() => {
+    const notifications = pendingNotificationsRef.current;
+    if (notifications.length === 0) return;
+
+    debug.log(
+      `📬 [WebSocket] Flushing ${notifications.length} batched notifications`,
+    );
+
+    // Update notification count
+    queryClient.setQueryData(["notificationCount"], (oldCount: number) => {
+      return (oldCount || 0) + notifications.length;
+    });
+
+    // Update notifications list
+    queryClient.setQueriesData(
+      { queryKey: ["notifications"] },
+      (oldData: unknown) => {
+        const data = oldData as
+          | { pages?: Array<{ notifications: Notification[] }> }
+          | undefined;
+        if (!data?.pages) return oldData;
+
+        const newPages = [...data.pages];
+        if (newPages[0]) {
+          newPages[0] = {
+            ...newPages[0],
+            notifications: [...notifications, ...newPages[0].notifications],
+          };
+        }
+
+        return {
+          ...data,
+          pages: newPages,
+        };
+      },
+    );
+
+    // Clear pending
+    pendingNotificationsRef.current = [];
+  }, [queryClient]);
+
+  // Flush pending count update
+  const flushPendingCount = useCallback(() => {
+    const count = pendingCountRef.current;
+    if (count === null) return;
+
+    debug.log(`🔢 [WebSocket] Flushing notification count: ${count}`);
+    queryClient.setQueryData(["notificationCount"], count);
+    pendingCountRef.current = null;
+  }, [queryClient]);
+
   const handleNewNotification = useCallback(
     (event: NewNotificationEvent) => {
       debug.log(
@@ -82,34 +190,20 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         event.notification,
       );
 
-      queryClient.setQueryData(["notificationCount"], (oldCount: number) => {
-        return (oldCount || 0) + 1;
-      });
+      // Add to pending notifications for batched update
+      pendingNotificationsRef.current.push(event.notification);
 
-      queryClient.setQueriesData(
-        { queryKey: ["notifications"] },
-        (oldData: unknown) => {
-          const data = oldData as
-            | { pages?: Array<{ notifications: Notification[] }> }
-            | undefined;
-          if (!data?.pages) return oldData;
-
-          const newPages = [...data.pages];
-          if (newPages[0]) {
-            newPages[0] = {
-              ...newPages[0],
-              notifications: [event.notification, ...newPages[0].notifications],
-            };
-          }
-
-          return {
-            ...data,
-            pages: newPages,
-          };
-        },
-      );
+      // Debounce the React Query update to batch rapid notifications
+      if (notificationDebounceTimerRef.current) {
+        clearTimeout(notificationDebounceTimerRef.current);
+      }
+      notificationDebounceTimerRef.current = setTimeout(() => {
+        flushPendingNotifications();
+        notificationDebounceTimerRef.current = null;
+      }, NOTIFICATION_DEBOUNCE_MS);
 
       // Show push notification via service worker for better handling
+      // (Push notifications are shown immediately, not debounced)
       const pushPayload: PushNotificationPayload = {
         type: "notification",
         title: "New Bluesky Notification",
@@ -142,26 +236,40 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
           }
         });
     },
-    [queryClient],
+    [flushPendingNotifications],
   );
 
   const handleNotificationCount = useCallback(
     (event: NotificationCountEvent) => {
       debug.log("🔢 [WebSocket] Notification count update:", event.count);
-      queryClient.setQueryData(["notificationCount"], event.count);
+
+      // Debounce count updates to avoid rapid re-renders
+      pendingCountRef.current = event.count;
+
+      if (countDebounceTimerRef.current) {
+        clearTimeout(countDebounceTimerRef.current);
+      }
+      countDebounceTimerRef.current = setTimeout(() => {
+        flushPendingCount();
+        countDebounceTimerRef.current = null;
+      }, NOTIFICATION_DEBOUNCE_MS);
     },
-    [queryClient],
+    [flushPendingCount],
   );
 
   const handleConnect = useCallback(() => {
     debug.log("✅ [WebSocket] Connected");
     updateStats();
-  }, [updateStats]);
+    // Switch to longer polling interval when connected (event-driven updates handle the rest)
+    updatePollingInterval(true);
+  }, [updateStats, updatePollingInterval]);
 
   const handleDisconnect = useCallback(() => {
     debug.log("❌ [WebSocket] Disconnected");
     updateStats();
-  }, [updateStats]);
+    // Switch to shorter polling interval to monitor reconnection status
+    updatePollingInterval(false);
+  }, [updateStats, updatePollingInterval]);
 
   const handleReconnect = useCallback(() => {
     debug.log("🔄 [WebSocket] Reconnecting...");
@@ -190,6 +298,37 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         debug.log("🔌 [WebSocket] User logged out, disconnecting");
         const service = getWebSocketService();
         if (service) {
+          // Remove event handlers before disconnecting
+          const handlers = handlersRef.current;
+          if (handlers.newNotification)
+            service.off(
+              WebSocketEventType.NEW_NOTIFICATION,
+              handlers.newNotification,
+            );
+          if (handlers.notificationCount)
+            service.off(
+              WebSocketEventType.NOTIFICATION_COUNT,
+              handlers.notificationCount,
+            );
+          if (handlers.connect)
+            service.off(WebSocketEventType.CONNECT, handlers.connect);
+          if (handlers.disconnect)
+            service.off(WebSocketEventType.DISCONNECT, handlers.disconnect);
+          if (handlers.reconnect)
+            service.off(WebSocketEventType.RECONNECT, handlers.reconnect);
+          if (handlers.error)
+            service.off(WebSocketEventType.ERROR, handlers.error);
+
+          // Clear handler refs
+          handlersRef.current = {
+            newNotification: null,
+            notificationCount: null,
+            connect: null,
+            disconnect: null,
+            reconnect: null,
+            error: null,
+          };
+
           service.disconnect();
         }
         isInitialized.current = false;
@@ -222,27 +361,101 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       debug: true,
     });
 
-    service.on(WebSocketEventType.NEW_NOTIFICATION, (event) =>
-      handleNewNotification(event as NewNotificationEvent),
-    );
-    service.on(WebSocketEventType.NOTIFICATION_COUNT, (event) =>
-      handleNotificationCount(event as NotificationCountEvent),
-    );
-    service.on(WebSocketEventType.CONNECT, handleConnect);
-    service.on(WebSocketEventType.DISCONNECT, handleDisconnect);
-    service.on(WebSocketEventType.RECONNECT, handleReconnect);
-    service.on(WebSocketEventType.ERROR, handleError);
+    // Create wrapper handlers to store references for cleanup
+    // Using wrappers ensures we can call the current callback versions
+    const newNotificationHandler: EventHandler = (event) =>
+      handleNewNotification(event as NewNotificationEvent);
+    const notificationCountHandler: EventHandler = (event) =>
+      handleNotificationCount(event as NotificationCountEvent);
+    const connectHandler: EventHandler = () => handleConnect();
+    const disconnectHandler: EventHandler = () => handleDisconnect();
+    const reconnectHandler: EventHandler = () => handleReconnect();
+    const errorHandler: EventHandler = () => handleError();
+
+    // Store handler references for cleanup
+    handlersRef.current = {
+      newNotification: newNotificationHandler,
+      notificationCount: notificationCountHandler,
+      connect: connectHandler,
+      disconnect: disconnectHandler,
+      reconnect: reconnectHandler,
+      error: errorHandler,
+    };
+
+    // Register handlers
+    service.on(WebSocketEventType.NEW_NOTIFICATION, newNotificationHandler);
+    service.on(WebSocketEventType.NOTIFICATION_COUNT, notificationCountHandler);
+    service.on(WebSocketEventType.CONNECT, connectHandler);
+    service.on(WebSocketEventType.DISCONNECT, disconnectHandler);
+    service.on(WebSocketEventType.RECONNECT, reconnectHandler);
+    service.on(WebSocketEventType.ERROR, errorHandler);
 
     service.connect();
     isInitialized.current = true;
 
-    const statsInterval = setInterval(updateStats, 5000);
+    // Start with shorter polling interval until connected
+    updatePollingInterval(false);
 
     return () => {
-      clearInterval(statsInterval);
+      // Clear stats polling interval
+      if (statsIntervalRef.current) {
+        clearInterval(statsIntervalRef.current);
+        statsIntervalRef.current = null;
+      }
+
+      // Clear reconnect timer
       if (reconnectAttemptTimer.current) {
         clearTimeout(reconnectAttemptTimer.current);
+        reconnectAttemptTimer.current = null;
       }
+
+      // Clear debounce timers
+      if (notificationDebounceTimerRef.current) {
+        clearTimeout(notificationDebounceTimerRef.current);
+        notificationDebounceTimerRef.current = null;
+      }
+      if (countDebounceTimerRef.current) {
+        clearTimeout(countDebounceTimerRef.current);
+        countDebounceTimerRef.current = null;
+      }
+
+      // Clear pending data
+      pendingNotificationsRef.current = [];
+      pendingCountRef.current = null;
+
+      // Remove event handlers from service
+      const currentService = getWebSocketService();
+      if (currentService) {
+        const handlers = handlersRef.current;
+        if (handlers.newNotification)
+          currentService.off(
+            WebSocketEventType.NEW_NOTIFICATION,
+            handlers.newNotification,
+          );
+        if (handlers.notificationCount)
+          currentService.off(
+            WebSocketEventType.NOTIFICATION_COUNT,
+            handlers.notificationCount,
+          );
+        if (handlers.connect)
+          currentService.off(WebSocketEventType.CONNECT, handlers.connect);
+        if (handlers.disconnect)
+          currentService.off(WebSocketEventType.DISCONNECT, handlers.disconnect);
+        if (handlers.reconnect)
+          currentService.off(WebSocketEventType.RECONNECT, handlers.reconnect);
+        if (handlers.error)
+          currentService.off(WebSocketEventType.ERROR, handlers.error);
+      }
+
+      // Clear handler refs
+      handlersRef.current = {
+        newNotification: null,
+        notificationCount: null,
+        connect: null,
+        disconnect: null,
+        reconnect: null,
+        error: null,
+      };
     };
   }, [
     isAuthenticated,
@@ -253,7 +466,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     handleDisconnect,
     handleReconnect,
     handleError,
-    updateStats,
+    updatePollingInterval,
   ]);
 
   const value: WebSocketContextType = {
