@@ -2,17 +2,28 @@ import { RichText, type AppBskyFeedDefs } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BarChart3, Loader, X } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import ReactDOM from "react-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
 import { useModalSwipeBack } from "../hooks/useModalSwipeBack";
+import { useThreadKeyboardShortcuts } from "../hooks/useThreadKeyboardShortcuts";
 import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
 import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { EnhancedComposer } from "./EnhancedComposer";
 import { ThreadBreadcrumb } from "./ThreadBreadcrumb";
 import { ThreadEngagementAnalytics } from "./ThreadEngagementAnalytics";
 import { ThreadNavigationBar } from "./ThreadNavigationBar";
+import {
+  ThreadShortcutsHelp,
+  ThreadShortcutsHintBar,
+} from "./ThreadShortcutsHelp";
 import { ThreadViewer } from "./ThreadViewer";
 
 interface ThreadModalProps {

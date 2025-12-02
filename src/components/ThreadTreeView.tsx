@@ -20,15 +20,15 @@ import React, {
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { ThreadProvider } from "../contexts/ThreadContext";
+import { proxifyBskyImage } from "../utils/image-proxy";
+import { ProfileHoverCard } from "./ui/ProfileHoverCard";
+import { RichText } from "./ui/RichText";
 export {
   useCollapsedNodes,
   useThread,
   useThreadComplexity,
   useThreadNavigation,
 } from "../contexts/ThreadContext";
-import { proxifyBskyImage } from "../utils/image-proxy";
-import { ProfileHoverCard } from "./ui/ProfileHoverCard";
-import { RichText } from "./ui/RichText";
 
 type Post = AppBskyFeedDefs.PostView;
 

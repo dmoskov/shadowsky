@@ -9,6 +9,7 @@ const crypto = require("crypto");
 const os = require("os");
 const { WebSocketNotificationServer } = require("./websocket-server");
 const pushSubscriptions = require("./push-subscriptions");
+const pushNotificationService = require("./push-notification-service");
 
 // Load environment variables from parent directory's .env file
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
@@ -1253,6 +1254,179 @@ app.get("/api/push/vapid-public-key", (req, res) => {
   });
 });
 
+/**
+ * POST /api/push-notification/batch
+ *
+ * Send batch push notifications to a user.
+ * Useful for testing or sending multiple notifications efficiently.
+ *
+ * Request body:
+ * {
+ *   userDid: string,
+ *   notifications: Array<{
+ *     reason: 'like' | 'repost' | 'follow' | 'mention' | 'reply' | 'quote',
+ *     author?: { displayName?: string, handle: string, did: string },
+ *     uri?: string,
+ *     record?: { text?: string }
+ *   }>
+ * }
+ */
+app.post("/api/push-notification/batch", async (req, res) => {
+  if (!pushEnabled) {
+    return res.status(503).json({
+      error: "Push notifications are not configured on this server",
+    });
+  }
+
+  const { userDid, notifications } = req.body;
+
+  if (!userDid || !notifications || !Array.isArray(notifications)) {
+    return res.status(400).json({
+      error: "userDid and notifications array are required",
+    });
+  }
+
+  try {
+    const result = await pushNotificationService.handleNotifications(
+      userDid,
+      notifications,
+    );
+    res.json(result);
+  } catch (error) {
+    console.error("Error sending batch notifications:", error);
+    res.status(500).json({
+      error: "Failed to send batch notifications",
+    });
+  }
+});
+
+/**
+ * POST /api/push-notification/dm
+ *
+ * Send a DM notification to a user.
+ *
+ * Request body:
+ * {
+ *   userDid: string,
+ *   conversation: {
+ *     id: string,
+ *     senderName?: string,
+ *     senderDid: string,
+ *     lastMessage?: string
+ *   }
+ * }
+ */
+app.post("/api/push-notification/dm", async (req, res) => {
+  if (!pushEnabled) {
+    return res.status(503).json({
+      error: "Push notifications are not configured on this server",
+    });
+  }
+
+  const { userDid, conversation } = req.body;
+
+  if (!userDid || !conversation || !conversation.id) {
+    return res.status(400).json({
+      error: "userDid and conversation with id are required",
+    });
+  }
+
+  try {
+    const result = await pushNotificationService.sendDMNotification(
+      userDid,
+      conversation,
+    );
+
+    if (!result.success && result.reason === "user_active") {
+      return res.status(200).json({
+        sent: 0,
+        skipped: true,
+        reason: "User has active WebSocket connection",
+      });
+    }
+
+    if (!result.success) {
+      return res.status(404).json({
+        error: result.error || "No subscriptions found for user",
+      });
+    }
+
+    res.json({
+      sent: result.sent,
+      failed: result.failed,
+    });
+  } catch (error) {
+    console.error("Error sending DM notification:", error);
+    res.status(500).json({
+      error: "Failed to send DM notification",
+    });
+  }
+});
+
+/**
+ * POST /api/push-notification/system
+ *
+ * Send a system notification to a user (announcements, etc).
+ *
+ * Request body:
+ * {
+ *   userDid: string,
+ *   title: string,
+ *   body: string,
+ *   data?: { url?: string, ... }
+ * }
+ */
+app.post("/api/push-notification/system", async (req, res) => {
+  if (!pushEnabled) {
+    return res.status(503).json({
+      error: "Push notifications are not configured on this server",
+    });
+  }
+
+  const { userDid, title, body, data } = req.body;
+
+  if (!userDid || !title || !body) {
+    return res.status(400).json({
+      error: "userDid, title, and body are required",
+    });
+  }
+
+  try {
+    const result = await pushNotificationService.sendSystemNotification(
+      userDid,
+      title,
+      body,
+      data || {},
+    );
+
+    if (!result.success) {
+      return res.status(404).json({
+        error: result.error || "No subscriptions found for user",
+      });
+    }
+
+    res.json({
+      sent: result.sent,
+      failed: result.failed,
+    });
+  } catch (error) {
+    console.error("Error sending system notification:", error);
+    res.status(500).json({
+      error: "Failed to send system notification",
+    });
+  }
+});
+
+/**
+ * GET /api/push-notification/stats
+ *
+ * Get push notification service statistics.
+ */
+app.get("/api/push-notification/stats", (req, res) => {
+  const stats = pushNotificationService.getStats();
+  res.json(stats);
+});
+
 // Create HTTP server for Express app
 const httpServer = http.createServer(app);
 
@@ -1280,6 +1454,14 @@ httpServer.listen(PORT, () => {
   );
   console.log(`  - GET  /api/push-subscriptions : List user subscriptions`);
   console.log(`  - POST /api/push-notification/send : Send push notification`);
+  console.log(
+    `  - POST /api/push-notification/batch : Batch send notifications`,
+  );
+  console.log(`  - POST /api/push-notification/dm : Send DM notification`);
+  console.log(
+    `  - POST /api/push-notification/system : Send system notification`,
+  );
+  console.log(`  - GET  /api/push-notification/stats : Push service stats`);
   console.log(`  - GET  /api/push/vapid-public-key : Get VAPID public key`);
   console.log(
     `\nAPI Configuration:`,
