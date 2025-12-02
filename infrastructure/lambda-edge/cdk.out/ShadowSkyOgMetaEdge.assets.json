@@ -1,0 +1,36 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "09ccd5767c40f5a46ede65d7c700a13de90cd56c4926bbc1ed2fe68c859d19c1": {
+      "displayName": "OgMetaEdgeFunction/Code",
+      "source": {
+        "path": "asset.09ccd5767c40f5a46ede65d7c700a13de90cd56c4926bbc1ed2fe68c859d19c1",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "current_account-us-east-1-69282b8f": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
+          "objectKey": "09ccd5767c40f5a46ede65d7c700a13de90cd56c4926bbc1ed2fe68c859d19c1.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        }
+      }
+    },
+    "a74e2fb589cdbaff6c2d145c7b9b9cf9ae4936f10857fef8f0f91e9771ff76fb": {
+      "displayName": "ShadowSkyOgMetaEdge Template",
+      "source": {
+        "path": "ShadowSkyOgMetaEdge.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-us-east-1-e4de8456": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
+          "objectKey": "a74e2fb589cdbaff6c2d145c7b9b9cf9ae4936f10857fef8f0f91e9771ff76fb.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

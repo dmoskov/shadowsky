@@ -116,9 +116,10 @@ export class ATProtoClient {
       }
 
       // Use cookies for cross-subdomain access
+      // Security: SameSite=Strict prevents CSRF attacks
       setCookie(this.sessionKey, sessionData, {
         secure: window.location.protocol === "https:",
-        sameSite: "Lax",
+        sameSite: "Strict",
       });
       // Also save to localStorage for backward compatibility
       localStorage.setItem(this.sessionKey, sessionData);
@@ -155,11 +156,11 @@ export class ATProtoClient {
       // Fall back to localStorage if cookie not found
       if (!saved) {
         saved = localStorage.getItem(sessionKey);
-        // If found in localStorage, migrate to cookie
+        // If found in localStorage, migrate to cookie with improved security
         if (saved) {
           setCookie(sessionKey, saved, {
             secure: window.location.protocol === "https:",
-            sameSite: "Lax",
+            sameSite: "Strict", // CSRF protection
           });
         }
       }

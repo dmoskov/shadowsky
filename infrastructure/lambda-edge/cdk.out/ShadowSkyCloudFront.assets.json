@@ -1,0 +1,21 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "3d19c12dbdb6b4cfa4731c7e15e9874facf5284eeefa9497478138eb01bfaccd": {
+      "displayName": "ShadowSkyCloudFront Template",
+      "source": {
+        "path": "ShadowSkyCloudFront.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-us-east-1-686dd341": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
+          "objectKey": "3d19c12dbdb6b4cfa4731c7e15e9874facf5284eeefa9497478138eb01bfaccd.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

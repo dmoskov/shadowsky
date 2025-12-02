@@ -8,6 +8,11 @@
  * - Retry status notifications
  */
 
+import {
+  getErrorMessage,
+  getErrorStatus,
+  hasHeadersProperty,
+} from "../types/errors";
 import { createLogger } from "./logger";
 
 const logger = createLogger("RetryClient");
@@ -17,8 +22,8 @@ export interface RetryOptions {
   initialDelayMs?: number;
   maxDelayMs?: number;
   exponentialBase?: number;
-  shouldRetry?: (error: any, attempt: number) => boolean;
-  onRetry?: (error: any, attempt: number, delayMs: number) => void;
+  shouldRetry?: (error: unknown, attempt: number) => boolean;
+  onRetry?: (error: unknown, attempt: number, delayMs: number) => void;
   signal?: AbortSignal;
 }
 
@@ -60,7 +65,7 @@ class CircuitBreaker {
       const result = await fn();
       this.onSuccess();
       return result;
-    } catch (error) {
+    } catch (error: unknown) {
       this.onFailure();
       throw error;
     }
@@ -134,24 +139,27 @@ export class RetryClient {
     });
   }
 
-  private defaultShouldRetry(error: any, attempt: number): boolean {
+  private defaultShouldRetry(error: unknown, attempt: number): boolean {
     if (attempt >= this.defaultOptions.maxRetries) {
       return false;
     }
 
-    if (error?.status === 429) {
+    const status = getErrorStatus(error);
+
+    if (status === 429) {
       return true;
     }
 
-    if (error?.status >= 500 && error?.status < 600) {
+    if (status !== undefined && status >= 500 && status < 600) {
       return true;
     }
 
+    const message = getErrorMessage(error);
     if (
-      error?.message?.includes("network") ||
-      error?.message?.includes("timeout") ||
-      error?.message?.includes("ECONNREFUSED") ||
-      error?.message?.includes("ETIMEDOUT")
+      message.includes("network") ||
+      message.includes("timeout") ||
+      message.includes("ECONNREFUSED") ||
+      message.includes("ETIMEDOUT")
     ) {
       return true;
     }
@@ -159,8 +167,8 @@ export class RetryClient {
     return false;
   }
 
-  private getRetryAfterDelay(error: any): number | null {
-    if (!error?.headers) return null;
+  private getRetryAfterDelay(error: unknown): number | null {
+    if (!hasHeadersProperty(error)) return null;
 
     const retryAfter =
       error.headers["retry-after"] || error.headers["Retry-After"];
@@ -207,7 +215,7 @@ export class RetryClient {
 
   async execute<T>(fn: () => Promise<T>, options?: RetryOptions): Promise<T> {
     const opts = { ...this.defaultOptions, ...options };
-    let lastError: any;
+    let lastError: unknown;
 
     return this.circuitBreaker.execute(async () => {
       for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
@@ -218,7 +226,7 @@ export class RetryClient {
 
           const result = await fn();
           return result;
-        } catch (error) {
+        } catch (error: unknown) {
           lastError = error;
 
           if (!opts.shouldRetry(error, attempt)) {

@@ -2,8 +2,15 @@ import type { AppBskyFeedDefs } from "@atproto/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { Bookmark, Cloud, Search, Settings, X } from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate } from "react-router";
+import { List, ListImperativeAPI, useDynamicRowHeight } from "react-window";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModal } from "../contexts/ModalContext";
 import { useModeration } from "../contexts/ModerationContext";
@@ -18,6 +25,8 @@ interface BookmarksColumnProps {
   isFocused?: boolean;
   onClose?: () => void;
 }
+
+const scrollPositions = new Map<string, number>();
 
 export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
   isFocused = false,
@@ -40,9 +49,17 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
   }> | null>(null);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const listContainerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<ListImperativeAPI>(null);
+  const [containerHeight, setContainerHeight] = useState(600);
+  const [shouldRestoreScroll, setShouldRestoreScroll] = useState(false);
 
-  // Note: bookmarkServiceV2 is initialized in AuthContext
+  const cacheKey = `bookmarks-${searchQuery}`;
+
+  const dynamicRowHeight = useDynamicRowHeight({
+    defaultRowHeight: 180,
+    key: cacheKey,
+  });
 
   const {
     data: bookmarks,
@@ -58,6 +75,19 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
     },
     staleTime: 30000,
   });
+
+  // Filter bookmarks
+  const filteredBookmarks = useMemo(() => {
+    if (!bookmarks) return [];
+    return bookmarks.filter(
+      (bookmark) =>
+        bookmark.post &&
+        !isPostHidden(bookmark.post.uri) &&
+        !isUserMuted(bookmark.post.author.did) &&
+        !isUserBlocked(bookmark.post.author.did) &&
+        !isThreadMuted(bookmark.post.uri),
+    );
+  }, [bookmarks, isPostHidden, isUserMuted, isUserBlocked, isThreadMuted]);
 
   // Refetch bookmarks when the column becomes focused
   useEffect(() => {
@@ -93,12 +123,70 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
     setShowThread(true);
   };
 
+  // Measure container height for virtual list
+  useEffect(() => {
+    if (!listContainerRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerHeight(entry.contentRect.height);
+      }
+    });
+
+    resizeObserver.observe(listContainerRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  // Restore scroll position when bookmarks are loaded
+  useEffect(() => {
+    if (
+      shouldRestoreScroll &&
+      cacheKey &&
+      filteredBookmarks.length > 0 &&
+      scrollPositions.has(cacheKey) &&
+      listRef.current
+    ) {
+      const savedPosition = scrollPositions.get(cacheKey)!;
+      setTimeout(() => {
+        if (listRef.current) {
+          listRef.current.scrollToRow({
+            index: 0,
+            behavior: "auto",
+          });
+          const element = listRef.current.element;
+          if (element) {
+            element.scrollTop = savedPosition;
+          }
+        }
+      }, 0);
+      setShouldRestoreScroll(false);
+    }
+  }, [cacheKey, filteredBookmarks.length, shouldRestoreScroll]);
+
+  // Mark that we should restore scroll on mount
+  useEffect(() => {
+    if (cacheKey && scrollPositions.has(cacheKey)) {
+      setShouldRestoreScroll(true);
+    }
+  }, [cacheKey]);
+
+  // Save scroll position when unmounting
+  useEffect(() => {
+    return () => {
+      if (cacheKey && listRef.current) {
+        const element = listRef.current.element;
+        if (element) {
+          scrollPositions.set(cacheKey, element.scrollTop);
+        }
+      }
+    };
+  }, [cacheKey]);
+
   // Keyboard navigation
   useEffect(() => {
-    if (!isFocused || !bookmarks) return;
+    if (!isFocused || !filteredBookmarks.length) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't interfere with input fields
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement
@@ -110,35 +198,49 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
         e.preventDefault();
         setFocusedIndex((prev) => {
           const newIndex =
-            prev === -1 ? 0 : Math.min(prev + 1, bookmarks.length - 1);
+            prev === -1 ? 0 : Math.min(prev + 1, filteredBookmarks.length - 1);
+          // Scroll to the focused item
+          if (listRef.current && newIndex >= 0) {
+            listRef.current.scrollToRow({
+              index: newIndex,
+              behavior: "smooth",
+            });
+          }
           return newIndex;
         });
       } else if (e.key === "ArrowUp" || e.key === "k") {
         e.preventDefault();
         setFocusedIndex((prev) => {
           const newIndex = prev === -1 ? 0 : Math.max(prev - 1, 0);
+          // Scroll to the focused item
+          if (listRef.current && newIndex >= 0) {
+            listRef.current.scrollToRow({
+              index: newIndex,
+              behavior: "smooth",
+            });
+          }
           return newIndex;
         });
       } else if (
         e.key === "Enter" &&
         focusedIndex >= 0 &&
-        bookmarks[focusedIndex]?.post
+        filteredBookmarks[focusedIndex]?.post
       ) {
         e.preventDefault();
-        handlePostClick(bookmarks[focusedIndex].post!);
+        handlePostClick(filteredBookmarks[focusedIndex].post!);
       } else if (
         e.key === "Delete" &&
         focusedIndex >= 0 &&
-        bookmarks[focusedIndex]
+        filteredBookmarks[focusedIndex]
       ) {
         e.preventDefault();
-        handleUnbookmark(bookmarks[focusedIndex].postUri);
+        handleUnbookmark(filteredBookmarks[focusedIndex].postUri);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isFocused, bookmarks, focusedIndex, handleUnbookmark]);
+  }, [isFocused, filteredBookmarks, focusedIndex, handleUnbookmark]);
 
   // Focus container when column is focused
   useEffect(() => {
@@ -147,39 +249,33 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
     }
   }, [isFocused]);
 
-  // Scroll focused item into view
-  useEffect(() => {
-    if (focusedIndex >= 0 && bookmarks?.[focusedIndex]) {
-      const itemEl = itemRefs.current.get(bookmarks[focusedIndex].postUri);
-      if (itemEl) {
-        itemEl.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      }
-    }
-  }, [focusedIndex, bookmarks]);
-
-  const renderEmbed = (embed: any) => {
+  const renderEmbed = (embed: AppBskyFeedDefs.PostView["embed"]) => {
     if (!embed) return null;
 
-    if (embed.$type === "app.bsky.embed.images#view") {
+    if ((embed as { $type?: string }).$type === "app.bsky.embed.images#view") {
+      const imageEmbed = embed as {
+        images: Array<{ thumb: string; fullsize: string; alt?: string }>;
+      };
       const handleImageClick = (e: React.MouseEvent, index: number) => {
         e.stopPropagation();
-        const images = embed.images.map((img: any) => ({
-          thumb: proxifyBskyImage(img.thumb),
-          fullsize: proxifyBskyImage(img.fullsize),
-          alt: img.alt,
-        }));
+        const images: Array<{ thumb: string; fullsize: string; alt?: string }> =
+          [];
+        for (const img of imageEmbed.images) {
+          const thumb = proxifyBskyImage(img.thumb);
+          const fullsize = proxifyBskyImage(img.fullsize);
+          if (thumb && fullsize) {
+            images.push({ thumb, fullsize, alt: img.alt });
+          }
+        }
         setGalleryImages(images);
         setGalleryIndex(index);
       };
 
       return (
         <div
-          className={`mt-2 grid gap-1 ${embed.images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
+          className={`mt-2 grid gap-1 ${imageEmbed.images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
         >
-          {embed.images.map((img: any, idx: number) => (
+          {imageEmbed.images.map((img, idx: number) => (
             <div
               key={idx}
               className="relative overflow-hidden rounded-lg bg-bsky-bg-tertiary"
@@ -196,19 +292,27 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
       );
     }
 
-    if (embed.$type === "app.bsky.embed.video#view") {
+    if ((embed as { $type?: string }).$type === "app.bsky.embed.video#view") {
+      const videoEmbed = embed as {
+        playlist: string;
+        thumbnail?: string;
+        aspectRatio?: { width: number; height: number };
+        alt?: string;
+      };
       return (
         <div
           className="mt-2 overflow-hidden rounded-lg"
           onClick={(e) => e.stopPropagation()}
         >
           <VideoPlayer
-            src={proxifyBskyVideo(embed.playlist) || ""}
+            src={proxifyBskyVideo(videoEmbed.playlist) || ""}
             thumbnail={
-              embed.thumbnail ? proxifyBskyVideo(embed.thumbnail) : undefined
+              videoEmbed.thumbnail
+                ? proxifyBskyVideo(videoEmbed.thumbnail)
+                : undefined
             }
-            aspectRatio={embed.aspectRatio}
-            alt={embed.alt}
+            aspectRatio={videoEmbed.aspectRatio}
+            alt={videoEmbed.alt}
           />
         </div>
       );
@@ -307,15 +411,15 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
         </div>
       </div>
 
-      {/* Bookmarks List */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Bookmarks List - Virtualized */}
+      <div ref={listContainerRef} className="flex-1 overflow-hidden">
         {isLoading && (
           <div className="flex items-center justify-center p-8">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
           </div>
         )}
 
-        {!isLoading && (!bookmarks || bookmarks.length === 0) && (
+        {!isLoading && filteredBookmarks.length === 0 && (
           <div className="p-8 text-center">
             <Bookmark
               size={48}
@@ -334,105 +438,105 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
           </div>
         )}
 
-        {bookmarks
-          ?.filter(
-            (bookmark) =>
-              bookmark.post &&
-              !isPostHidden(bookmark.post.uri) &&
-              !isUserMuted(bookmark.post.author.did) &&
-              !isUserBlocked(bookmark.post.author.did) &&
-              !isThreadMuted(bookmark.post.uri),
-          )
-          .map((bookmark, index) => {
-            const post = bookmark.post;
-            if (!post) return null;
+        {!isLoading && filteredBookmarks.length > 0 && (
+          <List
+            listRef={listRef}
+            rowCount={filteredBookmarks.length}
+            rowHeight={dynamicRowHeight}
+            defaultHeight={containerHeight}
+            overscanCount={5}
+            rowComponent={({ index, style }) => {
+              const bookmark = filteredBookmarks[index];
+              const post = bookmark.post;
+              if (!post) return <div style={style} />;
 
-            const isFocused = focusedIndex === index;
+              const isItemFocused = focusedIndex === index;
 
-            return (
-              <div
-                key={bookmark.postUri}
-                ref={(el) => {
-                  if (el) itemRefs.current.set(bookmark.postUri, el);
-                }}
-                className={`group cursor-pointer border-b transition-colors hover:bg-blue-500 hover:bg-opacity-5 ${
-                  isFocused
-                    ? "border-l-4 border-l-blue-500 bg-blue-500 bg-opacity-10 pl-3"
-                    : ""
-                }`}
-                style={{ borderColor: "var(--bsky-border-primary)" }}
-                onClick={() => handlePostClick(post)}
-              >
-                <div className="p-4">
-                  <div className="flex items-start gap-3">
-                    {post.author?.avatar && (
-                      <img
-                        src={proxifyBskyImage(post.author.avatar)}
-                        alt={post.author.handle || ""}
-                        className="h-10 w-10 rounded-full"
-                      />
-                    )}
+              return (
+                <div style={style}>
+                  <div
+                    className={`group cursor-pointer border-b transition-colors hover:bg-blue-500 hover:bg-opacity-5 ${
+                      isItemFocused
+                        ? "border-l-4 border-l-blue-500 bg-blue-500 bg-opacity-10 pl-3"
+                        : ""
+                    }`}
+                    style={{ borderColor: "var(--bsky-border-primary)" }}
+                    onClick={() => handlePostClick(post)}
+                  >
+                    <div className="p-4">
+                      <div className="flex items-start gap-3">
+                        {post.author?.avatar && (
+                          <img
+                            src={proxifyBskyImage(post.author.avatar)}
+                            alt={post.author.handle || ""}
+                            className="h-10 w-10 rounded-full"
+                          />
+                        )}
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-baseline gap-2">
-                        <span
-                          className="font-semibold"
-                          style={{ color: "var(--bsky-text-primary)" }}
-                        >
-                          {post.author?.displayName ||
-                            post.author?.handle ||
-                            "Unknown"}
-                        </span>
-                        <span
-                          className="text-sm"
-                          style={{ color: "var(--bsky-text-secondary)" }}
-                        >
-                          @{post.author?.handle || "unknown"}
-                        </span>
-                        <span
-                          className="text-xs"
-                          style={{ color: "var(--bsky-text-tertiary)" }}
-                        >
-                          {formatDistanceToNow(new Date(bookmark.savedAt), {
-                            addSuffix: true,
-                          })}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleUnbookmark(bookmark.postUri);
-                          }}
-                          className="rounded p-1 opacity-50 transition-colors hover:bg-yellow-100 group-hover:opacity-100 dark:hover:bg-yellow-900/20"
-                          style={{ color: "#ffad1f" }}
-                          title="Remove bookmark"
-                        >
-                          <Bookmark size={16} fill="currentColor" />
-                        </button>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline gap-2">
+                            <span
+                              className="font-semibold"
+                              style={{ color: "var(--bsky-text-primary)" }}
+                            >
+                              {post.author?.displayName ||
+                                post.author?.handle ||
+                                "Unknown"}
+                            </span>
+                            <span
+                              className="text-sm"
+                              style={{ color: "var(--bsky-text-secondary)" }}
+                            >
+                              @{post.author?.handle || "unknown"}
+                            </span>
+                            <span
+                              className="text-xs"
+                              style={{ color: "var(--bsky-text-tertiary)" }}
+                            >
+                              {formatDistanceToNow(new Date(bookmark.savedAt), {
+                                addSuffix: true,
+                              })}
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUnbookmark(bookmark.postUri);
+                              }}
+                              className="rounded p-1 opacity-50 transition-colors hover:bg-yellow-100 group-hover:opacity-100 dark:hover:bg-yellow-900/20"
+                              style={{ color: "#ffad1f" }}
+                              title="Remove bookmark"
+                            >
+                              <Bookmark size={16} fill="currentColor" />
+                            </button>
+                          </div>
+
+                          <div
+                            className="mt-2 whitespace-pre-wrap break-words"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                          >
+                            {(post.record as { text?: string })?.text || ""}
+                          </div>
+
+                          {post.embed && renderEmbed(post.embed)}
+
+                          <PostActionBar
+                            post={post}
+                            onReply={() => {}}
+                            onLike={() => {}}
+                            onRepost={() => {}}
+                            showCounts={true}
+                            size="small"
+                          />
+                        </div>
                       </div>
-
-                      <div
-                        className="mt-2 whitespace-pre-wrap break-words"
-                        style={{ color: "var(--bsky-text-primary)" }}
-                      >
-                        {(post.record as any)?.text || ""}
-                      </div>
-
-                      {post.embed && renderEmbed(post.embed)}
-
-                      <PostActionBar
-                        post={post}
-                        onReply={() => {}}
-                        onLike={() => {}}
-                        onRepost={() => {}}
-                        showCounts={true}
-                        size="small"
-                      />
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            }}
+            rowProps={{}}
+          />
+        )}
       </div>
 
       {/* Thread Modal */}

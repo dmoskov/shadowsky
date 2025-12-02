@@ -4,6 +4,11 @@
 
 This document describes the comprehensive accessibility features implemented in the BSKY application to meet WCAG 2.1 AA standards.
 
+**Related Documents:**
+
+- [WCAG 2.1 AA Audit Report](./accessibility-audit-wcag-2.1-aa.md) - Comprehensive accessibility audit (November 2025)
+- [Remediation Backlog](./accessibility-remediation-backlog.md) - Prioritized issues and implementation guide
+
 ## Implemented Features
 
 ### 1. Keyboard Shortcuts (20+ Actions)

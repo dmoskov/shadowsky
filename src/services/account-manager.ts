@@ -130,9 +130,10 @@ export class AccountManager {
     const sessionKey = `notifications_bsky_session`;
     const sessionData = JSON.stringify(account.session);
 
+    // Security: SameSite=Strict prevents CSRF attacks
     setCookie(sessionKey, sessionData, {
       secure: window.location.protocol === "https:",
-      sameSite: "Lax",
+      sameSite: "Strict",
     });
     localStorage.setItem(sessionKey, sessionData);
 
@@ -162,9 +163,10 @@ export class AccountManager {
   }
 
   private static setActiveAccount(did: string): void {
+    // Security: SameSite=Strict prevents CSRF attacks
     setCookie(this.ACTIVE_KEY, did, {
       secure: window.location.protocol === "https:",
-      sameSite: "Lax",
+      sameSite: "Strict",
     });
     localStorage.setItem(this.ACTIVE_KEY, did);
   }
@@ -177,9 +179,10 @@ export class AccountManager {
   private static saveAccounts(accounts: StoredAccount[]): void {
     const data = JSON.stringify(accounts);
 
+    // Security: SameSite=Strict prevents CSRF attacks
     setCookie(this.STORAGE_KEY, data, {
       secure: window.location.protocol === "https:",
-      sameSite: "Lax",
+      sameSite: "Strict",
     });
     localStorage.setItem(this.STORAGE_KEY, data);
   }

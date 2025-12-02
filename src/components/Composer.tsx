@@ -1,3 +1,4 @@
+import { RichText } from "@atproto/api";
 import {
   AlertCircle,
   CheckCircle,
@@ -46,8 +47,13 @@ import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { createLogger } from "../utils/logger";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
+import {
+  MentionTypeahead,
+  type MentionTypeaheadHandle,
+} from "./MentionTypeahead";
 import { ReplyControls, type ReplyPermission } from "./ReplyControls";
 import { AISettingsPanel } from "./settings/AISettingsPanel";
+import { ThreadComposer } from "./ThreadComposer";
 import { UploadProgressBar } from "./ui/UploadProgressBar";
 
 const logger = createLogger("Composer");
@@ -239,7 +245,7 @@ export function Composer() {
   // Giphy and emoji state
   const [showGiphySearch, setShowGiphySearch] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<MentionTypeaheadHandle>(null);
 
   // Tone adjustment state
   const [showToneOptions, setShowToneOptions] = useState(false);
@@ -278,6 +284,9 @@ export function Composer() {
   // Reply control state
   const [replyPermission, setReplyPermission] =
     useState<ReplyPermission>("everyone");
+
+  // Thread composer modal state
+  const [showThreadComposer, setShowThreadComposer] = useState(false);
 
   // Load settings on mount
   useEffect(() => {
@@ -1376,9 +1385,13 @@ export function Composer() {
         let result: { uri: string; cid: string };
         const postMedia = postMediaMap.get(i) || [];
 
-        // Create base post object
+        // Create base post object with facet detection
+        const rt = new RichText({ text: numberedPosts[i] });
+        await rt.detectFacets(agent);
+
         const postData: any = {
-          text: numberedPosts[i],
+          text: rt.text,
+          facets: rt.facets,
         };
 
         // Add reply info for subsequent posts
@@ -2167,13 +2180,25 @@ export function Composer() {
           </button>
         </div>
 
-        <div className="mb-4 flex justify-end">
+        <div className="mb-4 flex items-center justify-between">
+          <button
+            className="bsky-button-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium"
+            onClick={() => setShowThreadComposer(true)}
+          >
+            <MessageSquare size={16} />
+            Create Thread
+          </button>
           <button
             className="bsky-button-primary flex items-center gap-2 px-6 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleSend}
             disabled={posts.length === 0 || isPosting}
+            aria-label={
+              posts.length > 1
+                ? `Post thread with ${posts.length} posts${media.some((m) => m.type === "image" && !m.alt) ? ". Warning: some images are missing alt text" : ""}`
+                : `Post${media.some((m) => m.type === "image" && !m.alt) ? ". Warning: some images are missing alt text" : ""}`
+            }
           >
-            <Send size={20} />
+            <Send size={20} aria-hidden="true" />
             {isPosting && countdown
               ? `Sending in ${countdown}s...`
               : isPosting
@@ -2184,23 +2209,19 @@ export function Composer() {
           </button>
         </div>
 
-        <textarea
+        <MentionTypeahead
           ref={textareaRef}
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={setText}
           onPaste={handlePaste}
           placeholder="What's on your mind?"
-          className="resize-vertical font-inherit min-h-[200px] w-full rounded-lg p-4 transition-all"
+          className="resize-vertical font-inherit min-h-[200px] w-full rounded-lg p-4 transition-all focus:border-blue-500"
           style={{
             background: "var(--bsky-bg-secondary)",
             border: "1px solid var(--bsky-border-primary)",
             color: "var(--bsky-text-primary)",
             outline: "none",
           }}
-          onFocus={(e) => (e.target.style.borderColor = "var(--bsky-primary)")}
-          onBlur={(e) =>
-            (e.target.style.borderColor = "var(--bsky-border-primary)")
-          }
           disabled={isPosting}
         />
 
@@ -2604,6 +2625,27 @@ export function Composer() {
               </p>
             </div>
           )}
+          {media.some((m) => m.type === "image" && !m.alt) && (
+            <div
+              className="mb-4 flex items-start gap-2 rounded-lg border-l-4 border-amber-400 p-3"
+              style={{ background: "var(--bsky-bg-tertiary)" }}
+              role="alert"
+              aria-live="polite"
+            >
+              <AlertCircle
+                size={16}
+                className="mt-0.5 flex-shrink-0 text-amber-500"
+                aria-hidden="true"
+              />
+              <p
+                className="text-sm"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                Some images are missing alt text. Adding alt text improves
+                accessibility for screen reader users.
+              </p>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {media
               .filter((m) => m.postIndex === undefined || m.postIndex === 0)
@@ -2673,18 +2715,30 @@ export function Composer() {
                     className="relative border-t"
                     style={{ borderColor: "var(--bsky-border-primary)" }}
                   >
+                    <label htmlFor={`alt-text-${m.id}`} className="sr-only">
+                      Alt text for image{" "}
+                      {m.alt
+                        ? "(has alt text)"
+                        : "(no alt text - add for accessibility)"}
+                    </label>
                     <textarea
-                      placeholder="Alt text (optional)"
+                      id={`alt-text-${m.id}`}
+                      placeholder="Add alt text for accessibility"
                       value={m.alt}
                       onChange={(e) => updateMediaAlt(m.id, e.target.value)}
-                      className="w-full resize-none p-2 pr-10 text-sm focus:outline-none"
+                      className={`w-full resize-none p-2 pr-10 text-sm focus:outline-none ${!m.alt ? "border-l-2 border-l-amber-400" : ""}`}
                       rows={2}
+                      aria-describedby={`alt-text-help-${m.id}`}
                       style={{
                         background: "var(--bsky-bg-primary)",
                         color: "var(--bsky-text-primary)",
                         minHeight: "3.5rem",
                       }}
                     />
+                    <span id={`alt-text-help-${m.id}`} className="sr-only">
+                      Describe the image for screen reader users. Good alt text
+                      describes the content and function of the image.
+                    </span>
                     {m.type === "image" && (
                       <button
                         onClick={() => autoGenerateAltTextForMedia(m.id)}
@@ -3585,6 +3639,16 @@ export function Composer() {
           </div>
         </div>
       )}
+
+      {/* Thread Composer Modal */}
+      <ThreadComposer
+        isOpen={showThreadComposer}
+        onClose={() => setShowThreadComposer(false)}
+        onThreadPosted={() => {
+          setPostStatus({ type: "success", message: "Thread posted!" });
+          setTimeout(() => setPostStatus({ type: "idle" }), 3000);
+        }}
+      />
     </div>
   );
 }

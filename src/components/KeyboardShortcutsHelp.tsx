@@ -76,9 +76,8 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
   {
     category: "General",
     shortcuts: [
-      { keys: ["Shift", "?"], description: "Show keyboard shortcuts" },
       { keys: ["?"], description: "Show keyboard shortcuts" },
-      { keys: ["/"], description: "Focus search" },
+      { keys: ["/"], description: "Focus search input" },
     ],
   },
 ];

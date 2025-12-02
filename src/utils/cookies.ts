@@ -1,4 +1,6 @@
 // Cookie utilities for persistent storage
+// Security: Using SameSite=Strict and Secure flags for session cookies
+// Note: httpOnly cannot be set via JavaScript - requires server-side Set-Cookie headers
 
 // Individual exports for backwards compatibility
 export const setCookie = (
@@ -9,8 +11,11 @@ export const setCookie = (
     | number,
 ) => {
   let days = 365;
-  let secure = false;
-  let sameSite = "Lax";
+  // Default to secure in production (HTTPS)
+  let secure =
+    typeof window !== "undefined" && window.location.protocol === "https:";
+  // Use Strict for session cookies (CSRF protection), Lax for others
+  let sameSite = "Strict";
   let domain: string | undefined;
 
   if (typeof options === "number") {
@@ -108,7 +113,7 @@ export const cookies = {
     setCookie(name, value, {
       secure:
         typeof window !== "undefined" && window.location.protocol === "https:",
-      sameSite: "Lax",
+      sameSite: "Strict", // CSRF protection - don't send cookies with cross-origin requests
       days: days,
     });
   },

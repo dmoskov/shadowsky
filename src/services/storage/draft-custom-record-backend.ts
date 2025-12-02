@@ -1,5 +1,6 @@
 import { AtpAgent } from "@atproto/api";
 import { ThreadDraft } from "../../services/drafts";
+import { withAtProtoRetry } from "../../utils/storage-retry";
 import { DraftStorageBackend } from "./draft-storage-backend";
 
 interface DraftRecord {
@@ -99,11 +100,13 @@ export class DraftCustomRecordBackend extends DraftStorageBackend {
       const did = this.agent!.session?.did;
       if (!did) throw new Error("No session");
 
-      const response = await this.agent!.api.com.atproto.repo.listRecords({
-        repo: did,
-        collection: this.COLLECTION,
-        limit: 100,
-      });
+      const response = await withAtProtoRetry(async () => {
+        return this.agent!.api.com.atproto.repo.listRecords({
+          repo: did,
+          collection: this.COLLECTION,
+          limit: 100,
+        });
+      }, "getAll-drafts");
 
       return response.data.records
         .map((record) => this.recordToDraft(record.value as DraftRecord))
@@ -126,11 +129,13 @@ export class DraftCustomRecordBackend extends DraftStorageBackend {
       const did = this.agent!.session?.did;
       if (!did) throw new Error("No session");
 
-      const response = await this.agent!.api.com.atproto.repo.getRecord({
-        repo: did,
-        collection: this.COLLECTION,
-        rkey: this.getRecordKey(id),
-      });
+      const response = await withAtProtoRetry(async () => {
+        return this.agent!.api.com.atproto.repo.getRecord({
+          repo: did,
+          collection: this.COLLECTION,
+          rkey: this.getRecordKey(id),
+        });
+      }, "get-draft");
 
       return this.recordToDraft(response.data.value as DraftRecord);
     } catch (error) {
@@ -148,12 +153,14 @@ export class DraftCustomRecordBackend extends DraftStorageBackend {
 
       const record = this.draftToRecord(draft);
 
-      await this.agent!.api.com.atproto.repo.createRecord({
-        repo: did,
-        collection: this.COLLECTION,
-        rkey: this.getRecordKey(draft.id),
-        record,
-      });
+      await withAtProtoRetry(async () => {
+        await this.agent!.api.com.atproto.repo.createRecord({
+          repo: did,
+          collection: this.COLLECTION,
+          rkey: this.getRecordKey(draft.id),
+          record,
+        });
+      }, "create-draft");
     } catch (error) {
       this.handleError(error, "create draft record");
       throw error;
@@ -169,12 +176,14 @@ export class DraftCustomRecordBackend extends DraftStorageBackend {
 
       const record = this.draftToRecord(draft);
 
-      await this.agent!.api.com.atproto.repo.putRecord({
-        repo: did,
-        collection: this.COLLECTION,
-        rkey: this.getRecordKey(id),
-        record,
-      });
+      await withAtProtoRetry(async () => {
+        await this.agent!.api.com.atproto.repo.putRecord({
+          repo: did,
+          collection: this.COLLECTION,
+          rkey: this.getRecordKey(id),
+          record,
+        });
+      }, "update-draft");
     } catch (error) {
       this.handleError(error, "update draft record");
       throw error;
@@ -188,11 +197,13 @@ export class DraftCustomRecordBackend extends DraftStorageBackend {
       const did = this.agent!.session?.did;
       if (!did) throw new Error("No session");
 
-      await this.agent!.api.com.atproto.repo.deleteRecord({
-        repo: did,
-        collection: this.COLLECTION,
-        rkey: this.getRecordKey(id),
-      });
+      await withAtProtoRetry(async () => {
+        await this.agent!.api.com.atproto.repo.deleteRecord({
+          repo: did,
+          collection: this.COLLECTION,
+          rkey: this.getRecordKey(id),
+        });
+      }, "delete-draft");
     } catch (error) {
       this.handleError(error, "delete draft record");
       throw error;

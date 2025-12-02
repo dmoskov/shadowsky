@@ -8,9 +8,14 @@ const path = require("path");
 const crypto = require("crypto");
 const os = require("os");
 const { WebSocketNotificationServer } = require("./websocket-server");
+const pushSubscriptions = require("./push-subscriptions");
+const pushNotificationService = require("./push-notification-service");
 
 // Load environment variables from parent directory's .env file
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
+
+// Initialize Web Push with VAPID keys
+const pushEnabled = pushSubscriptions.initWebPush();
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -52,6 +57,19 @@ app.use(
 
 // Increase JSON payload size limit for base64-encoded images
 app.use(express.json({ limit: "50mb" }));
+
+// Security headers middleware
+app.use((req, res, next) => {
+  // Prevent clickjacking
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  // Prevent MIME type sniffing
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  // Control referrer information
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  // XSS protection (legacy but still useful for older browsers)
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  next();
+});
 
 // Generate alt text for an image URL
 app.post("/api/generate-alt-text", async (req, res) => {
@@ -688,6 +706,7 @@ Start directly with { and end with }`,
 // Analyze user posts endpoint
 app.post("/api/analyze-posts", async (req, res) => {
   const { posts, analysisType = "sonnet" } = req.body;
+  const forceRefresh = req.query.forceRefresh === "true";
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!posts || !Array.isArray(posts) || posts.length === 0) {
@@ -696,6 +715,19 @@ app.post("/api/analyze-posts", async (req, res) => {
 
   if (!apiKey) {
     return res.status(500).json({ error: "Server API key not configured" });
+  }
+
+  // Check cache first (unless force refresh)
+  const cacheKey = generateProfileCacheKey(posts, analysisType);
+  if (!forceRefresh) {
+    const cached = getCachedProfileAnalysis(cacheKey);
+    if (cached) {
+      return res.json({
+        ...cached,
+        cached: true,
+        generatedAt: new Date(cached.generatedAt).toISOString(),
+      });
+    }
   }
 
   try {
@@ -784,13 +816,685 @@ Provide specific evidence and quotes to support your analysis. Start directly wi
     const cleanedText = cleanJsonResponse(data.content[0].text);
     const result = JSON.parse(cleanedText);
 
-    res.json(result);
+    // Cache the result
+    setCachedProfileAnalysis(cacheKey, result);
+
+    res.json({
+      ...result,
+      cached: false,
+      generatedAt: new Date().toISOString(),
+    });
   } catch (error) {
     console.error("Error analyzing posts:", error);
     res.status(500).json({
       error: error.message,
     });
   }
+});
+
+// =============================================================================
+// Thread Summary Cache (10-minute TTL)
+// =============================================================================
+const threadSummaryCache = new Map();
+const THREAD_SUMMARY_CACHE_TTL = 10 * 60 * 1000; // 10 minutes in milliseconds
+
+function generateCacheKey(posts, format) {
+  // Create a stable cache key from posts content and format
+  const postsHash = crypto
+    .createHash("sha256")
+    .update(JSON.stringify(posts.map((p) => p.text).sort()))
+    .digest("hex")
+    .slice(0, 16);
+  return `${format}:${postsHash}`;
+}
+
+function getCachedSummary(cacheKey) {
+  const cached = threadSummaryCache.get(cacheKey);
+  if (cached && Date.now() - cached.generatedAt < THREAD_SUMMARY_CACHE_TTL) {
+    return cached;
+  }
+  // Clean up expired entry
+  if (cached) {
+    threadSummaryCache.delete(cacheKey);
+  }
+  return null;
+}
+
+function setCachedSummary(cacheKey, result) {
+  threadSummaryCache.set(cacheKey, {
+    ...result,
+    generatedAt: Date.now(),
+  });
+}
+
+// Periodic cache cleanup (every 5 minutes)
+setInterval(
+  () => {
+    const now = Date.now();
+    for (const [key, value] of threadSummaryCache.entries()) {
+      if (now - value.generatedAt >= THREAD_SUMMARY_CACHE_TTL) {
+        threadSummaryCache.delete(key);
+      }
+    }
+  },
+  5 * 60 * 1000,
+);
+
+// =============================================================================
+// Profile Analysis Cache (48-hour TTL)
+// =============================================================================
+const profileAnalysisCache = new Map();
+const PROFILE_ANALYSIS_CACHE_TTL = 48 * 60 * 60 * 1000; // 48 hours in milliseconds
+
+function generateProfileCacheKey(posts, analysisType) {
+  // Create a stable cache key from posts content and analysis type
+  const postsHash = crypto
+    .createHash("sha256")
+    .update(JSON.stringify(posts.map((p) => p.text).sort()))
+    .digest("hex")
+    .slice(0, 16);
+  return `profile:${analysisType}:${postsHash}`;
+}
+
+function getCachedProfileAnalysis(cacheKey) {
+  const cached = profileAnalysisCache.get(cacheKey);
+  if (cached && Date.now() - cached.generatedAt < PROFILE_ANALYSIS_CACHE_TTL) {
+    return cached;
+  }
+  // Clean up expired entry
+  if (cached) {
+    profileAnalysisCache.delete(cacheKey);
+  }
+  return null;
+}
+
+function setCachedProfileAnalysis(cacheKey, result) {
+  profileAnalysisCache.set(cacheKey, {
+    ...result,
+    generatedAt: Date.now(),
+  });
+}
+
+// Periodic cache cleanup for profile analysis (every hour)
+setInterval(
+  () => {
+    const now = Date.now();
+    for (const [key, value] of profileAnalysisCache.entries()) {
+      if (now - value.generatedAt >= PROFILE_ANALYSIS_CACHE_TTL) {
+        profileAnalysisCache.delete(key);
+      }
+    }
+  },
+  60 * 60 * 1000,
+);
+
+// Thread summary endpoint
+app.post("/api/thread-summary", async (req, res) => {
+  const { posts, format = "haiku" } = req.body;
+  const forceRefresh = req.query.forceRefresh === "true";
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  // Input validation
+  if (!posts || !Array.isArray(posts)) {
+    return res.status(400).json({ error: "Missing or invalid posts array" });
+  }
+
+  if (posts.length === 0) {
+    return res.status(400).json({ error: "Posts array cannot be empty" });
+  }
+
+  // Maximum 500 posts per request
+  if (posts.length > 500) {
+    return res.status(400).json({
+      error: "Too many posts",
+      details: "Maximum 500 posts per request",
+    });
+  }
+
+  // Validate format
+  const validFormats = ["haiku", "tldr", "keypoints"];
+  if (!validFormats.includes(format)) {
+    return res.status(400).json({
+      error: "Invalid format",
+      details: `Format must be one of: ${validFormats.join(", ")}`,
+    });
+  }
+
+  if (!apiKey) {
+    return res.status(500).json({ error: "Server API key not configured" });
+  }
+
+  // Truncate individual post texts to 10,000 characters
+  const sanitizedPosts = posts.map((post) => ({
+    text:
+      typeof post.text === "string"
+        ? post.text.slice(0, 10000)
+        : String(post.text || "").slice(0, 10000),
+    author: String(post.author || "unknown").slice(0, 200),
+    likes: Number(post.likes) || 0,
+    replies: Number(post.replies) || 0,
+  }));
+
+  // Check cache (unless forceRefresh is true)
+  const cacheKey = generateCacheKey(sanitizedPosts, format);
+  if (!forceRefresh) {
+    const cached = getCachedSummary(cacheKey);
+    if (cached) {
+      return res.json({
+        summary: cached.summary,
+        format: cached.format,
+        metadata: {
+          ...cached.metadata,
+          cached: true,
+          generatedAt: new Date(cached.generatedAt).toISOString(),
+        },
+      });
+    }
+  }
+
+  try {
+    // Build the posts context with author and engagement info
+    const postsContext = sanitizedPosts
+      .map((post, i) => {
+        return `<post index="${i + 1}" author="${post.author}" likes="${post.likes}" replies="${post.replies}">
+${post.text}
+</post>`;
+      })
+      .join("\n\n");
+
+    // Get unique authors
+    const authors = [...new Set(sanitizedPosts.map((p) => p.author))];
+
+    // Build format-specific prompts
+    let formatPrompt;
+    let maxTokens;
+
+    switch (format) {
+      case "haiku":
+        formatPrompt = `Write a haiku (5-7-5 syllable structure) that captures the essence of this thread discussion.
+The haiku should be poetic and insightful, distilling the main theme or emotional core of the conversation.
+Return ONLY the haiku, three lines, no additional text or formatting.`;
+        maxTokens = 100;
+        break;
+      case "tldr":
+        formatPrompt = `Write a concise TL;DR summary of this thread conversation in 1-2 sentences (max 280 characters).
+Summarize both the original post AND what the replies discuss - capture the conversation, not just the original point.
+If there's debate or different viewpoints, mention that. If people agree or add context, note that.
+Return ONLY the summary text, no labels or prefixes.`;
+        maxTokens = 150;
+        break;
+      case "keypoints":
+        formatPrompt = `Extract 3-5 key points from this thread discussion.
+Format as a simple bullet list with each point on its own line, starting with "• ".
+Keep each point concise (under 100 characters).
+Return ONLY the bullet points, no headers or additional formatting.`;
+        maxTokens = 300;
+        break;
+      default:
+        formatPrompt = `Write a haiku (5-7-5 syllable structure) that captures the essence of this thread.`;
+        maxTokens = 100;
+    }
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20250929",
+        max_tokens: maxTokens,
+        messages: [
+          {
+            role: "user",
+            content: `<system>
+You are a thread summarizer. Analyze the following thread posts and provide a summary in the requested format.
+</system>
+
+<thread>
+${postsContext}
+</thread>
+
+<task>
+${formatPrompt}
+</task>`,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Anthropic API error: ${error}`);
+    }
+
+    const data = await response.json();
+    const summary = data.content[0].text.trim();
+
+    const now = Date.now();
+    const result = {
+      summary,
+      format,
+      metadata: {
+        postCount: sanitizedPosts.length,
+        authors,
+        generatedAt: new Date(now).toISOString(),
+      },
+    };
+
+    // Cache the result
+    setCachedSummary(cacheKey, {
+      summary,
+      format,
+      metadata: result.metadata,
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error generating thread summary:", error);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+});
+
+// =============================================================================
+// Push Notification Subscription Endpoints
+// =============================================================================
+
+/**
+ * Helper to get client IP address
+ */
+function getClientIp(req) {
+  return (
+    req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+    req.connection?.remoteAddress ||
+    req.ip ||
+    "unknown"
+  );
+}
+
+/**
+ * Helper to extract user DID from Authorization header
+ * Supports: Bearer <jwt> or DID:<did>
+ */
+function extractUserDid(req) {
+  const auth = req.headers.authorization;
+  if (!auth) {
+    return null;
+  }
+
+  // Support DID directly in header (e.g., "DID:did:plc:...")
+  if (auth.startsWith("DID:")) {
+    return auth.slice(4);
+  }
+
+  // Support Bearer token (would need JWT verification in production)
+  // For now, client can pass DID in x-user-did header as fallback
+  return req.headers["x-user-did"] || null;
+}
+
+/**
+ * POST /api/push-subscription
+ *
+ * Register a new push subscription for the authenticated user.
+ *
+ * Request body:
+ * {
+ *   endpoint: string,
+ *   keys: { p256dh: string, auth: string },
+ *   expirationTime?: number | null,
+ *   userAgent?: string,
+ *   createdAt?: number
+ * }
+ *
+ * Response:
+ * {
+ *   subscriptionId: string
+ * }
+ */
+app.post("/api/push-subscription", async (req, res) => {
+  if (!pushEnabled) {
+    return res.status(503).json({
+      error: "Push notifications are not configured on this server",
+    });
+  }
+
+  const subscription = req.body;
+  const userDid = extractUserDid(req);
+  const clientIp = getClientIp(req);
+
+  try {
+    const result = await pushSubscriptions.createSubscription(
+      subscription,
+      userDid,
+      clientIp,
+    );
+
+    if (!result.success) {
+      return res.status(400).json({
+        error: result.error,
+        details: result.details,
+      });
+    }
+
+    res.status(201).json({
+      subscriptionId: result.subscriptionId,
+    });
+  } catch (error) {
+    console.error("Error creating push subscription:", error);
+    res.status(500).json({
+      error: "Failed to create push subscription",
+    });
+  }
+});
+
+/**
+ * DELETE /api/push-subscription/:subscriptionId
+ *
+ * Delete a push subscription.
+ */
+app.delete("/api/push-subscription/:subscriptionId", async (req, res) => {
+  const { subscriptionId } = req.params;
+  const userDid = extractUserDid(req);
+
+  try {
+    const result = await pushSubscriptions.deleteSubscription(
+      subscriptionId,
+      userDid,
+    );
+
+    if (!result.success) {
+      return res.status(403).json({
+        error: result.error,
+      });
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    console.error("Error deleting push subscription:", error);
+    res.status(500).json({
+      error: "Failed to delete push subscription",
+    });
+  }
+});
+
+/**
+ * GET /api/push-subscriptions
+ *
+ * Get all push subscriptions for the authenticated user.
+ */
+app.get("/api/push-subscriptions", async (req, res) => {
+  const userDid = extractUserDid(req);
+
+  if (!userDid) {
+    return res.status(401).json({
+      error: "Authentication required",
+    });
+  }
+
+  try {
+    const subscriptions =
+      await pushSubscriptions.getSubscriptionsForUser(userDid);
+    res.json({ subscriptions });
+  } catch (error) {
+    console.error("Error fetching push subscriptions:", error);
+    res.status(500).json({
+      error: "Failed to fetch push subscriptions",
+    });
+  }
+});
+
+/**
+ * POST /api/push-notification/send
+ *
+ * Send a push notification to a user (internal/admin endpoint).
+ * In production, this should be protected with proper authentication.
+ *
+ * Request body:
+ * {
+ *   userDid: string,
+ *   notification: {
+ *     type: 'notification' | 'message' | 'system',
+ *     title: string,
+ *     body: string,
+ *     icon?: string,
+ *     badge?: string,
+ *     data?: object
+ *   }
+ * }
+ */
+app.post("/api/push-notification/send", async (req, res) => {
+  if (!pushEnabled) {
+    return res.status(503).json({
+      error: "Push notifications are not configured on this server",
+    });
+  }
+
+  const { userDid, notification } = req.body;
+
+  if (!userDid || !notification) {
+    return res.status(400).json({
+      error: "userDid and notification are required",
+    });
+  }
+
+  try {
+    const result = await pushSubscriptions.sendPushNotification(
+      userDid,
+      notification,
+    );
+
+    if (!result.success) {
+      return res.status(404).json({
+        error: result.error,
+      });
+    }
+
+    res.json({
+      sent: result.sent,
+      failed: result.failed,
+    });
+  } catch (error) {
+    console.error("Error sending push notification:", error);
+    res.status(500).json({
+      error: "Failed to send push notification",
+    });
+  }
+});
+
+/**
+ * GET /api/push/vapid-public-key
+ *
+ * Get the VAPID public key for client subscription.
+ * This allows the frontend to retrieve the key dynamically.
+ */
+app.get("/api/push/vapid-public-key", (req, res) => {
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
+
+  if (!publicKey) {
+    return res.status(503).json({
+      error: "Push notifications are not configured",
+    });
+  }
+
+  res.json({
+    publicKey,
+  });
+});
+
+/**
+ * POST /api/push-notification/batch
+ *
+ * Send batch push notifications to a user.
+ * Useful for testing or sending multiple notifications efficiently.
+ *
+ * Request body:
+ * {
+ *   userDid: string,
+ *   notifications: Array<{
+ *     reason: 'like' | 'repost' | 'follow' | 'mention' | 'reply' | 'quote',
+ *     author?: { displayName?: string, handle: string, did: string },
+ *     uri?: string,
+ *     record?: { text?: string }
+ *   }>
+ * }
+ */
+app.post("/api/push-notification/batch", async (req, res) => {
+  if (!pushEnabled) {
+    return res.status(503).json({
+      error: "Push notifications are not configured on this server",
+    });
+  }
+
+  const { userDid, notifications } = req.body;
+
+  if (!userDid || !notifications || !Array.isArray(notifications)) {
+    return res.status(400).json({
+      error: "userDid and notifications array are required",
+    });
+  }
+
+  try {
+    const result = await pushNotificationService.handleNotifications(
+      userDid,
+      notifications,
+    );
+    res.json(result);
+  } catch (error) {
+    console.error("Error sending batch notifications:", error);
+    res.status(500).json({
+      error: "Failed to send batch notifications",
+    });
+  }
+});
+
+/**
+ * POST /api/push-notification/dm
+ *
+ * Send a DM notification to a user.
+ *
+ * Request body:
+ * {
+ *   userDid: string,
+ *   conversation: {
+ *     id: string,
+ *     senderName?: string,
+ *     senderDid: string,
+ *     lastMessage?: string
+ *   }
+ * }
+ */
+app.post("/api/push-notification/dm", async (req, res) => {
+  if (!pushEnabled) {
+    return res.status(503).json({
+      error: "Push notifications are not configured on this server",
+    });
+  }
+
+  const { userDid, conversation } = req.body;
+
+  if (!userDid || !conversation || !conversation.id) {
+    return res.status(400).json({
+      error: "userDid and conversation with id are required",
+    });
+  }
+
+  try {
+    const result = await pushNotificationService.sendDMNotification(
+      userDid,
+      conversation,
+    );
+
+    if (!result.success && result.reason === "user_active") {
+      return res.status(200).json({
+        sent: 0,
+        skipped: true,
+        reason: "User has active WebSocket connection",
+      });
+    }
+
+    if (!result.success) {
+      return res.status(404).json({
+        error: result.error || "No subscriptions found for user",
+      });
+    }
+
+    res.json({
+      sent: result.sent,
+      failed: result.failed,
+    });
+  } catch (error) {
+    console.error("Error sending DM notification:", error);
+    res.status(500).json({
+      error: "Failed to send DM notification",
+    });
+  }
+});
+
+/**
+ * POST /api/push-notification/system
+ *
+ * Send a system notification to a user (announcements, etc).
+ *
+ * Request body:
+ * {
+ *   userDid: string,
+ *   title: string,
+ *   body: string,
+ *   data?: { url?: string, ... }
+ * }
+ */
+app.post("/api/push-notification/system", async (req, res) => {
+  if (!pushEnabled) {
+    return res.status(503).json({
+      error: "Push notifications are not configured on this server",
+    });
+  }
+
+  const { userDid, title, body, data } = req.body;
+
+  if (!userDid || !title || !body) {
+    return res.status(400).json({
+      error: "userDid, title, and body are required",
+    });
+  }
+
+  try {
+    const result = await pushNotificationService.sendSystemNotification(
+      userDid,
+      title,
+      body,
+      data || {},
+    );
+
+    if (!result.success) {
+      return res.status(404).json({
+        error: result.error || "No subscriptions found for user",
+      });
+    }
+
+    res.json({
+      sent: result.sent,
+      failed: result.failed,
+    });
+  } catch (error) {
+    console.error("Error sending system notification:", error);
+    res.status(500).json({
+      error: "Failed to send system notification",
+    });
+  }
+});
+
+/**
+ * GET /api/push-notification/stats
+ *
+ * Get push notification service statistics.
+ */
+app.get("/api/push-notification/stats", (req, res) => {
+  const stats = pushNotificationService.getStats();
+  res.json(stats);
 });
 
 // Create HTTP server for Express app
@@ -812,10 +1516,34 @@ httpServer.listen(PORT, () => {
     `  - POST /api/analyze-posts     : Analyze user posts qualitatively`,
   );
   console.log(
+    `  - POST /api/thread-summary    : Generate thread summary (haiku/tldr/keypoints)`,
+  );
+  console.log(`  - POST /api/push-subscription : Register push subscription`);
+  console.log(
+    `  - DELETE /api/push-subscription/:id : Remove push subscription`,
+  );
+  console.log(`  - GET  /api/push-subscriptions : List user subscriptions`);
+  console.log(`  - POST /api/push-notification/send : Send push notification`);
+  console.log(
+    `  - POST /api/push-notification/batch : Batch send notifications`,
+  );
+  console.log(`  - POST /api/push-notification/dm : Send DM notification`);
+  console.log(
+    `  - POST /api/push-notification/system : Send system notification`,
+  );
+  console.log(`  - GET  /api/push-notification/stats : Push service stats`);
+  console.log(`  - GET  /api/push/vapid-public-key : Get VAPID public key`);
+  console.log(
     `\nAPI Configuration:`,
     process.env.ANTHROPIC_API_KEY
       ? `✓ Anthropic API key loaded`
       : `✗ Anthropic API key not found`,
+  );
+  console.log(
+    `Push Notifications:`,
+    pushEnabled
+      ? `✓ VAPID keys configured`
+      : `✗ VAPID keys not found (set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY)`,
   );
 });
 

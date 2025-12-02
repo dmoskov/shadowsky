@@ -3,7 +3,8 @@ export type ColumnType =
   | "timeline"
   | "feed"
   | "messages"
-  | "bookmarks";
+  | "bookmarks"
+  | "search";
 
 export interface Column {
   id: string;

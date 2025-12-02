@@ -474,11 +474,26 @@ export interface EngagementPatterns {
   suggestions: string[];
 }
 
+export interface OptimalTimeRecommendation {
+  hour: number;
+  dayOfWeek: number; // 0 = Sunday, -1 = any day
+  avgEngagement: number;
+  confidence: "high" | "medium" | "low";
+}
+
+export interface OptimalPostingTimes {
+  recommendations: OptimalTimeRecommendation[];
+  hourlyEngagement: number[];
+  weekdayEngagement: number[];
+  lastCalculated: string;
+}
+
 export interface PostAnalysisResult {
   contentThemes: ContentTheme[];
   writingStyle: WritingStyleAnalysis;
   engagementPatterns: EngagementPatterns;
   summary: string;
+  optimalPostingTimes?: OptimalPostingTimes;
 }
 
 export async function analyzePosts(
@@ -512,6 +527,71 @@ export async function analyzePosts(
     } else {
       throw new Error(
         `Post analysis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+}
+
+// Thread Summary Types
+export interface ThreadSummaryPost {
+  text: string;
+  author: string;
+  likes: number;
+  replies: number;
+}
+
+export type ThreadSummaryFormat = "haiku" | "tldr" | "keypoints";
+
+export interface ThreadSummaryMetadata {
+  postCount: number;
+  authors: string[];
+  generatedAt: string;
+  cached?: boolean;
+}
+
+export interface ThreadSummaryResult {
+  summary: string;
+  format: ThreadSummaryFormat;
+  metadata: ThreadSummaryMetadata;
+}
+
+export async function generateThreadSummary(
+  posts: ThreadSummaryPost[],
+  format: ThreadSummaryFormat = "haiku",
+  options?: { forceRefresh?: boolean },
+): Promise<ThreadSummaryResult> {
+  try {
+    const apiBaseUrl = getApiBaseUrl();
+    const url = new URL(`${apiBaseUrl}/api/thread-summary`);
+    if (options?.forceRefresh) {
+      url.searchParams.set("forceRefresh", "true");
+    }
+
+    const response = await fetchWithRetry(
+      url.toString(),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ posts, format }),
+      },
+      API_RETRY_OPTIONS,
+    );
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    logger.error("Error generating thread summary:", error);
+    analytics.trackError(error as Error, "thread_summary");
+
+    if (error instanceof Error && error.message.includes("401")) {
+      throw new Error("Thread summary failed: Invalid API key");
+    } else if (error instanceof Error && error.message.includes("429")) {
+      throw new Error("Thread summary failed: Rate limit exceeded");
+    } else {
+      throw new Error(
+        `Thread summary failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }

@@ -12,8 +12,13 @@ import {
   Users,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
+import { useSearchParams } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
-import { analyzePosts, type PostAnalysisPost } from "../services/anthropic";
+import {
+  analyzePosts,
+  type OptimalTimeRecommendation,
+  type PostAnalysisPost,
+} from "../services/anthropic";
 import { proxifyBskyImage } from "../utils/image-proxy";
 
 type DateRange = "24h" | "7d" | "30d" | "90d";
@@ -35,8 +40,22 @@ interface PostEngagement {
 
 export const UserAnalytics: React.FC = () => {
   const { agent, session } = useAuth();
-  const [dateRange, setDateRange] = useState<DateRange>("30d");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [analysisRequested, setAnalysisRequested] = useState(false);
+
+  // Get date range from URL, default to "30d"
+  const rangeParam = searchParams.get("range");
+  const dateRange: DateRange =
+    rangeParam === "24h" ||
+    rangeParam === "7d" ||
+    rangeParam === "30d" ||
+    rangeParam === "90d"
+      ? rangeParam
+      : "30d";
+
+  const setDateRange = (range: DateRange) => {
+    setSearchParams(range === "30d" ? {} : { range }, { replace: true });
+  };
 
   // Always use logged-in user's handle
   const activeHandle = session?.handle;
@@ -149,21 +168,42 @@ export const UserAnalytics: React.FC = () => {
         0,
       );
 
-      const dailyEngagement = postsWithEngagement.reduce(
-        (acc, post) => {
-          const date = format(new Date(post.createdAt), "yyyy-MM-dd");
+      const dailyEngagement = allPosts.reduce(
+        (acc, item) => {
+          const date = format(new Date(item.post.indexedAt), "yyyy-MM-dd");
           if (!acc[date]) {
-            acc[date] = { likes: 0, reposts: 0, replies: 0, posts: 0 };
+            acc[date] = {
+              likes: 0,
+              reposts: 0,
+              replies: 0,
+              posts: 0,
+              originalPosts: 0,
+              replyPosts: 0,
+            };
           }
-          acc[date].likes += post.likes;
-          acc[date].reposts += post.reposts;
-          acc[date].replies += post.replies;
+          acc[date].likes += item.post.likeCount || 0;
+          acc[date].reposts += item.post.repostCount || 0;
+          acc[date].replies += item.post.replyCount || 0;
           acc[date].posts += 1;
+          // Check if post is a reply (has reply field in record)
+          const isReply = !!(item.post.record as { reply?: unknown })?.reply;
+          if (isReply) {
+            acc[date].replyPosts += 1;
+          } else {
+            acc[date].originalPosts += 1;
+          }
           return acc;
         },
         {} as Record<
           string,
-          { likes: number; reposts: number; replies: number; posts: number }
+          {
+            likes: number;
+            reposts: number;
+            replies: number;
+            posts: number;
+            originalPosts: number;
+            replyPosts: number;
+          }
         >,
       );
 
@@ -296,10 +336,16 @@ export const UserAnalytics: React.FC = () => {
     for (let i = days - 1; i >= 0; i--) {
       const date = subDays(new Date(), i);
       const dateKey = format(date, "yyyy-MM-dd");
-      const dayData = postsData.dailyEngagement[dateKey] || { posts: 0 };
+      const dayData = postsData.dailyEngagement[dateKey] || {
+        posts: 0,
+        originalPosts: 0,
+        replyPosts: 0,
+      };
       data.push({
         date: format(date, dateRange === "7d" ? "EEE" : "M/d"),
         posts: dayData.posts,
+        originalPosts: dayData.originalPosts,
+        replyPosts: dayData.replyPosts,
       });
     }
 
@@ -670,16 +716,38 @@ export const UserAnalytics: React.FC = () => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {postFrequencyData.length > 0 && (
           <div
-            className="bsky-card p-6"
+            className="bsky-card min-w-0 overflow-hidden p-6"
             style={{ background: "var(--bsky-bg-secondary)" }}
           >
-            <h2
-              className="mb-4 flex items-center gap-2 text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
-            >
-              <Clock size={20} className="text-orange-500" />
-              Posting Frequency
-            </h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2
+                className="flex items-center gap-2 text-lg font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                <Clock size={20} className="text-orange-500" />
+                Posting Frequency
+              </h2>
+              <div className="flex items-center gap-4 text-xs">
+                <div className="flex items-center gap-1">
+                  <div
+                    className="h-3 w-3 rounded-sm"
+                    style={{ backgroundColor: "#f97316" }}
+                  />
+                  <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    Posts
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div
+                    className="h-3 w-3 rounded-sm"
+                    style={{ backgroundColor: "#4ade80" }}
+                  />
+                  <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    Replies
+                  </span>
+                </div>
+              </div>
+            </div>
             <div className="relative" style={{ height: "250px" }}>
               <div
                 className="absolute bottom-0 left-0 top-0 flex flex-col justify-between text-xs"
@@ -715,38 +783,73 @@ export const UserAnalytics: React.FC = () => {
                   {postFrequencyData.map((data, index) => (
                     <div
                       key={`${data.date}-${index}`}
-                      className="group relative"
+                      className="group relative flex flex-col justify-end"
                       style={{
                         width: `${100 / postFrequencyData.length - 0.5}%`,
                         minWidth: "6px",
+                        height: "220px",
                       }}
                     >
-                      <div
-                        className="w-full rounded-t-lg transition-all duration-300 hover:opacity-80"
-                        style={{
-                          height: `${(data.posts / maxPostsPerDay) * 220}px`,
-                          background:
-                            "linear-gradient(180deg, #fb923c 0%, #f97316 100%)",
-                        }}
-                        title={`${data.posts} posts`}
-                      />
-
-                      {(postFrequencyData.length <= 14 ||
-                        index % 3 === 0 ||
-                        index === postFrequencyData.length - 1) && (
-                        <div className="absolute left-0 right-0 top-full mt-1 text-center">
-                          <span
-                            className="text-xs"
-                            style={{
-                              color: "var(--bsky-text-secondary)",
-                              fontSize:
-                                postFrequencyData.length > 30 ? "8px" : "10px",
-                            }}
-                          >
-                            {data.date}
-                          </span>
-                        </div>
+                      {/* Stacked bar: Posts (orange) at bottom, Replies (green) on top */}
+                      {data.replyPosts > 0 && (
+                        <div
+                          className="w-full rounded-t-lg transition-all duration-300 hover:opacity-80"
+                          style={{
+                            height: `${(data.replyPosts / maxPostsPerDay) * 220}px`,
+                            background: "#4ade80",
+                          }}
+                          title={`${data.replyPosts} replies`}
+                        />
                       )}
+                      {data.originalPosts > 0 && (
+                        <div
+                          className="w-full transition-all duration-300 hover:opacity-80"
+                          style={{
+                            height: `${(data.originalPosts / maxPostsPerDay) * 220}px`,
+                            background:
+                              "linear-gradient(180deg, #fb923c 0%, #f97316 100%)",
+                            borderTopLeftRadius:
+                              data.replyPosts === 0 ? "0.5rem" : "0",
+                            borderTopRightRadius:
+                              data.replyPosts === 0 ? "0.5rem" : "0",
+                          }}
+                          title={`${data.originalPosts} posts`}
+                        />
+                      )}
+
+                      {(() => {
+                        // Calculate label interval to show ~8-10 labels max
+                        const len = postFrequencyData.length;
+                        const labelInterval =
+                          len <= 10
+                            ? 1
+                            : len <= 21
+                              ? 2
+                              : len <= 35
+                                ? 4
+                                : len <= 60
+                                  ? 7
+                                  : 14;
+                        const showLabel =
+                          index === 0 ||
+                          index === len - 1 ||
+                          index % labelInterval === 0;
+                        return (
+                          showLabel && (
+                            <div className="absolute left-0 right-0 top-full mt-1 text-center">
+                              <span
+                                className="whitespace-nowrap text-xs"
+                                style={{
+                                  color: "var(--bsky-text-secondary)",
+                                  fontSize: len > 60 ? "9px" : "10px",
+                                }}
+                              >
+                                {data.date}
+                              </span>
+                            </div>
+                          )
+                        );
+                      })()}
                     </div>
                   ))}
                 </div>
@@ -757,7 +860,7 @@ export const UserAnalytics: React.FC = () => {
 
         {postingTimeAnalysis && (
           <div
-            className="bsky-card p-6"
+            className="bsky-card min-w-0 p-6"
             style={{ background: "var(--bsky-bg-secondary)" }}
           >
             <h2
@@ -1301,6 +1404,118 @@ export const UserAnalytics: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {analysisData.optimalPostingTimes &&
+                analysisData.optimalPostingTimes.recommendations.length > 0 && (
+                  <div
+                    className="rounded-lg p-6"
+                    style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                  >
+                    <h3
+                      className="mb-4 flex items-center gap-2 text-base font-semibold"
+                      style={{ color: "var(--bsky-text-primary)" }}
+                    >
+                      <Clock size={18} className="text-blue-500" />
+                      Optimal Posting Times
+                    </h3>
+                    <p
+                      className="mb-4 text-sm"
+                      style={{ color: "var(--bsky-text-secondary)" }}
+                    >
+                      Based on your last{" "}
+                      {dateRange === "90d"
+                        ? "90 days"
+                        : dateRange === "30d"
+                          ? "30 days"
+                          : dateRange === "7d"
+                            ? "7 days"
+                            : "24 hours"}{" "}
+                      of engagement data
+                    </p>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                      {analysisData.optimalPostingTimes.recommendations.map(
+                        (rec: OptimalTimeRecommendation, i: number) => {
+                          const dayNames = [
+                            "Sunday",
+                            "Monday",
+                            "Tuesday",
+                            "Wednesday",
+                            "Thursday",
+                            "Friday",
+                            "Saturday",
+                          ];
+                          const formatHour = (hour: number) => {
+                            if (hour === 0) return "12:00 AM";
+                            if (hour === 12) return "12:00 PM";
+                            return hour < 12
+                              ? `${hour}:00 AM`
+                              : `${hour - 12}:00 PM`;
+                          };
+                          const confidenceColor =
+                            rec.confidence === "high"
+                              ? "#22c55e"
+                              : rec.confidence === "medium"
+                                ? "#eab308"
+                                : "#94a3b8";
+
+                          return (
+                            <div
+                              key={i}
+                              className="flex flex-col rounded-lg p-4"
+                              style={{
+                                backgroundColor: "var(--bsky-bg-secondary)",
+                                border:
+                                  i === 0
+                                    ? "2px solid var(--bsky-primary)"
+                                    : "1px solid var(--bsky-border-primary)",
+                              }}
+                            >
+                              <div className="mb-2 flex items-center justify-between">
+                                <span
+                                  className="text-xs font-medium"
+                                  style={{
+                                    color: "var(--bsky-text-secondary)",
+                                  }}
+                                >
+                                  {i === 0 ? "Best Time" : `#${i + 1}`}
+                                </span>
+                                <span
+                                  className="rounded-full px-2 py-0.5 text-xs"
+                                  style={{
+                                    backgroundColor: confidenceColor,
+                                    color: "white",
+                                  }}
+                                >
+                                  {rec.confidence}
+                                </span>
+                              </div>
+                              <div
+                                className="text-lg font-bold"
+                                style={{ color: "var(--bsky-text-primary)" }}
+                              >
+                                {formatHour(rec.hour)}
+                              </div>
+                              <div
+                                className="text-sm"
+                                style={{ color: "var(--bsky-text-secondary)" }}
+                              >
+                                {rec.dayOfWeek === -1
+                                  ? "Any day"
+                                  : dayNames[rec.dayOfWeek]}
+                              </div>
+                              <div
+                                className="mt-2 text-xs"
+                                style={{ color: "var(--bsky-primary)" }}
+                              >
+                                ~{rec.avgEngagement} avg engagement
+                              </div>
+                            </div>
+                          );
+                        },
+                      )}
+                    </div>
+                  </div>
+                )}
 
               <button
                 onClick={() => setAnalysisRequested(false)}

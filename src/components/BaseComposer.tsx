@@ -1,11 +1,27 @@
-import { AlertCircle, Image, Loader, Send, Smile, X } from "lucide-react";
+import {
+  AlertCircle,
+  Edit2,
+  Image,
+  Loader,
+  Send,
+  Smile,
+  X,
+} from "lucide-react";
 import React, { useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useVideoCompression } from "../hooks/useVideoCompression";
 import { debug } from "../shared/debug";
 import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { safeCreateObjectURL, safeRevokeObjectURL } from "../utils/retry";
+import {
+  BLUESKY_MAX_VIDEO_SIZE,
+  isVideoFile,
+  shouldCompressVideo,
+} from "../utils/video-compression";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
+import { ImageEditor } from "./ImageEditor";
+import { VideoUploadProgress } from "./VideoUploadProgress";
 
 async function loadAnthropicService() {
   return await import("../services/anthropic");
@@ -40,6 +56,7 @@ interface BaseComposerProps {
     giphy?: boolean;
     altTextGeneration?: boolean;
     shortcuts?: boolean;
+    imageEditing?: boolean;
   };
 
   // UI customization
@@ -59,7 +76,7 @@ interface BaseComposerProps {
 }
 
 const MAX_IMAGE_SIZE = 1000000; // 1MB
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_VIDEO_SIZE = BLUESKY_MAX_VIDEO_SIZE; // 100MB recommended
 const MAX_IMAGES = 4;
 const SUPPORTED_VIDEO_FORMATS = [".mp4", ".mpeg", ".webm", ".mov"];
 
@@ -75,6 +92,7 @@ export function BaseComposer({
     giphy: false,
     altTextGeneration: true,
     shortcuts: true,
+    imageEditing: true,
   },
   layout = "full",
   showCharCount = true,
@@ -93,9 +111,17 @@ export function BaseComposer({
   const [error, setError] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifSearch, setShowGifSearch] = useState(false);
+  const [showImageEditor, setShowImageEditor] = useState(false);
   const [generatingAlt, setGeneratingAlt] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Video compression hook
+  const videoCompression = useVideoCompression({
+    preset: "auto",
+    generateThumbnail: true,
+    thumbnailTime: 1,
+  });
 
   // Handle text change
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -136,20 +162,85 @@ export function BaseComposer({
   // Add media file
   const addMedia = async (file: File) => {
     try {
-      // Check if it's a video
-      const isVideo = SUPPORTED_VIDEO_FORMATS.some((format) =>
-        file.name.toLowerCase().endsWith(format),
-      );
+      // Check if it's a video using MIME type detection
+      const isVideo =
+        isVideoFile(file) ||
+        SUPPORTED_VIDEO_FORMATS.some((format) =>
+          file.name.toLowerCase().endsWith(format),
+        );
 
       if (isVideo) {
         if (media.some((m) => m.type === "video")) {
           setError("Only one video can be uploaded at a time");
           return;
         }
-        if (file.size > MAX_VIDEO_SIZE) {
-          setError("Video must be less than 50MB");
+
+        // Check if video is too large to process
+        if (videoCompression.isTooLarge(file)) {
+          setError("Video is too large. Maximum size is 500MB.");
           return;
         }
+
+        let processedFile = file;
+
+        // Compress video if it exceeds the recommended size
+        if (shouldCompressVideo(file)) {
+          debug.log("Video needs compression:", {
+            size: file.size,
+            threshold: MAX_VIDEO_SIZE,
+          });
+
+          try {
+            const result = await videoCompression.compressVideo(file);
+            processedFile = result.file;
+
+            if (result.wasCompressed) {
+              debug.log("Video compressed:", {
+                original: file.size,
+                compressed: processedFile.size,
+                ratio: (file.size / processedFile.size).toFixed(2),
+              });
+            }
+          } catch (compressionError) {
+            debug.error("Video compression failed:", compressionError);
+            // If compression fails but file is under limit, use original
+            if (file.size <= MAX_VIDEO_SIZE) {
+              debug.log("Using original file as fallback");
+              processedFile = file;
+            } else {
+              setError(
+                "Failed to compress video. Please try a smaller file or different format.",
+              );
+              return;
+            }
+          }
+        }
+
+        // Final size check
+        if (processedFile.size > MAX_VIDEO_SIZE) {
+          setError(
+            `Video is too large (${(processedFile.size / (1024 * 1024)).toFixed(1)}MB). Maximum size is ${(MAX_VIDEO_SIZE / (1024 * 1024)).toFixed(0)}MB.`,
+          );
+          return;
+        }
+
+        // Create preview with error handling
+        const preview = safeCreateObjectURL(processedFile);
+        if (!preview) {
+          setError("Failed to create preview for video file");
+          return;
+        }
+
+        const newMedia: UploadedMedia = {
+          id: Date.now().toString(),
+          file: processedFile,
+          preview,
+          alt: "",
+          type: "video",
+        };
+
+        setMedia((prev) => [...prev, newMedia]);
+        setError(null);
       } else {
         // Check image limits
         const imageCount = media.filter((m) => m.type === "image").length;
@@ -167,8 +258,8 @@ export function BaseComposer({
               original: file.size,
               compressed: processedFile.size,
             });
-          } catch (error) {
-            debug.error("Failed to compress image:", error);
+          } catch (compressionError) {
+            debug.error("Failed to compress image:", compressionError);
           }
         }
 
@@ -176,26 +267,25 @@ export function BaseComposer({
           setError("Image must be less than 1MB");
           return;
         }
-        file = processedFile;
+
+        // Create preview with error handling
+        const preview = safeCreateObjectURL(processedFile);
+        if (!preview) {
+          setError("Failed to create preview for media file");
+          return;
+        }
+
+        const newMedia: UploadedMedia = {
+          id: Date.now().toString(),
+          file: processedFile,
+          preview,
+          alt: "",
+          type: "image",
+        };
+
+        setMedia((prev) => [...prev, newMedia]);
+        setError(null);
       }
-
-      // Create preview with error handling
-      const preview = safeCreateObjectURL(file);
-      if (!preview) {
-        setError("Failed to create preview for media file");
-        return;
-      }
-
-      const newMedia: UploadedMedia = {
-        id: Date.now().toString(),
-        file: file,
-        preview,
-        alt: "",
-        type: isVideo ? "video" : "image",
-      };
-
-      setMedia((prev) => [...prev, newMedia]);
-      setError(null);
     } catch (error) {
       debug.error("Failed to add media:", error);
       setError("Failed to add media");
@@ -217,6 +307,39 @@ export function BaseComposer({
   const updateAltText = (id: string, alt: string) => {
     setMedia((prev) => prev.map((m) => (m.id === id ? { ...m, alt } : m)));
   };
+
+  // Handle image editor save
+  const handleImageEditorSave = (
+    editedImages: Array<{
+      originalFile: File;
+      editedFile: File;
+      preview: string;
+    }>,
+  ) => {
+    // Update media with edited versions
+    const imageMedia = media.filter((m) => m.type === "image");
+    const videoMedia = media.filter((m) => m.type === "video");
+
+    const updatedImageMedia = imageMedia.map((item, index) => {
+      const edited = editedImages[index];
+      if (edited && edited.editedFile !== edited.originalFile) {
+        // Revoke old preview URL
+        safeRevokeObjectURL(item.preview);
+        return {
+          ...item,
+          file: edited.editedFile,
+          preview: edited.preview,
+        };
+      }
+      return item;
+    });
+
+    setMedia([...updatedImageMedia, ...videoMedia]);
+    setShowImageEditor(false);
+  };
+
+  // Check if there are images to edit
+  const hasEditableImages = media.some((m) => m.type === "image");
 
   // Generate alt text with AI
   const handleGenerateAlt = async (id: string) => {
@@ -447,6 +570,46 @@ export function BaseComposer({
                   )}
                 </div>
               ))}
+
+              {/* Edit images button */}
+              {features.imageEditing && hasEditableImages && !isInline && (
+                <button
+                  onClick={() => setShowImageEditor(true)}
+                  className="flex h-32 w-full items-center justify-center rounded border-2 border-dashed transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                  style={{
+                    borderColor: "var(--bsky-border-primary)",
+                    color: "var(--bsky-text-secondary)",
+                  }}
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <Edit2 size={20} />
+                    <span className="text-xs">Edit All</span>
+                  </div>
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Video compression progress */}
+          {videoCompression.isCompressing && (
+            <div className="mt-2">
+              <VideoUploadProgress
+                stage="compressing"
+                progress={videoCompression.state.progress}
+                fileName={
+                  videoCompression.state.metadata
+                    ? `Compressing video (${(videoCompression.state.originalSize / (1024 * 1024)).toFixed(1)}MB)`
+                    : "Compressing video..."
+                }
+                compressionProgress={{
+                  stage: videoCompression.state.stage || "analyzing",
+                  progress: videoCompression.state.progress,
+                  estimatedTimeRemaining:
+                    videoCompression.state.estimatedTimeRemaining ?? undefined,
+                }}
+                onCancel={() => videoCompression.cancel()}
+                compact={layout === "inline"}
+              />
             </div>
           )}
 
@@ -596,6 +759,17 @@ export function BaseComposer({
             />
           </div>
         </div>
+      )}
+
+      {/* Image editor modal */}
+      {features.imageEditing && showImageEditor && hasEditableImages && (
+        <ImageEditor
+          images={media
+            .filter((m) => m.type === "image")
+            .map((m) => ({ file: m.file, preview: m.preview }))}
+          onSave={handleImageEditorSave}
+          onCancel={() => setShowImageEditor(false)}
+        />
       )}
     </div>
   );

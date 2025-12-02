@@ -1,14 +1,28 @@
-import type { AppBskyFeedDefs } from "@atproto/api";
+import { RichText, type AppBskyFeedDefs } from "@atproto/api";
 import { debug } from "@bsky/shared";
-import { useQuery } from "@tanstack/react-query";
-import { Loader, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { BarChart3, Loader, X } from "lucide-react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import ReactDOM from "react-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useModal } from "../contexts/ModalContext";
 import { useModalSwipeBack } from "../hooks/useModalSwipeBack";
+import { useThreadKeyboardShortcuts } from "../hooks/useThreadKeyboardShortcuts";
 import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
+import type { ThreadSummaryResult } from "../services/anthropic";
 import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { EnhancedComposer } from "./EnhancedComposer";
+import { ThreadContextBar } from "./ThreadContextBar";
+import { ThreadEngagementAnalytics } from "./ThreadEngagementAnalytics";
+import { ThreadHaikuSummary } from "./ThreadHaikuSummary";
+import { ThreadMinimap } from "./ThreadMinimap";
+import { ThreadShortcutsHelp } from "./ThreadShortcutsHelp";
 import { ThreadViewer } from "./ThreadViewer";
 
 interface ThreadModalProps {
@@ -36,9 +50,11 @@ export function ThreadModal({
   openToReply = false,
   openToQuote = false,
 }: ThreadModalProps) {
-  const { agent } = useAuth();
+  const { agent, session } = useAuth();
   const swipeHandlers = useModalSwipeBack({ onClose });
   const videoUploadManager = useVideoUploadManager(agent);
+  const queryClient = useQueryClient();
+  const { showConfirm } = useModal();
   const [replyState, setReplyState] = useState<ReplyState>({
     isReplying: openToReply,
     replyToPost: null,
@@ -47,6 +63,19 @@ export function ThreadModal({
     isQuoting: openToQuote,
     quotedPost: null,
   });
+  const [continueThreadPost, setContinueThreadPost] =
+    useState<AppBskyFeedDefs.PostView | null>(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [focusedPostIndex, setFocusedPostIndex] = useState(0);
+  const [highlightedPostUri, setHighlightedPostUri] = useState(postUri);
+
+  // Reset highlighted post when postUri changes
+  useEffect(() => {
+    setHighlightedPostUri(postUri);
+  }, [postUri]);
+
+  // Ref for ThreadContextBar sentinel element (placed after thread stats)
+  const contextBarSentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -197,6 +226,346 @@ export function ThreadModal({
     return postUri;
   }, [threadData, postUri]);
 
+  // Get the actual root post object
+  const rootPostObject = useMemo(() => {
+    return posts.find((p) => p.uri === rootPost);
+  }, [posts, rootPost]);
+
+  // Calculate thread statistics for ThreadContextBar
+  const threadStats = useMemo(() => {
+    if (posts.length === 0) return { uniqueParticipants: 0, maxDepth: 0 };
+
+    // Calculate unique participants
+    const uniqueAuthors = new Set(posts.map((p) => p.author.did));
+
+    // Calculate max depth
+    let maxDepth = 0;
+    const depthMap = new Map<string, number>();
+
+    // Find root and set its depth to 0
+    if (rootPost) {
+      depthMap.set(rootPost, 0);
+    }
+
+    // Build depth map by traversing reply chain
+    posts.forEach((post) => {
+      const record = post.record as { reply?: { parent?: { uri: string } } };
+      const parentUri = record?.reply?.parent?.uri;
+
+      if (!parentUri) {
+        // This is the root
+        depthMap.set(post.uri, 0);
+      } else if (depthMap.has(parentUri)) {
+        const parentDepth = depthMap.get(parentUri) || 0;
+        const newDepth = parentDepth + 1;
+        depthMap.set(post.uri, newDepth);
+        maxDepth = Math.max(maxDepth, newDepth);
+      }
+    });
+
+    // Make a second pass for any posts that weren't resolved
+    posts.forEach((post) => {
+      if (!depthMap.has(post.uri)) {
+        const record = post.record as { reply?: { parent?: { uri: string } } };
+        const parentUri = record?.reply?.parent?.uri;
+        if (parentUri && depthMap.has(parentUri)) {
+          const parentDepth = depthMap.get(parentUri) || 0;
+          const newDepth = parentDepth + 1;
+          depthMap.set(post.uri, newDepth);
+          maxDepth = Math.max(maxDepth, newDepth);
+        }
+      }
+    });
+
+    return {
+      uniqueParticipants: uniqueAuthors.size,
+      maxDepth,
+    };
+  }, [posts, rootPost]);
+
+  // Get cached haiku summary for ThreadContextBar
+  const cachedHaikuSummary = useMemo(() => {
+    const queryKey = ["thread-summary", rootPost || postUri];
+    const cachedData = queryClient.getQueryData<ThreadSummaryResult>(queryKey);
+    return cachedData?.summary || null;
+  }, [queryClient, rootPost, postUri]);
+
+  // Get current focused post and its navigation context
+  const navigationContext = useMemo(() => {
+    if (posts.length === 0) return null;
+
+    const currentPost = posts[focusedPostIndex] || posts[0];
+    if (!currentPost) return null;
+
+    // Find parent post
+    const postRecord = currentPost.record as {
+      reply?: { parent?: { uri: string } };
+    };
+    const parentUri = postRecord?.reply?.parent?.uri;
+    const parentPost = parentUri
+      ? posts.find((p) => p.uri === parentUri)
+      : undefined;
+
+    // Find siblings (posts with same parent)
+    let siblingPosts:
+      | { prev?: PostView; next?: PostView; current: number; total: number }
+      | undefined;
+    if (parentPost) {
+      const siblings = posts.filter((p) => {
+        const record = p.record as { reply?: { parent?: { uri: string } } };
+        return record?.reply?.parent?.uri === parentUri;
+      });
+      if (siblings.length > 1) {
+        const currentIdx = siblings.findIndex((p) => p.uri === currentPost.uri);
+        siblingPosts = {
+          prev: currentIdx > 0 ? siblings[currentIdx - 1] : undefined,
+          next:
+            currentIdx < siblings.length - 1
+              ? siblings[currentIdx + 1]
+              : undefined,
+          current: currentIdx,
+          total: siblings.length,
+        };
+      }
+    }
+
+    return {
+      currentPost,
+      parentPost,
+      siblingPosts,
+    };
+  }, [posts, focusedPostIndex]);
+
+  // Navigation handlers
+  const handleJumpToRoot = useCallback(() => {
+    setFocusedPostIndex(0);
+  }, []);
+
+  const handleJumpToParent = useCallback(() => {
+    if (navigationContext?.parentPost) {
+      const parentIdx = posts.findIndex(
+        (p) => p.uri === navigationContext.parentPost?.uri,
+      );
+      if (parentIdx >= 0) {
+        setFocusedPostIndex(parentIdx);
+      }
+    }
+  }, [navigationContext, posts]);
+
+  const handleJumpToPrevSibling = useCallback(() => {
+    if (navigationContext?.siblingPosts?.prev) {
+      const idx = posts.findIndex(
+        (p) => p.uri === navigationContext.siblingPosts?.prev?.uri,
+      );
+      if (idx >= 0) {
+        setFocusedPostIndex(idx);
+      }
+    }
+  }, [navigationContext, posts]);
+
+  const handleJumpToNextSibling = useCallback(() => {
+    if (navigationContext?.siblingPosts?.next) {
+      const idx = posts.findIndex(
+        (p) => p.uri === navigationContext.siblingPosts?.next?.uri,
+      );
+      if (idx >= 0) {
+        setFocusedPostIndex(idx);
+      }
+    }
+  }, [navigationContext, posts]);
+
+  // Handler for breadcrumb navigation
+  const handleBreadcrumbNavigate = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < posts.length) {
+        setFocusedPostIndex(index);
+      }
+    },
+    [posts.length],
+  );
+
+  // Handler for jumping to end of thread
+  const handleJumpToEnd = useCallback(() => {
+    if (posts.length > 0) {
+      setFocusedPostIndex(posts.length - 1);
+    }
+  }, [posts.length]);
+
+  // Handler for jumping to specific index (used by ThreadContextBar)
+  const handleJumpToIndex = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < posts.length) {
+        setFocusedPostIndex(index);
+      }
+    },
+    [posts.length],
+  );
+
+  // Ref for composer focus
+  const composerRef = useRef<HTMLDivElement>(null);
+
+  // State for author-only filter mode
+  const [showAuthorOnly, setShowAuthorOnly] = useState(false);
+
+  // Get the thread author (root post author) for filtering
+  const threadAuthorDid = rootPostObject?.author?.did;
+
+  // Find next branch point (a post with multiple children)
+  const handleJumpToNextBranch = useCallback(() => {
+    // Find the first post after current that has multiple replies
+    for (let i = focusedPostIndex + 1; i < posts.length; i++) {
+      const post = posts[i];
+      // Check if this post has multiple direct replies
+      const childCount = posts.filter((p) => {
+        const record = p.record as { reply?: { parent?: { uri: string } } };
+        return record?.reply?.parent?.uri === post.uri;
+      }).length;
+      if (childCount > 1) {
+        setFocusedPostIndex(i);
+        return;
+      }
+    }
+    // Wrap around to find from beginning
+    for (let i = 0; i < focusedPostIndex; i++) {
+      const post = posts[i];
+      const childCount = posts.filter((p) => {
+        const record = p.record as { reply?: { parent?: { uri: string } } };
+        return record?.reply?.parent?.uri === post.uri;
+      }).length;
+      if (childCount > 1) {
+        setFocusedPostIndex(i);
+        return;
+      }
+    }
+  }, [posts, focusedPostIndex]);
+
+  // Handle toggle author-only view
+  const handleToggleAuthorOnly = useCallback(() => {
+    setShowAuthorOnly((prev) => !prev);
+  }, []);
+
+  // Focus reply composer
+  const handleFocusReply = useCallback(() => {
+    // Open reply to currently focused post
+    if (posts.length > 0) {
+      const currentPost = posts[focusedPostIndex] || posts[0];
+      if (currentPost) {
+        setReplyState({
+          isReplying: true,
+          replyToPost: currentPost,
+        });
+        // Focus composer after state update
+        setTimeout(() => {
+          composerRef.current?.querySelector("textarea")?.focus();
+        }, 100);
+      }
+    }
+  }, [posts, focusedPostIndex]);
+
+  // Navigate down in thread
+  const handleNavigateDown = useCallback(() => {
+    if (focusedPostIndex < posts.length - 1) {
+      setFocusedPostIndex(focusedPostIndex + 1);
+    }
+  }, [focusedPostIndex, posts.length]);
+
+  // Navigate up in thread
+  const handleNavigateUp = useCallback(() => {
+    if (focusedPostIndex > 0) {
+      setFocusedPostIndex(focusedPostIndex - 1);
+    }
+  }, [focusedPostIndex]);
+
+  // Thread keyboard shortcuts
+  const { shortcuts, showHelpPanel, setShowHelpPanel } =
+    useThreadKeyboardShortcuts({
+      enabled: posts.length > 0,
+      authorDid: threadAuthorDid,
+      actions: {
+        jumpToSummary: handleJumpToRoot,
+        jumpToNextBranch: handleJumpToNextBranch,
+        jumpToOriginalPost: handleJumpToRoot,
+        toggleAuthorOnlyView: handleToggleAuthorOnly,
+        jumpToParent: handleJumpToParent,
+        jumpToPrevSibling: handleJumpToPrevSibling,
+        jumpToNextSibling: handleJumpToNextSibling,
+        navigateUp: handleNavigateUp,
+        navigateDown: handleNavigateDown,
+        focusReply: handleFocusReply,
+      },
+    });
+
+  // Filter posts for author-only view
+  const displayPosts = useMemo(() => {
+    if (!showAuthorOnly || !threadAuthorDid) {
+      return posts;
+    }
+    return posts.filter((p) => p.author.did === threadAuthorDid);
+  }, [posts, showAuthorOnly, threadAuthorDid]);
+
+  // Find the last post in the user's own thread continuation (deepest post by user in direct reply chain)
+  const findLastUserPost = useCallback(
+    (postsArr: PostView[], currentUserDid?: string): PostView | null => {
+      if (!currentUserDid || postsArr.length === 0) return null;
+
+      // Get user's posts
+      const userPosts = postsArr.filter((p) => p.author.did === currentUserDid);
+      if (userPosts.length === 0) return null;
+
+      // Find the deepest post in the thread that belongs to the user
+      // Sort by timestamp to find the latest
+      userPosts.sort(
+        (a, b) =>
+          new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime(),
+      );
+
+      return userPosts[0];
+    },
+    [],
+  );
+
+  // Handle deleting a post
+  const handleDeletePost = useCallback(
+    async (post: PostView) => {
+      if (!agent) return;
+
+      await showConfirm(
+        "Delete this post? This action cannot be undone. Note: Deleting a post in the middle of a thread may affect thread continuity.",
+        async () => {
+          try {
+            await agent.deletePost(post.uri);
+            // Invalidate and refetch the thread
+            queryClient.invalidateQueries({ queryKey: ["thread", postUri] });
+            refetch();
+          } catch (error) {
+            debug.error("Failed to delete post:", error);
+            throw error;
+          }
+        },
+        {
+          variant: "warning",
+          title: "Delete Post",
+          confirmText: "Delete",
+          cancelText: "Cancel",
+        },
+      );
+    },
+    [agent, showConfirm, queryClient, postUri, refetch],
+  );
+
+  // Handle continuing a thread from the last post
+  const handleContinueThread = useCallback((lastPost: PostView) => {
+    setContinueThreadPost(lastPost);
+    setReplyState({
+      isReplying: true,
+      replyToPost: lastPost,
+    });
+    setQuoteState({
+      isQuoting: false,
+      quotedPost: null,
+    });
+  }, []);
+
   // Set initial reply/quote state when we get the main post
   useEffect(() => {
     if (posts.length > 0) {
@@ -306,8 +675,13 @@ export function ThreadModal({
           },
         };
 
+    // Detect facets (mentions, links, hashtags) in the text
+    const rt = new RichText({ text: text.trim() });
+    await rt.detectFacets(agent);
+
     const record = {
-      text: text.trim(),
+      text: rt.text,
+      facets: rt.facets,
       embed: quoteEmbed,
       createdAt: new Date().toISOString(),
     };
@@ -399,8 +773,13 @@ export function ThreadModal({
       }
     }
 
+    // Detect facets (mentions, links, hashtags) in the text
+    const rt = new RichText({ text: text.trim() });
+    await rt.detectFacets(agent);
+
     const record = {
-      text: text.trim(),
+      text: rt.text,
+      facets: rt.facets,
       reply: {
         root: { uri: rootPost, cid: rootCid },
         parent: { uri: replyPost.uri, cid: replyPost.cid },
@@ -423,6 +802,24 @@ export function ThreadModal({
     <>
       <div className="fixed inset-0 z-[100] bg-black/70" onClick={onClose} />
 
+      {/* Sticky ThreadContextBar - appears when scrolled past thread stats */}
+      {posts.length > 0 && (
+        <ThreadContextBar
+          posts={posts}
+          threadUri={rootPost || postUri}
+          haikuSummary={cachedHaikuSummary}
+          currentIndex={focusedPostIndex}
+          totalPosts={posts.length}
+          uniqueParticipants={threadStats.uniqueParticipants}
+          maxDepth={threadStats.maxDepth}
+          onJumpToStart={handleJumpToRoot}
+          onJumpToEnd={handleJumpToEnd}
+          onJumpToParent={handleJumpToParent}
+          onJumpToIndex={handleJumpToIndex}
+          sentinelRef={contextBarSentinelRef}
+        />
+      )}
+
       <div
         {...swipeHandlers}
         className="thread-modal-container fixed inset-0 z-[101] flex items-center justify-center p-4 md:p-8"
@@ -433,30 +830,65 @@ export function ThreadModal({
         >
           {/* Header with close button */}
           <div
-            className="flex flex-shrink-0 items-center justify-between border-b p-6"
+            className="flex flex-shrink-0 items-center justify-between border-b px-4 py-3 md:px-6 md:py-4"
             style={{
               backgroundColor: "var(--bsky-bg-primary)",
               borderColor: "var(--bsky-border-primary)",
             }}
           >
-            <h2
-              className="text-xl font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
-            >
-              Thread
-            </h2>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onClose();
-              }}
-              className="rounded-full p-2 transition-all hover:scale-110 hover:bg-gray-100 dark:hover:bg-gray-800"
-              style={{ color: "var(--bsky-text-secondary)" }}
-              aria-label="Close"
-            >
-              <X size={24} />
-            </button>
+            <div className="flex items-center gap-3">
+              <h2
+                className="text-lg font-semibold md:text-xl"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                Thread
+              </h2>
+              {posts.length > 0 && (
+                <span
+                  className="rounded-full px-2 py-0.5 text-xs"
+                  style={{
+                    backgroundColor: "var(--bsky-bg-tertiary)",
+                    color: "var(--bsky-text-secondary)",
+                  }}
+                >
+                  {posts.length} posts
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Analytics toggle */}
+              {posts.length > 0 && (
+                <button
+                  onClick={() => setShowAnalytics(!showAnalytics)}
+                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                    showAnalytics
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                  style={
+                    !showAnalytics
+                      ? { color: "var(--bsky-text-secondary)" }
+                      : {}
+                  }
+                  title="Toggle thread analytics"
+                >
+                  <BarChart3 size={16} />
+                  <span className="hidden sm:inline">Analytics</span>
+                </button>
+              )}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onClose();
+                }}
+                className="rounded-full p-2 transition-all hover:scale-110 hover:bg-gray-100 dark:hover:bg-gray-800"
+                style={{ color: "var(--bsky-text-secondary)" }}
+                aria-label="Close"
+              >
+                <X size={24} />
+              </button>
+            </div>
           </div>
 
           {/* Scrollable content */}
@@ -567,39 +999,99 @@ export function ThreadModal({
               )}
 
               {posts.length > 0 && (
-                <ThreadViewer
-                  posts={posts}
-                  rootUri={rootPost}
-                  highlightUri={postUri}
-                  showUnreadIndicators={false}
-                  className="w-full"
-                  onPostClick={(clickedPost, action) => {
-                    const post =
-                      posts.find((p) => p.uri === clickedPost.uri) || null;
+                <>
+                  {/* Thread Analytics (collapsible) - only when toggled */}
+                  {showAnalytics && (
+                    <ThreadEngagementAnalytics
+                      posts={posts}
+                      className="mb-4"
+                      collapsed={false}
+                      onPostClick={(post) => {
+                        setHighlightedPostUri(post.uri);
+                        // Scroll to the post
+                        const postElement = document.querySelector(
+                          `[data-post-uri="${post.uri}"]`,
+                        );
+                        if (postElement) {
+                          postElement.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          });
+                        }
+                      }}
+                    />
+                  )}
 
-                    if (action === "reply") {
-                      // When user clicks reply on a post in the thread
-                      setReplyState({
-                        isReplying: true,
-                        replyToPost: post,
-                      });
-                      setQuoteState({
-                        isQuoting: false,
-                        quotedPost: null,
-                      });
-                    } else if (action === "quote") {
-                      // When user clicks quote on a post in the thread
-                      setQuoteState({
-                        isQuoting: true,
-                        quotedPost: post,
-                      });
-                      setReplyState({
-                        isReplying: false,
-                        replyToPost: null,
-                      });
+                  {/* Thread Viewer - uses displayPosts for author-only filter */}
+                  <ThreadViewer
+                    rootPostObject={rootPostObject}
+                    threadSummary={
+                      <ThreadHaikuSummary
+                        posts={posts}
+                        threadUri={rootPost || postUri}
+                      />
                     }
-                  }}
-                />
+                    posts={displayPosts}
+                    rootUri={rootPost}
+                    highlightUri={highlightedPostUri}
+                    showUnreadIndicators={false}
+                    className="w-full"
+                    currentUserDid={session?.did}
+                    contextBarSentinelRef={contextBarSentinelRef}
+                    focusedIndex={focusedPostIndex}
+                    onFocusedIndexChange={setFocusedPostIndex}
+                    onPostClick={(clickedPost, action) => {
+                      const post =
+                        posts.find((p) => p.uri === clickedPost.uri) || null;
+
+                      // Update focused index when clicking a post
+                      const clickedIdx = posts.findIndex(
+                        (p) => p.uri === clickedPost.uri,
+                      );
+                      if (clickedIdx >= 0) {
+                        setFocusedPostIndex(clickedIdx);
+                      }
+
+                      if (action === "reply") {
+                        // When user clicks reply on a post in the thread
+                        setReplyState({
+                          isReplying: true,
+                          replyToPost: post,
+                        });
+                        setQuoteState({
+                          isQuoting: false,
+                          quotedPost: null,
+                        });
+                      } else if (action === "quote") {
+                        // When user clicks quote on a post in the thread
+                        setQuoteState({
+                          isQuoting: true,
+                          quotedPost: post,
+                        });
+                        setReplyState({
+                          isReplying: false,
+                          replyToPost: null,
+                        });
+                      }
+                    }}
+                    onDeletePost={handleDeletePost}
+                    onContinueThread={() => {
+                      const lastUserPost = findLastUserPost(
+                        posts,
+                        session?.did,
+                      );
+                      if (lastUserPost) {
+                        handleContinueThread(lastUserPost);
+                      } else {
+                        // If no user posts, use the last post in the thread
+                        const lastPost = posts[posts.length - 1];
+                        if (lastPost) {
+                          handleContinueThread(lastPost);
+                        }
+                      }
+                    }}
+                  />
+                </>
               )}
             </div>
           </div>
@@ -609,6 +1101,7 @@ export function ThreadModal({
             ((replyState.isReplying && replyState.replyToPost) ||
               (quoteState.isQuoting && quoteState.quotedPost)) && (
               <div
+                ref={composerRef}
                 className="flex-shrink-0 border-t"
                 style={{
                   backgroundColor: "var(--bsky-bg-secondary)",
@@ -621,7 +1114,9 @@ export function ThreadModal({
                     placeholder={
                       quoteState.isQuoting
                         ? "Add your thoughts..."
-                        : "Add your reply..."
+                        : continueThreadPost
+                          ? "Continue your thread..."
+                          : "Add your reply..."
                     }
                     autoFocus={true}
                     replyTo={
@@ -657,8 +1152,16 @@ export function ThreadModal({
                       hashtags: true,
                       threadOptimization: false,
                     }}
-                    showReplyContext={replyState.isReplying}
-                    submitLabel={quoteState.isQuoting ? "Quote" : "Reply"}
+                    showReplyContext={
+                      replyState.isReplying && !continueThreadPost
+                    }
+                    submitLabel={
+                      quoteState.isQuoting
+                        ? "Quote"
+                        : continueThreadPost
+                          ? "Continue"
+                          : "Reply"
+                    }
                     onCancel={() => {
                       setReplyState({
                         isReplying: false,
@@ -668,13 +1171,32 @@ export function ThreadModal({
                         isQuoting: false,
                         quotedPost: null,
                       });
+                      setContinueThreadPost(null);
                     }}
                   />
                 </div>
               </div>
             )}
         </div>
+
+        {/* Thread Minimap - floating visual navigation for complex threads */}
+        {posts.length > 0 && (
+          <ThreadMinimap
+            posts={posts}
+            currentIndex={focusedPostIndex}
+            currentUserDid={session?.did}
+            onNavigate={handleBreadcrumbNavigate}
+            rootUri={rootPost}
+          />
+        )}
       </div>
+
+      {/* Keyboard shortcuts help panel */}
+      <ThreadShortcutsHelp
+        shortcuts={shortcuts}
+        isOpen={showHelpPanel}
+        onClose={() => setShowHelpPanel(false)}
+      />
     </>,
     document.body,
   );

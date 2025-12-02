@@ -8,26 +8,24 @@ import {
   Routes,
   useLocation,
   useNavigate,
+  useParams,
 } from "react-router";
-import { BackgroundNotificationLoader } from "./components/BackgroundNotificationLoader";
-import { CommandPalette } from "./components/CommandPalette";
-import { DebugConsole } from "./components/DebugConsole";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Header } from "./components/Header";
-import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
 import { LandingPage } from "./components/LandingPage";
 import { MobileTabBar } from "./components/MobileTabBar";
-import { NotificationPermissionPrompt } from "./components/NotificationPermissionPrompt";
 import { OAuthCallback } from "./components/OAuthCallback";
 import { StorageErrorProvider } from "./components/providers/StorageErrorProvider";
-import { RateLimitStatus } from "./components/RateLimitStatus";
 import { Sidebar } from "./components/Sidebar";
-import { SwipeIndicator } from "./components/SwipeIndicator";
-import { FloatingActionButton } from "./components/ui/FloatingActionButton";
+import { AriaLiveProvider } from "./components/ui/AriaLiveRegion";
 import { PageLoader } from "./components/ui/PageLoader";
-import { WebSocketStatus } from "./components/WebSocketStatus";
+import { AccessibilityProvider } from "./contexts/AccessibilityContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { HiddenPostsProvider } from "./contexts/HiddenPostsContext";
+import {
+  KeyboardShortcutsProvider,
+  useKeyboardShortcutsContext,
+} from "./contexts/KeyboardShortcutsContext";
 import { ModalProvider } from "./contexts/ModalContext";
 import { ModerationProvider } from "./contexts/ModerationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -37,10 +35,68 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
 import { analytics } from "./services/analytics";
 import { appPreferencesService } from "./services/app-preferences-service";
+import { initializeCoreStorage } from "./services/data-services-initializer";
 import { NotificationStorageDB } from "./services/notification-storage-db";
 import { cleanupLocalStorage } from "./utils/cleanupLocalStorage";
 import "./utils/debug-control"; // Initialize debug controls
 import { removeTrailingSlash } from "./utils/removeTrailingSlash";
+
+// Lazy load non-critical components that are conditionally rendered
+const BackgroundNotificationLoader = lazy(() =>
+  import("./components/BackgroundNotificationLoader").then((m) => ({
+    default: m.BackgroundNotificationLoader,
+  })),
+);
+const CommandPalette = lazy(() =>
+  import("./components/CommandPalette").then((m) => ({
+    default: m.CommandPalette,
+  })),
+);
+const DebugConsole = lazy(() =>
+  import("./components/DebugConsole").then((m) => ({
+    default: m.DebugConsole,
+  })),
+);
+const KeyboardShortcutsHelp = lazy(() =>
+  import("./components/KeyboardShortcutsHelp").then((m) => ({
+    default: m.KeyboardShortcutsHelp,
+  })),
+);
+const NotificationPermissionPrompt = lazy(() =>
+  import("./components/NotificationPermissionPrompt").then((m) => ({
+    default: m.NotificationPermissionPrompt,
+  })),
+);
+const RateLimitStatus = lazy(() =>
+  import("./components/RateLimitStatus").then((m) => ({
+    default: m.RateLimitStatus,
+  })),
+);
+const ServiceWorkerUpdatePrompt = lazy(() =>
+  import("./components/ServiceWorkerUpdatePrompt").then((m) => ({
+    default: m.ServiceWorkerUpdatePrompt,
+  })),
+);
+const SwipeIndicator = lazy(() =>
+  import("./components/SwipeIndicator").then((m) => ({
+    default: m.SwipeIndicator,
+  })),
+);
+const FloatingActionButton = lazy(() =>
+  import("./components/ui/FloatingActionButton").then((m) => ({
+    default: m.FloatingActionButton,
+  })),
+);
+const WebSocketStatus = lazy(() =>
+  import("./components/WebSocketStatus").then((m) => ({
+    default: m.WebSocketStatus,
+  })),
+);
+const MutationQueueStatus = lazy(() =>
+  import("./components/MutationQueueStatus").then((m) => ({
+    default: m.MutationQueueStatus,
+  })),
+);
 
 // Lazy load route components for better performance
 const Bookmarks = lazy(() =>
@@ -87,6 +143,11 @@ const Search = lazy(() =>
     default: m.SearchTabbed,
   })),
 );
+const ScheduledPosts = lazy(() =>
+  import("./components/ScheduledPosts").then((m) => ({
+    default: m.ScheduledPosts,
+  })),
+);
 const SkyDeck = lazy(() => import("./components/SkyDeck"));
 const VisualTimeline = lazy(() =>
   import("./components/VisualTimeline").then((m) => ({
@@ -101,6 +162,23 @@ const Settings = lazy(() =>
 const UserAnalytics = lazy(() =>
   import("./pages/UserAnalytics").then((m) => ({ default: m.UserAnalytics })),
 );
+
+// Wrapper components that use route params as keys to force remount on navigation
+// This ensures all component state resets when navigating between different items
+function ProfilePageWithKey() {
+  const { handle } = useParams<{ handle: string }>();
+  return <ProfilePage key={handle} />;
+}
+
+function ThreadPageWithKey() {
+  const { handle, postId } = useParams<{ handle: string; postId: string }>();
+  return <ThreadPage key={`${handle}/${postId}`} />;
+}
+
+function ListTimelineWithKey() {
+  const { listId } = useParams<{ listId: string }>();
+  return <ListTimeline key={listId} />;
+}
 
 // Mobile-optimized query client settings
 const isMobile = window.innerWidth < 768;
@@ -137,11 +215,12 @@ function AppContent() {
   const { isAuthenticated, isLoading, session } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { isShortcutsHelpOpen, setIsShortcutsHelpOpen } =
+    useKeyboardShortcutsContext();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [isShortcutsHelpOpen, setIsShortcutsHelpOpen] = useState(false);
 
   // Check if we're on the home route
   const isHomeRoute =
@@ -165,21 +244,13 @@ function AppContent() {
         category: "General",
         action: () => setIsCommandPaletteOpen(true),
       },
-      // Help
+      // Help - Shift+? opens shortcuts help (/ without shift focuses search, handled in KeyboardShortcutsContext)
       {
         key: "?",
         shift: true,
         description: "Show keyboard shortcuts",
         category: "General",
         action: () => setIsShortcutsHelpOpen(true),
-      },
-      {
-        key: "/",
-        shift: false,
-        description: "Show keyboard shortcuts (alternative)",
-        category: "General",
-        action: () => setIsShortcutsHelpOpen(true),
-        preventDefault: false,
       },
       // Navigation shortcuts
       {
@@ -272,14 +343,17 @@ function AppContent() {
     return () => window.removeEventListener("resize", checkViewportWidth);
   }, [isAuthenticated]);
 
-  // Run one-time migration on app load
+  // Initialize core storage backends and run one-time migration on app load
   useEffect(() => {
-    const runMigration = async () => {
+    const initializeStorage = async () => {
       try {
-        // Note: Bookmark storage now uses BookmarkServiceV2 which is initialized in AuthContext
+        // Initialize core storage via StorageManager (api-cache, offline-storage, notification-storage)
+        // This replaces scattered individual initializations with coordinated error handling
+        await initializeCoreStorage();
+        debug.log("✅ Core storage backends initialized");
 
+        // Run notification migration after core storage is ready
         const db = NotificationStorageDB.getInstance();
-        await db.init();
         const migrated = await db.migrateFromLocalStorage();
         if (migrated) {
           debug.log(
@@ -289,11 +363,11 @@ function AppContent() {
           cleanupLocalStorage();
         }
       } catch (error) {
-        debug.error("Failed to run migration:", error);
+        debug.error("Failed to initialize core storage:", error);
       }
     };
 
-    runMigration();
+    initializeStorage();
   }, []);
 
   if (isLoading) {
@@ -330,7 +404,16 @@ function AppContent() {
       style={{ background: "var(--bsky-bg-primary)" }}
       {...swipeHandlers}
     >
-      <BackgroundNotificationLoader />
+      {/* Skip navigation link for accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+      >
+        Skip to main content
+      </a>
+      <Suspense fallback={null}>
+        <BackgroundNotificationLoader />
+      </Suspense>
       <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
       <div
         className={`relative flex ${isHomeRoute ? "" : "mx-auto 2xl:max-w-[1536px]"}`}
@@ -341,6 +424,9 @@ function AppContent() {
           isCollapsed={isSidebarCollapsed}
         />
         <main
+          id="main-content"
+          role="main"
+          aria-label="Main content"
           className={`mt-16 min-h-[calc(100vh-4rem)] flex-1 pb-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto lg:pb-0`}
         >
           <Suspense fallback={<PageLoader />}>
@@ -390,14 +476,42 @@ function AppContent() {
                       analytics.trackError(error, "ListTimeline");
                     }}
                   >
-                    <ListTimeline />
+                    <ListTimelineWithKey />
                   </ErrorBoundary>
                 }
               />
-              <Route path="/compose" element={<Composer />} />
+              <Route
+                path="/compose"
+                element={
+                  <ErrorBoundary
+                    componentName="Composer"
+                    onError={(error) => {
+                      analytics.trackError(error, "Composer");
+                    }}
+                  >
+                    <Composer />
+                  </ErrorBoundary>
+                }
+              />
               <Route path="/search" element={<Search />} />
-              <Route path="/profile/:handle" element={<ProfilePage />} />
-              <Route path="/thread/:handle/:postId" element={<ThreadPage />} />
+              <Route
+                path="/scheduled"
+                element={
+                  <ErrorBoundary
+                    componentName="Scheduled Posts"
+                    onError={(error) => {
+                      analytics.trackError(error, "ScheduledPosts");
+                    }}
+                  >
+                    <ScheduledPosts />
+                  </ErrorBoundary>
+                }
+              />
+              <Route path="/profile/:handle" element={<ProfilePageWithKey />} />
+              <Route
+                path="/thread/:handle/:postId"
+                element={<ThreadPageWithKey />}
+              />
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/:section" element={<Settings />} />
               <Route path="/compression-test" element={<CompressionTest />} />
@@ -407,21 +521,34 @@ function AppContent() {
         </main>
       </div>
       <MobileTabBar />
-      <FloatingActionButton />
-      <SwipeIndicator />
-      <RateLimitStatus />
-      <WebSocketStatus />
-      <NotificationPermissionPrompt />
-      <DebugConsole />
-      <ColumnMigrationNotice />
-      <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        onClose={() => setIsCommandPaletteOpen(false)}
-      />
-      <KeyboardShortcutsHelp
-        isOpen={isShortcutsHelpOpen}
-        onClose={() => setIsShortcutsHelpOpen(false)}
-      />
+      {/* Lazy loaded UI components */}
+      <Suspense fallback={null}>
+        <FloatingActionButton />
+        <SwipeIndicator />
+        <RateLimitStatus />
+        <WebSocketStatus />
+        <MutationQueueStatus />
+        <ErrorBoundary
+          componentName="Push Notifications"
+          fallback={null}
+          onError={(error) => {
+            analytics.trackError(error, "PushNotifications");
+          }}
+        >
+          <NotificationPermissionPrompt />
+        </ErrorBoundary>
+        <DebugConsole />
+        <ColumnMigrationNotice />
+        <CommandPalette
+          isOpen={isCommandPaletteOpen}
+          onClose={() => setIsCommandPaletteOpen(false)}
+        />
+        <KeyboardShortcutsHelp
+          isOpen={isShortcutsHelpOpen}
+          onClose={() => setIsShortcutsHelpOpen(false)}
+        />
+        <ServiceWorkerUpdatePrompt />
+      </Suspense>
     </div>
   );
 }
@@ -447,19 +574,32 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ThemeProvider>
-          <AuthProvider>
-            <WebSocketProvider>
-              <ModalProvider>
-                <HiddenPostsProvider>
-                  <ModerationProvider>
-                    <StorageErrorProvider>
-                      <AppContent />
-                    </StorageErrorProvider>
-                  </ModerationProvider>
-                </HiddenPostsProvider>
-              </ModalProvider>
-            </WebSocketProvider>
-          </AuthProvider>
+          <AccessibilityProvider>
+            <AriaLiveProvider>
+              <AuthProvider>
+                <KeyboardShortcutsProvider>
+                  <WebSocketProvider>
+                    <ModalProvider>
+                      <HiddenPostsProvider>
+                        <ModerationProvider>
+                          <StorageErrorProvider>
+                            <ErrorBoundary
+                              componentName="Application"
+                              onError={(error) => {
+                                analytics.trackError(error, "App");
+                              }}
+                            >
+                              <AppContent />
+                            </ErrorBoundary>
+                          </StorageErrorProvider>
+                        </ModerationProvider>
+                      </HiddenPostsProvider>
+                    </ModalProvider>
+                  </WebSocketProvider>
+                </KeyboardShortcutsProvider>
+              </AuthProvider>
+            </AriaLiveProvider>
+          </AccessibilityProvider>
         </ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>

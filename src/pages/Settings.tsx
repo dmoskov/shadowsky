@@ -1,4 +1,5 @@
 import { useParams } from "react-router";
+import { AccessibilitySettings } from "../components/settings/AccessibilitySettings";
 import { AccountSettings } from "../components/settings/AccountSettings";
 import { AccountsSettings } from "../components/settings/AccountsSettings";
 import { AppearanceSettings } from "../components/settings/AppearanceSettings";
@@ -21,6 +22,8 @@ export const Settings = () => {
         return <AccountsSettings />;
       case "appearance":
         return <AppearanceSettings />;
+      case "accessibility":
+        return <AccessibilitySettings />;
       case "composer":
         return <ComposerSettings />;
       case "notifications":

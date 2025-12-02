@@ -1,8 +1,9 @@
 import { AppBskyActorDefs } from "@atproto/api";
 import { X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
@@ -29,6 +30,12 @@ export function UserListModal({
   const [cursor, setCursor] = useState<string | undefined>();
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+
+  // Accessibility: Focus trap and unique ID for aria-labelledby
+  const containerRef = useFocusTrap<HTMLDivElement>(isOpen);
+  const titleId = useId();
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen && agent) {
@@ -88,10 +95,13 @@ export function UserListModal({
     }
   };
 
-  const handleUserClick = (handle: string) => {
-    navigate(`/profile/${handle}`);
-    onClose();
-  };
+  const handleUserClick = useCallback(
+    (handle: string) => {
+      navigate(`/profile/${handle}`);
+      onClose();
+    },
+    [navigate, onClose],
+  );
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const element = e.currentTarget;
@@ -104,48 +114,138 @@ export function UserListModal({
     }
   };
 
+  // Keyboard navigation handler for the modal
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      switch (e.key) {
+        case "Escape":
+          e.preventDefault();
+          onClose();
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          if (users.length > 0) {
+            setFocusedIndex((prev) =>
+              prev < users.length - 1 ? prev + 1 : prev,
+            );
+          }
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          if (users.length > 0) {
+            setFocusedIndex((prev) => (prev > 0 ? prev - 1 : 0));
+          }
+          break;
+        case "Enter":
+          if (focusedIndex >= 0 && focusedIndex < users.length) {
+            e.preventDefault();
+            handleUserClick(users[focusedIndex].handle);
+          }
+          break;
+        case "Home":
+          if (users.length > 0) {
+            e.preventDefault();
+            setFocusedIndex(0);
+          }
+          break;
+        case "End":
+          if (users.length > 0) {
+            e.preventDefault();
+            setFocusedIndex(users.length - 1);
+          }
+          break;
+      }
+    },
+    [users, focusedIndex, onClose, handleUserClick],
+  );
+
+  // Reset focus index when modal opens or users change
+  useEffect(() => {
+    if (isOpen) {
+      setFocusedIndex(-1);
+    }
+  }, [isOpen]);
+
+  // Scroll focused item into view
+  useEffect(() => {
+    if (focusedIndex >= 0 && listRef.current) {
+      const listItems = listRef.current.querySelectorAll('[role="option"]');
+      const focusedItem = listItems[focusedIndex] as HTMLElement;
+      if (focusedItem) {
+        focusedItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
+    }
+  }, [focusedIndex]);
+
   if (!isOpen) return null;
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
       onClick={onClose}
+      role="presentation"
     >
       <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className="relative max-h-[80vh] w-full max-w-md overflow-hidden rounded-lg bg-white dark:bg-gray-900"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={handleKeyDown}
       >
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-          <h2 className="text-xl font-semibold">{title}</h2>
+          <h2 id={titleId} className="text-xl font-semibold">
+            {title}
+          </h2>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* User list */}
         <div
+          ref={listRef}
           className="max-h-[calc(80vh-73px)] overflow-y-auto"
           onScroll={handleScroll}
+          role="listbox"
+          aria-label={`${title} list`}
+          tabIndex={0}
         >
           {loading ? (
-            <div className="flex justify-center p-8">
-              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"></div>
+            <div className="flex justify-center p-8" aria-live="polite">
+              <div
+                className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"
+                aria-label="Loading users"
+              ></div>
             </div>
           ) : users.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+            <div
+              className="p-8 text-center text-gray-500 dark:text-gray-400"
+              role="status"
+            >
               No {type} yet
             </div>
           ) : (
             <>
-              {users.map((user) => (
+              {users.map((user, index) => (
                 <div
                   key={user.did}
-                  className="flex cursor-pointer items-center gap-3 border-b p-4 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+                  role="option"
+                  aria-selected={index === focusedIndex}
+                  tabIndex={index === focusedIndex ? 0 : -1}
+                  className={`flex cursor-pointer items-center gap-3 border-b p-4 outline-none dark:border-gray-700 ${
+                    index === focusedIndex
+                      ? "bg-blue-50 ring-2 ring-inset ring-blue-500 dark:bg-blue-900/30"
+                      : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                  }`}
                   onClick={() => handleUserClick(user.handle)}
+                  onFocus={() => setFocusedIndex(index)}
                 >
                   <ProfileHoverCard handle={user.handle}>
                     <img
@@ -154,7 +254,8 @@ export function UserListModal({
                           ? proxifyBskyImage(user.avatar)
                           : "/default-avatar.svg"
                       }
-                      alt={user.displayName || user.handle}
+                      alt=""
+                      aria-hidden="true"
                       className="h-12 w-12 cursor-pointer rounded-full transition-opacity hover:opacity-80"
                     />
                   </ProfileHoverCard>
@@ -165,7 +266,11 @@ export function UserListModal({
                       </div>
                     </ProfileHoverCard>
                     <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                      <span>@{user.handle}</span>
+                      <ProfileHoverCard handle={user.handle}>
+                        <span className="cursor-pointer hover:underline">
+                          @{user.handle}
+                        </span>
+                      </ProfileHoverCard>
                       <DomainVerifiedBadgeInline handle={user.handle} />
                     </div>
                     {user.description && (
@@ -177,8 +282,11 @@ export function UserListModal({
                 </div>
               ))}
               {loadingMore && (
-                <div className="flex justify-center p-4">
-                  <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"></div>
+                <div className="flex justify-center p-4" aria-live="polite">
+                  <div
+                    className="h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"
+                    aria-label="Loading more users"
+                  ></div>
                 </div>
               )}
             </>

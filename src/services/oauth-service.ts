@@ -1,14 +1,35 @@
 /**
  * OAuth Service for AT Protocol authentication
  * Uses @atproto/oauth-client-browser for secure OAuth flow
+ *
+ * NOTE: The @atproto/oauth-client-browser package (~327KB) is dynamically imported
+ * only when OAuth functionality is needed (login click or session restoration).
+ * This reduces the initial bundle size for users who don't use OAuth.
  */
 
 import { Agent } from "@atproto/api";
-import {
-  BrowserOAuthClient,
-  type OAuthSession,
-} from "@atproto/oauth-client-browser";
 import { debug } from "@bsky/shared";
+
+// Type-only import for TypeScript - doesn't affect bundle
+import type {
+  BrowserOAuthClient as BrowserOAuthClientType,
+  OAuthSession,
+} from "@atproto/oauth-client-browser";
+
+// Lazy-loaded OAuth client module
+let OAuthClientModule: typeof import("@atproto/oauth-client-browser") | null =
+  null;
+
+async function loadOAuthClient(): Promise<
+  typeof import("@atproto/oauth-client-browser")
+> {
+  if (!OAuthClientModule) {
+    debug.log("Loading OAuth client module...");
+    OAuthClientModule = await import("@atproto/oauth-client-browser");
+    debug.log("OAuth client module loaded");
+  }
+  return OAuthClientModule;
+}
 
 // Determine the client ID based on environment
 function getClientId(): string {
@@ -37,7 +58,7 @@ type OAuthEventCallback = (state: OAuthState) => void;
 type OAuthDeletedCallback = (event: { sub: string; cause: Error }) => void;
 
 class OAuthService {
-  private client: BrowserOAuthClient | null = null;
+  private client: BrowserOAuthClientType | null = null;
   private currentSession: OAuthSession | null = null;
   private currentAgent: Agent | null = null;
   private initPromise: Promise<OAuthState | null> | null = null;
@@ -63,6 +84,9 @@ class OAuthService {
     try {
       const clientId = getClientId();
       debug.log("Initializing OAuth client with clientId:", clientId);
+
+      // Dynamically load the OAuth client module
+      const { BrowserOAuthClient } = await loadOAuthClient();
 
       // Try to load the OAuth client - this may fail if client-metadata.json isn't deployed yet
       try {

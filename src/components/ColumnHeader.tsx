@@ -80,6 +80,8 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
         return "Messages";
       case "bookmarks":
         return "Bookmarks";
+      case "search":
+        return "Search";
       default:
         return column.title || column.type;
     }

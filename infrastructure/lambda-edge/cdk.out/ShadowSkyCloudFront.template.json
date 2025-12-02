@@ -1,0 +1,171 @@
+{
+ "Description": "Custom CloudFront distribution for ShadowSky with OG meta tags",
+ "Resources": {
+  "Distribution830FAC52": {
+   "Type": "AWS::CloudFront::Distribution",
+   "Properties": {
+    "DistributionConfig": {
+     "CacheBehaviors": [
+      {
+       "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+       "Compress": true,
+       "PathPattern": "/assets/*",
+       "TargetOriginId": "ShadowSkyCloudFrontDistributionOrigin1E9B3871E",
+       "ViewerProtocolPolicy": "redirect-to-https"
+      },
+      {
+       "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+       "Compress": true,
+       "PathPattern": "/*.js",
+       "TargetOriginId": "ShadowSkyCloudFrontDistributionOrigin1E9B3871E",
+       "ViewerProtocolPolicy": "redirect-to-https"
+      },
+      {
+       "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+       "Compress": true,
+       "PathPattern": "/*.css",
+       "TargetOriginId": "ShadowSkyCloudFrontDistributionOrigin1E9B3871E",
+       "ViewerProtocolPolicy": "redirect-to-https"
+      },
+      {
+       "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+       "Compress": true,
+       "PathPattern": "/*.svg",
+       "TargetOriginId": "ShadowSkyCloudFrontDistributionOrigin1E9B3871E",
+       "ViewerProtocolPolicy": "redirect-to-https"
+      },
+      {
+       "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+       "Compress": true,
+       "PathPattern": "/*.png",
+       "TargetOriginId": "ShadowSkyCloudFrontDistributionOrigin1E9B3871E",
+       "ViewerProtocolPolicy": "redirect-to-https"
+      },
+      {
+       "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+       "Compress": true,
+       "PathPattern": "/*.ico",
+       "TargetOriginId": "ShadowSkyCloudFrontDistributionOrigin1E9B3871E",
+       "ViewerProtocolPolicy": "redirect-to-https"
+      }
+     ],
+     "Comment": "ShadowSky with OG Meta Tags Lambda@Edge",
+     "DefaultCacheBehavior": {
+      "AllowedMethods": [
+       "GET",
+       "HEAD",
+       "OPTIONS"
+      ],
+      "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+      "Compress": true,
+      "LambdaFunctionAssociations": [
+       {
+        "EventType": "viewer-request",
+        "LambdaFunctionARN": "arn:aws:lambda:us-east-1:181691141781:function:shadowsky-og-meta-edge:2"
+       }
+      ],
+      "OriginRequestPolicyId": "59781a5b-3903-41f3-afcb-af62929ccde1",
+      "TargetOriginId": "ShadowSkyCloudFrontDistributionOrigin1E9B3871E",
+      "ViewerProtocolPolicy": "redirect-to-https"
+     },
+     "Enabled": true,
+     "HttpVersion": "http2",
+     "IPV6Enabled": true,
+     "Origins": [
+      {
+       "CustomOriginConfig": {
+        "OriginProtocolPolicy": "https-only",
+        "OriginSSLProtocols": [
+         "TLSv1.2"
+        ]
+       },
+       "DomainName": "prod.d1g6mni4b6812x.amplifyapp.com",
+       "Id": "ShadowSkyCloudFrontDistributionOrigin1E9B3871E"
+      }
+     ],
+     "PriceClass": "PriceClass_100"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShadowSkyCloudFront/Distribution/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/03JTQ7CIBCG4bN0D6PFG6hxa9QDGH6TaSkYmNEF4e7auOnqy/t8CtRhhP2gP1VaN8uIBtqDtJ3Fj54t6sU4De3CyRLmdNTVixvriAG922oXNmZ2oeRE0M5YqaDh9RWnkLbd+ypXphdTFyk7D1PdvZUCNcI4TBVRFk6Ei4f7f786GF7vpwAAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "ShadowSkyCloudFront/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "DistributionDomainName": {
+   "Description": "CloudFront Distribution Domain Name",
+   "Value": {
+    "Fn::GetAtt": [
+     "Distribution830FAC52",
+     "DomainName"
+    ]
+   }
+  },
+  "DistributionId": {
+   "Description": "CloudFront Distribution ID",
+   "Value": {
+    "Ref": "Distribution830FAC52"
+   }
+  },
+  "NextSteps": {
+   "Description": "Next steps after deployment",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "Test at: https://",
+      {
+       "Fn::GetAtt": [
+        "Distribution830FAC52",
+        "DomainName"
+       ]
+      }
+     ]
+    ]
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

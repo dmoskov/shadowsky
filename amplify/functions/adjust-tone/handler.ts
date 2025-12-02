@@ -1,59 +1,58 @@
-// Helper function to strip markdown code fences from JSON responses
-function cleanJsonResponse(text: string): string {
-  let cleaned = text.trim();
-  if (cleaned.startsWith('```json')) {
-    cleaned = cleaned.slice(7);
-  } else if (cleaned.startsWith('```')) {
-    cleaned = cleaned.slice(3);
-  }
-  if (cleaned.endsWith('```')) {
-    cleaned = cleaned.slice(0, -3);
-  }
-  return cleaned.trim();
+import {
+  cleanJsonResponse,
+  createConfigError,
+  createExternalApiError,
+  createInternalError,
+  createMissingParameterError,
+  createOptionsResponse,
+  createSuccessResponse,
+  getCorrelationId,
+  isOptionsRequest,
+  logError,
+  logInfo,
+  parseEventBody,
+} from "../shared/api-response";
+
+interface RequestBody {
+  text?: string;
+  tone?: string;
 }
 
-export const handler = async (event: any) => {
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "POST,OPTIONS",
-    "Content-Type": "application/json",
-  };
+const toneDescriptions: Record<string, string> = {
+  professional: "formal, clear, and business-appropriate language",
+  casual: "relaxed, conversational, and friendly language",
+  humorous:
+    "witty, playful, and entertaining language while maintaining the core message",
+  informative: "educational, fact-focused, and explanatory language",
+  inspirational: "motivating, uplifting, and encouraging language",
+};
 
-  // Handle OPTIONS request for CORS
-  const method = event.requestContext?.http?.method || event.httpMethod;
-  if (method === "OPTIONS") {
-    return { statusCode: 200, headers, body: "" };
+export const handler = async (event: any) => {
+  const correlationId = getCorrelationId(event);
+
+  // Handle OPTIONS request for CORS preflight
+  if (isOptionsRequest(event)) {
+    return createOptionsResponse(event);
   }
 
   try {
-    const body = JSON.parse(event.body || "{}");
-    const { text, tone } = body;
+    const body = parseEventBody<RequestBody>(event);
+    const { text, tone } = body || {};
 
-    if (!text || !tone) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: "Missing text or tone" }),
-      };
+    if (!text) {
+      return createMissingParameterError("text", event, correlationId);
+    }
+
+    if (!tone) {
+      return createMissingParameterError("tone", event, correlationId);
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: "Server API key not configured" }),
-      };
+      return createConfigError("ANTHROPIC_API_KEY", event, correlationId);
     }
 
-    const toneDescriptions: Record<string, string> = {
-      professional: "formal, clear, and business-appropriate language",
-      casual: "relaxed, conversational, and friendly language",
-      humorous: "witty, playful, and entertaining language while maintaining the core message",
-      informative: "educational, fact-focused, and explanatory language",
-      inspirational: "motivating, uplifting, and encouraging language",
-    };
+    logInfo("adjust-tone", `Adjusting tone to: ${tone}`, correlationId);
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -68,7 +67,7 @@ export const handler = async (event: any) => {
         messages: [
           {
             role: "user",
-            content: `Adjust the tone of this social media post to be ${toneDescriptions[tone]}.
+            content: `Adjust the tone of this social media post to be ${toneDescriptions[tone] || tone}.
 
 Original post: "${text}"
 
@@ -92,31 +91,32 @@ Your response MUST be valid JSON only. Start with { and end with }.`,
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: `Anthropic API error: ${error}` }),
-      };
+      const errorText = await response.text();
+      logError(
+        "adjust-tone",
+        `Anthropic API error: ${response.status}`,
+        correlationId,
+        {
+          statusCode: response.status,
+        },
+      );
+      return createExternalApiError(
+        "Anthropic",
+        errorText,
+        event,
+        correlationId,
+      );
     }
 
     const data = await response.json();
     const cleanedText = cleanJsonResponse(data.content[0].text);
     const result = JSON.parse(cleanedText);
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(result),
-    };
+    logInfo("adjust-tone", "Tone adjusted successfully", correlationId);
+
+    return createSuccessResponse(result, event, { correlationId });
   } catch (error) {
-    console.error("Error adjusting tone:", error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: error instanceof Error ? error.message : "Internal server error"
-      }),
-    };
+    logError("adjust-tone", error, correlationId);
+    return createInternalError(error, event, correlationId);
   }
 };

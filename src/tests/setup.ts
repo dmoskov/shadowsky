@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom";
+import "fake-indexeddb/auto";
 import { vi } from "vitest";
 
 // Mock window.matchMedia
@@ -32,3 +33,10 @@ Object.defineProperty(document, "cookie", {
   writable: true,
   value: "",
 });
+
+// Mock ResizeObserver
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};

@@ -16,6 +16,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
     location.pathname === "/" || location.pathname === "/home";
   return (
     <header
+      role="banner"
+      aria-label="Site header"
       className="bsky-glass fixed left-0 right-0 top-0 z-50 h-16"
       style={{ borderBottom: "1px solid var(--bsky-border-primary)" }}
     >

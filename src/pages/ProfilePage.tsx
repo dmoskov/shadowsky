@@ -5,16 +5,17 @@ import {
   Edit,
   ExternalLink,
   Flag,
-  List,
+  List as ListIcon,
   MoreHorizontal,
   Share2,
   Sparkles,
   UserX,
   VolumeX,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
+import { List, ListImperativeAPI, useDynamicRowHeight } from "react-window";
 import { AddToListModal } from "../components/AddToListModal";
 import { PostCard } from "../components/PostCard";
 import { ReportModal } from "../components/ReportModal";
@@ -24,8 +25,8 @@ import { ProfileSkeleton } from "../components/ui/SkeletonLoader";
 import { UserListModal } from "../components/UserListModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
-import { analyzePosts } from "../services/anthropic";
 import { useTopPosts } from "../hooks/useTopPosts";
+import { analyzePosts } from "../services/anthropic";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { getBskyProfileUrl } from "../utils/url-helpers";
@@ -60,9 +61,13 @@ interface ProfileData {
 
 type ProfileTab = "posts" | "replies" | "media" | "top";
 
+// Store scroll positions for each profile/tab combination
+const scrollPositions = new Map<string, number>();
+
 export default function ProfilePage() {
   const { handle } = useParams<{ handle: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { session, agent } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [posts, setPosts] = useState<AppBskyFeedDefs.FeedViewPost[]>([]);
@@ -71,7 +76,17 @@ export default function ProfilePage() {
   const [postsLoading, setPostsLoading] = useState(false);
   const [cursor, setCursor] = useState<string | undefined>();
   const [hasMore, setHasMore] = useState(true);
-  const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
+
+  // Get active tab from URL, default to "posts"
+  const tabParam = searchParams.get("tab");
+  const activeTab: ProfileTab =
+    tabParam === "replies" || tabParam === "media" || tabParam === "top"
+      ? tabParam
+      : "posts";
+
+  const setActiveTab = (tab: ProfileTab) => {
+    setSearchParams(tab === "posts" ? {} : { tab }, { replace: true });
+  };
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [profileMenuPosition, setProfileMenuPosition] = useState<{
     top: number;
@@ -91,80 +106,108 @@ export default function ProfilePage() {
 
   const profileMenuButtonRef = useRef<HTMLButtonElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const listContainerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<ListImperativeAPI>(null);
+  const [listHeight, setListHeight] = useState(600);
+  const [shouldRestoreScroll, setShouldRestoreScroll] = useState(false);
+
+  const cacheKey = `profile-${handle}-${activeTab}`;
+
+  const dynamicRowHeight = useDynamicRowHeight({
+    defaultRowHeight: 200,
+    key: cacheKey,
+  });
 
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
     useOptimisticPosts();
 
-  // Fetch posts once for analysis (shared between haiku and sonnet)
-  const { data: postsForAnalysis, isLoading: isLoadingPosts } = useQuery({
-    queryKey: ["profile-posts-for-analysis", handle],
-    queryFn: async () => {
-      if (!agent || !handle) throw new Error("No handle to analyze");
+  // Transform posts already in memory for quick haiku analysis
+  const postsInMemory = posts
+    .filter((item) => {
+      const isRepost = item.reason?.$type === "app.bsky.feed.defs#reasonRepost";
+      return !isRepost;
+    })
+    .map((item) => ({
+      text: (item.post.record as { text?: string })?.text || "",
+      createdAt: item.post.indexedAt,
+      likes: item.post.likeCount || 0,
+      reposts: item.post.repostCount || 0,
+      replies: item.post.replyCount || 0,
+    }));
 
-      const allPosts: any[] = [];
-      let fetchCursor: string | undefined;
-      const maxPages = 1; // Fetch up to 50 posts
-
-      for (let page = 0; page < maxPages; page++) {
-        const response = await agent.getAuthorFeed({
-          actor: handle,
-          limit: 50,
-          cursor: fetchCursor,
-        });
-
-        const filteredPosts = response.data.feed.filter((item) => {
-          const isRepost =
-            item.reason?.$type === "app.bsky.feed.defs#reasonRepost";
-          return !isRepost;
-        });
-
-        allPosts.push(...filteredPosts);
-        fetchCursor = response.data.cursor;
-        if (!fetchCursor) break;
-      }
-
-      if (allPosts.length === 0) {
-        throw new Error("No posts available for analysis");
-      }
-
-      return allPosts.map((item) => ({
-        text: item.post.record?.text || "",
-        createdAt: item.post.indexedAt,
-        likes: item.post.likeCount || 0,
-        reposts: item.post.repostCount || 0,
-        replies: item.post.replyCount || 0,
-      }));
-    },
-    staleTime: 30 * 60 * 1000,
-    enabled: analysisRequested && !!handle && !!agent,
-  });
-
-  // Quick haiku analysis (fast, 3-sentence summary)
+  // Quick haiku analysis using posts already in memory (instant start)
   const { data: haikuAnalysis, isLoading: isLoadingHaiku } = useQuery({
     queryKey: ["profile-analysis-haiku", handle],
     queryFn: async () => {
-      if (!postsForAnalysis) throw new Error("Posts not loaded");
-      return await analyzePosts(postsForAnalysis, "haiku");
+      if (postsInMemory.length === 0) throw new Error("No posts in memory");
+      return await analyzePosts(postsInMemory, "haiku");
     },
     staleTime: 30 * 60 * 1000,
-    enabled: !!postsForAnalysis,
+    enabled: analysisRequested && postsInMemory.length > 0,
   });
 
-  // Full sonnet analysis (detailed)
+  // Fetch more posts for deeper Sonnet analysis (in parallel)
+  const { data: postsForSonnet, isLoading: isLoadingPostsForSonnet } = useQuery(
+    {
+      queryKey: ["profile-posts-for-sonnet", handle],
+      queryFn: async () => {
+        if (!agent || !handle) throw new Error("No handle to analyze");
+
+        const allPosts: AppBskyFeedDefs.FeedViewPost[] = [];
+        let fetchCursor: string | undefined;
+        const maxPages = 4; // Fetch up to 200 posts for deeper analysis
+
+        for (let page = 0; page < maxPages; page++) {
+          const response = await agent.getAuthorFeed({
+            actor: handle,
+            limit: 50,
+            cursor: fetchCursor,
+          });
+
+          const filteredPosts = response.data.feed.filter((item) => {
+            const isRepost =
+              item.reason?.$type === "app.bsky.feed.defs#reasonRepost";
+            return !isRepost;
+          });
+
+          allPosts.push(...filteredPosts);
+          fetchCursor = response.data.cursor;
+          if (!fetchCursor) break;
+        }
+
+        if (allPosts.length === 0) {
+          throw new Error("No posts available for analysis");
+        }
+
+        return allPosts.map((item) => ({
+          text: (item.post.record as { text?: string })?.text || "",
+          createdAt: item.post.indexedAt,
+          likes: item.post.likeCount || 0,
+          reposts: item.post.repostCount || 0,
+          replies: item.post.replyCount || 0,
+        }));
+      },
+      staleTime: 30 * 60 * 1000,
+      enabled: analysisRequested && !!handle && !!agent,
+    },
+  );
+
+  // Full sonnet analysis with more posts (detailed)
   const { data: sonnetAnalysis, isLoading: isLoadingSonnet } = useQuery({
     queryKey: ["profile-analysis-sonnet", handle],
     queryFn: async () => {
-      if (!postsForAnalysis) throw new Error("Posts not loaded");
-      return await analyzePosts(postsForAnalysis, "sonnet");
+      if (!postsForSonnet) throw new Error("Posts not loaded");
+      return await analyzePosts(postsForSonnet, "sonnet");
     },
     staleTime: 30 * 60 * 1000,
-    enabled: !!postsForAnalysis,
+    enabled: !!postsForSonnet,
   });
 
   // Use haiku if available, then upgrade to sonnet when ready
   const analysisData = sonnetAnalysis || haikuAnalysis;
   const isLoadingAnalysis =
-    isLoadingPosts || (isLoadingHaiku && isLoadingSonnet);
+    (isLoadingHaiku && !haikuAnalysis) ||
+    (isLoadingPostsForSonnet && isLoadingSonnet && !haikuAnalysis);
 
   // Top posts for the "Top Posts" tab
   const { data: topPostsData, isLoading: isTopPostsLoading } = useTopPosts({
@@ -275,21 +318,88 @@ export default function ProfilePage() {
     }
   };
 
-  const handleScroll = () => {
-    if (
-      window.innerHeight + document.documentElement.scrollTop >=
-      document.documentElement.offsetHeight - 100 &&
-      hasMore &&
-      !postsLoading
-    ) {
-      loadPosts();
-    }
-  };
-
+  // Measure container height for virtual list
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasMore, postsLoading, cursor]);
+    if (!listContainerRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        // Calculate height based on viewport minus header offset
+        const viewportHeight = window.innerHeight;
+        const containerRect = entry.target.getBoundingClientRect();
+        const calculatedHeight = Math.max(
+          400,
+          viewportHeight - containerRect.top - 16,
+        );
+        setListHeight(calculatedHeight);
+      }
+    });
+
+    resizeObserver.observe(listContainerRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  // Restore scroll position when posts are loaded
+  useEffect(() => {
+    if (
+      shouldRestoreScroll &&
+      cacheKey &&
+      posts.length > 0 &&
+      scrollPositions.has(cacheKey) &&
+      listRef.current
+    ) {
+      const savedPosition = scrollPositions.get(cacheKey)!;
+      setTimeout(() => {
+        if (listRef.current) {
+          listRef.current.scrollToRow({
+            index: 0,
+            behavior: "auto",
+          });
+          const element = listRef.current.element;
+          if (element) {
+            element.scrollTop = savedPosition;
+          }
+        }
+      }, 0);
+      setShouldRestoreScroll(false);
+    }
+  }, [cacheKey, posts.length, shouldRestoreScroll]);
+
+  // Mark that we should restore scroll on mount
+  useEffect(() => {
+    if (cacheKey && scrollPositions.has(cacheKey)) {
+      setShouldRestoreScroll(true);
+    }
+  }, [cacheKey]);
+
+  // Save scroll position when unmounting or changing tabs
+  useEffect(() => {
+    return () => {
+      if (cacheKey && listRef.current) {
+        const element = listRef.current.element;
+        if (element) {
+          scrollPositions.set(cacheKey, element.scrollTop);
+        }
+      }
+    };
+  }, [cacheKey]);
+
+  // Handle scroll for infinite loading
+  const handleRowsRendered = useCallback(
+    (
+      visibleRows: { startIndex: number; stopIndex: number },
+      _allRows: { startIndex: number; stopIndex: number },
+    ) => {
+      if (!hasMore || postsLoading || posts.length === 0) return;
+
+      // Trigger load at 80% scroll position
+      const scrollPercentage = visibleRows.stopIndex / posts.length;
+      if (scrollPercentage >= 0.8) {
+        loadPosts();
+      }
+    },
+    [hasMore, postsLoading, posts.length],
+  );
 
   useEffect(() => {
     if (profile) {
@@ -484,10 +594,11 @@ export default function ProfilePage() {
               {!isOwnProfile && (
                 <button
                   onClick={handleFollow}
-                  className={`rounded-full px-6 py-2.5 font-medium transition-all ${profile.viewer?.following
-                    ? "bsky-button-secondary hover:scale-105"
-                    : "bsky-button-primary hover:scale-105"
-                    }`}
+                  className={`rounded-full px-6 py-2.5 font-medium transition-all ${
+                    profile.viewer?.following
+                      ? "bsky-button-secondary hover:scale-105"
+                      : "bsky-button-primary hover:scale-105"
+                  }`}
                 >
                   {profile.viewer?.following ? "Following" : "Follow"}
                 </button>
@@ -511,8 +622,8 @@ export default function ProfilePage() {
                     color: "var(--bsky-text-secondary)",
                   }}
                   onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor =
-                    "var(--bsky-bg-hover)")
+                    (e.currentTarget.style.backgroundColor =
+                      "var(--bsky-bg-hover)")
                   }
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.backgroundColor = "transparent")
@@ -546,12 +657,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <Edit className="h-4 w-4" />
@@ -566,12 +677,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <Sparkles className="h-4 w-4" />
@@ -585,12 +696,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 rounded-t-lg px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <Share2 className="h-4 w-4" />
@@ -601,12 +712,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <ExternalLink className="h-4 w-4" />
@@ -617,15 +728,15 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
-                            <List className="h-4 w-4" />
+                            <ListIcon className="h-4 w-4" />
                             Add to Lists
                           </button>
                           <button
@@ -637,12 +748,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <Sparkles className="h-4 w-4" />
@@ -653,12 +764,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <VolumeX className="h-4 w-4 flex-shrink-0" />
@@ -672,12 +783,12 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--bsky-text-primary)" }}
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <Flag className="h-4 w-4 flex-shrink-0" />
@@ -689,12 +800,12 @@ export default function ProfilePage() {
                             onClick={handleBlock}
                             className="flex w-full items-center gap-3 rounded-b-lg px-4 py-2.5 text-sm text-red-600 transition-all"
                             onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "var(--bsky-bg-hover)")
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--bsky-bg-hover)")
                             }
                             onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              "transparent")
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
                             }
                           >
                             <UserX className="h-4 w-4 flex-shrink-0" />
@@ -802,8 +913,9 @@ export default function ProfilePage() {
         <div className="flex">
           <button
             onClick={() => setActiveTab("posts")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${activeTab === "posts" ? "" : "hover:scale-105"
-              }`}
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+              activeTab === "posts" ? "" : "hover:scale-105"
+            }`}
             style={{
               color:
                 activeTab === "posts"
@@ -821,8 +933,9 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setActiveTab("replies")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${activeTab === "replies" ? "" : "hover:scale-105"
-              }`}
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+              activeTab === "replies" ? "" : "hover:scale-105"
+            }`}
             style={{
               color:
                 activeTab === "replies"
@@ -840,8 +953,9 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setActiveTab("media")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${activeTab === "media" ? "" : "hover:scale-105"
-              }`}
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+              activeTab === "media" ? "" : "hover:scale-105"
+            }`}
             style={{
               color:
                 activeTab === "media"
@@ -859,8 +973,9 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setActiveTab("top")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${activeTab === "top" ? "" : "hover:scale-105"
-              }`}
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+              activeTab === "top" ? "" : "hover:scale-105"
+            }`}
             style={{
               color:
                 activeTab === "top"
@@ -880,191 +995,191 @@ export default function ProfilePage() {
       </div>
 
       {/* Profile Analysis Section */}
-      {showProfileAnalysis &&
-        !isOwnProfile &&
-        (isLoadingAnalysis || analysisData) && (
-          <div className="mb-4">
-            <div
-              className="rounded-lg p-6"
-              style={{ background: "var(--bsky-bg-secondary)" }}
-            >
-              <div className="mb-4 flex items-center justify-between">
-                <h2
-                  className="flex items-center gap-2 text-lg font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
-                >
-                  <Sparkles size={20} className="text-purple-500" />
-                  Profile Analysis
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowProfileAnalysis(false);
-                    setAnalysisRequested(false);
-                  }}
-                  className="rounded px-3 py-1 text-sm transition-all hover:opacity-80"
-                  style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    color: "var(--bsky-text-secondary)",
-                  }}
-                >
-                  Hide
-                </button>
+      {showProfileAnalysis && (isLoadingAnalysis || analysisData) && (
+        <div className="mb-4">
+          <div
+            className="rounded-lg p-6"
+            style={{ background: "var(--bsky-bg-secondary)" }}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2
+                className="flex items-center gap-2 text-lg font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                <Sparkles size={20} className="text-purple-500" />
+                Profile Analysis
+              </h2>
+              <button
+                onClick={() => {
+                  setShowProfileAnalysis(false);
+                  setAnalysisRequested(false);
+                }}
+                className="rounded px-3 py-1 text-sm transition-all hover:opacity-80"
+                style={{
+                  backgroundColor: "var(--bsky-bg-tertiary)",
+                  color: "var(--bsky-text-secondary)",
+                }}
+              >
+                Hide
+              </button>
+            </div>
+
+            {isLoadingAnalysis ? (
+              <div className="py-8 text-center">
+                <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-500" />
+                <p style={{ color: "var(--bsky-text-primary)" }}>
+                  Analyzing profile...
+                </p>
               </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Show haiku if that's all we have, or sonnet if ready */}
+                {haikuAnalysis && !sonnetAnalysis && (
+                  <div
+                    className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-tertiary)",
+                      color: "var(--bsky-text-secondary)",
+                    }}
+                  >
+                    <div className="h-2 w-2 animate-pulse rounded-full bg-purple-500" />
+                    Quick analysis ({postsInMemory.length} posts) •{" "}
+                    {isLoadingPostsForSonnet
+                      ? "Fetching more posts..."
+                      : "Deep analysis loading..."}
+                  </div>
+                )}
+                {sonnetAnalysis && (
+                  <div
+                    className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm font-medium"
+                    style={{
+                      backgroundColor: "rgba(168, 85, 247, 0.1)",
+                      color: "var(--bsky-primary)",
+                    }}
+                  >
+                    ✨ Full analysis complete ({postsForSonnet?.length || 0}{" "}
+                    posts analyzed)
+                  </div>
+                )}
 
-              {isLoadingAnalysis ? (
-                <div className="py-8 text-center">
-                  <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-500" />
-                  <p style={{ color: "var(--bsky-text-primary)" }}>
-                    Analyzing profile...
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Show haiku if that's all we have, or sonnet if ready */}
-                  {haikuAnalysis && !sonnetAnalysis && (
-                    <div
-                      className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm"
-                      style={{
-                        backgroundColor: "var(--bsky-bg-tertiary)",
-                        color: "var(--bsky-text-secondary)",
-                      }}
-                    >
-                      <div className="h-2 w-2 animate-pulse rounded-full bg-purple-500" />
-                      Quick analysis ready • Full analysis loading...
-                    </div>
-                  )}
-                  {sonnetAnalysis && haikuAnalysis && (
-                    <div
-                      className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm font-medium"
-                      style={{
-                        backgroundColor: "rgba(168, 85, 247, 0.1)",
-                        color: "var(--bsky-primary)",
-                      }}
-                    >
-                      ✨ Full analysis complete
-                    </div>
-                  )}
+                {/* Summary (always shown) */}
+                <p style={{ color: "var(--bsky-text-secondary)" }}>
+                  {analysisData?.summary}
+                </p>
 
-                  {/* Summary (always shown) */}
-                  <p style={{ color: "var(--bsky-text-secondary)" }}>
-                    {analysisData?.summary}
-                  </p>
-
-                  {/* Full sonnet details (only when sonnet is available) */}
-                  {sonnetAnalysis && (
-                    <div className="mt-6 space-y-6">
-                      {/* Content Themes */}
-                      {sonnetAnalysis.contentThemes &&
-                        sonnetAnalysis.contentThemes.length > 0 && (
-                          <div>
-                            <h3
-                              className="mb-3 text-sm font-semibold"
-                              style={{ color: "var(--bsky-text-primary)" }}
-                            >
-                              Content Themes
-                            </h3>
-                            <div className="space-y-3">
-                              {sonnetAnalysis.contentThemes.map(
-                                (theme, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="rounded-lg p-3"
-                                    style={{
-                                      backgroundColor:
-                                        "var(--bsky-bg-tertiary)",
-                                    }}
-                                  >
-                                    <div className="mb-1 flex items-center gap-2">
-                                      <span
-                                        className="font-medium"
-                                        style={{
-                                          color: "var(--bsky-text-primary)",
-                                        }}
-                                      >
-                                        {theme.theme}
-                                      </span>
-                                      <span
-                                        className="rounded-full px-2 py-0.5 text-xs"
-                                        style={{
-                                          backgroundColor:
-                                            theme.frequency === "primary"
-                                              ? "#8b5cf6"
-                                              : theme.frequency === "regular"
-                                                ? "#a78bfa"
-                                                : "#c4b5fd",
-                                          color: "white",
-                                        }}
-                                      >
-                                        {theme.frequency}
-                                      </span>
-                                    </div>
-                                    <p
-                                      className="text-sm"
-                                      style={{
-                                        color: "var(--bsky-text-secondary)",
-                                      }}
-                                    >
-                                      {theme.description}
-                                    </p>
-                                  </div>
-                                ),
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                      {/* Writing Style */}
-                      {sonnetAnalysis.writingStyle && (
+                {/* Full sonnet details (only when sonnet is available) */}
+                {sonnetAnalysis && (
+                  <div className="mt-6 space-y-6">
+                    {/* Content Themes */}
+                    {sonnetAnalysis.contentThemes &&
+                      sonnetAnalysis.contentThemes.length > 0 && (
                         <div>
                           <h3
                             className="mb-3 text-sm font-semibold"
                             style={{ color: "var(--bsky-text-primary)" }}
                           >
-                            Writing Style
+                            Content Themes
                           </h3>
-                          <div
-                            className="rounded-lg p-3"
-                            style={{
-                              backgroundColor: "var(--bsky-bg-tertiary)",
-                            }}
-                          >
-                            <p
-                              className="mb-2 text-sm font-medium"
-                              style={{ color: "var(--bsky-text-primary)" }}
-                            >
-                              {sonnetAnalysis.writingStyle.tone}
-                            </p>
-                            {sonnetAnalysis.writingStyle.characteristics && (
-                              <ul className="space-y-1">
-                                {sonnetAnalysis.writingStyle.characteristics.map(
-                                  (char, idx) => (
-                                    <li
-                                      key={idx}
-                                      className="text-sm"
-                                      style={{
-                                        color: "var(--bsky-text-secondary)",
-                                      }}
-                                    >
-                                      • {char}
-                                    </li>
-                                  ),
-                                )}
-                              </ul>
-                            )}
+                          <div className="space-y-3">
+                            {sonnetAnalysis.contentThemes.map((theme, idx) => (
+                              <div
+                                key={idx}
+                                className="rounded-lg p-3"
+                                style={{
+                                  backgroundColor: "var(--bsky-bg-tertiary)",
+                                }}
+                              >
+                                <div className="mb-1 flex items-center gap-2">
+                                  <span
+                                    className="font-medium"
+                                    style={{
+                                      color: "var(--bsky-text-primary)",
+                                    }}
+                                  >
+                                    {theme.theme}
+                                  </span>
+                                  <span
+                                    className="rounded-full px-2 py-0.5 text-xs"
+                                    style={{
+                                      backgroundColor:
+                                        theme.frequency === "primary"
+                                          ? "#8b5cf6"
+                                          : theme.frequency === "regular"
+                                            ? "#a78bfa"
+                                            : "#c4b5fd",
+                                      color: "white",
+                                    }}
+                                  >
+                                    {theme.frequency}
+                                  </span>
+                                </div>
+                                <p
+                                  className="text-sm"
+                                  style={{
+                                    color: "var(--bsky-text-secondary)",
+                                  }}
+                                >
+                                  {theme.description}
+                                </p>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+
+                    {/* Writing Style */}
+                    {sonnetAnalysis.writingStyle && (
+                      <div>
+                        <h3
+                          className="mb-3 text-sm font-semibold"
+                          style={{ color: "var(--bsky-text-primary)" }}
+                        >
+                          Writing Style
+                        </h3>
+                        <div
+                          className="rounded-lg p-3"
+                          style={{
+                            backgroundColor: "var(--bsky-bg-tertiary)",
+                          }}
+                        >
+                          <p
+                            className="mb-2 text-sm font-medium"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                          >
+                            {sonnetAnalysis.writingStyle.tone}
+                          </p>
+                          {sonnetAnalysis.writingStyle.characteristics && (
+                            <ul className="space-y-1">
+                              {sonnetAnalysis.writingStyle.characteristics.map(
+                                (char, idx) => (
+                                  <li
+                                    key={idx}
+                                    className="text-sm"
+                                    style={{
+                                      color: "var(--bsky-text-secondary)",
+                                    }}
+                                  >
+                                    • {char}
+                                  </li>
+                                ),
+                              )}
+                            </ul>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        )}
-      {/* Posts */}
-      <div>
+        </div>
+      )}
+
+      {/* Posts - Virtualized */}
+      <div ref={listContainerRef}>
         {activeTab === "top" ? (
-          <div className="space-y-4">
+          <div style={{ height: listHeight }}>
             {isTopPostsLoading ? (
               <div className="py-8 text-center text-gray-500">
                 Loading top posts...
@@ -1073,71 +1188,110 @@ export default function ProfilePage() {
               <div className="py-8 text-center text-gray-500">
                 No top posts found.
               </div>
-            ) : (
-              topPostsData?.topPosts.map((item) => (
-                <PostCard
-                  key={item.post.uri}
-                  post={item.post}
-                  reason={undefined}
-                  onClick={() => {
-                    setSelectedPost(item.post);
-                    setOpenThreadToReply(false);
-                    setShowThread(true);
-                  }}
-                  onReply={() => {
-                    setSelectedPost(item.post);
-                    setOpenThreadToReply(true);
-                    setShowThread(true);
-                  }}
-                />
-              ))
-            )}
+            ) : topPostsData?.topPosts && topPostsData.topPosts.length > 0 ? (
+              <List
+                listRef={listRef}
+                rowCount={topPostsData.topPosts.length}
+                rowHeight={dynamicRowHeight}
+                defaultHeight={listHeight}
+                overscanCount={5}
+                rowComponent={({ index, style }) => {
+                  const item = topPostsData.topPosts[index];
+                  return (
+                    <div style={style}>
+                      <PostCard
+                        post={item.post}
+                        reason={undefined}
+                        onClick={() => {
+                          setSelectedPost(item.post);
+                          setOpenThreadToReply(false);
+                          setShowThread(true);
+                        }}
+                        onReply={() => {
+                          setSelectedPost(item.post);
+                          setOpenThreadToReply(true);
+                          setShowThread(true);
+                        }}
+                      />
+                    </div>
+                  );
+                }}
+                rowProps={{}}
+              />
+            ) : null}
           </div>
         ) : (
-          posts.map((post) => (
-            <PostCard
-              key={post.post.uri}
-              post={post.post}
-              reason={post.reason}
-              onClick={() => {
-                setSelectedPost(post.post);
-                setOpenThreadToReply(false);
-                setOpenThreadToQuote(false);
-                setShowThread(true);
-              }}
-              onQuoteClick={(uri) => {
-                // Find the quoted post from our posts array or create a minimal post object
-                const quotedPost = posts.find((p) => p.post.uri === uri)?.post;
-                if (quotedPost) {
-                  setSelectedPost(quotedPost);
-                } else {
-                  // Create a minimal post object with just the URI for the ThreadModal to fetch
-                  setSelectedPost({ uri } as AppBskyFeedDefs.PostView);
-                }
-                setOpenThreadToReply(false);
-                setOpenThreadToQuote(false);
-                setShowThread(true);
-              }}
-              onLike={() => handleLike(post.post)}
-              onRepost={() => handleRepost(post.post)}
-              onReply={() => {
-                setSelectedPost(post.post);
-                setOpenThreadToReply(true);
-                setOpenThreadToQuote(false);
-                setShowThread(true);
-              }}
-              onQuote={() => {
-                setSelectedPost(post.post);
-                setOpenThreadToReply(false);
-                setOpenThreadToQuote(true);
-                setShowThread(true);
-              }}
-            />
-          ))
-        )}
-        {postsLoading && (
-          <div className="flex justify-center p-4">
-            <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"></div>
+          <div style={{ height: listHeight }}>
+            {posts.length === 0 && !postsLoading ? (
+              <div className="py-8 text-center text-gray-500">
+                No posts found.
+              </div>
+            ) : posts.length > 0 ? (
+              <List
+                listRef={listRef}
+                rowCount={posts.length}
+                rowHeight={dynamicRowHeight}
+                defaultHeight={listHeight}
+                onRowsRendered={handleRowsRendered}
+                overscanCount={5}
+                rowComponent={({ index, style }) => {
+                  const post = posts[index];
+                  return (
+                    <div style={style}>
+                      <PostCard
+                        post={post.post}
+                        reason={post.reason}
+                        onClick={() => {
+                          setSelectedPost(post.post);
+                          setOpenThreadToReply(false);
+                          setOpenThreadToQuote(false);
+                          setShowThread(true);
+                        }}
+                        onQuoteClick={(uri) => {
+                          const quotedPost = posts.find(
+                            (p) => p.post.uri === uri,
+                          )?.post;
+                          if (quotedPost) {
+                            setSelectedPost(quotedPost);
+                          } else {
+                            setSelectedPost({
+                              uri,
+                            } as AppBskyFeedDefs.PostView);
+                          }
+                          setOpenThreadToReply(false);
+                          setOpenThreadToQuote(false);
+                          setShowThread(true);
+                        }}
+                        onLike={() => handleLike(post.post)}
+                        onRepost={() => handleRepost(post.post)}
+                        onReply={() => {
+                          setSelectedPost(post.post);
+                          setOpenThreadToReply(true);
+                          setOpenThreadToQuote(false);
+                          setShowThread(true);
+                        }}
+                        onQuote={() => {
+                          setSelectedPost(post.post);
+                          setOpenThreadToReply(false);
+                          setOpenThreadToQuote(true);
+                          setShowThread(true);
+                        }}
+                      />
+                    </div>
+                  );
+                }}
+                rowProps={{}}
+              />
+            ) : postsLoading ? (
+              <div className="flex justify-center p-4">
+                <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"></div>
+              </div>
+            ) : null}
+            {posts.length > 0 && postsLoading && (
+              <div className="flex justify-center p-4">
+                <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"></div>
+              </div>
+            )}
           </div>
         )}
       </div>

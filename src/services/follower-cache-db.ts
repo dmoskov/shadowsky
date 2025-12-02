@@ -59,7 +59,7 @@ const CACHE_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
 export class FollowerCacheDB {
   private db: IDBDatabase | null = null;
   private readonly DB_NAME = "BlueskyFollowerCache";
-  private readonly DB_VERSION = 1;
+  private readonly DB_VERSION = 2; // Bumped for compound indexes
 
   async initialize(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -73,6 +73,7 @@ export class FollowerCacheDB {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
+        const oldVersion = event.oldVersion;
 
         // Cached profiles store
         if (!db.objectStoreNames.contains("profiles")) {
@@ -104,6 +105,44 @@ export class FollowerCacheDB {
             "latestInteractionAt",
             { unique: false },
           );
+        }
+
+        // Version 2: Add compound indexes for O(log n) query performance
+        if (oldVersion < 2) {
+          const transaction = (event.target as IDBOpenDBRequest).transaction;
+          if (transaction) {
+            // Add compound indexes to profiles store
+            const profileStore = transaction.objectStore("profiles");
+
+            // Compound index: (followersCount, lastFetched) - for popular profiles queries
+            // Enables efficient "get popular profiles that aren't stale" queries
+            if (
+              !profileStore.indexNames.contains("followersCount_lastFetched")
+            ) {
+              profileStore.createIndex(
+                "followersCount_lastFetched",
+                ["followersCount", "lastFetched"],
+                { unique: false },
+              );
+            }
+
+            // Add compound indexes to interactions store
+            const interactionStore = transaction.objectStore("interactions");
+
+            // Compound index: (totalInteractions, latestInteractionAt) - for top interactors queries
+            // Enables efficient "get top interactors sorted by recency" queries
+            if (
+              !interactionStore.indexNames.contains(
+                "totalInteractions_latestInteractionAt",
+              )
+            ) {
+              interactionStore.createIndex(
+                "totalInteractions_latestInteractionAt",
+                ["totalInteractions", "latestInteractionAt"],
+                { unique: false },
+              );
+            }
+          }
         }
       };
     });

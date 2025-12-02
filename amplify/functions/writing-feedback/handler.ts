@@ -1,57 +1,44 @@
-// Helper function to strip markdown code fences from JSON responses
-function cleanJsonResponse(text: string): string {
-  // Remove markdown code fences if present
-  let cleaned = text.trim();
+import {
+  cleanJsonResponse,
+  createConfigError,
+  createExternalApiError,
+  createInternalError,
+  createMissingParameterError,
+  createOptionsResponse,
+  createSuccessResponse,
+  getCorrelationId,
+  isOptionsRequest,
+  logError,
+  logInfo,
+  parseEventBody,
+} from "../shared/api-response";
 
-  // Remove ```json or ``` at the start
-  if (cleaned.startsWith('```json')) {
-    cleaned = cleaned.slice(7);
-  } else if (cleaned.startsWith('```')) {
-    cleaned = cleaned.slice(3);
-  }
-
-  // Remove ``` at the end
-  if (cleaned.endsWith('```')) {
-    cleaned = cleaned.slice(0, -3);
-  }
-
-  return cleaned.trim();
+interface RequestBody {
+  text?: string;
 }
 
 export const handler = async (event: any) => {
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "POST,OPTIONS",
-    "Content-Type": "application/json",
-  };
+  const correlationId = getCorrelationId(event);
 
-  // Handle OPTIONS request for CORS
-  const method = event.requestContext?.http?.method || event.httpMethod;
-  if (method === "OPTIONS") {
-    return { statusCode: 200, headers, body: "" };
+  // Handle OPTIONS request for CORS preflight
+  if (isOptionsRequest(event)) {
+    return createOptionsResponse(event);
   }
 
   try {
-    const body = JSON.parse(event.body || "{}");
-    const { text } = body;
+    const body = parseEventBody<RequestBody>(event);
+    const { text } = body || {};
 
     if (!text) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: "Missing text" }),
-      };
+      return createMissingParameterError("text", event, correlationId);
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: "Server API key not configured" }),
-      };
+      return createConfigError("ANTHROPIC_API_KEY", event, correlationId);
     }
+
+    logInfo("writing-feedback", "Processing feedback request", correlationId);
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -102,31 +89,36 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: `Anthropic API error: ${error}` }),
-      };
+      const errorText = await response.text();
+      logError(
+        "writing-feedback",
+        `Anthropic API error: ${response.status}`,
+        correlationId,
+        {
+          statusCode: response.status,
+        },
+      );
+      return createExternalApiError(
+        "Anthropic",
+        errorText,
+        event,
+        correlationId,
+      );
     }
 
     const data = await response.json();
     const cleanedText = cleanJsonResponse(data.content[0].text);
     const result = JSON.parse(cleanedText);
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(result),
-    };
+    logInfo(
+      "writing-feedback",
+      "Feedback generated successfully",
+      correlationId,
+    );
+
+    return createSuccessResponse(result, event, { correlationId });
   } catch (error) {
-    console.error("Error getting writing feedback:", error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: error instanceof Error ? error.message : "Internal server error"
-      }),
-    };
+    logError("writing-feedback", error, correlationId);
+    return createInternalError(error, event, correlationId);
   }
 };

@@ -440,9 +440,13 @@ export const NotificationsFeed: React.FC = () => {
   }
 
   return (
-    <div className="bsky-font">
+    <div className="bsky-font" role="main" aria-label="Notifications">
       {/* Filter tabs */}
-      <div className="bsky-glass sticky top-0 z-10 border-b border-bsky-border-primary">
+      <div
+        className="bsky-glass sticky top-0 z-10 border-b border-bsky-border-primary"
+        role="toolbar"
+        aria-label="Notification filters"
+      >
         <div className="overflow-hidden px-3 py-2">
           {/* Filter tabs and actions */}
           <div className="flex items-center justify-between gap-2">
@@ -665,11 +669,16 @@ export const NotificationsFeed: React.FC = () => {
                 onClick={handleRefresh}
                 disabled={isRefreshing || isLoading}
                 className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-bsky-text-secondary transition-all hover:bg-bsky-bg-secondary hover:text-bsky-text-primary disabled:opacity-50"
-                title="Refresh notifications"
+                aria-label={
+                  isRefreshing
+                    ? "Refreshing notifications"
+                    : "Refresh notifications"
+                }
               >
                 <RefreshCw
                   size={16}
                   className={isRefreshing ? "animate-spin" : ""}
+                  aria-hidden="true"
                 />
                 <span className="hidden sm:inline">Refresh</span>
               </button>
@@ -679,7 +688,7 @@ export const NotificationsFeed: React.FC = () => {
                 <button
                   onClick={() => markAsRead()}
                   className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-bsky-primary transition-all hover:bg-bsky-bg-secondary"
-                  title="Mark all notifications as read"
+                  aria-label={`Mark all ${unreadCount} notifications as read`}
                 >
                   <svg
                     width="16"
@@ -689,6 +698,7 @@ export const NotificationsFeed: React.FC = () => {
                     stroke="currentColor"
                     strokeWidth="2"
                     className="flex-shrink-0"
+                    aria-hidden="true"
                   >
                     <polyline points="9 11 12 14 22 4" />
                     <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
@@ -702,7 +712,11 @@ export const NotificationsFeed: React.FC = () => {
       </div>
 
       {/* Notifications list */}
-      <div className="mx-auto max-w-4xl px-3 sm:px-6">
+      <div
+        className="mx-auto max-w-4xl px-3 sm:px-6"
+        role="feed"
+        aria-label="Notifications feed"
+      >
         {filter === "top-accounts" ? (
           <TopAccountsView
             notifications={notifications}
@@ -997,16 +1011,22 @@ const FilterTab: React.FC<FilterTabProps> = ({
           ? "bg-bsky-primary text-white"
           : "text-bsky-text-secondary hover:bg-bsky-bg-secondary hover:text-bsky-text-primary"
       } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
-      title={`${label}${count !== undefined && count > 0 ? ` (${count})` : ""}`}
+      aria-label={`Filter by ${label}${count !== undefined && count > 0 ? `, ${count} items` : ""}`}
+      aria-pressed={active}
       disabled={disabled}
+      role="tab"
+      aria-selected={active}
     >
-      <span className="flex-shrink-0">{icon}</span>
+      <span className="flex-shrink-0" aria-hidden="true">
+        {icon}
+      </span>
       <span className="hidden sm:inline">{label}</span>
       {count !== undefined && count > 0 && (
         <span
           className={`text-[10px] font-bold sm:text-xs ${
             active ? "text-white/90" : "text-bsky-text-tertiary"
           }`}
+          aria-hidden="true"
         >
           {count}
         </span>

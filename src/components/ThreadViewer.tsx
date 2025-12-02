@@ -1,7 +1,19 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { VirtualItem } from "@tanstack/react-virtual";
 import { formatDistanceToNow } from "date-fns";
-import { CornerDownRight, ExternalLink, Loader2, Sparkles } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  CornerDownRight,
+  ExternalLink,
+  GitBranch,
+  Loader2,
+  Plus,
+  Sparkles,
+  Trash2,
+  User,
+} from "lucide-react";
 import React, {
   useCallback,
   useEffect,
@@ -10,12 +22,27 @@ import React, {
   useState,
 } from "react";
 import { useNavigate } from "react-router";
+import { useAuth } from "../contexts/AuthContext";
+import { ThreadProvider } from "../contexts/ThreadContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
 import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
+import { ProfileHoverCard } from "./ui/ProfileHoverCard";
+import { RichText } from "./ui/RichText";
 import { VideoPlayer } from "./VideoPlayer";
+import {
+  DEFAULT_VIRTUAL_SCROLL_CONFIG,
+  type VirtualizedThreadListHandle,
+  type VirtualScrollConfig,
+} from "./VirtualizedThreadList";
+export {
+  useThread,
+  useThreadComplexity,
+  useThreadNavigation,
+  useThreadUserPosts,
+} from "../contexts/ThreadContext";
 
 const logger = createLogger("ThreadViewer");
 
@@ -25,12 +52,17 @@ async function loadAnthropicService() {
 
 type Post = AppBskyFeedDefs.PostView;
 
+/**
+ * @deprecated Use ThreadNode from ThreadContext instead
+ * Kept for backwards compatibility
+ */
 export interface ThreadNode {
   notification?: Notification;
   post?: Post;
   children: ThreadNode[];
   depth: number;
   isRoot?: boolean;
+  flatIndex?: number;
 }
 
 export interface ThreadViewerProps {
@@ -41,6 +73,24 @@ export interface ThreadViewerProps {
   onPostClick?: (post: Post, action?: "reply" | "quote") => void;
   showUnreadIndicators?: boolean;
   className?: string;
+  // New props for enhanced features
+  maxInitialReplies?: number;
+  enableKeyboardNavigation?: boolean;
+  // Thread management props
+  currentUserDid?: string;
+  onDeletePost?: (post: Post) => void;
+  onContinueThread?: () => void;
+  // Virtual scrolling props for performance with large threads
+  enableVirtualization?: boolean;
+  virtualScrollConfig?: Partial<VirtualScrollConfig>;
+  // Hero root post props
+  rootPostObject?: Post;
+  threadSummary?: React.ReactNode;
+  // Ref for sticky context bar sentinel element
+  contextBarSentinelRef?: React.RefObject<HTMLDivElement | null>;
+  // Controlled focus index for external navigation (e.g., minimap)
+  focusedIndex?: number;
+  onFocusedIndexChange?: (index: number) => void;
 }
 
 export const ThreadViewer: React.FC<ThreadViewerProps> = ({
@@ -51,8 +101,22 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   onPostClick,
   showUnreadIndicators = true,
   className = "",
+  maxInitialReplies = 5,
+  enableKeyboardNavigation = true,
+  currentUserDid: propCurrentUserDid,
+  onDeletePost,
+  onContinueThread,
+  enableVirtualization = true,
+  virtualScrollConfig,
+  rootPostObject,
+  threadSummary,
+  contextBarSentinelRef,
+  focusedIndex: controlledFocusedIndex,
+  onFocusedIndexChange,
 }) => {
   const navigate = useNavigate();
+  const { session } = useAuth();
+  const currentUserDid = propCurrentUserDid || session?.did;
   const [galleryImages, setGalleryImages] = useState<Array<{
     thumb: string;
     fullsize: string;
@@ -71,6 +135,39 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   const [showAltText, setShowAltText] = useState<
     Record<string, Record<number, boolean>>
   >({});
+
+  // State for collapsible reply branches - tracks which nodes have expanded children
+  const [expandedBranches, setExpandedBranches] = useState<Set<string>>(
+    new Set(),
+  );
+  // State for showing replies section (progressive reveal) - start expanded
+  const [showReplies, setShowReplies] = useState(true);
+  // State for keyboard navigation - tracks currently focused post index
+  // Use controlled value if provided, otherwise use internal state
+  const [internalFocusedIndex, setInternalFocusedIndex] = useState<number>(-1);
+  const focusedPostIndex = controlledFocusedIndex ?? internalFocusedIndex;
+  const setFocusedPostIndex = useCallback(
+    (index: number) => {
+      setInternalFocusedIndex(index);
+      onFocusedIndexChange?.(index);
+    },
+    [onFocusedIndexChange],
+  );
+  // Ref to track post elements for keyboard navigation
+  const postRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  // Container ref for scroll management
+  const containerRef = useRef<HTMLDivElement>(null);
+  // Ref for virtualized thread list
+  const virtualListRef = useRef<VirtualizedThreadListHandle>(null);
+
+  // Merged virtual scroll configuration
+  const mergedVirtualConfig = useMemo<VirtualScrollConfig>(
+    () => ({
+      ...DEFAULT_VIRTUAL_SCROLL_CONFIG,
+      ...virtualScrollConfig,
+    }),
+    [virtualScrollConfig],
+  );
 
   // Get optimistic post mutations
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
@@ -234,31 +331,201 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     return maxDepth;
   }, [threadTree]);
 
-  // Calculate dynamic indentation based on maximum thread depth
-  const indentWidth = useMemo(() => {
-    // Use viewport width for responsive scaling on mobile
-    const isMobile = window.innerWidth < 640;
+  // Get the CSS custom property name based on thread depth
+  // This allows CSS clamp() to handle responsive scaling automatically
+  const getIndentCssVar = useCallback((depth: number): string => {
+    if (depth <= 3) return "var(--thread-indent-shallow)";
+    if (depth <= 7) return "var(--thread-indent-medium)";
+    if (depth <= 12) return "var(--thread-indent-deep)";
+    return "var(--thread-indent-minimal)";
+  }, []);
 
-    if (isMobile) {
-      // On mobile, use percentage-based indentation
-      if (maxThreadDepth <= 3) return Math.min(32, window.innerWidth * 0.08);
-      if (maxThreadDepth <= 5) return Math.min(24, window.innerWidth * 0.06);
-      if (maxThreadDepth <= 7) return Math.min(16, window.innerWidth * 0.04);
-      if (maxThreadDepth <= 9) return Math.min(12, window.innerWidth * 0.03);
-      if (maxThreadDepth <= 12) return Math.min(8, window.innerWidth * 0.02);
-      return Math.min(4, window.innerWidth * 0.01);
+  // Get the CSS variable name for the current thread depth
+  const indentCssVar = useMemo(
+    () => getIndentCssVar(maxThreadDepth),
+    [maxThreadDepth, getIndentCssVar],
+  );
+
+  // Create flat list of nodes for keyboard navigation (depth-first order)
+  const flatNodeList = useMemo(() => {
+    const flat: ThreadNode[] = [];
+    let index = 0;
+
+    const traverse = (node: ThreadNode) => {
+      node.flatIndex = index++;
+      flat.push(node);
+      node.children.forEach(traverse);
+    };
+
+    threadTree.forEach(traverse);
+    return flat;
+  }, [threadTree]);
+
+  // Count total user participation in thread
+  const userParticipationStats = useMemo(() => {
+    if (!currentUserDid) return { count: 0, nodeIndices: [] as number[] };
+
+    const nodeIndices: number[] = [];
+    flatNodeList.forEach((node, idx) => {
+      if (node.post?.author?.did === currentUserDid) {
+        nodeIndices.push(idx);
+      }
+    });
+
+    return { count: nodeIndices.length, nodeIndices };
+  }, [flatNodeList, currentUserDid]);
+
+  // Determine if virtualization should be active
+  const shouldVirtualize = useMemo(() => {
+    return (
+      enableVirtualization &&
+      mergedVirtualConfig.enabled &&
+      flatNodeList.length >= mergedVirtualConfig.threshold
+    );
+  }, [enableVirtualization, mergedVirtualConfig, flatNodeList.length]);
+
+  // Toggle branch expansion
+  const toggleBranch = useCallback((nodeUri: string) => {
+    setExpandedBranches((prev) => {
+      const next = new Set(prev);
+      if (next.has(nodeUri)) {
+        next.delete(nodeUri);
+      } else {
+        next.add(nodeUri);
+      }
+      return next;
+    });
+  }, []);
+
+  // Keyboard navigation handler
+  const handleKeyboardNavigation = useCallback(
+    (e: KeyboardEvent) => {
+      if (!enableKeyboardNavigation) return;
+
+      // Check if user is typing in an input
+      const activeElement = document.activeElement;
+      if (
+        activeElement?.tagName === "INPUT" ||
+        activeElement?.tagName === "TEXTAREA" ||
+        (activeElement as HTMLElement)?.isContentEditable
+      ) {
+        return;
+      }
+
+      const totalNodes = flatNodeList.length;
+      if (totalNodes === 0) return;
+
+      let newIndex = focusedPostIndex;
+      let handled = false;
+
+      switch (e.key) {
+        case "ArrowDown":
+        case "j": // Vim-style navigation
+          newIndex = Math.min(focusedPostIndex + 1, totalNodes - 1);
+          if (focusedPostIndex === -1) newIndex = 0;
+          handled = true;
+          break;
+        case "ArrowUp":
+        case "k": // Vim-style navigation
+          newIndex = Math.max(focusedPostIndex - 1, 0);
+          if (focusedPostIndex === -1) newIndex = 0;
+          handled = true;
+          break;
+        case "Home":
+          newIndex = 0;
+          handled = true;
+          break;
+        case "End":
+          newIndex = totalNodes - 1;
+          handled = true;
+          break;
+        case "n": // Jump to next user post
+          if (userParticipationStats.nodeIndices.length > 0) {
+            const nextUserIndex = userParticipationStats.nodeIndices.find(
+              (idx) => idx > focusedPostIndex,
+            );
+            if (nextUserIndex !== undefined) {
+              newIndex = nextUserIndex;
+              handled = true;
+            } else {
+              // Wrap to first user post
+              newIndex = userParticipationStats.nodeIndices[0];
+              handled = true;
+            }
+          }
+          break;
+        case "p": // Jump to previous user post
+          if (userParticipationStats.nodeIndices.length > 0) {
+            const prevUserIndex = [...userParticipationStats.nodeIndices]
+              .reverse()
+              .find((idx) => idx < focusedPostIndex);
+            if (prevUserIndex !== undefined) {
+              newIndex = prevUserIndex;
+              handled = true;
+            } else {
+              // Wrap to last user post
+              newIndex =
+                userParticipationStats.nodeIndices[
+                  userParticipationStats.nodeIndices.length - 1
+                ];
+              handled = true;
+            }
+          }
+          break;
+        case "Enter":
+        case " ":
+          // Trigger reply on current post
+          if (focusedPostIndex >= 0) {
+            const node = flatNodeList[focusedPostIndex];
+            if (node?.post) {
+              onPostClick?.(node.post, e.key === " " ? "quote" : "reply");
+              handled = true;
+            }
+          }
+          break;
+      }
+
+      if (handled) {
+        e.preventDefault();
+        if (newIndex !== focusedPostIndex) {
+          setFocusedPostIndex(newIndex);
+          // Use virtualized list scrolling if available, otherwise fall back to DOM
+          if (virtualListRef.current) {
+            virtualListRef.current.scrollToIndex(newIndex, {
+              align: "center",
+              behavior: "smooth",
+            });
+          } else {
+            // Scroll the focused post into view while preserving scroll position
+            const postElement = postRefs.current.get(newIndex);
+            if (postElement) {
+              postElement.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            }
+          }
+        }
+      }
+    },
+    [
+      enableKeyboardNavigation,
+      flatNodeList,
+      focusedPostIndex,
+      userParticipationStats.nodeIndices,
+      onPostClick,
+    ],
+  );
+
+  // Set up keyboard event listener
+  useEffect(() => {
+    if (enableKeyboardNavigation) {
+      window.addEventListener("keydown", handleKeyboardNavigation);
+      return () => {
+        window.removeEventListener("keydown", handleKeyboardNavigation);
+      };
     }
-
-    // Desktop sizes remain the same
-    if (maxThreadDepth <= 3) return 48;
-    if (maxThreadDepth <= 5) return 32;
-    if (maxThreadDepth <= 7) return 24;
-    if (maxThreadDepth <= 9) return 16;
-    if (maxThreadDepth <= 12) return 12;
-    if (maxThreadDepth <= 15) return 8;
-    if (maxThreadDepth <= 20) return 6;
-    return 4; // For very deep threads
-  }, [maxThreadDepth]);
+  }, [enableKeyboardNavigation, handleKeyboardNavigation]);
 
   // Ref for the highlighted post
   const highlightRef = useRef<HTMLDivElement>(null);
@@ -297,6 +564,19 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       return () => clearTimeout(timer);
     }
   }, [highlightUri, hasShownInitialHighlight]);
+
+  // Scroll to post when controlled focus index changes (e.g., from minimap navigation)
+  useEffect(() => {
+    if (controlledFocusedIndex !== undefined && controlledFocusedIndex >= 0) {
+      const postElement = postRefs.current.get(controlledFocusedIndex);
+      if (postElement) {
+        postElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+    }
+  }, [controlledFocusedIndex]);
 
   const handleGenerateAltText = useCallback(
     async (imageUrl: string, postUri: string, index: number) => {
@@ -504,28 +784,68 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
               style={{ borderColor: "var(--bsky-border-primary)" }}
             >
               <div className="mb-1 flex items-center gap-1">
-                <img
-                  src={
-                    proxifyBskyImage(quotedPost.author.avatar) ||
-                    "/default-avatar.svg"
-                  }
-                  alt={quotedPost.author?.handle || "unknown"}
-                  className="h-4 w-4 rounded-full"
-                />
-                <span
-                  className="font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
-                >
-                  {quotedPost.author?.displayName ||
-                    quotedPost.author?.handle ||
-                    "Unknown"}
-                </span>
-                <span style={{ color: "var(--bsky-text-secondary)" }}>
-                  @{quotedPost.author?.handle || "unknown"}
-                </span>
+                {quotedPost.author?.handle ? (
+                  <ProfileHoverCard handle={quotedPost.author.handle}>
+                    <img
+                      src={
+                        proxifyBskyImage(quotedPost.author.avatar) ||
+                        "/default-avatar.svg"
+                      }
+                      alt={quotedPost.author?.handle || "unknown"}
+                      className="h-4 w-4 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+                    />
+                  </ProfileHoverCard>
+                ) : (
+                  <img
+                    src={
+                      proxifyBskyImage(quotedPost.author?.avatar) ||
+                      "/default-avatar.svg"
+                    }
+                    alt={quotedPost.author?.handle || "unknown"}
+                    className="h-4 w-4 rounded-full"
+                  />
+                )}
+                {quotedPost.author?.handle ? (
+                  <ProfileHoverCard handle={quotedPost.author.handle}>
+                    <span
+                      className="cursor-pointer font-semibold hover:underline"
+                      style={{ color: "var(--bsky-text-primary)" }}
+                    >
+                      {quotedPost.author?.displayName ||
+                        quotedPost.author?.handle ||
+                        "Unknown"}
+                    </span>
+                  </ProfileHoverCard>
+                ) : (
+                  <span
+                    className="font-semibold"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                  >
+                    {quotedPost.author?.displayName ||
+                      quotedPost.author?.handle ||
+                      "Unknown"}
+                  </span>
+                )}
+                {quotedPost.author?.handle ? (
+                  <ProfileHoverCard handle={quotedPost.author.handle}>
+                    <span
+                      className="cursor-pointer hover:underline"
+                      style={{ color: "var(--bsky-text-secondary)" }}
+                    >
+                      @{quotedPost.author?.handle || "unknown"}
+                    </span>
+                  </ProfileHoverCard>
+                ) : (
+                  <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    @{quotedPost.author?.handle || "unknown"}
+                  </span>
+                )}
               </div>
               <div style={{ color: "var(--bsky-text-primary)" }}>
-                {quotedPost.value.text}
+                <RichText
+                  text={quotedPost.value?.text || ""}
+                  facets={quotedPost.value?.facets}
+                />
               </div>
             </div>
           );
@@ -565,6 +885,24 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
           showUnreadIndicators && notification && !notification.isRead;
         const isHighlighted = highlightUri && post?.uri === highlightUri;
         const author = post?.author || notification?.author;
+        const isCurrentUser = currentUserDid && author?.did === currentUserDid;
+        const isFocused = node.flatIndex === focusedPostIndex;
+        const nodeUri = post?.uri || notification?.uri || `node-${node.depth}`;
+
+        // Calculate if this branch should be collapsed
+        const hasMultipleChildren = node.children.length > maxInitialReplies;
+        const isExpanded = expandedBranches.has(nodeUri);
+        const visibleChildren =
+          hasMultipleChildren && !isExpanded
+            ? node.children.slice(0, maxInitialReplies)
+            : node.children;
+        const hiddenCount = hasMultipleChildren
+          ? node.children.length - maxInitialReplies
+          : 0;
+
+        // Count branches at this level
+        const hasBranches = node.children.length > 1;
+
         // Generate external bsky.app URL for the external link button
         const postUrl =
           post?.uri && author?.handle
@@ -576,16 +914,27 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
 
         return (
           <div
-            key={post?.uri || notification?.uri || `node-${node.depth}`}
+            key={nodeUri}
             className="mb-4"
-            ref={isHighlighted ? highlightRef : null}
+            ref={(el) => {
+              if (isHighlighted && highlightRef) {
+                (
+                  highlightRef as React.MutableRefObject<HTMLDivElement | null>
+                ).current = el;
+              }
+              if (node.flatIndex !== undefined && el) {
+                postRefs.current.set(node.flatIndex, el);
+              }
+            }}
           >
             {/* Thread line connector for nested replies */}
             {node.depth > 0 && (
               <div className="flex">
                 <div
                   className="flex w-8 flex-shrink-0 justify-center"
-                  style={{ marginLeft: `${(node.depth - 1) * indentWidth}px` }}
+                  style={{
+                    marginLeft: `calc(${node.depth - 1} * ${indentCssVar})`,
+                  }}
                 >
                   <div
                     className="-mt-6 h-6 w-0.5"
@@ -599,7 +948,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             {/* Post content */}
             <div
               className="flex"
-              style={{ marginLeft: `${node.depth * indentWidth}px` }}
+              style={{ marginLeft: `calc(${node.depth} * ${indentCssVar})` }}
             >
               {/* Branch indicator */}
               {node.depth > 0 && (maxThreadDepth <= 15 || node.depth < 10) && (
@@ -636,20 +985,40 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
               <div
                 className={`min-w-0 flex-1 ${maxThreadDepth > 15 ? "p-2" : maxThreadDepth > 10 ? "p-3" : "p-4"} cursor-pointer rounded-lg transition-all hover:bg-blue-500 hover:bg-opacity-5 ${
                   isUnread ? "ring-2 ring-blue-500 ring-opacity-30" : ""
-                } ${isHighlighted && !hasShownInitialHighlight ? "ring-2 ring-orange-500 ring-opacity-50" : ""}`}
+                } ${isHighlighted && !hasShownInitialHighlight ? "ring-2 ring-orange-500 ring-opacity-50" : ""} ${
+                  isFocused ? "ring-2 ring-blue-400 ring-opacity-70" : ""
+                } ${isCurrentUser ? "border-l-4" : ""}`}
                 style={{
-                  backgroundColor:
-                    isHighlighted && !hasShownInitialHighlight
+                  backgroundColor: isCurrentUser
+                    ? "rgba(34, 197, 94, 0.08)" // Green tint for user's posts
+                    : isHighlighted && !hasShownInitialHighlight
                       ? "rgba(251, 146, 60, 0.1)" // Orange highlight background (only initially)
                       : node.isRoot
                         ? "var(--bsky-bg-secondary)"
                         : isUnread
                           ? "var(--bsky-bg-primary)"
                           : "var(--bsky-bg-secondary)",
+                  borderColor: isCurrentUser
+                    ? "rgb(34, 197, 94)" // Green left border for user's posts
+                    : undefined,
                   border:
                     isHighlighted && !hasShownInitialHighlight
                       ? "2px solid rgba(251, 146, 60, 0.5)"
-                      : "1px solid var(--bsky-border-primary)",
+                      : isCurrentUser
+                        ? undefined
+                        : "1px solid var(--bsky-border-primary)",
+                  borderLeft: isCurrentUser
+                    ? "4px solid rgb(34, 197, 94)"
+                    : undefined,
+                  borderTop: isCurrentUser
+                    ? "1px solid var(--bsky-border-primary)"
+                    : undefined,
+                  borderRight: isCurrentUser
+                    ? "1px solid var(--bsky-border-primary)"
+                    : undefined,
+                  borderBottom: isCurrentUser
+                    ? "1px solid var(--bsky-border-primary)"
+                    : undefined,
                   overflow: "hidden",
                   fontSize:
                     maxThreadDepth > 15
@@ -657,10 +1026,16 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       : maxThreadDepth > 10
                         ? "0.875rem"
                         : "1rem",
+                  outline: isFocused
+                    ? "2px solid rgb(96, 165, 250)"
+                    : undefined,
+                  outlineOffset: isFocused ? "2px" : undefined,
                 }}
                 onClick={(e) => {
-                  // Don't do anything on post click - navigation removed
-                  // Only interactive elements like buttons will trigger actions
+                  // Set focus to this post when clicked
+                  if (node.flatIndex !== undefined) {
+                    setFocusedPostIndex(node.flatIndex);
+                  }
                   e.stopPropagation();
                 }}
                 onKeyDown={(e) => {
@@ -669,9 +1044,14 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     e.stopPropagation();
                   }
                 }}
+                tabIndex={0}
+                role="article"
+                aria-label={`Post by ${author?.handle || "unknown"}`}
               >
                 {(node.isRoot ||
                   node.depth > 5 ||
+                  isCurrentUser ||
+                  hasBranches ||
                   (isHighlighted && hasShownInitialHighlight)) && (
                   <div className="mb-2 flex items-center gap-2">
                     {node.isRoot && (
@@ -684,6 +1064,32 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                         }}
                       >
                         Original Post
+                      </span>
+                    )}
+                    {isCurrentUser && !node.isRoot && (
+                      <span
+                        className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium"
+                        style={{
+                          backgroundColor: "rgba(34, 197, 94, 0.15)",
+                          color: "rgb(34, 197, 94)",
+                          border: "1px solid rgba(34, 197, 94, 0.3)",
+                        }}
+                      >
+                        <User size={10} />
+                        Your reply
+                      </span>
+                    )}
+                    {hasBranches && (
+                      <span
+                        className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium"
+                        style={{
+                          backgroundColor: "rgba(147, 51, 234, 0.1)",
+                          color: "rgb(147, 51, 234)",
+                          border: "1px solid rgba(147, 51, 234, 0.2)",
+                        }}
+                      >
+                        <GitBranch size={10} />
+                        {node.children.length} branches
                       </span>
                     )}
                     {node.depth > 5 && !node.isRoot && (
@@ -771,18 +1177,50 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-center justify-between">
                       <div className="flex min-w-0 items-center gap-1">
-                        <span
-                          className="truncate text-sm font-semibold"
-                          style={{ color: "var(--bsky-text-primary)" }}
-                        >
-                          {author?.displayName || author?.handle || "Unknown"}
-                        </span>
-                        <span
-                          className="flex-shrink-0 text-xs"
-                          style={{ color: "var(--bsky-text-secondary)" }}
-                        >
-                          @{author?.handle || "unknown"}
-                        </span>
+                        {author?.handle ? (
+                          <ProfileHoverCard handle={author.handle}>
+                            <span
+                              className="cursor-pointer truncate text-sm font-semibold hover:underline"
+                              style={{ color: "var(--bsky-text-primary)" }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/profile/${author.handle}`);
+                              }}
+                            >
+                              {author?.displayName ||
+                                author?.handle ||
+                                "Unknown"}
+                            </span>
+                          </ProfileHoverCard>
+                        ) : (
+                          <span
+                            className="truncate text-sm font-semibold"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                          >
+                            {author?.displayName || author?.handle || "Unknown"}
+                          </span>
+                        )}
+                        {author?.handle ? (
+                          <ProfileHoverCard handle={author.handle}>
+                            <span
+                              className="flex-shrink-0 cursor-pointer text-xs hover:underline"
+                              style={{ color: "var(--bsky-text-secondary)" }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/profile/${author.handle}`);
+                              }}
+                            >
+                              @{author?.handle || "unknown"}
+                            </span>
+                          </ProfileHoverCard>
+                        ) : (
+                          <span
+                            className="flex-shrink-0 text-xs"
+                            style={{ color: "var(--bsky-text-secondary)" }}
+                          >
+                            @{author?.handle || "unknown"}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <time
@@ -833,7 +1271,10 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       }}
                     >
                       {post ? (
-                        (post.record as any)?.text || "[No text]"
+                        <RichText
+                          text={(post.record as any)?.text || "[No text]"}
+                          facets={(post.record as any)?.facets}
+                        />
                       ) : (
                         <span style={{ color: "var(--bsky-text-secondary)" }}>
                           <Loader2
@@ -863,29 +1304,127 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
 
                 {/* Post Action Bar */}
                 {post && (
-                  <PostActionBar
-                    post={post}
-                    onReply={() => {
-                      // Pass the post being replied to up to the ThreadModal
-                      onPostClick?.(post, "reply");
-                    }}
-                    onRepost={() => handleRepost(post)}
-                    onQuote={() => {
-                      // Pass the post being quoted to up to the ThreadModal
-                      onPostClick?.(post, "quote");
-                    }}
-                    onLike={() => handleLike(post)}
-                    showCounts={true}
-                    size={maxThreadDepth > 10 ? "small" : "medium"}
-                    isReplying={false}
-                  />
+                  <div className="flex items-center justify-between">
+                    <PostActionBar
+                      post={post}
+                      onReply={() => {
+                        // Pass the post being replied to up to the ThreadModal
+                        onPostClick?.(post, "reply");
+                      }}
+                      onRepost={() => handleRepost(post)}
+                      onQuote={() => {
+                        // Pass the post being quoted to up to the ThreadModal
+                        onPostClick?.(post, "quote");
+                      }}
+                      onLike={() => handleLike(post)}
+                      showCounts={true}
+                      size={maxThreadDepth > 10 ? "small" : "medium"}
+                      isReplying={false}
+                    />
+                    {/* Delete button for user's own posts */}
+                    {isCurrentUser && onDeletePost && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeletePost(post);
+                        }}
+                        className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all hover:bg-red-500 hover:bg-opacity-10"
+                        style={{
+                          color: "var(--bsky-error, #ef4444)",
+                        }}
+                        title="Delete this post"
+                      >
+                        <Trash2 size={14} />
+                        <span className="hidden sm:inline">Delete</span>
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
 
             {/* Render children */}
-            {node.children.length > 0 && (
-              <div>{renderThreadNodes(node.children)}</div>
+            {visibleChildren.length > 0 && (
+              <div>{renderThreadNodes(visibleChildren)}</div>
+            )}
+
+            {/* Load more replies button */}
+            {hasMultipleChildren && !isExpanded && hiddenCount > 0 && (
+              <div
+                className="flex"
+                style={{
+                  marginLeft: `calc(${node.depth + 1} * ${indentCssVar})`,
+                  marginTop: "8px",
+                }}
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Store scroll position before expanding
+                    const scrollContainer =
+                      containerRef.current?.closest(".bsky-scrollbar");
+                    const scrollTop = scrollContainer?.scrollTop || 0;
+
+                    toggleBranch(nodeUri);
+
+                    // Restore scroll position after expansion
+                    requestAnimationFrame(() => {
+                      if (scrollContainer) {
+                        scrollContainer.scrollTop = scrollTop;
+                      }
+                    });
+                  }}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10"
+                  style={{
+                    backgroundColor: "var(--bsky-bg-tertiary)",
+                    color: "var(--bsky-primary)",
+                    border: "1px solid var(--bsky-border-primary)",
+                  }}
+                >
+                  <ChevronDown size={16} />
+                  Load {hiddenCount} more{" "}
+                  {hiddenCount === 1 ? "reply" : "replies"}
+                </button>
+              </div>
+            )}
+
+            {/* Collapse button when expanded */}
+            {hasMultipleChildren && isExpanded && hiddenCount > 0 && (
+              <div
+                className="flex"
+                style={{
+                  marginLeft: `calc(${node.depth + 1} * ${indentCssVar})`,
+                  marginTop: "8px",
+                }}
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleBranch(nodeUri);
+
+                    // Scroll back to a reasonable position after collapse
+                    requestAnimationFrame(() => {
+                      const postEl = postRefs.current.get(node.flatIndex || 0);
+                      if (postEl) {
+                        postEl.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        });
+                      }
+                    });
+                  }}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10"
+                  style={{
+                    backgroundColor: "var(--bsky-bg-tertiary)",
+                    color: "var(--bsky-text-secondary)",
+                    border: "1px solid var(--bsky-border-primary)",
+                  }}
+                >
+                  <ChevronUp size={16} />
+                  Collapse {hiddenCount}{" "}
+                  {hiddenCount === 1 ? "reply" : "replies"}
+                </button>
+              </div>
             )}
           </div>
         );
@@ -896,28 +1435,740 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       highlightUri,
       highlightRef,
       hasShownInitialHighlight,
-      indentWidth,
+      indentCssVar,
       maxThreadDepth,
       navigate,
       onPostClick,
       renderEmbed,
       handleLike,
       handleRepost,
+      currentUserDid,
+      focusedPostIndex,
+      expandedBranches,
+      maxInitialReplies,
+      toggleBranch,
+      setFocusedPostIndex,
+      onDeletePost,
     ],
   );
 
+  // Render a single node for virtualized list (no recursive children rendering)
+  const renderSingleNode = useCallback(
+    (
+      node: ThreadNode,
+      index: number,
+      _virtualItem: VirtualItem,
+    ): React.ReactNode => {
+      const post = node.post;
+      const notification = node.notification;
+      const isUnread =
+        showUnreadIndicators && notification && !notification.isRead;
+      const isHighlighted = highlightUri && post?.uri === highlightUri;
+      const author = post?.author || notification?.author;
+      const isCurrentUser = currentUserDid && author?.did === currentUserDid;
+      const isFocused = index === focusedPostIndex;
+      const hasBranches = node.children.length > 1;
+
+      // Generate external bsky.app URL
+      const postUrl =
+        post?.uri && author?.handle
+          ? (() => {
+              const postId = post.uri.split("/").pop();
+              return `https://bsky.app/profile/${author.handle}/post/${postId}`;
+            })()
+          : null;
+
+      return (
+        <div
+          className="mb-2"
+          ref={(el) => {
+            if (isHighlighted && highlightRef) {
+              (
+                highlightRef as React.MutableRefObject<HTMLDivElement | null>
+              ).current = el;
+            }
+            if (index !== undefined && el) {
+              postRefs.current.set(index, el);
+            }
+          }}
+        >
+          {/* Thread line connector for nested replies */}
+          {node.depth > 0 && (
+            <div className="flex">
+              <div
+                className="flex w-8 flex-shrink-0 justify-center"
+                style={{
+                  marginLeft: `calc(${node.depth - 1} * ${indentCssVar})`,
+                }}
+              >
+                <div
+                  className="-mt-4 h-4 w-0.5"
+                  style={{ backgroundColor: "var(--bsky-border-primary)" }}
+                />
+              </div>
+              <div className="flex-1" />
+            </div>
+          )}
+
+          {/* Post content */}
+          <div
+            className="flex"
+            style={{ marginLeft: `calc(${node.depth} * ${indentCssVar})` }}
+          >
+            {/* Branch indicator */}
+            {node.depth > 0 && (maxThreadDepth <= 15 || node.depth < 10) && (
+              <div
+                className="flex flex-shrink-0 items-start justify-center pt-3"
+                style={{
+                  width:
+                    maxThreadDepth > 10
+                      ? "16px"
+                      : maxThreadDepth > 7
+                        ? "24px"
+                        : "32px",
+                  marginRight: maxThreadDepth > 10 ? "4px" : "0",
+                }}
+              >
+                <CornerDownRight
+                  size={maxThreadDepth > 10 ? 10 : maxThreadDepth > 7 ? 12 : 16}
+                  style={{
+                    color: "var(--bsky-text-tertiary)",
+                    opacity:
+                      maxThreadDepth > 15
+                        ? 0.3
+                        : maxThreadDepth > 10
+                          ? 0.5
+                          : 0.7,
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Post card */}
+            <div
+              className={`min-w-0 flex-1 ${maxThreadDepth > 15 ? "p-2" : maxThreadDepth > 10 ? "p-3" : "p-4"} cursor-pointer rounded-lg transition-all hover:bg-blue-500 hover:bg-opacity-5 ${
+                isUnread ? "ring-2 ring-blue-500 ring-opacity-30" : ""
+              } ${isHighlighted && !hasShownInitialHighlight ? "ring-2 ring-orange-500 ring-opacity-50" : ""} ${
+                isFocused ? "ring-2 ring-blue-400 ring-opacity-70" : ""
+              } ${isCurrentUser ? "border-l-4" : ""}`}
+              style={{
+                backgroundColor: isCurrentUser
+                  ? "rgba(34, 197, 94, 0.08)"
+                  : isHighlighted && !hasShownInitialHighlight
+                    ? "rgba(251, 146, 60, 0.1)"
+                    : node.isRoot
+                      ? "var(--bsky-bg-secondary)"
+                      : isUnread
+                        ? "var(--bsky-bg-primary)"
+                        : "var(--bsky-bg-secondary)",
+                borderColor: isCurrentUser ? "rgb(34, 197, 94)" : undefined,
+                border:
+                  isHighlighted && !hasShownInitialHighlight
+                    ? "2px solid rgba(251, 146, 60, 0.5)"
+                    : isCurrentUser
+                      ? undefined
+                      : "1px solid var(--bsky-border-primary)",
+                borderLeft: isCurrentUser
+                  ? "4px solid rgb(34, 197, 94)"
+                  : undefined,
+                borderTop: isCurrentUser
+                  ? "1px solid var(--bsky-border-primary)"
+                  : undefined,
+                borderRight: isCurrentUser
+                  ? "1px solid var(--bsky-border-primary)"
+                  : undefined,
+                borderBottom: isCurrentUser
+                  ? "1px solid var(--bsky-border-primary)"
+                  : undefined,
+                overflow: "hidden",
+                fontSize:
+                  maxThreadDepth > 15
+                    ? "0.75rem"
+                    : maxThreadDepth > 10
+                      ? "0.875rem"
+                      : "1rem",
+                outline: isFocused ? "2px solid rgb(96, 165, 250)" : undefined,
+                outlineOffset: isFocused ? "2px" : undefined,
+              }}
+              onClick={(e) => {
+                if (index !== undefined) {
+                  setFocusedPostIndex(index);
+                }
+                e.stopPropagation();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.stopPropagation();
+                }
+              }}
+              tabIndex={0}
+              role="article"
+              aria-label={`Post by ${author?.handle || "unknown"}`}
+            >
+              {(node.isRoot ||
+                node.depth > 5 ||
+                isCurrentUser ||
+                hasBranches ||
+                (isHighlighted && hasShownInitialHighlight)) && (
+                <div className="mb-2 flex items-center gap-2">
+                  {node.isRoot && (
+                    <span
+                      className="rounded-full px-2 py-1 text-xs font-medium"
+                      style={{
+                        backgroundColor: "var(--bsky-bg-primary)",
+                        color: "var(--bsky-text-secondary)",
+                        border: "1px solid var(--bsky-border-primary)",
+                      }}
+                    >
+                      Original Post
+                    </span>
+                  )}
+                  {isCurrentUser && !node.isRoot && (
+                    <span
+                      className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium"
+                      style={{
+                        backgroundColor: "rgba(34, 197, 94, 0.15)",
+                        color: "rgb(34, 197, 94)",
+                        border: "1px solid rgba(34, 197, 94, 0.3)",
+                      }}
+                    >
+                      <User size={10} />
+                      Your reply
+                    </span>
+                  )}
+                  {hasBranches && (
+                    <span
+                      className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium"
+                      style={{
+                        backgroundColor: "rgba(147, 51, 234, 0.1)",
+                        color: "rgb(147, 51, 234)",
+                        border: "1px solid rgba(147, 51, 234, 0.2)",
+                      }}
+                    >
+                      <GitBranch size={10} />
+                      {node.children.length} branches
+                    </span>
+                  )}
+                  {node.depth > 5 && !node.isRoot && (
+                    <span
+                      className="rounded px-2 py-0.5 text-xs font-medium"
+                      style={{
+                        backgroundColor: "var(--bsky-bg-tertiary)",
+                        color: "var(--bsky-text-tertiary)",
+                        opacity: 0.8,
+                      }}
+                    >
+                      Depth: {node.depth}
+                    </span>
+                  )}
+                  {isHighlighted &&
+                    hasShownInitialHighlight &&
+                    !node.isRoot && (
+                      <span
+                        className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium"
+                        style={{
+                          backgroundColor: "rgba(251, 146, 60, 0.1)",
+                          color: "rgb(251, 146, 60)",
+                          border: "1px solid rgba(251, 146, 60, 0.3)",
+                        }}
+                      >
+                        <ExternalLink size={10} />
+                        Opened here
+                      </span>
+                    )}
+                  {post && node.isRoot && (
+                    <span
+                      className="rounded px-2 py-1 text-xs"
+                      style={{
+                        color: "var(--bsky-text-tertiary)",
+                        backgroundColor: "var(--bsky-bg-primary)",
+                      }}
+                    >
+                      {formatDistanceToNow(
+                        new Date(
+                          (post.record as { createdAt?: string })?.createdAt ||
+                            post.indexedAt,
+                        ),
+                        { addSuffix: true },
+                      )}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <div
+                className={`flex items-start ${maxThreadDepth > 15 ? "gap-2" : "gap-3"}`}
+              >
+                <div className="flex-shrink-0">
+                  {author?.avatar ? (
+                    <img
+                      src={proxifyBskyImage(author.avatar)}
+                      alt={author.handle}
+                      className={`${maxThreadDepth > 15 ? "h-6 w-6" : maxThreadDepth > 10 ? "h-8 w-8" : "h-10 w-10"} cursor-pointer rounded-full object-cover transition-opacity hover:opacity-80`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (author.handle) {
+                          navigate(`/profile/${author.handle}`);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className={`${maxThreadDepth > 15 ? "h-6 w-6" : maxThreadDepth > 10 ? "h-8 w-8" : "h-10 w-10"} flex cursor-pointer items-center justify-center rounded-full transition-opacity hover:opacity-80`}
+                      style={{ background: "var(--bsky-bg-tertiary)" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (author?.handle) {
+                          navigate(`/profile/${author.handle}`);
+                        }
+                      }}
+                    >
+                      <span
+                        className={`${maxThreadDepth > 15 ? "text-xs" : "text-sm"} font-semibold`}
+                      >
+                        {author?.handle?.charAt(0).toUpperCase() || "U"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center justify-between">
+                    <div className="flex min-w-0 items-center gap-1">
+                      {author?.handle ? (
+                        <ProfileHoverCard handle={author.handle}>
+                          <span
+                            className="cursor-pointer truncate text-sm font-semibold hover:underline"
+                            style={{ color: "var(--bsky-text-primary)" }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/profile/${author.handle}`);
+                            }}
+                          >
+                            {author?.displayName || author?.handle || "Unknown"}
+                          </span>
+                        </ProfileHoverCard>
+                      ) : (
+                        <span
+                          className="truncate text-sm font-semibold"
+                          style={{ color: "var(--bsky-text-primary)" }}
+                        >
+                          {author?.displayName || author?.handle || "Unknown"}
+                        </span>
+                      )}
+                      {author?.handle ? (
+                        <ProfileHoverCard handle={author.handle}>
+                          <span
+                            className="flex-shrink-0 cursor-pointer text-xs hover:underline"
+                            style={{ color: "var(--bsky-text-secondary)" }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/profile/${author.handle}`);
+                            }}
+                          >
+                            @{author?.handle || "unknown"}
+                          </span>
+                        </ProfileHoverCard>
+                      ) : (
+                        <span
+                          className="flex-shrink-0 text-xs"
+                          style={{ color: "var(--bsky-text-secondary)" }}
+                        >
+                          @{author?.handle || "unknown"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <time
+                        className="rounded px-2 py-1 text-xs"
+                        style={{
+                          color: "var(--bsky-text-tertiary)",
+                          backgroundColor: "var(--bsky-bg-primary)",
+                        }}
+                      >
+                        {formatDistanceToNow(
+                          new Date(
+                            (post?.record as { createdAt?: string })
+                              ?.createdAt ||
+                              post?.indexedAt ||
+                              Date.now(),
+                          ),
+                          { addSuffix: true },
+                        )}
+                      </time>
+                      {postUrl && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(
+                              postUrl,
+                              "_blank",
+                              "noopener,noreferrer",
+                            );
+                          }}
+                          className="transition-opacity hover:opacity-70"
+                          aria-label="Open in Bluesky"
+                        >
+                          <ExternalLink
+                            size={14}
+                            style={{ color: "var(--bsky-text-tertiary)" }}
+                          />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <p
+                    className="overflow-wrap-anywhere break-words text-sm"
+                    style={{
+                      color: "var(--bsky-text-primary)",
+                      lineHeight: "1.5",
+                      wordBreak: "break-word",
+                      overflowWrap: "anywhere",
+                    }}
+                  >
+                    {post ? (
+                      <RichText
+                        text={
+                          (post.record as { text?: string })?.text ||
+                          "[No text]"
+                        }
+                        facets={
+                          (
+                            post.record as {
+                              facets?: {
+                                index: { byteStart: number; byteEnd: number };
+                                features: Array<{
+                                  $type: string;
+                                  did?: string;
+                                  uri?: string;
+                                  tag?: string;
+                                }>;
+                              }[];
+                            }
+                          )?.facets
+                        }
+                      />
+                    ) : (
+                      <span style={{ color: "var(--bsky-text-secondary)" }}>
+                        <Loader2
+                          size={14}
+                          className="mr-1 inline animate-spin"
+                        />
+                        Loading post content...
+                      </span>
+                    )}
+                  </p>
+
+                  {post?.embed && renderEmbed(post.embed, post.uri)}
+
+                  {isUnread && (
+                    <span
+                      className="mt-2 inline-block rounded-full px-2 py-0.5 text-xs"
+                      style={{
+                        backgroundColor: "var(--bsky-primary)",
+                        color: "white",
+                      }}
+                    >
+                      New
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Post Action Bar */}
+              {post && (
+                <div className="flex items-center justify-between">
+                  <PostActionBar
+                    post={post}
+                    onReply={() => {
+                      onPostClick?.(post, "reply");
+                    }}
+                    onRepost={() => handleRepost(post)}
+                    onQuote={() => {
+                      onPostClick?.(post, "quote");
+                    }}
+                    onLike={() => handleLike(post)}
+                    showCounts={true}
+                    size={maxThreadDepth > 10 ? "small" : "medium"}
+                    isReplying={false}
+                  />
+                  {isCurrentUser && onDeletePost && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeletePost(post);
+                      }}
+                      className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all hover:bg-red-500 hover:bg-opacity-10"
+                      style={{
+                        color: "var(--bsky-error, #ef4444)",
+                      }}
+                      title="Delete this post"
+                    >
+                      <Trash2 size={14} />
+                      <span className="hidden sm:inline">Delete</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    },
+    [
+      showUnreadIndicators,
+      highlightUri,
+      highlightRef,
+      hasShownInitialHighlight,
+      indentCssVar,
+      maxThreadDepth,
+      navigate,
+      onPostClick,
+      renderEmbed,
+      handleLike,
+      handleRepost,
+      currentUserDid,
+      focusedPostIndex,
+      setFocusedPostIndex,
+      onDeletePost,
+    ],
+  );
+
+  // Calculate reply count (excluding root)
+  const replyCount = posts.length - 1;
+
   return (
     <>
-      <div className={`thread-viewer ${className}`}>
-        {threadTree.length > 0 ? (
-          renderThreadNodes(threadTree)
-        ) : (
+      <div ref={containerRef} className={`thread-viewer ${className}`}>
+        {/* Hero Root Post */}
+        {rootPostObject && (
+          <div className="mb-6">
+            {/* Author header */}
+            <div className="mb-4 flex items-center gap-3">
+              {rootPostObject.author?.avatar ? (
+                <img
+                  src={proxifyBskyImage(rootPostObject.author.avatar)}
+                  alt={rootPostObject.author.handle}
+                  className="h-12 w-12 cursor-pointer rounded-full object-cover transition-opacity hover:opacity-80"
+                  onClick={() =>
+                    navigate(`/profile/${rootPostObject.author.handle}`)
+                  }
+                />
+              ) : (
+                <div
+                  className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full"
+                  style={{ background: "var(--bsky-bg-tertiary)" }}
+                  onClick={() =>
+                    navigate(`/profile/${rootPostObject.author?.handle}`)
+                  }
+                >
+                  <span className="text-lg font-semibold">
+                    {rootPostObject.author?.handle?.charAt(0).toUpperCase() ||
+                      "U"}
+                  </span>
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <ProfileHoverCard handle={rootPostObject.author?.handle || ""}>
+                  <div
+                    className="cursor-pointer truncate font-semibold hover:underline"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                    onClick={() =>
+                      navigate(`/profile/${rootPostObject.author?.handle}`)
+                    }
+                  >
+                    {rootPostObject.author?.displayName ||
+                      rootPostObject.author?.handle}
+                  </div>
+                </ProfileHoverCard>
+                <div
+                  className="text-sm"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  @{rootPostObject.author?.handle} ·{" "}
+                  {formatDistanceToNow(
+                    new Date(
+                      (rootPostObject.record as { createdAt?: string })
+                        ?.createdAt || rootPostObject.indexedAt,
+                    ),
+                    { addSuffix: true },
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Post content - large typography */}
+            <div
+              className="mb-4 text-lg leading-relaxed"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              <RichText
+                text={
+                  (rootPostObject.record as { text?: string })?.text ||
+                  "[No text]"
+                }
+                facets={
+                  (
+                    rootPostObject.record as {
+                      facets?: {
+                        index: { byteStart: number; byteEnd: number };
+                        features: Array<{
+                          $type: string;
+                          did?: string;
+                          uri?: string;
+                          tag?: string;
+                        }>;
+                      }[];
+                    }
+                  )?.facets
+                }
+              />
+            </div>
+
+            {/* Embeds */}
+            {rootPostObject.embed &&
+              renderEmbed(rootPostObject.embed, rootPostObject.uri)}
+
+            {/* Action bar */}
+            <div className="mt-4">
+              <PostActionBar
+                post={rootPostObject}
+                onReply={() => onPostClick?.(rootPostObject, "reply")}
+                onRepost={() => handleRepost(rootPostObject)}
+                onQuote={() => onPostClick?.(rootPostObject, "quote")}
+                onLike={() => handleLike(rootPostObject)}
+                showCounts={true}
+                size="medium"
+                isReplying={false}
+              />
+            </div>
+
+            {/* Thread summary */}
+            {threadSummary && replyCount > 0 && (
+              <div className="mt-4">{threadSummary}</div>
+            )}
+
+            {/* Sentinel element for sticky context bar intersection observer */}
+            {contextBarSentinelRef && (
+              <div
+                ref={contextBarSentinelRef as React.RefObject<HTMLDivElement>}
+                className="pointer-events-none h-0"
+                aria-hidden="true"
+              />
+            )}
+
+            {/* Replies toggle */}
+            {replyCount > 0 && (
+              <button
+                onClick={() => setShowReplies(!showReplies)}
+                className="mt-4 flex w-full items-center justify-between rounded-lg px-4 py-3 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
+                style={{
+                  backgroundColor: "var(--bsky-bg-secondary)",
+                  border: "1px solid var(--bsky-border-primary)",
+                }}
+              >
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  {replyCount} {replyCount === 1 ? "reply" : "replies"}
+                  {userParticipationStats.count > 0 && (
+                    <span
+                      className="ml-2"
+                      style={{ color: "rgb(34, 197, 94)" }}
+                    >
+                      · {userParticipationStats.count} from you
+                    </span>
+                  )}
+                </span>
+                {showReplies ? (
+                  <ChevronUp
+                    size={20}
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  />
+                ) : (
+                  <ChevronDown
+                    size={20}
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  />
+                )}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Replies section - progressive reveal */}
+        {(showReplies || !rootPostObject) && threadTree.length > 0 && (
+          <div
+            className={rootPostObject ? "border-t pt-4" : ""}
+            style={{ borderColor: "var(--bsky-border-primary)" }}
+          >
+            {/* Render non-root nodes only when we have a hero root */}
+            {rootPostObject
+              ? renderThreadNodes(threadTree[0]?.children || [])
+              : renderThreadNodes(threadTree)}
+          </div>
+        )}
+
+        {/* No posts fallback */}
+        {!rootPostObject && threadTree.length === 0 && (
           <div className="p-8 text-center">
             <p style={{ color: "var(--bsky-text-secondary)" }}>
               No posts to display
             </p>
           </div>
         )}
+
+        {/* Continue Thread button - shown when user has posts in the thread */}
+        {showReplies &&
+          onContinueThread &&
+          userParticipationStats.count > 0 && (
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onContinueThread();
+                }}
+                className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-all hover:scale-105"
+                style={{
+                  backgroundColor: "var(--bsky-primary)",
+                  color: "white",
+                  boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+                }}
+              >
+                <Plus size={18} />
+                Continue Thread
+              </button>
+            </div>
+          )}
+
+        {/* Join conversation button */}
+        {showReplies &&
+          onContinueThread &&
+          userParticipationStats.count === 0 &&
+          posts.length > 0 && (
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const lastPost = posts[posts.length - 1];
+                  if (lastPost) {
+                    onPostClick?.(lastPost, "reply");
+                  }
+                }}
+                className="flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-all hover:scale-105"
+                style={{
+                  backgroundColor: "var(--bsky-bg-secondary)",
+                  borderColor: "var(--bsky-border-primary)",
+                  color: "var(--bsky-text-primary)",
+                }}
+              >
+                <Plus size={18} />
+                Join Conversation
+              </button>
+            </div>
+          )}
       </div>
 
       {galleryImages && (
@@ -933,3 +2184,25 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     </>
   );
 };
+
+/**
+ * ThreadViewerWithContext - Wrapper that provides ThreadContext
+ *
+ * Use this component when you need access to shared thread state across multiple components.
+ * The ThreadViewer component can be used directly for simple cases where context sharing
+ * is not needed.
+ */
+export const ThreadViewerWithContext: React.FC<ThreadViewerProps> = (props) => {
+  return (
+    <ThreadProvider
+      posts={props.posts}
+      notifications={props.notifications}
+      rootUri={props.rootUri}
+      initialHighlightUri={props.highlightUri}
+    >
+      <ThreadViewer {...props} />
+    </ThreadProvider>
+  );
+};
+
+// Hooks re-exported at top of file from "../contexts/ThreadContext"

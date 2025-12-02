@@ -1,58 +1,108 @@
 import { debug } from "@bsky/shared";
-import { Bell, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { AlertTriangle, Bell, BellOff, Loader2, X } from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { usePushNotifications } from "../hooks/usePushNotifications";
 
 export const NotificationPermissionPrompt: React.FC = () => {
+  const { status, isLoading, error, subscribe, isDismissed, setDismissed } =
+    usePushNotifications();
+
   const [show, setShow] = useState(false);
-  const [permission, setPermission] =
-    useState<NotificationPermission>("default");
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [subscriptionError, setSubscriptionError] = useState<string | null>(
+    null,
+  );
+
+  // Ref to track the previously focused element for focus restoration
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const enableButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (!("Notification" in window)) {
-      debug.log("Browser does not support notifications");
+    // Don't show if not supported or already subscribed/denied
+    if (!status.isSupported) {
+      debug.log("Push notifications not supported");
       return;
     }
 
-    const currentPermission = Notification.permission;
-    setPermission(currentPermission);
+    if (status.permission === "denied") {
+      debug.log("Push notifications denied");
+      return;
+    }
 
-    const dismissedKey = "notification-permission-dismissed";
-    const isDismissed = localStorage.getItem(dismissedKey) === "true";
+    if (status.isSubscribed || status.permission === "granted") {
+      debug.log("Push notifications already enabled");
+      return;
+    }
 
-    if (currentPermission === "default" && !isDismissed) {
-      const timer = setTimeout(() => {
-        setShow(true);
-      }, 5000);
+    // Don't show if dismissed
+    if (isDismissed) {
+      return;
+    }
 
-      return () => clearTimeout(timer);
+    // Show prompt after delay
+    const timer = setTimeout(() => {
+      // Capture the currently focused element before showing the dialog
+      previousFocusRef.current = document.activeElement as HTMLElement;
+      setShow(true);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [status, isDismissed, isLoading]);
+
+  // Focus the enable button when the prompt becomes visible
+  useEffect(() => {
+    if (show && enableButtonRef.current) {
+      enableButtonRef.current.focus();
+    }
+  }, [show]);
+
+  // Restore focus to the previously focused element
+  const restoreFocus = useCallback(() => {
+    if (
+      previousFocusRef.current &&
+      typeof previousFocusRef.current.focus === "function"
+    ) {
+      // Check if element is still in the DOM and focusable
+      if (document.body.contains(previousFocusRef.current)) {
+        previousFocusRef.current.focus();
+      }
     }
   }, []);
 
-  const requestPermission = async () => {
+  const handleEnable = async () => {
+    setIsSubscribing(true);
+    setSubscriptionError(null);
     try {
-      const permission = await Notification.requestPermission();
-      setPermission(permission);
+      const success = await subscribe();
 
-      if (permission === "granted") {
-        debug.log("Notification permission granted");
-        new Notification("Notifications Enabled", {
-          body: "You will now receive real-time notifications from Bluesky",
-          icon: "/favicon.ico",
-        });
+      if (success) {
+        debug.log("Push notifications enabled successfully");
+        setShow(false);
+        restoreFocus();
       }
-
-      setShow(false);
-    } catch (error) {
-      debug.error("Error requesting notification permission:", error);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to enable notifications";
+      debug.error("Error enabling push notifications:", err);
+      setSubscriptionError(errorMessage);
+    } finally {
+      setIsSubscribing(false);
     }
   };
 
-  const dismiss = () => {
+  const handleDismiss = () => {
     setShow(false);
-    localStorage.setItem("notification-permission-dismissed", "true");
+    setDismissed(true);
+    restoreFocus();
   };
 
-  if (!show || permission !== "default") {
+  // Don't render if loading, not showing, or not supported
+  if (isLoading || !show || !status.isSupported) {
+    return null;
+  }
+
+  // Don't show if permission is denied
+  if (status.permission === "denied") {
     return null;
   }
 
@@ -64,6 +114,9 @@ export const NotificationPermissionPrompt: React.FC = () => {
           background: "var(--bsky-bg-secondary)",
           borderColor: "var(--bsky-border)",
         }}
+        role="dialog"
+        aria-labelledby="notification-prompt-title"
+        aria-describedby="notification-prompt-description"
       >
         <div className="flex items-start gap-3">
           <div
@@ -72,41 +125,78 @@ export const NotificationPermissionPrompt: React.FC = () => {
               background: "var(--bsky-primary)",
               color: "white",
             }}
+            aria-hidden="true"
           >
             <Bell className="h-5 w-5" />
           </div>
 
           <div className="flex-1">
             <h3
+              id="notification-prompt-title"
               className="mb-1 font-semibold"
               style={{ color: "var(--bsky-text-primary)" }}
             >
-              Enable Notifications
+              Enable Push Notifications
             </h3>
             <p
+              id="notification-prompt-description"
               className="mb-3 text-sm"
               style={{ color: "var(--bsky-text-secondary)" }}
             >
-              Get real-time notifications for likes, replies, and mentions
+              Get notified about likes, replies, and mentions even when the app
+              is closed
             </p>
+
+            {/* Error display */}
+            {(subscriptionError || error) && (
+              <div
+                className="mb-3 flex items-start gap-2 rounded p-2 text-sm"
+                style={{
+                  background: "rgba(239, 68, 68, 0.1)",
+                  color: "#ef4444",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                }}
+                role="alert"
+              >
+                <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                <span>{subscriptionError || error}</span>
+              </div>
+            )}
 
             <div className="flex gap-2">
               <button
-                onClick={requestPermission}
-                className="flex-1 rounded px-3 py-2 text-sm font-medium transition-colors hover:opacity-90"
+                ref={enableButtonRef}
+                onClick={handleEnable}
+                disabled={isSubscribing}
+                className="flex flex-1 items-center justify-center gap-2 rounded px-3 py-2 text-sm font-medium transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50"
                 style={{
                   background: "var(--bsky-primary)",
                   color: "white",
+                  // @ts-expect-error CSS custom property for focus ring
+                  "--tw-ring-color": "var(--bsky-primary)",
+                  "--tw-ring-offset-color": "var(--bsky-bg-secondary)",
                 }}
+                aria-busy={isSubscribing}
               >
-                Enable
+                {isSubscribing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Enabling...
+                  </>
+                ) : (
+                  "Enable"
+                )}
               </button>
               <button
-                onClick={dismiss}
-                className="rounded px-3 py-2 text-sm font-medium transition-colors hover:opacity-80"
+                onClick={handleDismiss}
+                disabled={isSubscribing}
+                className="rounded px-3 py-2 text-sm font-medium transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2"
                 style={{
                   background: "var(--bsky-bg-tertiary)",
                   color: "var(--bsky-text-secondary)",
+                  // @ts-expect-error CSS custom property for focus ring
+                  "--tw-ring-color": "var(--bsky-primary)",
+                  "--tw-ring-offset-color": "var(--bsky-bg-secondary)",
                 }}
               >
                 Not Now
@@ -115,13 +205,60 @@ export const NotificationPermissionPrompt: React.FC = () => {
           </div>
 
           <button
-            onClick={dismiss}
-            className="text-gray-400 hover:text-gray-600"
+            onClick={handleDismiss}
+            className="rounded text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2"
+            aria-label="Dismiss notification prompt"
+            style={{
+              // @ts-expect-error CSS custom property for focus ring
+              "--tw-ring-color": "var(--bsky-primary)",
+              "--tw-ring-offset-color": "var(--bsky-bg-secondary)",
+            }}
           >
             <X className="h-4 w-4" />
           </button>
         </div>
       </div>
+    </div>
+  );
+};
+
+/**
+ * Component for showing when notifications are blocked
+ */
+export const NotificationBlockedBanner: React.FC = () => {
+  const { status } = usePushNotifications();
+  const [dismissed, setDismissed] = useState(false);
+
+  if (dismissed || status.permission !== "denied") {
+    return null;
+  }
+
+  return (
+    <div
+      className="mb-4 flex items-center gap-3 rounded-lg border p-3"
+      style={{
+        background: "var(--bsky-bg-tertiary)",
+        borderColor: "var(--bsky-border)",
+      }}
+      role="alert"
+    >
+      <BellOff
+        className="h-5 w-5 flex-shrink-0"
+        style={{ color: "var(--bsky-text-secondary)" }}
+      />
+      <div className="flex-1">
+        <p className="text-sm" style={{ color: "var(--bsky-text-secondary)" }}>
+          Notifications are blocked. To enable them, update your browser
+          settings for this site.
+        </p>
+      </div>
+      <button
+        onClick={() => setDismissed(true)}
+        className="text-gray-400 hover:text-gray-600"
+        aria-label="Dismiss"
+      >
+        <X className="h-4 w-4" />
+      </button>
     </div>
   );
 };

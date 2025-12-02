@@ -349,7 +349,11 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
                   className="mb-2 flex items-center text-sm"
                   style={{ color: "var(--bsky-text-secondary)" }}
                 >
-                  <span>@{account.handle}</span>
+                  <ProfileHoverCard handle={account.handle}>
+                    <span className="cursor-pointer hover:underline">
+                      @{account.handle}
+                    </span>
+                  </ProfileHoverCard>
                   <DomainVerifiedBadgeInline handle={account.handle} />
                 </p>
 

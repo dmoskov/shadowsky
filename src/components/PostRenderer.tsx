@@ -15,12 +15,14 @@ import { useNavigate } from "react-router";
 import { useModerationPreferences } from "../hooks/useModerationPreferences";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
+import { isValidUrl } from "../utils/security";
 import { parseBskyUrl } from "../utils/url-helpers";
 import { ImageGallery } from "./ImageGallery";
 import { VideoPlayer } from "./VideoPlayer";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { ProgressiveImage } from "./ui/ProgressiveImage";
+import { RichText } from "./ui/RichText";
 
 const logger = createLogger("PostRenderer");
 
@@ -132,23 +134,29 @@ const BskyUrlEmbed: React.FC<{
       </div>
       <div className="p-3">
         <div className="quote-author mb-2 flex items-center gap-2">
-          <img
-            src={
-              proxifyBskyImage(quotedPost.author.avatar) ||
-              "/default-avatar.svg"
-            }
-            alt=""
-            className="h-5 w-5 rounded-full"
-          />
-          <span className="text-sm font-semibold">
-            {quotedPost.author.displayName || quotedPost.author.handle}
-          </span>
-          <span
-            className="text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
-          >
-            @{quotedPost.author.handle}
-          </span>
+          <ProfileHoverCard handle={quotedPost.author.handle}>
+            <img
+              src={
+                proxifyBskyImage(quotedPost.author.avatar) ||
+                "/default-avatar.svg"
+              }
+              alt=""
+              className="h-5 w-5 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+            />
+          </ProfileHoverCard>
+          <ProfileHoverCard handle={quotedPost.author.handle}>
+            <span className="cursor-pointer text-sm font-semibold hover:underline">
+              {quotedPost.author.displayName || quotedPost.author.handle}
+            </span>
+          </ProfileHoverCard>
+          <ProfileHoverCard handle={quotedPost.author.handle}>
+            <span
+              className="cursor-pointer text-sm hover:underline"
+              style={{ color: "var(--bsky-text-secondary)" }}
+            >
+              @{quotedPost.author.handle}
+            </span>
+          </ProfileHoverCard>
         </div>
         <p className="text-sm">{record?.text || ""}</p>
         {quotedPost.embed && (
@@ -464,6 +472,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
             thumbnail={
               embed.thumbnail ? proxifyBskyImage(embed.thumbnail) : undefined
             }
+            inTimeline={true}
           />
         </div>
       );
@@ -561,7 +570,12 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
                 <DomainVerifiedBadgeInline handle={quotedPost.author.handle} />
               )}
             </div>
-            <p className="quote-text text-sm">{quotedPost.value?.text || ""}</p>
+            <p className="quote-text text-sm">
+              <RichText
+                text={quotedPost.value?.text || ""}
+                facets={quotedPost.value?.facets}
+              />
+            </p>
             {/* Render embedded content in the quoted post */}
             {quotedPost.embeds?.[0] && (
               <div className="mt-2">{renderEmbed(quotedPost.embeds[0])}</div>
@@ -626,7 +640,12 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
                 <DomainVerifiedBadgeInline handle={quotedPost.author.handle} />
               )}
             </div>
-            <p className="quote-text text-sm">{quotedPost.value?.text || ""}</p>
+            <p className="quote-text text-sm">
+              <RichText
+                text={quotedPost.value?.text || ""}
+                facets={quotedPost.value?.facets}
+              />
+            </p>
           </div>
         </div>
       );
@@ -634,25 +653,25 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
 
     // External link
     if (embed.external) {
+      // Validate external URL to prevent XSS attacks
+      const externalUri = embed.external.uri;
+      const isUriValid = isValidUrl(externalUri);
+
       return (
         <div
           className="mt-2 cursor-pointer rounded-lg border p-2.5 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
           style={{ borderColor: "var(--bsky-border-primary)" }}
           onClick={(e) => {
             e.stopPropagation();
-            if (embed.external.uri) {
+            if (externalUri && isUriValid) {
               // Check if it's a Bluesky URL
-              const parsed = parseBskyUrl(embed.external.uri);
+              const parsed = parseBskyUrl(externalUri);
               if (parsed && parsed.postId && parsed.handle) {
                 // Navigate internally to the thread view
                 navigate(`/thread/${parsed.handle}/${parsed.postId}`);
               } else {
-                // Open external links in a new tab
-                window.open(
-                  embed.external.uri,
-                  "_blank",
-                  "noopener,noreferrer",
-                );
+                // Open external links in a new tab with security attributes
+                window.open(externalUri, "_blank", "noopener,noreferrer");
               }
             }
           }}
@@ -701,7 +720,17 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
           >
             <Repeat2 size={16} />
             <span className="inline-flex items-center">
-              {(reason as any).by.displayName || (reason as any).by.handle}
+              <ProfileHoverCard handle={(reason as any).by.handle}>
+                <span
+                  className="cursor-pointer hover:underline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/profile/${(reason as any).by.handle}`);
+                  }}
+                >
+                  {(reason as any).by.displayName || (reason as any).by.handle}
+                </span>
+              </ProfileHoverCard>
               {(reason as any).by.handle && (
                 <DomainVerifiedBadgeInline handle={(reason as any).by.handle} />
               )}{" "}
@@ -786,7 +815,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
                 className="whitespace-pre-wrap"
                 style={{ color: "var(--bsky-text-primary)" }}
               >
-                {record?.text || ""}
+                <RichText text={record?.text || ""} facets={record?.facets} />
               </p>
               {post.embed && renderEmbed(post.embed)}
               {/* If no embed but text contains a bsky URL, try to render it */}

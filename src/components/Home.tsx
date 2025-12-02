@@ -22,6 +22,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
+import { useKeyboardShortcutsContext } from "../contexts/KeyboardShortcutsContext";
 import { useModeration } from "../contexts/ModerationContext";
 import {
   useFeatureTracking,
@@ -41,6 +42,7 @@ import { ThreadModal } from "./ThreadModal";
 import { VideoPlayer } from "./VideoPlayer";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { ProgressiveImage } from "./ui/ProgressiveImage";
+import { RichText } from "./ui/RichText";
 import { FeedSkeleton } from "./ui/SkeletonLoader";
 
 const logger = createLogger("Home");
@@ -205,6 +207,10 @@ export const Home: React.FC<HomeProps> = React.memo(
 
     const { trackFeatureAction } = useFeatureTracking("home_feed");
     const { trackClick } = useInteractionTracking();
+
+    // Keyboard shortcuts context for L/R/B/S/C shortcuts
+    const { setFocusedPost, registerPostActions, unregisterPostActions } =
+      useKeyboardShortcutsContext();
 
     // Fetch user's saved/pinned feeds
     const { data: userPrefs } = useQuery({
@@ -585,7 +591,18 @@ export const Home: React.FC<HomeProps> = React.memo(
               >
                 <Repeat2 size={12} />
                 <span>
-                  {item.reason.by.displayName || item.reason.by.handle} reposted
+                  <ProfileHoverCard handle={item.reason.by.handle}>
+                    <span
+                      className="cursor-pointer hover:underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/profile/${item.reason.by.handle}`);
+                      }}
+                    >
+                      {item.reason.by.displayName || item.reason.by.handle}
+                    </span>
+                  </ProfileHoverCard>{" "}
+                  reposted
                 </span>
               </div>
             )}
@@ -614,20 +631,24 @@ export const Home: React.FC<HomeProps> = React.memo(
                       style={{ color: "var(--bsky-text-primary)" }}
                     >
                       Replying to{" "}
-                      <button
-                        className="font-semibold hover:underline"
-                        style={{ color: "rgb(29, 155, 240)" }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Navigate to parent post
-                          const parentPost = item.reply.parent;
-                          if (parentPost) {
-                            handlePostClick(parentPost);
-                          }
-                        }}
+                      <ProfileHoverCard
+                        handle={item.reply.parent.author?.handle || "unknown"}
                       >
-                        @{item.reply.parent.author?.handle || "unknown"}
-                      </button>
+                        <button
+                          className="font-semibold hover:underline"
+                          style={{ color: "rgb(29, 155, 240)" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Navigate to parent post
+                            const parentPost = item.reply.parent;
+                            if (parentPost) {
+                              handlePostClick(parentPost);
+                            }
+                          }}
+                        >
+                          @{item.reply.parent.author?.handle || "unknown"}
+                        </button>
+                      </ProfileHoverCard>
                     </span>
                     {item.reply.parent.record?.text && (
                       <div
@@ -753,7 +774,10 @@ export const Home: React.FC<HomeProps> = React.memo(
                   className="whitespace-pre-wrap"
                   style={{ color: "var(--bsky-text-primary)" }}
                 >
-                  {post.record.text}
+                  <RichText
+                    text={post.record.text}
+                    facets={post.record.facets}
+                  />
                 </div>
 
                 {renderEmbed(post.embed, post.uri, index)}
@@ -1097,6 +1121,108 @@ export const Home: React.FC<HomeProps> = React.memo(
       }
     }, [isFocused]);
 
+    // Report focused post to keyboard shortcuts context
+    useEffect(() => {
+      if (focusedPostIndex >= 0 && focusedPostIndex < posts.length) {
+        const feedItem = posts[focusedPostIndex];
+        if (feedItem?.post) {
+          setFocusedPost({
+            post: feedItem.post,
+            index: focusedPostIndex,
+            columnId: columnId || "home",
+          });
+        }
+      } else {
+        setFocusedPost(null);
+      }
+    }, [focusedPostIndex, posts, columnId, setFocusedPost]);
+
+    // Register post actions for keyboard shortcuts (L, R, B, S, C/R)
+    useEffect(() => {
+      const effectiveColumnId = columnId || "home";
+      registerPostActions(effectiveColumnId, {
+        onLike: (post) => {
+          if (post.viewer?.like) {
+            unlikeMutation.mutate({
+              postUri: post.uri,
+              likeUri: post.viewer.like,
+            });
+          } else {
+            likeMutation.mutate({ uri: post.uri, cid: post.cid });
+          }
+        },
+        onRepost: (post) => {
+          if (post.viewer?.repost) {
+            unrepostMutation.mutate({
+              postUri: post.uri,
+              repostUri: post.viewer.repost,
+            });
+          } else {
+            repostMutation.mutate({ uri: post.uri, cid: post.cid });
+          }
+        },
+        onReply: (post) => {
+          setSelectedPost(post as unknown as Post);
+          setOpenThreadToReply(true);
+          setShowThread(true);
+        },
+        onBookmark: (post) => {
+          toggleBookmark(post);
+        },
+        onShare: async (post) => {
+          const shareUrl = `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split("/").pop()}`;
+          if (navigator.share) {
+            try {
+              await navigator.share({
+                title: "Share post",
+                url: shareUrl,
+              });
+            } catch {
+              // User cancelled or share failed, fall back to clipboard
+              await navigator.clipboard.writeText(shareUrl);
+            }
+          } else {
+            await navigator.clipboard.writeText(shareUrl);
+          }
+        },
+        onOpen: (post) => {
+          handlePostClick(post as unknown as Post);
+        },
+        onNavigateNext: () => {
+          if (focusedPostIndex < posts.length - 1) {
+            isKeyboardNavigationRef.current = true;
+            setFocusedPostIndex((prev) => prev + 1);
+          } else if (focusedPostIndex === -1 && posts.length > 0) {
+            isKeyboardNavigationRef.current = true;
+            setFocusedPostIndex(0);
+          }
+        },
+        onNavigatePrev: () => {
+          if (focusedPostIndex > 0) {
+            isKeyboardNavigationRef.current = true;
+            setFocusedPostIndex((prev) => prev - 1);
+          } else if (focusedPostIndex === -1 && posts.length > 0) {
+            isKeyboardNavigationRef.current = true;
+            setFocusedPostIndex(posts.length - 1);
+          }
+        },
+      });
+
+      return () => unregisterPostActions(effectiveColumnId);
+    }, [
+      columnId,
+      registerPostActions,
+      unregisterPostActions,
+      likeMutation,
+      unlikeMutation,
+      repostMutation,
+      unrepostMutation,
+      toggleBookmark,
+      focusedPostIndex,
+      posts,
+      handlePostClick,
+    ]);
+
     const handleGenerateAltText = React.useCallback(
       async (imageUrl: string, postUri: string, index: number) => {
         const postKey = postUri;
@@ -1394,16 +1520,30 @@ export const Home: React.FC<HomeProps> = React.memo(
                           Unknown
                         </span>
                       )}
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
-                        @{quotedPost.author?.handle || "unknown"}
-                      </span>
+                      {quotedPost.author?.handle ? (
+                        <ProfileHoverCard handle={quotedPost.author.handle}>
+                          <span
+                            className="cursor-pointer hover:underline"
+                            style={{ color: "var(--bsky-text-secondary)" }}
+                          >
+                            @{quotedPost.author?.handle || "unknown"}
+                          </span>
+                        </ProfileHoverCard>
+                      ) : (
+                        <span style={{ color: "var(--bsky-text-secondary)" }}>
+                          @{quotedPost.author?.handle || "unknown"}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div
                     className="text-sm"
                     style={{ color: "var(--bsky-text-primary)" }}
                   >
-                    {quotedPost.value.text}
+                    <RichText
+                      text={quotedPost.value?.text || ""}
+                      facets={quotedPost.value?.facets}
+                    />
                   </div>
                   {quotedPost.embeds?.[0] &&
                     renderEmbed(quotedPost.embeds[0], postUri, postIndex)}
