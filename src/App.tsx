@@ -528,7 +528,15 @@ function AppContent() {
         <RateLimitStatus />
         <WebSocketStatus />
         <MutationQueueStatus />
-        <NotificationPermissionPrompt />
+        <ErrorBoundary
+          componentName="Push Notifications"
+          fallback={null}
+          onError={(error) => {
+            analytics.trackError(error, "PushNotifications");
+          }}
+        >
+          <NotificationPermissionPrompt />
+        </ErrorBoundary>
         <DebugConsole />
         <ColumnMigrationNotice />
         <CommandPalette

@@ -1,14 +1,17 @@
 import { debug } from "@bsky/shared";
-import { Bell, BellOff, Loader2, X } from "lucide-react";
+import { AlertTriangle, Bell, BellOff, Loader2, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { usePushNotifications } from "../hooks/usePushNotifications";
 
 export const NotificationPermissionPrompt: React.FC = () => {
-  const { status, isLoading, subscribe, isDismissed, setDismissed } =
+  const { status, isLoading, error, subscribe, isDismissed, setDismissed } =
     usePushNotifications();
 
   const [show, setShow] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [subscriptionError, setSubscriptionError] = useState<string | null>(
+    null,
+  );
 
   // Ref to track the previously focused element for focus restoration
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -68,6 +71,7 @@ export const NotificationPermissionPrompt: React.FC = () => {
 
   const handleEnable = async () => {
     setIsSubscribing(true);
+    setSubscriptionError(null);
     try {
       const success = await subscribe();
 
@@ -76,8 +80,11 @@ export const NotificationPermissionPrompt: React.FC = () => {
         setShow(false);
         restoreFocus();
       }
-    } catch (error) {
-      debug.error("Error enabling push notifications:", error);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to enable notifications";
+      debug.error("Error enabling push notifications:", err);
+      setSubscriptionError(errorMessage);
     } finally {
       setIsSubscribing(false);
     }
@@ -139,6 +146,22 @@ export const NotificationPermissionPrompt: React.FC = () => {
               Get notified about likes, replies, and mentions even when the app
               is closed
             </p>
+
+            {/* Error display */}
+            {(subscriptionError || error) && (
+              <div
+                className="mb-3 flex items-start gap-2 rounded p-2 text-sm"
+                style={{
+                  background: "rgba(239, 68, 68, 0.1)",
+                  color: "#ef4444",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                }}
+                role="alert"
+              >
+                <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                <span>{subscriptionError || error}</span>
+              </div>
+            )}
 
             <div className="flex gap-2">
               <button

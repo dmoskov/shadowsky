@@ -182,13 +182,14 @@ class PushNotificationService {
 
     if (!vapidPublicKey) {
       logger.warn(
-        "VAPID public key not configured, using local notifications only",
+        "VAPID public key not configured - push notifications unavailable",
       );
-      // Still mark as "subscribed" for local notifications
+      // Don't set enabled=true when VAPID is missing - this creates a confusing state
+      // where UI shows "enabled" but push notifications don't actually work
       this.subscription = null;
-      this.settings.enabled = true;
-      this.saveSettings();
-      return null;
+      throw new Error(
+        "Push notifications are not available. Server configuration is incomplete.",
+      );
     }
 
     try {
