@@ -55,18 +55,7 @@ export const BatchProgressIndicator: React.FC<BatchProgressIndicatorProps> = ({
     return () => clearInterval(interval);
   }, [operation.status, operation.startTime]);
 
-  // Don't render if no operation or idle
-  if (!operation.actionType || operation.status === "idle") {
-    return null;
-  }
-
-  const actionLabel = getActionDescription(operation.actionType);
-  const progress =
-    operation.totalCount > 0
-      ? (operation.completedCount / operation.totalCount) * 100
-      : 0;
-
-  // Calculate estimated time remaining
+  // Calculate estimated time remaining - must be before early return to follow rules of hooks
   const estimatedRemaining = useMemo(() => {
     if (
       operation.completedCount === 0 ||
@@ -86,6 +75,17 @@ export const BatchProgressIndicator: React.FC<BatchProgressIndicatorProps> = ({
     const minutes = Math.ceil(remainingMs / 60000);
     return `${minutes}m remaining`;
   }, [operation, elapsedTime]);
+
+  // Don't render if no operation or idle
+  if (!operation.actionType || operation.status === "idle") {
+    return null;
+  }
+
+  const actionLabel = getActionDescription(operation.actionType);
+  const progress =
+    operation.totalCount > 0
+      ? (operation.completedCount / operation.totalCount) * 100
+      : 0;
 
   const formatElapsed = (ms: number): string => {
     const seconds = Math.floor(ms / 1000);
