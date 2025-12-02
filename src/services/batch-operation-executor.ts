@@ -96,7 +96,7 @@ async function executeOperation(
         break;
       }
 
-      case "unblock":
+      case "unblock": {
         // Need to find and delete the block record
         const blockRecords = await agent.app.bsky.graph.block.list({
           repo: agent.session?.did || "",
@@ -111,6 +111,7 @@ async function executeOperation(
           });
         }
         break;
+      }
 
       case "unfollow":
         if (user.relationshipUri) {

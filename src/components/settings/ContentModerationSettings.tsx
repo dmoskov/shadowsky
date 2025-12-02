@@ -1,59 +1,128 @@
 import { getProfileService, queryClient } from "@bsky/shared";
+import type { AppBskyActorDefs as _AppBskyActorDefs } from "@atproto/api";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Shield, X } from "lucide-react";
+import {
+  Plus,
+  Shield,
+  Tag as _Tag,
+  X,
+  Clock as _Clock,
+  Users as _Users,
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 
-interface MutedUser {
+interface _MutedUser {
   did: string;
   handle: string;
   displayName?: string;
   mutedUntil?: string;
 }
 
-interface BlockedUser {
+interface _BlockedUser {
   did: string;
   handle: string;
   displayName?: string;
   blockUri?: string;
 }
 
-interface ModerationPreferences {
-  keywordFilters: string[];
-  hideReplies: boolean;
-  hideReposts: boolean;
-  hideQuotePosts: boolean;
-  mutedUsers: MutedUser[];
-  blockedUsers: BlockedUser[];
-  sensitiveMediaBehavior: "blur" | "hide" | "show";
-  adultContentEnabled: boolean;
-  autoModeration: boolean;
+// Native AT Protocol muted word type
+type MutedWordTarget = "content" | "tag";
+type ActorTarget = "all" | "exclude-following";
+
+interface _NativeMutedWord {
+  id?: string;
+  value: string;
+  targets: MutedWordTarget[];
+  actorTarget: ActorTarget;
+  expiresAt?: string;
 }
+
+// Native AT Protocol content label preferences
+type LabelVisibility = "ignore" | "show" | "warn" | "hide";
+
+interface _ContentLabelPref {
+  labelerDid?: string;
+  label: string;
+  visibility: LabelVisibility;
+}
+
+// Known content labels from AT Protocol
+const _CONTENT_LABELS = [
+  { id: "porn", name: "Pornography", description: "Explicit sexual content" },
+  {
+    id: "sexual",
+    name: "Sexually Suggestive",
+    description: "Suggestive but not explicit",
+  },
+  { id: "nudity", name: "Nudity", description: "Non-sexual nudity" },
+  {
+    id: "graphic-media",
+    name: "Graphic Media",
+    description: "Graphic violence or gore",
+  },
+  {
+    id: "gore",
+    name: "Gore",
+    description: "Graphic depictions of violence or injury",
+  },
+  {
+    id: "nsfl",
+    name: "NSFL",
+    description: "Not safe for life content",
+  },
+  {
+    id: "!warn",
+    name: "Content Warning",
+    description: "Content with explicit warnings",
+  },
+];
 
 export const ContentModerationSettings: React.FC = () => {
   const { agent } = useAuth();
-  const [preferences, setPreferences] = useState<ModerationPreferences>({
-    keywordFilters: [],
-    hideReplies: false,
-    hideReposts: false,
-    hideQuotePosts: false,
-    mutedUsers: [],
-    blockedUsers: [],
-    sensitiveMediaBehavior: "blur",
-    adultContentEnabled: false,
-    autoModeration: true,
-  });
-  const [newKeyword, setNewKeyword] = useState("");
+
+  // Native AT Protocol muted words state
+  const [mutedWords, setMutedWords] = useState<NativeMutedWord[]>([]);
+  const [newMutedWord, setNewMutedWord] = useState("");
+  const [newWordTargets, setNewWordTargets] = useState<MutedWordTarget[]>([
+    "content",
+    "tag",
+  ]);
+  const [newWordActorTarget, setNewWordActorTarget] =
+    useState<ActorTarget>("all");
+  const [newWordExpiration, setNewWordExpiration] = useState<string>("never");
+
+  // Content label preferences state
+  const [labelPrefs, setLabelPrefs] = useState<Map<string, LabelVisibility>>(
+    new Map(),
+  );
+  const [adultContentEnabled, setAdultContentEnabled] = useState(false);
+
+  // Muted/blocked users state
+  const [mutedUsers, setMutedUsers] = useState<MutedUser[]>([]);
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [newMuteHandle, setNewMuteHandle] = useState("");
-  const [muteDuration, setMuteDuration] = useState<string>("forever");
+
+  // UI state
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
 
-  // Fetch muted and blocked users
-  const { data: mutedAccounts } = useQuery({
+  // Fetch native AT Protocol preferences
+  const { data: preferences, refetch: refetchPreferences } = useQuery({
+    queryKey: ["nativePreferences"],
+    queryFn: async () => {
+      if (!agent) return null;
+      const response = await agent.app.bsky.actor.getPreferences();
+      return response.data.preferences;
+    },
+    enabled: !!agent,
+  });
+
+  // Fetch muted users from AT Protocol
+  const { data: mutedAccounts, refetch: refetchMutes } = useQuery({
     queryKey: ["mutedAccounts"],
     queryFn: async () => {
       if (!agent) return [];
@@ -63,7 +132,8 @@ export const ContentModerationSettings: React.FC = () => {
     enabled: !!agent,
   });
 
-  const { data: blocks } = useQuery({
+  // Fetch blocked users from AT Protocol
+  const { data: blocks, refetch: refetchBlocks } = useQuery({
     queryKey: ["blocks"],
     queryFn: async () => {
       if (!agent) return [];
@@ -73,66 +143,70 @@ export const ContentModerationSettings: React.FC = () => {
     enabled: !!agent,
   });
 
-  // Fetch content filtering preferences from AT Protocol
-  const { data: atProtoPref } = useQuery({
-    queryKey: ["contentModeration"],
-    queryFn: async () => {
-      if (!agent) return null;
-      try {
-        const response = await agent.api.com.atproto.repo.getRecord({
-          repo: agent.session?.did || "",
-          collection: "com.shadowsky.moderation",
-          rkey: "self",
-        });
-        return response.data.value as any;
-      } catch (error: any) {
-        if (error?.status === 400) return null;
-        throw error;
-      }
-    },
-    enabled: !!agent,
-  });
-
-  // Update local state when data loads
+  // Parse native preferences when loaded
   useEffect(() => {
-    if (atProtoPref) {
-      setPreferences((prev) => ({
-        ...prev,
-        keywordFilters: atProtoPref.keywordFilters || [],
-        hideReplies: atProtoPref.hideReplies || false,
-        hideReposts: atProtoPref.hideReposts || false,
-        hideQuotePosts: atProtoPref.hideQuotePosts || false,
-        sensitiveMediaBehavior: atProtoPref.sensitiveMediaBehavior || "blur",
-        adultContentEnabled: atProtoPref.adultContentEnabled || false,
-        autoModeration: atProtoPref.autoModeration !== false,
-      }));
-    }
-  }, [atProtoPref]);
+    if (!preferences || !Array.isArray(preferences)) return;
 
+    // Extract muted words
+    const mutedWordsPref = preferences.find(
+      (p: any) => p.$type === "app.bsky.actor.defs#mutedWordsPref",
+    ) as AppBskyActorDefs.MutedWordsPref | undefined;
+
+    if (mutedWordsPref?.items) {
+      setMutedWords(
+        mutedWordsPref.items.map((item) => ({
+          id: item.id,
+          value: item.value,
+          targets: (item.targets || ["content", "tag"]) as MutedWordTarget[],
+          actorTarget: (item.actorTarget || "all") as ActorTarget,
+          expiresAt: item.expiresAt,
+        })),
+      );
+    }
+
+    // Extract adult content preference
+    const adultContentPref = preferences.find(
+      (p: any) => p.$type === "app.bsky.actor.defs#adultContentPref",
+    ) as AppBskyActorDefs.AdultContentPref | undefined;
+
+    if (adultContentPref) {
+      setAdultContentEnabled(adultContentPref.enabled);
+    }
+
+    // Extract content label preferences
+    const newLabelPrefs = new Map<string, LabelVisibility>();
+    preferences.forEach((p: any) => {
+      if (p.$type === "app.bsky.actor.defs#contentLabelPref" && !p.labelerDid) {
+        newLabelPrefs.set(p.label, p.visibility as LabelVisibility);
+      }
+    });
+    setLabelPrefs(newLabelPrefs);
+  }, [preferences]);
+
+  // Update muted users state
   useEffect(() => {
     if (mutedAccounts) {
-      setPreferences((prev) => ({
-        ...prev,
-        mutedUsers: mutedAccounts.map((user) => ({
+      setMutedUsers(
+        mutedAccounts.map((user) => ({
           did: user.did,
           handle: user.handle,
           displayName: user.displayName,
         })),
-      }));
+      );
     }
   }, [mutedAccounts]);
 
+  // Update blocked users state
   useEffect(() => {
     if (blocks) {
-      setPreferences((prev) => ({
-        ...prev,
-        blockedUsers: blocks.map((user) => ({
+      setBlockedUsers(
+        blocks.map((user) => ({
           did: user.did,
           handle: user.handle,
           displayName: user.displayName,
           blockUri: user.viewer?.blocking,
         })),
-      }));
+      );
     }
   }, [blocks]);
 

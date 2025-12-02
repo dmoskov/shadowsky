@@ -2,6 +2,21 @@
  * Common error types used throughout the application
  */
 
+// Re-export storage error types for convenience
+export {
+  StorageErrorSeverity,
+  StorageErrorCode,
+  type StorageError,
+  type StorageErrorOptions,
+  type RetryConfig,
+  createStorageError,
+  isStorageError,
+  classifyStorageError,
+  shouldRetryStorageError,
+  calculateRetryDelay,
+  DEFAULT_RETRY_CONFIG,
+} from "./storage-errors";
+
 export interface ErrorWithStatus {
   status?: number;
   message?: string;
