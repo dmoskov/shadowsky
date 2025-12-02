@@ -9,12 +9,13 @@
  * - Timeline feed items (user's home feed)
  * - Recent DM conversations and messages
  * - Feed metadata for offline indicators
+ * - Thread summaries (AI-generated haiku summaries for offline access)
  */
 
 import { debug } from "@bsky/shared";
 
 const DB_NAME = "BskyOfflineStorage";
-const DB_VERSION = 2; // Bumped for compound indexes
+const DB_VERSION = 3; // Bumped for thread summaries store
 
 // Store names
 const STORES = {
@@ -22,6 +23,7 @@ const STORES = {
   DM_CONVERSATIONS: "dmConversations",
   DM_MESSAGES: "dmMessages",
   METADATA: "offlineMetadata",
+  THREAD_SUMMARIES: "threadSummaries",
 } as const;
 
 // Storage limits
@@ -29,8 +31,10 @@ const LIMITS = {
   MAX_FEED_ITEMS: 500,
   MAX_DM_CONVERSATIONS: 50,
   MAX_MESSAGES_PER_CONVO: 100,
+  MAX_THREAD_SUMMARIES: 200,
   FEED_MAX_AGE_DAYS: 7,
   DM_MAX_AGE_DAYS: 30,
+  SUMMARY_MAX_AGE_DAYS: 30,
 } as const;
 
 export interface OfflineFeedItem {
@@ -90,12 +94,31 @@ export interface OfflineMetadata {
   newestItemAt?: string;
 }
 
+export type ThreadSummaryFormat = "haiku" | "tldr" | "keypoints";
+export type ThreadSummarySource = "bookmarked" | "followed" | "viewed";
+
+export interface OfflineThreadSummary {
+  threadUri: string;
+  summary: string;
+  format: ThreadSummaryFormat;
+  metadata: {
+    postCount: number;
+    authors: string[];
+    generatedAt: string;
+  };
+  source: ThreadSummarySource;
+  _offlineCachedAt: number;
+  _lastAccessedAt: number;
+}
+
 export interface OfflineStorageStats {
   feedItemCount: number;
   conversationCount: number;
   messageCount: number;
+  summaryCount: number;
   lastFeedSync: number | null;
   lastDMSync: number | null;
+  lastSummarySync: number | null;
   storageEstimate: number;
 }
 
@@ -211,6 +234,29 @@ export class OfflineStorageDB {
               );
             }
           }
+        }
+
+        // Version 3: Add thread summaries store for offline access
+        if (!db.objectStoreNames.contains(STORES.THREAD_SUMMARIES)) {
+          const summaryStore = db.createObjectStore(STORES.THREAD_SUMMARIES, {
+            keyPath: "threadUri",
+          });
+          // Index by source for filtering bookmarked vs followed summaries
+          summaryStore.createIndex("source", "source", { unique: false });
+          // Index by cached time for eviction
+          summaryStore.createIndex("_offlineCachedAt", "_offlineCachedAt", {
+            unique: false,
+          });
+          // Index by last accessed time for LRU eviction
+          summaryStore.createIndex("_lastAccessedAt", "_lastAccessedAt", {
+            unique: false,
+          });
+          // Compound index for efficient source + time queries
+          summaryStore.createIndex(
+            "source_cachedAt",
+            ["source", "_offlineCachedAt"],
+            { unique: false },
+          );
         }
       };
     });
@@ -475,6 +521,161 @@ export class OfflineStorageDB {
     });
   }
 
+  // ==================== Thread Summary Operations ====================
+
+  async saveThreadSummary(
+    summary: Omit<OfflineThreadSummary, "_offlineCachedAt" | "_lastAccessedAt">,
+  ): Promise<void> {
+    const db = this.ensureDb();
+    const transaction = db.transaction(
+      [STORES.THREAD_SUMMARIES, STORES.METADATA],
+      "readwrite",
+    );
+    const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
+    const metaStore = transaction.objectStore(STORES.METADATA);
+
+    const now = Date.now();
+
+    const offlineSummary: OfflineThreadSummary = {
+      ...summary,
+      _offlineCachedAt: now,
+      _lastAccessedAt: now,
+    };
+    store.put(offlineSummary);
+
+    // Update metadata
+    const existingMeta = await this.getMetadataInTransaction(
+      metaStore,
+      "thread_summaries",
+    );
+    const newMeta: OfflineMetadata = {
+      key: "thread_summaries",
+      lastSyncAt: now,
+      itemCount: (existingMeta?.itemCount || 0) + 1,
+    };
+    metaStore.put(newMeta);
+
+    return new Promise((resolve, reject) => {
+      transaction.oncomplete = () => {
+        debug.log(`Cached thread summary for: ${summary.threadUri}`);
+        resolve();
+      };
+      transaction.onerror = () => reject(transaction.error);
+    });
+  }
+
+  async getThreadSummary(
+    threadUri: string,
+  ): Promise<OfflineThreadSummary | null> {
+    const db = this.ensureDb();
+    const transaction = db.transaction([STORES.THREAD_SUMMARIES], "readwrite");
+    const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
+
+    return new Promise((resolve, reject) => {
+      const request = store.get(threadUri);
+
+      request.onsuccess = () => {
+        const summary = request.result as OfflineThreadSummary | undefined;
+        if (summary) {
+          // Update last accessed time
+          summary._lastAccessedAt = Date.now();
+          store.put(summary);
+          resolve(summary);
+        } else {
+          resolve(null);
+        }
+      };
+
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async hasThreadSummary(threadUri: string): Promise<boolean> {
+    const db = this.ensureDb();
+    const transaction = db.transaction([STORES.THREAD_SUMMARIES], "readonly");
+    const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
+
+    return new Promise((resolve, reject) => {
+      const request = store.count(IDBKeyRange.only(threadUri));
+      request.onsuccess = () => resolve(request.result > 0);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async getThreadSummaries(
+    source?: ThreadSummarySource,
+    limit = 50,
+  ): Promise<OfflineThreadSummary[]> {
+    const db = this.ensureDb();
+    const transaction = db.transaction([STORES.THREAD_SUMMARIES], "readonly");
+    const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
+
+    const summaries: OfflineThreadSummary[] = [];
+
+    return new Promise((resolve, reject) => {
+      if (source) {
+        // Use compound index for filtering by source
+        const index = store.index("source_cachedAt");
+        const range = IDBKeyRange.bound([source, 0], [source, Date.now()]);
+        const request = index.openCursor(range, "prev");
+
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+
+          if (cursor && summaries.length < limit) {
+            summaries.push(cursor.value as OfflineThreadSummary);
+            cursor.continue();
+          } else {
+            resolve(summaries);
+          }
+        };
+
+        request.onerror = () => reject(request.error);
+      } else {
+        // Get all summaries sorted by cached time
+        const index = store.index("_offlineCachedAt");
+        const request = index.openCursor(null, "prev");
+
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+
+          if (cursor && summaries.length < limit) {
+            summaries.push(cursor.value as OfflineThreadSummary);
+            cursor.continue();
+          } else {
+            resolve(summaries);
+          }
+        };
+
+        request.onerror = () => reject(request.error);
+      }
+    });
+  }
+
+  async deleteThreadSummary(threadUri: string): Promise<void> {
+    const db = this.ensureDb();
+    const transaction = db.transaction([STORES.THREAD_SUMMARIES], "readwrite");
+    const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
+
+    return new Promise((resolve, reject) => {
+      const request = store.delete(threadUri);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async getThreadSummaryCount(): Promise<number> {
+    const db = this.ensureDb();
+    const transaction = db.transaction([STORES.THREAD_SUMMARIES], "readonly");
+    const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
+
+    return new Promise((resolve, reject) => {
+      const request = store.count();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
   // ==================== Metadata & Stats ====================
 
   private getMetadataInTransaction(
@@ -503,6 +704,7 @@ export class OfflineStorageDB {
         STORES.FEED_ITEMS,
         STORES.DM_CONVERSATIONS,
         STORES.DM_MESSAGES,
+        STORES.THREAD_SUMMARIES,
         STORES.METADATA,
       ],
       "readonly",
@@ -511,28 +713,42 @@ export class OfflineStorageDB {
     const feedStore = transaction.objectStore(STORES.FEED_ITEMS);
     const convoStore = transaction.objectStore(STORES.DM_CONVERSATIONS);
     const msgStore = transaction.objectStore(STORES.DM_MESSAGES);
+    const summaryStore = transaction.objectStore(STORES.THREAD_SUMMARIES);
     const metaStore = transaction.objectStore(STORES.METADATA);
 
-    const [feedCount, convoCount, msgCount, feedMeta, dmMeta] =
-      await Promise.all([
-        new Promise<number>((resolve, reject) => {
-          const req = feedStore.count();
-          req.onsuccess = () => resolve(req.result);
-          req.onerror = () => reject(req.error);
-        }),
-        new Promise<number>((resolve, reject) => {
-          const req = convoStore.count();
-          req.onsuccess = () => resolve(req.result);
-          req.onerror = () => reject(req.error);
-        }),
-        new Promise<number>((resolve, reject) => {
-          const req = msgStore.count();
-          req.onsuccess = () => resolve(req.result);
-          req.onerror = () => reject(req.error);
-        }),
-        this.getMetadataInTransaction(metaStore, "feed_timeline"),
-        this.getMetadataInTransaction(metaStore, "dm_conversations"),
-      ]);
+    const [
+      feedCount,
+      convoCount,
+      msgCount,
+      summaryCount,
+      feedMeta,
+      dmMeta,
+      summaryMeta,
+    ] = await Promise.all([
+      new Promise<number>((resolve, reject) => {
+        const req = feedStore.count();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      }),
+      new Promise<number>((resolve, reject) => {
+        const req = convoStore.count();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      }),
+      new Promise<number>((resolve, reject) => {
+        const req = msgStore.count();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      }),
+      new Promise<number>((resolve, reject) => {
+        const req = summaryStore.count();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      }),
+      this.getMetadataInTransaction(metaStore, "feed_timeline"),
+      this.getMetadataInTransaction(metaStore, "dm_conversations"),
+      this.getMetadataInTransaction(metaStore, "thread_summaries"),
+    ]);
 
     // Estimate storage size
     let storageEstimate = 0;
@@ -549,8 +765,10 @@ export class OfflineStorageDB {
       feedItemCount: feedCount,
       conversationCount: convoCount,
       messageCount: msgCount,
+      summaryCount,
       lastFeedSync: feedMeta?.lastSyncAt || null,
       lastDMSync: dmMeta?.lastSyncAt || null,
+      lastSummarySync: summaryMeta?.lastSyncAt || null,
       storageEstimate,
     };
   }
@@ -619,14 +837,48 @@ export class OfflineStorageDB {
     });
   }
 
+  async evictOldSummaries(): Promise<number> {
+    const db = this.ensureDb();
+    const transaction = db.transaction([STORES.THREAD_SUMMARIES], "readwrite");
+    const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
+    const index = store.index("_offlineCachedAt");
+
+    const cutoffTime =
+      Date.now() - LIMITS.SUMMARY_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+    let deletedCount = 0;
+
+    return new Promise((resolve, reject) => {
+      const range = IDBKeyRange.upperBound(cutoffTime);
+      const request = index.openCursor(range);
+
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest).result;
+
+        if (cursor) {
+          cursor.delete();
+          deletedCount++;
+          cursor.continue();
+        } else {
+          debug.log(`Evicted ${deletedCount} old thread summaries`);
+          resolve(deletedCount);
+        }
+      };
+
+      request.onerror = () => reject(request.error);
+    });
+  }
+
   async enforceStorageLimits(): Promise<void> {
     // Enforce feed item limit
     await this.enforceFeedLimit();
     // Enforce conversation limit
     await this.enforceConversationLimit();
+    // Enforce summary limit
+    await this.enforceSummaryLimit();
     // Clean up old items
     await this.evictOldFeedItems();
     await this.evictOldMessages();
+    await this.evictOldSummaries();
   }
 
   private async enforceFeedLimit(): Promise<void> {
@@ -735,6 +987,45 @@ export class OfflineStorageDB {
     }
   }
 
+  private async enforceSummaryLimit(): Promise<void> {
+    const db = this.ensureDb();
+    const transaction = db.transaction([STORES.THREAD_SUMMARIES], "readwrite");
+    const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
+
+    const count = await new Promise<number>((resolve, reject) => {
+      const req = store.count();
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+
+    if (count > LIMITS.MAX_THREAD_SUMMARIES) {
+      // Use LRU eviction based on last accessed time
+      const index = store.index("_lastAccessedAt");
+      const deleteCount = count - LIMITS.MAX_THREAD_SUMMARIES;
+      let deleted = 0;
+
+      await new Promise<void>((resolve, reject) => {
+        const request = index.openCursor(null, "next"); // Oldest accessed first
+
+        request.onsuccess = (event) => {
+          const cursor = (event.target as IDBRequest).result;
+
+          if (cursor && deleted < deleteCount) {
+            cursor.delete();
+            deleted++;
+            cursor.continue();
+          } else {
+            resolve();
+          }
+        };
+
+        request.onerror = () => reject(request.error);
+      });
+
+      debug.log(`Enforced summary limit: removed ${deleted} summaries (LRU)`);
+    }
+  }
+
   async clearAll(): Promise<void> {
     const db = this.ensureDb();
     const transaction = db.transaction(
@@ -742,6 +1033,7 @@ export class OfflineStorageDB {
         STORES.FEED_ITEMS,
         STORES.DM_CONVERSATIONS,
         STORES.DM_MESSAGES,
+        STORES.THREAD_SUMMARIES,
         STORES.METADATA,
       ],
       "readwrite",
@@ -750,6 +1042,7 @@ export class OfflineStorageDB {
     transaction.objectStore(STORES.FEED_ITEMS).clear();
     transaction.objectStore(STORES.DM_CONVERSATIONS).clear();
     transaction.objectStore(STORES.DM_MESSAGES).clear();
+    transaction.objectStore(STORES.THREAD_SUMMARIES).clear();
     transaction.objectStore(STORES.METADATA).clear();
 
     return new Promise((resolve, reject) => {

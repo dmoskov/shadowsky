@@ -5,16 +5,17 @@ import {
   AlertTriangle,
   ChevronDown,
   ChevronUp,
+  Database,
   Loader2,
   RefreshCw,
   Sparkles,
 } from "lucide-react";
 import { useState } from "react";
+import { type ThreadSummaryPost } from "../services/anthropic";
 import {
-  generateThreadSummary,
-  type ThreadSummaryPost,
-  type ThreadSummaryResult,
-} from "../services/anthropic";
+  type CachedThreadSummary,
+  threadSummaryCacheService,
+} from "../services/thread-summary-cache";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 type Post = AppBskyFeedDefs.PostView;
@@ -53,12 +54,15 @@ function ThreadHaikuSummaryContent({
     refetch,
     dataUpdatedAt,
     isFetching,
-  } = useQuery<ThreadSummaryResult>({
+  } = useQuery<CachedThreadSummary>({
     queryKey: ["thread-summary", threadUri],
     queryFn: async () => {
-      const result = await generateThreadSummary(summaryPosts, "haiku", {
-        forceRefresh,
-      });
+      const result = await threadSummaryCacheService.getThreadSummary(
+        threadUri,
+        summaryPosts,
+        "haiku",
+        { forceRefresh, source: "viewed" },
+      );
       // Reset forceRefresh after query completes
       setForceRefresh(false);
       return result;
@@ -282,15 +286,17 @@ function ThreadHaikuSummaryContent({
                   {summary.metadata.postCount} posts •{" "}
                   {summary.metadata.authors.length} authors
                 </span>
-                {summary.metadata.cached && (
+                {summary.cached && (
                   <span
-                    className="rounded px-1.5 py-0.5 text-xs"
+                    className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs"
                     style={{
-                      backgroundColor: "var(--bsky-bg-tertiary)",
-                      color: "var(--bsky-text-tertiary)",
+                      backgroundColor: "rgba(34, 197, 94, 0.1)",
+                      color: "rgb(34, 197, 94)",
                     }}
+                    title="Available offline"
                   >
-                    Cached
+                    <Database size={10} />
+                    Offline
                   </span>
                 )}
               </div>

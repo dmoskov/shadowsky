@@ -142,6 +142,11 @@ const Search = lazy(() =>
     default: m.SearchTabbed,
   })),
 );
+const ScheduledPosts = lazy(() =>
+  import("./components/ScheduledPosts").then((m) => ({
+    default: m.ScheduledPosts,
+  })),
+);
 const SkyDeck = lazy(() => import("./components/SkyDeck"));
 const VisualTimeline = lazy(() =>
   import("./components/VisualTimeline").then((m) => ({
@@ -485,6 +490,19 @@ function AppContent() {
                 }
               />
               <Route path="/search" element={<Search />} />
+              <Route
+                path="/scheduled"
+                element={
+                  <ErrorBoundary
+                    componentName="Scheduled Posts"
+                    onError={(error) => {
+                      analytics.trackError(error, "ScheduledPosts");
+                    }}
+                  >
+                    <ScheduledPosts />
+                  </ErrorBoundary>
+                }
+              />
               <Route path="/profile/:handle" element={<ProfilePageWithKey />} />
               <Route
                 path="/thread/:handle/:postId"

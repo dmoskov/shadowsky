@@ -15,11 +15,14 @@ import { useModal } from "../contexts/ModalContext";
 import { useModalSwipeBack } from "../hooks/useModalSwipeBack";
 import { useThreadKeyboardShortcuts } from "../hooks/useThreadKeyboardShortcuts";
 import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
+import type { ThreadSummaryResult } from "../services/anthropic";
 import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { EnhancedComposer } from "./EnhancedComposer";
 import { ThreadBreadcrumb } from "./ThreadBreadcrumb";
+import { ThreadContextBar } from "./ThreadContextBar";
 import { ThreadEngagementAnalytics } from "./ThreadEngagementAnalytics";
 import { ThreadHaikuSummary } from "./ThreadHaikuSummary";
+import { ThreadMinimap } from "./ThreadMinimap";
 import { ThreadNavigationBar } from "./ThreadNavigationBar";
 import {
   ThreadShortcutsHelp,
@@ -75,6 +78,9 @@ export function ThreadModal({
   useEffect(() => {
     setHighlightedPostUri(postUri);
   }, [postUri]);
+
+  // Ref for ThreadContextBar sentinel element (placed after thread stats)
+  const contextBarSentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -230,6 +236,65 @@ export function ThreadModal({
     return posts.find((p) => p.uri === rootPost);
   }, [posts, rootPost]);
 
+  // Calculate thread statistics for ThreadContextBar
+  const threadStats = useMemo(() => {
+    if (posts.length === 0) return { uniqueParticipants: 0, maxDepth: 0 };
+
+    // Calculate unique participants
+    const uniqueAuthors = new Set(posts.map((p) => p.author.did));
+
+    // Calculate max depth
+    let maxDepth = 0;
+    const depthMap = new Map<string, number>();
+
+    // Find root and set its depth to 0
+    if (rootPost) {
+      depthMap.set(rootPost, 0);
+    }
+
+    // Build depth map by traversing reply chain
+    posts.forEach((post) => {
+      const record = post.record as { reply?: { parent?: { uri: string } } };
+      const parentUri = record?.reply?.parent?.uri;
+
+      if (!parentUri) {
+        // This is the root
+        depthMap.set(post.uri, 0);
+      } else if (depthMap.has(parentUri)) {
+        const parentDepth = depthMap.get(parentUri) || 0;
+        const newDepth = parentDepth + 1;
+        depthMap.set(post.uri, newDepth);
+        maxDepth = Math.max(maxDepth, newDepth);
+      }
+    });
+
+    // Make a second pass for any posts that weren't resolved
+    posts.forEach((post) => {
+      if (!depthMap.has(post.uri)) {
+        const record = post.record as { reply?: { parent?: { uri: string } } };
+        const parentUri = record?.reply?.parent?.uri;
+        if (parentUri && depthMap.has(parentUri)) {
+          const parentDepth = depthMap.get(parentUri) || 0;
+          const newDepth = parentDepth + 1;
+          depthMap.set(post.uri, newDepth);
+          maxDepth = Math.max(maxDepth, newDepth);
+        }
+      }
+    });
+
+    return {
+      uniqueParticipants: uniqueAuthors.size,
+      maxDepth,
+    };
+  }, [posts, rootPost]);
+
+  // Get cached haiku summary for ThreadContextBar
+  const cachedHaikuSummary = useMemo(() => {
+    const queryKey = ["thread-summary", rootPost || postUri];
+    const cachedData = queryClient.getQueryData<ThreadSummaryResult>(queryKey);
+    return cachedData?.summary || null;
+  }, [queryClient, rootPost, postUri]);
+
   // Get current focused post and its navigation context
   const navigationContext = useMemo(() => {
     if (posts.length === 0) return null;
@@ -316,6 +381,23 @@ export function ThreadModal({
 
   // Handler for breadcrumb navigation
   const handleBreadcrumbNavigate = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < posts.length) {
+        setFocusedPostIndex(index);
+      }
+    },
+    [posts.length],
+  );
+
+  // Handler for jumping to end of thread
+  const handleJumpToEnd = useCallback(() => {
+    if (posts.length > 0) {
+      setFocusedPostIndex(posts.length - 1);
+    }
+  }, [posts.length]);
+
+  // Handler for jumping to specific index (used by ThreadContextBar)
+  const handleJumpToIndex = useCallback(
     (index: number) => {
       if (index >= 0 && index < posts.length) {
         setFocusedPostIndex(index);
@@ -726,6 +808,24 @@ export function ThreadModal({
     <>
       <div className="fixed inset-0 z-[100] bg-black/70" onClick={onClose} />
 
+      {/* Sticky ThreadContextBar - appears when scrolled past thread stats */}
+      {posts.length > 0 && (
+        <ThreadContextBar
+          posts={posts}
+          threadUri={rootPost || postUri}
+          haikuSummary={cachedHaikuSummary}
+          currentIndex={focusedPostIndex}
+          totalPosts={posts.length}
+          uniqueParticipants={threadStats.uniqueParticipants}
+          maxDepth={threadStats.maxDepth}
+          onJumpToStart={handleJumpToRoot}
+          onJumpToEnd={handleJumpToEnd}
+          onJumpToParent={handleJumpToParent}
+          onJumpToIndex={handleJumpToIndex}
+          sentinelRef={contextBarSentinelRef}
+        />
+      )}
+
       <div
         {...swipeHandlers}
         className="thread-modal-container fixed inset-0 z-[101] flex items-center justify-center p-4 md:p-8"
@@ -943,6 +1043,13 @@ export function ThreadModal({
                     className="mb-4"
                   />
 
+                  {/* Sentinel element for ThreadContextBar intersection observer */}
+                  <div
+                    ref={contextBarSentinelRef}
+                    className="h-0"
+                    aria-hidden="true"
+                  />
+
                   {/* Thread Analytics (collapsible) */}
                   {showAnalytics && (
                     <ThreadEngagementAnalytics
@@ -1111,6 +1218,17 @@ export function ThreadModal({
               </div>
             )}
         </div>
+
+        {/* Thread Minimap - floating visual navigation for complex threads */}
+        {posts.length > 0 && (
+          <ThreadMinimap
+            posts={posts}
+            currentIndex={focusedPostIndex}
+            currentUserDid={session?.did}
+            onNavigate={handleBreadcrumbNavigate}
+            rootUri={rootPost}
+          />
+        )}
       </div>
 
       {/* Keyboard shortcuts help panel */}
