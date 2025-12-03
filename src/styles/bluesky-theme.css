@@ -3,6 +3,45 @@
 /* Utility classes are now using Tailwind directly */
 
 :root {
+  /* ==========================================
+   * Animation Tokens - Coordinated Timing System
+   * ==========================================
+   * Use these tokens for consistent, natural-feeling animations
+   * throughout the application.
+   */
+
+  /* Duration tokens - use for transition-duration */
+  --transition-fast: 150ms; /* Quick micro-interactions: hover states, toggles */
+  --transition-normal: 200ms; /* Standard interactions: buttons, cards */
+  --transition-slow: 300ms; /* Emphasis animations: modals, page transitions */
+  --transition-slower: 400ms; /* Complex animations: expanding panels */
+
+  /* Easing curves - use for transition-timing-function */
+  /* Standard ease-in-out for most transitions */
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Natural deceleration - elements coming to rest */
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  /* Acceleration - elements leaving */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  /* Spring-like overshoot - playful interactions */
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  /* Bounce effect - celebratory feedback */
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  /* Smooth deceleration for entrances */
+  --ease-entrance: cubic-bezier(0, 0, 0.2, 1);
+  /* Quick acceleration for exits */
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Composite transition tokens - common patterns */
+  --transition-colors-fast:
+    color var(--transition-fast) var(--ease-default),
+    background-color var(--transition-fast) var(--ease-default),
+    border-color var(--transition-fast) var(--ease-default);
+  --transition-opacity-fast: opacity var(--transition-fast) var(--ease-default);
+  --transition-transform-normal: transform var(--transition-normal)
+    var(--ease-out);
+  --transition-all-normal: all var(--transition-normal) var(--ease-default);
+
   /* Primary colors - shifted towards a unique blue-purple gradient */
   --bsky-primary: #0085ff;
   --bsky-primary-rgb: 0, 133, 255;

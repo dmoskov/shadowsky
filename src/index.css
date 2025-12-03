@@ -10,13 +10,30 @@
 
 /* Global hover state adjustments for a more grounded UI */
 @layer utilities {
-  /* Reduce all transition durations for snappier feel */
+  /* Override default Tailwind transitions to use coordinated timing tokens */
   .transition-all {
-    transition-duration: 150ms !important;
+    transition-duration: var(--transition-fast) !important;
+    transition-timing-function: var(--ease-default) !important;
   }
 
   .transition-colors {
-    transition-duration: 150ms !important;
+    transition-duration: var(--transition-fast) !important;
+    transition-timing-function: var(--ease-default) !important;
+  }
+
+  .transition-opacity {
+    transition-duration: var(--transition-fast) !important;
+    transition-timing-function: var(--ease-default) !important;
+  }
+
+  .transition-transform {
+    transition-duration: var(--transition-normal) !important;
+    transition-timing-function: var(--ease-out) !important;
+  }
+
+  .transition-shadow {
+    transition-duration: var(--transition-fast) !important;
+    transition-timing-function: var(--ease-default) !important;
   }
 
   /* Remove active scale effects globally */
@@ -421,12 +438,12 @@ html[data-high-contrast="true"] .dark {
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Reduce animation complexity on mobile */
+  /* Reduce animation complexity on mobile - use faster token values */
   .transition-all,
   .transition-colors,
   .transition-opacity,
   .transition-transform {
-    transition-duration: 100ms !important;
+    transition-duration: calc(var(--transition-fast) * 0.67) !important;
   }
 
   /* Disable hover effects on touch devices */

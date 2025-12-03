@@ -8,38 +8,25 @@ This report presents findings from a comprehensive audit of the BSKY codebase, f
 
 ### 1. Hardcoded Credentials in Test Scripts
 
-**Severity: CRITICAL**
+**Severity: CRITICAL** → **RESOLVED** ✅
 
-Multiple test scripts contain hardcoded credentials that pose a severe security risk:
+~~Multiple test scripts contained hardcoded credentials.~~
 
-- **Email exposed**: `test-account@example.com` appears in 10+ test files
-- **Password exposed**: `C%;,!2iO"]Wu%11T9+Y8` found in `capture-postcard-comparison.mjs`
+**Status**: Fixed on 2025-12-03. All test files now use `getTestCredentials()` pattern which reads from environment variables (`VITE_TEST_IDENTIFIER`, `VITE_TEST_PASSWORD`).
 
-**Affected Files:**
+**Remaining Actions**:
 
-```
-./capture-postcard-comparison.mjs
-./capture-long-threads.js
-./tests/playwright/test-thread-improvements.js
-./tests/playwright/test-viewport-fit.js
-./tests/playwright/test-share-functionality.js
-./tests/playwright/test-header-fix.js
-./tests/playwright/test-complex-thread-diagram.js
-./tests/playwright/test-thread-navigation-fix.js
-./tests/playwright/test-compact-diagram.js
-./tests/playwright/comprehensive-ui-audit.mjs
-```
-
-**Recommendation**:
-
-- Immediately rotate the exposed password
-- Remove all hardcoded credentials from the repository
-- Use environment variables exclusively (already implemented in `src/lib/test-credentials.ts`)
-- Add pre-commit hooks to prevent credential commits
+- Rotate the previously exposed password (contact account owner)
+- Consider using BFG Repo-Cleaner to scrub credentials from git history
+- Add pre-commit hooks to prevent future credential commits
 
 ### 2. Credential Management Inconsistency
 
-The codebase has proper credential management infrastructure (`src/lib/test-credentials.ts`, `.env.example`) but it's not being used consistently. Many test scripts still hardcode values instead of using the secure credential system.
+**Status**: **RESOLVED** ✅
+
+~~The codebase has proper credential management infrastructure (`src/lib/test-credentials.ts`, `.env.example`) but it's not being used consistently.~~
+
+**Status**: Fixed on 2025-12-03. All test scripts now consistently use the secure credential management system via environment variables.
 
 ## Code Organization Issues 📁
 

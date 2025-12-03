@@ -75,6 +75,24 @@ export default {
         // Conversation animations
         highlight: "highlight 2s ease-out",
         "highlight-flash": "highlightFlash 1s ease-out 2",
+        // Entrance animations using token system
+        "enter-fade": "enterFade var(--transition-normal) var(--ease-entrance)",
+        "enter-slide-up":
+          "enterSlideUp var(--transition-normal) var(--ease-entrance)",
+        "enter-slide-down":
+          "enterSlideDown var(--transition-normal) var(--ease-entrance)",
+        "enter-scale": "enterScale var(--transition-normal) var(--ease-spring)",
+        // Exit animations
+        "exit-fade": "exitFade var(--transition-fast) var(--ease-exit)",
+        "exit-slide-up": "exitSlideUp var(--transition-fast) var(--ease-exit)",
+        "exit-slide-down":
+          "exitSlideDown var(--transition-fast) var(--ease-exit)",
+        "exit-scale": "exitScale var(--transition-fast) var(--ease-exit)",
+        // Tactile feedback
+        "press-scale": "pressScale var(--transition-fast) var(--ease-spring)",
+        // Staggered list item (use with animation-delay)
+        "list-item-enter":
+          "listItemEnter var(--transition-normal) var(--ease-entrance) forwards",
       },
       keyframes: {
         fadeIn: {
@@ -206,6 +224,51 @@ export default {
             transform: "scale(1)",
           },
         },
+        // Entrance keyframes
+        enterFade: {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        enterSlideUp: {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        enterSlideDown: {
+          from: { opacity: "0", transform: "translateY(-8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        enterScale: {
+          from: { opacity: "0", transform: "scale(0.95)" },
+          to: { opacity: "1", transform: "scale(1)" },
+        },
+        // Exit keyframes
+        exitFade: {
+          from: { opacity: "1" },
+          to: { opacity: "0" },
+        },
+        exitSlideUp: {
+          from: { opacity: "1", transform: "translateY(0)" },
+          to: { opacity: "0", transform: "translateY(-8px)" },
+        },
+        exitSlideDown: {
+          from: { opacity: "1", transform: "translateY(0)" },
+          to: { opacity: "0", transform: "translateY(8px)" },
+        },
+        exitScale: {
+          from: { opacity: "1", transform: "scale(1)" },
+          to: { opacity: "0", transform: "scale(0.95)" },
+        },
+        // Tactile feedback
+        pressScale: {
+          "0%": { transform: "scale(1)" },
+          "50%": { transform: "scale(0.97)" },
+          "100%": { transform: "scale(1)" },
+        },
+        // Staggered list item entrance
+        listItemEnter: {
+          from: { opacity: "0", transform: "translateY(4px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
@@ -222,7 +285,20 @@ export default {
         xs: "2px",
       },
       transitionDuration: {
+        fast: "var(--transition-fast)",
+        normal: "var(--transition-normal)",
+        slow: "var(--transition-slow)",
+        slower: "var(--transition-slower)",
         400: "400ms",
+      },
+      transitionTimingFunction: {
+        DEFAULT: "var(--ease-default)",
+        out: "var(--ease-out)",
+        in: "var(--ease-in)",
+        spring: "var(--ease-spring)",
+        bounce: "var(--ease-bounce)",
+        entrance: "var(--ease-entrance)",
+        exit: "var(--ease-exit)",
       },
       zIndex: {
         60: "60",
@@ -260,6 +336,77 @@ export default {
     },
   },
   plugins: [
+    // Animation utility classes plugin
+    function ({ addUtilities }) {
+      addUtilities({
+        // Transition shorthand utilities with coordinated timing
+        ".transition-fast": {
+          transitionProperty:
+            "color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter",
+          transitionDuration: "var(--transition-fast)",
+          transitionTimingFunction: "var(--ease-default)",
+        },
+        ".transition-normal": {
+          transitionProperty:
+            "color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter",
+          transitionDuration: "var(--transition-normal)",
+          transitionTimingFunction: "var(--ease-default)",
+        },
+        ".transition-slow": {
+          transitionProperty:
+            "color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter",
+          transitionDuration: "var(--transition-slow)",
+          transitionTimingFunction: "var(--ease-default)",
+        },
+        // Common interaction patterns
+        ".hover-lift": {
+          transition:
+            "transform var(--transition-fast) var(--ease-out), box-shadow var(--transition-fast) var(--ease-out)",
+          "&:hover": {
+            transform: "translateY(-1px)",
+            boxShadow: "var(--bsky-shadow-md)",
+          },
+        },
+        ".hover-glow": {
+          transition: "box-shadow var(--transition-normal) var(--ease-out)",
+          "&:hover": {
+            boxShadow: "var(--bsky-glow)",
+          },
+        },
+        ".press-feedback": {
+          transition: "transform var(--transition-fast) var(--ease-spring)",
+          "&:active": {
+            transform: "scale(0.98)",
+          },
+        },
+        // Color transition utilities
+        ".transition-colors-smooth": {
+          transitionProperty:
+            "color, background-color, border-color, text-decoration-color, fill, stroke",
+          transitionDuration: "var(--transition-fast)",
+          transitionTimingFunction: "var(--ease-default)",
+        },
+        // Opacity transition utilities
+        ".transition-opacity-smooth": {
+          transitionProperty: "opacity",
+          transitionDuration: "var(--transition-fast)",
+          transitionTimingFunction: "var(--ease-default)",
+        },
+        // Transform transition utilities
+        ".transition-transform-smooth": {
+          transitionProperty: "transform",
+          transitionDuration: "var(--transition-normal)",
+          transitionTimingFunction: "var(--ease-out)",
+        },
+        // Animation delay utilities for staggered animations
+        ".delay-0": { animationDelay: "0ms" },
+        ".delay-50": { animationDelay: "50ms" },
+        ".delay-100": { animationDelay: "100ms" },
+        ".delay-150": { animationDelay: "150ms" },
+        ".delay-200": { animationDelay: "200ms" },
+        ".delay-300": { animationDelay: "300ms" },
+      });
+    },
     // Custom component classes plugin
     function ({ addComponents }) {
       addComponents({

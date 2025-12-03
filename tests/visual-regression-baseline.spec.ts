@@ -21,7 +21,7 @@ async function loginIfNeeded(page: any) {
       'input[placeholder="Username or email"]',
       credentials.identifier,
     );
-    await page.fill('input[type="password"]', 'C%;,!2iO"]Wu%11T9+Y8');
+    await page.fill('input[type="password"]', credentials.password);
     await page.click('button[type="submit"]');
     await page.waitForSelector(".feed-container", { timeout: 10000 });
     await page.waitForTimeout(2000); // Let the feed stabilize

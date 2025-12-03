@@ -29,7 +29,7 @@ async function testNotificationBadge() {
       const credentials = getTestCredentials();
 
       await page.fill('input[placeholder*="Username"]', credentials.identifier);
-      await page.fill('input[type="password"]', 'C%;,!2iO"]Wu%11T9+Y8');
+      await page.fill('input[type="password"]', credentials.password);
       await page.click('button[type="submit"]');
 
       // Wait for login to complete

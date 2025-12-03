@@ -22,7 +22,7 @@ async function testViewportFit() {
       'input[placeholder="Username or email"]',
       credentials.identifier,
     );
-    await page.fill('input[placeholder="Password"]', 'C%;,!2iO"]Wu%11T9+Y8');
+    await page.fill('input[placeholder="Password"]', credentials.password);
     await page.click('button[type="submit"]');
     console.log("Submitted login form");
 
