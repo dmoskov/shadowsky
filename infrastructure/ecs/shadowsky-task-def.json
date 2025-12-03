@@ -1,0 +1,59 @@
+{
+  "family": "shadowsky-api-server",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::181691141781:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::181691141781:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "api-server",
+      "image": "181691141781.dkr.ecr.us-west-1.amazonaws.com/shadowsky/api-server:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3002,
+          "protocol": "tcp",
+          "name": "http"
+        },
+        {
+          "containerPort": 3001,
+          "protocol": "tcp",
+          "name": "websocket"
+        }
+      ],
+      "environment": [
+        {"name": "PORT", "value": "3002"},
+        {"name": "WS_PORT", "value": "3001"},
+        {"name": "NODE_ENV", "value": "production"}
+      ],
+      "secrets": [
+        {
+          "name": "ANTHROPIC_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-west-1:181691141781:secret:anthropic-api-key-88hbTt"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/shadowsky-api-server",
+          "awslogs-region": "us-west-1",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3002/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ],
+  "tags": [
+    {"key": "Project", "value": "shadowsky"},
+    {"key": "Environment", "value": "production"}
+  ]
+}

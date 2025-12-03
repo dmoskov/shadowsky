@@ -71,6 +71,13 @@ app.use((req, res, next) => {
   next();
 });
 
+// Health check endpoint for load balancer
+app.get("/health", (req, res) => {
+  res
+    .status(200)
+    .json({ status: "healthy", timestamp: new Date().toISOString() });
+});
+
 // Generate alt text for an image URL
 app.post("/api/generate-alt-text", async (req, res) => {
   const { imageUrl } = req.body;

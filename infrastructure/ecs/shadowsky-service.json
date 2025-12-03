@@ -1,0 +1,32 @@
+{
+  "cluster": "shadowsky-cluster",
+  "serviceName": "shadowsky-api-server",
+  "taskDefinition": "shadowsky-api-server:1",
+  "desiredCount": 1,
+  "launchType": "FARGATE",
+  "networkConfiguration": {
+    "awsvpcConfiguration": {
+      "subnets": ["subnet-01ba95f3a849af7de", "subnet-0d5b07d9422881dca"],
+      "securityGroups": ["sg-015e88e8fc86287cc"],
+      "assignPublicIp": "ENABLED"
+    }
+  },
+  "loadBalancers": [
+    {
+      "targetGroupArn": "arn:aws:elasticloadbalancing:us-west-1:181691141781:targetgroup/shadowsky-api-http/a41457d833cd66b3",
+      "containerName": "api-server",
+      "containerPort": 3002
+    },
+    {
+      "targetGroupArn": "arn:aws:elasticloadbalancing:us-west-1:181691141781:targetgroup/shadowsky-api-ws/f420c8c5e06ce0e5",
+      "containerName": "api-server",
+      "containerPort": 3001
+    }
+  ],
+  "healthCheckGracePeriodSeconds": 120,
+  "enableExecuteCommand": true,
+  "tags": [
+    {"key": "Project", "value": "shadowsky"},
+    {"key": "Environment", "value": "production"}
+  ]
+}
