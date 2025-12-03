@@ -76,6 +76,8 @@ export function ThreadModal({
 
   // Ref for ThreadContextBar sentinel element (placed after thread stats)
   const contextBarSentinelRef = useRef<HTMLDivElement>(null);
+  // Ref for scrollable thread container (for minimap viewport tracking)
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -893,6 +895,7 @@ export function ThreadModal({
 
           {/* Scrollable content */}
           <div
+            ref={scrollContainerRef}
             className="bsky-scrollbar flex-1 overflow-y-auto"
             style={{ minHeight: 0 }}
           >
@@ -1187,6 +1190,7 @@ export function ThreadModal({
             currentUserDid={session?.did}
             onNavigate={handleBreadcrumbNavigate}
             rootUri={rootPost}
+            scrollContainerRef={scrollContainerRef}
           />
         )}
       </div>

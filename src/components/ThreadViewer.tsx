@@ -888,6 +888,8 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
           <div
             key={nodeUri}
             className="mb-4"
+            data-post-index={node.flatIndex}
+            data-post-uri={nodeUri}
             ref={(el) => {
               if (isHighlighted && highlightRef) {
                 (

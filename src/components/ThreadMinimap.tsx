@@ -18,6 +18,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { proxifyBskyImage } from "../utils/image-proxy";
 
 type Post = AppBskyFeedDefs.PostView;
 
@@ -38,6 +39,20 @@ interface ThreadMinimapProps {
   onNavigate: (index: number) => void;
   className?: string;
   rootUri?: string;
+  scrollContainerRef?: React.RefObject<HTMLElement>;
+}
+
+// Generate a consistent color for a user based on their DID
+function getUserColor(did: string): string {
+  // Simple hash function
+  let hash = 0;
+  for (let i = 0; i < did.length; i++) {
+    hash = did.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  // Generate HSL color with good saturation and lightness
+  const hue = Math.abs(hash % 360);
+  return `hsl(${hue}, 70%, 60%)`;
 }
 
 // Calculate whether minimap should be visible based on thread complexity
@@ -179,11 +194,16 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
   onNavigate,
   className = "",
   rootUri,
+  scrollContainerRef,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [viewportRange, setViewportRange] = useState<{
+    startIndex: number;
+    endIndex: number;
+  } | null>(null);
 
   // Build tree structure
   const { nodes, maxDepth } = useMemo(
@@ -246,6 +266,57 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
       });
     }
   }, [currentIndex, isCollapsed]);
+
+  // Track viewport position to show visible range indicator
+  useEffect(() => {
+    if (!scrollContainerRef?.current) return;
+
+    const updateViewportRange = () => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const postElements = container.querySelectorAll("[data-post-index]");
+
+      let startIdx = -1;
+      let endIdx = -1;
+
+      postElements.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const postIndex = parseInt(el.getAttribute("data-post-index") || "-1");
+
+        if (postIndex === -1) return;
+
+        // Check if post is at least partially visible in viewport
+        const isVisible =
+          rect.top < containerRect.bottom && rect.bottom > containerRect.top;
+
+        if (isVisible) {
+          if (startIdx === -1) startIdx = postIndex;
+          endIdx = postIndex;
+        }
+      });
+
+      if (startIdx !== -1 && endIdx !== -1) {
+        setViewportRange({ startIndex: startIdx, endIndex: endIdx });
+      }
+    };
+
+    // Update on scroll
+    const container = scrollContainerRef.current;
+    container.addEventListener("scroll", updateViewportRange);
+
+    // Initial update
+    updateViewportRange();
+
+    // Update on resize
+    window.addEventListener("resize", updateViewportRange);
+
+    return () => {
+      container.removeEventListener("scroll", updateViewportRange);
+      window.removeEventListener("resize", updateViewportRange);
+    };
+  }, [scrollContainerRef, posts.length]);
 
   // Handle node click
   const handleNodeClick = useCallback(
@@ -379,6 +450,17 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
                 viewBox={`0 0 ${svgWidth} ${svgHeight}`}
                 className="block"
               >
+                {/* Define circular clip path for avatars */}
+                <defs>
+                  <clipPath id="avatar-clip">
+                    <circle
+                      cx={nodeSize / 2}
+                      cy={nodeSize / 2}
+                      r={nodeSize / 2}
+                    />
+                  </clipPath>
+                </defs>
+
                 {/* Connection lines */}
                 {flatNodes.map((node, idx) => {
                   if (node.parentIndex === null) return null;
@@ -416,9 +498,10 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
                   const x = padding + node.depth * depthSpacing;
                   const y = padding + idx * nodeSpacing;
                   const isCurrentNode = idx === currentIndex;
-                  const isUserPost = userPostIndices.has(idx);
                   const color = getNodeColor(node, idx);
                   const opacity = getNodeOpacity(idx);
+                  const avatarUrl = proxifyBskyImage(node.post.author.avatar);
+                  const userColor = getUserColor(node.post.author.did);
 
                   return (
                     <g
@@ -452,32 +535,67 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
                         </circle>
                       )}
 
-                      {/* Main node */}
+                      {/* Colored background circle (fallback for no avatar) */}
+                      <circle
+                        cx={x + nodeSize / 2}
+                        cy={y + nodeSize / 2}
+                        r={nodeSize / 2}
+                        fill={userColor}
+                        opacity={opacity * 0.8}
+                      />
+
+                      {/* User initial (fallback text) */}
+                      {!avatarUrl && (
+                        <text
+                          x={x + nodeSize / 2}
+                          y={y + nodeSize / 2 + 1}
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          fontSize={nodeSize * 0.5}
+                          fill="white"
+                          fontWeight="bold"
+                          opacity={opacity}
+                        >
+                          {(node.post.author.handle?.[0] || "?").toUpperCase()}
+                        </text>
+                      )}
+
+                      {/* Colored ring border to indicate node type */}
                       <circle
                         cx={x + nodeSize / 2}
                         cy={y + nodeSize / 2}
                         r={
                           isCurrentNode
                             ? nodeSize / 2 + 1
-                            : node.isRoot
+                            : node.isRoot || node.hasMultipleReplies
                               ? nodeSize / 2 + 0.5
-                              : node.hasMultipleReplies
-                                ? nodeSize / 2
-                                : nodeSize / 2 - 1
+                              : nodeSize / 2
                         }
-                        fill={color}
+                        fill="none"
+                        stroke={color}
+                        strokeWidth={
+                          isCurrentNode
+                            ? 2
+                            : node.isRoot || node.hasMultipleReplies
+                              ? 1.5
+                              : 1
+                        }
                         opacity={opacity}
                       />
 
-                      {/* Inner highlight for root/user posts */}
-                      {(node.isRoot || isUserPost) && !isCurrentNode && (
-                        <circle
-                          cx={x + nodeSize / 2}
-                          cy={y + nodeSize / 2}
-                          r={nodeSize / 4}
-                          fill="white"
-                          opacity={opacity * 0.4}
-                        />
+                      {/* Avatar image (if available) */}
+                      {avatarUrl && (
+                        <g clipPath="url(#avatar-clip)">
+                          <image
+                            x={x}
+                            y={y}
+                            width={nodeSize}
+                            height={nodeSize}
+                            href={avatarUrl}
+                            opacity={opacity * 0.9}
+                            preserveAspectRatio="xMidYMid slice"
+                          />
+                        </g>
                       )}
 
                       {/* Hover area (larger for easier clicking) */}
@@ -492,6 +610,31 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
                     </g>
                   );
                 })}
+
+                {/* Viewport indicator - shows which posts are currently visible */}
+                {viewportRange && (
+                  <rect
+                    x={0}
+                    y={
+                      padding +
+                      viewportRange.startIndex * nodeSpacing -
+                      nodeSpacing / 2
+                    }
+                    width={svgWidth}
+                    height={
+                      (viewportRange.endIndex - viewportRange.startIndex + 1) *
+                        nodeSpacing +
+                      nodeSpacing
+                    }
+                    fill="var(--bsky-primary)"
+                    opacity={0.15}
+                    stroke="var(--bsky-primary)"
+                    strokeWidth={1}
+                    strokeOpacity={0.3}
+                    rx={4}
+                    pointerEvents="none"
+                  />
+                )}
               </svg>
             </div>
 

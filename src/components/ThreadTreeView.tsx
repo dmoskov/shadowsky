@@ -631,6 +631,41 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
                       ? `+${hiddenCount}`
                       : node.children.length}
                   </span>
+                  {/* Show avatars of branch authors */}
+                  {node.children.length > 0 && (
+                    <div className="ml-1 flex -space-x-1.5">
+                      {node.children.slice(0, 3).map((child, idx) => (
+                        <img
+                          key={child.post.uri}
+                          src={
+                            proxifyBskyImage(child.post.author.avatar) ||
+                            "/default-avatar.svg"
+                          }
+                          alt={child.post.author.handle}
+                          className="h-4 w-4 rounded-full border border-white object-cover dark:border-gray-800"
+                          style={{
+                            zIndex: 3 - idx,
+                          }}
+                          title={
+                            child.post.author.displayName ||
+                            child.post.author.handle
+                          }
+                        />
+                      ))}
+                      {node.children.length > 3 && (
+                        <div
+                          className="flex h-4 w-4 items-center justify-center rounded-full border border-white text-[8px] font-bold dark:border-gray-800"
+                          style={{
+                            backgroundColor: "var(--bsky-bg-secondary)",
+                            color: "var(--bsky-text-tertiary)",
+                          }}
+                          title={`+${node.children.length - 3} more`}
+                        >
+                          +{node.children.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </button>
               )}
             </div>
