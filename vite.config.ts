@@ -200,8 +200,8 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
         // Clean up old caches
         cleanupOutdatedCaches: true,
-        // Skip waiting for old service workers
-        skipWaiting: false,
+        // Skip waiting for old service workers - activate immediately on new deployment
+        skipWaiting: true,
         clientsClaim: true,
       },
       // Web manifest configuration for PWA

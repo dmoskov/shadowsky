@@ -1,6 +1,6 @@
 import { debug } from "@bsky/shared";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import {
   BrowserRouter,
   Navigate,
@@ -39,127 +39,129 @@ import { initializeCoreStorage } from "./services/data-services-initializer";
 import { NotificationStorageDB } from "./services/notification-storage-db";
 import { cleanupLocalStorage } from "./utils/cleanupLocalStorage";
 import "./utils/debug-control"; // Initialize debug controls
+import { lazyWithRetry } from "./utils/lazyWithRetry";
 import { removeTrailingSlash } from "./utils/removeTrailingSlash";
 
 // Lazy load non-critical components that are conditionally rendered
-const BackgroundNotificationLoader = lazy(() =>
+// Using lazyWithRetry to handle chunk load failures after deployments
+const BackgroundNotificationLoader = lazyWithRetry(() =>
   import("./components/BackgroundNotificationLoader").then((m) => ({
     default: m.BackgroundNotificationLoader,
   })),
 );
-const CommandPalette = lazy(() =>
+const CommandPalette = lazyWithRetry(() =>
   import("./components/CommandPalette").then((m) => ({
     default: m.CommandPalette,
   })),
 );
-const DebugConsole = lazy(() =>
+const DebugConsole = lazyWithRetry(() =>
   import("./components/DebugConsole").then((m) => ({
     default: m.DebugConsole,
   })),
 );
-const KeyboardShortcutsHelp = lazy(() =>
+const KeyboardShortcutsHelp = lazyWithRetry(() =>
   import("./components/KeyboardShortcutsHelp").then((m) => ({
     default: m.KeyboardShortcutsHelp,
   })),
 );
-const NotificationPermissionPrompt = lazy(() =>
+const NotificationPermissionPrompt = lazyWithRetry(() =>
   import("./components/NotificationPermissionPrompt").then((m) => ({
     default: m.NotificationPermissionPrompt,
   })),
 );
-const RateLimitStatus = lazy(() =>
+const RateLimitStatus = lazyWithRetry(() =>
   import("./components/RateLimitStatus").then((m) => ({
     default: m.RateLimitStatus,
   })),
 );
-const ServiceWorkerUpdatePrompt = lazy(() =>
+const ServiceWorkerUpdatePrompt = lazyWithRetry(() =>
   import("./components/ServiceWorkerUpdatePrompt").then((m) => ({
     default: m.ServiceWorkerUpdatePrompt,
   })),
 );
-const SwipeIndicator = lazy(() =>
+const SwipeIndicator = lazyWithRetry(() =>
   import("./components/SwipeIndicator").then((m) => ({
     default: m.SwipeIndicator,
   })),
 );
-const FloatingActionButton = lazy(() =>
+const FloatingActionButton = lazyWithRetry(() =>
   import("./components/ui/FloatingActionButton").then((m) => ({
     default: m.FloatingActionButton,
   })),
 );
-const WebSocketStatus = lazy(() =>
+const WebSocketStatus = lazyWithRetry(() =>
   import("./components/WebSocketStatus").then((m) => ({
     default: m.WebSocketStatus,
   })),
 );
-const MutationQueueStatus = lazy(() =>
+const MutationQueueStatus = lazyWithRetry(() =>
   import("./components/MutationQueueStatus").then((m) => ({
     default: m.MutationQueueStatus,
   })),
 );
 
 // Lazy load route components for better performance
-const Bookmarks = lazy(() =>
+const Bookmarks = lazyWithRetry(() =>
   import("./components/Bookmarks").then((m) => ({ default: m.Bookmarks })),
 );
-const ColumnMigrationNotice = lazy(() =>
+const ColumnMigrationNotice = lazyWithRetry(() =>
   import("./components/ColumnMigrationNotice").then((m) => ({
     default: m.ColumnMigrationNotice,
   })),
 );
-const Composer = lazy(() =>
+const Composer = lazyWithRetry(() =>
   import("./components/Composer").then((m) => ({ default: m.Composer })),
 );
-const CompressionTest = lazy(() =>
+const CompressionTest = lazyWithRetry(() =>
   import("./components/CompressionTest").then((m) => ({
     default: m.CompressionTest,
   })),
 );
-const DirectMessages = lazy(() =>
+const DirectMessages = lazyWithRetry(() =>
   import("./components/DirectMessages").then((m) => ({
     default: m.DirectMessages,
   })),
 );
-const Lists = lazy(() =>
+const Lists = lazyWithRetry(() =>
   import("./components/Lists").then((m) => ({ default: m.Lists })),
 );
-const ListTimeline = lazy(() =>
+const ListTimeline = lazyWithRetry(() =>
   import("./components/ListTimeline").then((m) => ({
     default: m.ListTimeline,
   })),
 );
-const Notifications = lazy(() =>
+const Notifications = lazyWithRetry(() =>
   import("./components/Notifications").then((m) => ({
     default: m.Notifications,
   })),
 );
-const NotificationsAnalytics = lazy(() =>
+const NotificationsAnalytics = lazyWithRetry(() =>
   import("./components/NotificationsAnalytics").then((m) => ({
     default: m.NotificationsAnalytics,
   })),
 );
-const Search = lazy(() =>
+const Search = lazyWithRetry(() =>
   import("./components/SearchTabbed").then((m) => ({
     default: m.SearchTabbed,
   })),
 );
-const ScheduledPosts = lazy(() =>
+const ScheduledPosts = lazyWithRetry(() =>
   import("./components/ScheduledPosts").then((m) => ({
     default: m.ScheduledPosts,
   })),
 );
-const SkyDeck = lazy(() => import("./components/SkyDeck"));
-const VisualTimeline = lazy(() =>
+const SkyDeck = lazyWithRetry(() => import("./components/SkyDeck"));
+const VisualTimeline = lazyWithRetry(() =>
   import("./components/VisualTimeline").then((m) => ({
     default: m.VisualTimeline,
   })),
 );
-const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const ThreadPage = lazy(() => import("./pages/ThreadPage"));
-const Settings = lazy(() =>
+const ProfilePage = lazyWithRetry(() => import("./pages/ProfilePage"));
+const ThreadPage = lazyWithRetry(() => import("./pages/ThreadPage"));
+const Settings = lazyWithRetry(() =>
   import("./pages/Settings").then((m) => ({ default: m.Settings })),
 );
-const UserAnalytics = lazy(() =>
+const UserAnalytics = lazyWithRetry(() =>
   import("./pages/UserAnalytics").then((m) => ({ default: m.UserAnalytics })),
 );
 
