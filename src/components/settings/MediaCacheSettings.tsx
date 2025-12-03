@@ -1,5 +1,6 @@
 import { Database, HardDrive, Image, Trash2, Video } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useModal } from "../../contexts/ModalContext";
 import { MediaCacheService } from "../../services/media-cache-service";
 
 export const MediaCacheSettings: React.FC = () => {
@@ -20,6 +21,7 @@ export const MediaCacheSettings: React.FC = () => {
   const [maxSizeValue, setMaxSizeValue] = useState<number>(100); // MB
 
   const mediaCache = MediaCacheService.getInstance();
+  const { showDestructiveConfirm } = useModal();
 
   // Load cache statistics
   useEffect(() => {
@@ -48,26 +50,41 @@ export const MediaCacheSettings: React.FC = () => {
   };
 
   const handleClearCache = async () => {
-    setIsLoading(true);
-    setMessage(null);
+    await showDestructiveConfirm(
+      {
+        title: "Clear Media Cache",
+        message:
+          "This will remove all cached images and videos from your browser. The cache will rebuild as you browse.",
+        confirmButtonLabel: "Clear Cache",
+        severity: "warning",
+        canUndo: false,
+        warningMessage: stats
+          ? `This will free up ${formatBytes(stats.totalSize)} of storage (${stats.totalItems} items).`
+          : undefined,
+      },
+      async () => {
+        setIsLoading(true);
+        setMessage(null);
 
-    try {
-      await mediaCache.clearCache();
-      const newStats = await mediaCache.getStats();
-      setStats(newStats);
-      setMessage({
-        type: "success",
-        text: "Media cache cleared successfully!",
-      });
-    } catch (error) {
-      console.error("Failed to clear cache:", error);
-      setMessage({
-        type: "error",
-        text: "Failed to clear cache. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+        try {
+          await mediaCache.clearCache();
+          const newStats = await mediaCache.getStats();
+          setStats(newStats);
+          setMessage({
+            type: "success",
+            text: "Media cache cleared successfully!",
+          });
+        } catch (error) {
+          console.error("Failed to clear cache:", error);
+          setMessage({
+            type: "error",
+            text: "Failed to clear cache. Please try again.",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      },
+    );
   };
 
   const handleClearByType = async (mimeType: string) => {

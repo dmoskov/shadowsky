@@ -9,10 +9,21 @@ import { ToastContainer } from "../components/Toast";
 
 export type ToastType = "success" | "error" | "warning" | "info";
 
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 export interface ToastOptions {
   type?: ToastType;
   duration?: number;
   dismissible?: boolean;
+  /** Action button to show in the toast */
+  action?: ToastAction;
+  /** Whether to show a countdown timer (useful for undo actions) */
+  showCountdown?: boolean;
+  /** Callback when toast expires (after countdown) */
+  onExpire?: () => void;
 }
 
 export interface ToastData {
@@ -22,12 +33,25 @@ export interface ToastData {
   duration: number;
   dismissible: boolean;
   createdAt: number;
+  /** Action button to show in the toast */
+  action?: ToastAction;
+  /** Whether to show a countdown timer */
+  showCountdown?: boolean;
+  /** Callback when toast expires */
+  onExpire?: () => void;
 }
 
 interface ToastContextType {
   showToast: (message: string, options?: ToastOptions) => string;
   dismissToast: (id: string) => void;
   dismissAllToasts: () => void;
+  /** Show an undo toast with countdown and action */
+  showUndoToast: (
+    message: string,
+    onUndo: () => void,
+    onExpire: () => void,
+    duration?: number,
+  ) => string;
 }
 
 const ToastContext = createContext<ToastContextType | null>(null);
@@ -57,6 +81,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         duration,
         dismissible,
         createdAt: Date.now(),
+        action: options?.action,
+        showCountdown: options?.showCountdown,
+        onExpire: options?.onExpire,
       };
 
       setToasts((prev) => [...prev, newToast]);
@@ -64,6 +91,28 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       return id;
     },
     [],
+  );
+
+  const showUndoToast = useCallback(
+    (
+      message: string,
+      onUndo: () => void,
+      onExpire: () => void,
+      duration = 5000,
+    ): string => {
+      return showToast(message, {
+        type: "warning",
+        duration,
+        dismissible: false,
+        showCountdown: true,
+        action: {
+          label: "Undo",
+          onClick: onUndo,
+        },
+        onExpire,
+      });
+    },
+    [showToast],
   );
 
   const dismissToast = useCallback((id: string) => {
@@ -76,7 +125,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastContext.Provider
-      value={{ showToast, dismissToast, dismissAllToasts }}
+      value={{ showToast, dismissToast, dismissAllToasts, showUndoToast }}
     >
       {children}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />

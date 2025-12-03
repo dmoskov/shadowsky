@@ -1,4 +1,8 @@
 import React, { createContext, useCallback, useContext, useState } from "react";
+import {
+  ConfirmDestructiveDialog,
+  DestructiveActionSeverity,
+} from "../components/ConfirmDestructiveDialog";
 import { Modal, ModalType, ModalVariant } from "../components/Modal";
 
 interface ModalOptions {
@@ -11,6 +15,25 @@ interface ModalOptions {
   onConfirm?: () => void;
 }
 
+export interface DestructiveConfirmOptions {
+  /** Title of the destructive dialog */
+  title: string;
+  /** Description of what will happen */
+  message: string;
+  /** Text the user must type to confirm (for high-risk actions) */
+  requireTypeConfirmation?: string;
+  /** Label for the confirm button */
+  confirmButtonLabel?: string;
+  /** Label for the cancel button */
+  cancelButtonLabel?: string;
+  /** Severity level of the action */
+  severity?: DestructiveActionSeverity;
+  /** Whether the action can be undone */
+  canUndo?: boolean;
+  /** Additional warning message */
+  warningMessage?: string;
+}
+
 interface ModalContextType {
   showAlert: (message: string, options?: Partial<ModalOptions>) => void;
   showConfirm: (
@@ -18,13 +41,29 @@ interface ModalContextType {
     onConfirm: () => void,
     options?: Partial<ModalOptions>,
   ) => Promise<boolean>;
+  /** Show a destructive confirmation dialog with warning styling */
+  showDestructiveConfirm: (
+    options: DestructiveConfirmOptions,
+    onConfirm: () => void | Promise<void>,
+  ) => Promise<boolean>;
 }
 
 const ModalContext = createContext<ModalContextType | null>(null);
 
+interface DestructiveDialogState extends DestructiveConfirmOptions {
+  onConfirm: () => void | Promise<void>;
+  isProcessing: boolean;
+}
+
 export function ModalProvider({ children }: { children: React.ReactNode }) {
   const [modalState, setModalState] = useState<ModalOptions | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [destructiveState, setDestructiveState] =
+    useState<DestructiveDialogState | null>(null);
+  const [isDestructiveOpen, setIsDestructiveOpen] = useState(false);
+  const resolveDestructiveRef = React.useRef<((value: boolean) => void) | null>(
+    null,
+  );
 
   const showAlert = useCallback(
     (message: string, options?: Partial<ModalOptions>) => {
@@ -65,16 +104,80 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const showDestructiveConfirm = useCallback(
+    (
+      options: DestructiveConfirmOptions,
+      onConfirm: () => void | Promise<void>,
+    ): Promise<boolean> => {
+      return new Promise((resolve) => {
+        resolveDestructiveRef.current = resolve;
+        setDestructiveState({
+          ...options,
+          onConfirm,
+          isProcessing: false,
+        });
+        setIsDestructiveOpen(true);
+      });
+    },
+    [],
+  );
+
   const handleClose = useCallback(() => {
     setIsOpen(false);
     setTimeout(() => setModalState(null), 300); // Clear state after animation
   }, []);
 
+  const handleDestructiveClose = useCallback(() => {
+    setIsDestructiveOpen(false);
+    resolveDestructiveRef.current?.(false);
+    resolveDestructiveRef.current = null;
+    setTimeout(() => setDestructiveState(null), 300); // Clear state after animation
+  }, []);
+
+  const handleDestructiveConfirm = useCallback(async () => {
+    if (!destructiveState) return;
+
+    setDestructiveState((prev) =>
+      prev ? { ...prev, isProcessing: true } : null,
+    );
+
+    try {
+      await destructiveState.onConfirm();
+      setIsDestructiveOpen(false);
+      resolveDestructiveRef.current?.(true);
+      resolveDestructiveRef.current = null;
+      setTimeout(() => setDestructiveState(null), 300);
+    } catch (error) {
+      console.error("Destructive action failed:", error);
+      setDestructiveState((prev) =>
+        prev ? { ...prev, isProcessing: false } : null,
+      );
+    }
+  }, [destructiveState]);
+
   return (
-    <ModalContext.Provider value={{ showAlert, showConfirm }}>
+    <ModalContext.Provider
+      value={{ showAlert, showConfirm, showDestructiveConfirm }}
+    >
       {children}
       {modalState && (
         <Modal isOpen={isOpen} onClose={handleClose} {...modalState} />
+      )}
+      {destructiveState && (
+        <ConfirmDestructiveDialog
+          isOpen={isDestructiveOpen}
+          onClose={handleDestructiveClose}
+          onConfirm={handleDestructiveConfirm}
+          title={destructiveState.title}
+          message={destructiveState.message}
+          requireTypeConfirmation={destructiveState.requireTypeConfirmation}
+          confirmButtonLabel={destructiveState.confirmButtonLabel}
+          cancelButtonLabel={destructiveState.cancelButtonLabel}
+          severity={destructiveState.severity}
+          canUndo={destructiveState.canUndo}
+          warningMessage={destructiveState.warningMessage}
+          isProcessing={destructiveState.isProcessing}
+        />
       )}
     </ModalContext.Provider>
   );

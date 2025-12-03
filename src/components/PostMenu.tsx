@@ -50,7 +50,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
   const { session, agent } = useAuth();
   const { hidePost } = useHiddenPosts();
   const { muteUser, muteThread, blockUser } = useModeration();
-  const { showConfirm } = useModal();
+  const { showDestructiveConfirm } = useModal();
 
   const isOwnPost = session?.did === post.author.did;
   const postRecord = post.record as any;
@@ -101,8 +101,16 @@ export const PostMenu: React.FC<PostMenuProps> = ({
     } else {
       // Default implementation
       if (agent) {
-        await showConfirm(
-          `Block @${post.author.handle}? They won't be able to see your posts or interact with you.`,
+        await showDestructiveConfirm(
+          {
+            title: "Block User",
+            message: `Are you sure you want to block @${post.author.handle}? They won't be able to see your posts, reply to you, or interact with your content.`,
+            confirmButtonLabel: "Block User",
+            severity: "danger",
+            canUndo: true,
+            warningMessage:
+              "You can unblock this user later from your settings.",
+          },
           async () => {
             try {
               // Add to local blocked users immediately for instant UI update
@@ -126,12 +134,6 @@ export const PostMenu: React.FC<PostMenuProps> = ({
               // Note: would need unblockUser method for this
             }
           },
-          {
-            variant: "warning",
-            title: "Block User",
-            confirmText: "Block",
-            cancelText: "Cancel",
-          },
         );
       }
     }
@@ -143,8 +145,16 @@ export const PostMenu: React.FC<PostMenuProps> = ({
       onDelete();
     } else {
       // Default implementation
-      await showConfirm(
-        "Delete this post? This action cannot be undone.",
+      await showDestructiveConfirm(
+        {
+          title: "Delete Post",
+          message:
+            "Are you sure you want to delete this post? This will remove it from your profile and timeline.",
+          confirmButtonLabel: "Delete Post",
+          severity: "danger",
+          canUndo: false,
+          warningMessage: "This action cannot be undone.",
+        },
         async () => {
           try {
             if (agent) {
@@ -154,12 +164,6 @@ export const PostMenu: React.FC<PostMenuProps> = ({
           } catch (error) {
             console.error("Failed to delete post:", error);
           }
-        },
-        {
-          variant: "warning",
-          title: "Delete Post",
-          confirmText: "Delete",
-          cancelText: "Cancel",
         },
       );
     }

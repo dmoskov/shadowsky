@@ -1,5 +1,5 @@
 import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ToastData, ToastType } from "../contexts/ToastContext";
 
 interface ToastProps {
@@ -11,6 +11,8 @@ interface ToastContainerProps {
   toasts: ToastData[];
   onDismiss: (id: string) => void;
 }
+
+const COUNTDOWN_UPDATE_INTERVAL = 100; // Update countdown every 100ms for smooth animation
 
 const TOAST_ICONS: Record<ToastType, typeof CheckCircle> = {
   success: CheckCircle,
@@ -40,23 +42,74 @@ export function Toast({ toast, onDismiss }: ToastProps) {
   const [isExiting, setIsExiting] = useState(false);
   const [translateX, setTranslateX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [remainingTime, setRemainingTime] = useState(toast.duration);
+  const [actionTriggered, setActionTriggered] = useState(false);
   const toastRef = useRef<HTMLDivElement>(null);
   const startXRef = useRef(0);
   const startTimeRef = useRef(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const countdownRef = useRef<ReturnType<typeof setInterval>>();
 
   const Icon = TOAST_ICONS[toast.type];
   const colorClass = TOAST_COLORS[toast.type];
   const borderColorClass = TOAST_BORDER_COLORS[toast.type];
 
-  const dismiss = () => {
-    setIsExiting(true);
-    setTimeout(() => onDismiss(toast.id), 200);
-  };
+  const dismiss = useCallback(
+    (skipExpire = false) => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+      // Only call onExpire if toast wasn't dismissed via action and not skipped
+      if (!skipExpire && !actionTriggered && toast.onExpire) {
+        toast.onExpire();
+      }
+      setIsExiting(true);
+      setTimeout(() => onDismiss(toast.id), 200);
+    },
+    [actionTriggered, onDismiss, toast.id, toast.onExpire],
+  );
+
+  const handleAction = useCallback(() => {
+    if (toast.action && !actionTriggered) {
+      setActionTriggered(true);
+      toast.action.onClick();
+      // Dismiss immediately after action, skip expire callback
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      setIsExiting(true);
+      setTimeout(() => onDismiss(toast.id), 200);
+    }
+  }, [actionTriggered, onDismiss, toast.action, toast.id]);
+
+  // Handle countdown timer for undo toasts
+  useEffect(() => {
+    if (toast.showCountdown && toast.duration > 0 && !isDragging) {
+      const startTime = Date.now();
+      countdownRef.current = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, toast.duration - elapsed);
+        setRemainingTime(remaining);
+
+        if (remaining <= 0) {
+          clearInterval(countdownRef.current);
+        }
+      }, COUNTDOWN_UPDATE_INTERVAL);
+    }
+
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+    };
+  }, [toast.showCountdown, toast.duration, isDragging]);
 
   useEffect(() => {
     if (toast.duration > 0 && !isDragging) {
-      timeoutRef.current = setTimeout(dismiss, toast.duration);
+      timeoutRef.current = setTimeout(() => dismiss(false), toast.duration);
     }
 
     return () => {
@@ -64,7 +117,7 @@ export function Toast({ toast, onDismiss }: ToastProps) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [toast.duration, toast.id, isDragging]);
+  }, [toast.duration, isDragging, dismiss]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!toast.dismissible) return;
@@ -174,9 +227,42 @@ export function Toast({ toast, onDismiss }: ToastProps) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="break-words text-sm font-medium text-bsky-text-primary">
-          {toast.message}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="flex-1 break-words text-sm font-medium text-bsky-text-primary">
+            {toast.message}
+          </p>
+          {/* Countdown timer */}
+          {toast.showCountdown && remainingTime > 0 && (
+            <span className="flex-shrink-0 font-mono text-xs text-bsky-text-secondary">
+              {Math.ceil(remainingTime / 1000)}s
+            </span>
+          )}
+        </div>
+        {/* Action button */}
+        {toast.action && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAction();
+            }}
+            disabled={actionTriggered}
+            className="hover:bg-bsky-primary-hover mt-2 rounded-md bg-bsky-primary px-3 py-1.5 text-xs font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-bsky-primary disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {toast.action.label}
+          </button>
+        )}
+        {/* Progress bar for countdown */}
+        {toast.showCountdown && toast.duration > 0 && (
+          <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-bsky-bg-tertiary">
+            <div
+              className="h-full bg-bsky-warning transition-all duration-100 ease-linear"
+              style={{
+                width: `${(remainingTime / toast.duration) * 100}%`,
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {toast.dismissible && (
@@ -184,7 +270,7 @@ export function Toast({ toast, onDismiss }: ToastProps) {
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            dismiss();
+            dismiss(true);
           }}
           className="flex-shrink-0 rounded-md p-1 text-bsky-text-tertiary transition-colors duration-150 hover:bg-bsky-bg-hover hover:text-bsky-text-primary focus:outline-none focus:ring-2 focus:ring-bsky-primary"
           aria-label="Dismiss notification"

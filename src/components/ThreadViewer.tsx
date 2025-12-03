@@ -3,11 +3,14 @@ import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notif
 import { formatDistanceToNow } from "date-fns";
 import {
   ChevronDown,
+  ChevronRight,
   ChevronUp,
   CornerDownRight,
   ExternalLink,
   GitBranch,
   Loader2,
+  MessageSquare,
+  Minus,
   Plus,
   Sparkles,
   Trash2,
@@ -24,6 +27,7 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { ThreadProvider } from "../contexts/ThreadContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
+import { useResponsiveCollapseThresholds } from "../hooks/useResponsiveCollapseThresholds";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
 import { ImageGallery } from "./ImageGallery";
@@ -40,6 +44,42 @@ export {
 } from "../contexts/ThreadContext";
 
 const logger = createLogger("ThreadViewer");
+
+// localStorage key prefix for thread collapse state
+const COLLAPSE_STATE_PREFIX = "thread-collapse-state-";
+
+// Helper to get/set collapse state from localStorage
+function getPersistedCollapseState(threadId: string): Set<string> {
+  try {
+    const stored = localStorage.getItem(`${COLLAPSE_STATE_PREFIX}${threadId}`);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return new Set(parsed);
+    }
+  } catch (e) {
+    logger.error("Error reading collapse state from localStorage:", e);
+  }
+  return new Set();
+}
+
+function setPersistedCollapseState(threadId: string, state: Set<string>) {
+  try {
+    localStorage.setItem(
+      `${COLLAPSE_STATE_PREFIX}${threadId}`,
+      JSON.stringify([...state]),
+    );
+  } catch (e) {
+    logger.error("Error saving collapse state to localStorage:", e);
+  }
+}
+
+// Count total descendants of a node
+function countNodeDescendants(node: ThreadNode): number {
+  return node.children.reduce(
+    (sum, child) => sum + 1 + countNodeDescendants(child),
+    0,
+  );
+}
 
 async function loadAnthropicService() {
   return await import("../services/anthropic");
@@ -126,10 +166,33 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     Record<string, Record<number, boolean>>
   >({});
 
-  // State for collapsible reply branches - tracks which nodes have expanded children
+  // Get depth-based color functions for visual thread hierarchy
+  const { getBranchBorderColor, getBranchBackgroundColor } =
+    useResponsiveCollapseThresholds();
+
+  // Thread ID for localStorage persistence (use rootUri or first post uri)
+  const threadId = useMemo(() => {
+    return rootUri || posts[0]?.uri || "";
+  }, [rootUri, posts]);
+
+  // State for collapsible reply branches - tracks which nodes are COLLAPSED
+  // Initialize from localStorage if available
+  const [collapsedBranches, setCollapsedBranches] = useState<Set<string>>(
+    () => {
+      if (threadId) {
+        return getPersistedCollapseState(threadId);
+      }
+      return new Set();
+    },
+  );
+
+  // Legacy compatibility - expandedBranches for the old "load more" behavior
   const [expandedBranches, setExpandedBranches] = useState<Set<string>>(
     new Set(),
   );
+
+  // Track nodes currently animating (for smooth height transitions)
+  const [animatingNodes, setAnimatingNodes] = useState<Set<string>>(new Set());
   // State for showing replies section (progressive reveal) - start expanded
   const [showReplies, setShowReplies] = useState(true);
   // State for keyboard navigation - tracks currently focused post index
@@ -356,7 +419,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     return { count: nodeIndices.length, nodeIndices };
   }, [flatNodeList, currentUserDid]);
 
-  // Toggle branch expansion
+  // Toggle branch expansion (for "load more" behavior at bottom)
   const toggleBranch = useCallback((nodeUri: string) => {
     setExpandedBranches((prev) => {
       const next = new Set(prev);
@@ -368,6 +431,44 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       return next;
     });
   }, []);
+
+  // Toggle branch collapse state (for per-node collapse/expand button)
+  const toggleCollapseBranch = useCallback(
+    (nodeUri: string) => {
+      // Start animation
+      setAnimatingNodes((prev) => new Set(prev).add(nodeUri));
+
+      setCollapsedBranches((prev) => {
+        const next = new Set(prev);
+        if (next.has(nodeUri)) {
+          next.delete(nodeUri);
+        } else {
+          next.add(nodeUri);
+        }
+        // Persist to localStorage
+        if (threadId) {
+          setPersistedCollapseState(threadId, next);
+        }
+        return next;
+      });
+
+      // End animation after transition completes
+      setTimeout(() => {
+        setAnimatingNodes((prev) => {
+          const next = new Set(prev);
+          next.delete(nodeUri);
+          return next;
+        });
+      }, 300);
+    },
+    [threadId],
+  );
+
+  // Check if a branch is collapsed
+  const isBranchCollapsed = useCallback(
+    (nodeUri: string) => collapsedBranches.has(nodeUri),
+    [collapsedBranches],
+  );
 
   // Keyboard navigation handler
   const handleKeyboardNavigation = useCallback(
@@ -861,11 +962,18 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
         const isFocused = node.flatIndex === focusedPostIndex;
         const nodeUri = post?.uri || notification?.uri || `node-${node.depth}`;
 
-        // Calculate if this branch should be collapsed
+        // Check if this branch is user-collapsed
+        const hasChildren = node.children.length > 0;
+        const isCollapsed = isBranchCollapsed(nodeUri);
+        const isAnimating = animatingNodes.has(nodeUri);
+        const descendantCount = hasChildren ? countNodeDescendants(node) : 0;
+
+        // Calculate if this branch should show "load more" (old behavior)
         const hasMultipleChildren = node.children.length > maxInitialReplies;
         const isExpanded = expandedBranches.has(nodeUri);
-        const visibleChildren =
-          hasMultipleChildren && !isExpanded
+        const visibleChildren = isCollapsed
+          ? [] // Show nothing when collapsed
+          : hasMultipleChildren && !isExpanded
             ? node.children.slice(0, maxInitialReplies)
             : node.children;
         const hiddenCount = hasMultipleChildren
@@ -874,6 +982,10 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
 
         // Count branches at this level
         const hasBranches = node.children.length > 1;
+
+        // Get depth-based colors for visual hierarchy
+        const depthBorderColor = getBranchBorderColor(node.depth);
+        const depthBgColor = getBranchBackgroundColor(node.depth);
 
         // Generate external bsky.app URL for the external link button
         const postUrl =
@@ -901,7 +1013,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
               }
             }}
           >
-            {/* Thread line connector for nested replies */}
+            {/* Thread line connector for nested replies - with depth-based colors */}
             {node.depth > 0 && (
               <div className="flex">
                 <div
@@ -911,8 +1023,11 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                   }}
                 >
                   <div
-                    className="-mt-6 h-6 w-0.5"
-                    style={{ backgroundColor: "var(--bsky-border-primary)" }}
+                    className="-mt-6 h-6 w-0.5 transition-colors"
+                    style={{
+                      backgroundColor: depthBorderColor,
+                      borderRadius: "1px",
+                    }}
                   />
                 </div>
                 <div className="flex-1" />
@@ -924,36 +1039,60 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
               className="flex"
               style={{ marginLeft: `calc(${node.depth} * ${indentCssVar})` }}
             >
-              {/* Branch indicator */}
-              {node.depth > 0 && (maxThreadDepth <= 15 || node.depth < 10) && (
-                <div
-                  className="flex flex-shrink-0 items-start justify-center pt-3"
-                  style={{
-                    width:
-                      maxThreadDepth > 10
-                        ? "16px"
-                        : maxThreadDepth > 7
-                          ? "24px"
-                          : "32px",
-                    marginRight: maxThreadDepth > 10 ? "4px" : "0",
+              {/* Collapse/Expand button for branches with children */}
+              {hasChildren && node.depth > 0 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleCollapseBranch(nodeUri);
                   }}
+                  className="mr-1 flex flex-shrink-0 items-center justify-center rounded transition-all hover:scale-110"
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    marginTop: "12px",
+                    backgroundColor: depthBorderColor,
+                    color: "white",
+                    opacity: 0.9,
+                  }}
+                  aria-label={isCollapsed ? "Expand branch" : "Collapse branch"}
+                  aria-expanded={!isCollapsed}
                 >
-                  <CornerDownRight
-                    size={
-                      maxThreadDepth > 10 ? 10 : maxThreadDepth > 7 ? 12 : 16
-                    }
-                    style={{
-                      color: "var(--bsky-text-tertiary)",
-                      opacity:
-                        maxThreadDepth > 15
-                          ? 0.3
-                          : maxThreadDepth > 10
-                            ? 0.5
-                            : 0.7,
-                    }}
-                  />
-                </div>
+                  {isCollapsed ? (
+                    <ChevronRight size={12} />
+                  ) : (
+                    <Minus size={12} />
+                  )}
+                </button>
               )}
+
+              {/* Branch indicator - only show if no collapse button or no children */}
+              {node.depth > 0 &&
+                !hasChildren &&
+                (maxThreadDepth <= 15 || node.depth < 10) && (
+                  <div
+                    className="flex flex-shrink-0 items-start justify-center pt-3"
+                    style={{
+                      width:
+                        maxThreadDepth > 10
+                          ? "16px"
+                          : maxThreadDepth > 7
+                            ? "24px"
+                            : "32px",
+                      marginRight: maxThreadDepth > 10 ? "4px" : "0",
+                    }}
+                  >
+                    <CornerDownRight
+                      size={
+                        maxThreadDepth > 10 ? 10 : maxThreadDepth > 7 ? 12 : 16
+                      }
+                      style={{
+                        color: depthBorderColor,
+                        opacity: 0.8,
+                      }}
+                    />
+                  </div>
+                )}
 
               {/* Post card */}
               <div
@@ -961,7 +1100,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                   isUnread ? "ring-2 ring-blue-500 ring-opacity-30" : ""
                 } ${isHighlighted && !hasShownInitialHighlight ? "ring-2 ring-orange-500 ring-opacity-50" : ""} ${
                   isFocused ? "ring-2 ring-blue-400 ring-opacity-70" : ""
-                } ${isCurrentUser ? "border-l-4" : ""}`}
+                }`}
                 style={{
                   backgroundColor: isCurrentUser
                     ? "rgba(34, 197, 94, 0.08)" // Green tint for user's posts
@@ -971,7 +1110,9 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                         ? "var(--bsky-bg-secondary)"
                         : isUnread
                           ? "var(--bsky-bg-primary)"
-                          : "var(--bsky-bg-secondary)",
+                          : node.depth > 0
+                            ? depthBgColor // Subtle depth-based background
+                            : "var(--bsky-bg-secondary)",
                   borderColor: isCurrentUser
                     ? "rgb(34, 197, 94)" // Green left border for user's posts
                     : undefined,
@@ -981,9 +1122,12 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       : isCurrentUser
                         ? undefined
                         : "1px solid var(--bsky-border-primary)",
+                  // Depth-colored left border for visual hierarchy
                   borderLeft: isCurrentUser
                     ? "4px solid rgb(34, 197, 94)"
-                    : undefined,
+                    : node.depth > 0 && !node.isRoot
+                      ? `3px solid ${depthBorderColor}`
+                      : undefined,
                   borderTop: isCurrentUser
                     ? "1px solid var(--bsky-border-primary)"
                     : undefined,
@@ -1317,89 +1461,134 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
               </div>
             </div>
 
-            {/* Render children */}
-            {visibleChildren.length > 0 && (
-              <div>{renderThreadNodes(visibleChildren)}</div>
+            {/* Collapsed branch badge - shows when a branch with children is collapsed */}
+            {isCollapsed && hasChildren && (
+              <div
+                className="flex"
+                style={{
+                  marginLeft: `calc(${node.depth + 1} * ${indentCssVar})`,
+                  marginTop: "8px",
+                }}
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleCollapseBranch(nodeUri);
+                  }}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:scale-105"
+                  style={{
+                    backgroundColor: depthBorderColor,
+                    color: "white",
+                    boxShadow: `0 2px 8px ${depthBorderColor}40`,
+                  }}
+                >
+                  <MessageSquare size={14} />
+                  {descendantCount} hidden{" "}
+                  {descendantCount === 1 ? "reply" : "replies"}
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            )}
+
+            {/* Render children with smooth animation wrapper */}
+            {!isCollapsed && visibleChildren.length > 0 && (
+              <div
+                className="overflow-hidden transition-all duration-300 ease-in-out"
+                style={{
+                  maxHeight: isAnimating ? "0" : "none",
+                  opacity: isAnimating ? 0 : 1,
+                }}
+              >
+                {renderThreadNodes(visibleChildren)}
+              </div>
             )}
 
             {/* Load more replies button */}
-            {hasMultipleChildren && !isExpanded && hiddenCount > 0 && (
-              <div
-                className="flex"
-                style={{
-                  marginLeft: `calc(${node.depth + 1} * ${indentCssVar})`,
-                  marginTop: "8px",
-                }}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Store scroll position before expanding
-                    const scrollContainer =
-                      containerRef.current?.closest(".bsky-scrollbar");
-                    const scrollTop = scrollContainer?.scrollTop || 0;
-
-                    toggleBranch(nodeUri);
-
-                    // Restore scroll position after expansion
-                    requestAnimationFrame(() => {
-                      if (scrollContainer) {
-                        scrollContainer.scrollTop = scrollTop;
-                      }
-                    });
-                  }}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10"
+            {!isCollapsed &&
+              hasMultipleChildren &&
+              !isExpanded &&
+              hiddenCount > 0 && (
+                <div
+                  className="flex"
                   style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    color: "var(--bsky-primary)",
-                    border: "1px solid var(--bsky-border-primary)",
+                    marginLeft: `calc(${node.depth + 1} * ${indentCssVar})`,
+                    marginTop: "8px",
                   }}
                 >
-                  <ChevronDown size={16} />
-                  Load {hiddenCount} more{" "}
-                  {hiddenCount === 1 ? "reply" : "replies"}
-                </button>
-              </div>
-            )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Store scroll position before expanding
+                      const scrollContainer =
+                        containerRef.current?.closest(".bsky-scrollbar");
+                      const scrollTop = scrollContainer?.scrollTop || 0;
 
-            {/* Collapse button when expanded */}
-            {hasMultipleChildren && isExpanded && hiddenCount > 0 && (
-              <div
-                className="flex"
-                style={{
-                  marginLeft: `calc(${node.depth + 1} * ${indentCssVar})`,
-                  marginTop: "8px",
-                }}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleBranch(nodeUri);
+                      toggleBranch(nodeUri);
 
-                    // Scroll back to a reasonable position after collapse
-                    requestAnimationFrame(() => {
-                      const postEl = postRefs.current.get(node.flatIndex || 0);
-                      if (postEl) {
-                        postEl.scrollIntoView({
-                          behavior: "smooth",
-                          block: "center",
-                        });
-                      }
-                    });
-                  }}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10"
+                      // Restore scroll position after expansion
+                      requestAnimationFrame(() => {
+                        if (scrollContainer) {
+                          scrollContainer.scrollTop = scrollTop;
+                        }
+                      });
+                    }}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-tertiary)",
+                      color: "var(--bsky-primary)",
+                      border: "1px solid var(--bsky-border-primary)",
+                    }}
+                  >
+                    <ChevronDown size={16} />
+                    Load {hiddenCount} more{" "}
+                    {hiddenCount === 1 ? "reply" : "replies"}
+                  </button>
+                </div>
+              )}
+
+            {/* Collapse button when expanded (legacy load-more behavior) */}
+            {!isCollapsed &&
+              hasMultipleChildren &&
+              isExpanded &&
+              hiddenCount > 0 && (
+                <div
+                  className="flex"
                   style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    color: "var(--bsky-text-secondary)",
-                    border: "1px solid var(--bsky-border-primary)",
+                    marginLeft: `calc(${node.depth + 1} * ${indentCssVar})`,
+                    marginTop: "8px",
                   }}
                 >
-                  <ChevronUp size={16} />
-                  Collapse {hiddenCount}{" "}
-                  {hiddenCount === 1 ? "reply" : "replies"}
-                </button>
-              </div>
-            )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleBranch(nodeUri);
+
+                      // Scroll back to a reasonable position after collapse
+                      requestAnimationFrame(() => {
+                        const postEl = postRefs.current.get(
+                          node.flatIndex || 0,
+                        );
+                        if (postEl) {
+                          postEl.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          });
+                        }
+                      });
+                    }}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-tertiary)",
+                      color: "var(--bsky-text-secondary)",
+                      border: "1px solid var(--bsky-border-primary)",
+                    }}
+                  >
+                    <ChevronUp size={16} />
+                    Collapse {hiddenCount}{" "}
+                    {hiddenCount === 1 ? "reply" : "replies"}
+                  </button>
+                </div>
+              )}
           </div>
         );
       });
@@ -1423,6 +1612,12 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       toggleBranch,
       setFocusedPostIndex,
       onDeletePost,
+      // New collapse functionality
+      isBranchCollapsed,
+      toggleCollapseBranch,
+      animatingNodes,
+      getBranchBorderColor,
+      getBranchBackgroundColor,
     ],
   );
 
