@@ -7,6 +7,14 @@ declare global {
   }
 }
 
+// Initialize gtag as a no-op immediately to prevent errors before analytics loads
+if (typeof window !== "undefined" && !window.gtag) {
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function (...args: unknown[]) {
+    window.dataLayer.push(args);
+  };
+}
+
 export interface AnalyticsEvent {
   category: string;
   action: string;
