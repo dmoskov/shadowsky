@@ -5,10 +5,11 @@ frontend:
       commands:
         - nvm use 20
         - node --version
-        - curl -fsSL https://bun.sh/install | bash
+        # Only download Bun if not cached
+        - test -f ~/.bun/bin/bun || curl -fsSL https://bun.sh/install | bash
         - export BUN_INSTALL="$HOME/.bun" && export PATH="$BUN_INSTALL/bin:$PATH"
         - bun --version
-        - bun install --frozen-lockfile
+        - bun install
     build:
       commands:
         - export BUN_INSTALL="$HOME/.bun" && export PATH="$BUN_INSTALL/bin:$PATH"
@@ -29,8 +30,7 @@ frontend:
       - "**/*"
   cache:
     paths:
-      - node_modules/**/*
-      - .bun/**/*
+      # Only cache Bun binary, not node_modules (bun install is faster than cache restore)
       - ~/.bun/**/*
 # Redirect and rewrite rules for SPA routing
 redirects:
