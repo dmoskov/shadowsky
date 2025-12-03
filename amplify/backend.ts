@@ -58,7 +58,15 @@ const restApi = new RestApi(mainStack, 'RestApi', {
     stageName: 'prod',
   },
   defaultCorsPreflightOptions: {
-    allowOrigins: ['https://main.shadowsky.io', 'https://shadowsky.io', 'http://localhost:5174'],
+    allowOrigins: [
+      'https://main.shadowsky.io',
+      'https://shadowsky.io',
+      'https://www.shadowsky.io',
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
+      'http://localhost:5176',
+    ],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: [
       'Content-Type',

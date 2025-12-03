@@ -1,5 +1,11 @@
 import type { APIGatewayProxyHandler } from "aws-lambda";
-import { createApiResponse, createErrorResponse } from "../shared/api-response";
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  createOptionsResponse,
+  isOptionsRequest,
+  ErrorCodes,
+} from "../shared/api-response";
 
 interface ThreadPost {
   text: string;
@@ -56,14 +62,29 @@ function setCachedSummary(key: string, value: any) {
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   try {
+    // Handle CORS preflight requests
+    if (isOptionsRequest(event)) {
+      return createOptionsResponse(event);
+    }
+
     if (event.httpMethod !== "POST") {
-      return createErrorResponse(405, "Method not allowed");
+      return createErrorResponse(
+        405,
+        ErrorCodes.METHOD_NOT_ALLOWED,
+        "Method not allowed",
+        event,
+      );
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       console.error("ANTHROPIC_API_KEY not configured");
-      return createErrorResponse(500, "Server configuration error");
+      return createErrorResponse(
+        500,
+        ErrorCodes.CONFIG_ERROR,
+        "Server configuration error",
+        event,
+      );
     }
 
     const body = JSON.parse(event.body || "{}");
@@ -73,17 +94,29 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     // Input validation
     if (!posts || !Array.isArray(posts)) {
-      return createErrorResponse(400, "Missing or invalid posts array");
+      return createErrorResponse(
+        400,
+        ErrorCodes.MISSING_PARAMETER,
+        "Missing or invalid posts array",
+        event,
+      );
     }
 
     if (posts.length === 0) {
-      return createErrorResponse(400, "Posts array cannot be empty");
+      return createErrorResponse(
+        400,
+        ErrorCodes.VALIDATION_ERROR,
+        "Posts array cannot be empty",
+        event,
+      );
     }
 
     if (posts.length > 500) {
       return createErrorResponse(
         400,
+        ErrorCodes.VALIDATION_ERROR,
         "Too many posts (maximum 500 per request)",
+        event,
       );
     }
 
@@ -91,7 +124,9 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     if (!validFormats.includes(format)) {
       return createErrorResponse(
         400,
+        ErrorCodes.INVALID_PARAMETER,
         `Invalid format. Must be one of: ${validFormats.join(", ")}`,
+        event,
       );
     }
 
@@ -111,14 +146,17 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     if (!forceRefresh) {
       const cached = getCachedSummary(cacheKey);
       if (cached) {
-        return createApiResponse({
-          summary: cached.summary,
-          format: cached.format,
-          metadata: {
-            ...cached.metadata,
-            cached: true,
+        return createSuccessResponse(
+          {
+            summary: cached.summary,
+            format: cached.format,
+            metadata: {
+              ...cached.metadata,
+              cached: true,
+            },
           },
-        });
+          event,
+        );
       }
     }
 
@@ -195,7 +233,12 @@ ${formatPrompt}
     if (!response.ok) {
       const error = await response.text();
       console.error("Anthropic API error:", error);
-      return createErrorResponse(500, `AI service error: ${error}`);
+      return createErrorResponse(
+        500,
+        ErrorCodes.EXTERNAL_API_ERROR,
+        `AI service error: ${error}`,
+        event,
+      );
     }
 
     const data: AnthropicResponse = await response.json();
@@ -214,12 +257,14 @@ ${formatPrompt}
     // Cache the result
     setCachedSummary(cacheKey, result);
 
-    return createApiResponse(result);
+    return createSuccessResponse(result, event);
   } catch (error) {
     console.error("Error in thread-summary handler:", error);
     return createErrorResponse(
       500,
+      ErrorCodes.INTERNAL_ERROR,
       error instanceof Error ? error.message : "Internal server error",
+      event,
     );
   }
 };
