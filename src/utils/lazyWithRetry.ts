@@ -25,8 +25,21 @@ export function lazyWithRetry<T extends ComponentType<any>>(
       if (!pageHasAlreadyBeenForceRefreshed) {
         // Store flag to prevent infinite reload loop
         window.sessionStorage.setItem("page-has-been-force-refreshed", "true");
-        // Reload the page to get fresh HTML/JS
-        window.location.reload();
+
+        // Unregister all service workers before reloading to clear old caches
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.getRegistrations().then((registrations) => {
+            registrations.forEach((registration) => {
+              registration.unregister();
+            });
+            // Reload after unregistering service workers
+            window.location.reload();
+          });
+        } else {
+          // Reload the page to get fresh HTML/JS
+          window.location.reload();
+        }
+
         // Return a dummy component (page will reload before this renders)
         return {
           default: (() => null) as unknown as T,
