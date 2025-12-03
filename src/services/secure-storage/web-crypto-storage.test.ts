@@ -2,8 +2,8 @@
  * Tests for Web Crypto Storage
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "fake-indexeddb/auto";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { WebCryptoStorage } from "./web-crypto-storage";
 
 describe("WebCryptoStorage", () => {

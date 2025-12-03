@@ -92,10 +92,7 @@ self.addEventListener("message", (event) => {
   switch (type) {
     case "background-sync:preferences-updated":
       syncPreferences = { ...syncPreferences, ...payload };
-      console.log(
-        "[Background Sync SW] Preferences updated:",
-        syncPreferences,
-      );
+      console.log("[Background Sync SW] Preferences updated:", syncPreferences);
       break;
 
     case "background-sync:trigger":
@@ -129,7 +126,9 @@ async function handleTimelineSync() {
 
   // Check if sync should proceed based on preferences
   if (!shouldSync("timeline")) {
-    console.log("[Background Sync SW] Timeline sync skipped due to preferences");
+    console.log(
+      "[Background Sync SW] Timeline sync skipped due to preferences",
+    );
     return;
   }
 
@@ -137,7 +136,9 @@ async function handleTimelineSync() {
     // Get stored credentials (if any)
     const credentials = await getStoredCredentials();
     if (!credentials) {
-      console.log("[Background Sync SW] No credentials, skipping timeline sync");
+      console.log(
+        "[Background Sync SW] No credentials, skipping timeline sync",
+      );
       return notifyClients({
         type: "background-sync:completed",
         payload: {
@@ -185,7 +186,9 @@ async function handleTimelineSync() {
       },
     });
 
-    console.log(`[Background Sync SW] Timeline sync completed: ${items.length} items`);
+    console.log(
+      `[Background Sync SW] Timeline sync completed: ${items.length} items`,
+    );
   } catch (error) {
     console.error("[Background Sync SW] Timeline sync failed:", error);
 
@@ -509,7 +512,8 @@ async function showBackgroundNotification(count, notifications) {
   let body = `You have ${count} new notification${count > 1 ? "s" : ""}`;
 
   if (recent) {
-    const author = recent.author?.displayName || recent.author?.handle || "Someone";
+    const author =
+      recent.author?.displayName || recent.author?.handle || "Someone";
     const reason = recent.reason;
 
     switch (reason) {

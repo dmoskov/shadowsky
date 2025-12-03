@@ -82,11 +82,11 @@ Check the following capabilities:
 
 After completing the above steps, you'll have:
 
-| Credential | Example Value                 | Your Value     |
-| ---------- | ----------------------------- | -------------- |
-| Team ID    | `A1B2C3D4E5`                  | ****\_\_\_**** |
-| Bundle ID  | `io.shadowsky.app`            | ****\_\_\_**** |
-| App ID     | `A1B2C3D4E5.io.shadowsky.app` | ****\_\_\_**** |
+| Credential | Example Value                 | Your Value         |
+| ---------- | ----------------------------- | ------------------ |
+| Team ID    | `A1B2C3D4E5`                  | \***\*\_\_\_\*\*** |
+| Bundle ID  | `io.shadowsky.app`            | \***\*\_\_\_\*\*** |
+| App ID     | `A1B2C3D4E5.io.shadowsky.app` | \***\*\_\_\_\*\*** |
 
 ### 4.2 apple-app-site-association File
 

@@ -6,15 +6,12 @@
  */
 
 import { createLogger } from "../../utils/logger";
+import { compressImageAdvanced, getImageDimensions } from "../../utils/media-compression";
 import {
-  compressImageAdvanced,
-  getImageDimensions,
-} from "../../utils/media-compression";
-import {
-  isVideoFile as checkIsVideoFile,
   compressVideo as ffmpegCompressVideo,
   generateVideoThumbnail as ffmpegGenerateThumbnail,
   getVideoMetadata as ffmpegGetVideoMetadata,
+  isVideoFile as checkIsVideoFile,
   loadFFmpegInstance,
 } from "../../utils/video-compression";
 import type {
@@ -116,8 +113,6 @@ export class WebMediaProcessor implements IMediaProcessor {
         message: "Analyzing image...",
       });
 
-      // Get original dimensions
-      const originalDimensions = await getImageDimensions(file);
       const originalSize = file.size;
 
       onProgress?.({
@@ -206,9 +201,6 @@ export class WebMediaProcessor implements IMediaProcessor {
         progress: 10,
         message: "Analyzing video...",
       });
-
-      // Get metadata
-      const metadata = await ffmpegGetVideoMetadata(file);
 
       // Use existing compression utility
       const result = await ffmpegCompressVideo(

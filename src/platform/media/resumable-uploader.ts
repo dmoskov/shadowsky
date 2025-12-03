@@ -119,7 +119,9 @@ class UploadStateStorage {
     });
   }
 
-  async getByStatus(status: ResumableUploadState["status"]): Promise<ResumableUploadState[]> {
+  async getByStatus(
+    status: ResumableUploadState["status"],
+  ): Promise<ResumableUploadState[]> {
     if (!this.db) await this.init();
 
     return new Promise((resolve, reject) => {
@@ -190,7 +192,7 @@ export class ResumableUploader implements IResumableUploader {
     file: Blob | string,
     uploadUrl: string,
     metadata: Record<string, string>,
-    onProgress?: (progress: UploadProgress) => void
+    onProgress?: (progress: UploadProgress) => void,
   ): Promise<UploadResult> {
     await this.ensureInitialized();
 
@@ -220,13 +222,15 @@ export class ResumableUploader implements IResumableUploader {
       await this.storage.save(state);
 
       // Create upload on server
-      logger.log(`[${uploadId}] Creating tus upload for ${this.formatBytes(totalSize)}`);
+      logger.log(
+        `[${uploadId}] Creating tus upload for ${this.formatBytes(totalSize)}`,
+      );
 
       const createResponse = await this.createTusUpload(
         uploadUrl,
         totalSize,
         metadata,
-        abortController.signal
+        abortController.signal,
       );
 
       if (!createResponse.uploadLocation) {
@@ -243,7 +247,7 @@ export class ResumableUploader implements IResumableUploader {
         blob,
         state,
         abortController.signal,
-        onProgress
+        onProgress,
       );
 
       // Cleanup on success
@@ -277,7 +281,7 @@ export class ResumableUploader implements IResumableUploader {
    */
   async resume(
     uploadId: string,
-    onProgress?: (progress: UploadProgress) => void
+    onProgress?: (progress: UploadProgress) => void,
   ): Promise<UploadResult> {
     await this.ensureInitialized();
 
@@ -304,7 +308,7 @@ export class ResumableUploader implements IResumableUploader {
       // Get current offset from server
       const serverOffset = await this.getServerOffset(
         state.uploadUrl,
-        abortController.signal
+        abortController.signal,
       );
 
       // Update state
@@ -321,7 +325,7 @@ export class ResumableUploader implements IResumableUploader {
         blob,
         state,
         abortController.signal,
-        onProgress
+        onProgress,
       );
 
       // Cleanup on success
@@ -447,7 +451,7 @@ export class ResumableUploader implements IResumableUploader {
     uploadUrl: string,
     totalSize: number,
     metadata: Record<string, string>,
-    signal: AbortSignal
+    signal: AbortSignal,
   ): Promise<{ uploadLocation: string | null }> {
     // Encode metadata as tus expects
     const metadataHeader = Object.entries(metadata)
@@ -467,7 +471,9 @@ export class ResumableUploader implements IResumableUploader {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to create upload: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to create upload: ${response.status} ${response.statusText}`,
+      );
     }
 
     return {
@@ -478,7 +484,10 @@ export class ResumableUploader implements IResumableUploader {
   /**
    * Get the current upload offset from the server
    */
-  private async getServerOffset(uploadUrl: string, signal: AbortSignal): Promise<number> {
+  private async getServerOffset(
+    uploadUrl: string,
+    signal: AbortSignal,
+  ): Promise<number> {
     const response = await fetch(uploadUrl, {
       method: "HEAD",
       signal,
@@ -503,7 +512,7 @@ export class ResumableUploader implements IResumableUploader {
     blob: Blob,
     state: ResumableUploadState,
     signal: AbortSignal,
-    onProgress?: (progress: UploadProgress) => void
+    onProgress?: (progress: UploadProgress) => void,
   ): Promise<UploadResult> {
     const { chunkSize, maxRetries, retryDelay } = this.config;
     const uploadStartTime = Date.now();
@@ -527,7 +536,7 @@ export class ResumableUploader implements IResumableUploader {
             state.uploadUrl,
             chunk,
             bytesUploaded,
-            signal
+            signal,
           );
 
           if (!response.ok) {
@@ -562,7 +571,7 @@ export class ResumableUploader implements IResumableUploader {
 
           success = true;
           logger.log(
-            `[${state.uploadId}] Uploaded ${this.formatBytes(bytesUploaded)}/${this.formatBytes(state.totalSize)}`
+            `[${state.uploadId}] Uploaded ${this.formatBytes(bytesUploaded)}/${this.formatBytes(state.totalSize)}`,
           );
         } catch (error) {
           attempt++;
@@ -573,7 +582,7 @@ export class ResumableUploader implements IResumableUploader {
 
           logger.warn(
             `[${state.uploadId}] Chunk upload failed, retrying (${attempt}/${maxRetries}):`,
-            error
+            error,
           );
 
           await this.sleep(retryDelay * attempt);
@@ -602,7 +611,7 @@ export class ResumableUploader implements IResumableUploader {
     uploadUrl: string,
     chunk: Blob,
     offset: number,
-    signal: AbortSignal
+    signal: AbortSignal,
   ): Promise<Response> {
     return fetch(uploadUrl, {
       method: "PATCH",

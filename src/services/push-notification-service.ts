@@ -397,12 +397,22 @@ class PushNotificationService {
   }
 
   /**
+   * Extended notification options type for service worker notifications
+   */
+  private ExtendedNotificationOptions!: NotificationOptions & {
+    actions?: Array<{ action: string; title: string; icon?: string }>;
+    vibrate?: number[];
+    image?: string;
+    renotify?: boolean;
+  };
+
+  /**
    * Generate notification options with rich content
    */
   generateRichNotificationOptions(
     payload: PushNotificationPayload,
-  ): NotificationOptions & { actions?: Array<{ action: string; title: string; icon?: string }>; vibrate?: number[] } {
-    const options: NotificationOptions & { actions?: Array<{ action: string; title: string; icon?: string }>; vibrate?: number[] } = {
+  ): typeof this.ExtendedNotificationOptions {
+    const options: typeof this.ExtendedNotificationOptions = {
       body: payload.body,
       icon: payload.icon || "/butterfly-icon.svg",
       badge: payload.badge || "/butterfly-icon.svg",
@@ -419,7 +429,8 @@ class PushNotificationService {
 
     // Add actions if enabled
     if (payload.actions && payload.actions.length > 0) {
-      const actions: Array<{ action: string; title: string; icon?: string }> = [];
+      const actions: Array<{ action: string; title: string; icon?: string }> =
+        [];
 
       for (const action of payload.actions) {
         // Filter actions based on settings
@@ -445,7 +456,7 @@ class PushNotificationService {
 
     // Add renotify for grouped/aggregated notifications
     if (payload.renotify && payload.tag) {
-      (options as Record<string, unknown>).renotify = true;
+      options.renotify = true;
     }
 
     return options;
@@ -501,7 +512,9 @@ class PushNotificationService {
       await this.showLocalNotification({
         type: "message",
         title: `New message from ${senderName}`,
-        body: this.settings.showPostPreviews ? messagePreview : "You have a new message",
+        body: this.settings.showPostPreviews
+          ? messagePreview
+          : "You have a new message",
         icon: senderAvatar || "/butterfly-icon.svg",
         tag: `dm-single-${Date.now()}`,
         data: {
@@ -527,7 +540,9 @@ class PushNotificationService {
     await this.showLocalNotification({
       type: "message",
       title,
-      body: this.settings.showPostPreviews ? messagePreview : "You have new messages",
+      body: this.settings.showPostPreviews
+        ? messagePreview
+        : "You have new messages",
       icon: senderAvatar || "/butterfly-icon.svg",
       tag: `dm-thread-${conversationId}`,
       data: {

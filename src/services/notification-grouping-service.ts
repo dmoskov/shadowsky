@@ -10,9 +10,6 @@
 
 import type { AppBskyNotificationListNotifications } from "@atproto/api";
 import type { PushNotificationPayload } from "../types/push-notifications";
-import { createLogger } from "../utils/logger";
-
-const logger = createLogger("NotificationGroupingService");
 
 type Notification = AppBskyNotificationListNotifications.Notification;
 
