@@ -20,6 +20,7 @@ import { Sidebar } from "./components/Sidebar";
 import { AriaLiveProvider } from "./components/ui/AriaLiveRegion";
 import { PageLoader } from "./components/ui/PageLoader";
 import { AccessibilityProvider } from "./contexts/AccessibilityContext";
+import { ActionSyncProvider } from "./contexts/ActionSyncContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { HiddenPostsProvider } from "./contexts/HiddenPostsContext";
 import {
@@ -575,18 +576,20 @@ function App() {
                       <ToastProvider>
                         <HiddenPostsProvider>
                           <ModerationProvider>
-                            <StorageErrorProvider>
-                              <StatusBarProvider>
-                                <ErrorBoundary
-                                  componentName="Application"
-                                  onError={(error) => {
-                                    analytics.trackError(error, "App");
-                                  }}
-                                >
-                                  <AppContent />
-                                </ErrorBoundary>
-                              </StatusBarProvider>
-                            </StorageErrorProvider>
+                            <ActionSyncProvider>
+                              <StorageErrorProvider>
+                                <StatusBarProvider>
+                                  <ErrorBoundary
+                                    componentName="Application"
+                                    onError={(error) => {
+                                      analytics.trackError(error, "App");
+                                    }}
+                                  >
+                                    <AppContent />
+                                  </ErrorBoundary>
+                                </StatusBarProvider>
+                              </StorageErrorProvider>
+                            </ActionSyncProvider>
                           </ModerationProvider>
                         </HiddenPostsProvider>
                       </ToastProvider>

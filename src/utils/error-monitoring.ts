@@ -142,30 +142,32 @@ export interface OperationStats {
 // ==================== PII Sanitization ====================
 
 /**
- * Patterns that indicate potential PII in error messages
+ * Pre-compiled regex patterns for PII detection.
+ * Compiled at module load time to avoid per-call compilation overhead.
+ * Using named object for better maintainability and debugging.
  */
-const PII_PATTERNS = [
-  // Email addresses
-  /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
-  // DID (Decentralized Identifier)
-  /did:[a-z]+:[a-zA-Z0-9._-]+/g,
-  // Handle (Bluesky username)
-  /@[a-zA-Z0-9._-]+\.[a-zA-Z]+/g,
-  // AT Protocol URIs with user content
-  /at:\/\/[^\s]+/g,
-  // JWT tokens
-  /eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*/g,
-  // Bearer tokens
-  /Bearer\s+[a-zA-Z0-9._-]+/gi,
-  // API keys (various formats)
-  /[a-zA-Z0-9]{32,}/g,
-  // URLs with query params (may contain tokens)
-  /\?[^\s]*token=[^\s&]*/gi,
-  // IP addresses
-  /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g,
-  // Phone numbers (various formats)
-  /(\+\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g,
-];
+const PII_PATTERNS = {
+  /** Email addresses */
+  email: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+  /** DID (Decentralized Identifier) */
+  did: /did:[a-z]+:[a-zA-Z0-9._-]+/g,
+  /** Handle (Bluesky username) */
+  handle: /@[a-zA-Z0-9._-]+\.[a-zA-Z]+/g,
+  /** AT Protocol URIs with user content */
+  atUri: /at:\/\/[^\s]+/g,
+  /** JWT tokens */
+  jwt: /eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*/g,
+  /** Bearer tokens */
+  bearer: /Bearer\s+[a-zA-Z0-9._-]+/gi,
+  /** API keys (various formats) */
+  apiKey: /[a-zA-Z0-9]{32,}/g,
+  /** URLs with query params (may contain tokens) */
+  tokenParam: /\?[^\s]*token=[^\s&]*/gi,
+  /** IP addresses */
+  ipAddress: /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g,
+  /** Phone numbers (various formats) */
+  phone: /(\+\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g,
+} as const;
 
 /**
  * Sensitive keys in stack traces or metadata
@@ -189,7 +191,7 @@ const SENSITIVE_KEYS = [
 export function sanitizeMessage(message: string): string {
   let sanitized = message;
 
-  for (const pattern of PII_PATTERNS) {
+  for (const pattern of Object.values(PII_PATTERNS)) {
     sanitized = sanitized.replace(pattern, "[REDACTED]");
   }
 
@@ -213,7 +215,7 @@ export function sanitizeStackTrace(
   sanitized = sanitized.replace(/file:\/\/[^\s)]+/g, "[FILE]");
 
   // Apply PII patterns
-  for (const pattern of PII_PATTERNS) {
+  for (const pattern of Object.values(PII_PATTERNS)) {
     sanitized = sanitized.replace(pattern, "[REDACTED]");
   }
 
