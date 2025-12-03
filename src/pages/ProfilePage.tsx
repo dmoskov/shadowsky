@@ -24,12 +24,13 @@ import { DomainVerifiedBadge } from "../components/ui/DomainVerifiedBadge";
 import { ProfileSkeleton } from "../components/ui/SkeletonLoader";
 import { UserListModal } from "../components/UserListModal";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { useTopPosts } from "../hooks/useTopPosts";
 import { analyzePosts } from "../services/anthropic";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
+import { shareProfile } from "../services/share-service";
 import { proxifyBskyImage } from "../utils/image-proxy";
-import { getBskyProfileUrl } from "../utils/url-helpers";
 
 const formatCount = (count: number): string => {
   if (count >= 1000000) {
@@ -69,6 +70,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { session, agent } = useAuth();
+  const { showToast } = useToast();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [posts, setPosts] = useState<AppBskyFeedDefs.FeedViewPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -483,11 +485,27 @@ export default function ProfilePage() {
     }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (!profile) return;
-    const profileUrl = getBskyProfileUrl(profile.handle);
-    const fullUrl = `${window.location.origin}${profileUrl}`;
-    navigator.clipboard.writeText(fullUrl);
+
+    const result = await shareProfile(
+      profile.handle,
+      profile.displayName,
+      profile.description,
+    );
+
+    if (result.success) {
+      if (result.method === "clipboard") {
+        showToast("Profile link copied to clipboard", {
+          type: "success",
+          duration: 2000,
+        });
+      }
+      // Native share doesn't need a toast - the OS handles feedback
+    } else if (result.error !== "Share cancelled") {
+      showToast("Failed to share profile", { type: "error" });
+    }
+    setShowProfileMenu(false);
   };
 
   const handleOpenInBluesky = () => {

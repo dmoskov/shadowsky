@@ -18,6 +18,10 @@ import {
   apiCacheService,
   type OfflineStatus,
 } from "../services/api-cache-service";
+import {
+  backgroundSyncService,
+  type BackgroundSyncStatus,
+} from "../services/background-sync-service";
 import { offlineStorageDB } from "../services/offline-storage-db";
 import { createLogger } from "./logger";
 
@@ -34,6 +38,7 @@ export interface ServiceWorkerCallbacks {
   onSuccess?: (registration: ServiceWorkerRegistration) => void;
   onOfflineReady?: () => void;
   onOfflineStatusChange?: (status: OfflineStatus) => void;
+  onBackgroundSyncStatusChange?: (status: BackgroundSyncStatus) => void;
   onError?: (error: Error) => void;
 }
 
@@ -44,6 +49,8 @@ export interface ServiceWorkerState {
   isOnline: boolean;
   hasCachedContent: boolean;
   registration: ServiceWorkerRegistration | null;
+  backgroundSyncSupported: boolean;
+  periodicSyncSupported: boolean;
 }
 
 let swRegistration: ServiceWorkerRegistration | null = null;
@@ -215,6 +222,20 @@ export async function registerServiceWorker(
 
       // Update cached content status
       await updateCachedContentStatus();
+
+      // Initialize background sync service
+      try {
+        await backgroundSyncService.init(registration);
+        logger.info("Background sync service initialized");
+
+        // Set up background sync status change listener if provided
+        if (callbacks.onBackgroundSyncStatusChange) {
+          const status = await backgroundSyncService.getStatus();
+          callbacks.onBackgroundSyncStatusChange(status);
+        }
+      } catch (err) {
+        logger.warn("Failed to initialize background sync service:", err);
+      }
 
       // Check for updates periodically (every hour)
       setInterval(
@@ -397,6 +418,8 @@ export function getServiceWorkerState(): ServiceWorkerState {
     isOnline: navigator.onLine,
     hasCachedContent,
     registration: swRegistration,
+    backgroundSyncSupported: backgroundSyncService.isBackgroundSyncSupported(),
+    periodicSyncSupported: backgroundSyncService.isPeriodicSyncSupported(),
   };
 }
 
@@ -452,6 +475,44 @@ export async function clearOfflineStorage(): Promise<void> {
   hasCachedContent = false;
 }
 
+/**
+ * Get background sync status
+ */
+export async function getBackgroundSyncStatus(): Promise<BackgroundSyncStatus> {
+  return backgroundSyncService.getStatus();
+}
+
+/**
+ * Update background sync preferences
+ */
+export async function updateBackgroundSyncPreferences(
+  preferences: Parameters<typeof backgroundSyncService.updatePreferences>[0],
+): Promise<void> {
+  return backgroundSyncService.updatePreferences(preferences);
+}
+
+/**
+ * Trigger an immediate background sync
+ */
+export async function triggerBackgroundSync(
+  syncTag?: Parameters<typeof backgroundSyncService.triggerImmediateSync>[0],
+): Promise<void> {
+  return backgroundSyncService.triggerImmediateSync(syncTag);
+}
+
+/**
+ * Clear the app badge
+ */
+export async function clearAppBadge(): Promise<void> {
+  return backgroundSyncService.clearBadge();
+}
+
 // Re-export types and constants for convenience
 export { CACHE_NAMES, type OfflineStatus } from "../services/api-cache-service";
+export {
+  backgroundSyncService,
+  SYNC_TAGS,
+  type BackgroundRefreshPreferences,
+  type BackgroundSyncStatus,
+} from "../services/background-sync-service";
 export { offlineStorageDB } from "../services/offline-storage-db";

@@ -1,6 +1,7 @@
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
+const compression = require("compression");
 const fetch = require("node-fetch");
 const ffmpeg = require("fluent-ffmpeg");
 const fs = require("fs").promises;
@@ -57,6 +58,37 @@ app.use(
 
 // Increase JSON payload size limit for base64-encoded images
 app.use(express.json({ limit: "50mb" }));
+
+// Response compression middleware
+// Compresses responses to improve load times on slow networks
+app.use(
+  compression({
+    level: 6, // Good balance between compression ratio and CPU usage
+    threshold: 1024, // Only compress responses larger than 1KB
+    filter: (req, res) => {
+      // Skip compression for already-compressed content types
+      const contentType = res.getHeader("Content-Type") || "";
+      const skipTypes = [
+        "image/",
+        "video/",
+        "audio/",
+        "application/zip",
+        "application/gzip",
+        "application/x-gzip",
+        "application/x-compress",
+        "application/x-compressed",
+      ];
+
+      // Check if content type matches any skip types
+      if (skipTypes.some((type) => contentType.includes(type))) {
+        return false;
+      }
+
+      // Use default compression filter for other content
+      return compression.filter(req, res);
+    },
+  }),
+);
 
 // Security headers middleware
 app.use((req, res, next) => {

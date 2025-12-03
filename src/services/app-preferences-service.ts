@@ -3,6 +3,24 @@ import { createLogger } from "../utils/logger";
 import { withAtProtoRetry } from "../utils/storage-retry";
 import { AT_PROTO_COLLECTIONS } from "./storage/storage-constants";
 
+// Background refresh settings
+export interface BackgroundRefreshSettings {
+  /** Enable/disable background refresh entirely */
+  enabled: boolean;
+  /** Refresh frequency preference */
+  frequency: "high" | "normal" | "low";
+  /** Which content types to refresh */
+  contentTypes: {
+    timeline: boolean;
+    notifications: boolean;
+    directMessages: boolean;
+  };
+  /** Battery/data saving mode */
+  dataSaverMode: boolean;
+  /** Only sync on WiFi */
+  wifiOnly: boolean;
+}
+
 // Define the app preferences stored as custom record
 export interface ShadowSkyPreferences {
   $type: "com.shadowsky.preferences";
@@ -19,6 +37,8 @@ export interface ShadowSkyPreferences {
   };
   // Column display settings
   columnWidth?: number;
+  // Background refresh settings
+  backgroundRefresh?: BackgroundRefreshSettings;
 }
 
 // Column data stored in preferences
@@ -101,6 +121,8 @@ export interface AppPreferencesRecord {
   };
   // Column display settings
   columnWidth?: number;
+  // Background refresh settings
+  backgroundRefresh?: BackgroundRefreshSettings;
 }
 
 const PREFERENCES_COLLECTION = "com.shadowsky.preferences";
@@ -158,6 +180,7 @@ export class AppPreferencesService {
           updatedAt: shadowSkyPref.updatedAt,
           aiSettings: shadowSkyPref.aiSettings,
           columnWidth: shadowSkyPref.columnWidth,
+          backgroundRefresh: shadowSkyPref.backgroundRefresh,
         };
         // Mark that we loaded from AT Protocol
         (prefs as any).isStoredInAtProto = true;
@@ -184,6 +207,7 @@ export class AppPreferencesService {
         updatedAt: localPrefs.updatedAt || new Date().toISOString(),
         aiSettings: localPrefs.aiSettings,
         columnWidth: localPrefs.columnWidth,
+        backgroundRefresh: localPrefs.backgroundRefresh,
       };
       // Mark that we loaded from localStorage
       (validatedPrefs as any).isStoredInAtProto = false;
@@ -229,7 +253,6 @@ export class AppPreferencesService {
       this.preferencesCache = null;
 
       // Save to AT Protocol as custom record
-      // Save to AT Protocol as custom record
       const shadowSkyPref: ShadowSkyPreferences = {
         $type: PREFERENCES_COLLECTION,
         columnStorageType: updatedPrefs.columnStorageType || "local",
@@ -240,6 +263,7 @@ export class AppPreferencesService {
         version: 1,
         aiSettings: updatedPrefs.aiSettings,
         columnWidth: updatedPrefs.columnWidth,
+        backgroundRefresh: updatedPrefs.backgroundRefresh,
       };
 
       logger.log("Saving to AT Protocol:", shadowSkyPref);

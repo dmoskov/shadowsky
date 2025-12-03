@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useLinkPreview } from "../hooks/useLinkPreview";
 import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
@@ -41,6 +42,10 @@ import {
   saveDraft,
   type ThreadDraft,
 } from "../services/drafts";
+import {
+  composeFromSharedContent,
+  parseReceivedShare,
+} from "../services/share-service";
 import { debug } from "../shared/debug";
 import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { isGifFile } from "../utils/gif-to-video";
@@ -187,6 +192,7 @@ async function getVideoDuration(file: File): Promise<number> {
 
 export function Composer() {
   const { agent } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [text, setText] = useState("");
   const [posts, setPosts] = useState<string[]>([]);
   const [numberingFormat, setNumberingFormat] = useState<
@@ -327,6 +333,21 @@ export function Composer() {
 
     loadAiSettings();
   }, []);
+
+  // Handle shared content from Web Share Target API
+  useEffect(() => {
+    const sharedContent = parseReceivedShare(searchParams);
+    if (sharedContent) {
+      const composedText = composeFromSharedContent(sharedContent);
+      if (composedText) {
+        setText(composedText);
+        // Clear the URL parameters after processing
+        setSearchParams({}, { replace: true });
+        // Log for debugging
+        debug.log("[Composer] Received shared content:", sharedContent);
+      }
+    }
+  }, [searchParams, setSearchParams]);
 
   // Save thread settings when they change
   useEffect(() => {

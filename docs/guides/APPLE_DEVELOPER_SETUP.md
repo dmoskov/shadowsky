@@ -19,6 +19,7 @@ This guide walks through creating an Apple Developer account and obtaining the c
 ### 1.2 Choose Entity Type
 
 Select one of the following:
+
 - **Individual/Sole Proprietor**: For personal apps or single-person businesses
 - **Organization**: For companies (requires D-U-N-S Number)
 
@@ -62,12 +63,14 @@ Once enrolled:
    - **Bundle Identifier**: `io.shadowsky.app` (recommended format)
 
    > **Note**: The Bundle ID should follow reverse domain notation. For ShadowSky, options include:
+   >
    > - `io.shadowsky.app` (recommended if you own shadowsky.io)
    > - `com.shadowsky.app` (alternative)
 
 ### 3.3 Enable Capabilities
 
 Check the following capabilities:
+
 - [x] **Associated Domains** (required for Universal Links)
 - [x] **Push Notifications** (for future APNs support)
 
@@ -79,11 +82,11 @@ Check the following capabilities:
 
 After completing the above steps, you'll have:
 
-| Credential | Example Value | Your Value |
-|------------|---------------|------------|
-| Team ID | `A1B2C3D4E5` | ___________ |
-| Bundle ID | `io.shadowsky.app` | ___________ |
-| App ID | `A1B2C3D4E5.io.shadowsky.app` | ___________ |
+| Credential | Example Value                 | Your Value     |
+| ---------- | ----------------------------- | -------------- |
+| Team ID    | `A1B2C3D4E5`                  | ****\_\_\_**** |
+| Bundle ID  | `io.shadowsky.app`            | ****\_\_\_**** |
+| App ID     | `A1B2C3D4E5.io.shadowsky.app` | ****\_\_\_**** |
 
 ### 4.2 apple-app-site-association File
 
@@ -120,6 +123,7 @@ Replace `TEAM_ID` with your actual Team ID.
 ### 4.3 Hosting Requirements
 
 The `apple-app-site-association` file must be:
+
 - Served over HTTPS (no redirects)
 - Served with `Content-Type: application/json`
 - Located at either:
@@ -154,13 +158,13 @@ Once you have your Team ID and Bundle ID:
 
 ## Timeline Estimate
 
-| Step | Duration |
-|------|----------|
-| Apple ID creation (if needed) | Immediate |
-| Developer enrollment (Individual) | 24-48 hours |
-| Developer enrollment (Organization) | 2-4 weeks |
-| D-U-N-S Number (if needed) | 1-2 weeks |
-| App ID creation | Immediate after enrollment |
+| Step                                | Duration                   |
+| ----------------------------------- | -------------------------- |
+| Apple ID creation (if needed)       | Immediate                  |
+| Developer enrollment (Individual)   | 24-48 hours                |
+| Developer enrollment (Organization) | 2-4 weeks                  |
+| D-U-N-S Number (if needed)          | 1-2 weeks                  |
+| App ID creation                     | Immediate after enrollment |
 
 ## Troubleshooting
 

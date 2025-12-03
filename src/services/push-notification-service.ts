@@ -369,9 +369,180 @@ class PushNotificationService {
         return this.settings.replies;
       case "quote":
         return this.settings.quotes;
+      case "dm":
+      case "message":
+        return this.settings.directMessages;
       default:
         return true;
     }
+  }
+
+  /**
+   * Handle inline reply action from notification
+   */
+  async handleInlineReply(postUri: string, replyText: string): Promise<void> {
+    if (!this.settings.enableInlineReply) {
+      logger.warn("Inline reply is disabled");
+      return;
+    }
+
+    // Dispatch event for the app to handle the reply
+    window.dispatchEvent(
+      new CustomEvent("notificationInlineReply", {
+        detail: { postUri, replyText },
+      }),
+    );
+
+    logger.info("Inline reply dispatched", { postUri });
+  }
+
+  /**
+   * Generate notification options with rich content
+   */
+  generateRichNotificationOptions(
+    payload: PushNotificationPayload,
+  ): NotificationOptions & { actions?: Array<{ action: string; title: string; icon?: string }>; vibrate?: number[] } {
+    const options: NotificationOptions & { actions?: Array<{ action: string; title: string; icon?: string }>; vibrate?: number[] } = {
+      body: payload.body,
+      icon: payload.icon || "/butterfly-icon.svg",
+      badge: payload.badge || "/butterfly-icon.svg",
+      tag: payload.tag || `notification-${Date.now()}`,
+      data: payload.data,
+      requireInteraction: payload.requireInteraction ?? false,
+      silent: payload.silent ?? !this.settings.soundEnabled,
+    };
+
+    // Add image if media preview is enabled and available
+    if (this.settings.showMediaPreviews && payload.image) {
+      options.image = payload.image;
+    }
+
+    // Add actions if enabled
+    if (payload.actions && payload.actions.length > 0) {
+      const actions: Array<{ action: string; title: string; icon?: string }> = [];
+
+      for (const action of payload.actions) {
+        // Filter actions based on settings
+        if (action.action === "reply" && !this.settings.enableInlineReply) {
+          continue;
+        }
+        actions.push({
+          action: action.action,
+          title: action.title,
+          icon: action.icon,
+        });
+      }
+
+      if (actions.length > 0) {
+        options.actions = actions;
+      }
+    }
+
+    // Add vibration pattern if enabled
+    if (this.settings.vibrationEnabled) {
+      options.vibrate = payload.vibrate || [200, 100, 200];
+    }
+
+    // Add renotify for grouped/aggregated notifications
+    if (payload.renotify && payload.tag) {
+      (options as Record<string, unknown>).renotify = true;
+    }
+
+    return options;
+  }
+
+  /**
+   * Show grouped notification with aggregation
+   */
+  async showGroupedNotification(
+    groupId: string,
+    title: string,
+    body: string,
+    count: number,
+    options?: Partial<PushNotificationPayload>,
+  ): Promise<void> {
+    const payload: PushNotificationPayload = {
+      type: "notification",
+      title,
+      body,
+      tag: `group-${groupId}`,
+      data: {
+        groupId,
+        aggregatedCount: count,
+        ...options?.data,
+      },
+      actions: options?.actions || [
+        { action: "view", title: "View All" },
+        { action: "dismiss", title: "Dismiss" },
+      ],
+      renotify: true,
+      ...options,
+    };
+
+    await this.showLocalNotification(payload);
+  }
+
+  /**
+   * Show DM notification with threading support
+   */
+  async showDmNotification(
+    conversationId: string,
+    senderName: string,
+    messagePreview: string,
+    senderAvatar?: string,
+    unreadCount?: number,
+  ): Promise<void> {
+    if (!this.settings.directMessages) {
+      return;
+    }
+
+    if (!this.settings.threadDmNotifications) {
+      // Show as individual notification
+      await this.showLocalNotification({
+        type: "message",
+        title: `New message from ${senderName}`,
+        body: this.settings.showPostPreviews ? messagePreview : "You have a new message",
+        icon: senderAvatar || "/butterfly-icon.svg",
+        tag: `dm-single-${Date.now()}`,
+        data: {
+          conversationId,
+          url: `/messages/${conversationId}`,
+        },
+        actions: this.settings.enableInlineReply
+          ? [
+              { action: "reply", title: "Reply" },
+              { action: "view", title: "View" },
+            ]
+          : [{ action: "view", title: "View" }],
+      });
+      return;
+    }
+
+    // Thread by conversation - use consistent tag for same conversation
+    const title =
+      unreadCount && unreadCount > 1
+        ? `${unreadCount} messages from ${senderName}`
+        : `New message from ${senderName}`;
+
+    await this.showLocalNotification({
+      type: "message",
+      title,
+      body: this.settings.showPostPreviews ? messagePreview : "You have new messages",
+      icon: senderAvatar || "/butterfly-icon.svg",
+      tag: `dm-thread-${conversationId}`,
+      data: {
+        conversationId,
+        aggregatedCount: unreadCount || 1,
+        url: `/messages/${conversationId}`,
+      },
+      actions: this.settings.enableInlineReply
+        ? [
+            { action: "reply", title: "Reply" },
+            { action: "view", title: "View" },
+          ]
+        : [{ action: "view", title: "View" }],
+      renotify: true,
+    });
   }
 
   /**

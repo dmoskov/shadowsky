@@ -8,13 +8,19 @@
 import {
   Bell,
   BellOff,
+  Clock,
   Heart,
+  Image,
+  Layers,
   Loader2,
+  Mail,
   MessageCircle,
+  MessageSquare,
   Moon,
   Quote,
   Repeat2,
   Smartphone,
+  Type,
   UserPlus,
   Volume2,
 } from "lucide-react";
@@ -401,6 +407,163 @@ export const PushNotificationSettings: React.FC = () => {
               onChange={(v) => handleToggle("quotes", v)}
               disabled={isSaving}
             />
+            <Toggle
+              label="Direct Messages"
+              description="When someone sends you a message"
+              icon={<Mail className="h-4 w-4" />}
+              enabled={settings.directMessages}
+              onChange={(v) => handleToggle("directMessages", v)}
+              disabled={isSaving}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Rich Notification Settings */}
+      {settings.enabled && (
+        <div
+          className="rounded-lg border p-4"
+          style={{
+            background: "var(--bsky-bg-secondary)",
+            borderColor: "var(--bsky-border)",
+          }}
+        >
+          <h3
+            className="mb-2 font-medium"
+            style={{ color: "var(--bsky-text-primary)" }}
+          >
+            Rich Notifications
+          </h3>
+          <p
+            className="mb-4 text-sm"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
+            Customize how notifications are displayed
+          </p>
+
+          <div
+            className="divide-y"
+            style={{ borderColor: "var(--bsky-border)" }}
+          >
+            <Toggle
+              label="Media Previews"
+              description="Show image thumbnails in notifications"
+              icon={<Image className="h-4 w-4" />}
+              enabled={settings.showMediaPreviews}
+              onChange={(v) => handleToggle("showMediaPreviews", v)}
+              disabled={isSaving}
+            />
+            <Toggle
+              label="Post Previews"
+              description="Show post text in notifications"
+              icon={<Type className="h-4 w-4" />}
+              enabled={settings.showPostPreviews}
+              onChange={(v) => handleToggle("showPostPreviews", v)}
+              disabled={isSaving}
+            />
+            <Toggle
+              label="Inline Reply"
+              description="Reply directly from notifications (when supported)"
+              icon={<MessageSquare className="h-4 w-4" />}
+              enabled={settings.enableInlineReply}
+              onChange={(v) => handleToggle("enableInlineReply", v)}
+              disabled={isSaving}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Grouping & Threading Settings */}
+      {settings.enabled && (
+        <div
+          className="rounded-lg border p-4"
+          style={{
+            background: "var(--bsky-bg-secondary)",
+            borderColor: "var(--bsky-border)",
+          }}
+        >
+          <h3
+            className="mb-2 font-medium"
+            style={{ color: "var(--bsky-text-primary)" }}
+          >
+            Grouping & Threading
+          </h3>
+          <p
+            className="mb-4 text-sm"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
+            Control how notifications are combined
+          </p>
+
+          <div
+            className="divide-y"
+            style={{ borderColor: "var(--bsky-border)" }}
+          >
+            <Toggle
+              label="Group Notifications"
+              description="Combine similar notifications (e.g., '10 people liked')"
+              icon={<Layers className="h-4 w-4" />}
+              enabled={settings.groupNotifications}
+              onChange={(v) => handleToggle("groupNotifications", v)}
+              disabled={isSaving}
+            />
+            <Toggle
+              label="Thread DM Conversations"
+              description="Group messages by conversation"
+              icon={<MessageCircle className="h-4 w-4" />}
+              enabled={settings.threadDmNotifications}
+              onChange={(v) => handleToggle("threadDmNotifications", v)}
+              disabled={isSaving}
+            />
+            <div className="py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span
+                    className="flex-shrink-0"
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  >
+                    <Clock className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p
+                      className="text-sm font-medium"
+                      style={{ color: "var(--bsky-text-primary)" }}
+                    >
+                      Aggregation Window
+                    </p>
+                    <p
+                      className="text-xs"
+                      style={{ color: "var(--bsky-text-secondary)" }}
+                    >
+                      Time window for grouping notifications
+                    </p>
+                  </div>
+                </div>
+                <select
+                  value={settings.aggregationWindowHours}
+                  onChange={(e) =>
+                    handleToggle(
+                      "aggregationWindowHours",
+                      Number(e.target.value) as unknown as boolean,
+                    )
+                  }
+                  disabled={isSaving || !settings.groupNotifications}
+                  className="rounded border px-2 py-1 text-sm"
+                  style={{
+                    background: "var(--bsky-bg-primary)",
+                    borderColor: "var(--bsky-border)",
+                    color: "var(--bsky-text-primary)",
+                    opacity: isSaving || !settings.groupNotifications ? 0.5 : 1,
+                  }}
+                >
+                  <option value={1}>1 hour</option>
+                  <option value={6}>6 hours</option>
+                  <option value={12}>12 hours</option>
+                  <option value={24}>24 hours</option>
+                  <option value={48}>48 hours</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       )}

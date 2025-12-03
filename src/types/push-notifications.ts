@@ -58,6 +58,16 @@ export interface PushNotificationData {
   postUri?: string;
   threadUri?: string;
   notification?: Notification;
+  /** Conversation ID for DM threading */
+  conversationId?: string;
+  /** Group ID for aggregated notifications */
+  groupId?: string;
+  /** Count of aggregated notifications */
+  aggregatedCount?: number;
+  /** Media preview URLs */
+  mediaPreview?: string[];
+  /** Reply text for inline reply action */
+  replyText?: string;
 }
 
 /**
@@ -143,12 +153,24 @@ export interface PushNotificationSettings {
   mentions: boolean;
   replies: boolean;
   quotes: boolean;
+  /** Direct messages */
+  directMessages: boolean;
   quietHoursEnabled: boolean;
   quietHoursStart: string; // HH:mm format
   quietHoursEnd: string; // HH:mm format
   soundEnabled: boolean;
   vibrationEnabled: boolean;
   groupNotifications: boolean;
+  /** Thread DM notifications by conversation */
+  threadDmNotifications: boolean;
+  /** Show media thumbnails in notifications */
+  showMediaPreviews: boolean;
+  /** Show post text preview in notifications */
+  showPostPreviews: boolean;
+  /** Enable inline reply action (where supported) */
+  enableInlineReply: boolean;
+  /** Aggregation time window in hours */
+  aggregationWindowHours: number;
 }
 
 /**
@@ -162,12 +184,18 @@ export const DEFAULT_PUSH_SETTINGS: PushNotificationSettings = {
   mentions: true,
   replies: true,
   quotes: true,
+  directMessages: true,
   quietHoursEnabled: false,
   quietHoursStart: "22:00",
   quietHoursEnd: "08:00",
   soundEnabled: true,
   vibrationEnabled: true,
   groupNotifications: true,
+  threadDmNotifications: true,
+  showMediaPreviews: true,
+  showPostPreviews: true,
+  enableInlineReply: true,
+  aggregationWindowHours: 24,
 };
 
 /**

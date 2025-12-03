@@ -75,8 +75,8 @@ export default defineConfig({
         injectionPoint: undefined,
       },
       workbox: {
-        // Import push notification handler
-        importScripts: ["/push-sw.js"],
+        // Import push notification handler and background sync handler
+        importScripts: ["/push-sw.js", "/background-sync-sw.js"],
         // Cache static assets with stale-while-revalidate
         runtimeCaching: [
           {
@@ -223,6 +223,16 @@ export default defineConfig({
             purpose: "any maskable",
           },
         ],
+        // Web Share Target API - allows receiving shared content from other apps
+        share_target: {
+          action: "/compose",
+          method: "GET",
+          params: {
+            title: "title",
+            text: "text",
+            url: "url",
+          },
+        },
       },
       devOptions: {
         enabled: false, // Disable SW in development to avoid caching issues

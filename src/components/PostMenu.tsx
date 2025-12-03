@@ -8,6 +8,7 @@ import {
   Link,
   List,
   MoreHorizontal,
+  Share,
   Trash2,
   UserX,
   VolumeX,
@@ -18,6 +19,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModal } from "../contexts/ModalContext";
 import { useModeration } from "../contexts/ModerationContext";
+import { useToast } from "../contexts/ToastContext";
+import { isWebShareSupported, sharePost } from "../services/share-service";
 import { AddToListModal } from "./AddToListModal";
 import { ReportModal } from "./ReportModal";
 
@@ -51,6 +54,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
   const { hidePost } = useHiddenPosts();
   const { muteUser, muteThread, blockUser } = useModeration();
   const { showDestructiveConfirm } = useModal();
+  const { showToast } = useToast();
 
   const isOwnPost = session?.did === post.author.did;
   const postRecord = post.record as any;
@@ -169,20 +173,55 @@ export const PostMenu: React.FC<PostMenuProps> = ({
     }
   };
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     setIsOpen(false);
     const postId = post.uri.split("/").pop();
     const link = `${window.location.origin}/thread/${post.author.handle}/${postId}`;
-    navigator.clipboard.writeText(link);
-    // You might want to show a toast notification here
+    try {
+      await navigator.clipboard.writeText(link);
+      showToast("Link copied to clipboard", {
+        type: "success",
+        duration: 2000,
+      });
+    } catch {
+      showToast("Failed to copy link", { type: "error" });
+    }
   };
 
-  const handleEmbed = () => {
+  const handleNativeShare = async () => {
+    setIsOpen(false);
+    const postId = post.uri.split("/").pop();
+    if (!postId) return;
+
+    const postText = (post.record as { text?: string })?.text;
+    const result = await sharePost(post.author.handle, postId, postText);
+
+    if (result.success) {
+      if (result.method === "clipboard") {
+        showToast("Link copied to clipboard", {
+          type: "success",
+          duration: 2000,
+        });
+      }
+      // Native share doesn't need a toast - the OS handles feedback
+    } else if (result.error !== "Share cancelled") {
+      showToast("Failed to share", { type: "error" });
+    }
+  };
+
+  const handleEmbed = async () => {
     setIsOpen(false);
     const postId = post.uri.split("/").pop();
     const embedCode = `<iframe src="https://bsky.app/profile/${post.author.handle}/post/${postId}/embed" width="500" height="350" frameborder="0"></iframe>`;
-    navigator.clipboard.writeText(embedCode);
-    // You might want to show a toast notification here
+    try {
+      await navigator.clipboard.writeText(embedCode);
+      showToast("Embed code copied to clipboard", {
+        type: "success",
+        duration: 2000,
+      });
+    } catch {
+      showToast("Failed to copy embed code", { type: "error" });
+    }
   };
 
   const handleOpenInBluesky = () => {
@@ -300,6 +339,17 @@ export const PostMenu: React.FC<PostMenuProps> = ({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="overflow-hidden py-1">
+                {/* Native Share (shown on mobile/PWA when supported) */}
+                {isWebShareSupported() && (
+                  <button
+                    onClick={handleNativeShare}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
+                  >
+                    <Share className="h-4 w-4" />
+                    Share post
+                  </button>
+                )}
+
                 {/* Always visible options */}
                 <button
                   onClick={handleCopyLink}
