@@ -47,6 +47,7 @@ class AnalyticsService {
   // Set user ID for tracking across sessions
   setUserId(userId: string | null) {
     this.userId = userId;
+    if (!this.initialized) return;
     if (userId) {
       window.gtag("set", { user_id: userId });
     }
