@@ -6,6 +6,7 @@
   "scripts": {
     "build": "wireit",
     "build:app": "wireit",
+    "build:ci": "wireit",
     "dev": "vite",
     "dev:all": "./dev-all.sh",
     "dev:api": "node server/api-server.js",
@@ -98,6 +99,11 @@
       "dependencies": [
         "build:app",
         "test:types"
+      ]
+    },
+    "build:ci": {
+      "dependencies": [
+        "build:app"
       ]
     },
     "build:app": {
