@@ -22,6 +22,29 @@ import {
   OfflineThreadSummary,
 } from "./offline-storage-db";
 
+// Helper to close the database connection
+function closeDB(instance: OfflineStorageDB): void {
+  // @ts-expect-error - accessing private for testing
+  const db = instance.db as IDBDatabase | null;
+  if (db) {
+    db.close();
+    // @ts-expect-error - accessing private for testing
+    instance.db = null;
+    // @ts-expect-error - accessing private for testing
+    instance.initPromise = null;
+  }
+}
+
+// Helper to delete IndexedDB and wait for it
+async function deleteDatabase(name: string): Promise<void> {
+  return new Promise((resolve) => {
+    const request = indexedDB.deleteDatabase(name);
+    request.onsuccess = () => resolve();
+    request.onerror = () => resolve(); // Resolve even on error in tests
+    request.onblocked = () => resolve(); // Resolve even when blocked
+  });
+}
+
 // Helper to create a fresh OfflineStorageDB instance for each test
 function createFreshDB(): OfflineStorageDB {
   // Reset the singleton for testing
@@ -31,10 +54,11 @@ function createFreshDB(): OfflineStorageDB {
 }
 
 // Helper to create mock feed items
+// Note: saveFeedItems expects Omit<OfflineFeedItem, "_offlineCachedAt"> which includes _feedType
 function createMockFeedItem(
-  overrides: Partial<OfflineFeedItem> = {},
-): Omit<OfflineFeedItem, "_offlineCachedAt" | "_feedType"> {
-  return {
+  overrides: Partial<Omit<OfflineFeedItem, "_offlineCachedAt">> = {},
+): Omit<OfflineFeedItem, "_offlineCachedAt"> {
+  const base: Omit<OfflineFeedItem, "_offlineCachedAt"> = {
     uri: `at://did:plc:test/app.bsky.feed.post/${Date.now()}`,
     cid: `cid-${Date.now()}`,
     indexedAt: new Date().toISOString(),
@@ -51,8 +75,9 @@ function createMockFeedItem(
     replyCount: 0,
     repostCount: 0,
     likeCount: 0,
-    ...overrides,
+    _feedType: "timeline",
   };
+  return { ...base, ...overrides };
 }
 
 // Helper to create mock DM conversation
@@ -121,19 +146,18 @@ describe("OfflineStorageDB", () => {
   beforeEach(async () => {
     // Reset circuit breakers between tests
     resetAllCircuitBreakers();
-    // Clear the fake IndexedDB
-    indexedDB.deleteDatabase("BskyOfflineStorage");
     // Create fresh DB instance
     db = createFreshDB();
   });
 
   afterEach(async () => {
-    // Clean up
-    try {
-      await db.clearAll();
-    } catch {
-      // Ignore cleanup errors
-    }
+    // Close database connection before cleanup
+    closeDB(db);
+    // Delete the database
+    await deleteDatabase("BskyOfflineStorage");
+    // Reset the singleton
+    // @ts-expect-error - accessing private static for testing
+    OfflineStorageDB.instance = undefined;
   });
 
   // ==================== DB Initialization & Migrations ====================

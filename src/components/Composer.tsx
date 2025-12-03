@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useLinkPreview } from "../hooks/useLinkPreview";
 import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
 import { analytics } from "../services/analytics";
 import type {
@@ -47,6 +48,7 @@ import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { createLogger } from "../utils/logger";
 import { EmojiPicker } from "./EmojiPicker";
 import { GiphySearch } from "./GiphySearch";
+import { LinkPreview } from "./LinkPreview";
 import {
   MentionTypeahead,
   type MentionTypeaheadHandle,
@@ -202,6 +204,24 @@ export function Composer() {
 
   // Video upload manager with automatic cleanup and duplicate prevention
   const videoUploadManager = useVideoUploadManager(agent);
+
+  // Link preview detection
+  const linkPreview = useLinkPreview(text);
+  const [linkPreviewEnabled, setLinkPreviewEnabled] = useState(true);
+  const lastDetectedUrl = useRef<string | null>(null);
+
+  // Re-enable link preview when a new URL is detected
+  useEffect(() => {
+    if (
+      linkPreview.detectedUrl &&
+      linkPreview.detectedUrl !== lastDetectedUrl.current
+    ) {
+      lastDetectedUrl.current = linkPreview.detectedUrl;
+      setLinkPreviewEnabled(true);
+    } else if (!linkPreview.detectedUrl) {
+      lastDetectedUrl.current = null;
+    }
+  }, [linkPreview.detectedUrl]);
 
   // Draft and scheduling state
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
@@ -1470,6 +1490,62 @@ export function Composer() {
           }
         }
 
+        // Add external link embed for first post if no media and link preview is available
+        if (
+          i === 0 &&
+          !postData.embed &&
+          linkPreviewEnabled &&
+          linkPreview.metadata
+        ) {
+          logger.log("Adding external link embed:", linkPreview.metadata.url);
+
+          const externalEmbed: {
+            $type: string;
+            external: {
+              uri: string;
+              title: string;
+              description: string;
+              thumb?: any;
+            };
+          } = {
+            $type: "app.bsky.embed.external",
+            external: {
+              uri: linkPreview.metadata.url,
+              title: linkPreview.metadata.title,
+              description: linkPreview.metadata.description,
+            },
+          };
+
+          // Upload thumbnail if available
+          if (linkPreview.metadata.imageUrl) {
+            try {
+              // Fetch the image
+              const imageResponse = await fetch(linkPreview.metadata.imageUrl);
+              if (imageResponse.ok) {
+                const imageBlob = await imageResponse.blob();
+                const imageData = new Uint8Array(await imageBlob.arrayBuffer());
+
+                const uploadResult = await uploadBlobWithRetry(
+                  agent,
+                  imageData,
+                  { encoding: imageBlob.type || "image/jpeg" },
+                );
+
+                externalEmbed.external.thumb = uploadResult.data.blob;
+                logger.log("Uploaded link preview thumbnail");
+              }
+            } catch (thumbError) {
+              logger.error(
+                "Failed to upload link preview thumbnail:",
+                thumbError,
+              );
+              // Continue without thumbnail
+            }
+          }
+
+          postData.embed = externalEmbed;
+        }
+
         // eslint-disable-next-line prefer-const
         result = await agent.post(postData);
         lastPost = {
@@ -1515,6 +1591,8 @@ export function Composer() {
       setCountdown(null);
       setReplyPermission("everyone"); // Reset reply permission
       videoUploadManager.resetUpload(); // Reset video upload state
+      setLinkPreviewEnabled(true); // Reset link preview state
+      linkPreview.clearPreview();
 
       // Delete draft if it was loaded
       if (currentDraftId) {
@@ -2281,6 +2359,23 @@ export function Composer() {
             </div>
           </div>
         )}
+
+        {/* Link Preview */}
+        {linkPreviewEnabled &&
+          media.length === 0 &&
+          (linkPreview.isLoading ||
+            linkPreview.metadata ||
+            linkPreview.error) && (
+            <LinkPreview
+              metadata={linkPreview.metadata}
+              isLoading={linkPreview.isLoading}
+              error={linkPreview.error}
+              onRemove={() => {
+                setLinkPreviewEnabled(false);
+                linkPreview.clearPreview();
+              }}
+            />
+          )}
 
         <div className="mb-3 mt-3 flex items-center gap-2">
           <input
