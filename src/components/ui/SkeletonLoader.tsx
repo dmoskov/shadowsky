@@ -1,11 +1,31 @@
 import React from "react";
 
+/**
+ * Skeleton Loader Design System
+ *
+ * Unified skeleton loading components with consistent animation timing.
+ *
+ * Animation Tokens (from LoadingState):
+ * - Pulse: 2s duration, cubic-bezier(0.4, 0, 0.6, 1)
+ * - Shimmer: 2s duration, linear, left-to-right
+ *
+ * All skeletons use the bsky theme colors for consistent appearance
+ * across light and dark modes.
+ */
+
 interface SkeletonLoaderProps {
+  /** Additional CSS classes */
   className?: string;
+  /** Height in pixels or CSS value */
   height?: string | number;
+  /** Width in pixels or CSS value */
   width?: string | number;
+  /** Shape variant */
   variant?: "text" | "circular" | "rectangular" | "rounded";
-  animation?: "pulse" | "wave";
+  /** Animation type */
+  animation?: "pulse" | "wave" | "shimmer" | "none";
+  /** Accessibility label */
+  "aria-label"?: string;
 }
 
 export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
@@ -14,30 +34,37 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   width = "100%",
   variant = "text",
   animation = "pulse",
+  "aria-label": ariaLabel,
 }) => {
-  const baseClasses = "bg-gray-200 dark:bg-gray-700";
+  // Use theme-aware colors instead of hardcoded gray
+  const baseClasses = "bg-bsky-bg-tertiary";
 
-  const animationClasses = {
+  const animationClasses: Record<string, string> = {
     pulse: "animate-pulse",
     wave: "animate-skeleton-wave",
+    shimmer: "animate-shimmer bg-shimmer-gradient bg-[length:1000px_100%]",
+    none: "",
   };
 
-  const variantClasses = {
+  const variantClasses: Record<string, string> = {
     text: "h-4 rounded",
     circular: "rounded-full",
     rectangular: "",
     rounded: "rounded-lg",
   };
 
-  const style = {
+  const style: React.CSSProperties = {
     height: typeof height === "number" ? `${height}px` : height,
     width: typeof width === "number" ? `${width}px` : width,
   };
 
   return (
     <div
-      className={`${baseClasses} ${animationClasses[animation]} ${variantClasses[variant]} ${className}`}
+      className={`${baseClasses} ${animationClasses[animation] || ""} ${variantClasses[variant]} ${className}`}
       style={style}
+      role="status"
+      aria-label={ariaLabel || "Loading"}
+      aria-busy="true"
     />
   );
 };

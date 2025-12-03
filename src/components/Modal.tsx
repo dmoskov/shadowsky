@@ -1,8 +1,10 @@
 import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 
 export type ModalType = "alert" | "confirm";
 export type ModalVariant = "info" | "warning" | "error" | "success";
+type ModalState = "entering" | "open" | "exiting" | "closed";
 
 interface ModalProps {
   isOpen: boolean;
@@ -41,9 +43,41 @@ export function Modal({
   cancelText = "Cancel",
   onConfirm,
 }: ModalProps) {
-  const containerRef = useFocusTrap<HTMLDivElement>(isOpen);
+  const [modalState, setModalState] = useState<ModalState>("closed");
+  const containerRef = useFocusTrap<HTMLDivElement>(
+    modalState === "entering" || modalState === "open",
+  );
 
-  if (!isOpen) return null;
+  // Handle isOpen prop changes
+  useEffect(() => {
+    if (isOpen && modalState === "closed") {
+      setModalState("entering");
+    } else if (
+      !isOpen &&
+      (modalState === "entering" || modalState === "open")
+    ) {
+      setModalState("exiting");
+    }
+  }, [isOpen, modalState]);
+
+  // Transition from entering to open after entrance animation
+  const handleEntranceEnd = useCallback(() => {
+    if (modalState === "entering") {
+      setModalState("open");
+    }
+  }, [modalState]);
+
+  // Transition from exiting to closed after exit animation
+  const handleExitEnd = useCallback(() => {
+    if (modalState === "exiting") {
+      setModalState("closed");
+      onClose(); // Notify parent that modal has fully closed
+    }
+  }, [modalState, onClose]);
+
+  const handleClose = useCallback(() => {
+    setModalState("exiting");
+  }, []);
 
   const Icon = variantIcons[variant];
   const iconColor = variantColors[variant];
@@ -52,14 +86,41 @@ export function Modal({
     if (onConfirm) {
       onConfirm();
     }
-    onClose();
+    handleClose();
   };
+
+  const handleBackdropClick = () => {
+    if (type === "alert") {
+      handleClose();
+    }
+  };
+
+  // Don't render if modal is fully closed
+  if (modalState === "closed") return null;
+
+  // Determine animation classes based on state
+  const isEntering = modalState === "entering";
+  const isExiting = modalState === "exiting";
+
+  const backdropAnimationClass = isEntering
+    ? "animate-enter-fade"
+    : isExiting
+      ? "animate-exit-fade"
+      : "";
+
+  const contentAnimationClass = isEntering
+    ? "animate-enter-scale"
+    : isExiting
+      ? "animate-exit-scale"
+      : "";
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-      onClick={type === "alert" ? onClose : undefined}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 ${backdropAnimationClass}`}
+      onClick={handleBackdropClick}
+      onAnimationEnd={isExiting ? handleExitEnd : undefined}
       role="presentation"
+      data-state={modalState}
     >
       <div
         ref={containerRef}
@@ -67,8 +128,10 @@ export function Modal({
         aria-modal="true"
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
-        className="relative w-full max-w-md overflow-hidden rounded-lg bg-white dark:bg-gray-900"
+        className={`relative w-full max-w-md overflow-hidden rounded-lg bg-white dark:bg-gray-900 ${contentAnimationClass}`}
         onClick={(e) => e.stopPropagation()}
+        onAnimationEnd={isEntering ? handleEntranceEnd : undefined}
+        data-state={modalState}
       >
         {/* Header */}
         <div className="flex items-start gap-3 p-6">
@@ -93,7 +156,7 @@ export function Modal({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close dialog"
             className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
           >
@@ -105,7 +168,7 @@ export function Modal({
         <div className="flex justify-end gap-3 border-t bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
           {type === "confirm" && (
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"
             >
               {cancelText}
