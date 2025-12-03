@@ -75,7 +75,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <ToastContext.Provider value={{ showToast, dismissToast, dismissAllToasts }}>
+    <ToastContext.Provider
+      value={{ showToast, dismissToast, dismissAllToasts }}
+    >
       {children}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </ToastContext.Provider>

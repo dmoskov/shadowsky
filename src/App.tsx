@@ -28,10 +28,10 @@ import {
 } from "./contexts/KeyboardShortcutsContext";
 import { ModalProvider } from "./contexts/ModalContext";
 import { ModerationProvider } from "./contexts/ModerationContext";
+import { StatusBarProvider } from "./contexts/StatusBarContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
-import { StatusBarProvider } from "./contexts/StatusBarContext";
 import { useErrorTracking, usePageTracking } from "./hooks/useAnalytics";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";

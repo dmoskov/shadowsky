@@ -40,7 +40,9 @@ const getHealthIcon = (level: HealthLevel, className: string = "h-4 w-4") => {
     case "error":
       return <AlertCircle className={`${className} text-red-500`} />;
     case "critical":
-      return <AlertCircle className={`${className} animate-pulse text-red-600`} />;
+      return (
+        <AlertCircle className={`${className} animate-pulse text-red-600`} />
+      );
   }
 };
 
@@ -228,7 +230,9 @@ export const StatusBar: React.FC = () => {
             aria-label={`System status: ${issueCount} issue${issueCount > 1 ? "s" : ""}. Click to expand.`}
             aria-expanded={false}
           >
-            <div className={`h-2 w-2 rounded-full ${getHealthColor(overallHealth)}`} />
+            <div
+              className={`h-2 w-2 rounded-full ${getHealthColor(overallHealth)}`}
+            />
             {issueCount > 0 && (
               <span
                 className="text-xs font-medium"
@@ -237,7 +241,10 @@ export const StatusBar: React.FC = () => {
                 {issueCount}
               </span>
             )}
-            <ChevronUp className="h-3 w-3" style={{ color: "var(--bsky-text-tertiary)" }} />
+            <ChevronUp
+              className="h-3 w-3"
+              style={{ color: "var(--bsky-text-tertiary)" }}
+            />
           </button>
         )}
 

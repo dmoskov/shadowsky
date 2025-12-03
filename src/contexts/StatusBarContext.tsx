@@ -17,11 +17,11 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { useAuth } from "./AuthContext";
-import { useWebSocket } from "./WebSocketContext";
 import { useMutationQueue } from "../hooks/useMutationQueue";
 import { getRateLimiterStats } from "../services/rate-limiter";
 import { WebSocketConnectionState } from "../types/websocket";
+import { useAuth } from "./AuthContext";
+import { useWebSocket } from "./WebSocketContext";
 
 // Health levels in order of severity
 export type HealthLevel = "healthy" | "warning" | "error" | "critical";
@@ -76,7 +76,12 @@ export const StatusBarProvider: React.FC<StatusBarProviderProps> = ({
   children,
 }) => {
   const { agent } = useAuth();
-  const { connectionState, stats: wsStats, reconnect, isEnabled: wsEnabled } = useWebSocket();
+  const {
+    connectionState,
+    stats: wsStats,
+    reconnect,
+    isEnabled: wsEnabled,
+  } = useWebSocket();
   const mutationQueue = useMutationQueue(agent);
   const [rateLimitStats, setRateLimitStats] = useState(getRateLimiterStats());
   const [isExpanded, setIsExpanded] = useState(false);
@@ -164,13 +169,15 @@ export const StatusBarProvider: React.FC<StatusBarProviderProps> = ({
 
   // Compute Mutation Queue subsystem status
   const mutationQueueStatus = useMemo((): SubsystemStatus => {
-    const { pendingCount, failedCount, isProcessing, isOnline, triggerSync } = mutationQueue;
+    const { pendingCount, failedCount, isProcessing, isOnline, triggerSync } =
+      mutationQueue;
 
     if (!isOnline) {
       return {
         name: "Sync Queue",
         level: pendingCount > 0 ? "warning" : "healthy",
-        message: pendingCount > 0 ? `Offline (${pendingCount} pending)` : "Offline",
+        message:
+          pendingCount > 0 ? `Offline (${pendingCount} pending)` : "Offline",
         details: { pendingCount, failedCount, isOnline },
       };
     }
@@ -229,15 +236,18 @@ export const StatusBarProvider: React.FC<StatusBarProviderProps> = ({
     ];
 
     const hasThrottling = buckets.some(
-      (b) => b.stats.throttledRequests > 0 || b.stats.queueLength > 0
+      (b) => b.stats.throttledRequests > 0 || b.stats.queueLength > 0,
     );
     const hasQueue = buckets.some((b) => b.stats.queueLength > 0);
     const lowTokens = buckets.some(
-      (b) => b.stats.availableTokens < b.stats.maxTokens * 0.2
+      (b) => b.stats.availableTokens < b.stats.maxTokens * 0.2,
     );
 
     if (hasQueue) {
-      const queuedCount = buckets.reduce((sum, b) => sum + b.stats.queueLength, 0);
+      const queuedCount = buckets.reduce(
+        (sum, b) => sum + b.stats.queueLength,
+        0,
+      );
       return {
         name: "Rate Limits",
         level: "warning",
@@ -332,7 +342,13 @@ export const StatusBarProvider: React.FC<StatusBarProviderProps> = ({
       hasIssues: overallHealth !== "healthy",
       issueCount,
     };
-  }, [websocketStatus, mutationQueueStatus, rateLimitStatus, networkStatus, refreshTrigger]);
+  }, [
+    websocketStatus,
+    mutationQueueStatus,
+    rateLimitStatus,
+    networkStatus,
+    refreshTrigger,
+  ]);
 
   const value: StatusBarContextType = {
     status,

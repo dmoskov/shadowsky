@@ -1,5 +1,5 @@
+import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { AlertCircle, CheckCircle, Info, X, AlertTriangle } from "lucide-react";
 import type { ToastData, ToastType } from "../contexts/ToastContext";
 
 interface ToastProps {
@@ -151,33 +151,30 @@ export function Toast({ toast, onDismiss }: ToastProps) {
       role="status"
       aria-live="polite"
       aria-atomic="true"
-      className={`
-        pointer-events-auto relative flex w-full max-w-sm items-start gap-3
-        rounded-lg border border-bsky-border-primary border-l-4
-        bg-bsky-bg-secondary p-4 shadow-lg
-        ${borderColorClass}
-        ${isExiting ? "animate-toast-out" : "animate-toast-in"}
-        ${isDragging ? "cursor-grabbing" : "cursor-grab"}
-      `}
+      className={`pointer-events-auto relative flex w-full max-w-sm items-start gap-3 rounded-lg border border-l-4 border-bsky-border-primary bg-bsky-bg-secondary p-4 shadow-lg ${borderColorClass} ${isExiting ? "animate-toast-out" : "animate-toast-in"} ${isDragging ? "cursor-grabbing" : "cursor-grab"} `}
       style={{
         transform: `translateX(${translateX}px)`,
         opacity: translateX > 0 ? 1 - translateX / 300 : 1,
-        transition: isDragging ? "none" : "transform 200ms ease-out, opacity 200ms ease-out",
+        transition: isDragging
+          ? "none"
+          : "transform 200ms ease-out, opacity 200ms ease-out",
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onMouseDown={handleMouseDown}
     >
-      <div className={`flex-shrink-0 rounded-full p-1 ${colorClass} bg-opacity-20`}>
+      <div
+        className={`flex-shrink-0 rounded-full p-1 ${colorClass} bg-opacity-20`}
+      >
         <Icon
           className={`h-5 w-5 ${colorClass.replace("bg-", "text-")}`}
           aria-hidden="true"
         />
       </div>
 
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-bsky-text-primary break-words">
+      <div className="min-w-0 flex-1">
+        <p className="break-words text-sm font-medium text-bsky-text-primary">
           {toast.message}
         </p>
       </div>
@@ -189,10 +186,7 @@ export function Toast({ toast, onDismiss }: ToastProps) {
             e.stopPropagation();
             dismiss();
           }}
-          className="flex-shrink-0 rounded-md p-1 text-bsky-text-tertiary
-                     hover:bg-bsky-bg-hover hover:text-bsky-text-primary
-                     focus:outline-none focus:ring-2 focus:ring-bsky-primary
-                     transition-colors duration-150"
+          className="flex-shrink-0 rounded-md p-1 text-bsky-text-tertiary transition-colors duration-150 hover:bg-bsky-bg-hover hover:text-bsky-text-primary focus:outline-none focus:ring-2 focus:ring-bsky-primary"
           aria-label="Dismiss notification"
         >
           <X className="h-4 w-4" aria-hidden="true" />
@@ -206,11 +200,7 @@ export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
   return (
     <>
       {/* ARIA live region for screen readers */}
-      <div
-        aria-live="assertive"
-        aria-atomic="true"
-        className="sr-only"
-      >
+      <div aria-live="assertive" aria-atomic="true" className="sr-only">
         {toasts.map((toast) => (
           <div key={toast.id}>
             {toast.type}: {toast.message}
@@ -220,8 +210,7 @@ export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
 
       {/* Visual toast container - bottom-right, stacking upward */}
       <div
-        className="fixed bottom-4 right-4 z-50 flex flex-col-reverse gap-2
-                   pointer-events-none max-h-screen overflow-hidden"
+        className="pointer-events-none fixed bottom-4 right-4 z-50 flex max-h-screen flex-col-reverse gap-2 overflow-hidden"
         style={{ maxHeight: "calc(100vh - 32px)" }}
       >
         {toasts.map((toast) => (
