@@ -29,7 +29,9 @@ import {
 import { ModalProvider } from "./contexts/ModalContext";
 import { ModerationProvider } from "./contexts/ModerationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { ToastProvider } from "./contexts/ToastContext";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
+import { StatusBarProvider } from "./contexts/StatusBarContext";
 import { useErrorTracking, usePageTracking } from "./hooks/useAnalytics";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
@@ -69,9 +71,9 @@ const NotificationPermissionPrompt = lazyWithRetry(() =>
     default: m.NotificationPermissionPrompt,
   })),
 );
-const RateLimitStatus = lazyWithRetry(() =>
-  import("./components/RateLimitStatus").then((m) => ({
-    default: m.RateLimitStatus,
+const StatusBar = lazyWithRetry(() =>
+  import("./components/StatusBar").then((m) => ({
+    default: m.StatusBar,
   })),
 );
 const ServiceWorkerUpdatePrompt = lazyWithRetry(() =>
@@ -87,16 +89,6 @@ const SwipeIndicator = lazyWithRetry(() =>
 const FloatingActionButton = lazyWithRetry(() =>
   import("./components/ui/FloatingActionButton").then((m) => ({
     default: m.FloatingActionButton,
-  })),
-);
-const WebSocketStatus = lazyWithRetry(() =>
-  import("./components/WebSocketStatus").then((m) => ({
-    default: m.WebSocketStatus,
-  })),
-);
-const MutationQueueStatus = lazyWithRetry(() =>
-  import("./components/MutationQueueStatus").then((m) => ({
-    default: m.MutationQueueStatus,
   })),
 );
 
@@ -527,9 +519,7 @@ function AppContent() {
       <Suspense fallback={null}>
         <FloatingActionButton />
         <SwipeIndicator />
-        <RateLimitStatus />
-        <WebSocketStatus />
-        <MutationQueueStatus />
+        <StatusBar />
         <ErrorBoundary
           componentName="Push Notifications"
           fallback={null}
@@ -582,20 +572,24 @@ function App() {
                 <KeyboardShortcutsProvider>
                   <WebSocketProvider>
                     <ModalProvider>
-                      <HiddenPostsProvider>
-                        <ModerationProvider>
-                          <StorageErrorProvider>
-                            <ErrorBoundary
-                              componentName="Application"
-                              onError={(error) => {
-                                analytics.trackError(error, "App");
-                              }}
-                            >
-                              <AppContent />
-                            </ErrorBoundary>
-                          </StorageErrorProvider>
-                        </ModerationProvider>
-                      </HiddenPostsProvider>
+                      <ToastProvider>
+                        <HiddenPostsProvider>
+                          <ModerationProvider>
+                            <StorageErrorProvider>
+                              <StatusBarProvider>
+                                <ErrorBoundary
+                                  componentName="Application"
+                                  onError={(error) => {
+                                    analytics.trackError(error, "App");
+                                  }}
+                                >
+                                  <AppContent />
+                                </ErrorBoundary>
+                              </StatusBarProvider>
+                            </StorageErrorProvider>
+                          </ModerationProvider>
+                        </HiddenPostsProvider>
+                      </ToastProvider>
                     </ModalProvider>
                   </WebSocketProvider>
                 </KeyboardShortcutsProvider>

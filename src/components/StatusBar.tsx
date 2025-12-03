@@ -1,0 +1,318 @@
+/**
+ * StatusBar Component
+ *
+ * Unified status indicator that consolidates WebSocket, mutation queue,
+ * rate limits, and network status into a single coherent UI.
+ *
+ * Design principles:
+ * - Hidden by default when everything is healthy
+ * - Shows a small indicator when there are issues
+ * - Expands on click to show detailed status
+ * - Uses ARIA live regions for accessibility
+ */
+
+import {
+  Activity,
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle,
+  ChevronUp,
+  RefreshCw,
+  Wifi,
+  WifiOff,
+  X,
+  Zap,
+} from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  useStatusBar,
+  type HealthLevel,
+  type SubsystemStatus,
+} from "../contexts/StatusBarContext";
+
+// Get icon for health level
+const getHealthIcon = (level: HealthLevel, className: string = "h-4 w-4") => {
+  switch (level) {
+    case "healthy":
+      return <CheckCircle className={`${className} text-green-500`} />;
+    case "warning":
+      return <AlertTriangle className={`${className} text-yellow-500`} />;
+    case "error":
+      return <AlertCircle className={`${className} text-red-500`} />;
+    case "critical":
+      return <AlertCircle className={`${className} animate-pulse text-red-600`} />;
+  }
+};
+
+// Get background color for health level
+const getHealthColor = (level: HealthLevel): string => {
+  switch (level) {
+    case "healthy":
+      return "bg-green-500";
+    case "warning":
+      return "bg-yellow-500";
+    case "error":
+      return "bg-red-500";
+    case "critical":
+      return "bg-red-600";
+  }
+};
+
+// Get icon for subsystem
+const getSubsystemIcon = (name: string, level: HealthLevel) => {
+  const color =
+    level === "healthy"
+      ? "text-green-500"
+      : level === "warning"
+        ? "text-yellow-500"
+        : "text-red-500";
+
+  switch (name) {
+    case "WebSocket":
+      return level === "healthy" ? (
+        <Activity className={`h-4 w-4 ${color}`} />
+      ) : (
+        <Activity className={`h-4 w-4 ${color} animate-pulse`} />
+      );
+    case "Sync Queue":
+      return <RefreshCw className={`h-4 w-4 ${color}`} />;
+    case "Rate Limits":
+      return <Zap className={`h-4 w-4 ${color}`} />;
+    case "Network":
+      return level === "healthy" ? (
+        <Wifi className={`h-4 w-4 ${color}`} />
+      ) : (
+        <WifiOff className={`h-4 w-4 ${color}`} />
+      );
+    default:
+      return getHealthIcon(level);
+  }
+};
+
+// Subsystem row component
+const SubsystemRow: React.FC<{ subsystem: SubsystemStatus }> = ({
+  subsystem,
+}) => {
+  return (
+    <div
+      className="flex items-center justify-between py-2"
+      style={{ borderBottom: "1px solid var(--bsky-border)" }}
+    >
+      <div className="flex items-center gap-2">
+        {getSubsystemIcon(subsystem.name, subsystem.level)}
+        <span
+          className="text-sm font-medium"
+          style={{ color: "var(--bsky-text-primary)" }}
+        >
+          {subsystem.name}
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span
+          className="text-xs"
+          style={{ color: "var(--bsky-text-secondary)" }}
+        >
+          {subsystem.message}
+        </span>
+        {subsystem.action && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              subsystem.action?.handler();
+            }}
+            className="rounded px-2 py-0.5 text-xs font-medium transition-colors hover:opacity-80"
+            style={{
+              background: "var(--bsky-primary)",
+              color: "white",
+            }}
+          >
+            {subsystem.action.label}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export const StatusBar: React.FC = () => {
+  const { status, isExpanded, setIsExpanded, refresh } = useStatusBar();
+  const [isVisible, setIsVisible] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Show the status bar when there are issues
+  useEffect(() => {
+    if (status.hasIssues) {
+      setIsVisible(true);
+    } else {
+      // Keep visible for a moment before hiding
+      const timer = setTimeout(() => {
+        if (!isExpanded && !isHovered) {
+          setIsVisible(false);
+        }
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [status.hasIssues, isExpanded, isHovered]);
+
+  // Close expanded view when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsExpanded(false);
+      }
+    };
+
+    if (isExpanded) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isExpanded, setIsExpanded]);
+
+  // Don't render if no issues and not visible
+  if (!isVisible && !status.hasIssues) {
+    return null;
+  }
+
+  const { overallHealth, subsystems, issueCount } = status;
+
+  return (
+    <>
+      {/* ARIA live region for screen readers */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {status.hasIssues
+          ? `System status: ${issueCount} issue${issueCount > 1 ? "s" : ""} detected. ${
+              subsystems.network.level !== "healthy"
+                ? subsystems.network.message + ". "
+                : ""
+            }${
+              subsystems.websocket.level !== "healthy"
+                ? "WebSocket: " + subsystems.websocket.message + ". "
+                : ""
+            }${
+              subsystems.mutationQueue.level !== "healthy"
+                ? "Sync queue: " + subsystems.mutationQueue.message + ". "
+                : ""
+            }${
+              subsystems.rateLimit.level !== "healthy"
+                ? "Rate limits: " + subsystems.rateLimit.message + "."
+                : ""
+            }`
+          : "System status: All systems operational."}
+      </div>
+
+      <div
+        ref={containerRef}
+        className="fixed bottom-20 right-4 z-50 lg:bottom-4"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Collapsed view - small indicator */}
+        {!isExpanded && (
+          <button
+            onClick={() => setIsExpanded(true)}
+            className="flex items-center gap-2 rounded-full px-3 py-2 shadow-lg transition-all duration-200 hover:scale-105"
+            style={{
+              background: "var(--bsky-bg-secondary)",
+              border: "1px solid var(--bsky-border)",
+            }}
+            aria-label={`System status: ${issueCount} issue${issueCount > 1 ? "s" : ""}. Click to expand.`}
+            aria-expanded={false}
+          >
+            <div className={`h-2 w-2 rounded-full ${getHealthColor(overallHealth)}`} />
+            {issueCount > 0 && (
+              <span
+                className="text-xs font-medium"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                {issueCount}
+              </span>
+            )}
+            <ChevronUp className="h-3 w-3" style={{ color: "var(--bsky-text-tertiary)" }} />
+          </button>
+        )}
+
+        {/* Expanded view - detailed status */}
+        {isExpanded && (
+          <div
+            className="w-72 rounded-lg shadow-xl transition-all duration-200"
+            style={{
+              background: "var(--bsky-bg-secondary)",
+              border: "1px solid var(--bsky-border)",
+            }}
+          >
+            {/* Header */}
+            <div
+              className="flex items-center justify-between p-3"
+              style={{ borderBottom: "1px solid var(--bsky-border)" }}
+            >
+              <div className="flex items-center gap-2">
+                {getHealthIcon(overallHealth)}
+                <span
+                  className="text-sm font-semibold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  System Status
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => refresh()}
+                  className="rounded p-1 transition-colors hover:bg-black/10"
+                  aria-label="Refresh status"
+                >
+                  <RefreshCw
+                    className="h-4 w-4"
+                    style={{ color: "var(--bsky-text-tertiary)" }}
+                  />
+                </button>
+                <button
+                  onClick={() => setIsExpanded(false)}
+                  className="rounded p-1 transition-colors hover:bg-black/10"
+                  aria-label="Close status panel"
+                >
+                  <X
+                    className="h-4 w-4"
+                    style={{ color: "var(--bsky-text-tertiary)" }}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Subsystems list */}
+            <div className="p-3">
+              <SubsystemRow subsystem={subsystems.network} />
+              <SubsystemRow subsystem={subsystems.websocket} />
+              <SubsystemRow subsystem={subsystems.mutationQueue} />
+              <SubsystemRow subsystem={subsystems.rateLimit} />
+            </div>
+
+            {/* Footer */}
+            <div
+              className="px-3 py-2 text-center"
+              style={{
+                borderTop: "1px solid var(--bsky-border)",
+                color: "var(--bsky-text-tertiary)",
+              }}
+            >
+              <span className="text-xs">
+                {status.hasIssues
+                  ? "Some services are experiencing issues"
+                  : "All systems operational"}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
