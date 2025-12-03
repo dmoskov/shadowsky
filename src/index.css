@@ -27,6 +27,11 @@
 
 /* Consistent spacing system */
 @layer utilities {
+  /* Hide scrollbar in minimap */
+  .minimap-scroll-container::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Standard container padding */
   .bsky-container-padding {
     @apply px-3 py-2.5;

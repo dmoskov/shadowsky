@@ -438,9 +438,11 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
           <>
             <div
               ref={containerRef}
-              className="bsky-scrollbar overflow-y-auto overflow-x-hidden"
+              className="minimap-scroll-container overflow-y-auto overflow-x-hidden"
               style={{
                 maxHeight: "calc(70vh - 60px)",
+                scrollbarWidth: "none", // Firefox
+                msOverflowStyle: "none", // IE/Edge
               }}
             >
               <svg
