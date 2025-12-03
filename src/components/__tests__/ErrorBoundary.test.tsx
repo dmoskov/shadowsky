@@ -30,13 +30,18 @@ describe("ErrorBoundary", () => {
 
   it("renders error UI when child component throws", () => {
     render(
-      <ErrorBoundary componentName="Test Component">
+      <ErrorBoundary componentName="Test Component" showTechnicalDetails>
         <ThrowError shouldThrow={true} />
       </ErrorBoundary>,
     );
 
-    expect(screen.getByText("Test Component Error")).toBeInTheDocument();
-    expect(screen.getByText("Test error")).toBeInTheDocument();
+    // Check for user-friendly error title
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    // Check for affected area info
+    expect(
+      screen.getByText(/Affected area: Test Component/),
+    ).toBeInTheDocument();
+    // Check for Try Again button
     expect(screen.getByText("Try Again")).toBeInTheDocument();
   });
 

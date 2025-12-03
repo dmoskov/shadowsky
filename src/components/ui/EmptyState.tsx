@@ -18,7 +18,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import React from "react";
-import { ErrorIllustration, type ErrorIllustrationType } from "./ErrorIllustration";
+import {
+  ErrorIllustration,
+  type ErrorIllustrationType,
+} from "./ErrorIllustration";
 
 export type EmptyStateVariant =
   | "empty"
@@ -267,7 +270,13 @@ export const SearchEmptyState: React.FC<{
     }
     actions={
       onClearSearch
-        ? [{ label: "Clear search", onClick: onClearSearch, variant: "secondary" }]
+        ? [
+            {
+              label: "Clear search",
+              onClick: onClearSearch,
+              variant: "secondary",
+            },
+          ]
         : undefined
     }
     className={className}

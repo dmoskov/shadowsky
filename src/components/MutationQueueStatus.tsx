@@ -112,9 +112,7 @@ export const MutationQueueStatus: React.FC = () => {
   const handleClear = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (
-      window.confirm(
-        "Discard unsaved changes? This action cannot be undone.",
-      )
+      window.confirm("Discard unsaved changes? This action cannot be undone.")
     ) {
       await clearQueue();
     }
@@ -199,16 +197,18 @@ export const MutationQueueStatus: React.FC = () => {
 
             {/* Action buttons */}
             <div className="flex gap-2">
-              {isOnline && (pendingCount > 0 || failedCount > 0) && !isProcessing && (
-                <button
-                  onClick={handleSync}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-white transition-colors"
-                  style={{ backgroundColor: "var(--bsky-primary)" }}
-                >
-                  <RefreshCw className="h-3.5 w-3.5" />
-                  Sync now
-                </button>
-              )}
+              {isOnline &&
+                (pendingCount > 0 || failedCount > 0) &&
+                !isProcessing && (
+                  <button
+                    onClick={handleSync}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-white transition-colors"
+                    style={{ backgroundColor: "var(--bsky-primary)" }}
+                  >
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Sync now
+                  </button>
+                )}
               {(pendingCount > 0 || failedCount > 0) && (
                 <button
                   onClick={handleClear}

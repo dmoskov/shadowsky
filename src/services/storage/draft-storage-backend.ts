@@ -2,9 +2,7 @@ import { AtpAgent } from "@atproto/api";
 import { ThreadDraft } from "../../services/drafts";
 import { StorageBackend } from "./types";
 
-export abstract class DraftStorageBackend
-  implements StorageBackend<ThreadDraft>
-{
+export abstract class DraftStorageBackend implements StorageBackend<ThreadDraft> {
   protected agent?: AtpAgent;
 
   abstract initialize(agent?: AtpAgent): Promise<void>;
