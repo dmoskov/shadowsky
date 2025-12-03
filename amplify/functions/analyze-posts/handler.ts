@@ -236,8 +236,8 @@ export const handler = async (event: any) => {
       return createMissingParameterError("posts", event, correlationId);
     }
 
-    // Limit to 50 posts for analysis
-    const postsToAnalyze = posts.slice(0, 50);
+    // Limit to 25 posts for analysis (reduced to avoid context size issues)
+    const postsToAnalyze = posts.slice(0, 25);
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
@@ -250,13 +250,19 @@ export const handler = async (event: any) => {
       correlationId,
     );
 
+    // Truncate long posts to avoid exceeding Claude's context limits
+    const truncatePostText = (text: string, maxLength: number = 500): string => {
+      if (text.length <= maxLength) return text;
+      return text.substring(0, maxLength - 3) + "...";
+    };
+
     // Build the post analysis context
     const postsContext = postsToAnalyze
       .map((post: PostData, i: number) => {
         const engagement =
           (post.likes || 0) + (post.reposts || 0) + (post.replies || 0);
         return `Post ${i + 1}:
-Text: "${post.text}"
+Text: "${truncatePostText(post.text)}"
 Date: ${post.createdAt || "unknown"}
 Engagement: ${engagement} (${post.likes || 0} likes, ${post.reposts || 0} reposts, ${post.replies || 0} replies)`;
       })

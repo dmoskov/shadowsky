@@ -928,6 +928,174 @@ setInterval(
   60 * 60 * 1000,
 );
 
+// Fetch link metadata endpoint (for link previews in composer)
+app.post("/api/fetch-link-metadata", async (req, res) => {
+  const { url } = req.body;
+
+  if (!url) {
+    return res.status(400).json({ error: "Missing url parameter" });
+  }
+
+  // Validate URL
+  try {
+    const parsedUrl = new URL(url);
+    if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+      return res.status(400).json({ error: "Invalid URL format" });
+    }
+  } catch {
+    return res.status(400).json({ error: "Invalid URL format" });
+  }
+
+  console.log("Fetching link metadata for:", url);
+
+  try {
+    // Fetch the URL with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; ShadowSky/1.0; +https://shadowsky.io)",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+      },
+      signal: controller.signal,
+      redirect: "follow",
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.error("Failed to fetch URL:", response.status);
+      return res.status(500).json({
+        error: `Failed to fetch URL: ${response.status}`,
+      });
+    }
+
+    const contentType = response.headers.get("content-type") || "";
+    if (
+      !contentType.includes("text/html") &&
+      !contentType.includes("application/xhtml+xml")
+    ) {
+      // Not an HTML page, return minimal metadata
+      return res.json({
+        url,
+        title: new URL(url).hostname,
+        description: "",
+      });
+    }
+
+    // Read the HTML content (limit to first 100KB)
+    const html = await response.text();
+    const limitedHtml = html.slice(0, 100 * 1024);
+
+    // Extract meta tags
+    let title = "";
+    let description = "";
+    let imageUrl = null;
+
+    // Extract <title> tag
+    const titleMatch = limitedHtml.match(/<title[^>]*>([^<]*)<\/title>/i);
+    if (titleMatch) {
+      title = decodeHtmlEntities(titleMatch[1].trim());
+    }
+
+    // Extract meta tags with both attribute orders
+    const metaRegex1 =
+      /<meta\s+(?:[^>]*?\s+)?(?:name|property)=["']([^"']+)["']\s+(?:[^>]*?\s+)?content=["']([^"']*)["'][^>]*>/gi;
+    const metaRegex2 =
+      /<meta\s+(?:[^>]*?\s+)?content=["']([^"']*)["']\s+(?:[^>]*?\s+)?(?:name|property)=["']([^"']+)["'][^>]*>/gi;
+
+    let match;
+    while ((match = metaRegex1.exec(limitedHtml)) !== null) {
+      processMetaTag(match[1].toLowerCase(), decodeHtmlEntities(match[2]));
+    }
+    while ((match = metaRegex2.exec(limitedHtml)) !== null) {
+      processMetaTag(match[2].toLowerCase(), decodeHtmlEntities(match[1]));
+    }
+
+    function processMetaTag(name, content) {
+      switch (name) {
+        case "og:title":
+        case "twitter:title":
+          if (!title || name === "og:title") title = content;
+          break;
+        case "og:description":
+        case "twitter:description":
+        case "description":
+          if (!description || name === "og:description") description = content;
+          break;
+        case "og:image":
+        case "twitter:image":
+        case "twitter:image:src":
+          if (!imageUrl || name === "og:image") imageUrl = content;
+          break;
+      }
+    }
+
+    // Resolve relative image URLs
+    if (imageUrl) {
+      try {
+        if (imageUrl.startsWith("//")) {
+          imageUrl = `https:${imageUrl}`;
+        } else if (
+          !imageUrl.startsWith("http://") &&
+          !imageUrl.startsWith("https://")
+        ) {
+          const base = new URL(url);
+          if (imageUrl.startsWith("/")) {
+            imageUrl = `${base.origin}${imageUrl}`;
+          } else {
+            imageUrl = new URL(imageUrl, url).href;
+          }
+        }
+      } catch {
+        imageUrl = null;
+      }
+    }
+
+    console.log("Link metadata extracted:", {
+      title: title.slice(0, 50),
+      hasDescription: !!description,
+      hasImage: !!imageUrl,
+    });
+
+    res.json({
+      url,
+      title: title || new URL(url).hostname,
+      description: description || "",
+      imageUrl,
+    });
+  } catch (error) {
+    console.error("Error fetching link metadata:", error);
+
+    if (error.name === "AbortError") {
+      return res.status(500).json({ error: "Request timed out" });
+    }
+
+    res.status(500).json({
+      error: error.message || "Failed to fetch link metadata",
+    });
+  }
+});
+
+function decodeHtmlEntities(text) {
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&#x2F;/g, "/")
+    .replace(/&nbsp;/g, " ");
+}
+
 // Thread summary endpoint
 app.post("/api/thread-summary", async (req, res) => {
   const { posts, format = "haiku" } = req.body;
@@ -1043,7 +1211,7 @@ Return ONLY the bullet points, no headers or additional formatting.`;
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20250929",
+        model: "claude-haiku-4-5-20251001",
         max_tokens: maxTokens,
         messages: [
           {
@@ -1512,6 +1680,7 @@ httpServer.listen(PORT, () => {
   console.log(`  - POST /api/adjust-tone       : Adjust post tone`);
   console.log(`  - POST /api/optimize-thread   : Optimize thread structure`);
   console.log(`  - POST /api/suggest-hashtags  : Suggest hashtags`);
+  console.log(`  - POST /api/fetch-link-metadata: Fetch link preview metadata`);
   console.log(
     `  - POST /api/analyze-posts     : Analyze user posts qualitatively`,
   );

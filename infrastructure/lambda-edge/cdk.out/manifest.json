@@ -1,28 +1,28 @@
 {
   "version": "48.0.0",
   "artifacts": {
-    "ShadowSkyCloudFront.assets": {
+    "ShadowSkyOgMetaEdge.assets": {
       "type": "cdk:asset-manifest",
       "properties": {
-        "file": "ShadowSkyCloudFront.assets.json",
+        "file": "ShadowSkyOgMetaEdge.assets.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
       }
     },
-    "ShadowSkyCloudFront": {
+    "ShadowSkyOgMetaEdge": {
       "type": "aws:cloudformation:stack",
       "environment": "aws://unknown-account/us-east-1",
       "properties": {
-        "templateFile": "ShadowSkyCloudFront.template.json",
+        "templateFile": "ShadowSkyOgMetaEdge.template.json",
         "terminationProtection": false,
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/3d19c12dbdb6b4cfa4731c7e15e9874facf5284eeefa9497478138eb01bfaccd.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/68a482ea291a2450981b4cabbc591713f4c869c2e30f697617072ac5118e7fe4.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
-          "ShadowSkyCloudFront.assets"
+          "ShadowSkyOgMetaEdge.assets"
         ],
         "lookupRole": {
           "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
@@ -31,53 +31,59 @@
         }
       },
       "dependencies": [
-        "ShadowSkyCloudFront.assets"
+        "ShadowSkyOgMetaEdge.assets"
       ],
       "metadata": {
-        "/ShadowSkyCloudFront/Distribution/Resource": [
+        "/ShadowSkyOgMetaEdge/EdgeLambdaRole/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "Distribution830FAC52"
+            "data": "EdgeLambdaRole53C9CC2F"
           }
         ],
-        "/ShadowSkyCloudFront/DistributionDomainName": [
+        "/ShadowSkyOgMetaEdge/OgMetaEdgeFunction/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "DistributionDomainName"
+            "data": "OgMetaEdgeFunctionFE6C96D6"
           }
         ],
-        "/ShadowSkyCloudFront/DistributionId": [
+        "/ShadowSkyOgMetaEdge/OgMetaEdgeFunction/CurrentVersion/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "DistributionId"
+            "data": "OgMetaEdgeFunctionCurrentVersionA9E992B178a04e4ae0c27b04298538059e8d4ea9"
           }
         ],
-        "/ShadowSkyCloudFront/NextSteps": [
+        "/ShadowSkyOgMetaEdge/LambdaVersionArn": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "NextSteps"
+            "data": "LambdaVersionArn"
           }
         ],
-        "/ShadowSkyCloudFront/CDKMetadata/Default": [
+        "/ShadowSkyOgMetaEdge/Instructions": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "Instructions"
+          }
+        ],
+        "/ShadowSkyOgMetaEdge/CDKMetadata/Default": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CDKMetadata"
           }
         ],
-        "/ShadowSkyCloudFront/BootstrapVersion": [
+        "/ShadowSkyOgMetaEdge/BootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
             "data": "BootstrapVersion"
           }
         ],
-        "/ShadowSkyCloudFront/CheckBootstrapVersion": [
+        "/ShadowSkyOgMetaEdge/CheckBootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
             "data": "CheckBootstrapVersion"
           }
         ]
       },
-      "displayName": "ShadowSkyCloudFront"
+      "displayName": "ShadowSkyOgMetaEdge"
     },
     "Tree": {
       "type": "cdk:tree",

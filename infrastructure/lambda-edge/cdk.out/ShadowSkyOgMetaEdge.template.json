@@ -49,7 +49,7 @@
      "S3Bucket": {
       "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
      },
-     "S3Key": "09ccd5767c40f5a46ede65d7c700a13de90cd56c4926bbc1ed2fe68c859d19c1.zip"
+     "S3Key": "26fb1cddea75b5f01047cdae3f98cd99268383d029ed3b22241d8836c5bc0597.zip"
     },
     "Description": "Lambda@Edge function for ShadowSky OG meta tag generation",
     "FunctionName": "shadowsky-og-meta-edge",
@@ -69,12 +69,12 @@
    ],
    "Metadata": {
     "aws:cdk:path": "ShadowSkyOgMetaEdge/OgMetaEdgeFunction/Resource",
-    "aws:asset:path": "asset.09ccd5767c40f5a46ede65d7c700a13de90cd56c4926bbc1ed2fe68c859d19c1",
+    "aws:asset:path": "asset.26fb1cddea75b5f01047cdae3f98cd99268383d029ed3b22241d8836c5bc0597",
     "aws:asset:is-bundled": false,
     "aws:asset:property": "Code"
    }
   },
-  "OgMetaEdgeFunctionCurrentVersionA9E992B1d8176d7d1729a148ce92210d4ce10b91": {
+  "OgMetaEdgeFunctionCurrentVersionA9E992B178a04e4ae0c27b04298538059e8d4ea9": {
    "Type": "AWS::Lambda::Version",
    "Properties": {
     "FunctionName": {
@@ -100,7 +100,7 @@
   "LambdaVersionArn": {
    "Description": "Lambda@Edge Version ARN - Use this in CloudFront viewer-request",
    "Value": {
-    "Ref": "OgMetaEdgeFunctionCurrentVersionA9E992B1d8176d7d1729a148ce92210d4ce10b91"
+    "Ref": "OgMetaEdgeFunctionCurrentVersionA9E992B178a04e4ae0c27b04298538059e8d4ea9"
    },
    "Export": {
     "Name": "ShadowSkyOgMetaEdgeLambdaArn"

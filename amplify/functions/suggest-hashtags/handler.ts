@@ -45,6 +45,9 @@ export const handler = async (event: any) => {
       correlationId,
     );
 
+    // Truncate very long text to avoid context issues
+    const truncatedText = text.length > 1000 ? text.substring(0, 997) + "..." : text;
+
     const existingTagsText =
       existingTags.length > 0
         ? `\n\nExisting tags to avoid: ${existingTags.join(", ")}`
@@ -65,7 +68,7 @@ export const handler = async (event: any) => {
             role: "user",
             content: `Suggest relevant hashtags for this social media post.
 
-Post: "${text}"${existingTagsText}
+Post: "${truncatedText}"${existingTagsText}
 
 Provide a JSON response with:
 {

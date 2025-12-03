@@ -55,10 +55,14 @@ export const handler = async (event: any) => {
       correlationId,
     );
 
+    // Truncate long posts to avoid context size issues
+    const truncateText = (text: string, max: number = 500): string =>
+      text.length <= max ? text : text.substring(0, max - 3) + "...";
+
     // Build the historical posts context
     const historicalContext = historicalPosts
       .slice(0, 20) // Limit to 20 most recent posts
-      .map((post, i) => `${i + 1}. ${post}`)
+      .map((post, i) => `${i + 1}. ${truncateText(post)}`)
       .join("\n");
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -80,7 +84,7 @@ HISTORICAL POSTS:
 ${historicalContext}
 
 CURRENT DRAFT:
-"${currentText}"
+"${truncateText(currentText, 1000)}"
 
 Provide a JSON response with:
 1. userStyleSummary: A 1-2 sentence description of their typical writing style (tone, patterns, word choice, post length, emoji usage, etc.)

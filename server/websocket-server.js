@@ -50,12 +50,60 @@ class WebSocketNotificationServer {
     const url = new URL(req.url, "ws://localhost");
     const token = url.searchParams.get("token");
 
-    if (!token) {
-      this.log("Connection rejected: Missing token");
-      ws.close(1008, "Missing authentication token");
+    // If token is in URL, authenticate immediately (legacy support)
+    if (token) {
+      this.authenticateWithToken(ws, token);
       return;
     }
 
+    // Otherwise, wait for AUTH message from client
+    this.log("Waiting for authentication message...");
+    ws.isAuthenticated = false;
+
+    // Set up temporary message handler for authentication
+    const authTimeout = setTimeout(() => {
+      if (!ws.isAuthenticated) {
+        this.log("Connection rejected: Authentication timeout");
+        ws.close(1008, "Authentication timeout");
+      }
+    }, 10000); // 10 second timeout
+
+    ws.on("message", (data) => {
+      if (ws.isAuthenticated) {
+        // Already authenticated, handle normally
+        this.handleMessage(ws, ws.userDid, data);
+        return;
+      }
+
+      // Handle authentication message
+      try {
+        const message = JSON.parse(data.toString());
+        if (message.type === "auth" && message.token) {
+          clearTimeout(authTimeout);
+          this.authenticateWithToken(ws, message.token);
+        } else {
+          this.log("Connection rejected: Expected auth message");
+          ws.close(1008, "Expected authentication message");
+        }
+      } catch (err) {
+        this.log("Connection rejected: Invalid message format");
+        ws.close(1008, "Invalid message format");
+      }
+    });
+
+    ws.on("close", () => {
+      clearTimeout(authTimeout);
+      if (ws.isAuthenticated && ws.userDid) {
+        this.handleDisconnect(ws, ws.userDid);
+      }
+    });
+
+    ws.on("error", (error) => {
+      this.logError("WebSocket error:", error);
+    });
+  }
+
+  async authenticateWithToken(ws, token) {
     // Decode and validate JWT token
     let decoded;
     try {
@@ -66,12 +114,19 @@ class WebSocketNotificationServer {
       }
     } catch (err) {
       this.log("Connection rejected: Invalid token", err.message);
+      this.sendToConnection(ws, {
+        type: "auth_failure",
+        error: "Invalid token",
+        timestamp: new Date().toISOString(),
+      });
       ws.close(1008, "Invalid token");
       return;
     }
 
     const userDid = decoded.sub;
-    this.log(`Client connected: ${userDid}`);
+    ws.isAuthenticated = true;
+    ws.userDid = userDid;
+    this.log(`Client authenticated: ${userDid}`);
 
     // Store connection
     if (!this.userConnections.has(userDid)) {
@@ -108,27 +163,21 @@ class WebSocketNotificationServer {
       this.startPollingForUser(userDid);
     }
 
-    // Set up WebSocket event handlers
+    // Set up WebSocket event handlers (only if not already set up via message-based auth)
     ws.isAlive = true;
 
     ws.on("pong", () => {
       ws.isAlive = true;
     });
 
-    ws.on("message", (data) => {
-      this.handleMessage(ws, userDid, data);
-    });
-
-    ws.on("close", () => {
-      this.handleDisconnect(ws, userDid);
-    });
-
-    ws.on("error", (error) => {
-      this.logError(`WebSocket error for ${userDid}:`, error);
-    });
-
     // Start heartbeat for this connection
     this.startHeartbeat(ws, userDid);
+
+    // Send auth success message
+    this.sendToConnection(ws, {
+      type: "auth_success",
+      timestamp: new Date().toISOString(),
+    });
 
     // Send initial connection confirmation
     this.sendToConnection(ws, {

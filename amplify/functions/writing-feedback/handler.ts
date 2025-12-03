@@ -40,6 +40,9 @@ export const handler = async (event: any) => {
 
     logInfo("writing-feedback", "Processing feedback request", correlationId);
 
+    // Truncate very long text to avoid context issues
+    const truncatedText = text.length > 2000 ? text.substring(0, 1997) + "..." : text;
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -55,7 +58,7 @@ export const handler = async (event: any) => {
             role: "user",
             content: `Analyze this social media post and provide helpful feedback with improved versions.
 
-Post: "${text}"
+Post: "${truncatedText}"
 
 Provide a JSON response with:
 1. assessment:

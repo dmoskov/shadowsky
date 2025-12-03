@@ -36,6 +36,12 @@ const CRAWLER_USER_AGENTS = [
   'iframely',
 ];
 
+interface BlueskyImage {
+  thumb: string;
+  fullsize: string;
+  alt?: string;
+}
+
 interface BlueskyPost {
   uri: string;
   cid: string;
@@ -54,11 +60,19 @@ interface BlueskyPost {
   replyCount?: number;
   embed?: {
     $type: string;
-    images?: Array<{
-      thumb: string;
-      fullsize: string;
-      alt?: string;
-    }>;
+    images?: BlueskyImage[];
+    // For recordWithMedia embeds (quote posts with images)
+    media?: {
+      $type: string;
+      images?: BlueskyImage[];
+    };
+    // For external embeds (link previews)
+    external?: {
+      uri: string;
+      title: string;
+      description: string;
+      thumb?: string;
+    };
   };
 }
 
@@ -93,12 +107,23 @@ function truncateText(text: string, maxLength: number): string {
   return text.substring(0, maxLength - 3) + '...';
 }
 
+async function fetchWithTimeout(url: string, timeoutMs: number = 3000): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function fetchPostThread(handle: string, postId: string): Promise<BlueskyPost | null> {
   // Resolve handle to DID
   let did = handle;
   if (!handle.startsWith('did:')) {
     try {
-      const resolveResponse = await fetch(
+      const resolveResponse = await fetchWithTimeout(
         `https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle=${encodeURIComponent(handle)}`
       );
       if (!resolveResponse.ok) return null;
@@ -112,7 +137,7 @@ async function fetchPostThread(handle: string, postId: string): Promise<BlueskyP
   // Fetch the post
   const uri = `at://${did}/app.bsky.feed.post/${postId}`;
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread?uri=${encodeURIComponent(uri)}&depth=0`
     );
     if (!response.ok) return null;
@@ -125,7 +150,7 @@ async function fetchPostThread(handle: string, postId: string): Promise<BlueskyP
 
 async function fetchProfile(handle: string): Promise<BlueskyProfile | null> {
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(handle)}`
     );
     if (!response.ok) return null;
@@ -135,22 +160,42 @@ async function fetchProfile(handle: string): Promise<BlueskyProfile | null> {
   }
 }
 
+function getPostImage(post: BlueskyPost): string | null {
+  const embed = post.embed;
+  if (!embed) return null;
+
+  // Direct image embed: app.bsky.embed.images#view
+  if (embed.$type === 'app.bsky.embed.images#view' && embed.images?.length) {
+    return embed.images[0].fullsize || embed.images[0].thumb;
+  }
+
+  // Quote post with media: app.bsky.embed.recordWithMedia#view
+  if (embed.$type === 'app.bsky.embed.recordWithMedia#view' && embed.media?.images?.length) {
+    return embed.media.images[0].fullsize || embed.media.images[0].thumb;
+  }
+
+  // External link with thumbnail: app.bsky.embed.external#view
+  if (embed.$type === 'app.bsky.embed.external#view' && embed.external?.thumb) {
+    return embed.external.thumb;
+  }
+
+  return null;
+}
+
 function generateThreadOgHtml(post: BlueskyPost, handle: string, postId: string): string {
   const authorName = post.author.displayName || post.author.handle;
   const authorHandle = post.author.handle;
   const postText = post.record.text;
   const avatar = post.author.avatar;
 
-  // Get post image if available
-  let ogImage = avatar || 'https://shadowsky.io/butterfly-icon.svg';
-  if (post.embed?.$type === 'app.bsky.embed.images#view' && post.embed.images?.length) {
-    ogImage = post.embed.images[0].thumb || post.embed.images[0].fullsize;
-  }
+  // Get post image if available, fall back to avatar
+  const postImage = getPostImage(post);
+  const ogImage = postImage || avatar || 'https://shadowsky.io/butterfly-icon.svg';
 
   const title = `${authorName} (@${authorHandle}) on ShadowSky`;
   const description = truncateText(postText, 200);
   const canonicalUrl = `https://shadowsky.io/thread/${handle}/${postId}`;
-  const cardType = post.embed?.images?.length ? 'summary_large_image' : 'summary';
+  const cardType = postImage ? 'summary_large_image' : 'summary';
 
   return generateHtml({
     title,

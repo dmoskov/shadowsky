@@ -532,6 +532,47 @@ export async function analyzePosts(
   }
 }
 
+// Link Metadata Types
+export interface LinkMetadata {
+  url: string;
+  title: string;
+  description: string;
+  imageUrl?: string;
+}
+
+export async function fetchLinkMetadata(url: string): Promise<LinkMetadata> {
+  try {
+    const apiBaseUrl = getApiBaseUrl();
+    const response = await fetchWithRetry(
+      `${apiBaseUrl}/api/fetch-link-metadata`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+      },
+      API_RETRY_OPTIONS,
+    );
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    logger.error("Error fetching link metadata:", error);
+    analytics.trackError(error as Error, "link_metadata_fetch");
+
+    if (error instanceof Error && error.message.includes("401")) {
+      throw new Error("Link metadata fetch failed: Invalid API key");
+    } else if (error instanceof Error && error.message.includes("429")) {
+      throw new Error("Link metadata fetch failed: Rate limit exceeded");
+    } else {
+      throw new Error(
+        `Link metadata fetch failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+}
+
 // Thread Summary Types
 export interface ThreadSummaryPost {
   text: string;

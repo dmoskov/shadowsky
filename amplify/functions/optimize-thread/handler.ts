@@ -45,6 +45,9 @@ export const handler = async (event: any) => {
       correlationId,
     );
 
+    // Truncate very long text to avoid context issues (5000 chars is reasonable for thread splitting)
+    const truncatedText = text.length > 5000 ? text.substring(0, 4997) + "..." : text;
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -60,7 +63,7 @@ export const handler = async (event: any) => {
             role: "user",
             content: `Optimize this text for a social media thread with a maximum of ${maxCharsPerPost} characters per post.
 
-Text: "${text}"
+Text: "${truncatedText}"
 
 Analyze the content and provide a JSON response with:
 {

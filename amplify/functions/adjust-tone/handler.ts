@@ -54,6 +54,9 @@ export const handler = async (event: any) => {
 
     logInfo("adjust-tone", `Adjusting tone to: ${tone}`, correlationId);
 
+    // Truncate very long text to avoid context issues
+    const truncatedText = text.length > 2000 ? text.substring(0, 1997) + "..." : text;
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -69,7 +72,7 @@ export const handler = async (event: any) => {
             role: "user",
             content: `Adjust the tone of this social media post to be ${toneDescriptions[tone] || tone}.
 
-Original post: "${text}"
+Original post: "${truncatedText}"
 
 Provide a JSON response with:
 {

@@ -207,7 +207,7 @@ export function sanitizeStackTrace(
   let sanitized = stack;
 
   // Remove full file paths, keep only filename and line number
-  sanitized = sanitized.replace(/at\s+.*\(([^\/\\]+:\d+:\d+)\)/g, "at $1");
+  sanitized = sanitized.replace(/at\s+.*\(([^/\\]+:\d+:\d+)\)/g, "at $1");
 
   // Remove file:// URLs
   sanitized = sanitized.replace(/file:\/\/[^\s)]+/g, "[FILE]");
