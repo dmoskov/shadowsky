@@ -4,8 +4,10 @@ Since automated login is blocked, please follow these steps to capture screensho
 
 ## Login Credentials
 
-- **Username**: test-account@example.com
-- **Password**: C%;,!2iO"]Wu%11T9+Y8
+Credentials are stored in environment variables. Copy `.env.example` to `.env.local` and fill in:
+
+- `VITE_TEST_IDENTIFIER` - Your test username/email
+- `VITE_TEST_PASSWORD` - Your test account password
 
 ## Screenshots to Capture
 

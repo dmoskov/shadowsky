@@ -16,6 +16,25 @@
   --transition-slow: 300ms; /* Emphasis animations: modals, page transitions */
   --transition-slower: 400ms; /* Complex animations: expanding panels */
 
+  /* ==========================================
+   * Loading State Tokens
+   * ==========================================
+   * Centralized timing for loading indicators and skeletons.
+   * Use these tokens for consistent loading experiences.
+   */
+
+  /* Loading timing */
+  --loading-min-display: 300ms; /* Minimum loading display to prevent flash */
+  --loading-delay: 150ms; /* Delay before showing loader for quick ops */
+  --loading-spinner-duration: 1000ms; /* Spinner rotation cycle */
+  --loading-pulse-duration: 2000ms; /* Skeleton pulse animation */
+  --loading-shimmer-duration: 2000ms; /* Shimmer effect animation */
+
+  /* Loading colors */
+  --loading-skeleton-bg: var(--bsky-bg-tertiary);
+  --loading-skeleton-highlight: var(--bsky-bg-hover);
+  --loading-overlay-bg: rgba(0, 0, 0, 0.5);
+
   /* Easing curves - use for transition-timing-function */
   /* Standard ease-in-out for most transitions */
   --ease-default: cubic-bezier(0.4, 0, 0.2, 1);

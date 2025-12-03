@@ -1,14 +1,33 @@
 /**
  * Mutation Queue Status Indicator
  *
- * Shows pending offline mutations and sync status.
+ * Shows pending offline mutations and sync status with user-friendly messaging.
  * Only visible when there are pending items or when offline.
  */
 
-import { AlertCircle, CheckCircle, CloudOff, RefreshCw } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  CloudOff,
+  HelpCircle,
+  RefreshCw,
+  Trash2,
+  Wifi,
+} from "lucide-react";
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useMutationQueue } from "../hooks/useMutationQueue";
+
+interface StatusConfig {
+  icon: React.ReactNode;
+  title: string;
+  message: string;
+  bgColor: string;
+  borderColor: string;
+  textColor: string;
+}
 
 export const MutationQueueStatus: React.FC = () => {
   const { agent } = useAuth();
@@ -28,37 +47,62 @@ export const MutationQueueStatus: React.FC = () => {
     return null;
   }
 
-  const getStatusIcon = () => {
+  const getStatusConfig = (): StatusConfig => {
     if (!isOnline) {
-      return <CloudOff className="h-4 w-4 text-orange-500" />;
+      return {
+        icon: <CloudOff className="h-4 w-4 text-orange-500" />,
+        title: "Working offline",
+        message:
+          pendingCount > 0
+            ? `${pendingCount} action${pendingCount !== 1 ? "s" : ""} saved. Will sync when you're back online.`
+            : "Your changes are saved locally.",
+        bgColor: "bg-orange-50 dark:bg-orange-900/20",
+        borderColor: "border-orange-200 dark:border-orange-800",
+        textColor: "text-orange-800 dark:text-orange-200",
+      };
     }
     if (isProcessing) {
-      return <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />;
+      return {
+        icon: <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />,
+        title: "Syncing your changes",
+        message: "Please wait while we save your actions...",
+        bgColor: "bg-blue-50 dark:bg-blue-900/20",
+        borderColor: "border-blue-200 dark:border-blue-800",
+        textColor: "text-blue-800 dark:text-blue-200",
+      };
     }
     if (failedCount > 0) {
-      return <AlertCircle className="h-4 w-4 text-red-500" />;
+      return {
+        icon: <AlertCircle className="h-4 w-4 text-red-500" />,
+        title: `${failedCount} action${failedCount !== 1 ? "s" : ""} couldn't be saved`,
+        message:
+          "Some changes failed to sync. You can try again or discard them.",
+        bgColor: "bg-red-50 dark:bg-red-900/20",
+        borderColor: "border-red-200 dark:border-red-800",
+        textColor: "text-red-800 dark:text-red-200",
+      };
     }
     if (pendingCount > 0) {
-      return <RefreshCw className="h-4 w-4 text-yellow-500" />;
+      return {
+        icon: <RefreshCw className="h-4 w-4 text-yellow-500" />,
+        title: `${pendingCount} action${pendingCount !== 1 ? "s" : ""} waiting`,
+        message: "These will sync automatically when possible.",
+        bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
+        borderColor: "border-yellow-200 dark:border-yellow-800",
+        textColor: "text-yellow-800 dark:text-yellow-200",
+      };
     }
-    return <CheckCircle className="h-4 w-4 text-green-500" />;
+    return {
+      icon: <CheckCircle className="h-4 w-4 text-green-500" />,
+      title: "All synced",
+      message: "Your changes are saved.",
+      bgColor: "bg-green-50 dark:bg-green-900/20",
+      borderColor: "border-green-200 dark:border-green-800",
+      textColor: "text-green-800 dark:text-green-200",
+    };
   };
 
-  const getStatusText = () => {
-    if (!isOnline) {
-      return pendingCount > 0 ? `Offline (${pendingCount} pending)` : "Offline";
-    }
-    if (isProcessing) {
-      return "Syncing...";
-    }
-    if (failedCount > 0) {
-      return `${failedCount} failed`;
-    }
-    if (pendingCount > 0) {
-      return `${pendingCount} pending`;
-    }
-    return "Synced";
-  };
+  const config = getStatusConfig();
 
   const handleSync = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -69,85 +113,132 @@ export const MutationQueueStatus: React.FC = () => {
     e.stopPropagation();
     if (
       window.confirm(
-        "Clear all pending mutations? This will discard unsaved actions.",
+        "Discard unsaved changes? This action cannot be undone.",
       )
     ) {
       await clearQueue();
     }
   };
 
+  const getCompactLabel = () => {
+    if (!isOnline) return "Offline";
+    if (isProcessing) return "Syncing";
+    if (failedCount > 0) return `${failedCount} failed`;
+    if (pendingCount > 0) return `${pendingCount} pending`;
+    return "Synced";
+  };
+
   return (
     <div className="fixed bottom-20 left-4 z-50 lg:bottom-4">
       <div
-        className={`rounded-lg border shadow-lg transition-all duration-200 ${isExpanded ? "w-56" : "w-auto"}`}
-        style={{
-          background: "var(--bsky-bg-secondary)",
-          borderColor: "var(--bsky-border)",
-        }}
+        className={`rounded-lg border shadow-lg transition-all duration-200 ${config.bgColor} ${config.borderColor} ${isExpanded ? "w-72" : "w-auto"}`}
       >
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex w-full items-center gap-2 p-3 text-left hover:opacity-80"
-          style={{ color: "var(--bsky-text-primary)" }}
+          className="flex w-full items-center gap-2 p-3 text-left hover:opacity-90"
+          aria-expanded={isExpanded}
+          aria-label={`Sync status: ${config.title}`}
         >
-          {getStatusIcon()}
-          {isExpanded && (
-            <div className="flex-1">
-              <span className="text-sm font-medium">{getStatusText()}</span>
+          {config.icon}
+          {isExpanded ? (
+            <div className="flex flex-1 items-center justify-between">
+              <span className={`text-sm font-medium ${config.textColor}`}>
+                {config.title}
+              </span>
+              <ChevronUp className="h-4 w-4 text-gray-400" />
             </div>
-          )}
-          {!isExpanded && (pendingCount > 0 || failedCount > 0) && (
-            <span
-              className="text-xs font-medium"
-              style={{ color: "var(--bsky-text-secondary)" }}
-            >
-              {pendingCount + failedCount}
-            </span>
+          ) : (
+            <>
+              <span
+                className="text-xs font-medium"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                {getCompactLabel()}
+              </span>
+              <ChevronDown className="h-3 w-3 text-gray-400" />
+            </>
           )}
         </button>
 
         {isExpanded && (
           <div
-            className="border-t px-3 py-2 text-xs"
-            style={{
-              borderColor: "var(--bsky-border)",
-              color: "var(--bsky-text-secondary)",
-            }}
+            className="border-t px-3 pb-3 pt-2"
+            style={{ borderColor: "var(--bsky-border)" }}
           >
-            <div className="space-y-1">
-              <div>Network: {isOnline ? "Online" : "Offline"}</div>
-              {pendingCount > 0 && <div>Pending: {pendingCount}</div>}
+            <p
+              className="mb-3 text-xs"
+              style={{ color: "var(--bsky-text-secondary)" }}
+            >
+              {config.message}
+            </p>
+
+            {/* Status details */}
+            <div
+              className="mb-3 flex items-center gap-3 text-xs"
+              style={{ color: "var(--bsky-text-tertiary)" }}
+            >
+              <div className="flex items-center gap-1">
+                <Wifi
+                  className={`h-3 w-3 ${isOnline ? "text-green-500" : "text-orange-500"}`}
+                />
+                <span>{isOnline ? "Online" : "Offline"}</span>
+              </div>
+              {pendingCount > 0 && (
+                <div className="flex items-center gap-1">
+                  <RefreshCw className="h-3 w-3" />
+                  <span>{pendingCount} waiting</span>
+                </div>
+              )}
               {failedCount > 0 && (
-                <div className="text-red-500">Failed: {failedCount}</div>
+                <div className="flex items-center gap-1 text-red-500">
+                  <AlertCircle className="h-3 w-3" />
+                  <span>{failedCount} failed</span>
+                </div>
               )}
             </div>
 
-            <div className="mt-2 flex gap-2">
-              {isOnline && pendingCount > 0 && !isProcessing && (
+            {/* Action buttons */}
+            <div className="flex gap-2">
+              {isOnline && (pendingCount > 0 || failedCount > 0) && !isProcessing && (
                 <button
                   onClick={handleSync}
-                  className="flex-1 rounded px-2 py-1 text-xs font-medium transition-colors"
-                  style={{
-                    background: "var(--bsky-primary)",
-                    color: "white",
-                  }}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-white transition-colors"
+                  style={{ backgroundColor: "var(--bsky-primary)" }}
                 >
-                  Sync Now
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  Sync now
                 </button>
               )}
               {(pendingCount > 0 || failedCount > 0) && (
                 <button
                   onClick={handleClear}
-                  className="rounded px-2 py-1 text-xs font-medium transition-colors hover:opacity-80"
+                  className="flex items-center justify-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-80"
                   style={{
-                    background: "var(--bsky-bg-tertiary)",
+                    backgroundColor: "var(--bsky-bg-secondary)",
+                    borderColor: "var(--bsky-border)",
                     color: "var(--bsky-text-secondary)",
                   }}
+                  title="Discard unsaved changes"
                 >
-                  Clear
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Discard
                 </button>
               )}
             </div>
+
+            {/* Help tip for failed items */}
+            {failedCount > 0 && (
+              <div
+                className="mt-3 flex items-start gap-1.5 text-xs"
+                style={{ color: "var(--bsky-text-tertiary)" }}
+              >
+                <HelpCircle className="mt-0.5 h-3 w-3 flex-shrink-0" />
+                <span>
+                  Failed actions might be due to network issues or server
+                  problems. Try syncing again later.
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>
