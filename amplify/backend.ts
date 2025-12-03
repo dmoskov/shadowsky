@@ -22,6 +22,7 @@ import { ogMetaTags } from './functions/og-meta-tags/resource';
 import { fetchLinkMetadata } from './functions/fetch-link-metadata/resource';
 import { scheduledPosts } from './functions/scheduled-posts/resource';
 import { scheduledPostsProcessor } from './functions/scheduled-posts-processor/resource';
+import { threadSummary } from './functions/thread-summary/resource';
 import { createAnthropicDashboard, createAnthropicAlarms } from './functions/shared/cloudwatch-dashboard';
 import { createCloudWatchLogsKmsKey } from './functions/shared/kms-encryption';
 
@@ -42,6 +43,7 @@ const backend = defineBackend({
   fetchLinkMetadata,
   scheduledPosts,
   scheduledPostsProcessor,
+  threadSummary,
 });
 
 // Get the main backend stack
@@ -104,6 +106,9 @@ const scheduledPostsIntegration = new LambdaIntegration(
 const fetchLinkMetadataIntegration = new LambdaIntegration(
   backend.fetchLinkMetadata.resources.lambda
 );
+const threadSummaryIntegration = new LambdaIntegration(
+  backend.threadSummary.resources.lambda
+);
 
 // Add method options with NONE authorization (no authentication required)
 const methodOptions = {
@@ -134,6 +139,9 @@ analyzePostsResource.addMethod('POST', analyzePostsIntegration, methodOptions);
 
 const fetchLinkMetadataResource = apiResource.addResource('fetch-link-metadata');
 fetchLinkMetadataResource.addMethod('POST', fetchLinkMetadataIntegration, methodOptions);
+
+const threadSummaryResource = apiResource.addResource('thread-summary');
+threadSummaryResource.addMethod('POST', threadSummaryIntegration, methodOptions);
 
 // OG Meta Tags endpoints
 const ogResource = restApi.root.addResource('og');
