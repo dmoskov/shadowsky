@@ -500,7 +500,10 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
                   const isCurrentNode = idx === currentIndex;
                   const color = getNodeColor(node, idx);
                   const opacity = getNodeOpacity(idx);
-                  const avatarUrl = proxifyBskyImage(node.post.author.avatar);
+                  // Only load avatars in dev mode to avoid CORS issues with SVG <image> elements
+                  const avatarUrl = import.meta.env.DEV
+                    ? proxifyBskyImage(node.post.author.avatar)
+                    : undefined;
                   const userColor = getUserColor(node.post.author.did);
 
                   return (
