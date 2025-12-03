@@ -10,6 +10,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router";
+import { ClearCacheButton } from "./components/ClearCacheButton";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Header } from "./components/Header";
 import { LandingPage } from "./components/LandingPage";
@@ -526,6 +527,7 @@ function AppContent() {
       {/* Lazy loaded UI components */}
       <Suspense fallback={null}>
         <FloatingActionButton />
+        <ClearCacheButton />
         <SwipeIndicator />
         <RateLimitStatus />
         <WebSocketStatus />
