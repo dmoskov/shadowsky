@@ -17,6 +17,7 @@ io.shadowsky.app
 ```
 
 Package name requirements:
+
 - Must be unique on Google Play Store
 - Use reverse domain notation (e.g., `io.shadowsky.app`)
 - Can only contain lowercase letters, numbers, and underscores
@@ -105,19 +106,22 @@ Note: Google Play App Signing generates a different key than your upload key. Us
 Once you have the package name and fingerprint, create the `assetlinks.json` file:
 
 ```json
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "io.shadowsky.app",
-    "sha256_cert_fingerprints": [
-      "AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99"
-    ]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.shadowsky.app",
+      "sha256_cert_fingerprints": [
+        "AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99"
+      ]
+    }
   }
-}]
+]
 ```
 
 This file must be hosted at:
+
 ```
 https://shadowsky.io/.well-known/assetlinks.json
 ```
@@ -127,17 +131,19 @@ https://shadowsky.io/.well-known/assetlinks.json
 You can include multiple fingerprints for different environments:
 
 ```json
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "io.shadowsky.app",
-    "sha256_cert_fingerprints": [
-      "PRODUCTION_FINGERPRINT_HERE",
-      "DEBUG_FINGERPRINT_HERE"
-    ]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.shadowsky.app",
+      "sha256_cert_fingerprints": [
+        "PRODUCTION_FINGERPRINT_HERE",
+        "DEBUG_FINGERPRINT_HERE"
+      ]
+    }
   }
-}]
+]
 ```
 
 ## Step 5: Verify Setup
@@ -145,16 +151,19 @@ You can include multiple fingerprints for different environments:
 ### Test assetlinks.json
 
 Use Google's verification tool:
+
 ```
 https://developers.google.com/digital-asset-links/tools/generator
 ```
 
 Or test with curl:
+
 ```bash
 curl -I https://shadowsky.io/.well-known/assetlinks.json
 ```
 
 Requirements:
+
 - Must return HTTP 200
 - Must have `Content-Type: application/json`
 - Must be accessible without redirects
@@ -180,11 +189,11 @@ keytool -list -v \
 
 ## Summary of Credentials Needed
 
-| Credential | Example Value | Where to Use |
-|------------|---------------|--------------|
-| Package Name | `io.shadowsky.app` | AndroidManifest.xml, assetlinks.json |
-| Alias | `shadowsky` | Build configuration |
-| SHA-256 Fingerprint | `AA:BB:CC:...` | assetlinks.json |
+| Credential          | Example Value      | Where to Use                         |
+| ------------------- | ------------------ | ------------------------------------ |
+| Package Name        | `io.shadowsky.app` | AndroidManifest.xml, assetlinks.json |
+| Alias               | `shadowsky`        | Build configuration                  |
+| SHA-256 Fingerprint | `AA:BB:CC:...`     | assetlinks.json                      |
 
 ## Next Steps
 
