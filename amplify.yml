@@ -30,8 +30,8 @@ frontend:
       - "**/*"
   cache:
     paths:
-      # Only cache Bun binary, not node_modules (bun install is faster than cache restore)
-      - ~/.bun/**/*
+      # Only cache Bun binary (~56MB), not the package cache (~8GB)
+      - ~/.bun/bin/*
 # Redirect and rewrite rules for SPA routing
 redirects:
   # Core app routes
