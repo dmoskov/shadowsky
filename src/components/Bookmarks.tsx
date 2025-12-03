@@ -20,7 +20,7 @@ import { ThreadModal } from "./ThreadModal";
 
 export const Bookmarks: React.FC = () => {
   const queryClient = useQueryClient();
-  const { showAlert, showConfirm } = useModal();
+  const { showAlert, showDestructiveConfirm } = useModal();
   const [searchQuery, setSearchQuery] = useState("");
   const [showExportModal, setShowExportModal] = useState(false);
   const [selectedPost, setSelectedPost] =
@@ -112,18 +112,20 @@ export const Bookmarks: React.FC = () => {
   };
 
   const handleClearAll = async () => {
-    await showConfirm(
-      "Are you sure you want to clear all bookmarks? This cannot be undone.",
+    await showDestructiveConfirm(
+      {
+        title: "Clear All Bookmarks",
+        message:
+          "This will permanently remove all your saved bookmarks. You will lose your entire bookmark collection.",
+        confirmButtonLabel: "Clear All Bookmarks",
+        severity: "danger",
+        canUndo: false,
+        warningMessage: `You have ${bookmarkCount ?? 0} bookmark${(bookmarkCount ?? 0) !== 1 ? "s" : ""} that will be permanently deleted.`,
+      },
       async () => {
         await bookmarkServiceV2.clearAllBookmarks();
         queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
         queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
-      },
-      {
-        variant: "warning",
-        title: "Clear All Bookmarks",
-        confirmText: "Clear All",
-        cancelText: "Cancel",
       },
     );
   };

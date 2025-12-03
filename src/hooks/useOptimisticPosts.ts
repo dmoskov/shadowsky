@@ -1,6 +1,7 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useActionSyncOptional } from "../contexts/ActionSyncContext";
 import { useAuth } from "../contexts/AuthContext";
 import {
   mutationQueueDB,
@@ -10,6 +11,7 @@ import {
 export function useOptimisticPosts() {
   const { agent } = useAuth();
   const queryClient = useQueryClient();
+  const actionSync = useActionSyncOptional();
 
   // Helper to update post data optimistically in all feed caches
   const updatePostInCaches = (
@@ -154,6 +156,9 @@ export function useOptimisticPosts() {
       return await agent.like(uri, cid);
     },
     onMutate: async ({ uri }) => {
+      // Set pending state for sync badge
+      actionSync?.setActionPending("like", uri);
+
       // Cancel any outgoing refetches to prevent overwriting optimistic update
       await queryClient.cancelQueries({ queryKey: ["timeline"] });
       await queryClient.cancelQueries({ queryKey: ["columnFeed"] });
@@ -170,6 +175,9 @@ export function useOptimisticPosts() {
       }));
     },
     onSuccess: (data, { uri }) => {
+      // Set synced state for sync badge
+      actionSync?.setActionSynced("like", uri);
+
       // Update with real like URI from server
       updatePostInCaches(uri, (post) => ({
         ...post,
@@ -183,9 +191,17 @@ export function useOptimisticPosts() {
       // If it's a network error, queue for retry and keep optimistic update
       if (isNetworkError(error)) {
         queueMutation("like", { uri, cid });
-        // Keep the optimistic update - it will be retried
+        // Set failed state with retry function
+        actionSync?.setActionFailed("like", uri, () => {
+          likeMutation.mutate({ uri, cid });
+        });
         return;
       }
+
+      // Set failed state for non-network errors
+      actionSync?.setActionFailed("like", uri, () => {
+        likeMutation.mutate({ uri, cid });
+      });
 
       // Revert optimistic update on non-network error
       updatePostInCaches(uri, (post) => ({
@@ -205,6 +221,9 @@ export function useOptimisticPosts() {
       return await agent.deleteLike(likeUri);
     },
     onMutate: async ({ postUri }) => {
+      // Set pending state for sync badge
+      actionSync?.setActionPending("like", postUri);
+
       await queryClient.cancelQueries({ queryKey: ["timeline"] });
       await queryClient.cancelQueries({ queryKey: ["columnFeed"] });
       await queryClient.cancelQueries({ queryKey: ["authorFeed"] });
@@ -218,12 +237,22 @@ export function useOptimisticPosts() {
         },
       }));
     },
-    onError: (error, { likeUri }) => {
+    onSuccess: (_data, { postUri }) => {
+      // Set synced state for sync badge
+      actionSync?.setActionSynced("like", postUri);
+    },
+    onError: (error, { likeUri, postUri }) => {
       // If it's a network error, queue for retry
       if (isNetworkError(error)) {
         queueMutation("unlike", { likeUri });
+        actionSync?.setActionFailed("like", postUri, () => {
+          unlikeMutation.mutate({ likeUri, postUri });
+        });
+      } else {
+        actionSync?.setActionFailed("like", postUri, () => {
+          unlikeMutation.mutate({ likeUri, postUri });
+        });
       }
-      // Optimistic update already applied in onMutate - no need to revert for network errors
     },
   });
 
@@ -233,6 +262,9 @@ export function useOptimisticPosts() {
       return await agent.repost(uri, cid);
     },
     onMutate: async ({ uri }) => {
+      // Set pending state for sync badge
+      actionSync?.setActionPending("repost", uri);
+
       await queryClient.cancelQueries({ queryKey: ["timeline"] });
       await queryClient.cancelQueries({ queryKey: ["columnFeed"] });
 
@@ -246,6 +278,9 @@ export function useOptimisticPosts() {
       }));
     },
     onSuccess: (data, { uri }) => {
+      // Set synced state for sync badge
+      actionSync?.setActionSynced("repost", uri);
+
       updatePostInCaches(uri, (post) => ({
         ...post,
         viewer: {
@@ -258,8 +293,16 @@ export function useOptimisticPosts() {
       // If it's a network error, queue for retry and keep optimistic update
       if (isNetworkError(error)) {
         queueMutation("repost", { uri, cid });
+        actionSync?.setActionFailed("repost", uri, () => {
+          repostMutation.mutate({ uri, cid });
+        });
         return;
       }
+
+      // Set failed state for non-network errors
+      actionSync?.setActionFailed("repost", uri, () => {
+        repostMutation.mutate({ uri, cid });
+      });
 
       // Revert optimistic update on non-network error
       updatePostInCaches(uri, (post) => ({
@@ -284,6 +327,9 @@ export function useOptimisticPosts() {
       return await agent.deleteRepost(repostUri);
     },
     onMutate: async ({ postUri }) => {
+      // Set pending state for sync badge
+      actionSync?.setActionPending("repost", postUri);
+
       await queryClient.cancelQueries({ queryKey: ["timeline"] });
       await queryClient.cancelQueries({ queryKey: ["columnFeed"] });
       await queryClient.cancelQueries({ queryKey: ["authorFeed"] });
@@ -297,12 +343,22 @@ export function useOptimisticPosts() {
         },
       }));
     },
-    onError: (error, { repostUri }) => {
+    onSuccess: (_data, { postUri }) => {
+      // Set synced state for sync badge
+      actionSync?.setActionSynced("repost", postUri);
+    },
+    onError: (error, { repostUri, postUri }) => {
       // If it's a network error, queue for retry
       if (isNetworkError(error)) {
         queueMutation("unrepost", { repostUri });
+        actionSync?.setActionFailed("repost", postUri, () => {
+          unrepostMutation.mutate({ repostUri, postUri });
+        });
+      } else {
+        actionSync?.setActionFailed("repost", postUri, () => {
+          unrepostMutation.mutate({ repostUri, postUri });
+        });
       }
-      // Optimistic update already applied in onMutate
     },
   });
 
