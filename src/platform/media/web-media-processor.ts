@@ -6,12 +6,15 @@
  */
 
 import { createLogger } from "../../utils/logger";
-import { compressImageAdvanced, getImageDimensions } from "../../utils/media-compression";
 import {
+  compressImageAdvanced,
+  getImageDimensions,
+} from "../../utils/media-compression";
+import {
+  isVideoFile as checkIsVideoFile,
   compressVideo as ffmpegCompressVideo,
   generateVideoThumbnail as ffmpegGenerateThumbnail,
   getVideoMetadata as ffmpegGetVideoMetadata,
-  isVideoFile as checkIsVideoFile,
   loadFFmpegInstance,
 } from "../../utils/video-compression";
 import type {
