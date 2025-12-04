@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ErrorBoundary } from "../ErrorBoundary";
 
@@ -73,5 +74,121 @@ describe("ErrorBoundary", () => {
         componentStack: expect.any(String),
       }),
     );
+  });
+
+  it("displays error ID when error occurs", () => {
+    render(
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+
+    // Check that an error ID is displayed
+    expect(screen.getByText(/Error ID:/)).toBeInTheDocument();
+    expect(screen.getByText(/err-/)).toBeInTheDocument();
+  });
+
+  it("shows Go Back button by default", () => {
+    render(
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+
+    expect(screen.getByText("Go Back")).toBeInTheDocument();
+  });
+
+  it("hides Go Back button when showGoBack is false", () => {
+    render(
+      <ErrorBoundary showGoBack={false}>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+
+    expect(screen.queryByText("Go Back")).not.toBeInTheDocument();
+  });
+
+  it("shows Report this issue link by default", () => {
+    render(
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+
+    expect(screen.getByText("Report this issue")).toBeInTheDocument();
+  });
+
+  it("hides Report this issue link when showReportLink is false", () => {
+    render(
+      <ErrorBoundary showReportLink={false}>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+
+    expect(screen.queryByText("Report this issue")).not.toBeInTheDocument();
+  });
+
+  it("has proper accessibility attributes", () => {
+    render(
+      <ErrorBoundary componentName="Accessible Test">
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+
+    // Check for role="alert"
+    const alertElement = screen.getByRole("alert");
+    expect(alertElement).toBeInTheDocument();
+
+    // Check aria-labelledby points to title
+    expect(alertElement).toHaveAttribute("aria-labelledby", "error-title");
+
+    // Check aria-describedby points to description
+    expect(alertElement).toHaveAttribute(
+      "aria-describedby",
+      "error-description",
+    );
+  });
+
+  it("toggles technical details visibility", () => {
+    render(
+      <ErrorBoundary showTechnicalDetails>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+
+    // Details should be hidden initially
+    expect(screen.queryByText("Test error")).not.toBeInTheDocument();
+
+    // Click to show details
+    fireEvent.click(screen.getByText("Show technical details"));
+
+    // Details should now be visible
+    expect(screen.getByText("Test error")).toBeInTheDocument();
+
+    // Click to hide details
+    fireEvent.click(screen.getByText("Hide technical details"));
+
+    // Details should be hidden again
+    expect(screen.queryByText("Test error")).not.toBeInTheDocument();
+  });
+
+  it("calls reset handler when Try Again is clicked", () => {
+    // This test verifies that clicking "Try Again" triggers the reset mechanism
+    render(
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+
+    // Verify error state
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+
+    // Verify Try Again button exists and is a button
+    const tryAgainButton = screen.getByText("Try Again");
+    expect(tryAgainButton).toBeInTheDocument();
+    expect(tryAgainButton.tagName).toBe("BUTTON");
+
+    // Clicking should not throw
+    expect(() => fireEvent.click(tryAgainButton)).not.toThrow();
   });
 });

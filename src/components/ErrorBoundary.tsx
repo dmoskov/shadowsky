@@ -1,5 +1,7 @@
 import {
   AlertCircle,
+  ArrowLeft,
+  ExternalLink,
   HelpCircle,
   LifeBuoy,
   RefreshCw,
@@ -17,6 +19,12 @@ interface Props {
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
   componentName?: string;
   showTechnicalDetails?: boolean;
+  /** Show go back button (uses browser history) */
+  showGoBack?: boolean;
+  /** Show report issue link */
+  showReportLink?: boolean;
+  /** Custom URL for reporting issues */
+  reportUrl?: string;
 }
 
 interface State {
@@ -24,6 +32,47 @@ interface State {
   error: Error | null;
   errorInfo: ErrorInfo | null;
   showDetails: boolean;
+  errorId: string;
+}
+
+/**
+ * Generate a short error ID for reference in bug reports
+ */
+function generateErrorId(): string {
+  return `err-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
+}
+
+/**
+ * Build a GitHub issue URL with pre-filled error information
+ */
+function buildReportUrl(
+  baseUrl: string,
+  errorId: string,
+  errorMessage: string,
+  componentName?: string,
+): string {
+  const title = encodeURIComponent(
+    `[Bug] Error in ${componentName || "Application"}: ${errorMessage.substring(0, 50)}`,
+  );
+  const body = encodeURIComponent(
+    `## Error Details
+- **Error ID:** \`${errorId}\`
+- **Component:** ${componentName || "Unknown"}
+- **Error:** ${errorMessage}
+- **URL:** ${window.location.href}
+- **User Agent:** ${navigator.userAgent}
+- **Timestamp:** ${new Date().toISOString()}
+
+## Steps to Reproduce
+1.
+
+## Expected Behavior
+
+
+## Additional Context
+`,
+  );
+  return `${baseUrl}?title=${title}&body=${body}`;
 }
 
 /**
@@ -84,6 +133,9 @@ function getSeverityStyles(severity: UserFriendlyError["severity"]) {
   }
 }
 
+/** Default GitHub issues URL for ShadowSky */
+const DEFAULT_REPORT_URL = "https://github.com/user/shadowsky/issues/new";
+
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -92,6 +144,7 @@ export class ErrorBoundary extends Component<Props, State> {
       error: null,
       errorInfo: null,
       showDetails: false,
+      errorId: "",
     };
   }
 
@@ -99,6 +152,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return {
       hasError: true,
       error,
+      errorId: generateErrorId(),
     };
   }
 
@@ -118,11 +172,21 @@ export class ErrorBoundary extends Component<Props, State> {
       error: null,
       errorInfo: null,
       showDetails: false,
+      errorId: "",
     });
   };
 
   handleRefresh = (): void => {
     window.location.reload();
+  };
+
+  handleGoBack = (): void => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      // Fallback to home if no history
+      window.location.href = "/";
+    }
   };
 
   toggleDetails = (): void => {
@@ -135,36 +199,59 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
+      const {
+        showGoBack = true,
+        showReportLink = true,
+        reportUrl,
+      } = this.props;
       const friendlyError = toUserFriendlyError(this.state.error, {
         includeDetails: this.props.showTechnicalDetails,
       });
       const Icon = getErrorIcon(friendlyError.severity);
       const styles = getSeverityStyles(friendlyError.severity);
+      const errorMessage = this.state.error?.message || "Unknown error";
 
       return (
         <div
-          className="flex h-full flex-col items-center justify-center p-8"
+          className="flex h-full min-h-[200px] flex-col items-center justify-center p-8"
           style={{ backgroundColor: "var(--bsky-bg-primary)" }}
+          role="alert"
+          aria-live="assertive"
+          aria-labelledby="error-title"
+          aria-describedby="error-description"
         >
           <div
             className={`w-full max-w-md rounded-xl border p-6 shadow-lg ${styles.container}`}
           >
             <div className="flex flex-col items-center text-center">
               <div className={`mb-4 rounded-full p-3 ${styles.details}`}>
-                <Icon className={`h-8 w-8 ${styles.icon}`} />
+                <Icon className={`h-8 w-8 ${styles.icon}`} aria-hidden="true" />
               </div>
 
-              <h3 className={`mb-2 text-lg font-semibold ${styles.title}`}>
+              <h3
+                id="error-title"
+                className={`mb-2 text-lg font-semibold ${styles.title}`}
+              >
                 {friendlyError.title}
               </h3>
 
-              <p className={`mb-4 text-sm ${styles.text}`}>
+              <p
+                id="error-description"
+                className={`mb-4 text-sm ${styles.text}`}
+              >
                 {friendlyError.message}
               </p>
 
               {this.props.componentName && (
-                <p className={`mb-4 text-xs ${styles.text} opacity-75`}>
+                <p className={`mb-2 text-xs ${styles.text} opacity-75`}>
                   Affected area: {this.props.componentName}
+                </p>
+              )}
+
+              {this.state.errorId && (
+                <p className={`mb-4 text-xs ${styles.text} opacity-60`}>
+                  Error ID:{" "}
+                  <code className="font-mono">{this.state.errorId}</code>
                 </p>
               )}
 
@@ -173,57 +260,97 @@ export class ErrorBoundary extends Component<Props, State> {
                   <button
                     onClick={this.handleReset}
                     className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium text-white transition-colors ${styles.button}`}
+                    aria-label="Try again to load content"
                   >
-                    <RefreshCw className="h-4 w-4" />
+                    <RefreshCw className="h-4 w-4" aria-hidden="true" />
                     Try Again
                   </button>
                 )}
 
-                <button
-                  onClick={this.handleRefresh}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                >
-                  Refresh Page
-                </button>
+                <div className="flex w-full gap-2">
+                  {showGoBack && (
+                    <button
+                      onClick={this.handleGoBack}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      aria-label="Go back to previous page"
+                    >
+                      <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                      Go Back
+                    </button>
+                  )}
+
+                  <button
+                    onClick={this.handleRefresh}
+                    className={`flex ${showGoBack ? "flex-1" : "w-full"} items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700`}
+                    aria-label="Refresh the page"
+                  >
+                    <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                    Refresh
+                  </button>
+                </div>
               </div>
 
-              {(this.props.showTechnicalDetails ||
-                this.state.error?.message) && (
-                <div className="mt-4 w-full">
-                  <button
-                    onClick={this.toggleDetails}
-                    className={`flex w-full items-center justify-center gap-1 text-xs ${styles.text} opacity-75 hover:opacity-100`}
-                  >
-                    <LifeBuoy className="h-3 w-3" />
-                    {this.state.showDetails
-                      ? "Hide technical details"
-                      : "Show technical details"}
-                  </button>
+              <div className="mt-4 flex w-full flex-col gap-2">
+                {(this.props.showTechnicalDetails ||
+                  this.state.error?.message) && (
+                  <>
+                    <button
+                      onClick={this.toggleDetails}
+                      className={`flex w-full items-center justify-center gap-1 text-xs ${styles.text} opacity-75 hover:opacity-100`}
+                      aria-expanded={this.state.showDetails}
+                      aria-controls="error-details"
+                    >
+                      <LifeBuoy className="h-3 w-3" aria-hidden="true" />
+                      {this.state.showDetails
+                        ? "Hide technical details"
+                        : "Show technical details"}
+                    </button>
 
-                  {this.state.showDetails && (
-                    <div className={`mt-3 rounded-lg p-3 ${styles.details}`}>
-                      <div className={`rounded p-2 ${styles.detailsInner}`}>
-                        <p
-                          className={`break-words font-mono text-xs ${styles.title}`}
-                        >
-                          {this.state.error?.message || "Unknown error"}
-                        </p>
-                      </div>
-                      {this.state.errorInfo && (
-                        <div
-                          className={`mt-2 rounded p-2 ${styles.detailsInner}`}
-                        >
-                          <pre
-                            className={`max-h-24 overflow-auto text-xs ${styles.title}`}
+                    {this.state.showDetails && (
+                      <div
+                        id="error-details"
+                        className={`mt-2 rounded-lg p-3 ${styles.details}`}
+                      >
+                        <div className={`rounded p-2 ${styles.detailsInner}`}>
+                          <p
+                            className={`break-words font-mono text-xs ${styles.title}`}
                           >
-                            {this.state.errorInfo.componentStack}
-                          </pre>
+                            {errorMessage}
+                          </p>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+                        {this.state.errorInfo && (
+                          <div
+                            className={`mt-2 rounded p-2 ${styles.detailsInner}`}
+                          >
+                            <pre
+                              className={`max-h-24 overflow-auto text-xs ${styles.title}`}
+                            >
+                              {this.state.errorInfo.componentStack}
+                            </pre>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {showReportLink && (
+                  <a
+                    href={buildReportUrl(
+                      reportUrl || DEFAULT_REPORT_URL,
+                      this.state.errorId,
+                      errorMessage,
+                      this.props.componentName,
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center justify-center gap-1 text-xs ${styles.text} opacity-75 hover:opacity-100`}
+                  >
+                    <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                    Report this issue
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>
