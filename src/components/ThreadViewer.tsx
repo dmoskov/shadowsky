@@ -853,8 +853,17 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
         if (quotedPost?.$type === "app.bsky.embed.record#viewRecord") {
           return (
             <div
-              className="mt-2 rounded-lg border p-2 text-xs"
+              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-500 hover:bg-opacity-5"
               style={{ borderColor: "var(--bsky-border-primary)" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (quotedPost.uri && quotedPost.author?.handle) {
+                  const quotedPostId = quotedPost.uri.split("/").pop();
+                  navigate(
+                    `/thread/${quotedPost.author.handle}/${quotedPostId}`,
+                  );
+                }
+              }}
             >
               <div className="mb-1 flex items-center gap-1">
                 {quotedPost.author?.handle ? (
@@ -1239,10 +1248,9 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       )}
                     {post && node.isRoot && (
                       <span
-                        className="rounded px-2 py-1 text-xs"
+                        className="text-xs"
                         style={{
-                          color: "var(--bsky-text-tertiary)",
-                          backgroundColor: "var(--bsky-bg-primary)",
+                          color: "var(--bsky-text-secondary)",
                         }}
                       >
                         {formatDistanceToNow(
@@ -1342,10 +1350,9 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       </div>
                       <div className="flex items-center gap-2">
                         <time
-                          className="rounded px-2 py-1 text-xs"
+                          className="text-xs"
                           style={{
-                            color: "var(--bsky-text-tertiary)",
-                            backgroundColor: "var(--bsky-bg-primary)",
+                            color: "var(--bsky-text-secondary)",
                           }}
                         >
                           {formatDistanceToNow(

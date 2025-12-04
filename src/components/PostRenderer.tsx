@@ -788,8 +788,13 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
                 <DomainVerifiedBadgeInline handle={post.author.handle} />
                 <span style={{ color: "var(--bsky-text-secondary)" }}>·</span>
                 <span
-                  className="text-sm"
+                  className="cursor-pointer text-sm hover:underline"
                   style={{ color: "var(--bsky-text-secondary)" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const postId = post.uri.split("/").pop();
+                    navigate(`/thread/${post.author.handle}/${postId}`);
+                  }}
                 >
                   {formatDistanceToNow(new Date(post.indexedAt), {
                     addSuffix: true,

@@ -248,6 +248,7 @@ export default defineConfig({
     },
   },
   server: {
+    host: "127.0.0.1",
     port: 5174,
     // Configure the dev server to handle SPA routing
     middlewareMode: false,
@@ -279,6 +280,17 @@ export default defineConfig({
     },
     // Proxy configuration for Bluesky CDN images to avoid CORS issues
     proxy: {
+      // Proxy for OAuth client metadata to avoid CORS issues in development
+      "/proxy-client-metadata": {
+        target: "https://shadowsky.io",
+        changeOrigin: true,
+        rewrite: () => "/client-metadata.json",
+      },
+      // Proxy for local API server to avoid CORS issues in development
+      "/api": {
+        target: "http://localhost:3002",
+        changeOrigin: true,
+      },
       "/bsky-cdn": {
         target: "https://cdn.bsky.app",
         changeOrigin: true,

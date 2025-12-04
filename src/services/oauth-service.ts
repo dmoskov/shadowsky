@@ -35,11 +35,11 @@ async function loadOAuthClient(): Promise<
 function getClientId(): string {
   const hostname = window.location.hostname;
 
-  // Local development
+  // Local development - use local proxy to avoid CORS issues
   if (hostname === "localhost" || hostname === "127.0.0.1") {
-    // For local dev, we need to use the production URL since client metadata must be publicly accessible
-    // The redirect_uris in the metadata include localhost for development
-    return "https://shadowsky.io/client-metadata.json";
+    // Use local proxy which forwards to shadowsky.io/client-metadata.json
+    // The actual client_id in the metadata still points to shadowsky.io
+    return `${window.location.origin}/proxy-client-metadata`;
   }
 
   // Production

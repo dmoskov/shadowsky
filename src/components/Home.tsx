@@ -761,9 +761,18 @@ export const Home: React.FC<HomeProps> = React.memo(
                       </span>
                     </ProfileHoverCard>{" "}
                     ·{" "}
-                    {formatDistanceToNow(new Date(post.record.createdAt), {
-                      addSuffix: true,
-                    })}
+                    <span
+                      className="cursor-pointer hover:underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const postId = post.uri.split("/").pop();
+                        navigate(`/thread/${post.author.handle}/${postId}`);
+                      }}
+                    >
+                      {formatDistanceToNow(new Date(post.record.createdAt), {
+                        addSuffix: true,
+                      })}
+                    </span>
                   </div>
                 </div>
               </div>

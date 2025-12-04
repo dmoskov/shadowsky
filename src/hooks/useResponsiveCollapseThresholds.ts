@@ -157,15 +157,24 @@ export function useResponsiveCollapseThresholds(): UseResponsiveCollapseThreshol
   /**
    * Generates subtle HSL background color based on depth.
    * Uses very low opacity for minimal visual intrusion.
+   * Adapts to dark/light mode.
    */
   const getBranchBackgroundColor = useCallback((depth: number): string => {
+    // Check if dark mode is active
+    const isDarkMode =
+      document.documentElement.getAttribute("data-theme") === "dark" ||
+      (document.documentElement.getAttribute("data-theme") === "system" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches) ||
+      (!document.documentElement.getAttribute("data-theme") &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches);
+
     // Same hue calculation as border
     const baseHue = 210;
     const hueShift = 30;
     const hue = (baseHue + depth * hueShift) % 360;
-    // Very subtle: high lightness, low saturation
-    const saturation = 30;
-    const lightness = 97; // Very light, nearly white
+    // Adjust lightness based on theme
+    const saturation = isDarkMode ? 20 : 30;
+    const lightness = isDarkMode ? 15 : 97; // Dark for dark mode, light for light mode
 
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
   }, []);

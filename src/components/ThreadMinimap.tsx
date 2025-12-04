@@ -230,6 +230,52 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
     );
   }, [posts, currentUserDid]);
 
+  // Get top participants with post counts, OP always first
+  const topParticipants = useMemo(() => {
+    interface Participant {
+      did: string;
+      handle: string;
+      displayName?: string;
+      avatar?: string;
+      count: number;
+      isOP: boolean;
+    }
+    const participantMap: Record<string, Participant> = {};
+
+    // Find the OP (author of the root post)
+    const rootPost =
+      posts.find((p) => nodes[0]?.post?.uri === p.uri) || posts[0];
+    const opDid = rootPost?.author?.did;
+
+    posts.forEach((post) => {
+      const did = post.author?.did;
+      if (!did) return;
+
+      const existing = participantMap[did];
+      if (existing) {
+        existing.count++;
+      } else {
+        participantMap[did] = {
+          did,
+          handle: post.author?.handle || "unknown",
+          displayName: post.author?.displayName,
+          avatar: post.author?.avatar,
+          count: 1,
+          isOP: did === opDid,
+        };
+      }
+    });
+
+    // Sort: OP first, then by post count descending
+    return Object.values(participantMap)
+      .sort((a, b) => {
+        if (a.isOP && !b.isOP) return -1;
+        if (!a.isOP && b.isOP) return 1;
+        return b.count - a.count;
+      })
+      .slice(0, 5); // Show top 5 participants
+  }, [posts, nodes]);
+
   // SVG dimensions and scaling
   const nodeSize = 8;
   const nodeSpacing = 14;
@@ -452,17 +498,6 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
                 viewBox={`0 0 ${svgWidth} ${svgHeight}`}
                 className="block"
               >
-                {/* Define circular clip path for avatars */}
-                <defs>
-                  <clipPath id="avatar-clip">
-                    <circle
-                      cx={nodeSize / 2}
-                      cy={nodeSize / 2}
-                      r={nodeSize / 2}
-                    />
-                  </clipPath>
-                </defs>
-
                 {/* Connection lines */}
                 {flatNodes.map((node, idx) => {
                   if (node.parentIndex === null) return null;
@@ -502,8 +537,8 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
                   const isCurrentNode = idx === currentIndex;
                   const color = getNodeColor(node, idx);
                   const opacity = getNodeOpacity(idx);
-                  // Only load avatars in dev mode to avoid CORS issues with SVG <image> elements
-                  const avatarUrl = import.meta.env.DEV
+                  // Use proxied avatar URL (proxy handles CORS)
+                  const avatarUrl = node.post.author.avatar
                     ? proxifyBskyImage(node.post.author.avatar)
                     : undefined;
                   const userColor = getUserColor(node.post.author.did);
@@ -588,19 +623,29 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
                         opacity={opacity}
                       />
 
-                      {/* Avatar image (if available) */}
+                      {/* Avatar image (if available) - using circular clip */}
                       {avatarUrl && (
-                        <g clipPath="url(#avatar-clip)">
+                        <>
+                          <defs>
+                            <clipPath id={`avatar-clip-${idx}`}>
+                              <circle
+                                cx={x + nodeSize / 2}
+                                cy={y + nodeSize / 2}
+                                r={nodeSize / 2 - 0.5}
+                              />
+                            </clipPath>
+                          </defs>
                           <image
                             x={x}
                             y={y}
                             width={nodeSize}
                             height={nodeSize}
                             href={avatarUrl}
+                            clipPath={`url(#avatar-clip-${idx})`}
                             opacity={opacity * 0.9}
                             preserveAspectRatio="xMidYMid slice"
                           />
-                        </g>
+                        </>
                       )}
 
                       {/* Hover area (larger for easier clicking) */}
@@ -662,10 +707,10 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
         )}
       </div>
 
-      {/* Legend tooltip (shown on hover) */}
+      {/* Legend */}
       {!isCollapsed && (
         <div
-          className="mt-2 rounded-lg px-2 py-1.5 text-[10px] opacity-0 transition-opacity duration-200 hover:opacity-100"
+          className="mt-2 rounded-lg px-2 py-1.5 text-[10px]"
           style={{
             backgroundColor: "var(--bsky-bg-secondary)",
             border: "1px solid var(--bsky-border-primary)",
@@ -674,34 +719,98 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
         >
           <div className="flex items-center gap-1.5">
             <span
-              className="inline-block h-2 w-2 rounded-full"
-              style={{ backgroundColor: "var(--bsky-primary)" }}
+              className="inline-block h-2.5 w-2.5 rounded-full"
+              style={{
+                backgroundColor: "var(--bsky-bg-tertiary)",
+                border: "2px solid var(--bsky-primary)",
+              }}
             />
             Current
           </div>
           <div className="flex items-center gap-1.5">
             <span
-              className="inline-block h-2 w-2 rounded-full"
-              style={{ backgroundColor: "var(--bsky-warning)" }}
+              className="inline-block h-2.5 w-2.5 rounded-full"
+              style={{
+                backgroundColor: "var(--bsky-bg-tertiary)",
+                border: "2px solid var(--bsky-warning)",
+              }}
             />
             Root
           </div>
           {currentUserDid && (
             <div className="flex items-center gap-1.5">
               <span
-                className="inline-block h-2 w-2 rounded-full"
-                style={{ backgroundColor: "var(--bsky-success)" }}
+                className="inline-block h-2.5 w-2.5 rounded-full"
+                style={{
+                  backgroundColor: "var(--bsky-bg-tertiary)",
+                  border: "2px solid var(--bsky-success)",
+                }}
               />
               You
             </div>
           )}
           <div className="flex items-center gap-1.5">
             <span
-              className="inline-block h-2 w-2 rounded-full"
-              style={{ backgroundColor: "var(--bsky-accent)" }}
+              className="inline-block h-2.5 w-2.5 rounded-full"
+              style={{
+                backgroundColor: "var(--bsky-bg-tertiary)",
+                border: "2px solid var(--bsky-accent)",
+              }}
             />
             Branch
           </div>
+
+          {/* Top Participants */}
+          {topParticipants.length > 0 && (
+            <>
+              <div
+                className="my-1.5 border-t"
+                style={{ borderColor: "var(--bsky-border-primary)" }}
+              />
+              <div className="space-y-1">
+                {topParticipants.map((participant) => (
+                  <div
+                    key={participant.did}
+                    className="flex items-center gap-1.5"
+                  >
+                    {participant.avatar ? (
+                      <img
+                        src={proxifyBskyImage(participant.avatar)}
+                        alt=""
+                        className="h-3 w-3 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span
+                        className="flex h-3 w-3 items-center justify-center rounded-full text-[6px] font-bold text-white"
+                        style={{
+                          backgroundColor: getUserColor(participant.did),
+                        }}
+                      >
+                        {(participant.handle[0] || "?").toUpperCase()}
+                      </span>
+                    )}
+                    <span className="truncate" style={{ maxWidth: "70px" }}>
+                      {participant.displayName || participant.handle}
+                    </span>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      {participant.count}
+                    </span>
+                    {participant.isOP && (
+                      <span
+                        className="rounded px-1 text-[8px] font-medium"
+                        style={{
+                          backgroundColor: "var(--bsky-warning)",
+                          color: "white",
+                        }}
+                      >
+                        OP
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

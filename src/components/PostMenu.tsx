@@ -188,6 +188,21 @@ export const PostMenu: React.FC<PostMenuProps> = ({
     }
   };
 
+  const handleCopyBlueskyLink = async () => {
+    setIsOpen(false);
+    const postId = post.uri.split("/").pop();
+    const link = `https://bsky.app/profile/${post.author.handle}/post/${postId}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      showToast("Bluesky link copied to clipboard", {
+        type: "success",
+        duration: 2000,
+      });
+    } catch {
+      showToast("Failed to copy link", { type: "error" });
+    }
+  };
+
   const handleNativeShare = async () => {
     setIsOpen(false);
     const postId = post.uri.split("/").pop();
@@ -357,6 +372,14 @@ export const PostMenu: React.FC<PostMenuProps> = ({
                 >
                   <Link className="h-4 w-4" />
                   Copy link to post
+                </button>
+
+                <button
+                  onClick={handleCopyBlueskyLink}
+                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 transition-opacity hover:opacity-70 dark:text-gray-300"
+                >
+                  <Link className="h-4 w-4" />
+                  Copy Bluesky link
                 </button>
 
                 <button

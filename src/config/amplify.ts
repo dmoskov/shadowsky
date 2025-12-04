@@ -31,9 +31,10 @@ Amplify.configure({
 
 // Get API base URL
 export function getApiBaseUrl(): string {
-  // In development, use local server
+  // In development, use Vite proxy to avoid CORS issues
+  // The proxy forwards /api/* requests to localhost:3002
   if (import.meta.env.DEV) {
-    return "http://localhost:3002";
+    return "";
   }
 
   // In production, use the API Gateway URL from amplify_outputs
