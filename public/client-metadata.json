@@ -9,9 +9,7 @@
   "redirect_uris": [
     "https://shadowsky.io/oauth/callback",
     "http://127.0.0.1:5173/oauth/callback",
-    "http://127.0.0.1:5174/oauth/callback",
-    "http://localhost:5173/oauth/callback",
-    "http://localhost:5174/oauth/callback"
+    "http://127.0.0.1:5174/oauth/callback"
   ],
   "scope": "atproto transition:generic",
   "grant_types": ["authorization_code", "refresh_token"],

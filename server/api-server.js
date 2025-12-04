@@ -1823,8 +1823,18 @@ httpServer.listen(PORT, () => {
   );
 });
 
-// Create separate HTTP server for WebSocket
-const wsHttpServer = http.createServer();
+// Create separate HTTP server for WebSocket with health check endpoint
+const wsHttpServer = http.createServer((req, res) => {
+  // Health check endpoint for ALB
+  if (req.url === "/health" || req.url === "/") {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("OK");
+    return;
+  }
+  // All other HTTP requests get 426 Upgrade Required
+  res.writeHead(426, { "Content-Type": "text/plain" });
+  res.end("WebSocket connection required");
+});
 
 // Initialize WebSocket server
 const wsServer = new WebSocketNotificationServer(wsHttpServer, {
