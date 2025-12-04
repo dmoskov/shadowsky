@@ -1,6 +1,9 @@
-# Apple Developer Account Setup for Universal Links
+# Apple Developer Account Setup for iOS Distribution
 
-This guide walks through creating an Apple Developer account and obtaining the credentials needed for Universal Links configuration.
+This guide covers setting up Apple Developer credentials for:
+- Universal Links configuration
+- TestFlight beta distribution
+- App Store distribution via EAS Build
 
 ## Prerequisites
 
@@ -76,9 +79,219 @@ Check the following capabilities:
 
 4. Click **Continue** then **Register**
 
-## Step 4: Configure Associated Domains (Universal Links)
+## Step 4: Create Distribution Certificate
 
-### 4.1 Your App Credentials
+A distribution certificate is required for TestFlight and App Store distribution.
+
+### 4.1 Generate a Certificate Signing Request (CSR)
+
+On your Mac:
+
+1. Open **Keychain Access** (Applications > Utilities > Keychain Access)
+2. From the menu bar: **Keychain Access > Certificate Assistant > Request a Certificate From a Certificate Authority**
+3. Fill in:
+   - **User Email Address**: Your Apple Developer email
+   - **Common Name**: Your name or company name (e.g., "ShadowSky Distribution")
+   - **CA Email Address**: Leave blank
+   - **Request is**: Select **Saved to disk**
+4. Click **Continue** and save the `.certSigningRequest` file
+
+### 4.2 Create the Distribution Certificate
+
+1. Go to [developer.apple.com/account/resources/certificates](https://developer.apple.com/account/resources/certificates)
+2. Click **+** to create a new certificate
+3. Under **Software**, select:
+   - **Apple Distribution** (recommended - works for App Store and TestFlight)
+   - Or **iOS Distribution (App Store Connect and Ad Hoc)** for iOS-only
+4. Click **Continue**
+5. Upload the `.certSigningRequest` file you created
+6. Click **Continue**, then **Download**
+
+### 4.3 Install the Certificate
+
+1. Double-click the downloaded `.cer` file
+2. Keychain Access will open and install the certificate
+3. Verify installation:
+   - In Keychain Access, go to **My Certificates**
+   - Look for "Apple Distribution: [Your Name/Company]"
+   - Expand it to see the private key attached
+
+### 4.4 Export for EAS Build (p12 format)
+
+For EAS Build to use your certificate:
+
+1. In Keychain Access, find your "Apple Distribution" certificate
+2. Right-click the certificate and select **Export**
+3. Choose **Personal Information Exchange (.p12)** format
+4. Set a strong password (you'll need this for EAS)
+5. Save the `.p12` file securely
+
+> **Important**: Store the `.p12` file and password securely. Never commit them to git.
+
+## Step 5: Create Provisioning Profile
+
+### 5.1 Development Profile (for testing)
+
+1. Go to [developer.apple.com/account/resources/profiles](https://developer.apple.com/account/resources/profiles)
+2. Click **+** to create a new profile
+3. Select **iOS App Development** and click **Continue**
+4. Select your App ID (`io.shadowsky.app`) and click **Continue**
+5. Select your distribution certificate and click **Continue**
+6. Select devices for testing (or select all)
+7. Name: `ShadowSky Development`
+8. Click **Generate** and **Download**
+
+### 5.2 Distribution Profile (for TestFlight/App Store)
+
+1. Click **+** to create another profile
+2. Select **App Store Connect** and click **Continue**
+3. Select your App ID (`io.shadowsky.app`) and click **Continue**
+4. Select your Apple Distribution certificate and click **Continue**
+5. Name: `ShadowSky Distribution`
+6. Click **Generate** and **Download**
+
+### 5.3 Verify Profiles
+
+You now have two provisioning profiles:
+
+| Profile Type | Name | Use Case |
+|-------------|------|----------|
+| Development | ShadowSky Development | Local testing, debug builds |
+| Distribution | ShadowSky Distribution | TestFlight, App Store |
+
+## Step 6: Configure EAS Build Credentials
+
+EAS Build can manage Apple credentials automatically or manually.
+
+### Option A: Automatic (Recommended)
+
+EAS can create and manage certificates automatically:
+
+```bash
+# First time setup - EAS will prompt for Apple credentials
+eas credentials
+
+# Or let it configure during first build
+eas build --platform ios --profile preview
+```
+
+EAS will:
+1. Prompt for your Apple ID and password
+2. Create/select certificates and profiles automatically
+3. Store credentials securely on Expo servers
+
+### Option B: Manual Configuration
+
+If you prefer to use your existing certificates:
+
+1. **Export credentials from Keychain** (Step 4.4 above)
+
+2. **Configure in eas.json**:
+
+```json
+{
+  "build": {
+    "preview": {
+      "ios": {
+        "credentialsSource": "local"
+      }
+    },
+    "production": {
+      "ios": {
+        "credentialsSource": "local"
+      }
+    }
+  }
+}
+```
+
+3. **Create credentials.json** (don't commit this!):
+
+```json
+{
+  "ios": {
+    "provisioningProfilePath": "./secrets/ShadowSky_Distribution.mobileprovision",
+    "distributionCertificate": {
+      "path": "./secrets/distribution.p12",
+      "password": "YOUR_P12_PASSWORD"
+    }
+  }
+}
+```
+
+4. **Add to .gitignore**:
+
+```
+# Apple credentials
+credentials.json
+secrets/
+*.mobileprovision
+*.p12
+*.cer
+```
+
+### Option C: Using EAS Secret Store
+
+For CI/CD, store credentials as EAS secrets:
+
+```bash
+# Upload distribution certificate
+eas secret:create --name APPLE_DIST_CERT_P12 --value "$(base64 -i ./distribution.p12)"
+eas secret:create --name APPLE_DIST_CERT_PASSWORD --value "your-p12-password"
+
+# Upload provisioning profile
+eas secret:create --name APPLE_PROVISIONING_PROFILE --value "$(base64 -i ./profile.mobileprovision)"
+```
+
+## Step 7: Configure App Store Connect
+
+For TestFlight distribution:
+
+### 7.1 Create App in App Store Connect
+
+1. Go to [appstoreconnect.apple.com](https://appstoreconnect.apple.com)
+2. Click **My Apps** > **+** > **New App**
+3. Fill in:
+   - **Platform**: iOS
+   - **Name**: ShadowSky
+   - **Primary Language**: English (or your preference)
+   - **Bundle ID**: Select `io.shadowsky.app`
+   - **SKU**: `shadowsky-ios` (unique identifier)
+4. Click **Create**
+
+### 7.2 TestFlight Configuration
+
+1. In App Store Connect, select your app
+2. Go to **TestFlight** tab
+3. Under **General Information**, add:
+   - Test Information (what testers should test)
+   - Beta App Description
+   - Contact email and phone
+4. Under **App Store Connect Users**, add internal testers
+
+### 7.3 App Store Connect API Key (for automated uploads)
+
+For CI/CD automated uploads:
+
+1. Go to **Users and Access** > **Integrations** > **App Store Connect API**
+2. Click **+** to generate a new key
+3. Name: `EAS Build`
+4. Access: **App Manager** or **Admin**
+5. Click **Generate**
+6. Download the `.p8` file (only available once!)
+7. Note the **Key ID** and **Issuer ID**
+
+Store these for EAS:
+
+```bash
+eas secret:create --name APPLE_API_KEY_ID --value "XXXXXXXXXX"
+eas secret:create --name APPLE_API_KEY_ISSUER_ID --value "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+eas secret:create --name APPLE_API_KEY_P8 --value "$(cat ./AuthKey_XXXXXXXXXX.p8)"
+```
+
+## Step 8: Configure Associated Domains (Universal Links)
+
+### 8.1 Your App Credentials
 
 After completing the above steps, you'll have:
 
@@ -88,7 +301,7 @@ After completing the above steps, you'll have:
 | Bundle ID  | `io.shadowsky.app`            | \***\*\_\_\_\*\*** |
 | App ID     | `A1B2C3D4E5.io.shadowsky.app` | \***\*\_\_\_\*\*** |
 
-### 4.2 apple-app-site-association File
+### 8.2 apple-app-site-association File
 
 Create this file to be served at `https://shadowsky.io/.well-known/apple-app-site-association`:
 
@@ -120,7 +333,7 @@ Create this file to be served at `https://shadowsky.io/.well-known/apple-app-sit
 
 Replace `TEAM_ID` with your actual Team ID.
 
-### 4.3 Hosting Requirements
+### 8.3 Hosting Requirements
 
 The `apple-app-site-association` file must be:
 
