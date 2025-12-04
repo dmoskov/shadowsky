@@ -11,6 +11,7 @@ import { useErrorTracking } from "../hooks/useErrorTracking";
 import { columnService } from "../services/column-service";
 import { useStorageErrorManager } from "../services/storage/storage-error-manager";
 import type { Column } from "../types/column";
+import { throttle, TIMING } from "../utils/timing";
 import { BookmarksColumn } from "./BookmarksColumn";
 import { ColumnHeader } from "./ColumnHeader";
 import { DirectMessagesColumn } from "./DirectMessagesColumn";
@@ -57,8 +58,6 @@ const SkyColumn = memo(
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
-      let rafId: number | null = null;
-
       const checkScroll = () => {
         let scrollTop = 0;
         let scrollHeight = 0;
@@ -84,16 +83,8 @@ const SkyColumn = memo(
         setShowScrollButton(scrollTop > 200);
       };
 
-      // Debounce scroll checks with requestAnimationFrame
-      const handleScroll = () => {
-        if (rafId !== null) {
-          return; // Skip if a frame is already scheduled
-        }
-        rafId = requestAnimationFrame(() => {
-          checkScroll();
-          rafId = null;
-        });
-      };
+      // Throttle scroll handler for 60fps (16ms)
+      const handleScroll = throttle(checkScroll, TIMING.SCROLL_THROTTLE);
 
       const scrollContainer = scrollContainerRef.current;
 
@@ -109,9 +100,6 @@ const SkyColumn = memo(
       checkScroll(); // Initial check
 
       return () => {
-        if (rafId !== null) {
-          cancelAnimationFrame(rafId);
-        }
         if (scrollContainer) {
           scrollContainer.removeEventListener("scroll", handleScroll);
         }

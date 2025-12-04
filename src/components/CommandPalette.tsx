@@ -22,6 +22,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { useFeatureTracking } from "../hooks/useAnalytics";
 import { useFocusTrap } from "../hooks/useFocusTrap";
+import { useDelayedValue } from "../hooks/useTiming";
 
 interface Command {
   id: string;
@@ -43,6 +44,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onClose,
 }) => {
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDelayedValue(query, 150);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -218,16 +220,16 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   );
 
   const filteredCommands = useMemo(() => {
-    if (!query) return commands;
+    if (!debouncedQuery) return commands;
 
-    const lowerQuery = query.toLowerCase();
+    const lowerQuery = debouncedQuery.toLowerCase();
     return commands.filter(
       (cmd) =>
         cmd.name.toLowerCase().includes(lowerQuery) ||
         cmd.description?.toLowerCase().includes(lowerQuery) ||
         cmd.section.toLowerCase().includes(lowerQuery),
     );
-  }, [commands, query]);
+  }, [commands, debouncedQuery]);
 
   const groupedCommands = useMemo(() => {
     const groups: Record<string, Command[]> = {};
@@ -251,7 +253,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   useEffect(() => {
     setSelectedIndex(0);
-  }, [query]);
+  }, [debouncedQuery]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

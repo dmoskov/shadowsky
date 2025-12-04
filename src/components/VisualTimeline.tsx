@@ -21,6 +21,7 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useNotificationPosts } from "../hooks/useNotificationPosts";
 import { proxifyBskyImage } from "../utils/image-proxy";
+import { throttle, TIMING } from "../utils/timing";
 import { ThreadModal } from "./ThreadModal";
 
 interface AggregatedEvent {
@@ -67,7 +68,7 @@ interface VisualTimelineProps {
   onClose?: () => void;
 }
 
-export const VisualTimeline: React.FC<VisualTimelineProps> = ({
+export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(({
   hideTimeLabels = false,
   isInSkyDeck = false,
   isFocused = true,
@@ -1199,17 +1200,8 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = ({
       setDayGroupColors(newDayColors);
     };
 
-    // Update colors on scroll with throttling
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          updateDayColors();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
+    // Throttle scroll handler for 60fps (16ms)
+    const handleScroll = throttle(updateDayColors, TIMING.SCROLL_THROTTLE);
 
     // Initial update
     updateDayColors();

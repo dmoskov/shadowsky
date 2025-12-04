@@ -19,6 +19,7 @@ import React, {
   useState,
 } from "react";
 import { proxifyBskyImage } from "../utils/image-proxy";
+import { throttle, TIMING } from "../utils/timing";
 
 type Post = AppBskyFeedDefs.PostView;
 
@@ -348,19 +349,29 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
       }
     };
 
-    // Update on scroll
+    // Throttle scroll handler for 60fps (16ms)
+    const throttledUpdateViewportRange = throttle(
+      updateViewportRange,
+      TIMING.SCROLL_THROTTLE,
+    );
+
+    // Update on scroll (throttled for performance)
     const container = scrollContainerRef.current;
-    container.addEventListener("scroll", updateViewportRange);
+    container.addEventListener("scroll", throttledUpdateViewportRange, {
+      passive: true,
+    });
 
     // Initial update
     updateViewportRange();
 
-    // Update on resize
-    window.addEventListener("resize", updateViewportRange);
+    // Update on resize (throttled)
+    window.addEventListener("resize", throttledUpdateViewportRange, {
+      passive: true,
+    });
 
     return () => {
-      container.removeEventListener("scroll", updateViewportRange);
-      window.removeEventListener("resize", updateViewportRange);
+      container.removeEventListener("scroll", throttledUpdateViewportRange);
+      window.removeEventListener("resize", throttledUpdateViewportRange);
     };
   }, [scrollContainerRef, posts.length]);
 

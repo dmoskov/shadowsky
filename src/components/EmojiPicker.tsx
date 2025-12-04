@@ -1,5 +1,6 @@
 import { Clock, Search, Smile, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useDelayedValue } from "../hooks/useTiming";
 
 interface EmojiPickerProps {
   onSelectEmoji: (emoji: string) => void;
@@ -1851,6 +1852,7 @@ const MAX_RECENT_EMOJIS = 30;
 export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
   const [selectedCategory, setSelectedCategory] = useState("smileys");
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDelayedValue(searchTerm, 150);
   const [recentEmojis, setRecentEmojis] = useState<string[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -1881,11 +1883,11 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
     onSelectEmoji(emoji);
   };
 
-  const searchEmojis = () => {
-    if (!searchTerm) return [];
+  const searchResults = useMemo(() => {
+    if (!debouncedSearchTerm) return [];
 
     const results: string[] = [];
-    const search = searchTerm.toLowerCase();
+    const search = debouncedSearchTerm.toLowerCase();
 
     Object.values(EMOJI_CATEGORIES).forEach((category) => {
       category.emojis.forEach((emoji) => {
@@ -1896,10 +1898,10 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
     });
 
     return results;
-  };
+  }, [debouncedSearchTerm]);
 
-  const displayEmojis = searchTerm
-    ? searchEmojis()
+  const displayEmojis = debouncedSearchTerm
+    ? searchResults
     : selectedCategory === "recent" && recentEmojis.length === 0
       ? EMOJI_CATEGORIES.smileys.emojis
       : EMOJI_CATEGORIES[selectedCategory as keyof typeof EMOJI_CATEGORIES]
@@ -1998,7 +2000,7 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
         )}
 
         <div className="flex-1 overflow-y-auto p-4">
-          {displayEmojis.length === 0 && searchTerm && (
+          {displayEmojis.length === 0 && debouncedSearchTerm && (
             <div className="py-8 text-center">
               <p style={{ color: "var(--bsky-text-secondary)" }}>
                 No emojis found
