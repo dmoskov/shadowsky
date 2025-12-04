@@ -577,17 +577,31 @@ export async function fetchLinkMetadata(url: string): Promise<LinkMetadata> {
 export interface ThreadSummaryPost {
   text: string;
   author: string;
+  authorHandle: string;
   likes: number;
   replies: number;
+  reposts?: number;
+  uri: string;
+  parentUri?: string;
+  depth?: number;
 }
 
-export type ThreadSummaryFormat = "haiku" | "tldr" | "keypoints";
+export type ThreadSummaryFormat = "haiku" | "tldr" | "keypoints" | "extended";
+
+export interface SubThreadHighlight {
+  uri: string;
+  authorHandle: string;
+  snippet: string;
+  engagement: number;
+}
 
 export interface ThreadSummaryMetadata {
   postCount: number;
   authors: string[];
   generatedAt: string;
   cached?: boolean;
+  totalEngagement?: number;
+  highlightedSubThreads?: SubThreadHighlight[];
 }
 
 export interface ThreadSummaryResult {

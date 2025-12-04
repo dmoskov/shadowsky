@@ -101,8 +101,10 @@ export function useThreadSummaryPreGeneration(
         {
           text: bookmark.text || "",
           author: post.author.displayName || post.author.handle,
+          authorHandle: post.author.handle,
           likes: post.likeCount || 0,
           replies: post.replyCount || 0,
+          uri: post.uri,
         },
       ];
 

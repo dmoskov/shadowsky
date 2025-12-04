@@ -1159,7 +1159,7 @@ app.post("/api/thread-summary", async (req, res) => {
   }
 
   // Validate format
-  const validFormats = ["haiku", "tldr", "keypoints"];
+  const validFormats = ["haiku", "tldr", "keypoints", "extended"];
   if (!validFormats.includes(format)) {
     return res.status(400).json({
       error: "Invalid format",
@@ -1172,15 +1172,42 @@ app.post("/api/thread-summary", async (req, res) => {
   }
 
   // Truncate individual post texts to 10,000 characters
-  const sanitizedPosts = posts.map((post) => ({
+  const sanitizedPosts = posts.map((post, index) => ({
     text:
       typeof post.text === "string"
         ? post.text.slice(0, 10000)
         : String(post.text || "").slice(0, 10000),
     author: String(post.author || "unknown").slice(0, 200),
+    authorHandle: String(post.authorHandle || post.author || "unknown").slice(
+      0,
+      100,
+    ),
     likes: Number(post.likes) || 0,
     replies: Number(post.replies) || 0,
+    reposts: Number(post.reposts) || 0,
+    uri: String(post.uri || "").slice(0, 500),
+    parentUri: post.parentUri ? String(post.parentUri).slice(0, 500) : null,
+    depth: Number(post.depth) || 0,
+    index,
   }));
+
+  // Calculate total engagement for scaling summary length
+  const totalEngagement = sanitizedPosts.reduce(
+    (sum, p) => sum + p.likes + p.replies + (p.reposts || 0),
+    0,
+  );
+
+  // Find high-engagement sub-threads (posts with significant replies/likes)
+  const highlightedSubThreads = sanitizedPosts
+    .filter((p) => p.uri && (p.likes >= 10 || p.replies >= 5))
+    .sort((a, b) => b.likes + b.replies - (a.likes + a.replies))
+    .slice(0, 5)
+    .map((p) => ({
+      uri: p.uri,
+      authorHandle: p.authorHandle,
+      snippet: p.text.slice(0, 100) + (p.text.length > 100 ? "..." : ""),
+      engagement: p.likes + p.replies,
+    }));
 
   // Check cache (unless forceRefresh is true)
   const cacheKey = generateCacheKey(sanitizedPosts, format);
@@ -1237,6 +1264,44 @@ Keep each point concise (under 100 characters).
 Return ONLY the bullet points, no headers or additional formatting.`;
         maxTokens = 300;
         break;
+      case "extended":
+        // Scale detail based on engagement and post count
+        const engagementLevel =
+          totalEngagement > 500
+            ? "high"
+            : totalEngagement > 100
+              ? "medium"
+              : "low";
+        const postCountLevel =
+          sanitizedPosts.length > 50
+            ? "large"
+            : sanitizedPosts.length > 20
+              ? "medium"
+              : "small";
+
+        // Build context about important sub-threads for the prompt
+        const subThreadContext =
+          highlightedSubThreads.length > 0
+            ? `\n\nNotable high-engagement replies (reference by post index when describing):\n${highlightedSubThreads.map((st, i) => `- Post #${sanitizedPosts.findIndex((p) => p.uri === st.uri) + 1} by @${st.authorHandle} (${st.engagement} engagement): "${st.snippet}"`).join("\n")}`
+            : "";
+
+        formatPrompt = `Write a comprehensive summary of this thread discussion. This is a ${engagementLevel}-engagement thread with ${sanitizedPosts.length} posts.
+
+Guidelines:
+1. Start with a 2-3 sentence overview of the main topic and the original poster's point
+2. Describe the key themes and perspectives that emerged in the discussion
+3. Highlight any notable sub-conversations, disagreements, or insights${highlightedSubThreads.length > 0 ? " (especially the high-engagement posts noted below)" : ""}
+4. If there are clear sides to a debate, summarize each fairly
+5. Note any conclusions or consensus reached
+
+${engagementLevel === "high" || postCountLevel === "large" ? "This is a highly-engaged thread - provide more detail (3-4 paragraphs)." : "Keep the summary to 2-3 paragraphs."}
+${subThreadContext}
+
+When referencing specific noteworthy replies, mention them as "One popular response by @username pointed out..." or similar.
+Return ONLY the summary text, no headers or meta-commentary about the task.`;
+        maxTokens =
+          engagementLevel === "high" || postCountLevel === "large" ? 800 : 500;
+        break;
       default:
         formatPrompt = `Write a haiku (5-7-5 syllable structure) that captures the essence of this thread.`;
         maxTokens = 100;
@@ -1287,6 +1352,9 @@ ${formatPrompt}
         postCount: sanitizedPosts.length,
         authors,
         generatedAt: new Date(now).toISOString(),
+        totalEngagement,
+        highlightedSubThreads:
+          format === "extended" ? highlightedSubThreads : undefined,
       },
     };
 
