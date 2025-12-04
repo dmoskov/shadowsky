@@ -1,10 +1,13 @@
 import {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
+import { batchedStorage } from "../services/storage/batched-local-storage";
 
 interface ThemeContextType {
   theme: "light" | "dark" | "system";
@@ -19,7 +22,7 @@ const THEME_KEY = "bsky_notifications_theme_preference";
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<"light" | "dark" | "system">(() => {
     // Check localStorage first
-    const savedTheme = localStorage.getItem(THEME_KEY);
+    const savedTheme = batchedStorage.getItem(THEME_KEY);
     if (
       savedTheme === "light" ||
       savedTheme === "dark" ||
@@ -54,7 +57,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.setAttribute("data-theme", effectiveTheme);
 
     // Save to localStorage
-    localStorage.setItem(THEME_KEY, theme);
+    batchedStorage.setItem(THEME_KEY, theme);
   }, [theme]);
 
   // Listen to system theme changes
@@ -71,20 +74,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, [theme]);
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setThemeState((prev) => {
       if (prev === "light") return "dark";
       if (prev === "dark") return "system";
       return "light";
     });
-  };
+  }, []);
 
-  const setTheme = (newTheme: "light" | "dark" | "system") => {
+  const setTheme = useCallback((newTheme: "light" | "dark" | "system") => {
     setThemeState(newTheme);
-  };
+  }, []);
+
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  const contextValue = useMemo(
+    () => ({ theme, toggleTheme, setTheme }),
+    [theme, toggleTheme, setTheme],
+  );
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );

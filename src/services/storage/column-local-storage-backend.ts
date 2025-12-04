@@ -1,4 +1,5 @@
 import { AtpAgent } from "@atproto/api";
+import { batchedStorage } from "./batched-local-storage";
 import { ColumnStorageBackend } from "./column-storage-backend";
 import { LOCAL_STORAGE_KEYS } from "./storage-constants";
 import { Column, StoredColumn } from "./types";
@@ -10,9 +11,12 @@ export class ColumnLocalStorageBackend implements ColumnStorageBackend {
 
   async saveColumns(columns: Column[]): Promise<void> {
     try {
-      localStorage.setItem(LOCAL_STORAGE_KEYS.COLUMNS, JSON.stringify(columns));
+      batchedStorage.setItem(
+        LOCAL_STORAGE_KEYS.COLUMNS,
+        JSON.stringify(columns),
+      );
       // Also update the legacy key to maintain compatibility with SkyDeck
-      localStorage.setItem(
+      batchedStorage.setItem(
         LOCAL_STORAGE_KEYS.COLUMNS_LEGACY,
         JSON.stringify(columns),
       );
@@ -25,16 +29,16 @@ export class ColumnLocalStorageBackend implements ColumnStorageBackend {
   async loadColumns(): Promise<Column[]> {
     try {
       // Check if we've already migrated
-      const migrated = localStorage.getItem(
+      const migrated = batchedStorage.getItem(
         LOCAL_STORAGE_KEYS.COLUMNS_MIGRATED,
       );
 
       // First try to load from new key
-      const data = localStorage.getItem(LOCAL_STORAGE_KEYS.COLUMNS);
+      const data = batchedStorage.getItem(LOCAL_STORAGE_KEYS.COLUMNS);
 
       // If no data in new key and haven't migrated yet, check legacy key
       if (!data && !migrated) {
-        const legacyData = localStorage.getItem(
+        const legacyData = batchedStorage.getItem(
           LOCAL_STORAGE_KEYS.COLUMNS_LEGACY,
         );
         if (legacyData) {
@@ -45,7 +49,10 @@ export class ColumnLocalStorageBackend implements ColumnStorageBackend {
               // Save to new key
               await this.saveColumns(legacyColumns);
               // Mark as migrated
-              localStorage.setItem(LOCAL_STORAGE_KEYS.COLUMNS_MIGRATED, "true");
+              batchedStorage.setItem(
+                LOCAL_STORAGE_KEYS.COLUMNS_MIGRATED,
+                "true",
+              );
               return legacyColumns;
             }
           } catch (_e) {

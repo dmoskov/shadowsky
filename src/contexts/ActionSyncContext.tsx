@@ -12,6 +12,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -158,17 +159,28 @@ export function ActionSyncProvider({
     [],
   );
 
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  const contextValue = useMemo(
+    () => ({
+      getActionStatus,
+      setActionPending,
+      setActionSynced,
+      setActionFailed,
+      setActionIdle,
+      getRetryFn,
+    }),
+    [
+      getActionStatus,
+      setActionPending,
+      setActionSynced,
+      setActionFailed,
+      setActionIdle,
+      getRetryFn,
+    ],
+  );
+
   return (
-    <ActionSyncContext.Provider
-      value={{
-        getActionStatus,
-        setActionPending,
-        setActionSynced,
-        setActionFailed,
-        setActionIdle,
-        getRetryFn,
-      }}
-    >
+    <ActionSyncContext.Provider value={contextValue}>
       {children}
     </ActionSyncContext.Provider>
   );

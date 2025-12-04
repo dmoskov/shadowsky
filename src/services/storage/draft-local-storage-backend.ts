@@ -1,5 +1,6 @@
 import { AtpAgent } from "@atproto/api";
 import { ThreadDraft } from "../../services/drafts";
+import { batchedStorage } from "./batched-local-storage";
 import { DraftStorageBackend } from "./draft-storage-backend";
 import { LOCAL_STORAGE_KEYS } from "./storage-constants";
 
@@ -13,7 +14,7 @@ export class DraftLocalStorageBackend extends DraftStorageBackend {
 
   async getAll(): Promise<ThreadDraft[]> {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
+      const stored = batchedStorage.getItem(this.STORAGE_KEY);
       if (!stored) return [];
 
       const drafts = JSON.parse(stored);
@@ -32,7 +33,7 @@ export class DraftLocalStorageBackend extends DraftStorageBackend {
   async create(draft: ThreadDraft): Promise<void> {
     const drafts = await this.getAll();
     drafts.push(draft);
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(drafts));
+    batchedStorage.setItem(this.STORAGE_KEY, JSON.stringify(drafts));
   }
 
   async update(id: string, draft: ThreadDraft): Promise<void> {
@@ -40,17 +41,17 @@ export class DraftLocalStorageBackend extends DraftStorageBackend {
     const index = drafts.findIndex((d) => d.id === id);
     if (index !== -1) {
       drafts[index] = { ...draft, id }; // Ensure ID doesn't change
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(drafts));
+      batchedStorage.setItem(this.STORAGE_KEY, JSON.stringify(drafts));
     }
   }
 
   async delete(id: string): Promise<void> {
     const drafts = await this.getAll();
     const filtered = drafts.filter((draft) => draft.id !== id);
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(filtered));
+    batchedStorage.setItem(this.STORAGE_KEY, JSON.stringify(filtered));
   }
 
   async clear(): Promise<void> {
-    localStorage.removeItem(this.STORAGE_KEY);
+    batchedStorage.removeItem(this.STORAGE_KEY);
   }
 }

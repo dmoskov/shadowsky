@@ -350,12 +350,16 @@ export const StatusBarProvider: React.FC<StatusBarProviderProps> = ({
     refreshTrigger,
   ]);
 
-  const value: StatusBarContextType = {
-    status,
-    isExpanded,
-    setIsExpanded,
-    refresh,
-  };
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  const value = useMemo(
+    (): StatusBarContextType => ({
+      status,
+      isExpanded,
+      setIsExpanded,
+      refresh,
+    }),
+    [status, isExpanded, refresh],
+  );
 
   return (
     <StatusBarContext.Provider value={value}>

@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -257,26 +258,44 @@ export function KeyboardShortcutsProvider({
     openPost,
   ]);
 
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  const contextValue = useMemo(
+    () => ({
+      focusedPost,
+      setFocusedPost,
+      registerPostActions,
+      unregisterPostActions,
+      likePost,
+      repostPost,
+      replyToPost,
+      bookmarkPost,
+      sharePost,
+      openPost,
+      navigateNext,
+      navigatePrev,
+      isShortcutsHelpOpen,
+      setIsShortcutsHelpOpen,
+      areShortcutsEnabled,
+    }),
+    [
+      focusedPost,
+      registerPostActions,
+      unregisterPostActions,
+      likePost,
+      repostPost,
+      replyToPost,
+      bookmarkPost,
+      sharePost,
+      openPost,
+      navigateNext,
+      navigatePrev,
+      isShortcutsHelpOpen,
+      areShortcutsEnabled,
+    ],
+  );
+
   return (
-    <KeyboardShortcutsContext.Provider
-      value={{
-        focusedPost,
-        setFocusedPost,
-        registerPostActions,
-        unregisterPostActions,
-        likePost,
-        repostPost,
-        replyToPost,
-        bookmarkPost,
-        sharePost,
-        openPost,
-        navigateNext,
-        navigatePrev,
-        isShortcutsHelpOpen,
-        setIsShortcutsHelpOpen,
-        areShortcutsEnabled,
-      }}
-    >
+    <KeyboardShortcutsContext.Provider value={contextValue}>
       {children}
     </KeyboardShortcutsContext.Provider>
   );

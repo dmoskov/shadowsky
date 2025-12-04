@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { batchedStorage } from "../services/storage/batched-local-storage";
 
 interface ModerationContextType {
   mutedUsers: Set<string>;
@@ -33,9 +41,9 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
   // Load from localStorage on mount
   useEffect(() => {
     try {
-      const storedMutedUsers = localStorage.getItem(MUTED_USERS_KEY);
-      const storedMutedThreads = localStorage.getItem(MUTED_THREADS_KEY);
-      const storedBlockedUsers = localStorage.getItem(BLOCKED_USERS_KEY);
+      const storedMutedUsers = batchedStorage.getItem(MUTED_USERS_KEY);
+      const storedMutedThreads = batchedStorage.getItem(MUTED_THREADS_KEY);
+      const storedBlockedUsers = batchedStorage.getItem(BLOCKED_USERS_KEY);
 
       if (storedMutedUsers) {
         setMutedUsers(new Set(JSON.parse(storedMutedUsers)));
@@ -54,7 +62,7 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
   // Save to localStorage whenever data changes
   useEffect(() => {
     try {
-      localStorage.setItem(
+      batchedStorage.setItem(
         MUTED_USERS_KEY,
         JSON.stringify(Array.from(mutedUsers)),
       );
@@ -65,7 +73,7 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     try {
-      localStorage.setItem(
+      batchedStorage.setItem(
         MUTED_THREADS_KEY,
         JSON.stringify(Array.from(mutedThreads)),
       );
@@ -76,7 +84,7 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     try {
-      localStorage.setItem(
+      batchedStorage.setItem(
         BLOCKED_USERS_KEY,
         JSON.stringify(Array.from(blockedUsers)),
       );
@@ -99,75 +107,101 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, [mutedUsers, mutedThreads, blockedUsers]);
 
-  const muteUser = (did: string) => {
+  const muteUser = useCallback((did: string) => {
     setMutedUsers((prev) => {
       const newSet = new Set(prev);
       newSet.add(did);
       return newSet;
     });
-  };
+  }, []);
 
-  const unmuteUser = (did: string) => {
+  const unmuteUser = useCallback((did: string) => {
     setMutedUsers((prev) => {
       const newSet = new Set(prev);
       newSet.delete(did);
       return newSet;
     });
-  };
+  }, []);
 
-  const muteThread = (uri: string) => {
+  const muteThread = useCallback((uri: string) => {
     setMutedThreads((prev) => {
       const newSet = new Set(prev);
       newSet.add(uri);
       return newSet;
     });
-  };
+  }, []);
 
-  const unmuteThread = (uri: string) => {
+  const unmuteThread = useCallback((uri: string) => {
     setMutedThreads((prev) => {
       const newSet = new Set(prev);
       newSet.delete(uri);
       return newSet;
     });
-  };
+  }, []);
 
-  const blockUser = (did: string) => {
+  const blockUser = useCallback((did: string) => {
     setBlockedUsers((prev) => {
       const newSet = new Set(prev);
       newSet.add(did);
       return newSet;
     });
-  };
+  }, []);
 
-  const unblockUser = (did: string) => {
+  const unblockUser = useCallback((did: string) => {
     setBlockedUsers((prev) => {
       const newSet = new Set(prev);
       newSet.delete(did);
       return newSet;
     });
-  };
+  }, []);
 
-  const isUserMuted = (did: string) => mutedUsers.has(did);
-  const isThreadMuted = (uri: string) => mutedThreads.has(uri);
-  const isUserBlocked = (did: string) => blockedUsers.has(did);
+  const isUserMuted = useCallback(
+    (did: string) => mutedUsers.has(did),
+    [mutedUsers],
+  );
+  const isThreadMuted = useCallback(
+    (uri: string) => mutedThreads.has(uri),
+    [mutedThreads],
+  );
+  const isUserBlocked = useCallback(
+    (did: string) => blockedUsers.has(did),
+    [blockedUsers],
+  );
+
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  const contextValue = useMemo(
+    () => ({
+      mutedUsers,
+      mutedThreads,
+      blockedUsers,
+      muteUser,
+      unmuteUser,
+      muteThread,
+      unmuteThread,
+      blockUser,
+      unblockUser,
+      isUserMuted,
+      isThreadMuted,
+      isUserBlocked,
+    }),
+    [
+      mutedUsers,
+      mutedThreads,
+      blockedUsers,
+      muteUser,
+      unmuteUser,
+      muteThread,
+      unmuteThread,
+      blockUser,
+      unblockUser,
+      isUserMuted,
+      isThreadMuted,
+      isUserBlocked,
+    ],
+  );
 
   return (
-    <ModerationContext.Provider
-      value={{
-        mutedUsers,
-        mutedThreads,
-        blockedUsers,
-        muteUser,
-        unmuteUser,
-        muteThread,
-        unmuteThread,
-        blockUser,
-        unblockUser,
-        isUserMuted,
-        isThreadMuted,
-        isUserBlocked,
-      }}
-    >
+    <ModerationContext.Provider value={contextValue}>
       {children}
     </ModerationContext.Provider>
   );

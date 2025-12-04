@@ -1,5 +1,6 @@
 import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
 import { debug } from "@bsky/shared";
+import { batchedStorage } from "../services/storage/batched-local-storage";
 import { StorageManager } from "./storageManager";
 
 const CACHE_KEY_PREFIX = "bsky_notifications_";
@@ -99,21 +100,21 @@ export class NotificationCache {
         // Store data in chunks
         for (let i = 0; i < chunks; i++) {
           const chunk = dataStr.slice(i * chunkSize, (i + 1) * chunkSize);
-          localStorage.setItem(`${cacheKey}_chunk_${i}`, chunk);
+          batchedStorage.setItem(`${cacheKey}_chunk_${i}`, chunk);
         }
-        localStorage.setItem(`${cacheKey}_chunks`, chunks.toString());
+        batchedStorage.setItem(`${cacheKey}_chunks`, chunks.toString());
         debug.log(
           `📦 [${timestamp}] Stored in ${chunks} chunks to localStorage`,
         );
       } else {
         // Store as single item
-        localStorage.setItem(cacheKey, dataStr);
+        batchedStorage.setItem(cacheKey, dataStr);
         debug.log(`📦 [${timestamp}] Stored as single item to localStorage`);
       }
 
       // Store expiry time
       const expiryTime = Date.now() + CACHE_DURATION;
-      localStorage.setItem(
+      batchedStorage.setItem(
         `${CACHE_EXPIRY_KEY}_${priority ? "priority" : "all"}`,
         expiryTime.toString(),
       );
@@ -137,8 +138,8 @@ export class NotificationCache {
 
       // Verify the save worked
       const verification =
-        localStorage.getItem(cacheKey) ||
-        localStorage.getItem(`${cacheKey}_chunk_0`);
+        batchedStorage.getItem(cacheKey) ||
+        batchedStorage.getItem(`${cacheKey}_chunk_0`);
       if (verification) {
         debug.log(
           `✅ [${timestamp}] Cache save verified - data exists in localStorage`,
@@ -166,7 +167,7 @@ export class NotificationCache {
             pages,
             priority,
           };
-          localStorage.setItem(cacheKey, JSON.stringify(data));
+          batchedStorage.setItem(cacheKey, JSON.stringify(data));
           debug.log(`✅ [${timestamp}] Cache saved after clearing old data`);
         } catch (retryError) {
           debug.error(
@@ -192,7 +193,7 @@ export class NotificationCache {
       const expiryKey = `${CACHE_EXPIRY_KEY}_${priority ? "priority" : "all"}`;
 
       // Check if cache has expired
-      const expiryTime = localStorage.getItem(expiryKey);
+      const expiryTime = batchedStorage.getItem(expiryKey);
       if (!expiryTime) {
         debug.log(
           `❌ [${timestamp}] CACHE MISS: No expiry time found (priority: ${priority})`,
@@ -218,7 +219,7 @@ export class NotificationCache {
       );
 
       // Check if data is chunked
-      const chunksCount = localStorage.getItem(`${cacheKey}_chunks`);
+      const chunksCount = batchedStorage.getItem(`${cacheKey}_chunks`);
       let dataStr: string;
 
       if (chunksCount) {
@@ -228,7 +229,7 @@ export class NotificationCache {
         // Reassemble chunks
         const chunks: string[] = [];
         for (let i = 0; i < parseInt(chunksCount); i++) {
-          const chunk = localStorage.getItem(`${cacheKey}_chunk_${i}`);
+          const chunk = batchedStorage.getItem(`${cacheKey}_chunk_${i}`);
           if (!chunk) {
             debug.log(
               `❌ [${timestamp}] CHUNK MISSING: chunk ${i} not found, clearing cache`,
@@ -244,7 +245,7 @@ export class NotificationCache {
         );
       } else {
         // Load as single item
-        const data = localStorage.getItem(cacheKey);
+        const data = batchedStorage.getItem(cacheKey);
         if (!data) {
           debug.log(
             `❌ [${timestamp}] CACHE MISS: No data found in localStorage (priority: ${priority})`,
@@ -329,23 +330,23 @@ export class NotificationCache {
 
       // Check what we're clearing
       const hadData =
-        localStorage.getItem(cacheKey) ||
-        localStorage.getItem(`${cacheKey}_chunk_0`);
-      const hadExpiry = localStorage.getItem(expiryKey);
+        batchedStorage.getItem(cacheKey) ||
+        batchedStorage.getItem(`${cacheKey}_chunk_0`);
+      const hadExpiry = batchedStorage.getItem(expiryKey);
 
       // Remove main cache
-      localStorage.removeItem(cacheKey);
-      localStorage.removeItem(expiryKey);
+      batchedStorage.removeItem(cacheKey);
+      batchedStorage.removeItem(expiryKey);
 
       // Remove chunks if they exist
-      const chunksCount = localStorage.getItem(`${cacheKey}_chunks`);
+      const chunksCount = batchedStorage.getItem(`${cacheKey}_chunks`);
       let chunksCleared = 0;
       if (chunksCount) {
         for (let i = 0; i < parseInt(chunksCount); i++) {
-          localStorage.removeItem(`${cacheKey}_chunk_${i}`);
+          batchedStorage.removeItem(`${cacheKey}_chunk_${i}`);
           chunksCleared++;
         }
-        localStorage.removeItem(`${cacheKey}_chunks`);
+        batchedStorage.removeItem(`${cacheKey}_chunks`);
       }
 
       if (hadData || hadExpiry || chunksCleared > 0) {
@@ -370,15 +371,17 @@ export class NotificationCache {
 
   private static clearOldCaches(): void {
     // Clear all notification-related items from localStorage
+    // Note: We use batchedStorage.length and key() for iteration which access localStorage directly
+    // but use batchedStorage.removeItem for batched removal
     const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
+    for (let i = 0; i < batchedStorage.length; i++) {
+      const key = batchedStorage.key(i);
       if (key && key.startsWith(CACHE_KEY_PREFIX)) {
         keysToRemove.push(key);
       }
     }
 
-    keysToRemove.forEach((key) => localStorage.removeItem(key));
+    keysToRemove.forEach((key) => batchedStorage.removeItem(key));
     debug.log(`Cleared ${keysToRemove.length} old cache entries`);
   }
 
@@ -393,10 +396,10 @@ export class NotificationCache {
     const priorityData = this.load(true);
     const allData = this.load(false);
 
-    const priorityExpiryStr = localStorage.getItem(
+    const priorityExpiryStr = batchedStorage.getItem(
       `${CACHE_EXPIRY_KEY}_priority`,
     );
-    const allExpiryStr = localStorage.getItem(`${CACHE_EXPIRY_KEY}_all`);
+    const allExpiryStr = batchedStorage.getItem(`${CACHE_EXPIRY_KEY}_all`);
 
     return {
       hasPriorityCache: !!priorityData,

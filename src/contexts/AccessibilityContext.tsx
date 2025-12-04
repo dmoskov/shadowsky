@@ -1,10 +1,13 @@
 import {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
+import { batchedStorage } from "../services/storage/batched-local-storage";
 
 export interface AccessibilitySettings {
   highContrast: boolean;
@@ -41,7 +44,7 @@ function getSystemReducedMotion(): boolean {
 export function AccessibilityProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AccessibilitySettings>(() => {
     try {
-      const saved = localStorage.getItem(ACCESSIBILITY_KEY);
+      const saved = batchedStorage.getItem(ACCESSIBILITY_KEY);
       if (saved) {
         return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
       }
@@ -100,25 +103,37 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
   // Save to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem(ACCESSIBILITY_KEY, JSON.stringify(settings));
+      batchedStorage.setItem(ACCESSIBILITY_KEY, JSON.stringify(settings));
     } catch {
       // Ignore storage errors
     }
   }, [settings]);
 
-  const updateSettings = (updates: Partial<AccessibilitySettings>) => {
-    setSettings((prev) => ({ ...prev, ...updates }));
-  };
+  const updateSettings = useCallback(
+    (updates: Partial<AccessibilitySettings>) => {
+      setSettings((prev) => ({ ...prev, ...updates }));
+    },
+    [],
+  );
+
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  const contextValue = useMemo(
+    () => ({
+      settings,
+      updateSettings,
+      effectiveReduceMotion,
+      systemPrefersReducedMotion,
+    }),
+    [
+      settings,
+      updateSettings,
+      effectiveReduceMotion,
+      systemPrefersReducedMotion,
+    ],
+  );
 
   return (
-    <AccessibilityContext.Provider
-      value={{
-        settings,
-        updateSettings,
-        effectiveReduceMotion,
-        systemPrefersReducedMotion,
-      }}
-    >
+    <AccessibilityContext.Provider value={contextValue}>
       {children}
     </AccessibilityContext.Provider>
   );

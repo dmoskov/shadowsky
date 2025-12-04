@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { batchedStorage } from "../services/storage/batched-local-storage";
 
 interface HiddenPostsContextType {
   hiddenPosts: Set<string>;
@@ -33,7 +41,7 @@ export const HiddenPostsProvider: React.FC<{ children: React.ReactNode }> = ({
   // Load hidden posts from localStorage on mount
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(HIDDEN_POSTS_KEY);
+      const stored = batchedStorage.getItem(HIDDEN_POSTS_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         setHiddenPosts(new Set(parsed));
@@ -46,7 +54,7 @@ export const HiddenPostsProvider: React.FC<{ children: React.ReactNode }> = ({
   // Save to localStorage whenever hiddenPosts changes
   useEffect(() => {
     try {
-      localStorage.setItem(
+      batchedStorage.setItem(
         HIDDEN_POSTS_KEY,
         JSON.stringify(Array.from(hiddenPosts)),
       );
@@ -55,40 +63,47 @@ export const HiddenPostsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [hiddenPosts]);
 
-  const hidePost = (uri: string) => {
+  const hidePost = useCallback((uri: string) => {
     setHiddenPosts((prev) => {
       const newSet = new Set(prev);
       newSet.add(uri);
       return newSet;
     });
-  };
+  }, []);
 
-  const unhidePost = (uri: string) => {
+  const unhidePost = useCallback((uri: string) => {
     setHiddenPosts((prev) => {
       const newSet = new Set(prev);
       newSet.delete(uri);
       return newSet;
     });
-  };
+  }, []);
 
-  const isPostHidden = (uri: string) => {
-    return hiddenPosts.has(uri);
-  };
+  const isPostHidden = useCallback(
+    (uri: string) => {
+      return hiddenPosts.has(uri);
+    },
+    [hiddenPosts],
+  );
 
-  const clearHiddenPosts = () => {
+  const clearHiddenPosts = useCallback(() => {
     setHiddenPosts(new Set());
-  };
+  }, []);
+
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  const contextValue = useMemo(
+    () => ({
+      hiddenPosts,
+      hidePost,
+      unhidePost,
+      isPostHidden,
+      clearHiddenPosts,
+    }),
+    [hiddenPosts, hidePost, unhidePost, isPostHidden, clearHiddenPosts],
+  );
 
   return (
-    <HiddenPostsContext.Provider
-      value={{
-        hiddenPosts,
-        hidePost,
-        unhidePost,
-        isPostHidden,
-        clearHiddenPosts,
-      }}
-    >
+    <HiddenPostsContext.Provider value={contextValue}>
       {children}
     </HiddenPostsContext.Provider>
   );

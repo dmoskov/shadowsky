@@ -1,4 +1,10 @@
-import React, { createContext, useCallback, useContext, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 import {
   ConfirmDestructiveDialog,
   DestructiveActionSeverity,
@@ -155,10 +161,14 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     }
   }, [destructiveState]);
 
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  const contextValue = useMemo(
+    () => ({ showAlert, showConfirm, showDestructiveConfirm }),
+    [showAlert, showConfirm, showDestructiveConfirm],
+  );
+
   return (
-    <ModalContext.Provider
-      value={{ showAlert, showConfirm, showDestructiveConfirm }}
-    >
+    <ModalContext.Provider value={contextValue}>
       {children}
       {modalState && (
         <Modal isOpen={isOpen} onClose={handleClose} {...modalState} />

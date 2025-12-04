@@ -2,6 +2,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -123,10 +124,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts([]);
   }, []);
 
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  const contextValue = useMemo(
+    () => ({ showToast, dismissToast, dismissAllToasts, showUndoToast }),
+    [showToast, dismissToast, dismissAllToasts, showUndoToast],
+  );
+
   return (
-    <ToastContext.Provider
-      value={{ showToast, dismissToast, dismissAllToasts, showUndoToast }}
-    >
+    <ToastContext.Provider value={contextValue}>
       {children}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </ToastContext.Provider>

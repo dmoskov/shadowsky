@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -472,13 +473,17 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     updatePollingInterval,
   ]);
 
-  const value: WebSocketContextType = {
-    isConnected: connectionState === WebSocketConnectionState.CONNECTED,
-    connectionState,
-    stats,
-    reconnect,
-    isEnabled: !!import.meta.env.VITE_WS_URL,
-  };
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  const value = useMemo(
+    (): WebSocketContextType => ({
+      isConnected: connectionState === WebSocketConnectionState.CONNECTED,
+      connectionState,
+      stats,
+      reconnect,
+      isEnabled: !!import.meta.env.VITE_WS_URL,
+    }),
+    [connectionState, stats, reconnect],
+  );
 
   return (
     <WebSocketContext.Provider value={value}>
