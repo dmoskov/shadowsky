@@ -68,1451 +68,1449 @@ interface VisualTimelineProps {
   onClose?: () => void;
 }
 
-export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(({
-  hideTimeLabels = false,
-  isInSkyDeck = false,
-  isFocused = true,
-}) => {
-  const { agent } = useAuth();
-  const navigate = useNavigate();
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const scrollableRef = React.useRef<HTMLDivElement>(null);
-  const timelineItemsRef = React.useRef<Map<string, HTMLDivElement>>(new Map());
-  const [selectedItemIndex, setSelectedItemIndex] = React.useState<number>(-1);
-  const [selectedPostUri, setSelectedPostUri] = React.useState<string | null>(
-    null,
-  );
-  const [dayGroupColors, setDayGroupColors] = React.useState<
-    Map<string, { color: string; position: number }>
-  >(new Map());
-  // Removed expandedItems state - cards are always expanded
-  const [cursor, setCursor] = React.useState<string | undefined>(undefined);
-  const [allNotifications, setAllNotifications] = React.useState<any[]>([]);
-  const [hasMore, setHasMore] = React.useState(true);
-  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
-  const [hasNewNotifications, setHasNewNotifications] = React.useState(false);
-  const [isRefreshing, setIsRefreshing] = React.useState(false);
+export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
+  ({ hideTimeLabels = false, isInSkyDeck = false, isFocused = true }) => {
+    const { agent } = useAuth();
+    const navigate = useNavigate();
+    const containerRef = React.useRef<HTMLDivElement>(null);
+    const scrollableRef = React.useRef<HTMLDivElement>(null);
+    const timelineItemsRef = React.useRef<Map<string, HTMLDivElement>>(
+      new Map(),
+    );
+    const [selectedItemIndex, setSelectedItemIndex] =
+      React.useState<number>(-1);
+    const [selectedPostUri, setSelectedPostUri] = React.useState<string | null>(
+      null,
+    );
+    const [dayGroupColors, setDayGroupColors] = React.useState<
+      Map<string, { color: string; position: number }>
+    >(new Map());
+    // Removed expandedItems state - cards are always expanded
+    const [cursor, setCursor] = React.useState<string | undefined>(undefined);
+    const [allNotifications, setAllNotifications] = React.useState<any[]>([]);
+    const [hasMore, setHasMore] = React.useState(true);
+    const [isLoadingMore, setIsLoadingMore] = React.useState(false);
+    const [hasNewNotifications, setHasNewNotifications] = React.useState(false);
+    const [isRefreshing, setIsRefreshing] = React.useState(false);
 
-  // Helper function to handle internal navigation
-  const handleInternalNavigation = (e: React.MouseEvent, url: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    navigate(url);
-  };
+    // Helper function to handle internal navigation
+    const handleInternalNavigation = (e: React.MouseEvent, url: string) => {
+      e.preventDefault();
+      e.stopPropagation();
+      navigate(url);
+    };
 
-  // Initial load query
-  const { data, isLoading } = useQuery({
-    queryKey: ["notifications-visual-timeline", "initial"],
-    queryFn: async () => {
-      if (!agent) throw new Error("Not authenticated");
-      const response = await agent.listNotifications({ limit: 50 });
-      return response.data;
-    },
-    refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnMount: false, // Don't refetch on mount - use stale time instead
-    refetchInterval: 60 * 1000, // Poll every 60 seconds after initial load
-    enabled: !!agent, // Only run when agent is available
-  });
+    // Initial load query
+    const { data, isLoading } = useQuery({
+      queryKey: ["notifications-visual-timeline", "initial"],
+      queryFn: async () => {
+        if (!agent) throw new Error("Not authenticated");
+        const response = await agent.listNotifications({ limit: 50 });
+        return response.data;
+      },
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnMount: false, // Don't refetch on mount - use stale time instead
+      refetchInterval: 60 * 1000, // Poll every 60 seconds after initial load
+      enabled: !!agent, // Only run when agent is available
+    });
 
-  // Update state when initial data loads
-  React.useEffect(() => {
-    if (data) {
-      console.log("=== Initial Data Loaded ===", {
-        notificationCount: data.notifications?.length,
-        cursor: data.cursor,
-        hasCursor: !!data.cursor,
+    // Update state when initial data loads
+    React.useEffect(() => {
+      if (data) {
+        console.log("=== Initial Data Loaded ===", {
+          notificationCount: data.notifications?.length,
+          cursor: data.cursor,
+          hasCursor: !!data.cursor,
+        });
+        setAllNotifications(data.notifications || []);
+        setCursor(data.cursor);
+        setHasMore(!!data.cursor);
+      }
+    }, [data]);
+
+    // Periodically check for new notifications
+    React.useEffect(() => {
+      if (!agent || allNotifications.length === 0) return;
+
+      const checkForNew = async () => {
+        try {
+          const response = await agent.listNotifications({ limit: 1 });
+          if (response.data.notifications?.[0]) {
+            const latestNotification = response.data.notifications[0];
+            const currentLatest = allNotifications[0];
+
+            if (latestNotification.uri !== currentLatest.uri) {
+              setHasNewNotifications(true);
+            }
+          }
+        } catch (_error) {
+          // Silently fail - this is just a background check
+        }
+      };
+
+      // Check every 30 seconds
+      const interval = setInterval(checkForNew, 30000);
+      return () => clearInterval(interval);
+    }, [agent, allNotifications]);
+
+    // Load more function
+    const loadMore = React.useCallback(async () => {
+      console.log("=== LoadMore Called ===", {
+        hasAgent: !!agent,
+        cursor,
+        isLoadingMore,
+        hasMore,
+        currentNotificationsLength: allNotifications.length,
       });
-      setAllNotifications(data.notifications || []);
-      setCursor(data.cursor);
-      setHasMore(!!data.cursor);
-    }
-  }, [data]);
 
-  // Periodically check for new notifications
-  React.useEffect(() => {
-    if (!agent || allNotifications.length === 0) return;
+      if (!agent || !cursor || isLoadingMore || !hasMore) {
+        console.log("LoadMore blocked:", {
+          noAgent: !agent,
+          noCursor: !cursor,
+          alreadyLoading: isLoadingMore,
+          noMore: !hasMore,
+        });
+        return;
+      }
 
-    const checkForNew = async () => {
+      setIsLoadingMore(true);
       try {
-        const response = await agent.listNotifications({ limit: 1 });
-        if (response.data.notifications?.[0]) {
+        console.log("Fetching more notifications with cursor:", cursor);
+        const response = await agent.listNotifications({
+          limit: 50,
+          cursor: cursor,
+        });
+
+        console.log("LoadMore response:", {
+          notificationCount: response.data.notifications?.length,
+          newCursor: response.data.cursor,
+          hasNewCursor: !!response.data.cursor,
+        });
+
+        if (
+          response.data.notifications &&
+          response.data.notifications.length > 0
+        ) {
+          const newNotifications = response.data.notifications;
+          console.log("Adding new notifications:", {
+            newCount: newNotifications.length,
+            firstNew: newNotifications[0]?.uri,
+            lastNew: newNotifications[newNotifications.length - 1]?.uri,
+          });
+
+          setAllNotifications((prev) => {
+            const updated = [...prev, ...newNotifications];
+            console.log("Updated notifications array:", {
+              previousLength: prev.length,
+              newLength: updated.length,
+              actuallyAdded: updated.length - prev.length,
+            });
+            return updated;
+          });
+          setCursor(response.data.cursor);
+          setHasMore(!!response.data.cursor);
+        } else {
+          console.log("No more notifications to load");
+          setHasMore(false);
+        }
+      } catch (error) {
+        console.error("Error loading more notifications:", error);
+        setHasMore(false);
+      } finally {
+        setIsLoadingMore(false);
+        console.log("LoadMore completed:", {
+          finalNotificationsLength: allNotifications.length,
+          hasMore,
+        });
+      }
+    }, [agent, cursor, isLoadingMore, hasMore, allNotifications.length]);
+
+    // Refresh function to load new notifications
+    const refreshNotifications = React.useCallback(async () => {
+      if (!agent || isRefreshing) return;
+
+      setIsRefreshing(true);
+      setHasNewNotifications(false);
+
+      try {
+        const response = await agent.listNotifications({
+          limit: 50,
+        });
+
+        if (response.data.notifications) {
+          // Check for new notifications by comparing the first notification
           const latestNotification = response.data.notifications[0];
           const currentLatest = allNotifications[0];
 
-          if (latestNotification.uri !== currentLatest.uri) {
-            setHasNewNotifications(true);
-          }
-        }
-      } catch (_error) {
-        // Silently fail - this is just a background check
-      }
-    };
-
-    // Check every 30 seconds
-    const interval = setInterval(checkForNew, 30000);
-    return () => clearInterval(interval);
-  }, [agent, allNotifications]);
-
-  // Load more function
-  const loadMore = React.useCallback(async () => {
-    console.log("=== LoadMore Called ===", {
-      hasAgent: !!agent,
-      cursor,
-      isLoadingMore,
-      hasMore,
-      currentNotificationsLength: allNotifications.length,
-    });
-
-    if (!agent || !cursor || isLoadingMore || !hasMore) {
-      console.log("LoadMore blocked:", {
-        noAgent: !agent,
-        noCursor: !cursor,
-        alreadyLoading: isLoadingMore,
-        noMore: !hasMore,
-      });
-      return;
-    }
-
-    setIsLoadingMore(true);
-    try {
-      console.log("Fetching more notifications with cursor:", cursor);
-      const response = await agent.listNotifications({
-        limit: 50,
-        cursor: cursor,
-      });
-
-      console.log("LoadMore response:", {
-        notificationCount: response.data.notifications?.length,
-        newCursor: response.data.cursor,
-        hasNewCursor: !!response.data.cursor,
-      });
-
-      if (
-        response.data.notifications &&
-        response.data.notifications.length > 0
-      ) {
-        const newNotifications = response.data.notifications;
-        console.log("Adding new notifications:", {
-          newCount: newNotifications.length,
-          firstNew: newNotifications[0]?.uri,
-          lastNew: newNotifications[newNotifications.length - 1]?.uri,
-        });
-
-        setAllNotifications((prev) => {
-          const updated = [...prev, ...newNotifications];
-          console.log("Updated notifications array:", {
-            previousLength: prev.length,
-            newLength: updated.length,
-            actuallyAdded: updated.length - prev.length,
-          });
-          return updated;
-        });
-        setCursor(response.data.cursor);
-        setHasMore(!!response.data.cursor);
-      } else {
-        console.log("No more notifications to load");
-        setHasMore(false);
-      }
-    } catch (error) {
-      console.error("Error loading more notifications:", error);
-      setHasMore(false);
-    } finally {
-      setIsLoadingMore(false);
-      console.log("LoadMore completed:", {
-        finalNotificationsLength: allNotifications.length,
-        hasMore,
-      });
-    }
-  }, [agent, cursor, isLoadingMore, hasMore, allNotifications.length]);
-
-  // Refresh function to load new notifications
-  const refreshNotifications = React.useCallback(async () => {
-    if (!agent || isRefreshing) return;
-
-    setIsRefreshing(true);
-    setHasNewNotifications(false);
-
-    try {
-      const response = await agent.listNotifications({
-        limit: 50,
-      });
-
-      if (response.data.notifications) {
-        // Check for new notifications by comparing the first notification
-        const latestNotification = response.data.notifications[0];
-        const currentLatest = allNotifications[0];
-
-        if (
-          latestNotification &&
-          currentLatest &&
-          latestNotification.uri !== currentLatest.uri
-        ) {
-          // Find where the new notifications end
-          const existingIndex = response.data.notifications.findIndex((n) =>
-            allNotifications.some((existing) => existing.uri === n.uri),
-          );
-
-          if (existingIndex > 0) {
-            // Add only the new notifications at the beginning
-            const newNotifications = response.data.notifications.slice(
-              0,
-              existingIndex,
+          if (
+            latestNotification &&
+            currentLatest &&
+            latestNotification.uri !== currentLatest.uri
+          ) {
+            // Find where the new notifications end
+            const existingIndex = response.data.notifications.findIndex((n) =>
+              allNotifications.some((existing) => existing.uri === n.uri),
             );
-            setAllNotifications((prev) => [...newNotifications, ...prev]);
 
-            // Scroll to top to show new notifications
-            if (scrollableRef.current) {
-              scrollableRef.current.scrollTop = 0;
-            } else {
-              window.scrollTo({ top: 0, behavior: "smooth" });
+            if (existingIndex > 0) {
+              // Add only the new notifications at the beginning
+              const newNotifications = response.data.notifications.slice(
+                0,
+                existingIndex,
+              );
+              setAllNotifications((prev) => [...newNotifications, ...prev]);
+
+              // Scroll to top to show new notifications
+              if (scrollableRef.current) {
+                scrollableRef.current.scrollTop = 0;
+              } else {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            } else if (existingIndex === -1) {
+              // All notifications are new (rare case)
+              setAllNotifications(response.data.notifications);
+              setCursor(response.data.cursor);
+              setHasMore(!!response.data.cursor);
             }
-          } else if (existingIndex === -1) {
-            // All notifications are new (rare case)
-            setAllNotifications(response.data.notifications);
-            setCursor(response.data.cursor);
-            setHasMore(!!response.data.cursor);
           }
         }
+      } catch (error) {
+        console.error("Error refreshing notifications:", error);
+      } finally {
+        setIsRefreshing(false);
       }
-    } catch (error) {
-      console.error("Error refreshing notifications:", error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [agent, allNotifications, isRefreshing]);
+    }, [agent, allNotifications, isRefreshing]);
 
-  // Intersection observer for infinite scrolling
-  React.useEffect(() => {
-    // For non-SkyDeck mode, use document's main element as root
-    // For SkyDeck mode, use the scrollable container
-    const scrollRoot = isInSkyDeck
-      ? scrollableRef.current
-      : document.querySelector("main") || null;
+    // Intersection observer for infinite scrolling
+    React.useEffect(() => {
+      // For non-SkyDeck mode, use document's main element as root
+      // For SkyDeck mode, use the scrollable container
+      const scrollRoot = isInSkyDeck
+        ? scrollableRef.current
+        : document.querySelector("main") || null;
 
-    const options = {
-      root: scrollRoot,
-      rootMargin: "200px",
-      threshold: 0.1,
-    };
+      const options = {
+        root: scrollRoot,
+        rootMargin: "200px",
+        threshold: 0.1,
+      };
 
-    const observer = new IntersectionObserver((entries) => {
-      const target = entries[0];
-      console.log("Intersection Observer triggered:", {
-        isIntersecting: target.isIntersecting,
-        hasMore,
-        isLoadingMore,
-        willLoadMore: target.isIntersecting && hasMore && !isLoadingMore,
-      });
-      if (target.isIntersecting && hasMore && !isLoadingMore) {
-        loadMore();
-      }
-    }, options);
-
-    // Create sentinel element
-    const sentinel = document.getElementById("timeline-scroll-sentinel");
-    if (sentinel) {
-      observer.observe(sentinel);
-    }
-
-    return () => {
-      if (sentinel) {
-        observer.unobserve(sentinel);
-      }
-    };
-  }, [loadMore, hasMore, isLoadingMore, isInSkyDeck]);
-
-  // Get notifications from the state
-  const notifications = allNotifications;
-
-  // Log whenever allNotifications changes
-  React.useEffect(() => {
-    console.log("=== allNotifications Updated ===", {
-      length: allNotifications.length,
-      hasMore,
-      cursor,
-      firstNotification: allNotifications[0]?.uri,
-      lastNotification: allNotifications[allNotifications.length - 1]?.uri,
-    });
-  }, [allNotifications, hasMore, cursor]);
-
-  // Fetch posts for notifications to show richer content
-  const { data: posts } = useNotificationPosts(notifications);
-
-  // Create a map for quick post lookup
-  const postMap = React.useMemo(() => {
-    if (!posts) return new Map();
-    return new Map(posts.map((post) => [post.uri, post]));
-  }, [posts]);
-
-  // Smart aggregation based on notification type and context
-  const aggregatedEvents = React.useMemo(() => {
-    if (!allNotifications || allNotifications.length === 0) return [];
-
-    const events: AggregatedEvent[] = [];
-    const sorted = [...allNotifications].sort(
-      (a, b) =>
-        new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime(),
-    );
-
-    // First pass: Group notifications by user to identify user activity bursts
-    const userActivityGroups = new Map<string, any[]>();
-    const userActivityTimeWindows = new Map<
-      string,
-      { start: Date; end: Date }
-    >();
-
-    sorted.forEach((notification) => {
-      const userKey =
-        notification.author?.handle || notification.author?.did || "unknown";
-      const notifTime = new Date(notification.indexedAt);
-
-      if (!userActivityGroups.has(userKey)) {
-        userActivityGroups.set(userKey, []);
-        userActivityTimeWindows.set(userKey, {
-          start: notifTime,
-          end: notifTime,
+      const observer = new IntersectionObserver((entries) => {
+        const target = entries[0];
+        console.log("Intersection Observer triggered:", {
+          isIntersecting: target.isIntersecting,
+          hasMore,
+          isLoadingMore,
+          willLoadMore: target.isIntersecting && hasMore && !isLoadingMore,
         });
-      } else {
-        const timeWindow = userActivityTimeWindows.get(userKey)!;
-        // Check if this notification is within 30 minutes of the previous activity from this user
-        if (differenceInMinutes(timeWindow.end, notifTime) <= 30) {
-          // Part of the same activity burst
-          userActivityGroups.get(userKey)!.push(notification);
-          timeWindow.start =
-            notifTime < timeWindow.start ? notifTime : timeWindow.start;
-          timeWindow.end =
-            notifTime > timeWindow.end ? notifTime : timeWindow.end;
-        } else {
-          // Too far apart, treat as separate activity
-          // Process the previous burst if it qualifies
-          const userNotifs = userActivityGroups.get(userKey)!;
-          if (userNotifs.length >= 3) {
-            // Create user activity event for previous burst
-            const affectedPosts = new Map<string, any>();
-            userNotifs.forEach((n) => {
-              const postUri =
-                (n.reason === "repost" || n.reason === "like") &&
-                n.reasonSubject
-                  ? n.reasonSubject
-                  : n.uri;
-              if (postUri && !affectedPosts.has(postUri)) {
-                const post = postMap.get(postUri);
-                affectedPosts.set(postUri, {
-                  uri: postUri,
-                  text: post?.record?.text,
-                });
-              }
-            });
+        if (target.isIntersecting && hasMore && !isLoadingMore) {
+          loadMore();
+        }
+      }, options);
 
-            events.push({
-              time: timeWindow.end,
-              notifications: [...userNotifs],
-              types: new Set(userNotifs.map((n) => n.reason)),
-              actors: new Set([userKey]),
-              aggregationType: "user-activity",
-              earliestTime: timeWindow.start,
-              latestTime: timeWindow.end,
-              primaryActor: {
-                handle: userNotifs[0].author?.handle || "unknown",
-                displayName: userNotifs[0].author?.displayName,
-                avatar: userNotifs[0].author?.avatar,
-              },
-              affectedPosts: Array.from(affectedPosts.values()),
-            });
-          }
-          // Start new burst
-          userActivityGroups.set(userKey, [notification]);
+      // Create sentinel element
+      const sentinel = document.getElementById("timeline-scroll-sentinel");
+      if (sentinel) {
+        observer.observe(sentinel);
+      }
+
+      return () => {
+        if (sentinel) {
+          observer.unobserve(sentinel);
+        }
+      };
+    }, [loadMore, hasMore, isLoadingMore, isInSkyDeck]);
+
+    // Get notifications from the state
+    const notifications = allNotifications;
+
+    // Log whenever allNotifications changes
+    React.useEffect(() => {
+      console.log("=== allNotifications Updated ===", {
+        length: allNotifications.length,
+        hasMore,
+        cursor,
+        firstNotification: allNotifications[0]?.uri,
+        lastNotification: allNotifications[allNotifications.length - 1]?.uri,
+      });
+    }, [allNotifications, hasMore, cursor]);
+
+    // Fetch posts for notifications to show richer content
+    const { data: posts } = useNotificationPosts(notifications);
+
+    // Create a map for quick post lookup
+    const postMap = React.useMemo(() => {
+      if (!posts) return new Map();
+      return new Map(posts.map((post) => [post.uri, post]));
+    }, [posts]);
+
+    // Smart aggregation based on notification type and context
+    const aggregatedEvents = React.useMemo(() => {
+      if (!allNotifications || allNotifications.length === 0) return [];
+
+      const events: AggregatedEvent[] = [];
+      const sorted = [...allNotifications].sort(
+        (a, b) =>
+          new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime(),
+      );
+
+      // First pass: Group notifications by user to identify user activity bursts
+      const userActivityGroups = new Map<string, any[]>();
+      const userActivityTimeWindows = new Map<
+        string,
+        { start: Date; end: Date }
+      >();
+
+      sorted.forEach((notification) => {
+        const userKey =
+          notification.author?.handle || notification.author?.did || "unknown";
+        const notifTime = new Date(notification.indexedAt);
+
+        if (!userActivityGroups.has(userKey)) {
+          userActivityGroups.set(userKey, []);
           userActivityTimeWindows.set(userKey, {
             start: notifTime,
             end: notifTime,
           });
+        } else {
+          const timeWindow = userActivityTimeWindows.get(userKey)!;
+          // Check if this notification is within 30 minutes of the previous activity from this user
+          if (differenceInMinutes(timeWindow.end, notifTime) <= 30) {
+            // Part of the same activity burst
+            userActivityGroups.get(userKey)!.push(notification);
+            timeWindow.start =
+              notifTime < timeWindow.start ? notifTime : timeWindow.start;
+            timeWindow.end =
+              notifTime > timeWindow.end ? notifTime : timeWindow.end;
+          } else {
+            // Too far apart, treat as separate activity
+            // Process the previous burst if it qualifies
+            const userNotifs = userActivityGroups.get(userKey)!;
+            if (userNotifs.length >= 3) {
+              // Create user activity event for previous burst
+              const affectedPosts = new Map<string, any>();
+              userNotifs.forEach((n) => {
+                const postUri =
+                  (n.reason === "repost" || n.reason === "like") &&
+                  n.reasonSubject
+                    ? n.reasonSubject
+                    : n.uri;
+                if (postUri && !affectedPosts.has(postUri)) {
+                  const post = postMap.get(postUri);
+                  affectedPosts.set(postUri, {
+                    uri: postUri,
+                    text: post?.record?.text,
+                  });
+                }
+              });
+
+              events.push({
+                time: timeWindow.end,
+                notifications: [...userNotifs],
+                types: new Set(userNotifs.map((n) => n.reason)),
+                actors: new Set([userKey]),
+                aggregationType: "user-activity",
+                earliestTime: timeWindow.start,
+                latestTime: timeWindow.end,
+                primaryActor: {
+                  handle: userNotifs[0].author?.handle || "unknown",
+                  displayName: userNotifs[0].author?.displayName,
+                  avatar: userNotifs[0].author?.avatar,
+                },
+                affectedPosts: Array.from(affectedPosts.values()),
+              });
+            }
+            // Start new burst
+            userActivityGroups.set(userKey, [notification]);
+            userActivityTimeWindows.set(userKey, {
+              start: notifTime,
+              end: notifTime,
+            });
+          }
+        }
+      });
+
+      // Process remaining user activity bursts
+      userActivityGroups.forEach((notifications, userKey) => {
+        if (notifications.length >= 3) {
+          const timeWindow = userActivityTimeWindows.get(userKey)!;
+          const affectedPosts = new Map<string, any>();
+          notifications.forEach((n) => {
+            const postUri =
+              (n.reason === "repost" || n.reason === "like") && n.reasonSubject
+                ? n.reasonSubject
+                : n.uri;
+            if (postUri && !affectedPosts.has(postUri)) {
+              const post = postMap.get(postUri);
+              affectedPosts.set(postUri, {
+                uri: postUri,
+                text: post?.record?.text,
+              });
+            }
+          });
+
+          events.push({
+            time: timeWindow.end,
+            notifications: [...notifications],
+            types: new Set(notifications.map((n) => n.reason)),
+            actors: new Set([userKey]),
+            aggregationType: "user-activity",
+            earliestTime: timeWindow.start,
+            latestTime: timeWindow.end,
+            primaryActor: {
+              handle: notifications[0].author?.handle || "unknown",
+              displayName: notifications[0].author?.displayName,
+              avatar: notifications[0].author?.avatar,
+            },
+            affectedPosts: Array.from(affectedPosts.values()),
+          });
+        }
+      });
+
+      // Now handle remaining notifications that aren't part of user activity bursts
+      const handledNotifications = new Set<string>();
+      events.forEach((event) => {
+        event.notifications.forEach((n) => handledNotifications.add(n.uri));
+      });
+
+      // Group remaining notifications by post URI to identify post bursts
+      const postGroups = new Map<string, any[]>();
+      const followGroups: any[] = [];
+      const otherNotifications: any[] = [];
+
+      sorted.forEach((notification) => {
+        if (handledNotifications.has(notification.uri)) return;
+
+        if (
+          ["like", "repost", "quote", "reply"].includes(notification.reason)
+        ) {
+          // For likes and reposts, use reasonSubject which contains the original post URI
+          const postUri =
+            (notification.reason === "repost" ||
+              notification.reason === "like") &&
+            notification.reasonSubject
+              ? notification.reasonSubject
+              : notification.uri;
+
+          if (postUri) {
+            if (!postGroups.has(postUri)) {
+              postGroups.set(postUri, []);
+            }
+            postGroups.get(postUri)!.push(notification);
+          }
+        } else if (notification.reason === "follow") {
+          followGroups.push(notification);
+        } else {
+          otherNotifications.push(notification);
+        }
+      });
+
+      // Process post groups to create burst events
+      postGroups.forEach((notifications, postUri) => {
+        if (notifications.length >= 3) {
+          // This is a burst of activity on a single post
+          const times = notifications.map((n) =>
+            new Date(n.indexedAt).getTime(),
+          );
+          const earliestTime = new Date(Math.min(...times));
+          const latestTime = new Date(Math.max(...times));
+          const timeSpanHours = differenceInHours(latestTime, earliestTime);
+
+          // Determine burst intensity based on notification count and time span
+          let burstIntensity: "low" | "medium" | "high" = "low";
+          if (notifications.length >= 10 && timeSpanHours <= 6) {
+            burstIntensity = "high";
+          } else if (notifications.length >= 5 && timeSpanHours <= 12) {
+            burstIntensity = "medium";
+          }
+
+          // Get post text from post map if available
+          const post = postMap.get(postUri);
+          const postText = post?.record?.text;
+
+          const burstEvent: AggregatedEvent = {
+            time: latestTime, // Use latest time for sorting
+            notifications: notifications,
+            types: new Set(notifications.map((n) => n.reason)),
+            actors: new Set(
+              notifications.map((n) => n.author?.handle || "unknown"),
+            ),
+            postUri: postUri,
+            aggregationType: "post-burst",
+            earliestTime: earliestTime,
+            latestTime: latestTime,
+            burstIntensity: burstIntensity,
+            postText: postText,
+          };
+          events.push(burstEvent);
+        } else {
+          // Too few notifications for a burst, create individual or small grouped events
+          notifications.forEach((notification) => {
+            events.push({
+              time: new Date(notification.indexedAt),
+              notifications: [notification],
+              types: new Set([notification.reason]),
+              actors: new Set([notification.author?.handle || "unknown"]),
+              postUri: postUri,
+              aggregationType: "post",
+            });
+          });
+        }
+      });
+
+      // Process follow notifications with wider time window
+      const followBursts: any[] = [];
+      let currentFollowBurst: any[] = [];
+
+      followGroups.forEach((notification, index) => {
+        if (currentFollowBurst.length === 0) {
+          currentFollowBurst.push(notification);
+        } else {
+          const lastTime = new Date(
+            currentFollowBurst[currentFollowBurst.length - 1].indexedAt,
+          );
+          const currentTime = new Date(notification.indexedAt);
+
+          // Group follows within 2 hours
+          if (differenceInHours(lastTime, currentTime) <= 2) {
+            currentFollowBurst.push(notification);
+          } else {
+            // Save current burst and start new one
+            if (currentFollowBurst.length > 0) {
+              followBursts.push([...currentFollowBurst]);
+            }
+            currentFollowBurst = [notification];
+          }
+        }
+
+        // Save last burst
+        if (
+          index === followGroups.length - 1 &&
+          currentFollowBurst.length > 0
+        ) {
+          followBursts.push(currentFollowBurst);
+        }
+      });
+
+      // Create events for follow bursts
+      followBursts.forEach((burst) => {
+        if (burst.length >= 2) {
+          const times = burst.map((n: any) => new Date(n.indexedAt).getTime());
+          const latestTime = new Date(Math.max(...times));
+
+          events.push({
+            time: latestTime,
+            notifications: burst,
+            types: new Set(["follow"]),
+            actors: new Set(
+              burst.map((n: any) => n.author?.handle || "unknown"),
+            ),
+            aggregationType: "follow",
+            earliestTime: new Date(Math.min(...times)),
+            latestTime: latestTime,
+          });
+        } else {
+          // Single follow
+          events.push({
+            time: new Date(burst[0].indexedAt),
+            notifications: burst,
+            types: new Set(["follow"]),
+            actors: new Set([burst[0].author?.handle || "unknown"]),
+            aggregationType: "follow",
+          });
+        }
+      });
+
+      // Group recent comments (replies and quotes) by time window
+      const recentCommentWindow = 30; // 30 minutes window for comment grouping
+      const commentNotifications = otherNotifications.filter(
+        (n) => n.reason === "reply" || n.reason === "quote",
+      );
+      const nonCommentNotifications = otherNotifications.filter(
+        (n) => n.reason !== "reply" && n.reason !== "quote",
+      );
+
+      // Sort comments by time for proper grouping
+      commentNotifications.sort(
+        (a, b) =>
+          new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime(),
+      );
+
+      const commentGroups: any[] = [];
+      const processedComments = new Set<string>();
+
+      commentNotifications.forEach((notification) => {
+        if (processedComments.has(notification.uri)) return;
+
+        // Start a new group with this comment
+        const group = [notification];
+        processedComments.add(notification.uri);
+
+        // Find other comments within the time window
+        const notifTime = new Date(notification.indexedAt);
+
+        commentNotifications.forEach((otherNotif) => {
+          if (processedComments.has(otherNotif.uri)) return;
+
+          const otherTime = new Date(otherNotif.indexedAt);
+          const timeDiff = Math.abs(differenceInMinutes(notifTime, otherTime));
+
+          if (timeDiff <= recentCommentWindow) {
+            group.push(otherNotif);
+            processedComments.add(otherNotif.uri);
+          }
+        });
+
+        if (group.length >= 3) {
+          // Only aggregate if 3 or more comments
+          commentGroups.push(group);
+        } else {
+          // Add back as individual notifications
+          group.forEach((n) => {
+            processedComments.delete(n.uri); // Remove from processed so they can be added individually
+          });
+        }
+      });
+
+      // Create aggregated comment events
+      commentGroups.forEach((group) => {
+        const times = group.map((n: any) => new Date(n.indexedAt).getTime());
+        const latestTime = new Date(Math.max(...times));
+        const earliestTime = new Date(Math.min(...times));
+
+        events.push({
+          time: latestTime,
+          notifications: group,
+          types: new Set(group.map((n: any) => n.reason)),
+          actors: new Set(group.map((n: any) => n.author?.handle || "unknown")),
+          aggregationType: "recent-comments",
+          earliestTime: earliestTime,
+          latestTime: latestTime,
+        });
+      });
+
+      // Add non-aggregated comments and other notifications as individual events
+      [
+        ...commentNotifications.filter((n) => !processedComments.has(n.uri)),
+        ...nonCommentNotifications,
+      ].forEach((notification) => {
+        events.push({
+          time: new Date(notification.indexedAt),
+          notifications: [notification],
+          types: new Set([notification.reason]),
+          actors: new Set([notification.author?.handle || "unknown"]),
+          aggregationType: "mixed",
+        });
+      });
+
+      // Sort all events by time (newest first)
+      events.sort((a, b) => b.time.getTime() - a.time.getTime());
+
+      return events;
+    }, [allNotifications, postMap]);
+
+    // Calculate visual spacing based on time gaps
+    const getSpacingClass = (currentTime: Date, previousTime?: Date) => {
+      if (!previousTime) return "";
+
+      const hoursDiff = differenceInHours(previousTime, currentTime);
+
+      if (hoursDiff >= 24) return "mt-12";
+      if (hoursDiff >= 12) return "mt-8";
+      if (hoursDiff >= 6) return "mt-6";
+      if (hoursDiff >= 3) return "mt-4";
+      if (hoursDiff >= 1) return "mt-3";
+      return "mt-2";
+    };
+
+    const getTimeLabel = (date: Date) => {
+      if (isToday(date)) return "Today";
+      if (isYesterday(date)) return "Yesterday";
+      return format(date, "EEEE, MMMM d");
+    };
+
+    const getTimeOfDay = (date: Date) => {
+      const hour = date.getHours();
+
+      if (hour >= 5 && hour < 9) return "Early morning";
+      if (hour >= 9 && hour < 12) return "Morning";
+      if (hour >= 12 && hour < 14) return "Noon";
+      if (hour >= 14 && hour < 17) return "Afternoon";
+      if (hour >= 17 && hour < 20) return "Evening";
+      if (hour >= 20 && hour < 24) return "Night";
+      return "Late night";
+    };
+
+    const isDayTime = (date: Date) => {
+      const hour = date.getHours();
+      return hour >= 6 && hour < 18;
+    };
+
+    // Get a color based on the time of day with smooth transitions
+    const getTimeOfDayColor = (date: Date) => {
+      const hour = date.getHours();
+      const minute = date.getMinutes();
+      const timeValue = hour + minute / 60; // Convert to decimal hours
+
+      // Define color stops for different times of day (REVERSED for newest-first display)
+      const colorStops = [
+        {
+          time: 0,
+          bg: "rgba(25, 39, 77, 0.15)",
+          border: "rgba(55, 65, 81, 0.3)",
+          shadow: "rgba(17, 24, 39, 0.2)",
+        }, // Midnight - deep blue
+        {
+          time: 4,
+          bg: "rgba(99, 102, 241, 0.1)",
+          border: "rgba(79, 70, 229, 0.25)",
+          shadow: "rgba(67, 56, 202, 0.15)",
+        }, // Early morning - purple (was evening)
+        {
+          time: 6,
+          bg: "rgba(165, 180, 252, 0.1)",
+          border: "rgba(129, 140, 248, 0.25)",
+          shadow: "rgba(99, 102, 241, 0.15)",
+        }, // Dawn - light purple (was dusk)
+        {
+          time: 8,
+          bg: "rgba(251, 207, 232, 0.1)",
+          border: "rgba(244, 114, 182, 0.25)",
+          shadow: "rgba(236, 72, 153, 0.15)",
+        }, // Early morning - pink (was sunset)
+        {
+          time: 10,
+          bg: "rgba(254, 215, 170, 0.1)",
+          border: "rgba(251, 191, 36, 0.25)",
+          shadow: "rgba(245, 158, 11, 0.15)",
+        }, // Morning - orange (was afternoon)
+        {
+          time: 12,
+          bg: "rgba(254, 240, 138, 0.1)",
+          border: "rgba(253, 224, 71, 0.3)",
+          shadow: "rgba(250, 204, 21, 0.2)",
+        }, // Noon - bright yellow
+        {
+          time: 15,
+          bg: "rgba(254, 243, 199, 0.1)",
+          border: "rgba(252, 211, 77, 0.25)",
+          shadow: "rgba(251, 191, 36, 0.15)",
+        }, // Afternoon - warm yellow (was morning)
+        {
+          time: 17,
+          bg: "rgba(251, 207, 232, 0.1)",
+          border: "rgba(249, 168, 212, 0.25)",
+          shadow: "rgba(236, 72, 153, 0.15)",
+        }, // Sunset - light pink (was early morning)
+        {
+          time: 19,
+          bg: "rgba(236, 72, 153, 0.1)",
+          border: "rgba(244, 114, 182, 0.25)",
+          shadow: "rgba(219, 39, 119, 0.15)",
+        }, // Dusk - pink (was dawn)
+        {
+          time: 21,
+          bg: "rgba(49, 46, 129, 0.15)",
+          border: "rgba(79, 70, 229, 0.25)",
+          shadow: "rgba(55, 48, 163, 0.2)",
+        }, // Evening - indigo (was early morning)
+        {
+          time: 24,
+          bg: "rgba(25, 39, 77, 0.15)",
+          border: "rgba(55, 65, 81, 0.3)",
+          shadow: "rgba(17, 24, 39, 0.2)",
+        }, // Back to midnight
+      ];
+
+      // Find the two color stops we're between
+      let prevStop = colorStops[0];
+      let nextStop = colorStops[1];
+
+      for (let i = 0; i < colorStops.length - 1; i++) {
+        if (
+          timeValue >= colorStops[i].time &&
+          timeValue < colorStops[i + 1].time
+        ) {
+          prevStop = colorStops[i];
+          nextStop = colorStops[i + 1];
+          break;
         }
       }
-    });
 
-    // Process remaining user activity bursts
-    userActivityGroups.forEach((notifications, userKey) => {
-      if (notifications.length >= 3) {
-        const timeWindow = userActivityTimeWindows.get(userKey)!;
-        const affectedPosts = new Map<string, any>();
-        notifications.forEach((n) => {
-          const postUri =
-            (n.reason === "repost" || n.reason === "like") && n.reasonSubject
-              ? n.reasonSubject
-              : n.uri;
-          if (postUri && !affectedPosts.has(postUri)) {
-            const post = postMap.get(postUri);
-            affectedPosts.set(postUri, {
-              uri: postUri,
-              text: post?.record?.text,
+      // Calculate interpolation factor
+      const factor =
+        (timeValue - prevStop.time) / (nextStop.time - prevStop.time);
+
+      // Helper function to interpolate between two rgba values
+      const interpolateRgba = (start: string, end: string, factor: number) => {
+        // Extract rgba values using regex
+        const startMatch = start.match(
+          /rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/,
+        );
+        const endMatch = end.match(
+          /rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/,
+        );
+
+        if (!startMatch || !endMatch) return start;
+
+        const r = Math.round(
+          parseInt(startMatch[1]) +
+            (parseInt(endMatch[1]) - parseInt(startMatch[1])) * factor,
+        );
+        const g = Math.round(
+          parseInt(startMatch[2]) +
+            (parseInt(endMatch[2]) - parseInt(startMatch[2])) * factor,
+        );
+        const b = Math.round(
+          parseInt(startMatch[3]) +
+            (parseInt(endMatch[3]) - parseInt(startMatch[3])) * factor,
+        );
+        const a =
+          parseFloat(startMatch[4]) +
+          (parseFloat(endMatch[4]) - parseFloat(startMatch[4])) * factor;
+
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+      };
+
+      return {
+        backgroundColor: interpolateRgba(prevStop.bg, nextStop.bg, factor),
+        borderColor: interpolateRgba(prevStop.border, nextStop.border, factor),
+        shadowColor: interpolateRgba(prevStop.shadow, nextStop.shadow, factor),
+      };
+    };
+
+    const getReasonIcon = (reason: string) => {
+      switch (reason) {
+        case "like":
+          return (
+            <Heart size={14} style={{ color: "var(--bsky-text-secondary)" }} />
+          );
+        case "repost":
+          return (
+            <Repeat2
+              size={14}
+              style={{ color: "var(--bsky-text-secondary)" }}
+            />
+          );
+        case "follow":
+          return (
+            <UserPlus
+              size={14}
+              style={{ color: "var(--bsky-text-secondary)" }}
+            />
+          );
+        case "reply":
+          return (
+            <MessageCircle
+              size={14}
+              style={{ color: "var(--bsky-text-secondary)" }}
+            />
+          );
+        case "quote":
+          return (
+            <Quote size={14} style={{ color: "var(--bsky-text-secondary)" }} />
+          );
+        case "starterpack-joined":
+          return (
+            <UserPlus
+              size={14}
+              style={{ color: "var(--bsky-text-secondary)" }}
+            />
+          );
+        case "verified":
+          return (
+            <MessageCircle
+              size={14}
+              style={{ color: "var(--bsky-text-secondary)" }}
+            />
+          );
+        case "unverified":
+          return (
+            <MessageCircle
+              size={14}
+              style={{ color: "var(--bsky-text-secondary)" }}
+            />
+          );
+        case "like-via-repost":
+          return (
+            <Heart size={14} style={{ color: "var(--bsky-text-secondary)" }} />
+          );
+        case "repost-via-repost":
+          return (
+            <Repeat2
+              size={14}
+              style={{ color: "var(--bsky-text-secondary)" }}
+            />
+          );
+        default:
+          return (
+            <MessageCircle
+              size={14}
+              style={{ color: "var(--bsky-text-secondary)" }}
+            />
+          );
+      }
+    };
+
+    // Group events by day - must be before conditional returns
+    const eventsByDay = React.useMemo(() => {
+      const groups: {
+        [key: string]: { label: string; events: typeof aggregatedEvents };
+      } = {};
+
+      aggregatedEvents.forEach((event) => {
+        const dayLabel = getTimeLabel(event.time);
+        if (!groups[dayLabel]) {
+          groups[dayLabel] = { label: dayLabel, events: [] };
+        }
+        groups[dayLabel].events.push(event);
+      });
+
+      return Object.values(groups);
+    }, [aggregatedEvents]);
+
+    // Flatten all events for keyboard navigation
+    const allEvents = React.useMemo(() => {
+      return eventsByDay.flatMap((day) => day.events);
+    }, [eventsByDay]);
+
+    // Generate unique key for each event
+    const getEventKey = React.useCallback(
+      (event: AggregatedEvent, index: number) => {
+        return `${event.time.toISOString()}-${index}`;
+      },
+      [],
+    );
+
+    // Handle keyboard navigation
+    React.useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        // In SkyDeck mode, check if this column is focused
+        if (isInSkyDeck && !isFocused) return;
+
+        // Only handle keyboard navigation if not in SkyDeck or focus is within the timeline
+        if (
+          !isInSkyDeck &&
+          !containerRef.current?.contains(document.activeElement)
+        )
+          return;
+
+        // Don't interfere with input fields or when modals are open
+        if (
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement ||
+          document.body.classList.contains("thread-modal-open") ||
+          document.body.classList.contains("conversation-modal-open")
+        ) {
+          return;
+        }
+
+        let handled = false;
+        const currentIndex = selectedItemIndex;
+
+        switch (e.key) {
+          case "ArrowDown":
+          case "j": // vim-style down
+            e.preventDefault();
+            handled = true;
+            if (currentIndex < allEvents.length - 1) {
+              setSelectedItemIndex(currentIndex + 1);
+            }
+            break;
+
+          case "ArrowUp":
+          case "k": // vim-style up
+            e.preventDefault();
+            handled = true;
+            if (currentIndex > 0) {
+              setSelectedItemIndex(currentIndex - 1);
+            } else if (currentIndex === -1 && allEvents.length > 0) {
+              // If nothing selected, select last item when going up
+              setSelectedItemIndex(allEvents.length - 1);
+            }
+            break;
+
+          case "ArrowLeft":
+          case "h": // vim-style left
+            e.preventDefault();
+            handled = true;
+            // Scroll horizontally left
+            if (containerRef.current) {
+              containerRef.current.scrollBy({ left: -200, behavior: "smooth" });
+            }
+            break;
+
+          case "ArrowRight":
+          case "l": // vim-style right
+            e.preventDefault();
+            handled = true;
+            // Scroll horizontally right
+            if (containerRef.current) {
+              containerRef.current.scrollBy({ left: 200, behavior: "smooth" });
+            }
+            break;
+
+          case "Enter":
+          case " ": // Space bar
+            e.preventDefault();
+            handled = true;
+            // Open thread viewer for the selected item
+            if (currentIndex >= 0 && currentIndex < allEvents.length) {
+              const event = allEvents[currentIndex];
+              let postUriToOpen: string | null = null;
+
+              // For post bursts and post aggregations, use the postUri
+              if (event.postUri) {
+                postUriToOpen = event.postUri;
+              } else if (
+                event.notifications.length > 0 &&
+                event.notifications[0].reason !== "follow"
+              ) {
+                // For single notifications or other aggregations
+                const notification = event.notifications[0];
+                postUriToOpen =
+                  (notification.reason === "repost" ||
+                    notification.reason === "like") &&
+                  notification.reasonSubject
+                    ? notification.reasonSubject
+                    : notification.uri;
+              }
+
+              if (postUriToOpen) {
+                setSelectedPostUri(postUriToOpen);
+              }
+            }
+            break;
+
+          case "Home":
+            e.preventDefault();
+            handled = true;
+            if (allEvents.length > 0) {
+              setSelectedItemIndex(0);
+            }
+            break;
+
+          case "End":
+            e.preventDefault();
+            handled = true;
+            if (allEvents.length > 0) {
+              setSelectedItemIndex(allEvents.length - 1);
+            }
+            break;
+
+          case "PageUp":
+            e.preventDefault();
+            handled = true;
+            // Jump up by 5 items
+            setSelectedItemIndex(Math.max(0, currentIndex - 5));
+            break;
+
+          case "PageDown":
+            e.preventDefault();
+            handled = true;
+            // Jump down by 5 items
+            setSelectedItemIndex(
+              Math.min(allEvents.length - 1, currentIndex + 5),
+            );
+            break;
+
+          case "Escape":
+            // Clear selection
+            setSelectedItemIndex(-1);
+            handled = true;
+            break;
+        }
+
+        // Prevent default browser scrolling if we handled the key
+        if (handled) {
+          e.stopPropagation();
+        }
+      };
+
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [selectedItemIndex, allEvents, getEventKey, isInSkyDeck, isFocused]);
+
+    // Track visible events for dynamic dot color with smooth transitions
+    React.useEffect(() => {
+      const updateDayColors = () => {
+        const newDayColors = new Map<
+          string,
+          { color: string; position: number }
+        >();
+        const viewportHeight = window.innerHeight;
+        const viewportCenter = viewportHeight / 2;
+
+        // Get all day groups
+        const dayGroups = document.querySelectorAll("[data-day-group]");
+
+        dayGroups.forEach((dayGroup) => {
+          const dayLabel = dayGroup.getAttribute("data-day-group");
+          if (!dayLabel) return;
+
+          const events = dayGroup.querySelectorAll("[data-event-time]");
+          let closestEvent: {
+            element: Element;
+            distance: number;
+            time: string;
+          } | null = null;
+          let totalWeight = 0;
+          let weightedR = 0;
+          let weightedG = 0;
+          let weightedB = 0;
+          let weightedA = 0;
+
+          // Find events near the viewport center and blend their colors
+          events.forEach((event) => {
+            const rect = event.getBoundingClientRect();
+            const eventCenter = rect.top + rect.height / 2;
+            const distance = Math.abs(eventCenter - viewportCenter);
+
+            // Only consider events within viewport or slightly outside
+            if (rect.bottom > -100 && rect.top < viewportHeight + 100) {
+              const eventTime = event.getAttribute("data-event-time");
+              if (eventTime) {
+                // Calculate weight based on distance from viewport center
+                const maxDistance = viewportHeight / 2;
+                const weight = Math.max(0, 1 - distance / maxDistance);
+
+                if (weight > 0) {
+                  const colors = getTimeOfDayColor(new Date(eventTime));
+                  const colorMatch = colors.borderColor.match(
+                    /rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/,
+                  );
+
+                  if (colorMatch) {
+                    totalWeight += weight;
+                    weightedR += parseInt(colorMatch[1]) * weight;
+                    weightedG += parseInt(colorMatch[2]) * weight;
+                    weightedB += parseInt(colorMatch[3]) * weight;
+                    weightedA += parseFloat(colorMatch[4]) * weight;
+                  }
+
+                  if (!closestEvent || distance < closestEvent.distance) {
+                    closestEvent = {
+                      element: event,
+                      distance,
+                      time: eventTime,
+                    };
+                  }
+                }
+              }
+            }
+          });
+
+          if (totalWeight > 0) {
+            // Calculate weighted average color
+            const avgR = Math.round(weightedR / totalWeight);
+            const avgG = Math.round(weightedG / totalWeight);
+            const avgB = Math.round(weightedB / totalWeight);
+            const avgA = weightedA / totalWeight;
+
+            const blendedColor = `rgba(${avgR}, ${avgG}, ${avgB}, ${avgA})`;
+
+            // Get the position of the day banner for smooth scrolling effect
+            const dayBanner = dayGroup.querySelector(".timeline-sticky-banner");
+            const bannerRect = dayBanner?.getBoundingClientRect();
+            const bannerPosition = bannerRect ? bannerRect.top : 0;
+
+            newDayColors.set(dayLabel, {
+              color: blendedColor,
+              position: bannerPosition,
             });
           }
         });
 
-        events.push({
-          time: timeWindow.end,
-          notifications: [...notifications],
-          types: new Set(notifications.map((n) => n.reason)),
-          actors: new Set([userKey]),
-          aggregationType: "user-activity",
-          earliestTime: timeWindow.start,
-          latestTime: timeWindow.end,
-          primaryActor: {
-            handle: notifications[0].author?.handle || "unknown",
-            displayName: notifications[0].author?.displayName,
-            avatar: notifications[0].author?.avatar,
-          },
-          affectedPosts: Array.from(affectedPosts.values()),
-        });
-      }
-    });
+        setDayGroupColors(newDayColors);
+      };
 
-    // Now handle remaining notifications that aren't part of user activity bursts
-    const handledNotifications = new Set<string>();
-    events.forEach((event) => {
-      event.notifications.forEach((n) => handledNotifications.add(n.uri));
-    });
+      // Throttle scroll handler for 60fps (16ms)
+      const handleScroll = throttle(updateDayColors, TIMING.SCROLL_THROTTLE);
 
-    // Group remaining notifications by post URI to identify post bursts
-    const postGroups = new Map<string, any[]>();
-    const followGroups: any[] = [];
-    const otherNotifications: any[] = [];
+      // Initial update
+      updateDayColors();
 
-    sorted.forEach((notification) => {
-      if (handledNotifications.has(notification.uri)) return;
-
-      if (["like", "repost", "quote", "reply"].includes(notification.reason)) {
-        // For likes and reposts, use reasonSubject which contains the original post URI
-        const postUri =
-          (notification.reason === "repost" ||
-            notification.reason === "like") &&
-          notification.reasonSubject
-            ? notification.reasonSubject
-            : notification.uri;
-
-        if (postUri) {
-          if (!postGroups.has(postUri)) {
-            postGroups.set(postUri, []);
-          }
-          postGroups.get(postUri)!.push(notification);
-        }
-      } else if (notification.reason === "follow") {
-        followGroups.push(notification);
-      } else {
-        otherNotifications.push(notification);
-      }
-    });
-
-    // Process post groups to create burst events
-    postGroups.forEach((notifications, postUri) => {
-      if (notifications.length >= 3) {
-        // This is a burst of activity on a single post
-        const times = notifications.map((n) => new Date(n.indexedAt).getTime());
-        const earliestTime = new Date(Math.min(...times));
-        const latestTime = new Date(Math.max(...times));
-        const timeSpanHours = differenceInHours(latestTime, earliestTime);
-
-        // Determine burst intensity based on notification count and time span
-        let burstIntensity: "low" | "medium" | "high" = "low";
-        if (notifications.length >= 10 && timeSpanHours <= 6) {
-          burstIntensity = "high";
-        } else if (notifications.length >= 5 && timeSpanHours <= 12) {
-          burstIntensity = "medium";
-        }
-
-        // Get post text from post map if available
-        const post = postMap.get(postUri);
-        const postText = post?.record?.text;
-
-        const burstEvent: AggregatedEvent = {
-          time: latestTime, // Use latest time for sorting
-          notifications: notifications,
-          types: new Set(notifications.map((n) => n.reason)),
-          actors: new Set(
-            notifications.map((n) => n.author?.handle || "unknown"),
-          ),
-          postUri: postUri,
-          aggregationType: "post-burst",
-          earliestTime: earliestTime,
-          latestTime: latestTime,
-          burstIntensity: burstIntensity,
-          postText: postText,
-        };
-        events.push(burstEvent);
-      } else {
-        // Too few notifications for a burst, create individual or small grouped events
-        notifications.forEach((notification) => {
-          events.push({
-            time: new Date(notification.indexedAt),
-            notifications: [notification],
-            types: new Set([notification.reason]),
-            actors: new Set([notification.author?.handle || "unknown"]),
-            postUri: postUri,
-            aggregationType: "post",
-          });
-        });
-      }
-    });
-
-    // Process follow notifications with wider time window
-    const followBursts: any[] = [];
-    let currentFollowBurst: any[] = [];
-
-    followGroups.forEach((notification, index) => {
-      if (currentFollowBurst.length === 0) {
-        currentFollowBurst.push(notification);
-      } else {
-        const lastTime = new Date(
-          currentFollowBurst[currentFollowBurst.length - 1].indexedAt,
-        );
-        const currentTime = new Date(notification.indexedAt);
-
-        // Group follows within 2 hours
-        if (differenceInHours(lastTime, currentTime) <= 2) {
-          currentFollowBurst.push(notification);
-        } else {
-          // Save current burst and start new one
-          if (currentFollowBurst.length > 0) {
-            followBursts.push([...currentFollowBurst]);
-          }
-          currentFollowBurst = [notification];
-        }
-      }
-
-      // Save last burst
-      if (index === followGroups.length - 1 && currentFollowBurst.length > 0) {
-        followBursts.push(currentFollowBurst);
-      }
-    });
-
-    // Create events for follow bursts
-    followBursts.forEach((burst) => {
-      if (burst.length >= 2) {
-        const times = burst.map((n: any) => new Date(n.indexedAt).getTime());
-        const latestTime = new Date(Math.max(...times));
-
-        events.push({
-          time: latestTime,
-          notifications: burst,
-          types: new Set(["follow"]),
-          actors: new Set(burst.map((n: any) => n.author?.handle || "unknown")),
-          aggregationType: "follow",
-          earliestTime: new Date(Math.min(...times)),
-          latestTime: latestTime,
-        });
-      } else {
-        // Single follow
-        events.push({
-          time: new Date(burst[0].indexedAt),
-          notifications: burst,
-          types: new Set(["follow"]),
-          actors: new Set([burst[0].author?.handle || "unknown"]),
-          aggregationType: "follow",
-        });
-      }
-    });
-
-    // Group recent comments (replies and quotes) by time window
-    const recentCommentWindow = 30; // 30 minutes window for comment grouping
-    const commentNotifications = otherNotifications.filter(
-      (n) => n.reason === "reply" || n.reason === "quote",
-    );
-    const nonCommentNotifications = otherNotifications.filter(
-      (n) => n.reason !== "reply" && n.reason !== "quote",
-    );
-
-    // Sort comments by time for proper grouping
-    commentNotifications.sort(
-      (a, b) =>
-        new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime(),
-    );
-
-    const commentGroups: any[] = [];
-    const processedComments = new Set<string>();
-
-    commentNotifications.forEach((notification) => {
-      if (processedComments.has(notification.uri)) return;
-
-      // Start a new group with this comment
-      const group = [notification];
-      processedComments.add(notification.uri);
-
-      // Find other comments within the time window
-      const notifTime = new Date(notification.indexedAt);
-
-      commentNotifications.forEach((otherNotif) => {
-        if (processedComments.has(otherNotif.uri)) return;
-
-        const otherTime = new Date(otherNotif.indexedAt);
-        const timeDiff = Math.abs(differenceInMinutes(notifTime, otherTime));
-
-        if (timeDiff <= recentCommentWindow) {
-          group.push(otherNotif);
-          processedComments.add(otherNotif.uri);
-        }
-      });
-
-      if (group.length >= 3) {
-        // Only aggregate if 3 or more comments
-        commentGroups.push(group);
-      } else {
-        // Add back as individual notifications
-        group.forEach((n) => {
-          processedComments.delete(n.uri); // Remove from processed so they can be added individually
-        });
-      }
-    });
-
-    // Create aggregated comment events
-    commentGroups.forEach((group) => {
-      const times = group.map((n: any) => new Date(n.indexedAt).getTime());
-      const latestTime = new Date(Math.max(...times));
-      const earliestTime = new Date(Math.min(...times));
-
-      events.push({
-        time: latestTime,
-        notifications: group,
-        types: new Set(group.map((n: any) => n.reason)),
-        actors: new Set(group.map((n: any) => n.author?.handle || "unknown")),
-        aggregationType: "recent-comments",
-        earliestTime: earliestTime,
-        latestTime: latestTime,
-      });
-    });
-
-    // Add non-aggregated comments and other notifications as individual events
-    [
-      ...commentNotifications.filter((n) => !processedComments.has(n.uri)),
-      ...nonCommentNotifications,
-    ].forEach((notification) => {
-      events.push({
-        time: new Date(notification.indexedAt),
-        notifications: [notification],
-        types: new Set([notification.reason]),
-        actors: new Set([notification.author?.handle || "unknown"]),
-        aggregationType: "mixed",
-      });
-    });
-
-    // Sort all events by time (newest first)
-    events.sort((a, b) => b.time.getTime() - a.time.getTime());
-
-    return events;
-  }, [allNotifications, postMap]);
-
-  // Calculate visual spacing based on time gaps
-  const getSpacingClass = (currentTime: Date, previousTime?: Date) => {
-    if (!previousTime) return "";
-
-    const hoursDiff = differenceInHours(previousTime, currentTime);
-
-    if (hoursDiff >= 24) return "mt-12";
-    if (hoursDiff >= 12) return "mt-8";
-    if (hoursDiff >= 6) return "mt-6";
-    if (hoursDiff >= 3) return "mt-4";
-    if (hoursDiff >= 1) return "mt-3";
-    return "mt-2";
-  };
-
-  const getTimeLabel = (date: Date) => {
-    if (isToday(date)) return "Today";
-    if (isYesterday(date)) return "Yesterday";
-    return format(date, "EEEE, MMMM d");
-  };
-
-  const getTimeOfDay = (date: Date) => {
-    const hour = date.getHours();
-
-    if (hour >= 5 && hour < 9) return "Early morning";
-    if (hour >= 9 && hour < 12) return "Morning";
-    if (hour >= 12 && hour < 14) return "Noon";
-    if (hour >= 14 && hour < 17) return "Afternoon";
-    if (hour >= 17 && hour < 20) return "Evening";
-    if (hour >= 20 && hour < 24) return "Night";
-    return "Late night";
-  };
-
-  const isDayTime = (date: Date) => {
-    const hour = date.getHours();
-    return hour >= 6 && hour < 18;
-  };
-
-  // Get a color based on the time of day with smooth transitions
-  const getTimeOfDayColor = (date: Date) => {
-    const hour = date.getHours();
-    const minute = date.getMinutes();
-    const timeValue = hour + minute / 60; // Convert to decimal hours
-
-    // Define color stops for different times of day (REVERSED for newest-first display)
-    const colorStops = [
-      {
-        time: 0,
-        bg: "rgba(25, 39, 77, 0.15)",
-        border: "rgba(55, 65, 81, 0.3)",
-        shadow: "rgba(17, 24, 39, 0.2)",
-      }, // Midnight - deep blue
-      {
-        time: 4,
-        bg: "rgba(99, 102, 241, 0.1)",
-        border: "rgba(79, 70, 229, 0.25)",
-        shadow: "rgba(67, 56, 202, 0.15)",
-      }, // Early morning - purple (was evening)
-      {
-        time: 6,
-        bg: "rgba(165, 180, 252, 0.1)",
-        border: "rgba(129, 140, 248, 0.25)",
-        shadow: "rgba(99, 102, 241, 0.15)",
-      }, // Dawn - light purple (was dusk)
-      {
-        time: 8,
-        bg: "rgba(251, 207, 232, 0.1)",
-        border: "rgba(244, 114, 182, 0.25)",
-        shadow: "rgba(236, 72, 153, 0.15)",
-      }, // Early morning - pink (was sunset)
-      {
-        time: 10,
-        bg: "rgba(254, 215, 170, 0.1)",
-        border: "rgba(251, 191, 36, 0.25)",
-        shadow: "rgba(245, 158, 11, 0.15)",
-      }, // Morning - orange (was afternoon)
-      {
-        time: 12,
-        bg: "rgba(254, 240, 138, 0.1)",
-        border: "rgba(253, 224, 71, 0.3)",
-        shadow: "rgba(250, 204, 21, 0.2)",
-      }, // Noon - bright yellow
-      {
-        time: 15,
-        bg: "rgba(254, 243, 199, 0.1)",
-        border: "rgba(252, 211, 77, 0.25)",
-        shadow: "rgba(251, 191, 36, 0.15)",
-      }, // Afternoon - warm yellow (was morning)
-      {
-        time: 17,
-        bg: "rgba(251, 207, 232, 0.1)",
-        border: "rgba(249, 168, 212, 0.25)",
-        shadow: "rgba(236, 72, 153, 0.15)",
-      }, // Sunset - light pink (was early morning)
-      {
-        time: 19,
-        bg: "rgba(236, 72, 153, 0.1)",
-        border: "rgba(244, 114, 182, 0.25)",
-        shadow: "rgba(219, 39, 119, 0.15)",
-      }, // Dusk - pink (was dawn)
-      {
-        time: 21,
-        bg: "rgba(49, 46, 129, 0.15)",
-        border: "rgba(79, 70, 229, 0.25)",
-        shadow: "rgba(55, 48, 163, 0.2)",
-      }, // Evening - indigo (was early morning)
-      {
-        time: 24,
-        bg: "rgba(25, 39, 77, 0.15)",
-        border: "rgba(55, 65, 81, 0.3)",
-        shadow: "rgba(17, 24, 39, 0.2)",
-      }, // Back to midnight
-    ];
-
-    // Find the two color stops we're between
-    let prevStop = colorStops[0];
-    let nextStop = colorStops[1];
-
-    for (let i = 0; i < colorStops.length - 1; i++) {
-      if (
-        timeValue >= colorStops[i].time &&
-        timeValue < colorStops[i + 1].time
-      ) {
-        prevStop = colorStops[i];
-        nextStop = colorStops[i + 1];
-        break;
-      }
-    }
-
-    // Calculate interpolation factor
-    const factor =
-      (timeValue - prevStop.time) / (nextStop.time - prevStop.time);
-
-    // Helper function to interpolate between two rgba values
-    const interpolateRgba = (start: string, end: string, factor: number) => {
-      // Extract rgba values using regex
-      const startMatch = start.match(
-        /rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/,
-      );
-      const endMatch = end.match(
-        /rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/,
-      );
-
-      if (!startMatch || !endMatch) return start;
-
-      const r = Math.round(
-        parseInt(startMatch[1]) +
-          (parseInt(endMatch[1]) - parseInt(startMatch[1])) * factor,
-      );
-      const g = Math.round(
-        parseInt(startMatch[2]) +
-          (parseInt(endMatch[2]) - parseInt(startMatch[2])) * factor,
-      );
-      const b = Math.round(
-        parseInt(startMatch[3]) +
-          (parseInt(endMatch[3]) - parseInt(startMatch[3])) * factor,
-      );
-      const a =
-        parseFloat(startMatch[4]) +
-        (parseFloat(endMatch[4]) - parseFloat(startMatch[4])) * factor;
-
-      return `rgba(${r}, ${g}, ${b}, ${a})`;
-    };
-
-    return {
-      backgroundColor: interpolateRgba(prevStop.bg, nextStop.bg, factor),
-      borderColor: interpolateRgba(prevStop.border, nextStop.border, factor),
-      shadowColor: interpolateRgba(prevStop.shadow, nextStop.shadow, factor),
-    };
-  };
-
-  const getReasonIcon = (reason: string) => {
-    switch (reason) {
-      case "like":
-        return (
-          <Heart size={14} style={{ color: "var(--bsky-text-secondary)" }} />
-        );
-      case "repost":
-        return (
-          <Repeat2 size={14} style={{ color: "var(--bsky-text-secondary)" }} />
-        );
-      case "follow":
-        return (
-          <UserPlus size={14} style={{ color: "var(--bsky-text-secondary)" }} />
-        );
-      case "reply":
-        return (
-          <MessageCircle
-            size={14}
-            style={{ color: "var(--bsky-text-secondary)" }}
-          />
-        );
-      case "quote":
-        return (
-          <Quote size={14} style={{ color: "var(--bsky-text-secondary)" }} />
-        );
-      case "starterpack-joined":
-        return (
-          <UserPlus size={14} style={{ color: "var(--bsky-text-secondary)" }} />
-        );
-      case "verified":
-        return (
-          <MessageCircle
-            size={14}
-            style={{ color: "var(--bsky-text-secondary)" }}
-          />
-        );
-      case "unverified":
-        return (
-          <MessageCircle
-            size={14}
-            style={{ color: "var(--bsky-text-secondary)" }}
-          />
-        );
-      case "like-via-repost":
-        return (
-          <Heart size={14} style={{ color: "var(--bsky-text-secondary)" }} />
-        );
-      case "repost-via-repost":
-        return (
-          <Repeat2 size={14} style={{ color: "var(--bsky-text-secondary)" }} />
-        );
-      default:
-        return (
-          <MessageCircle
-            size={14}
-            style={{ color: "var(--bsky-text-secondary)" }}
-          />
-        );
-    }
-  };
-
-  // Group events by day - must be before conditional returns
-  const eventsByDay = React.useMemo(() => {
-    const groups: {
-      [key: string]: { label: string; events: typeof aggregatedEvents };
-    } = {};
-
-    aggregatedEvents.forEach((event) => {
-      const dayLabel = getTimeLabel(event.time);
-      if (!groups[dayLabel]) {
-        groups[dayLabel] = { label: dayLabel, events: [] };
-      }
-      groups[dayLabel].events.push(event);
-    });
-
-    return Object.values(groups);
-  }, [aggregatedEvents]);
-
-  // Flatten all events for keyboard navigation
-  const allEvents = React.useMemo(() => {
-    return eventsByDay.flatMap((day) => day.events);
-  }, [eventsByDay]);
-
-  // Generate unique key for each event
-  const getEventKey = React.useCallback(
-    (event: AggregatedEvent, index: number) => {
-      return `${event.time.toISOString()}-${index}`;
-    },
-    [],
-  );
-
-  // Handle keyboard navigation
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // In SkyDeck mode, check if this column is focused
-      if (isInSkyDeck && !isFocused) return;
-
-      // Only handle keyboard navigation if not in SkyDeck or focus is within the timeline
-      if (
-        !isInSkyDeck &&
-        !containerRef.current?.contains(document.activeElement)
-      )
-        return;
-
-      // Don't interfere with input fields or when modals are open
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement ||
-        document.body.classList.contains("thread-modal-open") ||
-        document.body.classList.contains("conversation-modal-open")
-      ) {
-        return;
-      }
-
-      let handled = false;
-      const currentIndex = selectedItemIndex;
-
-      switch (e.key) {
-        case "ArrowDown":
-        case "j": // vim-style down
-          e.preventDefault();
-          handled = true;
-          if (currentIndex < allEvents.length - 1) {
-            setSelectedItemIndex(currentIndex + 1);
-          }
-          break;
-
-        case "ArrowUp":
-        case "k": // vim-style up
-          e.preventDefault();
-          handled = true;
-          if (currentIndex > 0) {
-            setSelectedItemIndex(currentIndex - 1);
-          } else if (currentIndex === -1 && allEvents.length > 0) {
-            // If nothing selected, select last item when going up
-            setSelectedItemIndex(allEvents.length - 1);
-          }
-          break;
-
-        case "ArrowLeft":
-        case "h": // vim-style left
-          e.preventDefault();
-          handled = true;
-          // Scroll horizontally left
-          if (containerRef.current) {
-            containerRef.current.scrollBy({ left: -200, behavior: "smooth" });
-          }
-          break;
-
-        case "ArrowRight":
-        case "l": // vim-style right
-          e.preventDefault();
-          handled = true;
-          // Scroll horizontally right
-          if (containerRef.current) {
-            containerRef.current.scrollBy({ left: 200, behavior: "smooth" });
-          }
-          break;
-
-        case "Enter":
-        case " ": // Space bar
-          e.preventDefault();
-          handled = true;
-          // Open thread viewer for the selected item
-          if (currentIndex >= 0 && currentIndex < allEvents.length) {
-            const event = allEvents[currentIndex];
-            let postUriToOpen: string | null = null;
-
-            // For post bursts and post aggregations, use the postUri
-            if (event.postUri) {
-              postUriToOpen = event.postUri;
-            } else if (
-              event.notifications.length > 0 &&
-              event.notifications[0].reason !== "follow"
-            ) {
-              // For single notifications or other aggregations
-              const notification = event.notifications[0];
-              postUriToOpen =
-                (notification.reason === "repost" ||
-                  notification.reason === "like") &&
-                notification.reasonSubject
-                  ? notification.reasonSubject
-                  : notification.uri;
-            }
-
-            if (postUriToOpen) {
-              setSelectedPostUri(postUriToOpen);
-            }
-          }
-          break;
-
-        case "Home":
-          e.preventDefault();
-          handled = true;
-          if (allEvents.length > 0) {
-            setSelectedItemIndex(0);
-          }
-          break;
-
-        case "End":
-          e.preventDefault();
-          handled = true;
-          if (allEvents.length > 0) {
-            setSelectedItemIndex(allEvents.length - 1);
-          }
-          break;
-
-        case "PageUp":
-          e.preventDefault();
-          handled = true;
-          // Jump up by 5 items
-          setSelectedItemIndex(Math.max(0, currentIndex - 5));
-          break;
-
-        case "PageDown":
-          e.preventDefault();
-          handled = true;
-          // Jump down by 5 items
-          setSelectedItemIndex(
-            Math.min(allEvents.length - 1, currentIndex + 5),
-          );
-          break;
-
-        case "Escape":
-          // Clear selection
-          setSelectedItemIndex(-1);
-          handled = true;
-          break;
-      }
-
-      // Prevent default browser scrolling if we handled the key
-      if (handled) {
-        e.stopPropagation();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedItemIndex, allEvents, getEventKey, isInSkyDeck, isFocused]);
-
-  // Track visible events for dynamic dot color with smooth transitions
-  React.useEffect(() => {
-    const updateDayColors = () => {
-      const newDayColors = new Map<
-        string,
-        { color: string; position: number }
-      >();
-      const viewportHeight = window.innerHeight;
-      const viewportCenter = viewportHeight / 2;
-
-      // Get all day groups
-      const dayGroups = document.querySelectorAll("[data-day-group]");
-
-      dayGroups.forEach((dayGroup) => {
-        const dayLabel = dayGroup.getAttribute("data-day-group");
-        if (!dayLabel) return;
-
-        const events = dayGroup.querySelectorAll("[data-event-time]");
-        let closestEvent: {
-          element: Element;
-          distance: number;
-          time: string;
-        } | null = null;
-        let totalWeight = 0;
-        let weightedR = 0;
-        let weightedG = 0;
-        let weightedB = 0;
-        let weightedA = 0;
-
-        // Find events near the viewport center and blend their colors
-        events.forEach((event) => {
-          const rect = event.getBoundingClientRect();
-          const eventCenter = rect.top + rect.height / 2;
-          const distance = Math.abs(eventCenter - viewportCenter);
-
-          // Only consider events within viewport or slightly outside
-          if (rect.bottom > -100 && rect.top < viewportHeight + 100) {
-            const eventTime = event.getAttribute("data-event-time");
-            if (eventTime) {
-              // Calculate weight based on distance from viewport center
-              const maxDistance = viewportHeight / 2;
-              const weight = Math.max(0, 1 - distance / maxDistance);
-
-              if (weight > 0) {
-                const colors = getTimeOfDayColor(new Date(eventTime));
-                const colorMatch = colors.borderColor.match(
-                  /rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/,
-                );
-
-                if (colorMatch) {
-                  totalWeight += weight;
-                  weightedR += parseInt(colorMatch[1]) * weight;
-                  weightedG += parseInt(colorMatch[2]) * weight;
-                  weightedB += parseInt(colorMatch[3]) * weight;
-                  weightedA += parseFloat(colorMatch[4]) * weight;
-                }
-
-                if (!closestEvent || distance < closestEvent.distance) {
-                  closestEvent = { element: event, distance, time: eventTime };
-                }
-              }
-            }
-          }
-        });
-
-        if (totalWeight > 0) {
-          // Calculate weighted average color
-          const avgR = Math.round(weightedR / totalWeight);
-          const avgG = Math.round(weightedG / totalWeight);
-          const avgB = Math.round(weightedB / totalWeight);
-          const avgA = weightedA / totalWeight;
-
-          const blendedColor = `rgba(${avgR}, ${avgG}, ${avgB}, ${avgA})`;
-
-          // Get the position of the day banner for smooth scrolling effect
-          const dayBanner = dayGroup.querySelector(".timeline-sticky-banner");
-          const bannerRect = dayBanner?.getBoundingClientRect();
-          const bannerPosition = bannerRect ? bannerRect.top : 0;
-
-          newDayColors.set(dayLabel, {
-            color: blendedColor,
-            position: bannerPosition,
-          });
-        }
-      });
-
-      setDayGroupColors(newDayColors);
-    };
-
-    // Throttle scroll handler for 60fps (16ms)
-    const handleScroll = throttle(updateDayColors, TIMING.SCROLL_THROTTLE);
-
-    // Initial update
-    updateDayColors();
-
-    // Listen to scroll events
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    document
-      .querySelector("main")
-      ?.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
+      // Listen to scroll events
+      window.addEventListener("scroll", handleScroll, { passive: true });
       document
         .querySelector("main")
-        ?.removeEventListener("scroll", handleScroll);
-    };
-  }, [allEvents]);
+        ?.addEventListener("scroll", handleScroll, { passive: true });
 
-  // Make container focusable for keyboard navigation in SkyDeck
-  React.useEffect(() => {
-    if (containerRef.current && isInSkyDeck && isFocused) {
-      // Focus container when column becomes focused in SkyDeck
-      // This ensures keyboard events are captured
-      containerRef.current.focus();
-    }
-  }, [isInSkyDeck, isFocused]);
+      return () => {
+        window.removeEventListener("scroll", handleScroll);
+        document
+          .querySelector("main")
+          ?.removeEventListener("scroll", handleScroll);
+      };
+    }, [allEvents]);
 
-  // Scroll selected item into view
-  React.useEffect(() => {
-    if (selectedItemIndex >= 0 && selectedItemIndex < allEvents.length) {
-      const event = allEvents[selectedItemIndex];
-      const eventKey = getEventKey(event, selectedItemIndex);
-      const element = timelineItemsRef.current.get(eventKey);
-
-      if (element) {
-        element.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-          inline: "nearest",
-        });
-      }
-    }
-  }, [selectedItemIndex, allEvents, getEventKey]);
-
-  // Make timeline container focusable
-  React.useEffect(() => {
-    if (
-      containerRef.current &&
-      !containerRef.current.hasAttribute("tabindex")
-    ) {
-      containerRef.current.setAttribute("tabindex", "0");
-      containerRef.current.style.outline = "none";
-
-      // Auto-focus in standalone mode or when focused in SkyDeck
-      if (!isInSkyDeck || (isInSkyDeck && isFocused)) {
+    // Make container focusable for keyboard navigation in SkyDeck
+    React.useEffect(() => {
+      if (containerRef.current && isInSkyDeck && isFocused) {
+        // Focus container when column becomes focused in SkyDeck
+        // This ensures keyboard events are captured
         containerRef.current.focus();
       }
-    }
-  }, [isInSkyDeck, isFocused]);
+    }, [isInSkyDeck, isFocused]);
 
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex gap-4">
-              <div
-                className="h-6 w-24 rounded"
-                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
-              ></div>
-              <div
-                className="h-20 flex-1 rounded"
-                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
-              ></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+    // Scroll selected item into view
+    React.useEffect(() => {
+      if (selectedItemIndex >= 0 && selectedItemIndex < allEvents.length) {
+        const event = allEvents[selectedItemIndex];
+        const eventKey = getEventKey(event, selectedItemIndex);
+        const element = timelineItemsRef.current.get(eventKey);
 
-  return (
-    <div
-      className={isInSkyDeck ? "flex h-full flex-col" : "mx-auto max-w-4xl"}
-      ref={containerRef}
-      tabIndex={-1}
-      style={{ outline: "none" }}
-    >
-      {/* Scrollable content wrapper */}
-      <div
-        className={isInSkyDeck ? "flex-1 overflow-y-auto" : ""}
-        ref={scrollableRef}
-      >
-        <div className="relative">
-          {/* New notifications banner */}
-          {hasNewNotifications && !isRefreshing && (
-            <div
-              className="sticky top-0 z-40 mb-2 px-4 py-2 backdrop-blur-md sm:px-6"
-              style={{
-                backgroundColor: "var(--bsky-bg-primary)",
-                borderBottom: "1px solid var(--bsky-primary)",
-              }}
-            >
-              <button
-                onClick={refreshNotifications}
-                className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all hover:opacity-90"
-                style={{
-                  backgroundColor: "var(--bsky-primary)",
-                  color: "white",
-                }}
-              >
-                <RefreshCw
-                  size={16}
-                  className={isRefreshing ? "animate-spin" : ""}
-                />
-                New notifications available
-              </button>
-            </div>
-          )}
+        if (element) {
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "nearest",
+          });
+        }
+      }
+    }, [selectedItemIndex, allEvents, getEventKey]);
 
-          {eventsByDay.map((dayGroup, dayIndex) => (
-            <div key={dayGroup.label} data-day-group={dayGroup.label}>
-              {/* Sticky day label */}
-              <div
-                className={`mb-2 px-4 py-1.5 backdrop-blur-md sm:px-6 ${!isInSkyDeck ? "timeline-sticky-banner" : "sticky"}`}
-                style={{
-                  ...(isInSkyDeck
-                    ? {
-                        position: "sticky",
-                        WebkitPosition: "-webkit-sticky",
-                        top: "0",
-                        zIndex: 30,
-                      }
-                    : {}),
-                  backgroundColor: "var(--bsky-bg-primary)",
-                  borderBottom: "1px solid var(--bsky-border-primary)",
-                  backdropFilter: "blur(10px)",
-                  WebkitBackdropFilter: "blur(10px)",
-                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-                  // iOS Safari fixes
-                  transform: "translateZ(0)",
-                  willChange: "transform",
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <div
-                    className="h-2 w-2 rounded-full transition-all duration-700 ease-out"
-                    style={{
-                      backgroundColor: dayGroupColors.get(dayGroup.label)?.color
-                        ? dayGroupColors
-                            .get(dayGroup.label)!
-                            .color.replace(/[\d.]+\)$/, "1)")
-                        : dayGroup.events.length > 0
-                          ? getTimeOfDayColor(
-                              dayGroup.events[0].time,
-                            ).borderColor.replace(/[\d.]+\)$/, "1)")
-                          : "var(--bsky-primary)",
-                      boxShadow: dayGroupColors.get(dayGroup.label)?.color
-                        ? `0 0 8px ${dayGroupColors.get(dayGroup.label)!.color.replace(/[\d.]+\)$/, "0.4)")}`
-                        : "none",
-                      transform: "scale(1)",
-                    }}
-                  />
-                  <h2
-                    className="text-sm font-semibold uppercase tracking-wide"
-                    style={{ color: "var(--bsky-text-secondary)" }}
-                  >
-                    {dayGroup.label}
-                  </h2>
-                </div>
+    // Make timeline container focusable
+    React.useEffect(() => {
+      if (
+        containerRef.current &&
+        !containerRef.current.hasAttribute("tabindex")
+      ) {
+        containerRef.current.setAttribute("tabindex", "0");
+        containerRef.current.style.outline = "none";
+
+        // Auto-focus in standalone mode or when focused in SkyDeck
+        if (!isInSkyDeck || (isInSkyDeck && isFocused)) {
+          containerRef.current.focus();
+        }
+      }
+    }, [isInSkyDeck, isFocused]);
+
+    if (isLoading) {
+      return (
+        <div className="p-6">
+          <div className="animate-pulse space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex gap-4">
+                <div
+                  className="h-6 w-24 rounded"
+                  style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                ></div>
+                <div
+                  className="h-20 flex-1 rounded"
+                  style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                ></div>
               </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
 
-              {/* Events for this day */}
-              {dayGroup.events.map((event, eventIndex) => {
-                const previousEvent =
-                  eventIndex > 0
-                    ? dayGroup.events[eventIndex - 1]
-                    : dayIndex > 0
-                      ? eventsByDay[dayIndex - 1].events[
-                          eventsByDay[dayIndex - 1].events.length - 1
-                        ]
-                      : null;
-                const spacingClass = getSpacingClass(
-                  event.time,
-                  previousEvent?.time,
-                );
+    return (
+      <div
+        className={isInSkyDeck ? "flex h-full flex-col" : "mx-auto max-w-4xl"}
+        ref={containerRef}
+        tabIndex={-1}
+        style={{ outline: "none" }}
+      >
+        {/* Scrollable content wrapper */}
+        <div
+          className={isInSkyDeck ? "flex-1 overflow-y-auto" : ""}
+          ref={scrollableRef}
+        >
+          <div className="relative">
+            {/* New notifications banner */}
+            {hasNewNotifications && !isRefreshing && (
+              <div
+                className="sticky top-0 z-40 mb-2 px-4 py-2 backdrop-blur-md sm:px-6"
+                style={{
+                  backgroundColor: "var(--bsky-bg-primary)",
+                  borderBottom: "1px solid var(--bsky-primary)",
+                }}
+              >
+                <button
+                  onClick={refreshNotifications}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all hover:opacity-90"
+                  style={{
+                    backgroundColor: "var(--bsky-primary)",
+                    color: "white",
+                  }}
+                >
+                  <RefreshCw
+                    size={16}
+                    className={isRefreshing ? "animate-spin" : ""}
+                  />
+                  New notifications available
+                </button>
+              </div>
+            )}
 
-                // Calculate the global index for this event
-                let globalIndex = 0;
-                for (let i = 0; i < dayIndex; i++) {
-                  globalIndex += eventsByDay[i].events.length;
-                }
-                globalIndex += eventIndex;
+            {eventsByDay.map((dayGroup, dayIndex) => (
+              <div key={dayGroup.label} data-day-group={dayGroup.label}>
+                {/* Sticky day label */}
+                <div
+                  className={`mb-2 px-4 py-1.5 backdrop-blur-md sm:px-6 ${!isInSkyDeck ? "timeline-sticky-banner" : "sticky"}`}
+                  style={{
+                    ...(isInSkyDeck
+                      ? {
+                          position: "sticky",
+                          WebkitPosition: "-webkit-sticky",
+                          top: "0",
+                          zIndex: 30,
+                        }
+                      : {}),
+                    backgroundColor: "var(--bsky-bg-primary)",
+                    borderBottom: "1px solid var(--bsky-border-primary)",
+                    backdropFilter: "blur(10px)",
+                    WebkitBackdropFilter: "blur(10px)",
+                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                    // iOS Safari fixes
+                    transform: "translateZ(0)",
+                    willChange: "transform",
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="h-2 w-2 rounded-full transition-all duration-700 ease-out"
+                      style={{
+                        backgroundColor: dayGroupColors.get(dayGroup.label)
+                          ?.color
+                          ? dayGroupColors
+                              .get(dayGroup.label)!
+                              .color.replace(/[\d.]+\)$/, "1)")
+                          : dayGroup.events.length > 0
+                            ? getTimeOfDayColor(
+                                dayGroup.events[0].time,
+                              ).borderColor.replace(/[\d.]+\)$/, "1)")
+                            : "var(--bsky-primary)",
+                        boxShadow: dayGroupColors.get(dayGroup.label)?.color
+                          ? `0 0 8px ${dayGroupColors.get(dayGroup.label)!.color.replace(/[\d.]+\)$/, "0.4)")}`
+                          : "none",
+                        transform: "scale(1)",
+                      }}
+                    />
+                    <h2
+                      className="text-sm font-semibold uppercase tracking-wide"
+                      style={{ color: "var(--bsky-text-secondary)" }}
+                    >
+                      {dayGroup.label}
+                    </h2>
+                  </div>
+                </div>
 
-                const eventKey = getEventKey(event, globalIndex);
-                const isSelected = selectedItemIndex === globalIndex;
-                const isExpanded = true; // Cards are always expanded
+                {/* Events for this day */}
+                {dayGroup.events.map((event, eventIndex) => {
+                  const previousEvent =
+                    eventIndex > 0
+                      ? dayGroup.events[eventIndex - 1]
+                      : dayIndex > 0
+                        ? eventsByDay[dayIndex - 1].events[
+                            eventsByDay[dayIndex - 1].events.length - 1
+                          ]
+                        : null;
+                  const spacingClass = getSpacingClass(
+                    event.time,
+                    previousEvent?.time,
+                  );
 
-                return (
-                  <div
-                    key={eventKey}
-                    className={`relative ${spacingClass} transition-transform duration-200 ease-out ${isSelected ? "z-10" : ""}`}
-                    data-day-label={dayGroup.label}
-                    data-event-time={event.time.toISOString()}
-                    ref={(el) => {
-                      if (el) {
-                        timelineItemsRef.current.set(eventKey, el);
-                      } else {
-                        timelineItemsRef.current.delete(eventKey);
-                      }
-                    }}
-                  >
-                    {/* Time and event */}
-                    <div className="flex animate-fade-in-up items-start gap-2 px-4 sm:gap-4 sm:px-6">
-                      {/* Time - hide text on mobile, show only on desktop */}
-                      <div
-                        className={`${hideTimeLabels ? "w-3" : "w-3 sm:w-20"} pt-2 text-right font-mono text-xs tracking-wider sm:text-sm`}
-                      >
-                        {!hideTimeLabels && (
-                          <span
-                            className="hidden font-medium sm:inline"
-                            style={{
-                              color: isDayTime(event.time)
-                                ? "#d97706"
-                                : "#6366f1",
-                              opacity: 0.8,
-                            }}
-                          >
-                            {getTimeOfDay(event.time)}
-                          </span>
-                        )}
-                      </div>
+                  // Calculate the global index for this event
+                  let globalIndex = 0;
+                  for (let i = 0; i < dayIndex; i++) {
+                    globalIndex += eventsByDay[i].events.length;
+                  }
+                  globalIndex += eventIndex;
 
-                      {/* Timeline dot */}
-                      <div
-                        className="relative flex-shrink-0 px-1 sm:px-0"
-                        style={{ paddingTop: "14px" }}
-                      >
+                  const eventKey = getEventKey(event, globalIndex);
+                  const isSelected = selectedItemIndex === globalIndex;
+                  const isExpanded = true; // Cards are always expanded
+
+                  return (
+                    <div
+                      key={eventKey}
+                      className={`relative ${spacingClass} transition-transform duration-200 ease-out ${isSelected ? "z-10" : ""}`}
+                      data-day-label={dayGroup.label}
+                      data-event-time={event.time.toISOString()}
+                      ref={(el) => {
+                        if (el) {
+                          timelineItemsRef.current.set(eventKey, el);
+                        } else {
+                          timelineItemsRef.current.delete(eventKey);
+                        }
+                      }}
+                    >
+                      {/* Time and event */}
+                      <div className="flex animate-fade-in-up items-start gap-2 px-4 sm:gap-4 sm:px-6">
+                        {/* Time - hide text on mobile, show only on desktop */}
                         <div
-                          className={`${event.aggregationType === "post-burst" ? "h-3 w-3" : "h-2 w-2"} rounded-full`}
-                          style={{
-                            backgroundColor: getTimeOfDayColor(
-                              event.time,
-                            ).borderColor.replace(/[\d.]+\)$/, "1)"), // Use solid color for dot
-                            opacity:
-                              event.aggregationType === "post-burst"
-                                ? "0.9"
-                                : "0.7",
-                          }}
-                        />
-                      </div>
+                          className={`${hideTimeLabels ? "w-3" : "w-3 sm:w-20"} pt-2 text-right font-mono text-xs tracking-wider sm:text-sm`}
+                        >
+                          {!hideTimeLabels && (
+                            <span
+                              className="hidden font-medium sm:inline"
+                              style={{
+                                color: isDayTime(event.time)
+                                  ? "#d97706"
+                                  : "#6366f1",
+                                opacity: 0.8,
+                              }}
+                            >
+                              {getTimeOfDay(event.time)}
+                            </span>
+                          )}
+                        </div>
 
-                      {/* Event card */}
-                      <div
-                        className={`flex-1 cursor-pointer rounded-lg p-3 transition-all duration-200 ease-out ${
-                          event.notifications.length > 1
-                            ? "bg-bsky-bg-secondary"
-                            : ""
-                        } ${
-                          event.aggregationType === "follow"
-                            ? "border-l-[3px] border-l-bsky-follow pl-3"
-                            : event.aggregationType === "post" ||
+                        {/* Timeline dot */}
+                        <div
+                          className="relative flex-shrink-0 px-1 sm:px-0"
+                          style={{ paddingTop: "14px" }}
+                        >
+                          <div
+                            className={`${event.aggregationType === "post-burst" ? "h-3 w-3" : "h-2 w-2"} rounded-full`}
+                            style={{
+                              backgroundColor: getTimeOfDayColor(
+                                event.time,
+                              ).borderColor.replace(/[\d.]+\)$/, "1)"), // Use solid color for dot
+                              opacity:
                                 event.aggregationType === "post-burst"
-                              ? "border-l-[3px] border-l-bsky-primary pl-3"
-                              : event.aggregationType === "user-activity"
-                                ? "relative overflow-hidden bg-bsky-bg-secondary"
-                                : ""
-                        } ${isSelected ? "relative translate-x-1 transform before:absolute before:-left-1 before:bottom-0 before:top-0 before:w-[3px] before:rounded-r-[3px] before:bg-bsky-primary before:opacity-80 before:content-['']" : ""} hover:translate-x-0.5 hover:transform hover:shadow-lg`}
-                        style={{
-                          backgroundColor: getTimeOfDayColor(event.time)
-                            .backgroundColor,
-                          border: `1px solid ${isSelected ? "var(--bsky-primary)" : getTimeOfDayColor(event.time).borderColor}`,
-                          borderRadius: "8px",
-                          boxShadow: isSelected
-                            ? `0 0 0 2px var(--bsky-primary), 0 1px 3px ${getTimeOfDayColor(event.time).shadowColor}`
-                            : `0 1px 3px ${getTimeOfDayColor(event.time).shadowColor}`,
-                        }}
-                        tabIndex={isSelected ? 0 : -1}
-                        aria-selected={isSelected}
-                        aria-expanded={isExpanded}
-                        role="button"
-                        onClick={() => {
-                          setSelectedItemIndex(globalIndex);
-                          // Open thread viewer for post notifications
-                          let postUriToOpen: string | null = null;
+                                  ? "0.9"
+                                  : "0.7",
+                            }}
+                          />
+                        </div>
 
-                          // For post bursts and post aggregations, use the postUri
-                          if (event.postUri) {
-                            postUriToOpen = event.postUri;
-                          } else if (
-                            event.notifications.length > 0 &&
-                            event.notifications[0].reason !== "follow"
-                          ) {
-                            // For single notifications or other aggregations
-                            const notification = event.notifications[0];
-                            postUriToOpen =
-                              (notification.reason === "repost" ||
-                                notification.reason === "like") &&
-                              notification.reasonSubject
-                                ? notification.reasonSubject
-                                : notification.uri;
-                          }
-
-                          if (postUriToOpen) {
-                            setSelectedPostUri(postUriToOpen);
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          // Handle Enter/Space on the element itself
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
+                        {/* Event card */}
+                        <div
+                          className={`flex-1 cursor-pointer rounded-lg p-3 transition-all duration-200 ease-out ${
+                            event.notifications.length > 1
+                              ? "bg-bsky-bg-secondary"
+                              : ""
+                          } ${
+                            event.aggregationType === "follow"
+                              ? "border-l-[3px] border-l-bsky-follow pl-3"
+                              : event.aggregationType === "post" ||
+                                  event.aggregationType === "post-burst"
+                                ? "border-l-[3px] border-l-bsky-primary pl-3"
+                                : event.aggregationType === "user-activity"
+                                  ? "relative overflow-hidden bg-bsky-bg-secondary"
+                                  : ""
+                          } ${isSelected ? "relative translate-x-1 transform before:absolute before:-left-1 before:bottom-0 before:top-0 before:w-[3px] before:rounded-r-[3px] before:bg-bsky-primary before:opacity-80 before:content-['']" : ""} hover:translate-x-0.5 hover:transform hover:shadow-lg`}
+                          style={{
+                            backgroundColor: getTimeOfDayColor(event.time)
+                              .backgroundColor,
+                            border: `1px solid ${isSelected ? "var(--bsky-primary)" : getTimeOfDayColor(event.time).borderColor}`,
+                            borderRadius: "8px",
+                            boxShadow: isSelected
+                              ? `0 0 0 2px var(--bsky-primary), 0 1px 3px ${getTimeOfDayColor(event.time).shadowColor}`
+                              : `0 1px 3px ${getTimeOfDayColor(event.time).shadowColor}`,
+                          }}
+                          tabIndex={isSelected ? 0 : -1}
+                          aria-selected={isSelected}
+                          aria-expanded={isExpanded}
+                          role="button"
+                          onClick={() => {
+                            setSelectedItemIndex(globalIndex);
                             // Open thread viewer for post notifications
                             let postUriToOpen: string | null = null;
 
@@ -1536,121 +1534,201 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(({
                             if (postUriToOpen) {
                               setSelectedPostUri(postUriToOpen);
                             }
-                          }
-                        }}
-                      >
-                        {/* Single notification */}
-                        {event.notifications.length === 1 ? (
-                          <div>
-                            <div className="flex items-center gap-3">
-                              {/* Removed expand/collapse indicator - cards are always expanded */}
-                              <div
-                                onClick={(e) =>
-                                  handleInternalNavigation(
-                                    e,
-                                    getProfileUrl(
-                                      event.notifications[0].author?.handle ||
-                                        "unknown",
-                                    ),
-                                  )
-                                }
-                                className="flex-shrink-0 cursor-pointer transition-all duration-200 ease-out hover:opacity-80"
-                              >
-                                <img
-                                  src={proxifyBskyImage(
-                                    event.notifications[0].author.avatar,
-                                  )}
-                                  alt={
-                                    event.notifications[0].author?.handle ||
-                                    "unknown"
-                                  }
-                                  className="h-8 w-8 rounded-full"
-                                />
-                              </div>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  {getReasonIcon(event.notifications[0].reason)}
-                                  <span
-                                    onClick={(e) =>
-                                      handleInternalNavigation(
-                                        e,
-                                        getProfileUrl(
-                                          event.notifications[0].author
-                                            ?.handle || "unknown",
-                                        ),
-                                      )
-                                    }
-                                    className="cursor-pointer text-sm font-medium hover:underline"
-                                    style={{ color: "var(--bsky-primary)" }}
-                                  >
-                                    {event.notifications[0].author
-                                      ?.displayName ||
-                                      event.notifications[0].author?.handle ||
-                                      "Unknown"}
-                                  </span>
-                                </div>
-                                <div
-                                  className="mt-0.5 text-xs sm:text-sm"
-                                  style={{
-                                    color: "var(--bsky-text-secondary)",
-                                  }}
-                                >
-                                  {getActionText(event.notifications[0].reason)}
-                                </div>
-                              </div>
-                            </div>
-                            {/* Show post preview for single notifications too */}
-                            {event.notifications[0].reason !== "follow" &&
-                              isExpanded &&
-                              (() => {
-                                const notification = event.notifications[0];
+                          }}
+                          onKeyDown={(e) => {
+                            // Handle Enter/Space on the element itself
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              // Open thread viewer for post notifications
+                              let postUriToOpen: string | null = null;
 
-                                // Try to get full post data first
-                                // For reposts and likes, use reasonSubject which contains the original post URI
-                                const postUri =
+                              // For post bursts and post aggregations, use the postUri
+                              if (event.postUri) {
+                                postUriToOpen = event.postUri;
+                              } else if (
+                                event.notifications.length > 0 &&
+                                event.notifications[0].reason !== "follow"
+                              ) {
+                                // For single notifications or other aggregations
+                                const notification = event.notifications[0];
+                                postUriToOpen =
                                   (notification.reason === "repost" ||
                                     notification.reason === "like") &&
                                   notification.reasonSubject
                                     ? notification.reasonSubject
                                     : notification.uri;
-                                const post = [
-                                  "like",
-                                  "repost",
-                                  "reply",
-                                  "quote",
-                                ].includes(notification.reason)
-                                  ? postMap.get(postUri)
-                                  : undefined;
+                              }
 
-                                if (post) {
-                                  // We have full post data
+                              if (postUriToOpen) {
+                                setSelectedPostUri(postUriToOpen);
+                              }
+                            }
+                          }}
+                        >
+                          {/* Single notification */}
+                          {event.notifications.length === 1 ? (
+                            <div>
+                              <div className="flex items-center gap-3">
+                                {/* Removed expand/collapse indicator - cards are always expanded */}
+                                <div
+                                  onClick={(e) =>
+                                    handleInternalNavigation(
+                                      e,
+                                      getProfileUrl(
+                                        event.notifications[0].author?.handle ||
+                                          "unknown",
+                                      ),
+                                    )
+                                  }
+                                  className="flex-shrink-0 cursor-pointer transition-all duration-200 ease-out hover:opacity-80"
+                                >
+                                  <img
+                                    src={proxifyBskyImage(
+                                      event.notifications[0].author.avatar,
+                                    )}
+                                    alt={
+                                      event.notifications[0].author?.handle ||
+                                      "unknown"
+                                    }
+                                    className="h-8 w-8 rounded-full"
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    {getReasonIcon(
+                                      event.notifications[0].reason,
+                                    )}
+                                    <span
+                                      onClick={(e) =>
+                                        handleInternalNavigation(
+                                          e,
+                                          getProfileUrl(
+                                            event.notifications[0].author
+                                              ?.handle || "unknown",
+                                          ),
+                                        )
+                                      }
+                                      className="cursor-pointer text-sm font-medium hover:underline"
+                                      style={{ color: "var(--bsky-primary)" }}
+                                    >
+                                      {event.notifications[0].author
+                                        ?.displayName ||
+                                        event.notifications[0].author?.handle ||
+                                        "Unknown"}
+                                    </span>
+                                  </div>
+                                  <div
+                                    className="mt-0.5 text-xs sm:text-sm"
+                                    style={{
+                                      color: "var(--bsky-text-secondary)",
+                                    }}
+                                  >
+                                    {getActionText(
+                                      event.notifications[0].reason,
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              {/* Show post preview for single notifications too */}
+                              {event.notifications[0].reason !== "follow" &&
+                                isExpanded &&
+                                (() => {
+                                  const notification = event.notifications[0];
+
+                                  // Try to get full post data first
+                                  // For reposts and likes, use reasonSubject which contains the original post URI
+                                  const postUri =
+                                    (notification.reason === "repost" ||
+                                      notification.reason === "like") &&
+                                    notification.reasonSubject
+                                      ? notification.reasonSubject
+                                      : notification.uri;
+                                  const post = [
+                                    "like",
+                                    "repost",
+                                    "reply",
+                                    "quote",
+                                  ].includes(notification.reason)
+                                    ? postMap.get(postUri)
+                                    : undefined;
+
+                                  if (post) {
+                                    // We have full post data
+                                    return (
+                                      <div
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedPostUri(postUri);
+                                        }}
+                                        className="relative ml-11 mt-2 block cursor-pointer overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
+                                        style={{
+                                          backgroundColor:
+                                            "var(--bsky-bg-tertiary)",
+                                          border:
+                                            "1px solid var(--bsky-border-primary)",
+                                          textDecoration: "none",
+                                        }}
+                                      >
+                                        <p
+                                          className="mb-1 flex items-center gap-1 text-xs font-medium"
+                                          style={{
+                                            color: "var(--bsky-text-tertiary)",
+                                          }}
+                                        >
+                                          {notification.reason === "reply"
+                                            ? "Replying to your post:"
+                                            : notification.reason === "quote"
+                                              ? "Quoting your post:"
+                                              : "Your post:"}
+                                          <ExternalLink size={10} />
+                                        </p>
+                                        <p
+                                          className="line-clamp-2 text-xs"
+                                          style={{
+                                            color: "var(--bsky-text-primary)",
+                                          }}
+                                        >
+                                          {post.record?.text ||
+                                            "[Post with no text]"}
+                                        </p>
+                                      </div>
+                                    );
+                                  }
+
+                                  // Fallback for mentions or when post data isn't available
+                                  const postText =
+                                    notification.record?.text ||
+                                    (notification.record &&
+                                    typeof notification.record === "object" &&
+                                    "text" in notification.record
+                                      ? (
+                                          notification.record as {
+                                            text?: string;
+                                          }
+                                        ).text
+                                      : null);
+
+                                  if (!postText) return null;
+
                                   return (
                                     <div
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedPostUri(postUri);
-                                      }}
-                                      className="relative ml-11 mt-2 block cursor-pointer overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
+                                      className="relative ml-11 mt-2 overflow-hidden rounded p-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-['']"
                                       style={{
                                         backgroundColor:
                                           "var(--bsky-bg-tertiary)",
                                         border:
                                           "1px solid var(--bsky-border-primary)",
-                                        textDecoration: "none",
                                       }}
                                     >
                                       <p
-                                        className="mb-1 flex items-center gap-1 text-xs font-medium"
+                                        className="mb-1 text-xs font-medium"
                                         style={{
                                           color: "var(--bsky-text-tertiary)",
                                         }}
                                       >
-                                        {notification.reason === "reply"
-                                          ? "Replying to your post:"
-                                          : notification.reason === "quote"
-                                            ? "Quoting your post:"
-                                            : "Your post:"}
-                                        <ExternalLink size={10} />
+                                        {notification.reason === "mention"
+                                          ? "Mentioned you in:"
+                                          : "Post:"}
                                       </p>
                                       <p
                                         className="line-clamp-2 text-xs"
@@ -1658,251 +1736,427 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(({
                                           color: "var(--bsky-text-primary)",
                                         }}
                                       >
-                                        {post.record?.text ||
-                                          "[Post with no text]"}
+                                        {postText}
                                       </p>
                                     </div>
                                   );
-                                }
+                                })()}
+                            </div>
+                          ) : (
+                            /* Aggregated notifications */
+                            <div>
+                              {/* Removed expand/collapse indicator - cards are always expanded */}
+                              {event.aggregationType === "user-activity" ? (
+                                // Special layout for user activity bursts
+                                <div>
+                                  <div className="mb-3 flex items-start gap-3">
+                                    <div
+                                      onClick={(e) =>
+                                        handleInternalNavigation(
+                                          e,
+                                          getProfileUrl(
+                                            event.primaryActor!.handle,
+                                          ),
+                                        )
+                                      }
+                                      className="flex-shrink-0 cursor-pointer transition-all duration-200 ease-out hover:opacity-80"
+                                    >
+                                      <img
+                                        src={proxifyBskyImage(
+                                          event.primaryActor!.avatar,
+                                        )}
+                                        alt={event.primaryActor!.handle}
+                                        className="h-10 w-10 rounded-full"
+                                        style={{
+                                          border:
+                                            "1px solid var(--bsky-border-primary)",
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="mb-1 flex items-center gap-2">
+                                        <span
+                                          onClick={(e) =>
+                                            handleInternalNavigation(
+                                              e,
+                                              getProfileUrl(
+                                                event.primaryActor!.handle,
+                                              ),
+                                            )
+                                          }
+                                          className="cursor-pointer text-base font-bold hover:underline"
+                                          style={{
+                                            color: "var(--bsky-primary)",
+                                          }}
+                                        >
+                                          {event.primaryActor!.displayName ||
+                                            event.primaryActor!.handle}
+                                        </span>
+                                        <span
+                                          className="text-xs"
+                                          style={{
+                                            color: "var(--bsky-text-tertiary)",
+                                          }}
+                                        >
+                                          • active
+                                        </span>
+                                      </div>
+                                      <p
+                                        className="text-sm"
+                                        style={{
+                                          color: "var(--bsky-text-secondary)",
+                                        }}
+                                      >
+                                        {event.notifications.length}{" "}
+                                        interactions over{" "}
+                                        {event.earliestTime && event.latestTime
+                                          ? formatDistanceToNow(
+                                              event.earliestTime,
+                                              { addSuffix: false },
+                                            )
+                                          : "time"}
+                                      </p>
+                                    </div>
+                                  </div>
 
-                                // Fallback for mentions or when post data isn't available
-                                const postText =
-                                  notification.record?.text ||
-                                  (notification.record &&
-                                  typeof notification.record === "object" &&
-                                  "text" in notification.record
-                                    ? (notification.record as { text?: string })
-                                        .text
-                                    : null);
-
-                                if (!postText) return null;
-
-                                return (
+                                  {/* Engagement breakdown */}
                                   <div
-                                    className="relative ml-11 mt-2 overflow-hidden rounded p-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-['']"
+                                    className="mb-3 flex flex-wrap gap-3 text-sm"
                                     style={{
-                                      backgroundColor:
-                                        "var(--bsky-bg-tertiary)",
-                                      border:
-                                        "1px solid var(--bsky-border-primary)",
+                                      color: "var(--bsky-text-secondary)",
                                     }}
                                   >
-                                    <p
-                                      className="mb-1 text-xs font-medium"
-                                      style={{
-                                        color: "var(--bsky-text-tertiary)",
-                                      }}
-                                    >
-                                      {notification.reason === "mention"
-                                        ? "Mentioned you in:"
-                                        : "Post:"}
-                                    </p>
-                                    <p
-                                      className="line-clamp-2 text-xs"
-                                      style={{
-                                        color: "var(--bsky-text-primary)",
-                                      }}
-                                    >
-                                      {postText}
-                                    </p>
-                                  </div>
-                                );
-                              })()}
-                          </div>
-                        ) : (
-                          /* Aggregated notifications */
-                          <div>
-                            {/* Removed expand/collapse indicator - cards are always expanded */}
-                            {event.aggregationType === "user-activity" ? (
-                              // Special layout for user activity bursts
-                              <div>
-                                <div className="mb-3 flex items-start gap-3">
-                                  <div
-                                    onClick={(e) =>
-                                      handleInternalNavigation(
-                                        e,
-                                        getProfileUrl(
-                                          event.primaryActor!.handle,
-                                        ),
-                                      )
-                                    }
-                                    className="flex-shrink-0 cursor-pointer transition-all duration-200 ease-out hover:opacity-80"
-                                  >
-                                    <img
-                                      src={proxifyBskyImage(
-                                        event.primaryActor!.avatar,
-                                      )}
-                                      alt={event.primaryActor!.handle}
-                                      className="h-10 w-10 rounded-full"
-                                      style={{
-                                        border:
-                                          "1px solid var(--bsky-border-primary)",
-                                      }}
-                                    />
-                                  </div>
-                                  <div className="flex-1">
-                                    <div className="mb-1 flex items-center gap-2">
-                                      <span
-                                        onClick={(e) =>
-                                          handleInternalNavigation(
-                                            e,
-                                            getProfileUrl(
-                                              event.primaryActor!.handle,
-                                            ),
-                                          )
-                                        }
-                                        className="cursor-pointer text-base font-bold hover:underline"
-                                        style={{ color: "var(--bsky-primary)" }}
-                                      >
-                                        {event.primaryActor!.displayName ||
-                                          event.primaryActor!.handle}
+                                    {event.notifications.filter(
+                                      (n) => n.reason === "like",
+                                    ).length > 0 && (
+                                      <span>
+                                        {
+                                          event.notifications.filter(
+                                            (n) => n.reason === "like",
+                                          ).length
+                                        }{" "}
+                                        likes
                                       </span>
-                                      <span
-                                        className="text-xs"
+                                    )}
+                                    {event.notifications.filter(
+                                      (n) => n.reason === "repost",
+                                    ).length > 0 && (
+                                      <span>
+                                        {
+                                          event.notifications.filter(
+                                            (n) => n.reason === "repost",
+                                          ).length
+                                        }{" "}
+                                        reposts
+                                      </span>
+                                    )}
+                                    {event.notifications.filter(
+                                      (n) => n.reason === "reply",
+                                    ).length > 0 && (
+                                      <span>
+                                        {
+                                          event.notifications.filter(
+                                            (n) => n.reason === "reply",
+                                          ).length
+                                        }{" "}
+                                        replies
+                                      </span>
+                                    )}
+                                    {event.notifications.filter(
+                                      (n) => n.reason === "quote",
+                                    ).length > 0 && (
+                                      <span>
+                                        {
+                                          event.notifications.filter(
+                                            (n) => n.reason === "quote",
+                                          ).length
+                                        }{" "}
+                                        quotes
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Affected posts */}
+                                  {event.affectedPosts &&
+                                    event.affectedPosts.length > 0 &&
+                                    isExpanded && (
+                                      <div className="space-y-2">
+                                        <p
+                                          className="text-xs font-medium"
+                                          style={{
+                                            color: "var(--bsky-text-tertiary)",
+                                          }}
+                                        >
+                                          Posts they interacted with:
+                                        </p>
+                                        <div className="space-y-1.5">
+                                          {event.affectedPosts
+                                            .slice(0, 3)
+                                            .map((post, i) => {
+                                              return (
+                                                <div
+                                                  key={`${post.uri}-${i}`}
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedPostUri(
+                                                      post.uri,
+                                                    );
+                                                  }}
+                                                  className="line-clamp-2 block cursor-pointer rounded p-2 text-xs transition-all duration-200 ease-out hover:opacity-90"
+                                                  style={{
+                                                    backgroundColor:
+                                                      "var(--bsky-bg-tertiary)",
+                                                    border:
+                                                      "1px solid var(--bsky-border-primary)",
+                                                    textDecoration: "none",
+                                                    color:
+                                                      "var(--bsky-text-primary)",
+                                                  }}
+                                                >
+                                                  {post.text ||
+                                                    "[Post with no text]"}
+                                                </div>
+                                              );
+                                            })}
+                                          {event.affectedPosts.length > 3 && (
+                                            <p
+                                              className="text-xs"
+                                              style={{
+                                                color:
+                                                  "var(--bsky-text-tertiary)",
+                                              }}
+                                            >
+                                              ...and{" "}
+                                              {event.affectedPosts.length - 3}{" "}
+                                              more posts
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                </div>
+                              ) : event.aggregationType === "post-burst" ? (
+                                // Special layout for post bursts
+                                <div>
+                                  <div className="mb-3 flex items-start gap-3">
+                                    <div className="flex-shrink-0">
+                                      <div
+                                        className="flex h-10 w-10 items-center justify-center rounded-full"
                                         style={{
-                                          color: "var(--bsky-text-tertiary)",
+                                          backgroundColor:
+                                            "var(--bsky-bg-tertiary)",
+                                          border:
+                                            "1px solid var(--bsky-border-primary)",
                                         }}
                                       >
-                                        • active
-                                      </span>
-                                    </div>
-                                    <p
-                                      className="text-sm"
-                                      style={{
-                                        color: "var(--bsky-text-secondary)",
-                                      }}
-                                    >
-                                      {event.notifications.length} interactions
-                                      over{" "}
-                                      {event.earliestTime && event.latestTime
-                                        ? formatDistanceToNow(
-                                            event.earliestTime,
-                                            { addSuffix: false },
-                                          )
-                                        : "time"}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                {/* Engagement breakdown */}
-                                <div
-                                  className="mb-3 flex flex-wrap gap-3 text-sm"
-                                  style={{
-                                    color: "var(--bsky-text-secondary)",
-                                  }}
-                                >
-                                  {event.notifications.filter(
-                                    (n) => n.reason === "like",
-                                  ).length > 0 && (
-                                    <span>
-                                      {
-                                        event.notifications.filter(
-                                          (n) => n.reason === "like",
-                                        ).length
-                                      }{" "}
-                                      likes
-                                    </span>
-                                  )}
-                                  {event.notifications.filter(
-                                    (n) => n.reason === "repost",
-                                  ).length > 0 && (
-                                    <span>
-                                      {
-                                        event.notifications.filter(
-                                          (n) => n.reason === "repost",
-                                        ).length
-                                      }{" "}
-                                      reposts
-                                    </span>
-                                  )}
-                                  {event.notifications.filter(
-                                    (n) => n.reason === "reply",
-                                  ).length > 0 && (
-                                    <span>
-                                      {
-                                        event.notifications.filter(
-                                          (n) => n.reason === "reply",
-                                        ).length
-                                      }{" "}
-                                      replies
-                                    </span>
-                                  )}
-                                  {event.notifications.filter(
-                                    (n) => n.reason === "quote",
-                                  ).length > 0 && (
-                                    <span>
-                                      {
-                                        event.notifications.filter(
-                                          (n) => n.reason === "quote",
-                                        ).length
-                                      }{" "}
-                                      quotes
-                                    </span>
-                                  )}
-                                </div>
-
-                                {/* Affected posts */}
-                                {event.affectedPosts &&
-                                  event.affectedPosts.length > 0 &&
-                                  isExpanded && (
-                                    <div className="space-y-2">
-                                      <p
-                                        className="text-xs font-medium"
-                                        style={{
-                                          color: "var(--bsky-text-tertiary)",
-                                        }}
-                                      >
-                                        Posts they interacted with:
-                                      </p>
-                                      <div className="space-y-1.5">
-                                        {event.affectedPosts
-                                          .slice(0, 3)
-                                          .map((post, i) => {
-                                            return (
-                                              <div
-                                                key={`${post.uri}-${i}`}
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  setSelectedPostUri(post.uri);
-                                                }}
-                                                className="line-clamp-2 block cursor-pointer rounded p-2 text-xs transition-all duration-200 ease-out hover:opacity-90"
-                                                style={{
-                                                  backgroundColor:
-                                                    "var(--bsky-bg-tertiary)",
-                                                  border:
-                                                    "1px solid var(--bsky-border-primary)",
-                                                  textDecoration: "none",
-                                                  color:
-                                                    "var(--bsky-text-primary)",
-                                                }}
-                                              >
-                                                {post.text ||
-                                                  "[Post with no text]"}
-                                              </div>
-                                            );
-                                          })}
-                                        {event.affectedPosts.length > 3 && (
-                                          <p
-                                            className="text-xs"
-                                            style={{
-                                              color:
-                                                "var(--bsky-text-tertiary)",
-                                            }}
-                                          >
-                                            ...and{" "}
-                                            {event.affectedPosts.length - 3}{" "}
-                                            more posts
-                                          </p>
-                                        )}
+                                        <MessageCircle
+                                          size={20}
+                                          style={{
+                                            color: "var(--bsky-text-secondary)",
+                                          }}
+                                        />
                                       </div>
                                     </div>
-                                  )}
-                              </div>
-                            ) : event.aggregationType === "post-burst" ? (
-                              // Special layout for post bursts
-                              <div>
-                                <div className="mb-3 flex items-start gap-3">
-                                  <div className="flex-shrink-0">
+                                    <div className="flex-1">
+                                      <div className="mb-1 flex items-center gap-2">
+                                        <span
+                                          className="text-sm font-medium"
+                                          style={{
+                                            color: "var(--bsky-text-primary)",
+                                          }}
+                                        >
+                                          Popular Post
+                                        </span>
+                                        {event.notifications.length >= 10 && (
+                                          <span
+                                            className="rounded-full px-2 py-0.5 text-xs font-medium"
+                                            style={{
+                                              backgroundColor:
+                                                "var(--bsky-bg-tertiary)",
+                                              color:
+                                                "var(--bsky-text-secondary)",
+                                              border:
+                                                "1px solid var(--bsky-border-primary)",
+                                            }}
+                                          >
+                                            {event.notifications.length}+
+                                            interactions
+                                          </span>
+                                        )}
+                                      </div>
+                                      <p
+                                        className="text-sm"
+                                        style={{
+                                          color: "var(--bsky-text-secondary)",
+                                        }}
+                                      >
+                                        {event.actors.size}{" "}
+                                        {event.actors.size === 1
+                                          ? "person"
+                                          : "people"}{" "}
+                                        engaged over{" "}
+                                        {event.earliestTime && event.latestTime
+                                          ? formatDistanceToNow(
+                                              event.earliestTime,
+                                              { addSuffix: false },
+                                            )
+                                          : "time"}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* Engagement breakdown */}
+                                  <div className="mb-3 flex flex-wrap gap-3">
+                                    {event.notifications.filter(
+                                      (n) => n.reason === "like",
+                                    ).length > 0 && (
+                                      <div className="flex items-center gap-1 text-sm">
+                                        <Heart
+                                          size={16}
+                                          style={{
+                                            color: "var(--bsky-text-secondary)",
+                                          }}
+                                        />
+                                        <span
+                                          style={{
+                                            color: "var(--bsky-text-secondary)",
+                                          }}
+                                        >
+                                          {
+                                            event.notifications.filter(
+                                              (n) => n.reason === "like",
+                                            ).length
+                                          }
+                                        </span>
+                                      </div>
+                                    )}
+                                    {event.notifications.filter(
+                                      (n) => n.reason === "repost",
+                                    ).length > 0 && (
+                                      <div className="flex items-center gap-1 text-sm">
+                                        <Repeat2
+                                          size={16}
+                                          style={{
+                                            color: "var(--bsky-text-secondary)",
+                                          }}
+                                        />
+                                        <span
+                                          style={{
+                                            color: "var(--bsky-text-secondary)",
+                                          }}
+                                        >
+                                          {
+                                            event.notifications.filter(
+                                              (n) => n.reason === "repost",
+                                            ).length
+                                          }
+                                        </span>
+                                      </div>
+                                    )}
+                                    {event.notifications.filter(
+                                      (n) => n.reason === "reply",
+                                    ).length > 0 && (
+                                      <div className="flex items-center gap-1 text-sm">
+                                        <MessageCircle
+                                          size={16}
+                                          style={{
+                                            color: "var(--bsky-text-secondary)",
+                                          }}
+                                        />
+                                        <span
+                                          style={{
+                                            color: "var(--bsky-text-secondary)",
+                                          }}
+                                        >
+                                          {
+                                            event.notifications.filter(
+                                              (n) => n.reason === "reply",
+                                            ).length
+                                          }
+                                        </span>
+                                      </div>
+                                    )}
+                                    {event.notifications.filter(
+                                      (n) => n.reason === "quote",
+                                    ).length > 0 && (
+                                      <div className="flex items-center gap-1 text-sm">
+                                        <Quote
+                                          size={16}
+                                          style={{
+                                            color: "var(--bsky-text-secondary)",
+                                          }}
+                                        />
+                                        <span
+                                          style={{
+                                            color: "var(--bsky-text-secondary)",
+                                          }}
+                                        >
+                                          {
+                                            event.notifications.filter(
+                                              (n) => n.reason === "quote",
+                                            ).length
+                                          }
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Actor avatars in a grid for bursts */}
+                                  <div className="mb-3">
+                                    <div className="flex flex-wrap gap-1">
+                                      {event.notifications
+                                        .slice(0, 12)
+                                        .map((notif, i) => (
+                                          <div
+                                            key={`${notif.uri}-${i}`}
+                                            onClick={(e) =>
+                                              handleInternalNavigation(
+                                                e,
+                                                getProfileUrl(
+                                                  notif.author?.handle ||
+                                                    "unknown",
+                                                ),
+                                              )
+                                            }
+                                            className="cursor-pointer transition-all duration-200 ease-out hover:opacity-80"
+                                          >
+                                            <img
+                                              src={proxifyBskyImage(
+                                                notif.author.avatar,
+                                              )}
+                                              alt={
+                                                notif.author?.handle ||
+                                                "unknown"
+                                              }
+                                              className="h-8 w-8 rounded-full"
+                                              title={
+                                                notif.author?.displayName ||
+                                                notif.author?.handle ||
+                                                "Unknown"
+                                              }
+                                            />
+                                          </div>
+                                        ))}
+                                      {event.notifications.length > 12 && (
+                                        <div
+                                          className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold"
+                                          style={{
+                                            backgroundColor:
+                                              "var(--bsky-bg-tertiary)",
+                                            color: "var(--bsky-text-primary)",
+                                          }}
+                                        >
+                                          +{event.notifications.length - 12}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : event.aggregationType ===
+                                "recent-comments" ? (
+                                // Recent comments aggregation
+                                <div>
+                                  <div className="mb-4 flex items-center gap-3">
                                     <div
                                       className="flex h-10 w-10 items-center justify-center rounded-full"
                                       style={{
@@ -1914,160 +2168,183 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(({
                                     >
                                       <MessageCircle
                                         size={20}
-                                        style={{
-                                          color: "var(--bsky-text-secondary)",
-                                        }}
+                                        style={{ color: "var(--bsky-primary)" }}
                                       />
                                     </div>
-                                  </div>
-                                  <div className="flex-1">
-                                    <div className="mb-1 flex items-center gap-2">
-                                      <span
-                                        className="text-sm font-medium"
+                                    <div>
+                                      <h3
+                                        className="text-base font-bold"
                                         style={{
                                           color: "var(--bsky-text-primary)",
                                         }}
                                       >
-                                        Popular Post
-                                      </span>
-                                      {event.notifications.length >= 10 && (
-                                        <span
-                                          className="rounded-full px-2 py-0.5 text-xs font-medium"
+                                        Recent Comments
+                                      </h3>
+                                      <p
+                                        className="text-sm"
+                                        style={{
+                                          color: "var(--bsky-text-tertiary)",
+                                        }}
+                                      >
+                                        {event.notifications.length} comments
+                                        from{" "}
+                                        {
+                                          new Set(
+                                            event.notifications.map(
+                                              (n) => n.author?.handle,
+                                            ),
+                                          ).size
+                                        }{" "}
+                                        people
+                                        {event.earliestTime &&
+                                          event.latestTime && (
+                                            <span>
+                                              {" "}
+                                              over{" "}
+                                              {formatDistanceToNow(
+                                                event.earliestTime,
+                                                {
+                                                  addSuffix: false,
+                                                },
+                                              )}
+                                            </span>
+                                          )}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* Comment list in table format */}
+                                  <div
+                                    className="rounded-lg border"
+                                    style={{
+                                      backgroundColor:
+                                        "var(--bsky-bg-tertiary)",
+                                      borderColor: "var(--bsky-border-primary)",
+                                    }}
+                                  >
+                                    {event.notifications
+                                      .slice(0, 5)
+                                      .map((notification, idx) => (
+                                        <div
+                                          key={notification.uri}
+                                          className={`flex gap-3 p-3 ${
+                                            idx !== 0 ? "border-t" : ""
+                                          }`}
                                           style={{
-                                            backgroundColor:
-                                              "var(--bsky-bg-tertiary)",
-                                            color: "var(--bsky-text-secondary)",
-                                            border:
-                                              "1px solid var(--bsky-border-primary)",
+                                            borderColor:
+                                              "var(--bsky-border-primary)",
                                           }}
                                         >
-                                          {event.notifications.length}+
-                                          interactions
-                                        </span>
-                                      )}
-                                    </div>
-                                    <p
-                                      className="text-sm"
-                                      style={{
-                                        color: "var(--bsky-text-secondary)",
-                                      }}
-                                    >
-                                      {event.actors.size}{" "}
-                                      {event.actors.size === 1
-                                        ? "person"
-                                        : "people"}{" "}
-                                      engaged over{" "}
-                                      {event.earliestTime && event.latestTime
-                                        ? formatDistanceToNow(
-                                            event.earliestTime,
-                                            { addSuffix: false },
-                                          )
-                                        : "time"}
-                                    </p>
+                                          {/* Author avatar */}
+                                          <div className="flex-shrink-0">
+                                            <div
+                                              onClick={(e) =>
+                                                handleInternalNavigation(
+                                                  e,
+                                                  getProfileUrl(
+                                                    notification.author.handle,
+                                                  ),
+                                                )
+                                              }
+                                              className="cursor-pointer"
+                                            >
+                                              <img
+                                                src={proxifyBskyImage(
+                                                  notification.author.avatar,
+                                                )}
+                                                alt={notification.author.handle}
+                                                className="h-8 w-8 rounded-full transition-opacity hover:opacity-80"
+                                                style={{
+                                                  border:
+                                                    "1px solid var(--bsky-border-primary)",
+                                                }}
+                                              />
+                                            </div>
+                                          </div>
+
+                                          {/* Content */}
+                                          <div className="min-w-0 flex-1">
+                                            <div className="mb-1 flex items-baseline justify-between gap-2">
+                                              <span
+                                                onClick={(e) =>
+                                                  handleInternalNavigation(
+                                                    e,
+                                                    getProfileUrl(
+                                                      notification.author
+                                                        .handle,
+                                                    ),
+                                                  )
+                                                }
+                                                className="cursor-pointer truncate font-medium hover:underline"
+                                                style={{
+                                                  color:
+                                                    "var(--bsky-text-primary)",
+                                                }}
+                                              >
+                                                {notification.author
+                                                  .displayName ||
+                                                  notification.author.handle}
+                                              </span>
+                                              <span
+                                                className="flex-shrink-0 text-xs"
+                                                style={{
+                                                  color:
+                                                    "var(--bsky-text-tertiary)",
+                                                }}
+                                              >
+                                                {formatDistanceToNow(
+                                                  new Date(
+                                                    notification.indexedAt,
+                                                  ),
+                                                  { addSuffix: true },
+                                                )}
+                                              </span>
+                                            </div>
+                                            <p
+                                              onClick={() => {
+                                                if (
+                                                  notification.reasonSubject
+                                                ) {
+                                                  setSelectedPostUri(
+                                                    notification.reasonSubject,
+                                                  );
+                                                }
+                                              }}
+                                              className="line-clamp-2 cursor-pointer text-sm hover:opacity-80"
+                                              style={{
+                                                color:
+                                                  "var(--bsky-text-primary)",
+                                              }}
+                                            >
+                                              {(notification.record as any)
+                                                ?.text || "[No text]"}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      ))}
+
+                                    {event.notifications.length > 5 && (
+                                      <div
+                                        className="border-t px-3 py-2 text-center text-sm"
+                                        style={{
+                                          borderColor:
+                                            "var(--bsky-border-primary)",
+                                          color: "var(--bsky-text-tertiary)",
+                                        }}
+                                      >
+                                        +{event.notifications.length - 5} more
+                                        comments
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
-
-                                {/* Engagement breakdown */}
-                                <div className="mb-3 flex flex-wrap gap-3">
-                                  {event.notifications.filter(
-                                    (n) => n.reason === "like",
-                                  ).length > 0 && (
-                                    <div className="flex items-center gap-1 text-sm">
-                                      <Heart
-                                        size={16}
-                                        style={{
-                                          color: "var(--bsky-text-secondary)",
-                                        }}
-                                      />
-                                      <span
-                                        style={{
-                                          color: "var(--bsky-text-secondary)",
-                                        }}
-                                      >
-                                        {
-                                          event.notifications.filter(
-                                            (n) => n.reason === "like",
-                                          ).length
-                                        }
-                                      </span>
-                                    </div>
-                                  )}
-                                  {event.notifications.filter(
-                                    (n) => n.reason === "repost",
-                                  ).length > 0 && (
-                                    <div className="flex items-center gap-1 text-sm">
-                                      <Repeat2
-                                        size={16}
-                                        style={{
-                                          color: "var(--bsky-text-secondary)",
-                                        }}
-                                      />
-                                      <span
-                                        style={{
-                                          color: "var(--bsky-text-secondary)",
-                                        }}
-                                      >
-                                        {
-                                          event.notifications.filter(
-                                            (n) => n.reason === "repost",
-                                          ).length
-                                        }
-                                      </span>
-                                    </div>
-                                  )}
-                                  {event.notifications.filter(
-                                    (n) => n.reason === "reply",
-                                  ).length > 0 && (
-                                    <div className="flex items-center gap-1 text-sm">
-                                      <MessageCircle
-                                        size={16}
-                                        style={{
-                                          color: "var(--bsky-text-secondary)",
-                                        }}
-                                      />
-                                      <span
-                                        style={{
-                                          color: "var(--bsky-text-secondary)",
-                                        }}
-                                      >
-                                        {
-                                          event.notifications.filter(
-                                            (n) => n.reason === "reply",
-                                          ).length
-                                        }
-                                      </span>
-                                    </div>
-                                  )}
-                                  {event.notifications.filter(
-                                    (n) => n.reason === "quote",
-                                  ).length > 0 && (
-                                    <div className="flex items-center gap-1 text-sm">
-                                      <Quote
-                                        size={16}
-                                        style={{
-                                          color: "var(--bsky-text-secondary)",
-                                        }}
-                                      />
-                                      <span
-                                        style={{
-                                          color: "var(--bsky-text-secondary)",
-                                        }}
-                                      >
-                                        {
-                                          event.notifications.filter(
-                                            (n) => n.reason === "quote",
-                                          ).length
-                                        }
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-
-                                {/* Actor avatars in a grid for bursts */}
-                                <div className="mb-3">
-                                  <div className="flex flex-wrap gap-1">
+                              ) : (
+                                // Regular aggregated layout
+                                <div className="flex items-center gap-3">
+                                  {/* Actor avatars */}
+                                  <div className="flex flex-shrink-0 items-center -space-x-2">
                                     {event.notifications
-                                      .slice(0, 12)
+                                      .slice(0, 5)
                                       .map((notif, i) => (
                                         <div
                                           key={`${notif.uri}-${i}`}
@@ -2080,7 +2357,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(({
                                               ),
                                             )
                                           }
-                                          className="cursor-pointer transition-all duration-200 ease-out hover:opacity-80"
+                                          className="cursor-pointer transition-all duration-200 ease-out hover:z-10 hover:-translate-y-0.5 hover:scale-110"
                                         >
                                           <img
                                             src={proxifyBskyImage(
@@ -2089,7 +2366,11 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(({
                                             alt={
                                               notif.author?.handle || "unknown"
                                             }
-                                            className="h-8 w-8 rounded-full"
+                                            className="h-6 w-6 rounded-full border-2"
+                                            style={{
+                                              borderColor:
+                                                "var(--bsky-bg-secondary)",
+                                            }}
                                             title={
                                               notif.author?.displayName ||
                                               notif.author?.handle ||
@@ -2098,364 +2379,217 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(({
                                           />
                                         </div>
                                       ))}
-                                    {event.notifications.length > 12 && (
+                                    {event.notifications.length > 5 && (
                                       <div
-                                        className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold"
+                                        className="flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-medium"
                                         style={{
                                           backgroundColor:
                                             "var(--bsky-bg-tertiary)",
-                                          color: "var(--bsky-text-primary)",
+                                          borderColor:
+                                            "var(--bsky-bg-secondary)",
+                                          fontSize: "10px",
                                         }}
                                       >
-                                        +{event.notifications.length - 12}
+                                        +{event.notifications.length - 5}
                                       </div>
                                     )}
                                   </div>
-                                </div>
-                              </div>
-                            ) : event.aggregationType === "recent-comments" ? (
-                              // Recent comments aggregation
-                              <div>
-                                <div className="mb-4 flex items-center gap-3">
-                                  <div
-                                    className="flex h-10 w-10 items-center justify-center rounded-full"
-                                    style={{
-                                      backgroundColor:
-                                        "var(--bsky-bg-tertiary)",
-                                      border:
-                                        "1px solid var(--bsky-border-primary)",
-                                    }}
-                                  >
-                                    <MessageCircle
-                                      size={20}
-                                      style={{ color: "var(--bsky-primary)" }}
-                                    />
-                                  </div>
-                                  <div>
-                                    <h3
-                                      className="text-base font-bold"
-                                      style={{
-                                        color: "var(--bsky-text-primary)",
-                                      }}
-                                    >
-                                      Recent Comments
-                                    </h3>
-                                    <p
-                                      className="text-sm"
-                                      style={{
-                                        color: "var(--bsky-text-tertiary)",
-                                      }}
-                                    >
-                                      {event.notifications.length} comments from{" "}
-                                      {
-                                        new Set(
-                                          event.notifications.map(
-                                            (n) => n.author?.handle,
-                                          ),
-                                        ).size
-                                      }{" "}
-                                      people
-                                      {event.earliestTime &&
-                                        event.latestTime && (
-                                          <span>
-                                            {" "}
-                                            over{" "}
-                                            {formatDistanceToNow(
-                                              event.earliestTime,
-                                              {
-                                                addSuffix: false,
-                                              },
-                                            )}
+
+                                  {/* Compact summary */}
+                                  <div className="flex-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      {event.aggregationType === "follow" ? (
+                                        <>
+                                          <span className="text-sm font-medium">
+                                            {event.actors.size} new{" "}
+                                            {event.actors.size === 1
+                                              ? "follower"
+                                              : "followers"}
                                           </span>
-                                        )}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                {/* Comment list in table format */}
-                                <div
-                                  className="rounded-lg border"
-                                  style={{
-                                    backgroundColor: "var(--bsky-bg-tertiary)",
-                                    borderColor: "var(--bsky-border-primary)",
-                                  }}
-                                >
-                                  {event.notifications
-                                    .slice(0, 5)
-                                    .map((notification, idx) => (
-                                      <div
-                                        key={notification.uri}
-                                        className={`flex gap-3 p-3 ${
-                                          idx !== 0 ? "border-t" : ""
-                                        }`}
-                                        style={{
-                                          borderColor:
-                                            "var(--bsky-border-primary)",
-                                        }}
-                                      >
-                                        {/* Author avatar */}
-                                        <div className="flex-shrink-0">
-                                          <div
-                                            onClick={(e) =>
-                                              handleInternalNavigation(
-                                                e,
-                                                getProfileUrl(
-                                                  notification.author.handle,
-                                                ),
-                                              )
-                                            }
-                                            className="cursor-pointer"
-                                          >
-                                            <img
-                                              src={proxifyBskyImage(
-                                                notification.author.avatar,
-                                              )}
-                                              alt={notification.author.handle}
-                                              className="h-8 w-8 rounded-full transition-opacity hover:opacity-80"
-                                              style={{
-                                                border:
-                                                  "1px solid var(--bsky-border-primary)",
-                                              }}
-                                            />
-                                          </div>
-                                        </div>
-
-                                        {/* Content */}
-                                        <div className="min-w-0 flex-1">
-                                          <div className="mb-1 flex items-baseline justify-between gap-2">
-                                            <span
-                                              onClick={(e) =>
-                                                handleInternalNavigation(
-                                                  e,
-                                                  getProfileUrl(
-                                                    notification.author.handle,
-                                                  ),
-                                                )
-                                              }
-                                              className="cursor-pointer truncate font-medium hover:underline"
-                                              style={{
-                                                color:
-                                                  "var(--bsky-text-primary)",
-                                              }}
-                                            >
-                                              {notification.author
-                                                .displayName ||
-                                                notification.author.handle}
-                                            </span>
-                                            <span
-                                              className="flex-shrink-0 text-xs"
-                                              style={{
-                                                color:
-                                                  "var(--bsky-text-tertiary)",
-                                              }}
-                                            >
-                                              {formatDistanceToNow(
-                                                new Date(
-                                                  notification.indexedAt,
-                                                ),
-                                                { addSuffix: true },
-                                              )}
-                                            </span>
-                                          </div>
-                                          <p
-                                            onClick={() => {
-                                              if (notification.reasonSubject) {
-                                                setSelectedPostUri(
-                                                  notification.reasonSubject,
-                                                );
-                                              }
-                                            }}
-                                            className="line-clamp-2 cursor-pointer text-sm hover:opacity-80"
+                                          {getReasonIcon("follow")}
+                                        </>
+                                      ) : (
+                                        <>
+                                          <span className="text-sm font-medium">
+                                            {event.actors.size}{" "}
+                                            {event.actors.size === 1
+                                              ? "person"
+                                              : "people"}
+                                          </span>
+                                          <span
+                                            className="text-sm"
                                             style={{
-                                              color: "var(--bsky-text-primary)",
+                                              color:
+                                                "var(--bsky-text-secondary)",
                                             }}
                                           >
-                                            {(notification.record as any)
-                                              ?.text || "[No text]"}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    ))}
-
-                                  {event.notifications.length > 5 && (
-                                    <div
-                                      className="border-t px-3 py-2 text-center text-sm"
-                                      style={{
-                                        borderColor:
-                                          "var(--bsky-border-primary)",
-                                        color: "var(--bsky-text-tertiary)",
-                                      }}
-                                    >
-                                      +{event.notifications.length - 5} more
-                                      comments
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ) : (
-                              // Regular aggregated layout
-                              <div className="flex items-center gap-3">
-                                {/* Actor avatars */}
-                                <div className="flex flex-shrink-0 items-center -space-x-2">
-                                  {event.notifications
-                                    .slice(0, 5)
-                                    .map((notif, i) => (
-                                      <div
-                                        key={`${notif.uri}-${i}`}
-                                        onClick={(e) =>
-                                          handleInternalNavigation(
-                                            e,
-                                            getProfileUrl(
-                                              notif.author?.handle || "unknown",
-                                            ),
-                                          )
-                                        }
-                                        className="cursor-pointer transition-all duration-200 ease-out hover:z-10 hover:-translate-y-0.5 hover:scale-110"
-                                      >
-                                        <img
-                                          src={proxifyBskyImage(
-                                            notif.author.avatar,
-                                          )}
-                                          alt={
-                                            notif.author?.handle || "unknown"
-                                          }
-                                          className="h-6 w-6 rounded-full border-2"
-                                          style={{
-                                            borderColor:
-                                              "var(--bsky-bg-secondary)",
-                                          }}
-                                          title={
-                                            notif.author?.displayName ||
-                                            notif.author?.handle ||
-                                            "Unknown"
-                                          }
-                                        />
-                                      </div>
-                                    ))}
-                                  {event.notifications.length > 5 && (
-                                    <div
-                                      className="flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-medium"
-                                      style={{
-                                        backgroundColor:
-                                          "var(--bsky-bg-tertiary)",
-                                        borderColor: "var(--bsky-bg-secondary)",
-                                        fontSize: "10px",
-                                      }}
-                                    >
-                                      +{event.notifications.length - 5}
-                                    </div>
-                                  )}
-                                </div>
-
-                                {/* Compact summary */}
-                                <div className="flex-1">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    {event.aggregationType === "follow" ? (
-                                      <>
-                                        <span className="text-sm font-medium">
-                                          {event.actors.size} new{" "}
-                                          {event.actors.size === 1
-                                            ? "follower"
-                                            : "followers"}
-                                        </span>
-                                        {getReasonIcon("follow")}
-                                      </>
-                                    ) : (
-                                      <>
-                                        <span className="text-sm font-medium">
-                                          {event.actors.size}{" "}
-                                          {event.actors.size === 1
-                                            ? "person"
-                                            : "people"}
-                                        </span>
-                                        <span
-                                          className="text-sm"
-                                          style={{
-                                            color: "var(--bsky-text-secondary)",
-                                          }}
-                                        >
-                                          •
-                                        </span>
-                                        {Array.from(event.types).map(
-                                          (type, i) => (
-                                            <span
-                                              key={type}
-                                              className="flex items-center gap-1 text-sm"
-                                            >
-                                              {getReasonIcon(type)}
+                                            •
+                                          </span>
+                                          {Array.from(event.types).map(
+                                            (type, i) => (
                                               <span
-                                                style={{
-                                                  color:
-                                                    "var(--bsky-text-secondary)",
-                                                }}
+                                                key={type}
+                                                className="flex items-center gap-1 text-sm"
                                               >
-                                                {getActionCount(
-                                                  event.notifications,
-                                                  type,
-                                                )}
-                                              </span>
-                                              {i < event.types.size - 1 && (
+                                                {getReasonIcon(type)}
                                                 <span
                                                   style={{
                                                     color:
                                                       "var(--bsky-text-secondary)",
                                                   }}
                                                 >
-                                                  •
+                                                  {getActionCount(
+                                                    event.notifications,
+                                                    type,
+                                                  )}
                                                 </span>
-                                              )}
-                                            </span>
-                                          ),
-                                        )}
-                                      </>
-                                    )}
+                                                {i < event.types.size - 1 && (
+                                                  <span
+                                                    style={{
+                                                      color:
+                                                        "var(--bsky-text-secondary)",
+                                                    }}
+                                                  >
+                                                    •
+                                                  </span>
+                                                )}
+                                              </span>
+                                            ),
+                                          )}
+                                        </>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
 
-                            {/* Post preview for aggregated post notifications */}
-                            {(event.aggregationType === "post" ||
-                              event.aggregationType === "post-burst") &&
-                              isExpanded &&
-                              (() => {
-                                const notification = event.notifications[0];
+                              {/* Post preview for aggregated post notifications */}
+                              {(event.aggregationType === "post" ||
+                                event.aggregationType === "post-burst") &&
+                                isExpanded &&
+                                (() => {
+                                  const notification = event.notifications[0];
 
-                                // Try to get full post data
-                                // For reposts and likes, use reasonSubject which contains the original post URI
-                                const postUri =
-                                  (notification.reason === "repost" ||
-                                    notification.reason === "like") &&
-                                  notification.reasonSubject
-                                    ? notification.reasonSubject
-                                    : notification.uri;
-                                const post = postMap.get(postUri);
+                                  // Try to get full post data
+                                  // For reposts and likes, use reasonSubject which contains the original post URI
+                                  const postUri =
+                                    (notification.reason === "repost" ||
+                                      notification.reason === "like") &&
+                                    notification.reasonSubject
+                                      ? notification.reasonSubject
+                                      : notification.uri;
+                                  const post = postMap.get(postUri);
 
-                                if (post) {
-                                  // We have full post data
+                                  if (post) {
+                                    // We have full post data
+                                    return (
+                                      <div
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedPostUri(postUri);
+                                        }}
+                                        className="relative mt-3 block cursor-pointer overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
+                                        style={{
+                                          backgroundColor:
+                                            "var(--bsky-bg-tertiary)",
+                                          border:
+                                            "1px solid var(--bsky-border-primary)",
+                                          textDecoration: "none",
+                                        }}
+                                      >
+                                        <p
+                                          className="mb-1 flex items-center gap-1 text-xs font-medium"
+                                          style={{
+                                            color: "var(--bsky-text-tertiary)",
+                                          }}
+                                        >
+                                          Your post:
+                                          <ExternalLink size={10} />
+                                        </p>
+                                        <p
+                                          className="line-clamp-3 text-sm"
+                                          style={{
+                                            color: "var(--bsky-text-primary)",
+                                          }}
+                                        >
+                                          {post.record?.text ||
+                                            "[Post with no text]"}
+                                        </p>
+                                        <div
+                                          className="mt-2 flex items-center gap-2 text-xs"
+                                          style={{
+                                            color: "var(--bsky-text-tertiary)",
+                                          }}
+                                        >
+                                          <span>
+                                            {
+                                              event.notifications.filter(
+                                                (n) => n.reason === "like",
+                                              ).length
+                                            }{" "}
+                                            likes
+                                          </span>
+                                          <span>•</span>
+                                          <span>
+                                            {
+                                              event.notifications.filter(
+                                                (n) => n.reason === "repost",
+                                              ).length
+                                            }{" "}
+                                            reposts
+                                          </span>
+                                          {event.notifications.some(
+                                            (n) => n.reason === "quote",
+                                          ) && (
+                                            <>
+                                              <span>•</span>
+                                              <span>
+                                                {
+                                                  event.notifications.filter(
+                                                    (n) => n.reason === "quote",
+                                                  ).length
+                                                }{" "}
+                                                quotes
+                                              </span>
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+
+                                  // Fallback when post data isn't available
+                                  const postText =
+                                    notification.record?.text ||
+                                    (notification.record &&
+                                    typeof notification.record === "object" &&
+                                    "text" in notification.record
+                                      ? (
+                                          notification.record as {
+                                            text?: string;
+                                          }
+                                        ).text
+                                      : null);
+
+                                  if (!postText) return null;
+
                                   return (
                                     <div
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedPostUri(postUri);
-                                      }}
-                                      className="relative mt-3 block cursor-pointer overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
+                                      className="relative mt-3 overflow-hidden rounded p-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-['']"
                                       style={{
                                         backgroundColor:
                                           "var(--bsky-bg-tertiary)",
                                         border:
                                           "1px solid var(--bsky-border-primary)",
-                                        textDecoration: "none",
                                       }}
                                     >
                                       <p
-                                        className="mb-1 flex items-center gap-1 text-xs font-medium"
+                                        className="mb-1 text-xs font-medium"
                                         style={{
                                           color: "var(--bsky-text-tertiary)",
                                         }}
                                       >
                                         Your post:
-                                        <ExternalLink size={10} />
                                       </p>
                                       <p
                                         className="line-clamp-3 text-sm"
@@ -2463,8 +2597,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(({
                                           color: "var(--bsky-text-primary)",
                                         }}
                                       >
-                                        {post.record?.text ||
-                                          "[Post with no text]"}
+                                        {postText}
                                       </p>
                                       <div
                                         className="mt-2 flex items-center gap-2 text-xs"
@@ -2507,174 +2640,96 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(({
                                       </div>
                                     </div>
                                   );
-                                }
+                                })()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
 
-                                // Fallback when post data isn't available
-                                const postText =
-                                  notification.record?.text ||
-                                  (notification.record &&
-                                  typeof notification.record === "object" &&
-                                  "text" in notification.record
-                                    ? (notification.record as { text?: string })
-                                        .text
-                                    : null);
-
-                                if (!postText) return null;
-
-                                return (
-                                  <div
-                                    className="relative mt-3 overflow-hidden rounded p-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-['']"
-                                    style={{
-                                      backgroundColor:
-                                        "var(--bsky-bg-tertiary)",
-                                      border:
-                                        "1px solid var(--bsky-border-primary)",
-                                    }}
-                                  >
-                                    <p
-                                      className="mb-1 text-xs font-medium"
-                                      style={{
-                                        color: "var(--bsky-text-tertiary)",
-                                      }}
-                                    >
-                                      Your post:
-                                    </p>
-                                    <p
-                                      className="line-clamp-3 text-sm"
-                                      style={{
-                                        color: "var(--bsky-text-primary)",
-                                      }}
-                                    >
-                                      {postText}
-                                    </p>
-                                    <div
-                                      className="mt-2 flex items-center gap-2 text-xs"
-                                      style={{
-                                        color: "var(--bsky-text-tertiary)",
-                                      }}
-                                    >
-                                      <span>
-                                        {
-                                          event.notifications.filter(
-                                            (n) => n.reason === "like",
-                                          ).length
-                                        }{" "}
-                                        likes
-                                      </span>
-                                      <span>•</span>
-                                      <span>
-                                        {
-                                          event.notifications.filter(
-                                            (n) => n.reason === "repost",
-                                          ).length
-                                        }{" "}
-                                        reposts
-                                      </span>
-                                      {event.notifications.some(
-                                        (n) => n.reason === "quote",
-                                      ) && (
-                                        <>
-                                          <span>•</span>
-                                          <span>
-                                            {
-                                              event.notifications.filter(
-                                                (n) => n.reason === "quote",
-                                              ).length
-                                            }{" "}
-                                            quotes
-                                          </span>
-                                        </>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })()}
+                      {/* Visual gap indicator for large time gaps */}
+                      {previousEvent &&
+                        differenceInHours(previousEvent.time, event.time) >=
+                          12 && (
+                          <div
+                            className="absolute -top-3 left-[5rem] whitespace-nowrap rounded-[10px] bg-bsky-bg-secondary px-1.5 py-0.5 text-xs sm:left-[7.5rem]"
+                            style={{
+                              color: "var(--bsky-text-tertiary)",
+                              transform: "translateX(-50%)",
+                              fontSize: "10px",
+                            }}
+                          >
+                            {Math.floor(
+                              differenceInHours(previousEvent.time, event.time),
+                            )}
+                            h
                           </div>
                         )}
-                      </div>
                     </div>
-
-                    {/* Visual gap indicator for large time gaps */}
-                    {previousEvent &&
-                      differenceInHours(previousEvent.time, event.time) >=
-                        12 && (
-                        <div
-                          className="absolute -top-3 left-[5rem] whitespace-nowrap rounded-[10px] bg-bsky-bg-secondary px-1.5 py-0.5 text-xs sm:left-[7.5rem]"
-                          style={{
-                            color: "var(--bsky-text-tertiary)",
-                            transform: "translateX(-50%)",
-                            fontSize: "10px",
-                          }}
-                        >
-                          {Math.floor(
-                            differenceInHours(previousEvent.time, event.time),
-                          )}
-                          h
-                        </div>
-                      )}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-
-          {/* Load more indicator / End of timeline */}
-          <div id="timeline-scroll-sentinel" className="relative mb-4 mt-8">
-            <div className="flex items-center gap-3">
-              <div className="w-24" />
-              <div
-                className={`h-3 w-3 rounded-full ${isLoadingMore ? "animate-pulse" : ""}`}
-                style={{
-                  backgroundColor: isLoadingMore
-                    ? "var(--bsky-primary)"
-                    : "var(--bsky-border-primary)",
-                }}
-              />
-              <span
-                className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
-              >
-                {isLoadingMore
-                  ? "Loading more notifications..."
-                  : notifications.length === 0
-                    ? "No notifications yet"
-                    : hasMore
-                      ? `${notifications.length} notifications loaded`
-                      : `All ${notifications.length} notifications loaded`}
-              </span>
-            </div>
-
-            {/* Manual load more button */}
-            {hasMore && !isLoadingMore && notifications.length > 0 && (
-              <div className="mt-4 flex justify-center">
-                <button
-                  onClick={loadMore}
-                  className="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-90"
-                  style={{
-                    backgroundColor: "var(--bsky-bg-secondary)",
-                    color: "var(--bsky-text-primary)",
-                    border: "1px solid var(--bsky-border-primary)",
-                  }}
-                >
-                  Load More Notifications
-                </button>
+                  );
+                })}
               </div>
-            )}
-          </div>
-        </div>
+            ))}
 
-        {/* Thread Modal */}
-        {selectedPostUri && (
-          <ThreadModal
-            postUri={selectedPostUri}
-            onClose={() => setSelectedPostUri(null)}
-          />
-        )}
-      </div>{" "}
-      {/* End scrollable wrapper */}
-    </div>
-  );
-};
+            {/* Load more indicator / End of timeline */}
+            <div id="timeline-scroll-sentinel" className="relative mb-4 mt-8">
+              <div className="flex items-center gap-3">
+                <div className="w-24" />
+                <div
+                  className={`h-3 w-3 rounded-full ${isLoadingMore ? "animate-pulse" : ""}`}
+                  style={{
+                    backgroundColor: isLoadingMore
+                      ? "var(--bsky-primary)"
+                      : "var(--bsky-border-primary)",
+                  }}
+                />
+                <span
+                  className="text-sm"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  {isLoadingMore
+                    ? "Loading more notifications..."
+                    : notifications.length === 0
+                      ? "No notifications yet"
+                      : hasMore
+                        ? `${notifications.length} notifications loaded`
+                        : `All ${notifications.length} notifications loaded`}
+                </span>
+              </div>
+
+              {/* Manual load more button */}
+              {hasMore && !isLoadingMore && notifications.length > 0 && (
+                <div className="mt-4 flex justify-center">
+                  <button
+                    onClick={loadMore}
+                    className="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-90"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-secondary)",
+                      color: "var(--bsky-text-primary)",
+                      border: "1px solid var(--bsky-border-primary)",
+                    }}
+                  >
+                    Load More Notifications
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Thread Modal */}
+          {selectedPostUri && (
+            <ThreadModal
+              postUri={selectedPostUri}
+              onClose={() => setSelectedPostUri(null)}
+            />
+          )}
+        </div>{" "}
+        {/* End scrollable wrapper */}
+      </div>
+    );
+  },
+);
+
+VisualTimeline.displayName = "VisualTimeline";
 
 function getActionText(reason: string): string {
   switch (reason) {
