@@ -1,6 +1,7 @@
 # Apple Developer Account Setup for iOS Distribution
 
 This guide covers setting up Apple Developer credentials for:
+
 - Universal Links configuration
 - TestFlight beta distribution
 - App Store distribution via EAS Build
@@ -154,10 +155,10 @@ For EAS Build to use your certificate:
 
 You now have two provisioning profiles:
 
-| Profile Type | Name | Use Case |
-|-------------|------|----------|
-| Development | ShadowSky Development | Local testing, debug builds |
-| Distribution | ShadowSky Distribution | TestFlight, App Store |
+| Profile Type | Name                   | Use Case                    |
+| ------------ | ---------------------- | --------------------------- |
+| Development  | ShadowSky Development  | Local testing, debug builds |
+| Distribution | ShadowSky Distribution | TestFlight, App Store       |
 
 ## Step 6: Configure EAS Build Credentials
 
@@ -176,6 +177,7 @@ eas build --platform ios --profile preview
 ```
 
 EAS will:
+
 1. Prompt for your Apple ID and password
 2. Create/select certificates and profiles automatically
 3. Store credentials securely on Expo servers
@@ -343,11 +345,11 @@ The `apple-app-site-association` file must be:
   - `https://shadowsky.io/.well-known/apple-app-site-association`
   - `https://shadowsky.io/apple-app-site-association`
 
-## Step 5: Xcode Project Configuration
+## Step 9: Xcode Project Configuration
 
 When building the iOS app:
 
-### 5.1 Set Bundle Identifier
+### 9.1 Set Bundle Identifier
 
 1. Open the Xcode project
 2. Select the target
@@ -355,31 +357,64 @@ When building the iOS app:
    - **Team**: Select your development team
    - **Bundle Identifier**: `io.shadowsky.app`
 
-### 5.2 Add Associated Domains
+### 9.2 Add Associated Domains
 
 1. In **Signing & Capabilities**, click **+ Capability**
 2. Add **Associated Domains**
 3. Add the domain: `applinks:shadowsky.io`
 
+## Quick Start Checklist
+
+For users with an existing Apple Developer account but no certificates (Option 2):
+
+- [ ] Generate CSR from Keychain Access (Step 4.1)
+- [ ] Create Apple Distribution certificate (Step 4.2)
+- [ ] Install certificate in Keychain (Step 4.3)
+- [ ] Create App ID with bundle `io.shadowsky.app` (Step 3)
+- [ ] Create Distribution provisioning profile (Step 5.2)
+- [ ] Create app in App Store Connect (Step 7.1)
+- [ ] Run `eas credentials` to configure EAS Build (Step 6)
+- [ ] Generate App Store Connect API key for CI/CD (Step 7.3)
+
 ## Next Steps After Setup
 
-Once you have your Team ID and Bundle ID:
+Once you have your credentials configured:
 
-1. Update the blocked task "Configure Universal Links and App Links infrastructure" with your credentials
-2. Deploy the `apple-app-site-association` file to your domain
-3. Configure the iOS app with Associated Domains capability
+1. Run `eas build --platform ios --profile preview` to test the build
+2. Upload to TestFlight for beta testing
+3. Deploy the `apple-app-site-association` file to your domain
+4. Configure the iOS app with Associated Domains capability
 
-## Timeline Estimate
+## Credential Summary
 
-| Step                                | Duration                   |
-| ----------------------------------- | -------------------------- |
-| Apple ID creation (if needed)       | Immediate                  |
-| Developer enrollment (Individual)   | 24-48 hours                |
-| Developer enrollment (Organization) | 2-4 weeks                  |
-| D-U-N-S Number (if needed)          | 1-2 weeks                  |
-| App ID creation                     | Immediate after enrollment |
+After completing this guide, you'll have:
+
+| Credential               | Location                            | Purpose                    |
+| ------------------------ | ----------------------------------- | -------------------------- |
+| Team ID                  | Apple Developer Portal > Membership | Identifies your team       |
+| Bundle ID                | `io.shadowsky.app`                  | App identifier             |
+| Distribution Certificate | Keychain / EAS                      | Signs app for distribution |
+| Provisioning Profile     | Apple Developer Portal / EAS        | Links certificate to app   |
+| App Store Connect App    | App Store Connect                   | TestFlight & App Store     |
+| API Key (.p8)            | App Store Connect                   | Automated uploads          |
 
 ## Troubleshooting
+
+### Certificate Issues
+
+- **"No valid signing identity"**: Export certificate with private key as .p12
+- **Certificate expired**: Create new certificate, update provisioning profile
+- **Wrong certificate type**: Use "Apple Distribution" not "iOS Development"
+
+### Provisioning Profile Issues
+
+- **Profile doesn't include certificate**: Regenerate profile after creating certificate
+- **App ID mismatch**: Ensure bundle ID matches exactly
+
+### EAS Build Issues
+
+- **Credentials not found**: Run `eas credentials` to configure
+- **Authentication failed**: Check Apple ID credentials, may need app-specific password
 
 ### Universal Links Not Working
 
@@ -400,3 +435,5 @@ Once you have your Team ID and Bundle ID:
 - [Apple Developer Program Enrollment](https://developer.apple.com/programs/enroll/)
 - [Universal Links Documentation](https://developer.apple.com/documentation/xcode/allowing-apps-and-websites-to-link-to-your-content)
 - [Associated Domains Entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_associated-domains)
+- [EAS Build iOS Credentials](https://docs.expo.dev/app-signing/app-credentials/)
+- [App Store Connect API](https://developer.apple.com/documentation/appstoreconnectapi)
