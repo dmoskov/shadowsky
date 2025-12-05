@@ -1273,44 +1273,75 @@ Keep each point concise (under 100 characters).
 Return ONLY the bullet points, no headers or additional formatting.`;
         maxTokens = 300;
         break;
-      case "extended":
-        // Scale detail based on engagement and post count
-        const engagementLevel =
-          totalEngagement > 500
-            ? "high"
-            : totalEngagement > 100
-              ? "medium"
-              : "low";
-        const postCountLevel =
-          sanitizedPosts.length > 50
-            ? "large"
-            : sanitizedPosts.length > 20
-              ? "medium"
-              : "small";
+      // Progressive complexity formats
+      case "brief":
+        // For simple threads (3-9 replies) - one punchy sentence
+        formatPrompt = `Write ONE sentence (max 140 characters) summarizing what this thread is about.
+Focus on the main topic and general sentiment of replies.
+Be direct and informative - no filler words.
+Return ONLY the sentence, no labels or prefixes.`;
+        maxTokens = 80;
+        break;
 
+      case "moderate":
+        // For moderate threads (10-29 replies) - 2-3 sentences
+        formatPrompt = `Write 2-3 sentences summarizing this thread conversation (max 400 characters total).
+First sentence: What's the main topic or point.
+Second sentence: How did the conversation develop (agreements, debates, new angles).
+Third sentence (if notable): Any interesting conclusions or standout points.
+Be concise and capture the essence of the discussion.
+Return ONLY the summary text, no labels or prefixes.`;
+        maxTokens = 200;
+        break;
+
+      case "detailed":
+        // For complex threads (30-74 replies) - paragraph with key points
+        formatPrompt = `Write a detailed summary of this thread (150-250 words).
+Structure:
+1. Opening: What sparked this conversation (1-2 sentences)
+2. Main themes: What topics emerged in the replies (2-3 sentences)
+3. Key viewpoints: Different perspectives or arguments made (2-3 sentences)
+4. Notable moments: Any replies that got significant engagement or shifted the conversation (1-2 sentences)
+5. Closing: Where the conversation landed (1 sentence)
+
+Be informative and help readers understand what happened in this thread without reading every reply.
+Return ONLY the summary text, no labels or section headers.`;
+        maxTokens = 500;
+        break;
+
+      case "comprehensive":
+      case "extended": {
+        // For viral threads (75+ replies) - full analysis with sub-thread highlights
         // Build context about important sub-threads for the prompt
         const subThreadContext =
           highlightedSubThreads.length > 0
-            ? `\n\nNotable high-engagement replies (reference by post index when describing):\n${highlightedSubThreads.map((st, i) => `- Post #${sanitizedPosts.findIndex((p) => p.uri === st.uri) + 1} by @${st.authorHandle} (${st.engagement} engagement): "${st.snippet}"`).join("\n")}`
+            ? `\n\nNotable high-engagement replies (reference by post index when describing):\n${highlightedSubThreads.map((st) => `- Post #${sanitizedPosts.findIndex((p) => p.uri === st.uri) + 1} by @${st.authorHandle} (${st.engagement} engagement): "${st.snippet}"`).join("\n")}`
             : "";
 
-        formatPrompt = `Write a comprehensive summary of this thread discussion. This is a ${engagementLevel}-engagement thread with ${sanitizedPosts.length} posts.
+        formatPrompt = `Write a comprehensive analysis of this viral thread (250-400 words).
 
-Guidelines:
-1. Start with a 2-3 sentence overview of the main topic and the original poster's point
-2. Describe the key themes and perspectives that emerged in the discussion
-3. Highlight any notable sub-conversations, disagreements, or insights${highlightedSubThreads.length > 0 ? " (especially the high-engagement posts noted below)" : ""}
-4. If there are clear sides to a debate, summarize each fairly
-5. Note any conclusions or consensus reached
-
-${engagementLevel === "high" || postCountLevel === "large" ? "This is a highly-engaged thread - provide more detail (3-4 paragraphs)." : "Keep the summary to 2-3 paragraphs."}
+Analyze:
+1. The original post and its impact (2-3 sentences)
+2. Major conversation threads that emerged - what sub-topics sparked significant discussion (3-4 sentences)
+3. Key participants and their contributions - who added valuable perspectives (2-3 sentences)
+4. Points of agreement and disagreement - where did people align or clash (2-3 sentences)
+5. How the conversation evolved over time - did the tone or focus shift (2-3 sentences)
+6. Most impactful replies - which posts generated the most engagement and why (2-3 sentences)
+7. Overall takeaway - what would someone miss if they skipped this thread (1-2 sentences)
 ${subThreadContext}
 
-When referencing specific noteworthy replies, mention them as "One popular response by @username pointed out..." or similar.
-Return ONLY the summary text, no headers or meta-commentary about the task.`;
-        maxTokens =
-          engagementLevel === "high" || postCountLevel === "large" ? 800 : 500;
+After the main summary, add a section:
+
+---HIGHLIGHTS---
+List the top 3-5 most notable replies in this format:
+[POST_INDEX]: @handle - Brief description of why this reply was notable (engagement/insight/controversy)
+
+This helps readers navigate directly to the best parts of the conversation.
+Return the full analysis followed by the highlights section.`;
+        maxTokens = 1000;
         break;
+      }
+
       default:
         formatPrompt = `Write a haiku (5-7-5 syllable structure) that captures the essence of this thread.`;
         maxTokens = 100;
@@ -1351,11 +1382,46 @@ ${formatPrompt}
     }
 
     const data = await response.json();
-    const summary = data.content[0].text.trim();
+    let summaryText = data.content[0].text.trim();
+
+    // Parse highlights from comprehensive/extended summaries
+    let parsedHighlights;
+    if (format === "comprehensive" || format === "extended") {
+      const highlightsMatch = summaryText.match(
+        /---HIGHLIGHTS---\s*([\s\S]*?)$/,
+      );
+      if (highlightsMatch) {
+        // Extract summary without highlights section
+        summaryText = summaryText.replace(/---HIGHLIGHTS---[\s\S]*$/, "").trim();
+
+        // Parse individual highlights
+        const highlightLines = highlightsMatch[1].trim().split("\n");
+        parsedHighlights = highlightLines
+          .map((line) => {
+            // Format: [POST_INDEX]: @handle - Description
+            const match = line.match(/\[(\d+)\]:\s*@(\S+)\s*-\s*(.+)/);
+            if (match) {
+              const postIndex = parseInt(match[1], 10) - 1;
+              const post = sanitizedPosts[postIndex];
+              return {
+                uri: post?.uri || "",
+                authorHandle: match[2],
+                snippet: match[3].slice(0, 200),
+                engagement:
+                  (post?.likes || 0) +
+                  (post?.replies || 0) +
+                  (post?.reposts || 0),
+              };
+            }
+            return null;
+          })
+          .filter((h) => h !== null && h.uri !== "");
+      }
+    }
 
     const now = Date.now();
     const result = {
-      summary,
+      summary: summaryText,
       format,
       metadata: {
         postCount: sanitizedPosts.length,
@@ -1363,13 +1429,15 @@ ${formatPrompt}
         generatedAt: new Date(now).toISOString(),
         totalEngagement,
         highlightedSubThreads:
-          format === "extended" ? highlightedSubThreads : undefined,
+          format === "comprehensive" || format === "extended"
+            ? parsedHighlights || highlightedSubThreads
+            : undefined,
       },
     };
 
     // Cache the result
     setCachedSummary(cacheKey, {
-      summary,
+      summary: summaryText,
       format,
       metadata: result.metadata,
     });

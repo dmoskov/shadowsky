@@ -26,6 +26,10 @@ import {
 } from "../hooks/useAnalytics";
 import { useFollowing } from "../hooks/useFollowing";
 import {
+  useBatchedNotificationTransition,
+  useNotificationBatching,
+} from "../hooks/useNotificationBatching";
+import {
   postHasImages,
   useNotificationPosts,
 } from "../hooks/useNotificationPosts";
@@ -146,7 +150,7 @@ export const NotificationsFeed: React.FC = () => {
     }
   }, [unreadCount, markAsRead]); // Re-run when unreadCount changes
 
-  const notifications = React.useMemo(() => {
+  const rawNotifications = React.useMemo(() => {
     if (!data?.pages) {
       return [];
     }
@@ -156,15 +160,44 @@ export const NotificationsFeed: React.FC = () => {
     return allNotifications;
   }, [data?.pages]);
 
+  // Apply time-window batching to reduce UI jank during high-activity periods
+  const {
+    batchedNotifications,
+    pendingCount,
+    isBatching: isBatchingUpdates,
+    stats: batchStats,
+  } = useNotificationBatching(rawNotifications, {
+    enabled: true,
+    config: {
+      batchWindowMs: 5000, // 5-second batching window
+      maxBatchSize: 100,
+      enableGrouping: true,
+    },
+  });
+
+  // Apply smooth transitions for batched updates
+  const {
+    displayNotifications: notifications,
+    isTransitioning,
+    newNotificationIds,
+  } = useBatchedNotificationTransition(batchedNotifications, {
+    transitionDuration: 300,
+    enableAnimation: true,
+  });
+
   // Debug: Log when notifications change
   React.useEffect(() => {
     console.log("[NotificationsFeed] Notifications updated:", {
       count: notifications.length,
+      rawCount: rawNotifications.length,
+      pendingCount,
+      isBatching: isBatchingUpdates,
+      batchCount: batchStats.batchCount,
       firstNotification: notifications[0]?.indexedAt,
       dataVersion: data?.pageParams?.length,
       timestamp: new Date().toISOString(),
     });
-  }, [notifications, data?.pageParams]);
+  }, [notifications, rawNotifications.length, pendingCount, isBatchingUpdates, batchStats.batchCount, data?.pageParams]);
 
   // Track notification view when data loads
   useEffect(() => {
