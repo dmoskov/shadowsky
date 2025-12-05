@@ -18,9 +18,10 @@ import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
 import type { ThreadSummaryResult } from "../services/anthropic";
 import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { EnhancedComposer } from "./EnhancedComposer";
+import { ProgressiveThreadSummary } from "./ProgressiveThreadSummary";
+import { getComplexityTier, getTierConfig } from "./ProgressiveThreadView";
 import { ThreadContextBar } from "./ThreadContextBar";
 import { ThreadEngagementAnalytics } from "./ThreadEngagementAnalytics";
-import { ThreadHaikuSummary } from "./ThreadHaikuSummary";
 import { ThreadMinimap } from "./ThreadMinimap";
 import { ThreadShortcutsHelp } from "./ThreadShortcutsHelp";
 import { ThreadViewer } from "./ThreadViewer";
@@ -284,6 +285,25 @@ export function ThreadModal({
       maxDepth,
     };
   }, [posts, rootPost]);
+
+  // Calculate complexity tier for progressive UI
+  const tierConfig = useMemo(() => {
+    const replyCount = Math.max(0, posts.length - 1);
+    const tier = getComplexityTier(replyCount);
+    return getTierConfig(tier);
+  }, [posts.length]);
+
+  // Build parent URI map for progressive summary
+  const parentUris = useMemo(() => {
+    const map = new Map<string, string>();
+    posts.forEach((p) => {
+      const record = p.record as { reply?: { parent?: { uri: string } } };
+      if (record?.reply?.parent?.uri) {
+        map.set(p.uri, record.reply.parent.uri);
+      }
+    });
+    return map;
+  }, [posts]);
 
   // Get cached haiku summary for ThreadContextBar
   const cachedHaikuSummary = useMemo(() => {
@@ -855,8 +875,8 @@ export function ThreadModal({
               )}
             </div>
             <div className="flex items-center gap-2">
-              {/* Analytics toggle */}
-              {posts.length > 0 && (
+              {/* Analytics toggle - only show for complex+ threads */}
+              {posts.length > 0 && tierConfig.showAnalyticsBadge && (
                 <button
                   onClick={() => setShowAnalytics(!showAnalytics)}
                   className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
@@ -1026,10 +1046,14 @@ export function ThreadModal({
                   <ThreadViewer
                     rootPostObject={rootPostObject}
                     threadSummary={
-                      <ThreadHaikuSummary
-                        posts={posts}
-                        threadUri={rootPost || postUri}
-                      />
+                      tierConfig.showSummary ? (
+                        <ProgressiveThreadSummary
+                          posts={posts}
+                          threadUri={rootPost || postUri}
+                          parentUris={parentUris}
+                          summaryDepth={tierConfig.summaryDepth}
+                        />
+                      ) : null
                     }
                     posts={displayPosts}
                     rootUri={rootPost}
@@ -1180,7 +1204,8 @@ export function ThreadModal({
         </div>
 
         {/* Thread Minimap - floating visual navigation for complex threads */}
-        {posts.length > 0 && (
+        {/* Only show for complex+ threads based on tier config */}
+        {posts.length > 0 && tierConfig.showMinimap && (
           <ThreadMinimap
             posts={posts}
             currentIndex={focusedPostIndex}

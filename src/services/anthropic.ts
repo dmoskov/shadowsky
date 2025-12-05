@@ -586,7 +586,25 @@ export interface ThreadSummaryPost {
   depth?: number;
 }
 
-export type ThreadSummaryFormat = "haiku" | "tldr" | "keypoints" | "extended";
+// Thread summary formats:
+// - haiku: Poetic 3-line summary (legacy)
+// - tldr: 1 sentence TL;DR
+// - keypoints: Bullet point list
+// - extended: Multi-paragraph with highlights (legacy)
+// Progressive complexity formats:
+// - brief: 1 sentence (simple threads, 3-9 replies)
+// - moderate: 2-3 sentences (moderate threads, 10-29 replies)
+// - detailed: Paragraph with key points (complex threads, 30-74 replies)
+// - comprehensive: Multi-paragraph with sub-thread analysis (viral, 75+ replies)
+export type ThreadSummaryFormat =
+  | "haiku"
+  | "tldr"
+  | "keypoints"
+  | "extended"
+  | "brief"
+  | "moderate"
+  | "detailed"
+  | "comprehensive";
 
 export interface SubThreadHighlight {
   uri: string;

@@ -95,7 +95,15 @@ export interface OfflineMetadata {
   newestItemAt?: string;
 }
 
-export type ThreadSummaryFormat = "haiku" | "tldr" | "keypoints" | "extended";
+export type ThreadSummaryFormat =
+  | "haiku"
+  | "tldr"
+  | "keypoints"
+  | "extended"
+  | "brief"
+  | "moderate"
+  | "detailed"
+  | "comprehensive";
 export type ThreadSummarySource = "bookmarked" | "followed" | "viewed";
 
 export interface OfflineThreadSummary {
