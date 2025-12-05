@@ -29,6 +29,97 @@ import { ErrorBoundary } from "./ErrorBoundary";
 
 const logger = createLogger("ProgressiveThreadSummary");
 
+/**
+ * Simple markdown renderer for AI summaries
+ * Handles: **bold**, *italic*, # headers, and newlines
+ */
+function renderMarkdown(text: string): React.ReactNode {
+  // Split by double newlines to get paragraphs
+  const paragraphs = text.split(/\n\n+/);
+
+  return paragraphs.map((paragraph, pIndex) => {
+    // Check if it's a header
+    const headerMatch = paragraph.match(/^(#{1,3})\s+(.+)$/);
+    if (headerMatch) {
+      const level = headerMatch[1].length;
+      const content = headerMatch[2];
+      const className = level === 1
+        ? "text-base font-semibold mb-2 mt-3 first:mt-0"
+        : level === 2
+          ? "text-sm font-semibold mb-1.5 mt-2.5 first:mt-0"
+          : "text-sm font-medium mb-1 mt-2 first:mt-0";
+      return (
+        <div key={pIndex} className={className}>
+          {renderInlineMarkdown(content)}
+        </div>
+      );
+    }
+
+    // Regular paragraph - handle line breaks within
+    const lines = paragraph.split(/\n/);
+    return (
+      <p key={pIndex} className="mb-2 last:mb-0">
+        {lines.map((line, lIndex) => (
+          <span key={lIndex}>
+            {lIndex > 0 && <br />}
+            {renderInlineMarkdown(line)}
+          </span>
+        ))}
+      </p>
+    );
+  });
+}
+
+/**
+ * Render inline markdown: **bold** and *italic*
+ */
+function renderInlineMarkdown(text: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  let remaining = text;
+  let key = 0;
+
+  while (remaining.length > 0) {
+    // Look for **bold**
+    const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
+    // Look for *italic* (but not **)
+    const italicMatch = remaining.match(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/);
+
+    // Find the earliest match
+    let earliestMatch: RegExpMatchArray | null = null;
+    let matchType: 'bold' | 'italic' | null = null;
+
+    if (boldMatch && (!italicMatch || boldMatch.index! <= italicMatch.index!)) {
+      earliestMatch = boldMatch;
+      matchType = 'bold';
+    } else if (italicMatch) {
+      earliestMatch = italicMatch;
+      matchType = 'italic';
+    }
+
+    if (earliestMatch && earliestMatch.index !== undefined) {
+      // Add text before match
+      if (earliestMatch.index > 0) {
+        parts.push(remaining.slice(0, earliestMatch.index));
+      }
+
+      // Add formatted text
+      if (matchType === 'bold') {
+        parts.push(<strong key={key++}>{earliestMatch[1]}</strong>);
+      } else {
+        parts.push(<em key={key++}>{earliestMatch[1]}</em>);
+      }
+
+      remaining = remaining.slice(earliestMatch.index + earliestMatch[0].length);
+    } else {
+      // No more matches, add remaining text
+      parts.push(remaining);
+      break;
+    }
+  }
+
+  return parts.length === 1 ? parts[0] : <>{parts}</>;
+}
+
 type Post = AppBskyFeedDefs.PostView;
 
 export type SummaryDepth =
@@ -266,10 +357,10 @@ function ProgressiveThreadSummaryContent({
       {isExpanded && (
         <div className="px-3 pb-3">
           <div
-            className={`text-sm leading-relaxed ${isComprehensive ? "whitespace-pre-wrap" : ""}`}
+            className="text-sm leading-relaxed"
             style={{ color: "var(--bsky-text-secondary)" }}
           >
-            {summary.summary}
+            {renderMarkdown(summary.summary)}
           </div>
 
           {/* Highlighted sub-threads for comprehensive summaries */}
