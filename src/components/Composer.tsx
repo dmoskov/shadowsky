@@ -12,7 +12,6 @@ import {
   Send,
   Settings,
   Smile,
-  Sparkles,
   Split,
   Trash2,
   Undo,
@@ -20,7 +19,13 @@ import {
   Wand2,
   X,
 } from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useSearchParams } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useLinkPreview } from "../hooks/useLinkPreview";
@@ -51,17 +56,29 @@ import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { isGifFile } from "../utils/gif-to-video";
 import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { createLogger } from "../utils/logger";
-import { EmojiPicker } from "./EmojiPicker";
-import { GiphySearch } from "./GiphySearch";
-import { LinkPreview } from "./LinkPreview";
-import {
-  MentionTypeahead,
-  type MentionTypeaheadHandle,
-} from "./MentionTypeahead";
+import { type MentionTypeaheadHandle } from "./MentionTypeahead";
 import { ReplyControls, type ReplyPermission } from "./ReplyControls";
 import { AISettingsPanel } from "./settings/AISettingsPanel";
 import { ThreadComposer } from "./ThreadComposer";
 import { UploadProgressBar } from "./ui/UploadProgressBar";
+// Lazy-loaded sub-components for mobile performance
+const ComposerTextArea = React.lazy(() =>
+  import("./composer/ComposerTextArea").then((module) => ({
+    default: module.ComposerTextArea,
+  })),
+);
+const ComposerMediaUpload = React.lazy(() =>
+  import("./composer/ComposerMediaUpload").then((module) => ({
+    default: module.ComposerMediaUpload,
+  })),
+);
+
+// Lazy-loaded modals for performance optimization
+const ComposerModals = React.lazy(() =>
+  import("./composer/ComposerModals").then((module) => ({
+    default: module.ComposerModals,
+  })),
+);
 
 const logger = createLogger("Composer");
 
@@ -2099,6 +2116,24 @@ export function Composer() {
     }
   }, [text, agent]);
 
+  // Apply corrected version from writing feedback
+  const applyCorrectedVersion = useCallback(() => {
+    if (writingFeedback) {
+      setText(writingFeedback.correctedVersion.text);
+      setShowWritingFeedback(false);
+      setWritingFeedback(null);
+    }
+  }, [writingFeedback]);
+
+  // Apply enhanced version from writing feedback
+  const applyEnhancedVersion = useCallback(() => {
+    if (writingFeedback) {
+      setText(writingFeedback.enhancedVersion.text);
+      setShowWritingFeedback(false);
+      setWritingFeedback(null);
+    }
+  }, [writingFeedback]);
+
   // Track media URLs for cleanup
   useEffect(() => {
     media.forEach((m) => {
@@ -2308,95 +2343,38 @@ export function Composer() {
           </button>
         </div>
 
-        <MentionTypeahead
-          ref={textareaRef}
-          value={text}
-          onChange={setText}
-          onPaste={handlePaste}
-          placeholder="What's on your mind?"
-          className="resize-vertical font-inherit min-h-[200px] w-full rounded-lg p-4 transition-all focus:border-blue-500"
-          style={{
-            background: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
-            color: "var(--bsky-text-primary)",
-            outline: "none",
-          }}
-          disabled={isPosting}
-        />
-
-        {/* Hashtag Suggestions */}
-        {(showHashtagSuggestions || isLoadingHashtags) && text.length >= 20 && (
-          <div className="mb-3 mt-3">
-            <div className="mb-2 flex items-center gap-2">
-              <Sparkles
-                size={14}
-                style={{ color: "var(--bsky-text-tertiary)" }}
-              />
-              <span
-                className="text-xs font-medium"
-                style={{ color: "var(--bsky-text-tertiary)" }}
-              >
-                Suggested Hashtags
-              </span>
-              {isLoadingHashtags && (
-                <Loader size={12} className="animate-spin" />
-              )}
+        {/* Text Area with Link Preview and Hashtag Suggestions */}
+        <Suspense
+          fallback={
+            <div className="flex min-h-[200px] items-center justify-center">
+              <Loader className="animate-spin" size={24} />
             </div>
-            <div className="flex flex-wrap gap-2">
-              {hashtagSuggestions.map((suggestion, index) => (
-                <button
-                  key={index}
-                  onClick={() => applyHashtag(suggestion.tag)}
-                  disabled={isPosting}
-                  className="group relative flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-all hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 dark:hover:bg-opacity-20"
-                  style={{
-                    backgroundColor: "var(--bsky-bg-secondary)",
-                    borderColor:
-                      suggestion.relevance > 0.7
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-border-primary)",
-                    color: "var(--bsky-text-primary)",
-                  }}
-                >
-                  <span>#{suggestion.tag}</span>
-                  {suggestion.isTrending && (
-                    <span
-                      className="text-xs"
-                      style={{ color: "var(--bsky-primary)" }}
-                      title="Trending"
-                    >
-                      🔥
-                    </span>
-                  )}
-                  {suggestion.relevance > 0.7 && (
-                    <span
-                      className="absolute -right-1 -top-1 flex h-2 w-2 rounded-full"
-                      style={{ background: "var(--bsky-primary)" }}
-                      title="Highly relevant"
-                    />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Link Preview */}
-        {linkPreviewEnabled &&
-          media.length === 0 &&
-          (linkPreview.isLoading ||
-            linkPreview.metadata ||
-            linkPreview.error) && (
-            <LinkPreview
-              metadata={linkPreview.metadata}
-              isLoading={linkPreview.isLoading}
-              error={linkPreview.error}
-              onRemove={() => {
-                setLinkPreviewEnabled(false);
-                linkPreview.clearPreview();
-              }}
-            />
-          )}
+          }
+        >
+          <ComposerTextArea
+            text={text}
+            onTextChange={setText}
+            onPaste={handlePaste}
+            isPosting={isPosting}
+            textareaRef={textareaRef}
+            linkPreviewEnabled={linkPreviewEnabled}
+            linkPreview={{
+              metadata: linkPreview.metadata,
+              isLoading: linkPreview.isLoading,
+              error: linkPreview.error,
+              clearPreview: linkPreview.clearPreview,
+            }}
+            mediaCount={media.length}
+            onLinkPreviewRemove={() => {
+              setLinkPreviewEnabled(false);
+              linkPreview.clearPreview();
+            }}
+            showHashtagSuggestions={showHashtagSuggestions}
+            hashtagSuggestions={hashtagSuggestions}
+            isLoadingHashtags={isLoadingHashtags}
+            onApplyHashtag={applyHashtag}
+          />
+        </Suspense>
 
         <div className="mb-3 mt-3 flex items-center gap-2">
           <input
@@ -2703,190 +2681,25 @@ export function Composer() {
         </div>
       </div>
 
-      {media.length > 0 && (
-        <div className="bsky-card mb-6 p-4 md:p-6">
-          <h3
-            className="mb-4 text-lg font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
-          >
-            {media.some((m) => m.type === "video") ? "Video" : "Images"}
-            <span
-              className="text-sm font-normal"
-              style={{ color: "var(--bsky-text-secondary)" }}
-            >
-              {posts.length > 1
-                ? "(drag to reorder or assign to posts)"
-                : media.length > 1
-                  ? "(drag to reorder)"
-                  : "(will be added to first post)"}
-            </span>
-          </h3>
-          {media.some((m) => m.type === "video") && (
-            <div
-              className="mb-4 flex items-start gap-2 rounded-lg p-3"
-              style={{ background: "var(--bsky-bg-tertiary)" }}
-            >
-              <AlertCircle
-                size={16}
-                className="mt-0.5 flex-shrink-0"
-                style={{ color: "var(--bsky-text-secondary)" }}
-              />
-              <p
-                className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
-              >
-                Videos will be uploaded to Bluesky's servers for processing.
-                This may take a few moments depending on file size and server
-                load.
-              </p>
-            </div>
-          )}
-          {media.some((m) => m.type === "image" && !m.alt) && (
-            <div
-              className="mb-4 flex items-start gap-2 rounded-lg border-l-4 border-amber-400 p-3"
-              style={{ background: "var(--bsky-bg-tertiary)" }}
-              role="alert"
-              aria-live="polite"
-            >
-              <AlertCircle
-                size={16}
-                className="mt-0.5 flex-shrink-0 text-amber-500"
-                aria-hidden="true"
-              />
-              <p
-                className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
-              >
-                Some images are missing alt text. Adding alt text improves
-                accessibility for screen reader users.
-              </p>
-            </div>
-          )}
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {media
-              .filter((m) => m.postIndex === undefined || m.postIndex === 0)
-              .map((m) => (
-                <div
-                  key={m.id}
-                  className={`relative cursor-move overflow-hidden rounded-lg border ${dragOverMediaId === m.id ? "ring-2 ring-blue-400" : ""}`}
-                  style={{
-                    borderColor:
-                      dragOverMediaId === m.id
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-border-primary)",
-                    background: "var(--bsky-bg-secondary)",
-                    transition: "transform 0.2s, border-color 0.2s",
-                  }}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, m)}
-                  onDragEnd={handleDragEnd}
-                  onDragOver={(e) => handleMediaDragOver(e, m)}
-                  onDrop={(e) => handleMediaDrop(e, m)}
-                  onDragLeave={() => setDragOverMediaId(null)}
-                >
-                  <div className="group/image relative h-32 w-full">
-                    {m.type === "video" ? (
-                      <video
-                        src={m.preview}
-                        controls
-                        className="pointer-events-none h-full w-full object-cover"
-                      />
-                    ) : (
-                      <>
-                        <img
-                          src={m.preview}
-                          alt={m.alt || "Upload preview"}
-                          className="pointer-events-none h-full w-full object-cover"
-                        />
-                        {m.alt && (
-                          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 p-3 opacity-0 transition-opacity duration-200 group-hover/image:opacity-100">
-                            <p className="line-clamp-4 text-center text-xs text-white">
-                              {m.alt}
-                            </p>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                  <button
-                    className="absolute right-2 top-2 rounded-full bg-black bg-opacity-70 p-1 text-white transition-all hover:bg-opacity-90"
-                    onClick={() => removeMedia(m.id)}
-                    aria-label="Remove media"
-                  >
-                    <X size={16} />
-                  </button>
-                  <div className="absolute left-2 top-2 rounded-full bg-black bg-opacity-70 p-1 text-white">
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M7 11V7a5 5 0 0110 0v4m-5-4v10m-4-6h8" />
-                    </svg>
-                  </div>
-                  <div
-                    className="relative border-t"
-                    style={{ borderColor: "var(--bsky-border-primary)" }}
-                  >
-                    <label htmlFor={`alt-text-${m.id}`} className="sr-only">
-                      Alt text for image{" "}
-                      {m.alt
-                        ? "(has alt text)"
-                        : "(no alt text - add for accessibility)"}
-                    </label>
-                    <textarea
-                      id={`alt-text-${m.id}`}
-                      placeholder="Add alt text for accessibility"
-                      value={m.alt}
-                      onChange={(e) => updateMediaAlt(m.id, e.target.value)}
-                      className={`w-full resize-none p-2 pr-10 text-sm focus:outline-none ${!m.alt ? "border-l-2 border-l-amber-400" : ""}`}
-                      rows={2}
-                      aria-describedby={`alt-text-help-${m.id}`}
-                      style={{
-                        background: "var(--bsky-bg-primary)",
-                        color: "var(--bsky-text-primary)",
-                        minHeight: "3.5rem",
-                      }}
-                    />
-                    <span id={`alt-text-help-${m.id}`} className="sr-only">
-                      Describe the image for screen reader users. Good alt text
-                      describes the content and function of the image.
-                    </span>
-                    {m.type === "image" && (
-                      <button
-                        onClick={() => autoGenerateAltTextForMedia(m.id)}
-                        className={`absolute right-2 top-2 rounded-lg p-1.5 transition-all ${
-                          generatingAltTextFor === m.id
-                            ? "animate-pulse bg-blue-100 dark:bg-blue-900"
-                            : "hover:scale-110 hover:bg-gray-100 dark:hover:bg-gray-800"
-                        }`}
-                        disabled={generatingAltTextFor !== null}
-                        title="Generate alt text with AI"
-                      >
-                        {generatingAltTextFor === m.id ? (
-                          <Loader
-                            size={16}
-                            className="animate-spin"
-                            style={{ color: "var(--bsky-primary)" }}
-                          />
-                        ) : (
-                          <Sparkles
-                            size={16}
-                            className="transition-transform"
-                            style={{ color: "var(--bsky-text-secondary)" }}
-                          />
-                        )}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
-      )}
+      {/* Media Upload Section */}
+      <Suspense fallback={null}>
+        <ComposerMediaUpload
+          media={media}
+          posts={posts}
+          isPosting={isPosting}
+          onRemoveMedia={removeMedia}
+          onUpdateAlt={updateMediaAlt}
+          onAutoGenerateAlt={autoGenerateAltTextForMedia}
+          draggedMedia={draggedMedia}
+          dragOverMediaId={dragOverMediaId}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onMediaDragOver={handleMediaDragOver}
+          onMediaDrop={handleMediaDrop}
+          onDragLeave={() => setDragOverMediaId(null)}
+          generatingAltTextFor={generatingAltTextFor}
+        />
+      </Suspense>
 
       {posts.length > 0 && (
         <div className="mb-6">
@@ -3251,510 +3064,46 @@ export function Composer() {
         )}
       </div>
 
-      {showGiphySearch && (
-        <GiphySearch
-          onSelectGif={handleSelectGif}
-          onClose={() => setShowGiphySearch(false)}
-        />
-      )}
-
-      {showEmojiPicker && (
-        <EmojiPicker
+      {/* Lazy-loaded modals (Emoji, Giphy, AI features) */}
+      <Suspense fallback={null}>
+        <ComposerModals
+          // Emoji picker
+          showEmojiPicker={showEmojiPicker}
           onSelectEmoji={handleSelectEmoji}
-          onClose={() => setShowEmojiPicker(false)}
+          onCloseEmojiPicker={() => setShowEmojiPicker(false)}
+          // Giphy search
+          showGiphySearch={showGiphySearch}
+          onSelectGif={handleSelectGif}
+          onCloseGiphySearch={() => setShowGiphySearch(false)}
+          // AI features
+          text={text}
+          onTextChange={setText}
+          showToneOptions={showToneOptions}
+          onToggleToneOptions={() => setShowToneOptions(false)}
+          selectedTone={selectedTone}
+          isAdjustingTone={isAdjustingTone}
+          tonePreview={tonePreview}
+          showTonePreview={showTonePreview}
+          onToneAdjustment={handleToneAdjustment}
+          onApplyTone={applyToneAdjustment}
+          onCancelTone={cancelToneAdjustment}
+          threadOptimizationResult={threadOptimizationResult}
+          showThreadPreview={showThreadPreview}
+          onApplyThreadOptimization={applyThreadOptimization}
+          onCancelThreadOptimization={cancelThreadOptimization}
+          onNumberingFormatChange={setNumberingFormat}
+          showWritingFeedback={showWritingFeedback}
+          writingFeedback={writingFeedback}
+          isLoadingFeedback={isLoadingFeedback}
+          onRequestFeedback={handleWritingFeedback}
+          onCloseFeedback={() => {
+            setShowWritingFeedback(false);
+            setWritingFeedback(null);
+          }}
+          onApplyCorrected={applyCorrectedVersion}
+          onApplyEnhanced={applyEnhancedVersion}
         />
-      )}
-
-      {/* Tone Options Dropdown */}
-      {showToneOptions && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-          onClick={() => setShowToneOptions(false)}
-        >
-          <div
-            className="bsky-card w-full max-w-md p-4 shadow-lg"
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxHeight: "80vh", overflowY: "auto" }}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3
-                className="flex items-center gap-2 text-lg font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
-              >
-                <Wand2 size={20} />
-                Choose a Tone
-              </h3>
-              <button
-                className="rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
-                onClick={() => setShowToneOptions(false)}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              {TONE_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  className={`w-full rounded-lg border p-3 text-left transition-all hover:shadow-md ${
-                    isAdjustingTone
-                      ? "cursor-not-allowed opacity-50"
-                      : "hover:border-blue-400"
-                  }`}
-                  style={{
-                    borderColor: "var(--bsky-border-primary)",
-                    background: "var(--bsky-bg-secondary)",
-                  }}
-                  onClick={() => handleToneAdjustment(option.value)}
-                  disabled={isAdjustingTone}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{option.icon}</span>
-                    <div className="flex-1">
-                      <div
-                        className="font-medium"
-                        style={{ color: "var(--bsky-text-primary)" }}
-                      >
-                        {option.label}
-                      </div>
-                      <div
-                        className="text-sm"
-                        style={{ color: "var(--bsky-text-secondary)" }}
-                      >
-                        {option.description}
-                      </div>
-                    </div>
-                    {isAdjustingTone && selectedTone === option.value && (
-                      <Loader
-                        size={16}
-                        className="animate-spin"
-                        style={{ color: "var(--bsky-primary)" }}
-                      />
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tone Preview Modal */}
-      {showTonePreview && tonePreview && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0, 0, 0, 0.5)" }}
-        >
-          <div
-            className="bsky-card w-full max-w-2xl p-6 shadow-xl"
-            style={{ maxHeight: "80vh", overflowY: "auto" }}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3
-                className="flex items-center gap-2 text-lg font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
-              >
-                <Wand2 size={20} />
-                Tone Adjusted -{" "}
-                {TONE_OPTIONS.find((t) => t.value === selectedTone)?.label}
-                <span className="ml-2 text-2xl">
-                  {TONE_OPTIONS.find((t) => t.value === selectedTone)?.icon}
-                </span>
-              </h3>
-              <button
-                className="rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
-                onClick={cancelToneAdjustment}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <h4
-                  className="mb-2 text-sm font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
-                >
-                  Original:
-                </h4>
-                <div
-                  className="rounded-lg p-3"
-                  style={{
-                    background: "var(--bsky-bg-secondary)",
-                    color: "var(--bsky-text-primary)",
-                  }}
-                >
-                  {text}
-                </div>
-              </div>
-
-              <div>
-                <h4
-                  className="mb-2 text-sm font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
-                >
-                  Adjusted:
-                </h4>
-                <div
-                  className="rounded-lg border-2 p-3"
-                  style={{
-                    background: "var(--bsky-bg-secondary)",
-                    color: "var(--bsky-text-primary)",
-                    borderColor: "var(--bsky-primary)",
-                  }}
-                >
-                  {tonePreview}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                className="bsky-button-secondary px-4 py-2"
-                onClick={cancelToneAdjustment}
-              >
-                Cancel
-              </button>
-              <button
-                className="bsky-button-primary flex items-center gap-2 px-4 py-2"
-                onClick={applyToneAdjustment}
-              >
-                <CheckCircle size={16} />
-                Use This Version
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Thread Optimization Preview Modal */}
-      {showThreadPreview && threadOptimizationResult && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0, 0, 0, 0.5)" }}
-        >
-          <div
-            className="bsky-card w-full max-w-3xl p-6 shadow-xl"
-            style={{ maxHeight: "90vh", overflowY: "auto" }}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3
-                className="flex items-center gap-2 text-lg font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
-              >
-                <Sparkles size={20} />
-                Thread Optimization - {threadOptimizationResult.totalPosts}{" "}
-                Posts
-              </h3>
-              <button
-                className="rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
-                onClick={cancelThreadOptimization}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="mb-4">
-              <p
-                className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
-              >
-                {threadOptimizationResult.summary}
-              </p>
-              <p
-                className="mt-2 text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
-              >
-                Suggested format:{" "}
-                {threadOptimizationResult.suggestedFormat === "simple"
-                  ? "1/n"
-                  : threadOptimizationResult.suggestedFormat === "brackets"
-                    ? "[1/n]"
-                    : threadOptimizationResult.suggestedFormat === "thread"
-                      ? "🧵 1/n"
-                      : threadOptimizationResult.suggestedFormat === "dots"
-                        ? "1•n"
-                        : "None"}
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              {threadOptimizationResult.segments.map((segment, index) => {
-                const format = NUMBERING_FORMATS.find(
-                  (f) => f.id === threadOptimizationResult.suggestedFormat,
-                );
-                const numbering =
-                  format && format.id !== "none"
-                    ? format.format(
-                        index + 1,
-                        threadOptimizationResult.totalPosts,
-                      ) + " "
-                    : "";
-
-                return (
-                  <div
-                    key={index}
-                    className="rounded-lg border p-4"
-                    style={{
-                      background: "var(--bsky-bg-secondary)",
-                      borderColor: segment.isStandalone
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-border-primary)",
-                    }}
-                  >
-                    <div className="mb-2 flex items-center justify-between">
-                      <span
-                        className="text-xs font-medium"
-                        style={{ color: "var(--bsky-text-tertiary)" }}
-                      >
-                        Post {index + 1} • {numbering}
-                        {segment.text.length} characters
-                      </span>
-                      {segment.isStandalone && (
-                        <span
-                          className="rounded-full px-2 py-0.5 text-xs"
-                          style={{
-                            background: "var(--bsky-primary)",
-                            color: "white",
-                          }}
-                        >
-                          Can stand alone
-                        </span>
-                      )}
-                    </div>
-                    <p
-                      className="whitespace-pre-wrap"
-                      style={{ color: "var(--bsky-text-primary)" }}
-                    >
-                      {numbering}
-                      {segment.text}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                className="bsky-button-secondary px-4 py-2"
-                onClick={cancelThreadOptimization}
-              >
-                Cancel
-              </button>
-              <button
-                className="bsky-button-primary flex items-center gap-2 px-4 py-2"
-                onClick={applyThreadOptimization}
-              >
-                <CheckCircle size={16} />
-                Apply Optimization
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Writing Feedback Modal */}
-      {showWritingFeedback && writingFeedback && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0, 0, 0, 0.5)" }}
-        >
-          <div
-            className="bsky-card w-full max-w-2xl p-6 shadow-xl"
-            style={{ maxHeight: "90vh", overflowY: "auto" }}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3
-                className="flex items-center gap-2 text-lg font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
-              >
-                <MessageSquare size={20} />
-                Writing Feedback
-              </h3>
-              <button
-                className="rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
-                onClick={() => {
-                  setShowWritingFeedback(false);
-                  setWritingFeedback(null);
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {/* Assessment */}
-              <div
-                className={`rounded-lg border p-4 ${
-                  !writingFeedback.assessment.hasIssues
-                    ? "border-green-500 bg-green-50 dark:bg-green-900 dark:bg-opacity-20"
-                    : "border-yellow-500 bg-yellow-50 dark:bg-yellow-900 dark:bg-opacity-20"
-                }`}
-              >
-                <h4 className="mb-2 flex items-center gap-2 font-semibold">
-                  {!writingFeedback.assessment.hasIssues ? (
-                    <CheckCircle size={16} className="text-green-600" />
-                  ) : (
-                    <AlertCircle size={16} className="text-yellow-600" />
-                  )}
-                  Quality Assessment
-                </h4>
-                <p className="text-sm">{writingFeedback.assessment.summary}</p>
-              </div>
-
-              {/* Original Version */}
-              <div
-                className="rounded-lg border p-4"
-                style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
-                }}
-              >
-                <h4 className="mb-3 flex items-center gap-2 font-semibold">
-                  <FileText size={16} />
-                  Original Version
-                </h4>
-                <p className="rounded bg-gray-50 p-3 text-sm dark:bg-gray-900">
-                  {text}
-                </p>
-              </div>
-
-              {/* Corrected Version */}
-              <div
-                className="rounded-lg border p-4"
-                style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
-                }}
-              >
-                <h4 className="mb-3 flex items-center justify-between font-semibold">
-                  <span className="flex items-center gap-2">
-                    <FileText size={16} />
-                    Corrected Version
-                  </span>
-                  <button
-                    className="bsky-button-secondary flex items-center gap-1 px-3 py-1 text-sm"
-                    onClick={() => {
-                      setText(writingFeedback.correctedVersion.text);
-                      setShowWritingFeedback(false);
-                      setWritingFeedback(null);
-                    }}
-                  >
-                    <Undo size={14} />
-                    Use This
-                  </button>
-                </h4>
-                <p className="mb-3 rounded bg-gray-50 p-3 text-sm dark:bg-gray-900">
-                  {writingFeedback.correctedVersion.text}
-                </p>
-                {writingFeedback.correctedVersion.changes.length > 0 && (
-                  <div className="text-xs text-gray-500">
-                    <p className="font-medium">Corrections made:</p>
-                    <ul className="list-disc space-y-0.5 pl-5">
-                      {writingFeedback.correctedVersion.changes.map(
-                        (change, i) => (
-                          <li key={i}>{change}</li>
-                        ),
-                      )}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              {/* Enhanced Version */}
-              <div
-                className="rounded-lg border p-4"
-                style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
-                }}
-              >
-                <h4 className="mb-3 flex items-center justify-between font-semibold">
-                  <span className="flex items-center gap-2">
-                    <Sparkles size={16} />
-                    Enhanced Version
-                  </span>
-                  <button
-                    className="bsky-button-primary flex items-center gap-1 px-3 py-1 text-sm"
-                    onClick={() => {
-                      setText(writingFeedback.enhancedVersion.text);
-                      setShowWritingFeedback(false);
-                      setWritingFeedback(null);
-                    }}
-                  >
-                    <Undo size={14} />
-                    Use This
-                  </button>
-                </h4>
-                <p className="mb-3 rounded bg-gray-50 p-3 text-sm dark:bg-gray-900">
-                  {writingFeedback.enhancedVersion.text}
-                </p>
-                {writingFeedback.enhancedVersion.improvements.length > 0 && (
-                  <div className="text-xs text-gray-500">
-                    <p className="font-medium">Improvements:</p>
-                    <ul className="list-disc space-y-0.5 pl-5">
-                      {writingFeedback.enhancedVersion.improvements.map(
-                        (improvement, i) => (
-                          <li key={i}>{improvement}</li>
-                        ),
-                      )}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              {/* Style Analysis - only show if actually implemented */}
-              {writingFeedback.styleAnalysis.userStyleSummary &&
-                !writingFeedback.styleAnalysis.userStyleSummary.includes(
-                  "requires additional implementation",
-                ) && (
-                  <div
-                    className="rounded-lg border p-4"
-                    style={{
-                      backgroundColor: "var(--bsky-bg-secondary)",
-                      borderColor: "var(--bsky-border-primary)",
-                    }}
-                  >
-                    <h4 className="mb-3 flex items-center gap-2 font-semibold">
-                      <MessageSquare size={16} />
-                      Your Writing Style
-                    </h4>
-                    <p className="mb-2 text-sm italic">
-                      {writingFeedback.styleAnalysis.userStyleSummary}
-                    </p>
-                    <p className="mb-2 text-sm">
-                      {writingFeedback.styleAnalysis.matchesStyle
-                        ? "✅ This post matches your typical style"
-                        : "⚡ This post differs from your usual style"}
-                    </p>
-                    {writingFeedback.styleAnalysis.styleNotes.length > 0 && (
-                      <ul className="list-disc space-y-0.5 pl-5 text-xs text-gray-500">
-                        {writingFeedback.styleAnalysis.styleNotes.map(
-                          (note, i) => (
-                            <li key={i}>{note}</li>
-                          ),
-                        )}
-                      </ul>
-                    )}
-                  </div>
-                )}
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <button
-                className="bsky-button-primary px-6 py-2"
-                onClick={() => {
-                  setShowWritingFeedback(false);
-                  setWritingFeedback(null);
-                }}
-              >
-                Got it!
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      </Suspense>
 
       {/* Thread Composer Modal */}
       <ThreadComposer

@@ -45,12 +45,9 @@ export const EditListModal: React.FC<EditListModalProps> = ({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-      onClick={onClose}
-    >
+    <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="w-11/12 max-w-md rounded-xl bg-bsky-bg-primary shadow-xl"
+        className="modal-container modal-auto-height modal-md"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-bsky-border-primary p-6">
@@ -80,7 +77,7 @@ export const EditListModal: React.FC<EditListModalProps> = ({
               onChange={(e) => setName(e.target.value)}
               placeholder="My awesome list"
               maxLength={50}
-              className="w-full rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-2 text-bsky-text-primary focus:border-bsky-primary focus:outline-none"
+              className="w-full rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-2 text-bsky-text-primary focus-visible:border-bsky-primary focus-visible:outline-none"
               autoFocus
             />
             <div className="mt-1 text-right text-xs text-bsky-text-tertiary">
@@ -102,7 +99,7 @@ export const EditListModal: React.FC<EditListModalProps> = ({
               placeholder="What's this list about?"
               maxLength={200}
               rows={3}
-              className="w-full resize-none rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-2 text-bsky-text-primary focus:border-bsky-primary focus:outline-none"
+              className="w-full resize-none rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-2 text-bsky-text-primary focus-visible:border-bsky-primary focus-visible:outline-none"
             />
             <div className="mt-1 text-right text-xs text-bsky-text-tertiary">
               {description.length}/200

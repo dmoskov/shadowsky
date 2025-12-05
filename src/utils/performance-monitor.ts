@@ -1,8 +1,12 @@
+import {
+  WebVitalsMetrics,
+  webVitalsMonitor,
+} from "../services/web-vitals-monitor";
 import { createLogger } from "./logger";
 
 const logger = createLogger("PerformanceMonitor");
 
-interface PerformanceMetrics {
+export interface PerformanceMetrics {
   fps: number;
   memory?: {
     usedJSHeapSize: number;
@@ -10,6 +14,7 @@ interface PerformanceMetrics {
     jsHeapSizeLimit: number;
   };
   longTasks: number;
+  webVitals?: WebVitalsMetrics;
 }
 
 /**
@@ -44,7 +49,11 @@ export class PerformanceMonitor {
 
     this.isMonitoring = true;
     this.measureFPS();
-    logger.log("Performance monitoring started");
+
+    // Also initialize Web Vitals monitoring
+    webVitalsMonitor.init();
+
+    logger.log("Performance monitoring started (including Web Vitals)");
   }
 
   /**
@@ -75,6 +84,11 @@ export class PerformanceMonitor {
         totalJSHeapSize: memory.totalJSHeapSize,
         jsHeapSizeLimit: memory.jsHeapSizeLimit,
       };
+    }
+
+    // Add Web Vitals metrics if monitoring is active
+    if (webVitalsMonitor.isMonitoringActive()) {
+      metrics.webVitals = webVitalsMonitor.getMetrics();
     }
 
     return metrics;

@@ -15,13 +15,7 @@
  */
 
 import type { AppBskyFeedDefs } from "@atproto/api";
-import React, {
-  memo,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -62,7 +56,8 @@ function estimateItemHeight(item: MobilePostData): number {
     height +=
       embed.images?.length === 1
         ? 200
-        : FEED_CONSTANTS.POST_WITH_GALLERY_HEIGHT - FEED_CONSTANTS.BASE_POST_HEIGHT;
+        : FEED_CONSTANTS.POST_WITH_GALLERY_HEIGHT -
+          FEED_CONSTANTS.BASE_POST_HEIGHT;
   } else if (embed?.record) {
     height += 100; // Quoted post
   } else if (embed?.external) {
@@ -168,7 +163,7 @@ function FeedListComponent({
   ListHeaderComponent,
   ListFooterComponent,
 }: FeedListProps) {
-  const flatListRef = useRef<FlatList<MobilePostData>>(null);
+  const flatListRef = useRef(null);
   const [visibleItems, setVisibleItems] = useState<Set<string>>(new Set());
 
   // Stable key extractor
@@ -182,9 +177,18 @@ function FeedListComponent({
 
   // Handle viewability changes for lazy loading optimization
   const onViewableItemsChanged = useCallback(
-    ({ viewableItems }: { viewableItems: ViewToken[]; changed: ViewToken[] }) => {
+    ({
+      viewableItems,
+    }: {
+      viewableItems: ViewToken<MobilePostData>[];
+      changed: ViewToken<MobilePostData>[];
+    }) => {
       const newVisible = new Set(
-        viewableItems.map((item) => item.item?.key || item.item?.post?.uri),
+        viewableItems.map(
+          (item) =>
+            (item.item as MobilePostData)?.key ||
+            (item.item as MobilePostData)?.post?.uri,
+        ),
       );
       setVisibleItems(newVisible);
     },

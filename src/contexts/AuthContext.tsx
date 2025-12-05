@@ -13,6 +13,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -28,7 +29,10 @@ import { columnService } from "../services/column-service";
 import { initializeDataServices } from "../services/data-services-initializer";
 import { dmService } from "../services/dm-service";
 import { draftService } from "../services/draft-service";
-import { oauthService } from "../services/oauth-service";
+import {
+  hasExistingOAuthSession,
+  oauthService,
+} from "../services/oauth-service";
 
 type AuthMethod = "oauth" | "app-password" | null;
 
@@ -154,53 +158,59 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const initializeAuth = async () => {
       try {
-        // First, try to initialize OAuth and check for existing OAuth session
-        debug.log("Checking for OAuth session...");
-        const oauthState = await oauthService.init();
+        // First, do a lightweight check for existing OAuth session
+        // This avoids loading the ~328KB OAuth client for users who don't use OAuth
+        const mayHaveOAuthSession = await hasExistingOAuthSession();
 
-        // Check if OAuth is available (client metadata loaded)
-        setIsOAuthAvailable(oauthService.isAvailable());
+        if (mayHaveOAuthSession) {
+          // Only load the full OAuth client if we might have a session to restore
+          debug.log("Checking for OAuth session...");
+          const oauthState = await oauthService.init();
 
-        if (oauthState?.agent && oauthState.did) {
-          debug.log("OAuth session found, using OAuth authentication");
+          // Check if OAuth is available (client metadata loaded)
+          setIsOAuthAvailable(oauthService.isAvailable());
 
-          // Cast OAuth Agent to BskyAgent - they share the same API interface
-          const agent = oauthState.agent as unknown as BskyAgent;
+          if (oauthState?.agent && oauthState.did) {
+            debug.log("OAuth session found, using OAuth authentication");
 
-          // Fetch handle from profile since OAuth session doesn't include it
-          let handle = oauthState.handle || "";
-          try {
-            const { data: profile } = await agent.getProfile({
-              actor: oauthState.did,
-            });
-            handle = profile.handle;
-          } catch (err) {
-            debug.error("Failed to fetch handle for OAuth session:", err);
+            // Cast OAuth Agent to BskyAgent - they share the same API interface
+            const agent = oauthState.agent as unknown as BskyAgent;
+
+            // Fetch handle from profile since OAuth session doesn't include it
+            let handle = oauthState.handle || "";
+            try {
+              const { data: profile } = await agent.getProfile({
+                actor: oauthState.did,
+              });
+              handle = profile.handle;
+            } catch (err) {
+              debug.error("Failed to fetch handle for OAuth session:", err);
+            }
+
+            setIsAuthenticated(true);
+            setAuthMethod("oauth");
+            setOauthAgent(agent);
+
+            // Create a minimal session object for compatibility
+            const oauthSession: Session = {
+              did: oauthState.did,
+              handle,
+              accessJwt: "", // OAuth doesn't expose raw JWTs
+              refreshJwt: "",
+              active: true,
+            };
+            setSession(oauthSession);
+
+            // Initialize services with OAuth agent
+            await initializeBookmarkService(agent);
+            await initializeDataServices(agent);
+            dmService.setAgent(agent);
+
+            // Track login
+            analytics.setUserId(oauthState.did);
+            setIsLoading(false);
+            return;
           }
-
-          setIsAuthenticated(true);
-          setAuthMethod("oauth");
-          setOauthAgent(agent);
-
-          // Create a minimal session object for compatibility
-          const oauthSession: Session = {
-            did: oauthState.did,
-            handle,
-            accessJwt: "", // OAuth doesn't expose raw JWTs
-            refreshJwt: "",
-            active: true,
-          };
-          setSession(oauthSession);
-
-          // Initialize services with OAuth agent
-          await initializeBookmarkService(agent);
-          await initializeDataServices(agent);
-          dmService.setAgent(agent);
-
-          // Track login
-          analytics.setUserId(oauthState.did);
-          setIsLoading(false);
-          return;
         }
 
         // Fall back to legacy app password session
@@ -428,25 +438,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const currentAgent =
     authMethod === "oauth" ? oauthAgent : atProtoClient.agent;
 
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  const contextValue = useMemo(
+    () => ({
+      isAuthenticated,
+      isLoading,
+      authMethod,
+      isOAuthAvailable,
+      loginWithOAuth,
+      handleOAuthCallback,
+      login,
+      logout,
+      session,
+      client: atProtoClient,
+      agent: isAuthenticated ? currentAgent : null,
+      refreshSession,
+      switchAccount,
+    }),
+    [
+      isAuthenticated,
+      isLoading,
+      authMethod,
+      isOAuthAvailable,
+      loginWithOAuth,
+      handleOAuthCallback,
+      login,
+      logout,
+      session,
+      currentAgent,
+      refreshSession,
+      switchAccount,
+    ],
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        isLoading,
-        authMethod,
-        isOAuthAvailable,
-        loginWithOAuth,
-        handleOAuthCallback,
-        login,
-        logout,
-        session,
-        client: atProtoClient,
-        agent: isAuthenticated ? currentAgent : null,
-        refreshSession,
-        switchAccount,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 };

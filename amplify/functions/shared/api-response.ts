@@ -24,6 +24,91 @@
 
 import * as crypto from "crypto";
 
+// ============================================================================
+// Caching Configuration Types
+// ============================================================================
+
+/**
+ * Cache configuration options for API responses
+ */
+export interface CacheConfig {
+  /** Max age in seconds for Cache-Control header */
+  maxAge?: number;
+  /** Stale-while-revalidate duration in seconds */
+  staleWhileRevalidate?: number;
+  /** Whether to include public directive (default: true for GET, false otherwise) */
+  isPublic?: boolean;
+  /** Whether to include no-store directive (overrides other settings) */
+  noStore?: boolean;
+  /** Whether to include no-cache directive */
+  noCache?: boolean;
+  /** Whether to include must-revalidate directive */
+  mustRevalidate?: boolean;
+  /** Whether to include immutable directive (for truly static content) */
+  immutable?: boolean;
+  /** Custom ETag value (if not provided, will be generated from response body) */
+  etag?: string;
+  /** Whether to skip ETag generation entirely */
+  skipEtag?: boolean;
+  /** Vary header values for cache key differentiation */
+  vary?: string[];
+}
+
+/**
+ * Preset cache configurations for common use cases
+ */
+export const CachePresets = {
+  /** No caching - for dynamic or user-specific content */
+  NO_CACHE: {
+    noStore: true,
+    skipEtag: true,
+  } as CacheConfig,
+
+  /** Short-lived cache for frequently changing data (1 minute) */
+  SHORT: {
+    maxAge: 60,
+    staleWhileRevalidate: 30,
+    isPublic: true,
+  } as CacheConfig,
+
+  /** Medium cache for semi-static data (5 minutes) */
+  MEDIUM: {
+    maxAge: 300,
+    staleWhileRevalidate: 60,
+    isPublic: true,
+  } as CacheConfig,
+
+  /** Long cache for rarely changing data (1 hour) */
+  LONG: {
+    maxAge: 3600,
+    staleWhileRevalidate: 300,
+    isPublic: true,
+  } as CacheConfig,
+
+  /** Link metadata - cacheable since same URL returns same content (10 minutes) */
+  LINK_METADATA: {
+    maxAge: 600,
+    staleWhileRevalidate: 120,
+    isPublic: true,
+    vary: ["Origin"],
+  } as CacheConfig,
+
+  /** AI-generated content - short cache for same inputs (2 minutes) */
+  AI_GENERATED: {
+    maxAge: 120,
+    staleWhileRevalidate: 60,
+    isPublic: false,
+    vary: ["Origin"],
+  } as CacheConfig,
+
+  /** Static/immutable content (1 day, immutable) */
+  IMMUTABLE: {
+    maxAge: 86400,
+    isPublic: true,
+    immutable: true,
+  } as CacheConfig,
+} as const;
+
 /**
  * Standard error codes for API responses
  */
@@ -251,6 +336,200 @@ export function createSuccessResponse<T>(
     headers,
     body: JSON.stringify(data),
   };
+}
+
+// ============================================================================
+// Caching Utilities
+// ============================================================================
+
+/**
+ * Generate an ETag from response body content
+ * Uses MD5 hash for fast computation (security not needed for cache validation)
+ */
+export function generateEtag(body: string): string {
+  const hash = crypto.createHash("md5").update(body).digest("hex");
+  return `"${hash.substring(0, 16)}"`;
+}
+
+/**
+ * Build Cache-Control header value from config
+ */
+export function buildCacheControlHeader(config: CacheConfig): string {
+  const directives: string[] = [];
+
+  if (config.noStore) {
+    return "no-store";
+  }
+
+  if (config.noCache) {
+    directives.push("no-cache");
+  }
+
+  if (config.isPublic !== false) {
+    directives.push("public");
+  } else {
+    directives.push("private");
+  }
+
+  if (config.maxAge !== undefined) {
+    directives.push(`max-age=${config.maxAge}`);
+  }
+
+  if (config.staleWhileRevalidate !== undefined) {
+    directives.push(`stale-while-revalidate=${config.staleWhileRevalidate}`);
+  }
+
+  if (config.mustRevalidate) {
+    directives.push("must-revalidate");
+  }
+
+  if (config.immutable) {
+    directives.push("immutable");
+  }
+
+  return directives.join(", ");
+}
+
+/**
+ * Get If-None-Match header from request event
+ */
+export function getIfNoneMatch(event: any): string | null {
+  return (
+    event.headers?.["if-none-match"] || event.headers?.["If-None-Match"] || null
+  );
+}
+
+/**
+ * Check if client's cached version matches current ETag
+ */
+export function shouldReturn304(event: any, etag: string): boolean {
+  const ifNoneMatch = getIfNoneMatch(event);
+  if (!ifNoneMatch) return false;
+
+  // Handle multiple ETags in If-None-Match (comma-separated)
+  const clientEtags = ifNoneMatch.split(",").map((e) => e.trim());
+  return clientEtags.includes(etag) || clientEtags.includes("*");
+}
+
+/**
+ * Create a 304 Not Modified response
+ */
+export function create304Response(
+  event: any,
+  etag: string,
+  options?: {
+    cacheConfig?: CacheConfig;
+    correlationId?: string;
+    corsConfig?: CorsConfig;
+  },
+): LambdaResponse {
+  const correlationId = options?.correlationId || getCorrelationId(event);
+  const origin = getRequestOrigin(event);
+  const headers = buildCorsHeaders(origin, options?.corsConfig);
+
+  headers["X-Correlation-Id"] = correlationId;
+  headers["ETag"] = etag;
+
+  if (options?.cacheConfig) {
+    headers["Cache-Control"] = buildCacheControlHeader(options.cacheConfig);
+    if (options.cacheConfig.vary?.length) {
+      headers["Vary"] = options.cacheConfig.vary.join(", ");
+    }
+  }
+
+  return {
+    statusCode: 304,
+    headers,
+    body: "",
+  };
+}
+
+/**
+ * Create a cached success response with Cache-Control, ETag, and conditional response handling
+ *
+ * This function automatically:
+ * - Generates an ETag from the response body
+ * - Checks If-None-Match header and returns 304 if matched
+ * - Adds Cache-Control headers based on the provided config
+ * - Adds Vary headers if specified
+ *
+ * @example
+ * // Using preset
+ * return createCachedSuccessResponse(result, event, {
+ *   cacheConfig: CachePresets.LINK_METADATA,
+ *   correlationId,
+ * });
+ *
+ * @example
+ * // Custom config
+ * return createCachedSuccessResponse(result, event, {
+ *   cacheConfig: { maxAge: 300, staleWhileRevalidate: 60 },
+ *   correlationId,
+ * });
+ */
+export function createCachedSuccessResponse<T>(
+  data: T,
+  event: any,
+  options: {
+    cacheConfig: CacheConfig;
+    statusCode?: number;
+    correlationId?: string;
+    corsConfig?: CorsConfig;
+  },
+): LambdaResponse {
+  const correlationId = options.correlationId || getCorrelationId(event);
+  const origin = getRequestOrigin(event);
+  const headers = buildCorsHeaders(origin, options.corsConfig);
+  const body = JSON.stringify(data);
+
+  // Generate or use provided ETag
+  const etag = options.cacheConfig.skipEtag
+    ? null
+    : options.cacheConfig.etag || generateEtag(body);
+
+  // Check for conditional request (If-None-Match)
+  if (etag && shouldReturn304(event, etag)) {
+    return create304Response(event, etag, {
+      cacheConfig: options.cacheConfig,
+      correlationId,
+      corsConfig: options.corsConfig,
+    });
+  }
+
+  // Add correlation ID
+  headers["X-Correlation-Id"] = correlationId;
+
+  // Add caching headers
+  headers["Cache-Control"] = buildCacheControlHeader(options.cacheConfig);
+
+  if (etag) {
+    headers["ETag"] = etag;
+  }
+
+  if (options.cacheConfig.vary?.length) {
+    headers["Vary"] = options.cacheConfig.vary.join(", ");
+  }
+
+  return {
+    statusCode: options.statusCode || 200,
+    headers,
+    body,
+  };
+}
+
+/**
+ * Utility to generate a cache key from request parameters
+ * Useful for server-side caching decisions
+ */
+export function generateRequestCacheKey(
+  endpoint: string,
+  params: Record<string, unknown>,
+): string {
+  const sortedParams = Object.keys(params)
+    .sort()
+    .map((key) => `${key}=${JSON.stringify(params[key])}`)
+    .join("&");
+  return `${endpoint}:${crypto.createHash("md5").update(sortedParams).digest("hex")}`;
 }
 
 // ============================================================================

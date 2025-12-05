@@ -10,6 +10,15 @@ interface AriaLiveContextType {
   announce: (message: string, priority?: "polite" | "assertive") => void;
   announceNewPost: (authorName: string) => void;
   announceNotification: (count: number) => void;
+  announcePostAction: (
+    action:
+      | "liked"
+      | "unliked"
+      | "reposted"
+      | "unreposted"
+      | "bookmarked"
+      | "unbookmarked",
+  ) => void;
 }
 
 const AriaLiveContext = createContext<AriaLiveContextType | undefined>(
@@ -55,9 +64,37 @@ export function AriaLiveProvider({ children }: AriaLiveProviderProps) {
     [announce],
   );
 
+  const announcePostAction = useCallback(
+    (
+      action:
+        | "liked"
+        | "unliked"
+        | "reposted"
+        | "unreposted"
+        | "bookmarked"
+        | "unbookmarked",
+    ) => {
+      const messages = {
+        liked: "Post liked",
+        unliked: "Post unliked",
+        reposted: "Post reposted",
+        unreposted: "Repost removed",
+        bookmarked: "Post bookmarked",
+        unbookmarked: "Bookmark removed",
+      };
+      announce(messages[action]);
+    },
+    [announce],
+  );
+
   return (
     <AriaLiveContext.Provider
-      value={{ announce, announceNewPost, announceNotification }}
+      value={{
+        announce,
+        announceNewPost,
+        announceNotification,
+        announcePostAction,
+      }}
     >
       {children}
       {/* Polite live region - for non-urgent updates */}
@@ -100,6 +137,7 @@ export function useAriaLiveSafe() {
       announce: () => {},
       announceNewPost: () => {},
       announceNotification: () => {},
+      announcePostAction: () => {},
     }
   );
 }

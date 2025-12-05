@@ -2,9 +2,20 @@
 /* These reusable component classes replace the ones from bluesky-theme.css */
 
 @layer components {
-  /* Button styles */
+  /* Button styles with spring animations */
   .bsky-button {
-    @apply rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 hover:shadow-sm active:scale-[0.98];
+    @apply rounded-md px-3 py-1.5 text-sm font-medium hover:shadow-sm;
+    transition:
+      transform var(--transition-fast) var(--ease-spring-soft),
+      box-shadow var(--transition-fast) var(--ease-out),
+      opacity var(--transition-fast) var(--ease-default),
+      background-color var(--transition-fast) var(--ease-default);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .bsky-button:active {
+      transform: scale(0.97);
+    }
   }
 
   .bsky-button-primary {
@@ -19,13 +30,26 @@
     @apply bsky-button bg-transparent text-bsky-text-secondary hover:bg-white/10;
   }
 
-  /* Card styles */
+  /* Card styles with spring animations */
   .bsky-card {
     @apply rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary shadow-sm;
   }
 
   .bsky-card-hover {
-    @apply bsky-card transition-all duration-200 hover:border-opacity-60 hover:bg-opacity-90 hover:shadow-md;
+    @apply bsky-card;
+    transition:
+      transform var(--transition-normal) var(--ease-spring-soft),
+      box-shadow var(--transition-normal) var(--ease-out),
+      border-color var(--transition-fast) var(--ease-default),
+      background-color var(--transition-fast) var(--ease-default);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .bsky-card-hover:hover {
+      transform: translateY(-1px) scale(1.003);
+      box-shadow: var(--bsky-shadow-md);
+      border-color: var(--bsky-border-secondary);
+    }
   }
 
   /* Avatar styles */
@@ -59,9 +83,22 @@
     @apply drop-shadow-sm transition-transform hover:scale-110;
   }
 
-  /* Notification styles */
+  /* Notification styles with spring animations */
   .bsky-notification {
-    @apply relative overflow-hidden border-b border-bsky-border-light transition-all duration-200 hover:bg-bsky-bg-hover;
+    @apply relative overflow-hidden border-b border-bsky-border-light;
+    transition:
+      background-color var(--transition-fast) var(--ease-default),
+      transform var(--transition-fast) var(--ease-spring-soft);
+  }
+
+  .bsky-notification:hover {
+    background-color: var(--bsky-bg-hover);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .bsky-notification:active {
+      transform: scale(0.998);
+    }
   }
 
   .bsky-notification-unread {
@@ -69,9 +106,71 @@
     background: linear-gradient(to right, var(--bsky-primary-10), transparent);
   }
 
-  /* Tab styles */
+  /* New notification animation for batched updates */
+  .bsky-notification-new {
+    animation: notification-slide-in 0.3s ease-out forwards;
+  }
+
+  @keyframes notification-slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Batching indicator */
+  .bsky-notification-batch-indicator {
+    @apply fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-white shadow-lg;
+    background-color: var(--bsky-primary);
+    animation: batch-indicator-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes batch-indicator-pulse {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+  }
+
+  /* Reduced motion preferences for notification animations */
+  @media (prefers-reduced-motion: reduce) {
+    .bsky-notification-new {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+
+    .bsky-notification-batch-indicator {
+      animation: none;
+    }
+  }
+
+  /* Tab styles with spring animations */
   .bsky-tab {
-    @apply relative min-w-fit flex-shrink-0 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-bsky-text-secondary transition-all duration-200 hover:text-bsky-text-primary;
+    @apply relative min-w-fit flex-shrink-0 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-bsky-text-secondary;
+    transition:
+      color var(--transition-fast) var(--ease-default),
+      background-color var(--transition-fast) var(--ease-default),
+      transform var(--transition-fast) var(--ease-spring-soft);
+  }
+
+  .bsky-tab:hover {
+    color: var(--bsky-text-primary);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .bsky-tab:active {
+      transform: scale(0.97);
+    }
   }
 
   .bsky-tab-active {
@@ -191,6 +290,22 @@
     }
   }
 
+  /* Progressive reveal animation for thread complexity */
+  @keyframes fadeInSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-slide-up {
+    animation: fadeInSlideUp 0.3s ease-out forwards;
+  }
+
   /* Responsive tabs container */
   .bsky-tabs-container {
     @apply scrollbar-hide relative max-w-full flex-shrink-0;
@@ -238,5 +353,232 @@
     .bsky-tab-label {
       @apply inline;
     }
+  }
+
+  /* ============================================
+   * FOCUS-VISIBLE UTILITY CLASSES - WCAG 2.1 AAA
+   * ============================================
+   * Enhanced focus states for keyboard navigation accessibility.
+   * Uses CSS custom properties from bluesky-theme.css for consistent,
+   * accessible focus indicators meeting 3:1 contrast requirements.
+   *
+   * Usage: Apply these classes to focusable elements for consistent
+   * keyboard navigation visibility across the application.
+   * ============================================ */
+
+  /* Standard focus ring for buttons and interactive elements */
+  .focus-ring {
+    @apply transition-shadow;
+  }
+
+  .focus-ring:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+    box-shadow: 0 0 0 var(--focus-ring-glow-size)
+      rgba(var(--focus-ring-color-rgb), var(--focus-ring-glow-opacity));
+    transition: var(--focus-ring-transition);
+  }
+
+  /* Focus ring with no offset (for inputs that have borders) */
+  .focus-ring-inset {
+    @apply transition-shadow;
+  }
+
+  .focus-ring-inset:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 0;
+    box-shadow: 0 0 0 calc(var(--focus-ring-glow-size) / 2)
+      rgba(var(--focus-ring-color-rgb), var(--focus-ring-glow-opacity));
+    transition: var(--focus-ring-transition);
+  }
+
+  /* Focus border change for form inputs */
+  .focus-border:focus-visible {
+    border-color: var(--focus-ring-color);
+    outline: none;
+    box-shadow: 0 0 0 calc(var(--focus-ring-glow-size) / 2)
+      rgba(var(--focus-ring-color-rgb), var(--focus-ring-glow-opacity));
+    transition:
+      var(--focus-ring-transition),
+      border-color 0.15s ease-out;
+  }
+
+  /* Combined focus border and ring for prominent inputs */
+  .focus-border-ring:focus-visible {
+    border-color: var(--focus-ring-color);
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 0;
+    box-shadow: 0 0 0 var(--focus-ring-glow-size)
+      rgba(var(--focus-ring-color-rgb), var(--focus-ring-glow-opacity));
+    transition:
+      var(--focus-ring-transition),
+      border-color 0.15s ease-out;
+  }
+
+  /* Blue focus ring variant (for use with blue accent buttons) */
+  .focus-ring-blue:focus-visible {
+    --focus-ring-color: #3b82f6;
+    --focus-ring-color-rgb: 59, 130, 246;
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+    box-shadow: 0 0 0 var(--focus-ring-glow-size)
+      rgba(var(--focus-ring-color-rgb), var(--focus-ring-glow-opacity));
+  }
+
+  /* Gray focus ring (for cancel/secondary buttons) */
+  .focus-ring-gray:focus-visible {
+    --focus-ring-color: #6b7280;
+    --focus-ring-color-rgb: 107, 114, 128;
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+    box-shadow: 0 0 0 var(--focus-ring-glow-size)
+      rgba(var(--focus-ring-color-rgb), var(--focus-ring-glow-opacity));
+  }
+
+  /* Red focus ring (for destructive actions) - WCAG AAA compliant */
+  .focus-ring-red:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color-destructive);
+    outline-offset: var(--focus-ring-offset);
+    box-shadow: 0 0 0 var(--focus-ring-glow-size)
+      rgba(
+        var(--focus-ring-color-destructive-rgb),
+        var(--focus-ring-glow-opacity)
+      );
+  }
+
+  /* White focus ring (for use on dark backgrounds) */
+  .focus-ring-white:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color-light);
+    outline-offset: var(--focus-ring-offset);
+    box-shadow: 0 0 0 var(--focus-ring-glow-size)
+      rgba(var(--focus-ring-color-light-rgb), var(--focus-ring-glow-opacity));
+  }
+
+  /* Green/Success focus ring */
+  .focus-ring-green:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color-success);
+    outline-offset: var(--focus-ring-offset);
+    box-shadow: 0 0 0 var(--focus-ring-glow-size)
+      rgba(var(--focus-ring-color-success-rgb), var(--focus-ring-glow-opacity));
+  }
+
+  /* No visible focus ring (use sparingly, only when custom focus indicator exists) */
+  .focus-ring-none:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  /* ============================================
+   * RESPONSIVE MODAL UTILITIES
+   * ============================================
+   * Mobile-first modal patterns:
+   * - < 640px: Fullscreen or near-fullscreen modal
+   * - >= 640px: Centered modal with max-width
+   * ============================================ */
+
+  /* Base modal backdrop - covers entire screen */
+  .modal-backdrop {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm;
+    transition: opacity var(--transition-normal) var(--ease-entrance);
+  }
+
+  /* Base modal container - mobile-first fullscreen, centered on desktop */
+  .modal-container {
+    @apply relative flex w-full flex-col overflow-hidden rounded-none bg-bsky-bg-primary;
+    /* Mobile: fullscreen */
+    @apply h-full max-h-full;
+    /* Animation */
+    transition:
+      transform var(--transition-normal) var(--ease-spring),
+      opacity var(--transition-normal) var(--ease-entrance);
+  }
+
+  /* Small screens (>= 640px): Centered modal with rounded corners */
+  @media (min-width: 640px) {
+    .modal-container {
+      @apply mx-4 h-auto max-h-[90vh] rounded-xl shadow-xl;
+    }
+  }
+
+  /* Modal size variants - applied in addition to modal-container */
+  .modal-sm {
+    /* Mobile: stays fullscreen, desktop: max-w-sm (384px) */
+    @apply sm:max-w-sm;
+  }
+
+  .modal-md {
+    /* Mobile: stays fullscreen, desktop: max-w-md (448px) */
+    @apply sm:max-w-md;
+  }
+
+  .modal-lg {
+    /* Mobile: stays fullscreen, desktop: max-w-lg (512px) */
+    @apply sm:max-w-lg;
+  }
+
+  .modal-xl {
+    /* Mobile: stays fullscreen, desktop: max-w-xl (576px) */
+    @apply sm:max-w-xl;
+  }
+
+  .modal-2xl {
+    /* Mobile: stays fullscreen, desktop: max-w-2xl (672px) */
+    @apply sm:max-w-2xl;
+  }
+
+  .modal-3xl {
+    /* Mobile: stays fullscreen, desktop: max-w-3xl (768px) */
+    @apply sm:max-w-3xl;
+  }
+
+  .modal-4xl {
+    /* Mobile: stays fullscreen, desktop: max-w-4xl (896px) */
+    @apply sm:max-w-4xl;
+  }
+
+  .modal-5xl {
+    /* Mobile: stays fullscreen, desktop: max-w-5xl (1024px) */
+    @apply sm:max-w-5xl;
+  }
+
+  /* Modal with fixed height on mobile (not full height) */
+  .modal-auto-height {
+    @apply h-auto max-h-[85vh];
+  }
+
+  /* Mobile: near-fullscreen with small margins */
+  @media (max-width: 639px) {
+    .modal-auto-height {
+      @apply mx-2 my-2 h-auto max-h-[calc(100vh-1rem)] rounded-xl;
+    }
+  }
+
+  /* Modal header - sticky with proper styling */
+  .modal-header {
+    @apply sticky top-0 z-10 flex flex-shrink-0 items-center justify-between border-b border-bsky-border-primary bg-bsky-bg-primary p-4;
+    /* Safe area padding for notched devices */
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+
+  /* Modal body - scrollable content area */
+  .modal-body {
+    @apply bsky-scrollbar flex-1 overflow-y-auto p-4;
+  }
+
+  /* Modal footer - sticky at bottom */
+  .modal-footer {
+    @apply sticky bottom-0 flex flex-shrink-0 items-center justify-end gap-3 border-t border-bsky-border-primary bg-bsky-bg-secondary p-4;
+    /* Safe area padding for notched devices */
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  /* Modal close button - consistent styling */
+  .modal-close {
+    @apply focus-ring rounded-full p-2 text-bsky-text-secondary transition-colors hover:bg-bsky-bg-hover;
+  }
+
+  /* Modal title styling */
+  .modal-title {
+    @apply text-lg font-semibold text-bsky-text-primary sm:text-xl;
   }
 }

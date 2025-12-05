@@ -396,7 +396,7 @@ export const handler: APIGatewayProxyHandler = async (
   event
 ): Promise<APIGatewayProxyResult> => {
   const userAgent = event.headers["User-Agent"] || event.headers["user-agent"];
-  const path = event.path || event.rawPath || "";
+  const path = event.path || "";
 
   // Get path parameters from API Gateway
   const pathParams = event.pathParameters || {};

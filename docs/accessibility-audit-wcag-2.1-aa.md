@@ -1,6 +1,7 @@
 # WCAG 2.1 AA Accessibility Audit Report
 
 **Date:** November 29, 2025
+**Last Updated:** December 4, 2025
 **Application:** ShadowSky (BSKY)
 **Audit Scope:** All components against WCAG 2.1 AA standards
 
@@ -32,10 +33,20 @@ This audit evaluates the ShadowSky application against WCAG 2.1 AA standards. Th
 
 ### Critical Issues Found
 
+**Original (November 29, 2025):**
+
 - 3 Critical violations requiring immediate attention
 - 8 Serious violations requiring remediation within 30 days
 - 12 Moderate violations for improvement
 - 5 Minor violations (best practice recommendations)
+
+**After Remediation (December 4, 2025):**
+
+- 1 Critical violation remaining (video captions)
+- 2 Serious violations remaining
+- 4 Moderate violations remaining
+- 1 Minor violation remaining
+- **7 issues fixed in this update**
 
 ---
 
@@ -262,40 +273,49 @@ This audit evaluates the ShadowSky application against WCAG 2.1 AA standards. Th
 
 ## Prioritized Remediation Plan
 
-### Phase 1: Critical Issues (Immediate - Week 1)
+### Remediation Status (Updated December 4, 2025)
 
-| Priority | Issue                          | Component       | WCAG  | Effort |
-| -------- | ------------------------------ | --------------- | ----- | ------ |
-| P1       | Add closed caption support     | VideoPlayer.tsx | 1.2.2 | High   |
-| P2       | Implement skip-to-content link | App.tsx         | 2.4.1 | Low    |
-| P3       | Add html lang attribute        | index.html      | 3.1.1 | Low    |
+#### COMPLETED Fixes:
 
-### Phase 2: Serious Issues (Week 2-3)
+| Priority | Issue                               | Component        | WCAG  | Status  |
+| -------- | ----------------------------------- | ---------------- | ----- | ------- |
+| P2       | Implement skip-to-content link      | App.tsx          | 2.4.1 | ✅ DONE |
+| P3       | Add html lang attribute             | index.html       | 3.1.1 | ✅ DONE |
+| P4       | Add form labels to search inputs    | SearchTabbed.tsx | 1.3.1 | ✅ DONE |
+| P6       | Add aria-live regions for status    | AriaLiveRegion   | 4.1.3 | ✅ DONE |
+| P8       | Add article roles to posts          | PostRenderer.tsx | 1.3.1 | ✅ DONE |
+| P14      | Add aria-hidden to decorative icons | PostRenderer.tsx | 1.1.1 | ✅ DONE |
+| P15      | Menu button aria-label              | PostRenderer.tsx | 1.1.1 | ✅ DONE |
 
-| Priority | Issue                              | Component        | WCAG  | Effort |
-| -------- | ---------------------------------- | ---------------- | ----- | ------ |
-| P4       | Add form labels to search inputs   | Search.tsx       | 1.3.1 | Medium |
-| P5       | Keyboard alternative for drag-drop | Composer.tsx     | 2.1.1 | High   |
-| P6       | Add aria-live regions for status   | PostRenderer.tsx | 4.1.3 | Medium |
-| P7       | Dynamic page titles                | Router config    | 2.4.2 | Medium |
+#### REMAINING Issues for Follow-up:
 
-### Phase 3: Moderate Issues (Week 4-6)
+### Phase 1: Critical Issues
+
+| Priority | Issue                      | Component       | WCAG  | Effort |
+| -------- | -------------------------- | --------------- | ----- | ------ |
+| P1       | Add closed caption support | VideoPlayer.tsx | 1.2.2 | High   |
+
+### Phase 2: Serious Issues
+
+| Priority | Issue                              | Component     | WCAG  | Effort |
+| -------- | ---------------------------------- | ------------- | ----- | ------ |
+| P5       | Keyboard alternative for drag-drop | Composer.tsx  | 2.1.1 | High   |
+| P7       | Dynamic page titles                | Router config | 2.4.2 | Medium |
+
+### Phase 3: Moderate Issues
 
 | Priority | Issue                          | Component          | WCAG  | Effort |
 | -------- | ------------------------------ | ------------------ | ----- | ------ |
-| P8       | Add article roles to posts     | PostRenderer.tsx   | 1.3.1 | Low    |
 | P9       | Non-color status indicators    | PostRenderer.tsx   | 1.4.1 | Medium |
 | P10      | Video controls user preference | VideoPlayer.tsx    | 2.2.1 | Low    |
 | P11      | Form validation announcements  | Composer.tsx       | 3.3.1 | Medium |
 | P12      | Swipe action alternatives      | SwipeIndicator.tsx | 2.5.1 | Medium |
 
-### Phase 4: Minor Improvements (Week 7-8)
+### Phase 4: Minor Improvements
 
-| Priority | Issue                               | Component        | WCAG  | Effort |
-| -------- | ----------------------------------- | ---------------- | ----- | ------ |
-| P13      | Improve avatar alt text             | PostRenderer.tsx | 1.1.1 | Low    |
-| P14      | Add aria-hidden to decorative icons | Various          | 1.1.1 | Low    |
-| P15      | Menu button aria-label              | PostRenderer.tsx | 1.1.1 | Low    |
+| Priority | Issue                   | Component        | WCAG  | Effort |
+| -------- | ----------------------- | ---------------- | ----- | ------ |
+| P13      | Improve avatar alt text | PostRenderer.tsx | 1.1.1 | Low    |
 
 ---
 
@@ -303,8 +323,9 @@ This audit evaluates the ShadowSky application against WCAG 2.1 AA standards. Th
 
 ### Automated Testing
 
-- **axe-core**: Installed and configured for React testing
-- **Package**: `@axe-core/react` added to devDependencies
+- **axe-core**: Installed and configured for Playwright E2E testing
+- **Package**: `@axe-core/playwright` added to devDependencies
+- **Test file**: `tests/e2e/accessibility.spec.ts`
 
 ### Manual Testing Checklist
 

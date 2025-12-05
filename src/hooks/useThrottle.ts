@@ -1,62 +1,57 @@
-import { useCallback, useRef } from "react";
+/**
+ * Throttle Hook
+ *
+ * Re-exports throttle-related hooks from the centralized timing utilities.
+ * This file is maintained for backward compatibility.
+ *
+ * @deprecated Use hooks from './useTiming' directly.
+ */
+
+import { TIMING } from "../utils/timing";
+import { useDebouncedCallback, useThrottledCallback } from "./useTiming";
 
 /**
- * Hook that throttles a function to prevent excessive calls
- * Useful for reducing re-renders and improving mobile performance
+ * Hook that throttles a function to prevent excessive calls.
+ * Useful for reducing re-renders and improving mobile performance.
+ *
+ * @param fn - Function to throttle
+ * @param delay - Minimum time between calls in milliseconds
+ * @returns Throttled function
+ *
+ * @deprecated Use useThrottledCallback from './useTiming' directly.
+ *
+ * @example
+ * const throttledUpdate = useThrottle((value) => {
+ *   updatePosition(value);
+ * }, 100);
  */
-export function useThrottle<T extends (...args: any[]) => any>(
+export function useThrottle<T extends (...args: unknown[]) => unknown>(
   fn: T,
-  delay: number,
+  delay: number = TIMING.THROTTLE_INTERVAL,
 ): T {
-  const lastCall = useRef<number>(0);
-  const lastCallTimer = useRef<NodeJS.Timeout>();
-
-  return useCallback(
-    (...args: Parameters<T>) => {
-      const now = Date.now();
-
-      if (now - lastCall.current >= delay) {
-        lastCall.current = now;
-        return fn(...args);
-      }
-
-      // Clear any pending throttled call
-      if (lastCallTimer.current) {
-        clearTimeout(lastCallTimer.current);
-      }
-
-      // Schedule call at the end of the throttle period
-      lastCallTimer.current = setTimeout(
-        () => {
-          lastCall.current = Date.now();
-          fn(...args);
-        },
-        delay - (now - lastCall.current),
-      );
-    },
-    [fn, delay],
-  ) as T;
+  return useThrottledCallback(fn, delay);
 }
 
 /**
- * Hook that debounces a function to prevent rapid successive calls
+ * Hook that debounces a function to prevent rapid successive calls.
+ *
+ * @param fn - Function to debounce
+ * @param delay - Delay in milliseconds
+ * @returns Debounced function
+ *
+ * @deprecated Use useDebouncedCallback from './useTiming' directly.
+ *
+ * @example
+ * const debouncedSearch = useDebounce((query) => {
+ *   performSearch(query);
+ * }, 300);
  */
-export function useDebounce<T extends (...args: any[]) => any>(
+export function useDebounce<T extends (...args: unknown[]) => unknown>(
   fn: T,
-  delay: number,
+  delay: number = TIMING.DEBOUNCE_DELAY,
 ): T {
-  const timer = useRef<NodeJS.Timeout>();
-
-  return useCallback(
-    (...args: Parameters<T>) => {
-      if (timer.current) {
-        clearTimeout(timer.current);
-      }
-
-      timer.current = setTimeout(() => {
-        fn(...args);
-      }, delay);
-    },
-    [fn, delay],
-  ) as T;
+  return useDebouncedCallback(fn, delay);
 }
+
+// Re-export the hooks with their canonical names
+export { useDebouncedCallback, useThrottledCallback };

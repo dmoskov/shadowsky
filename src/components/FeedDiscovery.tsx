@@ -170,7 +170,7 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
               placeholder="Search feeds..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border py-2 pl-10 pr-4 focus:outline-none focus:ring-2"
+              className="w-full rounded-lg border py-2 pl-10 pr-4 focus-visible:outline-none focus-visible:ring-2"
               style={{
                 backgroundColor: "var(--bsky-bg-secondary)",
                 borderColor: "var(--bsky-border-primary)",

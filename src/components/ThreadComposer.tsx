@@ -647,7 +647,7 @@ export function ThreadComposer({
                         ? "Start your thread..."
                         : "Continue your thread..."
                     }
-                    className="min-h-[100px] w-full resize-none rounded-lg border-none bg-transparent p-0 focus:outline-none focus:ring-0"
+                    className="min-h-[100px] w-full resize-none rounded-lg border-none bg-transparent p-0 focus-visible:outline-none focus-visible:ring-0"
                     style={{ color: "var(--bsky-text-primary)" }}
                     maxLength={MAX_POST_LENGTH + 50} // Allow slight overflow for editing
                   />

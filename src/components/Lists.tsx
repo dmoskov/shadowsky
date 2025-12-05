@@ -12,6 +12,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
+import { useToast } from "../contexts/ToastContext";
 import {
   BlueskyList,
   blueskyListService,
@@ -24,6 +25,7 @@ export const Lists: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { showConfirm } = useModal();
+  const { showToast } = useToast();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingList, setEditingList] = useState<BlueskyList | null>(null);
   const [menuOpenForList, setMenuOpenForList] = useState<string | null>(null);
@@ -52,8 +54,13 @@ export const Lists: React.FC = () => {
       await blueskyListService.createList(name, description);
       queryClient.invalidateQueries({ queryKey: ["lists"] });
       setShowCreateModal(false);
+      showToast(`List "${name}" created`, {
+        type: "success",
+        duration: 3000,
+      });
     } catch (error) {
       console.error("Failed to create list:", error);
+      showToast("Failed to create list", { type: "error" });
       throw error;
     }
   };
@@ -67,8 +74,13 @@ export const Lists: React.FC = () => {
           await blueskyListService.initialize(agent);
           await blueskyListService.deleteList(listUri);
           queryClient.invalidateQueries({ queryKey: ["lists"] });
+          showToast("List deleted", {
+            type: "success",
+            duration: 3000,
+          });
         } catch (error) {
           console.error("Failed to delete list:", error);
+          showToast("Failed to delete list", { type: "error" });
         }
       },
       {
@@ -90,8 +102,13 @@ export const Lists: React.FC = () => {
       await blueskyListService.updateList(listUri, updates);
       queryClient.invalidateQueries({ queryKey: ["lists"] });
       setEditingList(null);
+      showToast("List updated", {
+        type: "success",
+        duration: 3000,
+      });
     } catch (error) {
       console.error("Failed to update list:", error);
+      showToast("Failed to update list", { type: "error" });
       throw error;
     }
   };

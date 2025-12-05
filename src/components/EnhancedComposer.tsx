@@ -870,7 +870,7 @@ export function EnhancedComposer({
         }}
         onBlur={onBlur}
         placeholder={placeholder}
-        className="min-h-[120px] w-full resize-none rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="min-h-[120px] w-full resize-none rounded-lg border px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         style={{
           backgroundColor: "var(--bsky-bg-secondary)",
           borderColor: "var(--bsky-border-primary)",
@@ -927,7 +927,7 @@ export function EnhancedComposer({
                       value={item.alt}
                       onChange={(e) => updateAltText(item.id, e.target.value)}
                       placeholder="Alt text"
-                      className="flex-1 rounded border bg-white/10 px-2 py-1 text-xs text-white placeholder-white/60 focus:outline-none"
+                      className="flex-1 rounded border bg-white/10 px-2 py-1 text-xs text-white placeholder-white/60 focus-visible:outline-none"
                     />
                     {/* Open full alt text editor */}
                     <button

@@ -8,9 +8,10 @@ async function testQuotePostNavigation() {
     document.querySelector(".feed-container");
 
   if (!isLoggedIn) {
-    console.log("Not logged in. Please log in first with:");
-    console.log("Handle: clood41.bsky.social");
-    console.log("Password: 5FFThQrGSYwz");
+    console.log("Not logged in. Please log in first.");
+    console.log(
+      "Set VITE_TEST_IDENTIFIER and VITE_TEST_PASSWORD in .env.local",
+    );
     return;
   }
 

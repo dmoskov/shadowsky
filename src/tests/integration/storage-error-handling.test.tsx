@@ -9,6 +9,7 @@ import { AuthProvider } from "../../contexts/AuthContext";
 import { HiddenPostsProvider } from "../../contexts/HiddenPostsContext";
 import { ModalProvider } from "../../contexts/ModalContext";
 import { ModerationProvider } from "../../contexts/ModerationContext";
+import { ToastProvider } from "../../contexts/ToastContext";
 import { bookmarkServiceV2 } from "../../services/bookmark-service-v2";
 import { createMockAgent } from "../mocks/atproto";
 
@@ -76,11 +77,13 @@ const createWrapper = () => {
       <MemoryRouter>
         <AuthProvider>
           <ModalProvider>
-            <StorageErrorProvider>
-              <HiddenPostsProvider>
-                <ModerationProvider>{children}</ModerationProvider>
-              </HiddenPostsProvider>
-            </StorageErrorProvider>
+            <ToastProvider>
+              <StorageErrorProvider>
+                <HiddenPostsProvider>
+                  <ModerationProvider>{children}</ModerationProvider>
+                </HiddenPostsProvider>
+              </StorageErrorProvider>
+            </ToastProvider>
           </ModalProvider>
         </AuthProvider>
       </MemoryRouter>

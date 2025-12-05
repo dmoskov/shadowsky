@@ -93,10 +93,19 @@ export const LandingPage: React.FC = () => {
       className="bsky-font min-h-screen"
       style={{ background: "var(--bsky-bg-primary)" }}
     >
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* Skip to main content link for landing page */}
+      <a href="#login-form" className="skip-link">
+        Skip to login form
+      </a>
+      <main
+        id="main-content"
+        role="main"
+        aria-label="ShadowSky landing page"
+        className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"
+      >
         <div className="grid grid-cols-1 items-start gap-6 sm:gap-12 lg:grid-cols-2">
           {/* Left side - Login and info */}
-          <div>
+          <section aria-labelledby="login-heading">
             <div className="mb-8 text-center lg:text-left">
               <div className="mb-4 flex items-center justify-center gap-3 lg:justify-start">
                 <img
@@ -119,8 +128,14 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Login Form */}
-            <div className="bsky-card mb-6 p-6 shadow-md">
+            <div
+              id="login-form"
+              className="bsky-card mb-6 p-6 shadow-md"
+              role="form"
+              aria-labelledby="login-heading"
+            >
               <h2
+                id="login-heading"
                 className="mb-4 text-xl font-semibold"
                 style={{ color: "var(--bsky-text-primary)" }}
               >
@@ -222,7 +237,7 @@ export const LandingPage: React.FC = () => {
                       id="handle"
                       value={handle}
                       onChange={(e) => setHandle(e.target.value)}
-                      className="w-full rounded-xl px-4 py-3 text-white transition-all focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                      className="w-full rounded-xl px-4 py-3 text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-opacity-50"
                       style={{
                         backgroundColor: "var(--bsky-bg-tertiary)",
                         border: "1px solid var(--bsky-border-primary)",
@@ -279,7 +294,7 @@ export const LandingPage: React.FC = () => {
                       id="identifier"
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
-                      className="w-full rounded-xl px-4 py-3 text-white transition-all focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                      className="w-full rounded-xl px-4 py-3 text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-opacity-50"
                       style={{
                         backgroundColor: "var(--bsky-bg-tertiary)",
                         border: "1px solid var(--bsky-border-primary)",
@@ -310,7 +325,7 @@ export const LandingPage: React.FC = () => {
                       id="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full rounded-xl px-4 py-3 text-white transition-all focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                      className="w-full rounded-xl px-4 py-3 text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-opacity-50"
                       style={{
                         backgroundColor: "var(--bsky-bg-tertiary)",
                         border: "1px solid var(--bsky-border-primary)",
@@ -357,7 +372,7 @@ export const LandingPage: React.FC = () => {
                         id="emailCode"
                         value={emailCode}
                         onChange={(e) => setEmailCode(e.target.value)}
-                        className="w-full rounded-xl px-4 py-3 text-white transition-all focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                        className="w-full rounded-xl px-4 py-3 text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-opacity-50"
                         style={{
                           backgroundColor: "var(--bsky-bg-tertiary)",
                           border: "1px solid var(--bsky-border-primary)",
@@ -426,7 +441,7 @@ export const LandingPage: React.FC = () => {
                           id="pdsUrl"
                           value={pdsUrl}
                           onChange={(e) => setPdsUrl(e.target.value)}
-                          className="w-full rounded-xl px-4 py-3 text-white transition-all focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                          className="w-full rounded-xl px-4 py-3 text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-opacity-50"
                           style={{
                             backgroundColor: "var(--bsky-bg-tertiary)",
                             border: "1px solid var(--bsky-border-primary)",
@@ -468,7 +483,7 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Security Info */}
-            <div className="space-y-3">
+            <aside className="space-y-3" aria-label="Security information">
               <div
                 className="flex items-start gap-3 rounded-lg p-3"
                 style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
@@ -477,6 +492,7 @@ export const LandingPage: React.FC = () => {
                   size={18}
                   style={{ color: "var(--bsky-success)" }}
                   className="mt-0.5 flex-shrink-0"
+                  aria-hidden="true"
                 />
                 <div>
                   <p
@@ -497,6 +513,7 @@ export const LandingPage: React.FC = () => {
                   size={18}
                   style={{ color: "var(--bsky-primary)" }}
                   className="mt-0.5 flex-shrink-0"
+                  aria-hidden="true"
                 />
                 <div>
                   <p
@@ -508,13 +525,14 @@ export const LandingPage: React.FC = () => {
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
+            </aside>
+          </section>
 
           {/* Right side - Features */}
-          <div>
-            <div className="mb-6">
+          <section aria-labelledby="features-heading">
+            <header className="mb-6">
               <h2
+                id="features-heading"
                 className="mb-4 text-2xl font-bold"
                 style={{ color: "var(--bsky-text-primary)" }}
               >
@@ -527,16 +545,17 @@ export const LandingPage: React.FC = () => {
                 Transform your Bluesky notifications into insights. Track
                 conversations, analyze engagement, never miss what matters.
               </p>
-            </div>
+            </header>
 
-            <div className="space-y-4">
+            <ul className="list-none space-y-4" aria-label="Features list">
               {/* Key Features */}
-              <div className="bsky-card p-4 transition-shadow hover:shadow-md">
+              <li className="bsky-card p-4 transition-shadow hover:shadow-md">
                 <div className="flex items-start gap-3">
                   <Bell
                     size={20}
                     style={{ color: "var(--bsky-primary)" }}
                     className="mt-0.5 flex-shrink-0"
+                    aria-hidden="true"
                   />
                   <div>
                     <h3
@@ -555,14 +574,15 @@ export const LandingPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </li>
 
-              <div className="bsky-card p-4 transition-shadow hover:shadow-md">
+              <li className="bsky-card p-4 transition-shadow hover:shadow-md">
                 <div className="flex items-start gap-3">
                   <MessageSquare
                     size={20}
                     style={{ color: "var(--bsky-success)" }}
                     className="mt-0.5 flex-shrink-0"
+                    aria-hidden="true"
                   />
                   <div>
                     <h3
@@ -580,14 +600,15 @@ export const LandingPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </li>
 
-              <div className="bsky-card p-4 transition-shadow hover:shadow-md">
+              <li className="bsky-card p-4 transition-shadow hover:shadow-md">
                 <div className="flex items-start gap-3">
                   <BarChart3
                     size={20}
                     style={{ color: "rgb(168, 85, 247)" }}
                     className="mt-0.5 flex-shrink-0"
+                    aria-hidden="true"
                   />
                   <div>
                     <h3
@@ -605,14 +626,15 @@ export const LandingPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </li>
 
-              <div className="bsky-card p-4 transition-shadow hover:shadow-md">
+              <li className="bsky-card p-4 transition-shadow hover:shadow-md">
                 <div className="flex items-start gap-3">
                   <Zap
                     size={20}
                     style={{ color: "rgb(250, 204, 21)" }}
                     className="mt-0.5 flex-shrink-0"
+                    aria-hidden="true"
                   />
                   <div>
                     <h3
@@ -630,14 +652,15 @@ export const LandingPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </li>
 
-              <div className="bsky-card p-4 transition-shadow hover:shadow-md">
+              <li className="bsky-card p-4 transition-shadow hover:shadow-md">
                 <div className="flex items-start gap-3">
                   <Activity
                     size={20}
                     style={{ color: "rgb(251, 146, 60)" }}
                     className="mt-0.5 flex-shrink-0"
+                    aria-hidden="true"
                   />
                   <div>
                     <h3
@@ -655,15 +678,20 @@ export const LandingPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-              </div>
-            </div>
+              </li>
+            </ul>
 
-            <div
+            <aside
               className="mt-6 rounded-lg p-4"
               style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+              aria-label="Additional information"
             >
               <div className="mb-2 flex items-center gap-2">
-                <Sparkles size={18} style={{ color: "var(--bsky-primary)" }} />
+                <Sparkles
+                  size={18}
+                  style={{ color: "var(--bsky-primary)" }}
+                  aria-hidden="true"
+                />
                 <span
                   className="font-semibold"
                   style={{ color: "var(--bsky-text-primary)" }}
@@ -678,10 +706,10 @@ export const LandingPage: React.FC = () => {
                 No ads, no tracking, no premium tiers. Just a useful tool for
                 the Bluesky community.
               </p>
-            </div>
-          </div>
+            </aside>
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

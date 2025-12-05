@@ -118,15 +118,27 @@ export function useMutationQueue(
     };
   }, [agent]);
 
-  // Subscribe to queue changes
+  // Subscribe to queue changes and emit events for UI components
   useEffect(() => {
     if (!isInitialized) return;
 
     const updateStats = async () => {
       try {
         const newStats = await mutationQueueDB.getStats();
+        const processing = mutationQueueDB.isQueueProcessing();
         setStats(newStats);
-        setIsProcessing(mutationQueueDB.isQueueProcessing());
+        setIsProcessing(processing);
+
+        // Emit custom event for ConnectedOfflineIndicator and other listeners
+        window.dispatchEvent(
+          new CustomEvent("mutation-queue-update", {
+            detail: {
+              pendingCount: newStats.pendingCount,
+              failedCount: newStats.failedCount,
+              isProcessing: processing,
+            },
+          }),
+        );
       } catch (error) {
         debug.error("Failed to update queue stats:", error);
       }

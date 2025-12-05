@@ -145,7 +145,7 @@ export const AccessibilitySettings: React.FC = () => {
               onClick={() =>
                 updateSettings({ highContrast: !settings.highContrast })
               }
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              className={`relative inline-flex h-6 w-11 items-center rounded-full spring-toggle ${
                 settings.highContrast ? "bg-blue-500" : "bg-gray-400"
               }`}
               style={{
@@ -155,7 +155,7 @@ export const AccessibilitySettings: React.FC = () => {
               }}
             >
               <span
-                className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+                className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm spring-toggle ${
                   settings.highContrast ? "translate-x-6" : "translate-x-1"
                 }`}
               />

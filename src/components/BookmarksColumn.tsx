@@ -1,7 +1,15 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { Bookmark, Cloud, Search, Settings, X } from "lucide-react";
+import {
+  Bookmark,
+  ChevronDown,
+  Cloud,
+  Folder,
+  Search,
+  Settings,
+  X,
+} from "lucide-react";
 import React, {
   useCallback,
   useEffect,
@@ -14,11 +22,23 @@ import { List, ListImperativeAPI, useDynamicRowHeight } from "react-window";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModal } from "../contexts/ModalContext";
 import { useModeration } from "../contexts/ModerationContext";
+import {
+  useBookmarkCollections,
+  useCollectionBookmarks,
+} from "../hooks/useBookmarkCollections";
+import { useMinDuration } from "../hooks/useTiming";
+import type { BookmarkCollection } from "../services/bookmark-collections";
+import { COLLECTION_COLORS } from "../services/bookmark-collections";
 import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
+import {
+  CollectionManager,
+  SaveToCollectionDropdown,
+} from "./bookmark-collections";
 import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
 import { ThreadModal } from "./ThreadModal";
+import { FeedSkeleton } from "./ui/SkeletonLoader";
 import { VideoPlayer } from "./VideoPlayer";
 
 interface BookmarksColumnProps {
@@ -48,13 +68,25 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
     alt?: string;
   }> | null>(null);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<
+    string | null
+  >(null);
+  const [showCollectionPanel, setShowCollectionPanel] = useState(false);
+  const [showCollectionDropdown, setShowCollectionDropdown] = useState(false);
+  const collectionDropdownRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const listContainerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<ListImperativeAPI>(null);
   const [containerHeight, setContainerHeight] = useState(600);
   const [shouldRestoreScroll, setShouldRestoreScroll] = useState(false);
 
-  const cacheKey = `bookmarks-${searchQuery}`;
+  const { collections } = useBookmarkCollections();
+  const {
+    bookmarks: collectionBookmarks,
+    refetch: refetchCollectionBookmarks,
+  } = useCollectionBookmarks(selectedCollectionId);
+
+  const cacheKey = `bookmarks-${searchQuery}-${selectedCollectionId || "all"}`;
 
   const dynamicRowHeight = useDynamicRowHeight({
     defaultRowHeight: 180,
@@ -63,7 +95,7 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
 
   const {
     data: bookmarks,
-    isLoading,
+    isLoading: isLoadingRaw,
     refetch,
   } = useQuery({
     queryKey: ["bookmarks", searchQuery],
@@ -76,10 +108,41 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
     staleTime: 30000,
   });
 
-  // Filter bookmarks
+  // Apply minimum duration to prevent jarring flash of loading state
+  const isLoading = useMinDuration(isLoadingRaw);
+
+  // Close collection dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        collectionDropdownRef.current &&
+        !collectionDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowCollectionDropdown(false);
+      }
+    };
+
+    if (showCollectionDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showCollectionDropdown]);
+
+  // Get the source bookmarks based on collection selection
+  const sourceBookmarks = useMemo(() => {
+    if (selectedCollectionId) {
+      return collectionBookmarks;
+    }
+    return bookmarks || [];
+  }, [selectedCollectionId, collectionBookmarks, bookmarks]);
+
+  // Filter bookmarks based on search and moderation
   const filteredBookmarks = useMemo(() => {
-    if (!bookmarks) return [];
-    return bookmarks.filter(
+    if (!sourceBookmarks) return [];
+    let filtered = sourceBookmarks.filter(
       (bookmark) =>
         bookmark.post &&
         !isPostHidden(bookmark.post.uri) &&
@@ -87,14 +150,56 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
         !isUserBlocked(bookmark.post.author.did) &&
         !isThreadMuted(bookmark.post.uri),
     );
-  }, [bookmarks, isPostHidden, isUserMuted, isUserBlocked, isThreadMuted]);
+
+    // Apply search filter if there's a query and we're viewing a collection
+    if (searchQuery && selectedCollectionId) {
+      const lowercaseQuery = searchQuery.toLowerCase();
+      filtered = filtered.filter((bookmark) => {
+        const searchText =
+          `${bookmark.text} ${bookmark.author.handle} ${bookmark.author.displayName}`.toLowerCase();
+        const notesText = bookmark.notes?.toLowerCase() || "";
+        return (
+          searchText.includes(lowercaseQuery) ||
+          notesText.includes(lowercaseQuery)
+        );
+      });
+    }
+
+    return filtered;
+  }, [
+    sourceBookmarks,
+    isPostHidden,
+    isUserMuted,
+    isUserBlocked,
+    isThreadMuted,
+    searchQuery,
+    selectedCollectionId,
+  ]);
 
   // Refetch bookmarks when the column becomes focused
   useEffect(() => {
     if (isFocused) {
       refetch();
+      if (selectedCollectionId) {
+        refetchCollectionBookmarks();
+      }
     }
-  }, [isFocused, refetch]);
+  }, [isFocused, refetch, selectedCollectionId, refetchCollectionBookmarks]);
+
+  // Get the selected collection details
+  const selectedCollection = useMemo(() => {
+    if (!selectedCollectionId || selectedCollectionId === "__uncategorized__") {
+      return null;
+    }
+    return collections.find((c) => c.id === selectedCollectionId) || null;
+  }, [selectedCollectionId, collections]);
+
+  const getCollectionColor = (collection: BookmarkCollection) => {
+    const colorOption = COLLECTION_COLORS.find(
+      (c) => c.id === collection.color,
+    );
+    return colorOption?.value || "#3b82f6";
+  };
 
   const { data: bookmarkCount } = useQuery({
     queryKey: ["bookmarkCount"],
@@ -328,6 +433,26 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
       className="flex h-full flex-col"
       style={{ outline: "none" }}
     >
+      {/* Collection Panel Overlay */}
+      {showCollectionPanel && (
+        <div className="absolute inset-0 z-30 flex">
+          <div
+            className="flex-1 bg-black bg-opacity-50"
+            onClick={() => setShowCollectionPanel(false)}
+          />
+          <div className="w-72 bg-bsky-bg-primary shadow-xl">
+            <CollectionManager
+              selectedCollectionId={selectedCollectionId}
+              onSelectCollection={(id) => {
+                setSelectedCollectionId(id);
+                setShowCollectionPanel(false);
+              }}
+              onClose={() => setShowCollectionPanel(false)}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div
         className="bsky-glass sticky top-0 z-20 border-b"
@@ -342,7 +467,7 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
             >
               Bookmarks
             </h2>
-            {bookmarkCount !== undefined && (
+            {bookmarkCount !== undefined && !selectedCollectionId && (
               <span
                 className="rounded-full px-2 py-0.5 text-sm"
                 style={{
@@ -357,6 +482,20 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setShowCollectionPanel(true)}
+              className="flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-all hover:bg-gray-200 dark:hover:bg-gray-700"
+              title="Manage collections"
+            >
+              <Folder
+                size={14}
+                style={{ color: "var(--bsky-text-secondary)" }}
+              />
+              <span style={{ color: "var(--bsky-text-secondary)" }}>
+                Collections
+              </span>
+            </button>
+
+            <button
               onClick={() => navigate("/settings/data")}
               className="flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-all hover:bg-gray-200 dark:hover:bg-gray-700"
               title="Data storage settings"
@@ -365,9 +504,6 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
                 size={14}
                 style={{ color: "var(--bsky-text-secondary)" }}
               />
-              <span style={{ color: "var(--bsky-text-secondary)" }}>
-                Official
-              </span>
               <Settings
                 size={12}
                 style={{ color: "var(--bsky-text-tertiary)" }}
@@ -383,6 +519,167 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
               >
                 <X size={18} />
               </button>
+            )}
+          </div>
+        </div>
+
+        {/* Collection Selector */}
+        <div className="px-4 pb-2">
+          <div className="relative" ref={collectionDropdownRef}>
+            <button
+              onClick={() => setShowCollectionDropdown(!showCollectionDropdown)}
+              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors hover:bg-bsky-bg-secondary"
+              style={{
+                backgroundColor: "var(--bsky-bg-secondary)",
+                border: "1px solid var(--bsky-border-primary)",
+              }}
+            >
+              <div className="flex items-center gap-2">
+                {selectedCollection ? (
+                  <>
+                    <div
+                      className="h-3 w-3 rounded-full"
+                      style={{
+                        backgroundColor: getCollectionColor(selectedCollection),
+                      }}
+                    />
+                    <span style={{ color: "var(--bsky-text-primary)" }}>
+                      {selectedCollection.name}
+                    </span>
+                    <span
+                      className="text-xs"
+                      style={{ color: "var(--bsky-text-tertiary)" }}
+                    >
+                      ({selectedCollection.bookmarkCount})
+                    </span>
+                  </>
+                ) : selectedCollectionId === "__uncategorized__" ? (
+                  <>
+                    <Folder
+                      size={14}
+                      style={{ color: "var(--bsky-text-tertiary)" }}
+                    />
+                    <span style={{ color: "var(--bsky-text-primary)" }}>
+                      Uncategorized
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Bookmark
+                      size={14}
+                      style={{ color: "var(--bsky-primary)" }}
+                    />
+                    <span style={{ color: "var(--bsky-text-primary)" }}>
+                      All Bookmarks
+                    </span>
+                    {bookmarkCount !== undefined && (
+                      <span
+                        className="text-xs"
+                        style={{ color: "var(--bsky-text-tertiary)" }}
+                      >
+                        ({bookmarkCount})
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+              <ChevronDown
+                size={16}
+                className={`transition-transform ${showCollectionDropdown ? "rotate-180" : ""}`}
+                style={{ color: "var(--bsky-text-tertiary)" }}
+              />
+            </button>
+
+            {showCollectionDropdown && (
+              <div
+                className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border shadow-lg"
+                style={{
+                  backgroundColor: "var(--bsky-bg-primary)",
+                  borderColor: "var(--bsky-border-primary)",
+                }}
+              >
+                {/* All Bookmarks option */}
+                <button
+                  onClick={() => {
+                    setSelectedCollectionId(null);
+                    setShowCollectionDropdown(false);
+                  }}
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-bsky-bg-secondary ${
+                    !selectedCollectionId ? "bg-blue-500 bg-opacity-10" : ""
+                  }`}
+                >
+                  <Bookmark
+                    size={14}
+                    style={{ color: "var(--bsky-primary)" }}
+                  />
+                  <span style={{ color: "var(--bsky-text-primary)" }}>
+                    All Bookmarks
+                  </span>
+                </button>
+
+                {/* Uncategorized option */}
+                <button
+                  onClick={() => {
+                    setSelectedCollectionId("__uncategorized__");
+                    setShowCollectionDropdown(false);
+                  }}
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-bsky-bg-secondary ${
+                    selectedCollectionId === "__uncategorized__"
+                      ? "bg-blue-500 bg-opacity-10"
+                      : ""
+                  }`}
+                >
+                  <Folder
+                    size={14}
+                    style={{ color: "var(--bsky-text-tertiary)" }}
+                  />
+                  <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    Uncategorized
+                  </span>
+                </button>
+
+                {collections.length > 0 && (
+                  <div
+                    className="my-1 border-t"
+                    style={{ borderColor: "var(--bsky-border-primary)" }}
+                  />
+                )}
+
+                {/* User collections */}
+                {collections.map((collection) => (
+                  <button
+                    key={collection.id}
+                    onClick={() => {
+                      setSelectedCollectionId(collection.id);
+                      setShowCollectionDropdown(false);
+                    }}
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-bsky-bg-secondary ${
+                      selectedCollectionId === collection.id
+                        ? "bg-blue-500 bg-opacity-10"
+                        : ""
+                    }`}
+                  >
+                    <div
+                      className="h-3 w-3 rounded-full"
+                      style={{
+                        backgroundColor: getCollectionColor(collection),
+                      }}
+                    />
+                    <span
+                      className="flex-1 text-left"
+                      style={{ color: "var(--bsky-text-primary)" }}
+                    >
+                      {collection.name}
+                    </span>
+                    <span
+                      className="text-xs"
+                      style={{ color: "var(--bsky-text-tertiary)" }}
+                    >
+                      {collection.bookmarkCount}
+                    </span>
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -413,11 +710,7 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
 
       {/* Bookmarks List - Virtualized */}
       <div ref={listContainerRef} className="flex-1 overflow-hidden">
-        {isLoading && (
-          <div className="flex items-center justify-center p-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-          </div>
-        )}
+        {isLoading && <FeedSkeleton count={5} aria-label="Loading bookmarks" />}
 
         {!isLoading && filteredBookmarks.length === 0 && (
           <div className="p-8 text-center">
@@ -497,17 +790,26 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
                                 addSuffix: true,
                               })}
                             </span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUnbookmark(bookmark.postUri);
-                              }}
-                              className="rounded p-1 opacity-50 transition-colors hover:bg-yellow-100 group-hover:opacity-100 dark:hover:bg-yellow-900/20"
-                              style={{ color: "#ffad1f" }}
-                              title="Remove bookmark"
+                            <div
+                              className="ml-auto flex items-center gap-1"
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              <Bookmark size={16} fill="currentColor" />
-                            </button>
+                              <SaveToCollectionDropdown
+                                postUri={bookmark.postUri}
+                                compact
+                              />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUnbookmark(bookmark.postUri);
+                                }}
+                                className="rounded p-1 opacity-50 transition-colors hover:bg-yellow-100 group-hover:opacity-100 dark:hover:bg-yellow-900/20"
+                                style={{ color: "#ffad1f" }}
+                                title="Remove bookmark"
+                              >
+                                <Bookmark size={16} fill="currentColor" />
+                              </button>
+                            </div>
                           </div>
 
                           <div

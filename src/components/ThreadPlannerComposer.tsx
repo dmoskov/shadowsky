@@ -1412,7 +1412,7 @@ export function ThreadPlannerComposer({
                             ? "Start your thread..."
                             : `Continue with post ${index + 1}...`
                         }
-                        className={`w-full resize-none rounded-lg border-none bg-transparent p-0 focus:outline-none focus:ring-0 ${
+                        className={`w-full resize-none rounded-lg border-none bg-transparent p-0 focus-visible:outline-none focus-visible:ring-0 ${
                           isExpanded ? "min-h-[100px]" : "min-h-[40px]"
                         }`}
                         style={{ color: "var(--bsky-text-primary)" }}
@@ -1445,7 +1445,7 @@ export function ThreadPlannerComposer({
                                   )
                                 }
                                 placeholder="Alt text"
-                                className="absolute bottom-0 left-0 right-0 rounded-b bg-black/70 px-1 py-0.5 text-xs text-white placeholder-white/60 opacity-0 transition-opacity focus:opacity-100 group-hover:opacity-100"
+                                className="absolute bottom-0 left-0 right-0 rounded-b bg-black/70 px-1 py-0.5 text-xs text-white placeholder-white/60 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
                               />
                             </div>
                           ))}

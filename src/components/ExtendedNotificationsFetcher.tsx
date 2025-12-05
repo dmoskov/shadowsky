@@ -958,8 +958,9 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
                     ? Math.floor(
                         (new Date().getTime() -
                           new Date(
-                            allNotifications[allNotifications.length - 1]
-                              .indexedAt,
+                            allNotifications[
+                              allNotifications.length - 1
+                            ].indexedAt,
                           ).getTime()) /
                           (1000 * 60 * 60 * 24),
                       )

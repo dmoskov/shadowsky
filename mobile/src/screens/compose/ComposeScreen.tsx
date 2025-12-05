@@ -23,7 +23,11 @@ export function ComposeScreen({navigation}: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleClose}>
+        <TouchableOpacity
+          onPress={handleClose}
+          style={styles.cancelTouchable}
+          hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+        >
           <Text style={styles.cancelButton}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.postButton} onPress={handlePost}>
@@ -59,6 +63,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#1f2937',
   },
+  cancelTouchable: {
+    minHeight: 44, // WCAG 2.1 touch target minimum
+    minWidth: 44,
+    justifyContent: 'center',
+  },
   cancelButton: {
     color: '#9ca3af',
     fontSize: 16,
@@ -66,8 +75,10 @@ const styles = StyleSheet.create({
   postButton: {
     backgroundColor: '#3b82f6',
     paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingVertical: 12,
     borderRadius: 20,
+    minHeight: 44, // WCAG 2.1 touch target minimum
+    justifyContent: 'center',
   },
   postButtonText: {
     color: '#ffffff',

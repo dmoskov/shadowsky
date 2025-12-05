@@ -135,9 +135,9 @@ export const MediaCacheSettings: React.FC = () => {
   };
 
   const getUsageBarColor = (percentage: number): string => {
-    if (percentage < 70) return "#22c55e"; // green
-    if (percentage < 90) return "#eab308"; // yellow
-    return "#ef4444"; // red
+    if (percentage < 70) return "var(--bsky-success-light)";
+    if (percentage < 90) return "var(--bsky-yellow)";
+    return "var(--bsky-error)";
   };
 
   return (
@@ -159,19 +159,11 @@ export const MediaCacheSettings: React.FC = () => {
 
       {message && (
         <div
-          className="rounded-lg p-3 text-sm"
-          style={{
-            backgroundColor:
-              message.type === "success"
-                ? "rgba(34, 197, 94, 0.1)"
-                : "rgba(239, 68, 68, 0.1)",
-            color: message.type === "success" ? "#22c55e" : "#ef4444",
-            border: `1px solid ${
-              message.type === "success"
-                ? "rgba(34, 197, 94, 0.3)"
-                : "rgba(239, 68, 68, 0.3)"
-            }`,
-          }}
+          className={`rounded-lg border p-3 text-sm ${
+            message.type === "success"
+              ? "border-bsky-success/30 bg-bsky-success/10 text-bsky-success"
+              : "border-bsky-error/30 bg-bsky-error/10 text-bsky-error"
+          }`}
         >
           {message.text}
         </div>
@@ -391,12 +383,7 @@ export const MediaCacheSettings: React.FC = () => {
         <button
           onClick={handleClearCache}
           disabled={isLoading}
-          className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition-colors"
-          style={{
-            backgroundColor: "rgba(239, 68, 68, 0.1)",
-            color: "#ef4444",
-            border: "1px solid rgba(239, 68, 68, 0.3)",
-          }}
+          className="border-bsky-error/30 bg-bsky-error/10 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm text-bsky-error transition-colors"
         >
           <Trash2 className="h-4 w-4" />
           {isLoading ? "Clearing..." : "Clear All Cached Media"}

@@ -1,7 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:5173";
+
 export default defineConfig({
-  testDir: "./tests",
+  testDir: "./tests/e2e",
+  testMatch: "**/*.spec.ts",
   timeout: 30 * 1000,
   expect: {
     timeout: 5000,
@@ -10,12 +13,16 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: "html",
+  reporter: process.env.CI
+    ? [["github"], ["html", { open: "never" }]]
+    : [["html", { open: "on-failure" }]],
   use: {
-    baseURL: "http://127.0.0.1:5173",
+    baseURL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
+    video: "retain-on-failure",
   },
+  outputDir: "test-results",
 
   projects: [
     {
@@ -26,7 +33,8 @@ export default defineConfig({
 
   webServer: {
     command: "npm run dev",
-    port: 5173,
-    reuseExistingServer: true,
+    url: baseURL,
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
   },
 });

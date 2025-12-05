@@ -26,6 +26,10 @@ import {
   type CollapseThresholds,
   type ScreenSize,
 } from "../hooks/useResponsiveCollapseThresholds";
+import {
+  calculateComplexityFromPosts,
+  type ThreadComplexityScore,
+} from "../services/thread-complexity-scorer";
 
 // ============================================================================
 // Types
@@ -92,6 +96,9 @@ export interface ThreadContextValue {
 
   // Metrics
   metrics: ThreadMetrics;
+
+  // Complexity scoring (weighted scoring for progressive reveal)
+  complexityScore: ThreadComplexityScore;
 
   // Collapse state
   collapsedNodes: Set<string>;
@@ -353,6 +360,17 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
     [posts, notifications, rootUri],
   );
 
+  // Calculate complexity score for progressive reveal
+  const complexityScore = useMemo(
+    () =>
+      calculateComplexityFromPosts(
+        posts,
+        metrics.maxDepth,
+        metrics.branchCount,
+      ),
+    [posts, metrics.maxDepth, metrics.branchCount],
+  );
+
   // Collapse state - initialize with adaptive thresholds
   const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
 
@@ -573,6 +591,9 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
       // Metrics
       metrics,
 
+      // Complexity scoring
+      complexityScore,
+
       // Collapse state
       collapsedNodes,
       toggleCollapse,
@@ -612,6 +633,7 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
       flatList,
       nodeMap,
       metrics,
+      complexityScore,
       collapsedNodes,
       toggleCollapse,
       collapseAll,
@@ -687,7 +709,7 @@ export function useThreadTree() {
  * Returns metrics and complexity level for UI decisions
  */
 export function useThreadComplexity() {
-  const { metrics } = useThread();
+  const { metrics, complexityScore } = useThread();
 
   return useMemo(
     () => ({
@@ -697,8 +719,13 @@ export function useThreadComplexity() {
       isComplex: metrics.complexityLevel === ThreadComplexityLevel.Complex,
       isVeryComplex:
         metrics.complexityLevel === ThreadComplexityLevel.VeryComplex,
+      // Enhanced complexity scoring for progressive reveal
+      complexityScore,
+      shouldUseSimplifiedRendering: complexityScore.useSimplifiedRendering,
+      initialRevealCount: complexityScore.initialRevealCount,
+      revealBatchSize: complexityScore.revealBatchSize,
     }),
-    [metrics],
+    [metrics, complexityScore],
   );
 }
 
@@ -906,4 +933,5 @@ export function useThreadUserPosts(userDid: string | undefined) {
 }
 
 // Re-export types for convenience
+export type { ThreadComplexityScore } from "../services/thread-complexity-scorer";
 export type { Post };

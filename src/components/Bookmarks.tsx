@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useModal } from "../contexts/ModalContext";
+import { useToast } from "../contexts/ToastContext";
 import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
 import { reinitializeBookmarkService } from "../services/bookmark-service-wrapper";
 import { proxifyBskyImage } from "../utils/image-proxy";
@@ -21,6 +22,7 @@ import { ThreadModal } from "./ThreadModal";
 export const Bookmarks: React.FC = () => {
   const queryClient = useQueryClient();
   const { showAlert, showDestructiveConfirm } = useModal();
+  const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [showExportModal, setShowExportModal] = useState(false);
   const [selectedPost, setSelectedPost] =
@@ -72,24 +74,42 @@ export const Bookmarks: React.FC = () => {
   };
 
   const handleDeleteBookmark = async (postUri: string) => {
-    await bookmarkServiceV2.removeBookmark(postUri);
-    queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
-    queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
-    queryClient.invalidateQueries({ queryKey: ["atProtocolRecordCounts"] });
+    try {
+      await bookmarkServiceV2.removeBookmark(postUri);
+      queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+      queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
+      queryClient.invalidateQueries({ queryKey: ["atProtocolRecordCounts"] });
+      showToast("Bookmark removed", {
+        type: "success",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Failed to remove bookmark:", error);
+      showToast("Failed to remove bookmark", { type: "error" });
+    }
   };
 
   const handleExport = async () => {
-    const bookmarks = await bookmarkServiceV2.exportBookmarks();
-    const blob = new Blob([JSON.stringify(bookmarks, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `bluesky-bookmarks-${new Date().toISOString().split("T")[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setShowExportModal(false);
+    try {
+      const bookmarks = await bookmarkServiceV2.exportBookmarks();
+      const blob = new Blob([JSON.stringify(bookmarks, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `bluesky-bookmarks-${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setShowExportModal(false);
+      showToast("Bookmarks exported", {
+        type: "success",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Failed to export bookmarks:", error);
+      showToast("Failed to export bookmarks", { type: "error" });
+    }
   };
 
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,9 +119,18 @@ export const Bookmarks: React.FC = () => {
     try {
       const text = await file.text();
       const bookmarks = JSON.parse(text);
+      const importedCount = Array.isArray(bookmarks) ? bookmarks.length : 0;
       await bookmarkServiceV2.importBookmarks(bookmarks);
       queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
       queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
+      setShowExportModal(false);
+      showToast(
+        `Imported ${importedCount} bookmark${importedCount !== 1 ? "s" : ""}`,
+        {
+          type: "success",
+          duration: 3000,
+        },
+      );
     } catch (error) {
       console.error("Failed to import bookmarks:", error);
       showAlert("Failed to import bookmarks. Please check the file format.", {
@@ -123,9 +152,19 @@ export const Bookmarks: React.FC = () => {
         warningMessage: `You have ${bookmarkCount ?? 0} bookmark${(bookmarkCount ?? 0) !== 1 ? "s" : ""} that will be permanently deleted.`,
       },
       async () => {
-        await bookmarkServiceV2.clearAllBookmarks();
-        queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
-        queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
+        try {
+          await bookmarkServiceV2.clearAllBookmarks();
+          queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+          queryClient.invalidateQueries({ queryKey: ["bookmarkCount"] });
+          setShowExportModal(false);
+          showToast("All bookmarks cleared", {
+            type: "success",
+            duration: 3000,
+          });
+        } catch (error) {
+          console.error("Failed to clear bookmarks:", error);
+          showToast("Failed to clear bookmarks", { type: "error" });
+        }
       },
     );
   };
@@ -173,7 +212,7 @@ export const Bookmarks: React.FC = () => {
               placeholder="Search bookmarks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="focus:border-bsky-accent-primary w-full rounded-full border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-2 pl-10 text-sm text-bsky-text-primary transition-all duration-200 focus:outline-none"
+              className="focus-visible:border-bsky-accent-primary w-full rounded-full border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-2 pl-10 text-sm text-bsky-text-primary transition-all duration-200 focus-visible:outline-none"
               aria-label="Search bookmarks"
             />
           </div>

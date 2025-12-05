@@ -13,5 +13,9 @@
         "../.amplify/generated/*"
       ]
     }
-  }
+  },
+  "exclude": [
+    "**/__tests__/**",
+    "**/*.test.ts"
+  ]
 }

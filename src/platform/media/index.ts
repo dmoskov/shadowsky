@@ -100,8 +100,9 @@ export async function getMediaProcessor(): Promise<IMediaProcessor> {
       break;
     }
     case "android": {
-      const { AndroidMediaProcessor } =
-        await import("./android-media-processor");
+      const { AndroidMediaProcessor } = await import(
+        "./android-media-processor"
+      );
       mediaProcessorInstance = new AndroidMediaProcessor();
       break;
     }

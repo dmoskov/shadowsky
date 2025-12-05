@@ -1,5 +1,6 @@
 import { AppBskyFeedDefs } from "@atproto/api";
-import React from "react";
+import React, { memo } from "react";
+import { extractPostId } from "../hooks/usePostDeepLink";
 import { PostActionBar } from "./PostActionBar";
 import { PostRenderer } from "./PostRenderer";
 
@@ -14,9 +15,48 @@ interface PostCardProps {
   onClick?: () => void;
   onQuoteClick?: (uri: string) => void;
   showBorder?: boolean;
+  /** Whether this post is targeted via URL deep link */
+  isDeepLinkTarget?: boolean;
 }
 
-export const PostCard: React.FC<PostCardProps> = ({
+/**
+ * Custom comparison function for React.memo
+ * Prevents unnecessary re-renders by comparing only relevant props
+ * that would cause visual changes to the PostCard
+ */
+function arePostCardPropsEqual(
+  prevProps: PostCardProps,
+  nextProps: PostCardProps,
+): boolean {
+  // Compare post identity - if different, it's a different post
+  if (prevProps.post.uri !== nextProps.post.uri) return false;
+  if (prevProps.post.cid !== nextProps.post.cid) return false;
+
+  // Compare engagement counts (these update frequently during scrolling)
+  if (prevProps.post.likeCount !== nextProps.post.likeCount) return false;
+  if (prevProps.post.repostCount !== nextProps.post.repostCount) return false;
+  if (prevProps.post.replyCount !== nextProps.post.replyCount) return false;
+
+  // Compare viewer state (user's interactions with the post)
+  if (prevProps.post.viewer?.like !== nextProps.post.viewer?.like) return false;
+  if (prevProps.post.viewer?.repost !== nextProps.post.viewer?.repost)
+    return false;
+
+  // Compare UI props
+  if (prevProps.showBorder !== nextProps.showBorder) return false;
+  if (prevProps.isDeepLinkTarget !== nextProps.isDeepLinkTarget) return false;
+
+  // Compare reason (for repost indicators)
+  const prevReasonType = prevProps.reason?.$type;
+  const nextReasonType = nextProps.reason?.$type;
+  if (prevReasonType !== nextReasonType) return false;
+
+  // Callbacks are expected to be stable (using useCallback in parent)
+  // so we skip comparing them to avoid unnecessary re-renders
+  return true;
+}
+
+const PostCardComponent: React.FC<PostCardProps> = ({
   post,
   reason,
   onLike,
@@ -27,15 +67,22 @@ export const PostCard: React.FC<PostCardProps> = ({
   onClick,
   onQuoteClick,
   showBorder = true,
+  isDeepLinkTarget = false,
 }) => {
   const authorName =
     post.author?.displayName || post.author?.handle || "Unknown user";
+
+  // Extract post ID for deep linking
+  const postId = extractPostId(post.uri);
 
   return (
     <article
       role="article"
       aria-label={`Post by ${authorName}`}
-      className={showBorder ? "border-b" : ""}
+      id={`post-${postId}`}
+      data-post-id={postId}
+      data-post-uri={post.uri}
+      className={`${showBorder ? "border-b" : ""} ${isDeepLinkTarget ? "deep-link-highlight" : ""}`}
       style={showBorder ? { borderColor: "var(--bsky-border-primary)" } : {}}
     >
       <PostRenderer
@@ -59,3 +106,9 @@ export const PostCard: React.FC<PostCardProps> = ({
     </article>
   );
 };
+
+/**
+ * Memoized PostCard for optimal feed scroll performance
+ * Uses custom comparator to prevent cascading re-renders
+ */
+export const PostCard = memo(PostCardComponent, arePostCardPropsEqual);

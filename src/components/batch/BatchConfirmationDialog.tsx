@@ -241,7 +241,7 @@ export const BatchConfirmationDialog: React.FC<
         <div className="flex justify-end gap-3 border-t bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800/50">
           <button
             onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             Cancel
           </button>
@@ -249,12 +249,12 @@ export const BatchConfirmationDialog: React.FC<
             ref={confirmButtonRef}
             onClick={onConfirm}
             disabled={!estimation.canProceed}
-            className={`rounded-lg px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+            className={`rounded-lg px-4 py-2 text-sm font-medium text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
               actionType === "block" || actionType === "remove_follower"
-                ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                ? "bg-red-600 hover:bg-red-700 focus-visible:ring-red-500"
                 : actionType === "mute" || actionType === "unfollow"
-                  ? "bg-amber-600 hover:bg-amber-700 focus:ring-amber-500"
-                  : "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
+                  ? "bg-amber-600 hover:bg-amber-700 focus-visible:ring-amber-500"
+                  : "bg-blue-600 hover:bg-blue-700 focus-visible:ring-blue-500"
             }`}
           >
             {estimation.canProceed

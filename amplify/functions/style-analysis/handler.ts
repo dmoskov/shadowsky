@@ -7,12 +7,18 @@ import {
   createMissingParameterError,
   createOptionsResponse,
   createSuccessResponse,
+  createTimeoutError,
   getCorrelationId,
   isOptionsRequest,
   logError,
   logInfo,
   parseEventBody,
 } from "../shared/api-response";
+import {
+  createAnthropicClient,
+  MaxRetriesExceededError,
+  TimeoutError,
+} from "../shared/resilience";
 
 interface RequestBody {
   currentText?: string;
@@ -65,20 +71,27 @@ export const handler = async (event: any) => {
       .map((post, i) => `${i + 1}. ${truncateText(post)}`)
       .join("\n");
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250929",
-        max_tokens: 1000,
-        messages: [
-          {
-            role: "user",
-            content: `You are a writing style analyst. Analyze the user's writing style based on their historical posts, then compare their current draft to that style.
+    // Create resilient client for Anthropic API with retry and timeout
+    const client = createAnthropicClient({ name: "style-analysis" });
+
+    let result;
+    try {
+      const response = await client.fetch(
+        "https://api.anthropic.com/v1/messages",
+        {
+          method: "POST",
+          headers: {
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-5-20250929",
+            max_tokens: 1000,
+            messages: [
+              {
+                role: "user",
+                content: `You are a writing style analyst. Analyze the user's writing style based on their historical posts, then compare their current draft to that style.
 
 HISTORICAL POSTS:
 ${historicalContext}
@@ -108,32 +121,38 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
 3. Base analysis on actual patterns from historical posts
 4. Be constructive and helpful, not critical
 5. Start directly with { and end with }`,
-          },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logError(
-        "style-analysis",
-        `Anthropic API error: ${response.status}`,
-        correlationId,
-        {
-          statusCode: response.status,
+              },
+            ],
+          }),
         },
+        correlationId
       );
-      return createExternalApiError(
-        "Anthropic",
-        errorText,
-        event,
-        correlationId,
-      );
-    }
 
-    const data = await response.json();
-    const cleanedText = cleanJsonResponse(data.content[0].text);
-    const result = JSON.parse(cleanedText);
+      const data = await response.json();
+      const cleanedText = cleanJsonResponse(data.content[0].text);
+      result = JSON.parse(cleanedText);
+    } catch (apiError) {
+      if (apiError instanceof TimeoutError) {
+        logError("style-analysis", apiError, correlationId, {
+          errorType: "timeout",
+        });
+        return createTimeoutError("Anthropic API call", event, correlationId);
+      }
+
+      if (apiError instanceof MaxRetriesExceededError) {
+        logError("style-analysis", apiError, correlationId, {
+          attempts: apiError.attempts,
+        });
+        return createExternalApiError(
+          "Anthropic",
+          `Failed after ${apiError.attempts} attempts`,
+          event,
+          correlationId
+        );
+      }
+
+      throw apiError;
+    }
 
     logInfo(
       "style-analysis",

@@ -84,8 +84,10 @@ function setCachedSummary(key: string, value: any) {
   cache.set(key, { ...value, timestamp: Date.now() });
   // Limit cache size to 100 entries
   if (cache.size > 100) {
-    const firstKey = cache.keys().next().value;
-    cache.delete(firstKey);
+    const firstKey = cache.keys().next().value as string | undefined;
+    if (firstKey) {
+      cache.delete(firstKey);
+    }
   }
 }
 

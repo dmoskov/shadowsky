@@ -2,6 +2,10 @@ import { AlertTriangle, CheckCircle, Flag, X } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useModeration } from "../contexts/ModerationContext";
+import {
+  type ReportReasonType,
+  moderationHistoryDB,
+} from "../services/moderation-history-db";
 import { rateLimitedReport, reportRateLimiter } from "../services/rate-limiter";
 
 export type ReportType = "post" | "account";
@@ -72,6 +76,8 @@ interface ReportModalProps {
   subjectCid?: string;
   subjectDid?: string;
   subjectHandle?: string;
+  subjectDisplayName?: string;
+  subjectText?: string; // For posts, a snippet of content
   onReportSubmitted?: () => void;
 }
 
@@ -83,6 +89,8 @@ export function ReportModal({
   subjectCid,
   subjectDid,
   subjectHandle,
+  subjectDisplayName,
+  subjectText,
   onReportSubmitted,
 }: ReportModalProps) {
   const { agent } = useAuth();
@@ -153,6 +161,28 @@ export function ReportModal({
         }
       });
 
+      // Record report to history
+      try {
+        await moderationHistoryDB.init();
+        const category = REPORT_CATEGORIES.find(
+          (c) => c.id === selectedCategory,
+        );
+        await moderationHistoryDB.recordReport({
+          subjectUri,
+          subjectType: reportType === "post" ? "post" : "account",
+          subjectDid,
+          subjectHandle,
+          subjectDisplayName,
+          subjectText: subjectText?.substring(0, 200), // Truncate for storage
+          reason: (category?.id || "other") as ReportReasonType,
+          reasonText: additionalContext.trim() || undefined,
+          createdAt: Date.now(),
+        });
+      } catch (historyErr) {
+        // Don't fail the report if history recording fails
+        console.warn("Failed to record report to history:", historyErr);
+      }
+
       setIsSubmitted(true);
       setShowBlockOption(reportType === "account");
 
@@ -179,13 +209,28 @@ export function ReportModal({
         throw new Error("No session available");
       }
 
-      await agent.app.bsky.graph.block.create(
+      const response = await agent.app.bsky.graph.block.create(
         { repo: agent.session.did },
         {
           subject: subjectDid,
           createdAt: new Date().toISOString(),
         },
       );
+
+      // Record block to history
+      try {
+        await moderationHistoryDB.init();
+        await moderationHistoryDB.recordBlock({
+          id: response.uri,
+          subjectDid,
+          subjectHandle,
+          subjectDisplayName,
+          createdAt: Date.now(),
+        });
+      } catch (historyErr) {
+        // Don't fail the block if history recording fails
+        console.warn("Failed to record block to history:", historyErr);
+      }
 
       blockUser(subjectDid);
       handleClose();
@@ -208,12 +253,9 @@ export function ReportModal({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-      onClick={handleClose}
-    >
+    <div className="modal-backdrop" onClick={handleClose}>
       <div
-        className="relative w-full max-w-lg overflow-hidden rounded-lg bg-white dark:bg-gray-900"
+        className="modal-container modal-auto-height modal-lg bg-white dark:bg-gray-900"
         onClick={(e) => e.stopPropagation()}
       >
         {isSubmitted ? (
@@ -352,7 +394,7 @@ export function ReportModal({
                   value={additionalContext}
                   onChange={(e) => setAdditionalContext(e.target.value)}
                   placeholder="Provide any additional details that might help with this report..."
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
                   rows={4}
                   maxLength={300}
                 />

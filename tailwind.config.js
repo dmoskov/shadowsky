@@ -93,6 +93,18 @@ export default {
         // Staggered list item (use with animation-delay)
         "list-item-enter":
           "listItemEnter var(--transition-normal) var(--ease-entrance) forwards",
+        // Spring animations for interactive elements
+        "spring-scale":
+          "springScale var(--transition-normal) var(--ease-spring-soft)",
+        "spring-pop": "springPop 300ms var(--ease-spring-medium)",
+        "spring-bounce-in":
+          "springBounceIn 400ms var(--ease-spring-soft) forwards",
+        // Toggle spring animation
+        "toggle-spring": "toggleSpring 250ms var(--ease-spring-soft)",
+        // Button press spring
+        "button-spring": "buttonSpring 200ms var(--ease-spring-snappy)",
+        // Card hover spring
+        "card-lift": "cardLift 200ms var(--ease-spring-soft) forwards",
       },
       keyframes: {
         fadeIn: {
@@ -269,6 +281,48 @@ export default {
           from: { opacity: "0", transform: "translateY(4px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        // Spring animations for interactive elements
+        springScale: {
+          "0%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.05)" },
+          "100%": { transform: "scale(1)" },
+        },
+        springPop: {
+          "0%": { transform: "scale(0.95)", opacity: "0.8" },
+          "40%": { transform: "scale(1.03)" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        springBounceIn: {
+          "0%": { transform: "scale(0)", opacity: "0" },
+          "50%": { transform: "scale(1.08)" },
+          "75%": { transform: "scale(0.97)" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        // Toggle switch spring
+        toggleSpring: {
+          "0%": { transform: "translateX(0)" },
+          "60%": { transform: "translateX(calc(100% + 2px))" },
+          "80%": { transform: "translateX(calc(100% - 1px))" },
+          "100%": { transform: "translateX(100%)" },
+        },
+        // Button press spring
+        buttonSpring: {
+          "0%": { transform: "scale(1)" },
+          "40%": { transform: "scale(0.95)" },
+          "70%": { transform: "scale(1.02)" },
+          "100%": { transform: "scale(1)" },
+        },
+        // Card lift spring
+        cardLift: {
+          "0%": {
+            transform: "translateY(0) scale(1)",
+            boxShadow: "var(--bsky-shadow-sm)",
+          },
+          "100%": {
+            transform: "translateY(-2px) scale(1.01)",
+            boxShadow: "var(--bsky-shadow-md)",
+          },
+        },
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
@@ -299,6 +353,10 @@ export default {
         bounce: "var(--ease-bounce)",
         entrance: "var(--ease-entrance)",
         exit: "var(--ease-exit)",
+        // Enhanced spring curves
+        "spring-soft": "var(--ease-spring-soft)",
+        "spring-medium": "var(--ease-spring-medium)",
+        "spring-snappy": "var(--ease-spring-snappy)",
       },
       zIndex: {
         60: "60",
@@ -377,6 +435,67 @@ export default {
           transition: "transform var(--transition-fast) var(--ease-spring)",
           "&:active": {
             transform: "scale(0.98)",
+          },
+        },
+        // Spring interaction utilities for buttons
+        ".spring-press": {
+          transition:
+            "transform var(--transition-fast) var(--ease-spring-soft)",
+          "@media (prefers-reduced-motion: no-preference)": {
+            "&:active": {
+              transform: "scale(0.96)",
+            },
+          },
+        },
+        ".spring-hover": {
+          transition:
+            "transform var(--transition-fast) var(--ease-spring-soft), box-shadow var(--transition-fast) var(--ease-out)",
+          "@media (prefers-reduced-motion: no-preference)": {
+            "&:hover": {
+              transform: "scale(1.03)",
+            },
+            "&:active": {
+              transform: "scale(0.98)",
+            },
+          },
+        },
+        // Spring scale for icon buttons
+        ".spring-icon": {
+          transition:
+            "transform var(--transition-fast) var(--ease-spring-snappy), color var(--transition-fast) var(--ease-default)",
+          "@media (prefers-reduced-motion: no-preference)": {
+            "&:hover": {
+              transform: "scale(1.15)",
+            },
+            "&:active": {
+              transform: "scale(0.92)",
+            },
+          },
+        },
+        // Spring toggle animation
+        ".spring-toggle": {
+          transition:
+            "transform 250ms var(--ease-spring-soft), background-color var(--transition-fast) var(--ease-default)",
+        },
+        // Card spring lift on hover
+        ".spring-card": {
+          transition:
+            "transform var(--transition-normal) var(--ease-spring-soft), box-shadow var(--transition-normal) var(--ease-out)",
+          "@media (prefers-reduced-motion: no-preference)": {
+            "&:hover": {
+              transform: "translateY(-2px) scale(1.005)",
+              boxShadow: "var(--bsky-shadow-md)",
+            },
+          },
+        },
+        // Subtle spring for list items
+        ".spring-list-item": {
+          transition:
+            "transform var(--transition-fast) var(--ease-spring-soft), background-color var(--transition-fast) var(--ease-default)",
+          "@media (prefers-reduced-motion: no-preference)": {
+            "&:active": {
+              transform: "scale(0.995)",
+            },
           },
         },
         // Color transition utilities

@@ -54,21 +54,21 @@ const severityColors: Record<
     bg: "bg-amber-50 dark:bg-amber-900/20",
     border: "border-amber-200 dark:border-amber-800",
     text: "text-amber-800 dark:text-amber-200",
-    button: "bg-amber-600 hover:bg-amber-700 focus:ring-amber-500",
+    button: "bg-amber-600 hover:bg-amber-700 focus-visible:ring-amber-500",
     buttonHover: "hover:bg-amber-700",
   },
   danger: {
     bg: "bg-red-50 dark:bg-red-900/20",
     border: "border-red-200 dark:border-red-800",
     text: "text-red-800 dark:text-red-200",
-    button: "bg-red-600 hover:bg-red-700 focus:ring-red-500",
+    button: "bg-red-600 hover:bg-red-700 focus-visible:ring-red-500",
     buttonHover: "hover:bg-red-700",
   },
   critical: {
     bg: "bg-red-100 dark:bg-red-900/30",
     border: "border-red-300 dark:border-red-700",
     text: "text-red-900 dark:text-red-100",
-    button: "bg-red-700 hover:bg-red-800 focus:ring-red-600",
+    button: "bg-red-700 hover:bg-red-800 focus-visible:ring-red-600",
     buttonHover: "hover:bg-red-800",
   },
 };
@@ -184,7 +184,7 @@ export const ConfirmDestructiveDialog: React.FC<
 
   return (
     <div
-      className={`fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm ${
+      className={`modal-backdrop z-[60] ${
         isExiting ? "animate-exit-fade" : "animate-enter-fade"
       }`}
       onClick={handleClose}
@@ -196,7 +196,7 @@ export const ConfirmDestructiveDialog: React.FC<
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
-        className={`mx-4 w-full max-w-md overflow-hidden rounded-xl border bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900 ${
+        className={`modal-container modal-auto-height modal-md border bg-white dark:border-gray-700 dark:bg-gray-900 ${
           isExiting ? "animate-exit-scale" : "animate-enter-scale"
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -296,7 +296,7 @@ export const ConfirmDestructiveDialog: React.FC<
                 onChange={(e) => setTypedConfirmation(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={isProcessing}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus-visible:border-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
                 placeholder={requireTypeConfirmation}
                 autoComplete="off"
                 autoCorrect="off"
@@ -312,7 +312,7 @@ export const ConfirmDestructiveDialog: React.FC<
           <button
             onClick={handleClose}
             disabled={isProcessing}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             {cancelButtonLabel}
           </button>
@@ -320,7 +320,7 @@ export const ConfirmDestructiveDialog: React.FC<
             ref={confirmButtonRef}
             onClick={handleConfirm}
             disabled={isConfirmDisabled}
-            className={`rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${colors.button}`}
+            className={`rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${colors.button}`}
           >
             {isProcessing ? (
               <span className="flex items-center gap-2">

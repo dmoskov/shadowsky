@@ -1582,7 +1582,8 @@ export const NotificationsAnalytics: React.FC = () => {
                         className="text-xs"
                         style={{ color: "var(--bsky-text-secondary)" }}
                       >
-                        <span style={{ color: "#ef4444" }}>♥</span> {user.likes}
+                        <span style={{ color: "#ef4444" }}>♥</span>{" "}
+                        {user.likes}
                       </span>
                     )}
                     {user.replies > 0 && (

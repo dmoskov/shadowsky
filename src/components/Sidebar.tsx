@@ -69,6 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar */}
       <aside
+        id="main-navigation"
         role="navigation"
         aria-label="Main navigation"
         className={`bsky-glass fixed bottom-0 top-16 z-40 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] ${isCollapsed ? "w-16" : "w-64"} max-w-[80vw] transform transition-all duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
@@ -82,7 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             onClick={onClose}
             aria-label="Close menu"
-            className="rounded-lg p-2 transition-all hover:opacity-70"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 transition-all hover:opacity-70"
           >
             <X
               size={20}
@@ -100,7 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 to={item.path}
                 onClick={() => onClose()}
                 className={({ isActive }) =>
-                  `group relative flex items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 ${
+                  `group relative flex min-h-[44px] items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 ${
                     isActive
                       ? "scale-[1.02] text-white shadow-md"
                       : "hover:scale-[1.02] hover:bg-blue-50"
@@ -152,7 +153,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             href="https://bsky.app"
             target="_blank"
             rel="noopener noreferrer"
-            className={`group flex items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 hover:bg-blue-500 hover:bg-opacity-10`}
+            className={`group flex min-h-[44px] items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 hover:bg-blue-500 hover:bg-opacity-10`}
             style={{ color: "var(--bsky-text-secondary)" }}
             title={isCollapsed ? "Open Bluesky" : undefined}
           >

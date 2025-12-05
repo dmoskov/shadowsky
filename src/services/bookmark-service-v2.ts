@@ -2,10 +2,15 @@ import { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
 import { createLogger } from "../utils/logger";
 import { OfficialBookmarksBackend } from "./bookmark-backend";
 import { Bookmark } from "./bookmark-backends/types";
+import {
+  BookmarkCollection,
+  bookmarkCollectionStorage,
+} from "./bookmark-collections";
 import { PostCacheService } from "./post-cache-service";
 
 export type BookmarkPost = Bookmark & {
   post?: AppBskyFeedDefs.PostView;
+  collectionIds?: string[];
 };
 
 const logger = createLogger("BookmarkService");
@@ -31,6 +36,9 @@ class BookmarkServiceV2 {
 
     // Initialize post cache
     await this.postCacheService.init();
+
+    // Initialize collection storage
+    await bookmarkCollectionStorage.init();
 
     // Initialize backend
     if (this.agent) {
@@ -79,6 +87,8 @@ class BookmarkServiceV2 {
 
   async removeBookmark(postUri: string): Promise<void> {
     await this.backend.removeBookmark(postUri);
+    // Also remove from all collections
+    await bookmarkCollectionStorage.removeBookmarkFromAllCollections(postUri);
   }
 
   async getBookmarkedPosts(
@@ -171,6 +181,106 @@ class BookmarkServiceV2 {
     if (this.backend.refreshCache) {
       await this.backend.refreshCache();
     }
+  }
+
+  // ==================== Collection Methods ====================
+
+  async createCollection(
+    collection: Omit<
+      BookmarkCollection,
+      "id" | "createdAt" | "updatedAt" | "bookmarkCount"
+    >,
+  ): Promise<BookmarkCollection> {
+    return bookmarkCollectionStorage.createCollection(collection);
+  }
+
+  async getCollection(id: string): Promise<BookmarkCollection | null> {
+    return bookmarkCollectionStorage.getCollection(id);
+  }
+
+  async getAllCollections(): Promise<BookmarkCollection[]> {
+    return bookmarkCollectionStorage.getAllCollections();
+  }
+
+  async updateCollection(
+    id: string,
+    updates: Partial<
+      Omit<BookmarkCollection, "id" | "createdAt" | "bookmarkCount">
+    >,
+  ): Promise<BookmarkCollection | null> {
+    return bookmarkCollectionStorage.updateCollection(id, updates);
+  }
+
+  async deleteCollection(id: string): Promise<void> {
+    return bookmarkCollectionStorage.deleteCollection(id);
+  }
+
+  async addBookmarkToCollection(
+    postUri: string,
+    collectionId: string,
+  ): Promise<void> {
+    return bookmarkCollectionStorage.addBookmarkToCollection(
+      postUri,
+      collectionId,
+    );
+  }
+
+  async removeBookmarkFromCollection(
+    postUri: string,
+    collectionId: string,
+  ): Promise<void> {
+    return bookmarkCollectionStorage.removeBookmarkFromCollection(
+      postUri,
+      collectionId,
+    );
+  }
+
+  async getBookmarkCollections(postUri: string): Promise<string[]> {
+    return bookmarkCollectionStorage.getBookmarkCollections(postUri);
+  }
+
+  async getCollectionBookmarks(collectionId: string): Promise<string[]> {
+    return bookmarkCollectionStorage.getCollectionBookmarks(collectionId);
+  }
+
+  async getBookmarksInCollection(
+    collectionId: string,
+  ): Promise<BookmarkPost[]> {
+    const bookmarkUris =
+      await bookmarkCollectionStorage.getCollectionBookmarks(collectionId);
+    const allBookmarks = await this.getBookmarkedPosts();
+
+    // Filter to only bookmarks in this collection
+    const uriSet = new Set(bookmarkUris);
+    return allBookmarks.filter((b) => uriSet.has(b.postUri));
+  }
+
+  async getUncategorizedBookmarks(): Promise<BookmarkPost[]> {
+    const allBookmarks = await this.getBookmarkedPosts();
+    const allUris = allBookmarks.map((b) => b.postUri);
+    const uncategorizedUris =
+      await bookmarkCollectionStorage.getUncategorizedBookmarks(allUris);
+
+    const uriSet = new Set(uncategorizedUris);
+    return allBookmarks.filter((b) => uriSet.has(b.postUri));
+  }
+
+  async exportCollections(): Promise<{
+    collections: BookmarkCollection[];
+    mappings: { bookmarkUri: string; collectionId: string; addedAt: string }[];
+  }> {
+    return bookmarkCollectionStorage.exportData();
+  }
+
+  async importCollections(data: {
+    collections: BookmarkCollection[];
+    mappings: { bookmarkUri: string; collectionId: string; addedAt: string }[];
+  }): Promise<void> {
+    return bookmarkCollectionStorage.importData(data);
+  }
+
+  async clearAllCollections(): Promise<void> {
+    return bookmarkCollectionStorage.clearAll();
   }
 }
 

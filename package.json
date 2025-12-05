@@ -4,6 +4,7 @@
   "version": "0.7.0",
   "type": "module",
   "scripts": {
+    "analyze": "ANALYZE=true npm run build:app && open bundle-stats.html",
     "build": "wireit",
     "build:app": "wireit",
     "build:ci": "wireit",
@@ -15,6 +16,10 @@
     "fix:lint": "wireit",
     "preview": "vite preview",
     "test": "wireit",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:a11y": "playwright test --grep @accessibility --reporter=html,json",
     "test:format": "wireit",
     "test:lint": "wireit",
     "test:types": "wireit",
@@ -42,14 +47,15 @@
     "react-dom": "^18.2.0",
     "react-router": "^7.0.2",
     "react-swipeable": "^7.0.2",
-    "react-window": "^2.2.3"
+    "react-window": "^2.2.3",
+    "web-vitals": "^5.1.0"
   },
   "devDependencies": {
-    "@axe-core/react": "^4.11.0",
+    "@axe-core/playwright": "^4.11.0",
     "@eslint/js": "^9.32.0",
+    "@playwright/test": "^1.57.0",
     "@testing-library/jest-dom": "^6.7.0",
     "@testing-library/react": "^16.3.0",
-    "@types/jest": "^30.0.0",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
     "@vitejs/plugin-react": "^4.2.0",

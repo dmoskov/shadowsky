@@ -1,4 +1,11 @@
-import { ComponentType, lazy } from "react";
+import {
+  ComponentType,
+  createElement,
+  lazy,
+  ReactElement,
+  Suspense,
+} from "react";
+import { ChunkLoadErrorBoundary } from "../components/ui/ChunkLoadErrorBoundary";
 
 /**
  * Wraps React.lazy with automatic retry logic for failed chunk loads.
@@ -50,4 +57,86 @@ export function lazyWithRetry<T extends ComponentType<any>>(
       throw error;
     }
   });
+}
+
+/**
+ * Options for creating a lazy component with error recovery UI
+ */
+export interface LazyWithErrorRecoveryOptions {
+  /** Name to display in error UI */
+  componentName?: string;
+  /** Custom fallback while loading */
+  loadingFallback?: ReactElement | null;
+  /** Callback when an error occurs */
+  onError?: (error: Error) => void;
+}
+
+/**
+ * Creates a lazy-loaded component wrapped with error recovery UI.
+ * This combines lazyWithRetry with ChunkLoadErrorBoundary for a complete solution.
+ *
+ * @example
+ * ```tsx
+ * const MyComponent = lazyWithErrorRecovery(
+ *   () => import('./MyComponent'),
+ *   { componentName: 'My Component' }
+ * );
+ *
+ * // Use in JSX
+ * <MyComponent />
+ * ```
+ */
+export function lazyWithErrorRecovery<T extends ComponentType<any>>(
+  componentImport: () => Promise<{ default: T }>,
+  options: LazyWithErrorRecoveryOptions = {},
+): React.FC<React.ComponentProps<T>> {
+  const LazyComponent = lazyWithRetry(componentImport);
+  const { componentName, loadingFallback = null } = options;
+
+  // Create a wrapper component that includes error boundary and suspense
+  const WrappedComponent: React.FC<React.ComponentProps<T>> = (props) => {
+    return createElement(ChunkLoadErrorBoundary, {
+      componentName,
+      children: createElement(
+        Suspense,
+        { fallback: loadingFallback },
+        createElement(LazyComponent, props as any),
+      ),
+    });
+  };
+
+  // Set display name for debugging
+  WrappedComponent.displayName = `LazyWithErrorRecovery(${componentName || "Component"})`;
+
+  return WrappedComponent;
+}
+
+/**
+ * Higher-order component that wraps any component with chunk load error recovery.
+ * Use this to wrap existing lazy components or any component that might fail to load.
+ *
+ * @example
+ * ```tsx
+ * const SafeComponent = withChunkErrorRecovery(
+ *   MyLazyComponent,
+ *   { componentName: 'My Component' }
+ * );
+ * ```
+ */
+export function withChunkErrorRecovery<P extends object>(
+  WrappedComponent: ComponentType<P>,
+  options: { componentName?: string } = {},
+): React.FC<P> {
+  const { componentName } = options;
+
+  const WithErrorRecovery: React.FC<P> = (props) => {
+    return createElement(ChunkLoadErrorBoundary, {
+      componentName,
+      children: createElement(WrappedComponent, props),
+    });
+  };
+
+  WithErrorRecovery.displayName = `WithChunkErrorRecovery(${componentName || WrappedComponent.displayName || "Component"})`;
+
+  return WithErrorRecovery;
 }

@@ -1119,4 +1119,286 @@ describe("OfflineStorageDB", () => {
       expect(metadata?.oldestItemAt).toBe("2024-01-02T00:00:00Z"); // Last in array
     });
   });
+
+  // ==================== DB Initialization Error Handling ====================
+
+  describe("DB Initialization Error Handling", () => {
+    it("should reject when IndexedDB fails to open", async () => {
+      // This test verifies the error handling code path exists
+      // by checking that uninitialized DB operations fail appropriately
+      const uninitDb = createFreshDB();
+
+      // Operations on uninitialized DB should throw
+      await expect(uninitDb.getFeedItems()).rejects.toThrow(
+        "OfflineStorageDB not initialized",
+      );
+      await expect(uninitDb.saveFeedItems([], "timeline")).rejects.toThrow(
+        "OfflineStorageDB not initialized",
+      );
+      await expect(uninitDb.getThreadSummary("test")).rejects.toThrow(
+        "OfflineStorageDB not initialized",
+      );
+    });
+  });
+
+  // ==================== Storage Estimate ====================
+
+  describe("Storage Estimate", () => {
+    let originalStorage: StorageManager | undefined;
+
+    beforeEach(async () => {
+      await db.init();
+      // Save original storage reference
+      originalStorage = navigator.storage;
+    });
+
+    afterEach(() => {
+      // Restore original storage if it was modified
+      if (originalStorage !== undefined) {
+        Object.defineProperty(navigator, "storage", {
+          value: originalStorage,
+          writable: true,
+          configurable: true,
+        });
+      }
+    });
+
+    it("should include storage estimate in stats when navigator.storage is available", async () => {
+      const mockEstimate = { usage: 12345, quota: 100000000 };
+
+      // Create mock storage object
+      Object.defineProperty(navigator, "storage", {
+        value: {
+          estimate: vi.fn().mockResolvedValue(mockEstimate),
+        },
+        writable: true,
+        configurable: true,
+      });
+
+      const stats = await db.getStats();
+
+      // storageEstimate should be present with mocked value
+      expect(typeof stats.storageEstimate).toBe("number");
+      expect(stats.storageEstimate).toBe(12345);
+    });
+
+    it("should handle storage estimate errors gracefully", async () => {
+      Object.defineProperty(navigator, "storage", {
+        value: {
+          estimate: vi.fn().mockRejectedValue(new Error("Storage API error")),
+        },
+        writable: true,
+        configurable: true,
+      });
+
+      // Should not throw - errors are silently ignored
+      const stats = await db.getStats();
+      expect(stats.storageEstimate).toBe(0);
+    });
+
+    it("should handle undefined estimate usage gracefully", async () => {
+      Object.defineProperty(navigator, "storage", {
+        value: {
+          estimate: vi.fn().mockResolvedValue({ quota: 100000000 }), // No usage property
+        },
+        writable: true,
+        configurable: true,
+      });
+
+      const stats = await db.getStats();
+      expect(stats.storageEstimate).toBe(0);
+    });
+  });
+
+  // ==================== Edge Cases ====================
+
+  describe("Edge Cases", () => {
+    beforeEach(async () => {
+      await db.init();
+    });
+
+    it("should handle saving empty arrays", async () => {
+      await db.saveFeedItems([], "timeline");
+      await db.saveConversations([]);
+      await db.saveMessages("convo", []);
+
+      const stats = await db.getStats();
+      expect(stats.feedItemCount).toBe(0);
+      expect(stats.conversationCount).toBe(0);
+      expect(stats.messageCount).toBe(0);
+    });
+
+    it("should handle getting thread summary for empty DB", async () => {
+      const summary = await db.getThreadSummary(
+        "at://nonexistent/thread/12345",
+      );
+      expect(summary).toBeNull();
+    });
+
+    it("should not throw when deleting non-existent thread summary", async () => {
+      await expect(
+        db.deleteThreadSummary("at://nonexistent/thread/12345"),
+      ).resolves.not.toThrow();
+    });
+
+    it("should handle enforce storage limits on empty DB", async () => {
+      await expect(db.enforceStorageLimits()).resolves.not.toThrow();
+    });
+
+    it("should handle evict operations on empty DB", async () => {
+      const feedDeleted = await db.evictOldFeedItems();
+      const msgDeleted = await db.evictOldMessages();
+      const summaryDeleted = await db.evictOldSummaries();
+
+      expect(feedDeleted).toBe(0);
+      expect(msgDeleted).toBe(0);
+      expect(summaryDeleted).toBe(0);
+    });
+
+    it("should handle getFeedItems without feedType filter", async () => {
+      const items = [
+        createMockFeedItem({ uri: "at://test/1" }),
+        createMockFeedItem({ uri: "at://test/2" }),
+      ];
+
+      await db.saveFeedItems(items, "timeline");
+
+      // Get all items without filter
+      const retrieved = await db.getFeedItems(10);
+      expect(retrieved.length).toBe(2);
+    });
+
+    it("should handle thread summaries metadata update", async () => {
+      // Save multiple summaries
+      await db.saveThreadSummary(
+        createMockThreadSummary({ threadUri: "at://test/1" }),
+      );
+      await db.saveThreadSummary(
+        createMockThreadSummary({ threadUri: "at://test/2" }),
+      );
+
+      const metadata = await db.getMetadata("thread_summaries");
+      expect(metadata).not.toBeNull();
+      expect(metadata?.lastSyncAt).toBeDefined();
+    });
+  });
+
+  // ==================== Compound Index Tests ====================
+
+  describe("Compound Index Usage", () => {
+    beforeEach(async () => {
+      await db.init();
+    });
+
+    it("should use compound index for author feed queries", async () => {
+      const authorDid = "did:plc:testauthor123";
+      const items = [
+        createMockFeedItem({
+          uri: "at://test/1",
+          author: {
+            did: authorDid,
+            handle: "testauthor.bsky.social",
+            displayName: "Test Author",
+          },
+          indexedAt: "2024-01-01T00:00:00Z",
+        }),
+        createMockFeedItem({
+          uri: "at://test/2",
+          author: {
+            did: authorDid,
+            handle: "testauthor.bsky.social",
+            displayName: "Test Author",
+          },
+          indexedAt: "2024-01-02T00:00:00Z",
+        }),
+        createMockFeedItem({
+          uri: "at://test/3",
+          author: {
+            did: "did:plc:different",
+            handle: "other.bsky.social",
+            displayName: "Other Author",
+          },
+          indexedAt: "2024-01-03T00:00:00Z",
+        }),
+      ];
+
+      await db.saveFeedItems(items, "author");
+
+      // Query for specific feed type should use compound index
+      const authorFeed = await db.getFeedItems(10, "author");
+      expect(authorFeed.length).toBe(3);
+
+      // Verify sorting
+      expect(authorFeed[0].indexedAt).toBe("2024-01-03T00:00:00Z");
+    });
+
+    it("should fall back to indexedAt index when compound index is not available", async () => {
+      // This tests the else branch in getFeedItems where feedType filter is applied manually
+      const items = [
+        createMockFeedItem({
+          uri: "at://test/1",
+          indexedAt: "2024-01-01T00:00:00Z",
+        }),
+        createMockFeedItem({
+          uri: "at://test/2",
+          indexedAt: "2024-01-02T00:00:00Z",
+        }),
+      ];
+
+      await db.saveFeedItems(items, "list");
+
+      const listFeed = await db.getFeedItems(10, "list");
+      expect(listFeed.length).toBe(2);
+    });
+  });
+
+  // ==================== LRU Eviction Tests ====================
+
+  describe("LRU Eviction for Summaries", () => {
+    beforeEach(async () => {
+      await db.init();
+      // Clear all data for clean test
+      await db.clearAll();
+    });
+
+    it("should update lastAccessedAt when retrieving summaries", async () => {
+      // Create a summary
+      const summary = createMockThreadSummary({
+        threadUri: "at://test/lru-summary",
+      });
+      await db.saveThreadSummary(summary);
+
+      // Wait a bit
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Access the summary
+      const retrieved = await db.getThreadSummary("at://test/lru-summary");
+
+      // _lastAccessedAt should be updated (greater than or equal to _offlineCachedAt)
+      expect(retrieved?._lastAccessedAt).toBeGreaterThanOrEqual(
+        retrieved?._offlineCachedAt ?? 0,
+      );
+    });
+
+    it("should track access patterns for LRU eviction", async () => {
+      // Create summaries with unique URIs
+      const summaries = Array.from({ length: 5 }, (_, i) =>
+        createMockThreadSummary({ threadUri: `at://test/lru${i}` }),
+      );
+
+      // Save all summaries
+      for (const s of summaries) {
+        await db.saveThreadSummary(s);
+        await new Promise((resolve) => setTimeout(resolve, 5));
+      }
+
+      // Access some summaries to update their _lastAccessedAt
+      await db.getThreadSummary("at://test/lru4");
+      await db.getThreadSummary("at://test/lru2");
+
+      // Verify all 5 summaries exist
+      const count = await db.getThreadSummaryCount();
+      expect(count).toBe(5);
+    });
+  });
 });

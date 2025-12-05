@@ -8,6 +8,7 @@ import {
   CornerDownRight,
   ExternalLink,
   GitBranch,
+  Layers,
   Loader2,
   MessageSquare,
   Minus,
@@ -28,6 +29,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { ThreadProvider } from "../contexts/ThreadContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { useResponsiveCollapseThresholds } from "../hooks/useResponsiveCollapseThresholds";
+import { calculateComplexityFromPosts } from "../services/thread-complexity-scorer";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
 import { ImageGallery } from "./ImageGallery";
@@ -374,6 +376,23 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     threadTree.forEach(traverse);
     return maxDepth;
   }, [threadTree]);
+
+  // Count branch points in the thread
+  const branchCount = useMemo(() => {
+    let count = 0;
+    const countBranches = (node: ThreadNode) => {
+      if (node.children.length > 1) count++;
+      node.children.forEach(countBranches);
+    };
+    threadTree.forEach(countBranches);
+    return count;
+  }, [threadTree]);
+
+  // Calculate thread complexity score for progressive reveal and UI degradation
+  const complexityScore = useMemo(
+    () => calculateComplexityFromPosts(posts, maxThreadDepth, branchCount),
+    [posts, maxThreadDepth, branchCount],
+  );
 
   // Get the CSS custom property name based on thread depth
   // This allows CSS clamp() to handle responsive scaling automatically
@@ -978,15 +997,20 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
         const descendantCount = hasChildren ? countNodeDescendants(node) : 0;
 
         // Calculate if this branch should show "load more" (old behavior)
-        const hasMultipleChildren = node.children.length > maxInitialReplies;
+        // Use complexity-based threshold or fallback to maxInitialReplies
+        const effectiveMaxReplies = Math.min(
+          maxInitialReplies,
+          complexityScore.revealBatchSize,
+        );
+        const hasMultipleChildren = node.children.length > effectiveMaxReplies;
         const isExpanded = expandedBranches.has(nodeUri);
         const visibleChildren = isCollapsed
           ? [] // Show nothing when collapsed
           : hasMultipleChildren && !isExpanded
-            ? node.children.slice(0, maxInitialReplies)
+            ? node.children.slice(0, effectiveMaxReplies)
             : node.children;
         const hiddenCount = hasMultipleChildren
-          ? node.children.length - maxInitialReplies
+          ? node.children.length - effectiveMaxReplies
           : 0;
 
         // Count branches at this level
@@ -1123,17 +1147,17 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                             ? depthBgColor // Subtle depth-based background
                             : "var(--bsky-bg-secondary)",
                   borderColor: isCurrentUser
-                    ? "rgb(34, 197, 94)" // Green left border for user's posts
+                    ? "var(--bsky-success-light)" // Green left border for user's posts
                     : undefined,
                   border:
                     isHighlighted && !hasShownInitialHighlight
-                      ? "2px solid rgba(251, 146, 60, 0.5)"
+                      ? "2px solid var(--bsky-orange-light)"
                       : isCurrentUser
                         ? undefined
                         : "1px solid var(--bsky-border-primary)",
                   // Depth-colored left border for visual hierarchy
                   borderLeft: isCurrentUser
-                    ? "4px solid rgb(34, 197, 94)"
+                    ? "4px solid var(--bsky-success-light)"
                     : node.depth > 0 && !node.isRoot
                       ? `3px solid ${depthBorderColor}`
                       : undefined,
@@ -1154,7 +1178,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                         ? "0.875rem"
                         : "1rem",
                   outline: isFocused
-                    ? "2px solid rgb(96, 165, 250)"
+                    ? "2px solid var(--bsky-info-light)"
                     : undefined,
                   outlineOffset: isFocused ? "2px" : undefined,
                 }}
@@ -1194,27 +1218,13 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       </span>
                     )}
                     {isCurrentUser && !node.isRoot && (
-                      <span
-                        className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium"
-                        style={{
-                          backgroundColor: "rgba(34, 197, 94, 0.15)",
-                          color: "rgb(34, 197, 94)",
-                          border: "1px solid rgba(34, 197, 94, 0.3)",
-                        }}
-                      >
+                      <span className="border-bsky-success/30 bg-bsky-success/15 flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium text-bsky-success">
                         <User size={10} />
                         Your reply
                       </span>
                     )}
                     {hasBranches && (
-                      <span
-                        className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium"
-                        style={{
-                          backgroundColor: "rgba(147, 51, 234, 0.1)",
-                          color: "rgb(147, 51, 234)",
-                          border: "1px solid rgba(147, 51, 234, 0.2)",
-                        }}
-                      >
+                      <span className="border-bsky-quote/20 bg-bsky-quote/10 flex items-center gap-1 rounded border px-2 py-0.5 text-xs font-medium text-bsky-quote">
                         <GitBranch size={10} />
                         {node.children.length} branches
                       </span>
@@ -1234,14 +1244,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     {isHighlighted &&
                       hasShownInitialHighlight &&
                       !node.isRoot && (
-                        <span
-                          className="flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium"
-                          style={{
-                            backgroundColor: "rgba(251, 146, 60, 0.1)",
-                            color: "rgb(251, 146, 60)",
-                            border: "1px solid rgba(251, 146, 60, 0.3)",
-                          }}
-                        >
+                        <span className="border-bsky-orange/30 bg-bsky-orange/10 text-bsky-orange flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium">
                           <ExternalLink size={10} />
                           Opened here
                         </span>
@@ -1616,6 +1619,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
       focusedPostIndex,
       expandedBranches,
       maxInitialReplies,
+      complexityScore,
       toggleBranch,
       setFocusedPostIndex,
       onDeletePost,
@@ -1751,7 +1755,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
               />
             )}
 
-            {/* Replies toggle */}
+            {/* Replies toggle with complexity indicator */}
             {replyCount > 0 && (
               <button
                 onClick={() => setShowReplies(!showReplies)}
@@ -1761,20 +1765,39 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                   border: "1px solid var(--bsky-border-primary)",
                 }}
               >
-                <span
-                  className="text-sm font-medium"
-                  style={{ color: "var(--bsky-text-primary)" }}
-                >
-                  {replyCount} {replyCount === 1 ? "reply" : "replies"}
-                  {userParticipationStats.count > 0 && (
+                <div className="flex items-center gap-2">
+                  <span
+                    className="text-sm font-medium"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                  >
+                    {replyCount} {replyCount === 1 ? "reply" : "replies"}
+                    {userParticipationStats.count > 0 && (
+                      <span
+                        className="ml-2"
+                        style={{ color: "rgb(34, 197, 94)" }}
+                      >
+                        · {userParticipationStats.count} from you
+                      </span>
+                    )}
+                  </span>
+                  {/* Complexity badge for complex threads */}
+                  {(complexityScore.level === "high" ||
+                    complexityScore.level === "extreme") && (
                     <span
-                      className="ml-2"
-                      style={{ color: "rgb(34, 197, 94)" }}
+                      className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                        complexityScore.level === "extreme"
+                          ? "border-bsky-error/20 bg-bsky-error/10 border text-bsky-error"
+                          : "border-bsky-orange/20 bg-bsky-orange/10 text-bsky-orange border"
+                      }`}
+                      title={`Complexity score: ${complexityScore.score}/100`}
                     >
-                      · {userParticipationStats.count} from you
+                      <Layers size={10} />
+                      {complexityScore.level === "extreme"
+                        ? "Very Complex"
+                        : "Complex"}
                     </span>
                   )}
-                </span>
+                </div>
                 {showReplies ? (
                   <ChevronUp
                     size={20}

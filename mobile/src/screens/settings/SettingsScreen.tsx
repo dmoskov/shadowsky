@@ -56,6 +56,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#1f2937',
+    minHeight: 44, // WCAG 2.1 touch target minimum
   },
   itemTitle: {
     color: '#ffffff',

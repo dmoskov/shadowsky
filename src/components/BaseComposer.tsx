@@ -498,7 +498,7 @@ export function BaseComposer({
             }}
             onBlur={onBlur}
             placeholder={placeholder}
-            className={`w-full resize-none rounded-lg border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`w-full resize-none rounded-lg border px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
               isInline ? "min-h-[40px]" : "min-h-[100px]"
             }`}
             style={{
@@ -545,7 +545,7 @@ export function BaseComposer({
                         value={item.alt}
                         onChange={(e) => updateAltText(item.id, e.target.value)}
                         placeholder="Alt text"
-                        className="flex-1 rounded border px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 rounded border px-2 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         style={{
                           backgroundColor: "var(--bsky-bg-secondary)",
                           borderColor: "var(--bsky-border-primary)",

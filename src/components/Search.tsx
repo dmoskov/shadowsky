@@ -791,7 +791,7 @@ export const Search: React.FC = () => {
                       handleSearch();
                     }
                   }}
-                  className="flex-1 rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2"
+                  className="flex-1 rounded-lg border px-3 py-2 text-sm transition-all focus-visible:outline-none focus-visible:ring-2"
                   style={{
                     backgroundColor: "var(--bsky-bg-secondary)",
                     borderColor: "var(--bsky-border-primary)",
@@ -1071,7 +1071,7 @@ export const Search: React.FC = () => {
                               }, 200);
                             }}
                             placeholder="e.g., jay.bsky.team or me"
-                            className="flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                            className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                             style={{
                               backgroundColor: "var(--bsky-bg-secondary)",
                               borderColor: "var(--bsky-border-primary)",
@@ -1321,7 +1321,7 @@ export const Search: React.FC = () => {
                             sinceDate: e.target.value,
                           }))
                         }
-                        className="cursor-pointer rounded-md border px-2 py-1 pr-7 text-xs focus:outline-none focus:ring-2"
+                        className="cursor-pointer rounded-md border px-2 py-1 pr-7 text-xs focus-visible:outline-none focus-visible:ring-2"
                         style={{
                           backgroundColor: "var(--bsky-bg-secondary)",
                           borderColor: "var(--bsky-border-primary)",
@@ -1357,7 +1357,7 @@ export const Search: React.FC = () => {
                             untilDate: e.target.value,
                           }))
                         }
-                        className="cursor-pointer rounded-md border px-2 py-1 pr-7 text-xs focus:outline-none focus:ring-2"
+                        className="cursor-pointer rounded-md border px-2 py-1 pr-7 text-xs focus-visible:outline-none focus-visible:ring-2"
                         style={{
                           backgroundColor: "var(--bsky-bg-secondary)",
                           borderColor: "var(--bsky-border-primary)",
@@ -1427,7 +1427,7 @@ export const Search: React.FC = () => {
                             }));
                           }}
                           placeholder='e.g., "hello world"'
-                          className="flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                          className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                           style={{
                             backgroundColor: "var(--bsky-bg-secondary)",
                             borderColor: "var(--bsky-border-primary)",
@@ -1483,7 +1483,7 @@ export const Search: React.FC = () => {
                             }));
                           }}
                           placeholder="e.g., bluesky"
-                          className="flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                          className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                           style={{
                             backgroundColor: "var(--bsky-bg-secondary)",
                             borderColor: "var(--bsky-border-primary)",
@@ -1565,7 +1565,7 @@ export const Search: React.FC = () => {
                               }, 200);
                             }}
                             placeholder="e.g., alice.bsky.social or me"
-                            className="flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                            className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                             style={{
                               backgroundColor: "var(--bsky-bg-secondary)",
                               borderColor: "var(--bsky-border-primary)",
@@ -1711,7 +1711,7 @@ export const Search: React.FC = () => {
                             }));
                           }}
                           placeholder="e.g., npr.org"
-                          className="flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                          className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                           style={{
                             backgroundColor: "var(--bsky-bg-secondary)",
                             borderColor: "var(--bsky-border-primary)",
@@ -1760,7 +1760,7 @@ export const Search: React.FC = () => {
                         language: e.target.value,
                       }))
                     }
-                    className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                    className="w-full rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                     style={{
                       backgroundColor: "var(--bsky-bg-secondary)",
                       borderColor: "var(--bsky-border-primary)",

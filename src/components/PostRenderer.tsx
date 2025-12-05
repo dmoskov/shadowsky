@@ -10,9 +10,10 @@ import {
   Reply,
   Sparkles,
 } from "lucide-react";
-import React from "react";
+import React, { memo } from "react";
 import { useNavigate } from "react-router";
 import { useModerationPreferences } from "../hooks/useModerationPreferences";
+import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
 import { isValidUrl } from "../utils/security";
@@ -197,7 +198,43 @@ interface PostRendererProps {
   onQuoteClick?: (uri: string) => void;
 }
 
-export const PostRenderer: React.FC<PostRendererProps> = ({
+/**
+ * Custom comparison function for PostRenderer memoization
+ * Prevents re-renders when only shallow prop references change
+ */
+function arePostRendererPropsEqual(
+  prevProps: PostRendererProps,
+  nextProps: PostRendererProps,
+): boolean {
+  // Compare post identity
+  if (prevProps.post.uri !== nextProps.post.uri) return false;
+  if (prevProps.post.cid !== nextProps.post.cid) return false;
+
+  // Compare engagement counts
+  if (prevProps.post.likeCount !== nextProps.post.likeCount) return false;
+  if (prevProps.post.repostCount !== nextProps.post.repostCount) return false;
+  if (prevProps.post.replyCount !== nextProps.post.replyCount) return false;
+
+  // Compare viewer state
+  if (prevProps.post.viewer?.like !== nextProps.post.viewer?.like) return false;
+  if (prevProps.post.viewer?.repost !== nextProps.post.viewer?.repost)
+    return false;
+
+  // Compare UI props
+  if (prevProps.isBookmarked !== nextProps.isBookmarked) return false;
+  if (prevProps.compact !== nextProps.compact) return false;
+  if (prevProps.showActions !== nextProps.showActions) return false;
+
+  // Compare reason type (for repost indicators)
+  const prevReasonType = prevProps.reason?.$type;
+  const nextReasonType = nextProps.reason?.$type;
+  if (prevReasonType !== nextReasonType) return false;
+
+  // Callbacks are expected to be stable (using useCallback in parent)
+  return true;
+}
+
+const PostRendererComponent: React.FC<PostRendererProps> = ({
   post,
   reason,
   onLike,
@@ -231,6 +268,12 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
   const [showSensitiveMedia, setShowSensitiveMedia] = React.useState(false);
   const { shouldBlurMedia, shouldHideMedia, getSensitiveWarningText } =
     useModerationPreferences();
+  const { getProfilePrefetchHandlers, getThreadPrefetchHandlers } =
+    useRoutePrefetch();
+
+  // Get prefetch handlers for this post's author and thread
+  const authorPrefetchHandlers = getProfilePrefetchHandlers(post.author.handle);
+  const threadPrefetchHandlers = getThreadPrefetchHandlers(post.uri);
 
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -708,9 +751,10 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
 
   return (
     <>
-      <div
+      <article
         className={`post-renderer p-4 ${compact ? "compact" : ""} ${record?.reply?.parent ? "is-reply" : ""} ${onClick ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800" : ""}`}
         onClick={handlePostClick}
+        aria-label={`Post by ${post.author.displayName || post.author.handle}`}
       >
         {/* Repost context */}
         {reason && reason.$type === "app.bsky.feed.defs#reasonRepost" && (
@@ -760,6 +804,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
               alt={post.author.handle}
               className="h-12 w-12 cursor-pointer rounded-full transition-opacity hover:opacity-80"
               onClick={handleAuthorClick}
+              {...authorPrefetchHandlers}
             />
           </ProfileHoverCard>
 
@@ -772,6 +817,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
                     className="cursor-pointer font-semibold hover:underline"
                     style={{ color: "var(--bsky-text-primary)" }}
                     onClick={handleAuthorClick}
+                    {...authorPrefetchHandlers}
                   >
                     {post.author.displayName || post.author.handle}
                   </span>
@@ -781,6 +827,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
                     className="cursor-pointer hover:underline"
                     style={{ color: "var(--bsky-text-secondary)" }}
                     onClick={handleAuthorClick}
+                    {...authorPrefetchHandlers}
                   >
                     @{post.author.handle}
                   </span>
@@ -795,6 +842,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
                     const postId = post.uri.split("/").pop();
                     navigate(`/thread/${post.author.handle}/${postId}`);
                   }}
+                  {...threadPrefetchHandlers}
                 >
                   {formatDistanceToNow(new Date(post.indexedAt), {
                     addSuffix: true,
@@ -805,10 +853,13 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
                 <button
                   onClick={onMenuClick}
                   className="rounded-full p-1 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+                  aria-label="More options"
+                  aria-haspopup="menu"
                 >
                   <MoreVertical
                     size={16}
                     style={{ color: "var(--bsky-text-secondary)" }}
+                    aria-hidden="true"
                   />
                 </button>
               )}
@@ -831,7 +882,11 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
 
             {/* Actions */}
             {showActions && !compact && (
-              <div className="mt-3 flex items-center gap-4">
+              <div
+                className="mt-3 flex items-center gap-4"
+                role="group"
+                aria-label="Post actions"
+              >
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -839,9 +894,10 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
                   }}
                   className="flex items-center gap-1 text-sm transition-colors hover:text-blue-500"
                   style={{ color: "var(--bsky-text-secondary)" }}
+                  aria-label={`Reply to post, ${post.replyCount || 0} replies`}
                 >
-                  <MessageCircle size={18} />
-                  <span>{post.replyCount || 0}</span>
+                  <MessageCircle size={18} aria-hidden="true" />
+                  <span aria-hidden="true">{post.replyCount || 0}</span>
                 </button>
 
                 <button
@@ -857,9 +913,11 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
                       ? undefined
                       : "var(--bsky-text-secondary)",
                   }}
+                  aria-label={`${post.viewer?.repost ? "Undo repost" : "Repost"}, ${post.repostCount || 0} reposts`}
+                  aria-pressed={!!post.viewer?.repost}
                 >
-                  <Repeat2 size={18} />
-                  <span>{post.repostCount || 0}</span>
+                  <Repeat2 size={18} aria-hidden="true" />
+                  <span aria-hidden="true">{post.repostCount || 0}</span>
                 </button>
 
                 <button
@@ -875,12 +933,15 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
                       ? undefined
                       : "var(--bsky-text-secondary)",
                   }}
+                  aria-label={`${post.viewer?.like ? "Unlike" : "Like"}, ${post.likeCount || 0} likes`}
+                  aria-pressed={!!post.viewer?.like}
                 >
                   <Heart
                     size={18}
                     fill={post.viewer?.like ? "currentColor" : "none"}
+                    aria-hidden="true"
                   />
-                  <span>{post.likeCount || 0}</span>
+                  <span aria-hidden="true">{post.likeCount || 0}</span>
                 </button>
 
                 {onBookmark && (
@@ -897,10 +958,15 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
                         ? undefined
                         : "var(--bsky-text-secondary)",
                     }}
+                    aria-label={
+                      isBookmarked ? "Remove bookmark" : "Bookmark post"
+                    }
+                    aria-pressed={isBookmarked}
                   >
                     <Bookmark
                       size={18}
                       fill={isBookmarked ? "currentColor" : "none"}
+                      aria-hidden="true"
                     />
                   </button>
                 )}
@@ -908,7 +974,7 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
             )}
           </div>
         </div>
-      </div>
+      </article>
 
       {/* Image Gallery Modal */}
       {galleryImages && (
@@ -921,3 +987,12 @@ export const PostRenderer: React.FC<PostRendererProps> = ({
     </>
   );
 };
+
+/**
+ * Memoized PostRenderer for optimal feed scroll performance
+ * Uses custom comparator to prevent cascading re-renders from parent components
+ */
+export const PostRenderer = memo(
+  PostRendererComponent,
+  arePostRendererPropsEqual,
+);

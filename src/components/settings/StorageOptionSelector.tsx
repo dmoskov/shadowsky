@@ -84,27 +84,13 @@ export const StorageOptionSelector: React.FC<StorageOptionSelectorProps> = ({
                 </p>
 
                 {option.warning && (
-                  <div
-                    className="mt-2 rounded p-2 text-sm font-medium"
-                    style={{
-                      backgroundColor: "rgba(239, 68, 68, 0.1)",
-                      color: "#ef4444",
-                      border: "1px solid rgba(239, 68, 68, 0.3)",
-                    }}
-                  >
+                  <div className="border-bsky-error/30 bg-bsky-error/10 mt-2 rounded border p-2 text-sm font-medium text-bsky-error">
                     ⚠️ {option.warning}
                   </div>
                 )}
 
                 {option.info && (
-                  <div
-                    className="mt-2 rounded p-2 text-sm"
-                    style={{
-                      backgroundColor: "rgba(59, 130, 246, 0.1)",
-                      color: "#3b82f6",
-                      border: "1px solid rgba(59, 130, 246, 0.3)",
-                    }}
-                  >
+                  <div className="border-bsky-info/30 bg-bsky-info/10 mt-2 rounded border p-2 text-sm text-bsky-info">
                     ℹ️ {option.info}
                   </div>
                 )}
@@ -114,7 +100,7 @@ export const StorageOptionSelector: React.FC<StorageOptionSelectorProps> = ({
                     <span style={{ color: "var(--bsky-text-tertiary)" }}>
                       Pros:
                     </span>
-                    <ul className="mt-1" style={{ color: "#22c55e" }}>
+                    <ul className="mt-1 text-bsky-success">
                       {option.pros.map((pro, i) => (
                         <li key={i}>• {pro}</li>
                       ))}
@@ -124,7 +110,7 @@ export const StorageOptionSelector: React.FC<StorageOptionSelectorProps> = ({
                     <span style={{ color: "var(--bsky-text-tertiary)" }}>
                       Cons:
                     </span>
-                    <ul className="mt-1" style={{ color: "#ef4444" }}>
+                    <ul className="mt-1 text-bsky-error">
                       {option.cons.map((con, i) => (
                         <li
                           key={i}

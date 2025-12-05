@@ -465,7 +465,7 @@ export const MarkdownComposer = forwardRef<
           onBlur={onBlur}
           placeholder={placeholder}
           autoFocus={autoFocus}
-          className={`min-h-[120px] w-full resize-none rounded-lg border px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
+          className={`min-h-[120px] w-full resize-none rounded-lg border px-3 py-2 font-mono text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${className}`}
           style={{
             ...style,
             backgroundColor: "var(--bsky-bg-secondary)",

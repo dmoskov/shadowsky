@@ -4,6 +4,39 @@
 
 :root {
   /* ==========================================
+   * Focus Ring System - WCAG 2.1 AAA Compliant
+   * ==========================================
+   * Enhanced focus indicators for keyboard navigation accessibility.
+   * Meets WCAG 2.1 AAA requirements for 3:1 contrast ratio against
+   * adjacent colors.
+   */
+
+  /* Focus ring configuration */
+  --focus-ring-width: 3px; /* Enhanced width for AAA compliance */
+  --focus-ring-offset: 2px; /* Offset from element border */
+  --focus-ring-color: var(--bsky-primary);
+  --focus-ring-color-rgb: var(--bsky-primary-rgb);
+  --focus-ring-glow-opacity: 0.3;
+  --focus-ring-glow-size: 6px;
+
+  /* Focus ring transition */
+  --focus-ring-transition:
+    outline 0.15s ease-out, outline-offset 0.15s ease-out,
+    box-shadow 0.15s ease-out;
+
+  /* High-visibility focus ring for dark backgrounds */
+  --focus-ring-color-light: #ffffff;
+  --focus-ring-color-light-rgb: 255, 255, 255;
+
+  /* Destructive action focus ring */
+  --focus-ring-color-destructive: #dc2626;
+  --focus-ring-color-destructive-rgb: 220, 38, 38;
+
+  /* Success action focus ring */
+  --focus-ring-color-success: #059669;
+  --focus-ring-color-success-rgb: 5, 150, 105;
+
+  /* ==========================================
    * Animation Tokens - Coordinated Timing System
    * ==========================================
    * Use these tokens for consistent, natural-feeling animations
@@ -50,6 +83,14 @@
   --ease-entrance: cubic-bezier(0, 0, 0.2, 1);
   /* Quick acceleration for exits */
   --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Enhanced spring curves for interactive elements */
+  /* Soft spring - subtle bounce for buttons and toggles */
+  --ease-spring-soft: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Medium spring - noticeable bounce for cards and modals */
+  --ease-spring-medium: cubic-bezier(0.22, 1.5, 0.36, 1);
+  /* Snappy spring - quick response for micro-interactions */
+  --ease-spring-snappy: cubic-bezier(0.5, 1.8, 0.5, 0.8);
 
   /* Composite transition tokens - common patterns */
   --transition-colors-fast:
@@ -101,9 +142,29 @@
 
   /* Status colors */
   --bsky-success: #10b981;
+  --bsky-success-light: #22c55e;
+  --bsky-success-lighter: #4ade80;
+  --bsky-success-lightest: #86efac;
   --bsky-warning: #f59e0b;
+  --bsky-warning-light: #fbbf24;
+  --bsky-warning-lighter: #fcd34d;
   --bsky-error: #ef4444;
+  --bsky-error-light: #f87171;
+  --bsky-error-lighter: #fca5a5;
   --bsky-info: #3b82f6;
+  --bsky-info-light: #60a5fa;
+  --bsky-info-lighter: #93c5fd;
+
+  /* Extended notification/action colors */
+  --bsky-orange: #f97316;
+  --bsky-orange-light: #fb923c;
+  --bsky-pink: #ec4899;
+  --bsky-pink-light: #f472b6;
+  --bsky-pink-lighter: #fb7185;
+  --bsky-pink-lightest: #fda4af;
+  --bsky-teal: #14b8a6;
+  --bsky-yellow: #eab308;
+  --bsky-yellow-light: #facc15;
 
   /* Shadows and effects */
   --bsky-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -111,14 +172,27 @@
   --bsky-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
   --bsky-glow: 0 0 20px rgba(0, 133, 255, 0.3);
 
-  /* Landing page accent backgrounds */
+  /* Accent backgrounds (10% opacity for backgrounds) */
   --bsky-primary-10: rgba(0, 133, 255, 0.1);
   --bsky-success-10: rgba(16, 185, 129, 0.1);
+  --bsky-error-10: rgba(239, 68, 68, 0.1);
+  --bsky-warning-10: rgba(245, 158, 11, 0.1);
+  --bsky-info-10: rgba(59, 130, 246, 0.1);
+  --bsky-orange-10: rgba(249, 115, 22, 0.1);
 }
 
 /* Dark theme */
 .dark,
 [data-theme="dark"] {
+  /* Focus ring - brighter for dark mode visibility */
+  --focus-ring-color: #60a5fa;
+  --focus-ring-color-rgb: 96, 165, 250;
+  --focus-ring-glow-opacity: 0.4;
+  --focus-ring-color-destructive: #f87171;
+  --focus-ring-color-destructive-rgb: 248, 113, 113;
+  --focus-ring-color-success: #34d399;
+  --focus-ring-color-success-rgb: 52, 211, 153;
+
   /* Primary colors remain similar for consistency */
   --bsky-primary: #0085ff;
   --bsky-primary-rgb: 0, 133, 255;
@@ -159,9 +233,29 @@
 
   /* Status colors - adjusted for dark mode */
   --bsky-success: #34d399;
+  --bsky-success-light: #4ade80;
+  --bsky-success-lighter: #6ee7b7;
+  --bsky-success-lightest: #a7f3d0;
   --bsky-warning: #fbbf24;
+  --bsky-warning-light: #fcd34d;
+  --bsky-warning-lighter: #fde68a;
   --bsky-error: #f87171;
+  --bsky-error-light: #fca5a5;
+  --bsky-error-lighter: #fecaca;
   --bsky-info: #60a5fa;
+  --bsky-info-light: #93c5fd;
+  --bsky-info-lighter: #bfdbfe;
+
+  /* Extended notification/action colors - dark mode */
+  --bsky-orange: #fb923c;
+  --bsky-orange-light: #fdba74;
+  --bsky-pink: #f472b6;
+  --bsky-pink-light: #f9a8d4;
+  --bsky-pink-lighter: #fb7185;
+  --bsky-pink-lightest: #fda4af;
+  --bsky-teal: #2dd4bf;
+  --bsky-yellow: #facc15;
+  --bsky-yellow-light: #fde047;
 
   /* Shadows and effects for dark theme */
   --bsky-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
@@ -169,14 +263,30 @@
   --bsky-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.7);
   --bsky-glow: 0 0 20px rgba(0, 133, 255, 0.5);
 
-  /* Landing page accent backgrounds - dark theme */
+  /* Accent backgrounds - dark theme */
   --bsky-primary-10: rgba(0, 133, 255, 0.15);
   --bsky-success-10: rgba(52, 211, 153, 0.15);
+  --bsky-error-10: rgba(248, 113, 113, 0.15);
+  --bsky-warning-10: rgba(251, 191, 36, 0.15);
+  --bsky-info-10: rgba(96, 165, 250, 0.15);
+  --bsky-orange-10: rgba(251, 146, 60, 0.15);
 }
 
 /* High Contrast Theme - Light Mode - WCAG AAA (7:1 minimum contrast ratio) */
 [data-high-contrast="true"],
 [data-high-contrast="true"][data-theme="light"] {
+  /* Enhanced focus ring for high contrast mode */
+  --focus-ring-width: 4px;
+  --focus-ring-offset: 3px;
+  --focus-ring-color: #000000;
+  --focus-ring-color-rgb: 0, 0, 0;
+  --focus-ring-glow-opacity: 0.5;
+  --focus-ring-glow-size: 8px;
+  --focus-ring-color-destructive: #7f1d1d;
+  --focus-ring-color-destructive-rgb: 127, 29, 29;
+  --focus-ring-color-success: #14532d;
+  --focus-ring-color-success-rgb: 20, 83, 45;
+
   /* Primary colors - high contrast blue */
   --bsky-primary: #0051a8;
   --bsky-primary-rgb: 0, 81, 168;
@@ -230,6 +340,18 @@
 /* High Contrast Theme - Dark Mode - WCAG AAA (7:1 minimum contrast ratio) */
 [data-high-contrast="true"][data-theme="dark"],
 [data-high-contrast="true"].dark {
+  /* Enhanced focus ring for high contrast dark mode */
+  --focus-ring-width: 4px;
+  --focus-ring-offset: 3px;
+  --focus-ring-color: #ffffff;
+  --focus-ring-color-rgb: 255, 255, 255;
+  --focus-ring-glow-opacity: 0.6;
+  --focus-ring-glow-size: 8px;
+  --focus-ring-color-destructive: #fecaca;
+  --focus-ring-color-destructive-rgb: 254, 202, 202;
+  --focus-ring-color-success: #bbf7d0;
+  --focus-ring-color-success-rgb: 187, 247, 208;
+
   /* Primary colors - brighter for dark mode */
   --bsky-primary: #60a5fa;
   --bsky-primary-rgb: 96, 165, 250;
@@ -280,18 +402,20 @@
   --bsky-success-10: rgba(110, 231, 183, 0.2);
 }
 
-/* High Contrast focus indicators */
+/* High Contrast focus indicators - uses enhanced focus ring tokens */
 [data-high-contrast="true"] *:focus-visible {
-  outline: 3px solid var(--bsky-primary) !important;
-  outline-offset: 2px !important;
+  outline: var(--focus-ring-width) solid var(--focus-ring-color) !important;
+  outline-offset: var(--focus-ring-offset) !important;
 }
 
 [data-high-contrast="true"] a:focus-visible,
 [data-high-contrast="true"] button:focus-visible,
-[data-high-contrast="true"] [role="button"]:focus-visible {
-  outline: 3px solid var(--bsky-primary) !important;
-  outline-offset: 2px !important;
-  box-shadow: var(--bsky-glow) !important;
+[data-high-contrast="true"] [role="button"]:focus-visible,
+[data-high-contrast="true"] [tabindex="0"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color) !important;
+  outline-offset: var(--focus-ring-offset) !important;
+  box-shadow: 0 0 0 var(--focus-ring-glow-size)
+    rgba(var(--focus-ring-color-rgb), var(--focus-ring-glow-opacity)) !important;
 }
 
 /* Reduced Motion Preferences */
@@ -336,63 +460,395 @@
 
 .focus-visible-polyfill:focus-visible,
 :focus-visible {
-  outline: 2px solid var(--bsky-primary);
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  transition: var(--focus-ring-transition);
+}
+
+/* Skip navigation links for keyboard users - WCAG 2.4.1 Bypass Blocks */
+.skip-links-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  background: var(--bsky-primary);
+  color: white;
+  padding: 12px 24px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  position: fixed;
+  left: 8px;
+  top: 0;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  outline: 3px solid var(--bsky-primary-light);
   outline-offset: 2px;
 }
 
-/* Skip to main content link for keyboard users */
-.skip-link {
-  position: absolute;
-  top: -40px;
-  left: 0;
-  background: var(--bsky-primary);
-  color: white;
-  padding: 8px 16px;
-  z-index: 100;
-  text-decoration: none;
-  font-weight: 600;
+/* Position second skip link next to the first when focused */
+.skip-links-container .skip-link:nth-child(2):focus,
+.skip-links-container .skip-link:nth-child(2):focus-visible {
+  left: calc(8px + 200px);
 }
 
-.skip-link:focus {
-  top: 0;
-}
+/* ==========================================
+ * Enhanced Focus Ring System - WCAG 2.1 AAA
+ * ==========================================
+ * Uses CSS custom properties for consistent, accessible focus indicators
+ * that meet 3:1 contrast ratio requirements against adjacent colors.
+ */
 
-/* Enhanced focus indicators (user preference) */
+/* Enhanced focus indicators (user preference toggle) */
 .enhanced-focus *:focus-visible {
-  outline: 3px solid var(--bsky-primary) !important;
-  outline-offset: 3px !important;
+  outline: var(--focus-ring-width) solid var(--focus-ring-color) !important;
+  outline-offset: var(--focus-ring-offset) !important;
+  transition: var(--focus-ring-transition);
 }
 
 .enhanced-focus a:focus-visible,
 .enhanced-focus button:focus-visible,
 .enhanced-focus [role="button"]:focus-visible,
+.enhanced-focus [role="link"]:focus-visible,
+.enhanced-focus [role="menuitem"]:focus-visible,
+.enhanced-focus [role="tab"]:focus-visible,
+.enhanced-focus [tabindex="0"]:focus-visible,
 .enhanced-focus input:focus-visible,
 .enhanced-focus select:focus-visible,
 .enhanced-focus textarea:focus-visible {
-  outline: 3px solid var(--bsky-primary) !important;
-  outline-offset: 3px !important;
-  box-shadow: 0 0 0 6px rgba(var(--bsky-primary-rgb), 0.2) !important;
+  outline: var(--focus-ring-width) solid var(--focus-ring-color) !important;
+  outline-offset: var(--focus-ring-offset) !important;
+  box-shadow: 0 0 0 var(--focus-ring-glow-size)
+    rgba(var(--focus-ring-color-rgb), var(--focus-ring-glow-opacity)) !important;
+  transition: var(--focus-ring-transition);
 }
 
-/* Ensure interactive elements have visible focus in all modes */
+/* Base focus styles for all interactive elements - WCAG 2.1 AAA compliant */
 a:focus-visible,
 button:focus-visible,
 [role="button"]:focus-visible,
-[tabindex="0"]:focus-visible {
-  outline: 2px solid var(--bsky-primary);
-  outline-offset: 2px;
+[role="link"]:focus-visible,
+[role="menuitem"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="option"]:focus-visible,
+[role="checkbox"]:focus-visible,
+[role="radio"]:focus-visible,
+[role="switch"]:focus-visible,
+[tabindex="0"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  transition: var(--focus-ring-transition);
 }
 
-/* Input focus styles */
+/* Add glow effect for primary interactive elements */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible {
+  box-shadow: 0 0 0 var(--focus-ring-glow-size)
+    rgba(var(--focus-ring-color-rgb), var(--focus-ring-glow-opacity));
+}
+
+/* Input focus styles - inset for bordered inputs */
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--bsky-primary);
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
   outline-offset: 0;
-  border-color: var(--bsky-primary);
+  border-color: var(--focus-ring-color);
+  box-shadow: 0 0 0 calc(var(--focus-ring-glow-size) / 2)
+    rgba(var(--focus-ring-color-rgb), var(--focus-ring-glow-opacity));
+  transition:
+    var(--focus-ring-transition),
+    border-color 0.15s ease-out;
+}
+
+/* Destructive action focus - for delete/cancel buttons */
+.focus-ring-destructive:focus-visible,
+[data-destructive="true"]:focus-visible,
+button[aria-label*="delete"]:focus-visible,
+button[aria-label*="Delete"]:focus-visible,
+button[aria-label*="remove"]:focus-visible,
+button[aria-label*="Remove"]:focus-visible {
+  outline-color: var(--focus-ring-color-destructive);
+  box-shadow: 0 0 0 var(--focus-ring-glow-size)
+    rgba(
+      var(--focus-ring-color-destructive-rgb),
+      var(--focus-ring-glow-opacity)
+    );
+}
+
+/* Success action focus - for confirm/save buttons */
+.focus-ring-success:focus-visible,
+[data-success="true"]:focus-visible {
+  outline-color: var(--focus-ring-color-success);
+  box-shadow: 0 0 0 var(--focus-ring-glow-size)
+    rgba(var(--focus-ring-color-success-rgb), var(--focus-ring-glow-opacity));
 }
 
 /* Remove default outline only when not using focus-visible */
 *:focus:not(:focus-visible) {
   outline: none;
+}
+
+/* Focus within for container elements */
+.focus-within-ring:focus-within {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Light focus ring for elements on dark backgrounds */
+.focus-ring-light:focus-visible {
+  outline-color: var(--focus-ring-color-light);
+  box-shadow: 0 0 0 var(--focus-ring-glow-size)
+    rgba(var(--focus-ring-color-light-rgb), var(--focus-ring-glow-opacity));
+}
+
+/**
+ * Keyboard Focus Indicator for Virtualized List Items
+ * ====================================================
+ * Used by VirtualizedPostList for keyboard navigation accessibility.
+ * Provides a clear visual indication of the currently focused item
+ * without relying on browser's :focus-visible (since focus is on container).
+ */
+.keyboard-focus-indicator {
+  position: relative;
+  background-color: rgba(var(--focus-ring-color-rgb), 0.08);
+  box-shadow: inset 3px 0 0 var(--focus-ring-color);
+}
+
+.keyboard-focus-indicator::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 2px solid var(--focus-ring-color);
+  border-radius: 4px;
+  z-index: 1;
+}
+
+/* High contrast mode enhancement for keyboard focus indicator */
+[data-high-contrast="true"] .keyboard-focus-indicator {
+  background-color: rgba(var(--focus-ring-color-rgb), 0.15);
+  box-shadow: inset 4px 0 0 var(--focus-ring-color);
+}
+
+[data-high-contrast="true"] .keyboard-focus-indicator::before {
+  border-width: 3px;
+}
+
+/* ==========================================
+ * System High Contrast Mode Support (prefers-contrast)
+ * ==========================================
+ * Respects OS-level high contrast preferences (Windows High Contrast Mode,
+ * macOS Increase Contrast, etc.) per WCAG 2.4.7 Focus Visible requirements.
+ * These styles apply when the user has high contrast enabled in their system
+ * settings, providing automatic accessibility without requiring manual toggles.
+ */
+
+@media (prefers-contrast: more) {
+  :root {
+    /* Enhanced focus ring for high contrast mode */
+    --focus-ring-width: 4px;
+    --focus-ring-offset: 3px;
+    --focus-ring-glow-size: 8px;
+    --focus-ring-glow-opacity: 0.6;
+  }
+
+  /* Ensure all interactive elements have highly visible focus indicators */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  [role="link"]:focus-visible,
+  [role="menuitem"]:focus-visible,
+  [role="tab"]:focus-visible,
+  [role="option"]:focus-visible,
+  [role="checkbox"]:focus-visible,
+  [role="radio"]:focus-visible,
+  [role="switch"]:focus-visible,
+  [role="listbox"]:focus-visible,
+  [role="combobox"]:focus-visible,
+  [role="slider"]:focus-visible,
+  [role="spinbutton"]:focus-visible,
+  [role="treeitem"]:focus-visible,
+  [tabindex="0"]:focus-visible,
+  [tabindex]:not([tabindex="-1"]):focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  summary:focus-visible,
+  details:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color) !important;
+    outline-offset: var(--focus-ring-offset) !important;
+    box-shadow: 0 0 0 var(--focus-ring-glow-size)
+      rgba(var(--focus-ring-color-rgb), var(--focus-ring-glow-opacity)) !important;
+  }
+
+  /* Light mode high contrast focus - black outline */
+  :root:not(.dark):not([data-theme="dark"]) {
+    --focus-ring-color: #000000;
+    --focus-ring-color-rgb: 0, 0, 0;
+    --focus-ring-color-destructive: #7f1d1d;
+    --focus-ring-color-destructive-rgb: 127, 29, 29;
+    --focus-ring-color-success: #14532d;
+    --focus-ring-color-success-rgb: 20, 83, 45;
+  }
+
+  /* Dark mode high contrast focus - white outline */
+  .dark,
+  [data-theme="dark"] {
+    --focus-ring-color: #ffffff;
+    --focus-ring-color-rgb: 255, 255, 255;
+    --focus-ring-color-destructive: #fecaca;
+    --focus-ring-color-destructive-rgb: 254, 202, 202;
+    --focus-ring-color-success: #bbf7d0;
+    --focus-ring-color-success-rgb: 187, 247, 208;
+  }
+
+  /* Enhanced keyboard focus indicator for virtualized lists */
+  .keyboard-focus-indicator {
+    background-color: rgba(var(--focus-ring-color-rgb), 0.2) !important;
+    box-shadow: inset 4px 0 0 var(--focus-ring-color) !important;
+  }
+
+  .keyboard-focus-indicator::before {
+    border-width: 3px !important;
+  }
+
+  /* Skip links with enhanced visibility */
+  .skip-link:focus,
+  .skip-link:focus-visible {
+    outline: 4px solid var(--focus-ring-color) !important;
+    outline-offset: 2px !important;
+  }
+
+  /* Ensure buttons have proper focus contrast */
+  button:focus-visible,
+  [role="button"]:focus-visible {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Form inputs with enhanced borders */
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    border-color: var(--focus-ring-color) !important;
+    outline-offset: 0 !important;
+  }
+
+  /* Destructive actions with clear focus indication */
+  .focus-ring-destructive:focus-visible,
+  [data-destructive="true"]:focus-visible,
+  button[aria-label*="delete"]:focus-visible,
+  button[aria-label*="Delete"]:focus-visible,
+  button[aria-label*="remove"]:focus-visible,
+  button[aria-label*="Remove"]:focus-visible {
+    outline-color: var(--focus-ring-color-destructive) !important;
+    box-shadow: 0 0 0 var(--focus-ring-glow-size)
+      rgba(
+        var(--focus-ring-color-destructive-rgb),
+        var(--focus-ring-glow-opacity)
+      ) !important;
+  }
+
+  /* Success actions with clear focus indication */
+  .focus-ring-success:focus-visible,
+  [data-success="true"]:focus-visible {
+    outline-color: var(--focus-ring-color-success) !important;
+    box-shadow: 0 0 0 var(--focus-ring-glow-size)
+      rgba(var(--focus-ring-color-success-rgb), var(--focus-ring-glow-opacity)) !important;
+  }
+
+  /* Ensure modal and dialog focus traps are visible */
+  [role="dialog"]:focus-visible,
+  [role="alertdialog"]:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color) !important;
+    outline-offset: var(--focus-ring-offset) !important;
+  }
+}
+
+/* ==========================================
+ * Forced Colors Mode Support (Windows High Contrast)
+ * ==========================================
+ * Provides specific overrides for Windows High Contrast Mode which uses
+ * system colors. This ensures focus indicators use system-defined colors
+ * for maximum accessibility in forced colors environments.
+ */
+
+@media (forced-colors: active) {
+  /* Use system highlight color for focus indicators */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  [role="link"]:focus-visible,
+  [role="menuitem"]:focus-visible,
+  [role="tab"]:focus-visible,
+  [role="option"]:focus-visible,
+  [role="checkbox"]:focus-visible,
+  [role="radio"]:focus-visible,
+  [role="switch"]:focus-visible,
+  [tabindex="0"]:focus-visible,
+  [tabindex]:not([tabindex="-1"]):focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 3px solid Highlight !important;
+    outline-offset: 2px !important;
+    forced-color-adjust: none;
+  }
+
+  /* Ensure keyboard focus indicator is visible in forced colors */
+  .keyboard-focus-indicator {
+    outline: 2px solid Highlight !important;
+    forced-color-adjust: none;
+  }
+
+  .keyboard-focus-indicator::before {
+    border-color: Highlight !important;
+    forced-color-adjust: none;
+  }
+
+  /* Skip links use system colors */
+  .skip-link:focus,
+  .skip-link:focus-visible {
+    background: Highlight !important;
+    color: HighlightText !important;
+    outline: 3px solid Highlight !important;
+    forced-color-adjust: none;
+  }
+
+  /* Ensure form controls are visible */
+  input,
+  select,
+  textarea,
+  button {
+    border: 1px solid ButtonText;
+  }
+
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    border-color: Highlight !important;
+  }
 }

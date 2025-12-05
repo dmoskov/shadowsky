@@ -306,7 +306,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
                   setSelectedSuggestion(null);
                 }}
                 placeholder="Describe this image for people who can't see it. Include important details about what's shown."
-                className="h-40 w-full resize-none rounded-lg border p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="h-40 w-full resize-none rounded-lg border p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 style={{
                   backgroundColor: "var(--bsky-bg-secondary)",
                   borderColor: "var(--bsky-border-primary)",

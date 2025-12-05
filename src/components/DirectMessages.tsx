@@ -4,10 +4,15 @@ import { formatDistanceToNow } from "date-fns";
 import { Search, X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useMinDuration } from "../hooks/useTiming";
 import { getDmSearchDB } from "../services/dm-search-db";
 import { dmService, type DmConversation } from "../services/dm-service";
 import { DmSearch } from "./DmSearch";
 import { MessageReactions } from "./MessageReactions";
+import {
+  ConversationListSkeleton,
+  MessageListSkeleton,
+} from "./ui/SkeletonLoader";
 
 export const DirectMessages: React.FC = () => {
   const { session } = useAuth();
@@ -81,7 +86,7 @@ export const DirectMessages: React.FC = () => {
   // Fetch conversations list with dynamic polling
   const {
     data: conversations,
-    isLoading: loadingConversations,
+    isLoading: loadingConversationsRaw,
     error: conversationsError,
   } = useQuery({
     queryKey: ["dm-conversations"],
@@ -90,6 +95,9 @@ export const DirectMessages: React.FC = () => {
     enabled: isTabVisible,
     retry: 1,
   });
+
+  // Apply minimum duration to prevent loading flash
+  const loadingConversations = useMinDuration(loadingConversationsRaw, 300);
 
   // Handle errors - only set error if there's an actual error, not just undefined data
   useEffect(() => {
@@ -103,7 +111,7 @@ export const DirectMessages: React.FC = () => {
   }, [conversationsError]);
 
   // Fetch messages for selected conversation with smart polling
-  const { data: conversationData, isLoading: loadingMessages } = useQuery({
+  const { data: conversationData, isLoading: loadingMessagesRaw } = useQuery({
     queryKey: ["dm-conversation", selectedConversation],
     queryFn: () =>
       selectedConversation
@@ -112,6 +120,9 @@ export const DirectMessages: React.FC = () => {
     enabled: !!selectedConversation && isTabVisible,
     refetchInterval: selectedConversation ? getPollingInterval : false,
   });
+
+  // Apply minimum duration to prevent loading flash
+  const loadingMessages = useMinDuration(loadingMessagesRaw, 300);
 
   // Index messages when conversation data changes (real-time indexing)
   useEffect(() => {
@@ -383,14 +394,10 @@ export const DirectMessages: React.FC = () => {
               </div>
             </div>
           ) : loadingConversations ? (
-            <div
-              className="p-4 text-center"
-              style={{ color: "var(--bsky-text-secondary)" }}
-              role="status"
+            <ConversationListSkeleton
+              count={5}
               aria-label="Loading conversations"
-            >
-              Loading conversations...
-            </div>
+            />
           ) : !conversations || conversations.length === 0 ? (
             <div
               className="p-4 text-center"
@@ -559,14 +566,7 @@ export const DirectMessages: React.FC = () => {
               aria-live="polite"
             >
               {loadingMessages ? (
-                <div
-                  className="text-center"
-                  style={{ color: "var(--bsky-text-secondary)" }}
-                  role="status"
-                  aria-label="Loading messages"
-                >
-                  Loading messages...
-                </div>
+                <MessageListSkeleton count={5} aria-label="Loading messages" />
               ) : conversationData.messages.length === 0 ? (
                 <div
                   className="text-center"
@@ -628,7 +628,7 @@ export const DirectMessages: React.FC = () => {
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-4 py-2 text-base text-bsky-text-primary focus:border-bsky-primary focus:shadow-sm focus:outline-none"
+                  className="flex-1 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-4 py-2 text-base text-bsky-text-primary focus-visible:border-bsky-primary focus-visible:shadow-sm focus-visible:outline-none"
                   aria-label="Message text"
                 />
                 <button

@@ -1,4 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  getCachedSupport,
+  getFormatSupport,
+  transformBskyCdnUrl,
+} from "../../utils/image-format-support";
+import {
+  getNetworkInfo,
+  subscribeToNetworkChanges,
+  type NetworkInfoSnapshot,
+  type PrefetchStrategy,
+} from "../../utils/network-info";
 
 interface ProgressiveImageProps {
   src: string;
@@ -11,21 +22,59 @@ interface ProgressiveImageProps {
   onLoad?: () => void;
   onError?: () => void;
   priority?: boolean; // Skip lazy loading for above-the-fold images
+  /** Enable skeleton overlay crossfade (default: true) */
+  showSkeleton?: boolean;
 }
 
-// Increase concurrent loads since we're preloading further ahead
-const MAX_CONCURRENT_LOADS = window.innerWidth < 768 ? 6 : 12;
+// Network-aware concurrent load limits
+// Initial values are defaults, updated dynamically based on network conditions
+let currentPrefetchStrategy: PrefetchStrategy =
+  getNetworkInfo().prefetchStrategy;
 let currentLoads = 0;
 const loadQueue: Array<() => void> = [];
 
-function processLoadQueue() {
-  while (currentLoads < MAX_CONCURRENT_LOADS && loadQueue.length > 0) {
+// Subscribe to network changes and update strategy
+if (typeof window !== "undefined") {
+  subscribeToNetworkChanges((info: NetworkInfoSnapshot) => {
+    currentPrefetchStrategy = info.prefetchStrategy;
+    // Process queue when network improves
+    processLoadQueue();
+  });
+}
+
+let isProcessingQueue = false;
+
+async function processLoadQueue() {
+  // Use network-aware max concurrent loads
+  const maxLoads = currentPrefetchStrategy.maxConcurrentLoads;
+  const batchDelay = currentPrefetchStrategy.batchDelayMs;
+
+  // Don't load anything if prefetching is disabled (offline)
+  if (!currentPrefetchStrategy.enabled) {
+    return;
+  }
+
+  // Prevent concurrent queue processing
+  if (isProcessingQueue) {
+    return;
+  }
+
+  isProcessingQueue = true;
+
+  while (currentLoads < maxLoads && loadQueue.length > 0) {
     const loadFn = loadQueue.shift();
     if (loadFn) {
       currentLoads++;
       loadFn();
+
+      // Add network-aware delay between loads on slower connections
+      if (batchDelay > 0 && loadQueue.length > 0 && currentLoads < maxLoads) {
+        await new Promise((resolve) => setTimeout(resolve, batchDelay));
+      }
     }
   }
+
+  isProcessingQueue = false;
 }
 
 export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
@@ -39,13 +88,60 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   onLoad,
   onError,
   priority = false,
+  showSkeleton = true,
 }) => {
   const [imgSrc, setImgSrc] = useState(placeholderSrc || "");
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(priority);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // Format support detection for AVIF/WebP optimization
+  const [formatSupport, setFormatSupport] = useState(getCachedSupport);
+
+  // Ensure format detection has completed
+  useEffect(() => {
+    if (formatSupport.avif === null || formatSupport.webp === null) {
+      getFormatSupport().then((support) => {
+        setFormatSupport(support);
+      });
+    }
+  }, [formatSupport.avif, formatSupport.webp]);
+
+  // Check if this is a Bluesky CDN URL that supports format conversion
+  const isBskyCdn = useMemo(() => {
+    return src && src.includes("cdn.bsky.app");
+  }, [src]);
+
+  // Generate optimized source URLs for picture element
+  const optimizedSources = useMemo(() => {
+    if (!isBskyCdn || !imgSrc) {
+      return [];
+    }
+
+    const result: Array<{ url: string; type: string }> = [];
+
+    // Add AVIF source if supported (best compression, ~50% smaller than JPEG)
+    if (formatSupport.avif) {
+      result.push({
+        url: transformBskyCdnUrl(imgSrc, "avif"),
+        type: "image/avif",
+      });
+    }
+
+    // Add WebP source if supported (~30% smaller than JPEG)
+    if (formatSupport.webp) {
+      result.push({
+        url: transformBskyCdnUrl(imgSrc, "webp"),
+        type: "image/webp",
+      });
+    }
+
+    return result;
+  }, [imgSrc, isBskyCdn, formatSupport.avif, formatSupport.webp]);
 
   // Generate a low-quality placeholder if not provided
   const getLowQualitySrc = (originalSrc: string) => {
@@ -72,6 +168,11 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
 
     if (shouldLoad) return;
 
+    // Use network-aware rootMargin for prefetching distance
+    // On poor connections, reduce prefetch distance to save data
+    const rootMarginPercent = currentPrefetchStrategy.rootMarginPercent;
+    const rootMargin = `${rootMarginPercent}% 0px ${rootMarginPercent}% 0px`;
+
     observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -82,16 +183,14 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
         });
       },
       {
-        // Preload images WAY before they enter viewport
-        // Mobile: 5 viewport heights, Desktop: 8 viewport heights
-        // This ensures images are fully loaded even with moderate scrolling
-        rootMargin:
-          window.innerWidth < 768 ? "500% 0px 500% 0px" : "800% 0px 800% 0px",
+        // Network-aware preload distance
+        // Excellent: 500-800%, Good: 400-600%, Moderate: 200-300%, Poor: 100%
+        rootMargin,
         threshold: 0.01,
       },
     );
 
-    const currentElement = imgRef.current;
+    const currentElement = containerRef.current || imgRef.current;
     if (currentElement) {
       observerRef.current.observe(currentElement);
     }
@@ -115,6 +214,10 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
         requestAnimationFrame(() => {
           setImgSrc(src);
           setIsLoading(false);
+          // Small delay for DOM update before triggering crossfade
+          requestAnimationFrame(() => {
+            setImageLoaded(true);
+          });
           onLoad?.();
         });
         currentLoads--;
@@ -157,17 +260,94 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
     };
   }, [src, placeholderSrc, shouldLoad, onLoad, onError, priority]);
 
-  return (
-    <>
-      {hasError ? (
-        <div
-          className={`flex items-center justify-center bg-gray-200 dark:bg-gray-700 ${className}`}
-          style={{ width: width || "100%", height: height || "100%", ...style }}
-        >
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            Failed to load image
-          </span>
+  // Error state
+  if (hasError) {
+    return (
+      <div
+        className={`flex items-center justify-center bg-bsky-bg-tertiary ${className}`}
+        style={{ width: width || "100%", height: height || "100%", ...style }}
+        role="img"
+        aria-label={`Failed to load: ${alt}`}
+      >
+        <div className="flex flex-col items-center gap-2 text-bsky-text-tertiary">
+          <svg
+            className="h-8 w-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          <span className="text-xs">Failed to load</span>
         </div>
+      </div>
+    );
+  }
+
+  // Render with skeleton overlay for crossfade effect
+  return (
+    <div
+      ref={containerRef}
+      className={`relative overflow-hidden ${className}`}
+      style={{
+        width: width || "100%",
+        height: height || "auto",
+        ...style,
+      }}
+    >
+      {/* Skeleton overlay - fades out as image loads */}
+      {showSkeleton && (
+        <div
+          className="absolute inset-0 animate-pulse bg-bsky-bg-tertiary"
+          style={{
+            opacity: imageLoaded ? 0 : 1,
+            transition:
+              "opacity var(--transition-slow, 300ms) var(--ease-entrance, cubic-bezier(0, 0, 0.2, 1))",
+            pointerEvents: imageLoaded ? "none" : "auto",
+            zIndex: 1,
+          }}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Actual image with AVIF/WebP fallback chain using picture element */}
+      {optimizedSources.length > 0 ? (
+        <picture>
+          {optimizedSources.map((source) => (
+            <source key={source.type} srcSet={source.url} type={source.type} />
+          ))}
+          <img
+            ref={imgRef}
+            src={imgSrc}
+            alt={alt}
+            loading={priority ? "eager" : "lazy"}
+            decoding={priority ? "sync" : "async"}
+            style={{
+              opacity: imageLoaded ? 1 : 0,
+              transition:
+                "opacity var(--transition-slow, 300ms) var(--ease-entrance, cubic-bezier(0, 0, 0.2, 1))",
+              willChange: isLoading ? "opacity" : "auto",
+              backfaceVisibility: "hidden",
+              width: "100%",
+              height: "100%",
+              objectFit: "inherit",
+              filter: style?.filter,
+            }}
+            width={width}
+            height={height}
+            onError={() => {
+              setHasError(true);
+              setIsLoading(false);
+              onError?.();
+            }}
+          />
+        </picture>
       ) : (
         <img
           ref={imgRef}
@@ -175,16 +355,16 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
           alt={alt}
           loading={priority ? "eager" : "lazy"}
           decoding={priority ? "sync" : "async"}
-          className={`${className} ${isLoading ? "blur-sm" : ""}`}
           style={{
-            transition: "filter 0.2s ease-out",
-            // Mobile performance optimizations
-            willChange: "auto",
+            opacity: imageLoaded ? 1 : 0,
+            transition:
+              "opacity var(--transition-slow, 300ms) var(--ease-entrance, cubic-bezier(0, 0, 0.2, 1))",
+            willChange: isLoading ? "opacity" : "auto",
             backfaceVisibility: "hidden",
-            transform: "translateZ(0)",
-            width: width || undefined,
-            height: height || undefined,
-            ...style,
+            width: "100%",
+            height: "100%",
+            objectFit: "inherit",
+            filter: style?.filter,
           }}
           width={width}
           height={height}
@@ -195,7 +375,7 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
           }}
         />
       )}
-    </>
+    </div>
   );
 };
 

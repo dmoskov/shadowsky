@@ -95,8 +95,9 @@ export const DataSettings: React.FC = () => {
             setMissingRecords((prev) => ({ ...prev, columns: false }));
 
             // Check local storage for comparison
-            const { ColumnLocalStorageBackend } =
-              await import("../../services/storage/column-local-storage-backend");
+            const { ColumnLocalStorageBackend } = await import(
+              "../../services/storage/column-local-storage-backend"
+            );
             const localBackend = new ColumnLocalStorageBackend();
             const localColumns = await localBackend.loadColumns();
             setLocalColumnCount(localColumns.length);
@@ -135,8 +136,9 @@ export const DataSettings: React.FC = () => {
 
     try {
       // Load columns from local storage
-      const { ColumnLocalStorageBackend } =
-        await import("../../services/storage/column-local-storage-backend");
+      const { ColumnLocalStorageBackend } = await import(
+        "../../services/storage/column-local-storage-backend"
+      );
       const localBackend = new ColumnLocalStorageBackend();
       const localColumns = await localBackend.loadColumns();
 
@@ -438,35 +440,20 @@ export const DataSettings: React.FC = () => {
 
       {message && (
         <div
-          className="rounded-lg p-3 text-sm"
-          style={{
-            backgroundColor:
-              message.type === "success"
-                ? "rgba(34, 197, 94, 0.1)"
-                : message.type === "error"
-                  ? "rgba(239, 68, 68, 0.1)"
-                  : "rgba(59, 130, 246, 0.1)",
-            color:
-              message.type === "success"
-                ? "#22c55e"
-                : message.type === "error"
-                  ? "#ef4444"
-                  : "#3b82f6",
-            border: `1px solid ${
-              message.type === "success"
-                ? "rgba(34, 197, 94, 0.3)"
-                : message.type === "error"
-                  ? "rgba(239, 68, 68, 0.3)"
-                  : "rgba(59, 130, 246, 0.3)"
-            }`,
-          }}
+          className={`rounded-lg border p-3 text-sm ${
+            message.type === "success"
+              ? "border-bsky-success/30 bg-bsky-success/10 text-bsky-success"
+              : message.type === "error"
+                ? "border-bsky-error/30 bg-bsky-error/10 text-bsky-error"
+                : "border-bsky-info/30 bg-bsky-info/10 text-bsky-info"
+          }`}
         >
           <div className="flex items-center justify-between">
             <span>{message.text}</span>
             {message.type === "success" && (
               <button
                 onClick={() => window.location.reload()}
-                className="ml-4 rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-green-700"
+                className="ml-4 rounded-md bg-bsky-success px-3 py-1.5 text-xs font-medium text-white transition-colors hover:opacity-90"
               >
                 Reload Page
               </button>
@@ -522,7 +509,7 @@ export const DataSettings: React.FC = () => {
                       ) : item.id === "bookmarks" &&
                         item.storageType === "official" ? (
                         <>
-                          <strong style={{ color: "#10b981" }}>
+                          <strong className="text-bsky-success">
                             🔒 PRIVATE (Official):
                           </strong>{" "}
                           Your bookmarks are stored privately using the official
@@ -531,7 +518,7 @@ export const DataSettings: React.FC = () => {
                       ) : item.id === "bookmarks" &&
                         item.storageType === "custom" ? (
                         <>
-                          <strong style={{ color: "#f59e0b" }}>
+                          <strong className="text-bsky-warning">
                             ⚠️ CUSTOM AT Protocol:
                           </strong>{" "}
                           Your bookmarks are stored in a custom AT Protocol
@@ -540,7 +527,7 @@ export const DataSettings: React.FC = () => {
                         </>
                       ) : isEnabled ? (
                         <>
-                          <strong style={{ color: "#ef4444" }}>
+                          <strong className="text-bsky-error">
                             ⚠️ PUBLIC:
                           </strong>{" "}
                           This data is stored in AT Protocol records and can be

@@ -6,5 +6,5 @@
  * using FlatList virtualization and React.memo.
  */
 
-export { PostCard } from "./PostCard";
 export { FeedList } from "./FeedList";
+export { PostCard } from "./PostCard";

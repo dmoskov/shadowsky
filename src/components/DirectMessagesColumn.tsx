@@ -392,7 +392,7 @@ export const DirectMessagesColumn: React.FC = () => {
                   }}
                   tabIndex={0}
                   role="button"
-                  className={`cursor-pointer overflow-hidden border-b border-bsky-border-primary p-4 transition-colors duration-200 hover:bg-bsky-bg-secondary focus:outline-none focus:ring-2 focus:ring-bsky-primary`}
+                  className={`cursor-pointer overflow-hidden border-b border-bsky-border-primary p-4 transition-colors duration-200 hover:bg-bsky-bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bsky-primary`}
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
                     <div className="flex-shrink-0">
@@ -631,7 +631,7 @@ export const DirectMessagesColumn: React.FC = () => {
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             placeholder="Type a message..."
-            className="min-w-0 flex-1 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-4 py-2 text-base text-bsky-text-primary focus:border-bsky-primary focus:shadow-sm focus:outline-none"
+            className="min-w-0 flex-1 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-4 py-2 text-base text-bsky-text-primary focus-visible:border-bsky-primary focus-visible:shadow-sm focus-visible:outline-none"
           />
           <button
             type="submit"

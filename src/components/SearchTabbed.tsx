@@ -36,6 +36,7 @@ import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModeration } from "../contexts/ModerationContext";
 import { useDebounce } from "../hooks/useDebounce";
 import { useFollowing } from "../hooks/useFollowing";
+import { useMinDuration } from "../hooks/useTiming";
 import { atProtoClient } from "../services/atproto";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
 import { getProfileCacheService } from "../services/profile-cache-service";
@@ -43,6 +44,7 @@ import { proxifyBskyImage } from "../utils/image-proxy";
 import { constructAtUri, parseBskyUrl } from "../utils/url-helpers";
 import { ImageGrid } from "./ImageGrid";
 import { ThreadViewer } from "./ThreadViewer";
+import { LoadingState } from "./ui/LoadingState";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 
 type SearchTab = "posts" | "users" | "feeds";
@@ -192,7 +194,7 @@ const buildSearchQuery = (searchFilters: SearchFilters) => {
   return parts.join(" ");
 };
 
-export const SearchTabbed: React.FC = () => {
+export const SearchTabbed: React.FC = React.memo(() => {
   useAuth();
   const navigate = useNavigate();
   const { isPostHidden } = useHiddenPosts();
@@ -1043,7 +1045,14 @@ export const SearchTabbed: React.FC = () => {
     }
   };
 
-  const { data: searchResults, isLoading, error } = currentSearchResults();
+  const {
+    data: searchResults,
+    isLoading: isLoadingRaw,
+    error,
+  } = currentSearchResults();
+
+  // Apply minimum duration to prevent jarring flash of loading state
+  const isLoading = useMinDuration(isLoadingRaw);
 
   return (
     <div className="mx-auto min-h-screen max-w-4xl p-4">
@@ -1152,7 +1161,7 @@ export const SearchTabbed: React.FC = () => {
                       setShowMainTypeahead(false);
                     }
                   }}
-                  className="flex-1 rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2"
+                  className="flex-1 rounded-lg border px-3 py-2 text-sm transition-all focus-visible:outline-none focus-visible:ring-2"
                   style={{
                     backgroundColor: "var(--bsky-bg-secondary)",
                     borderColor: "var(--bsky-border-primary)",
@@ -2136,7 +2145,7 @@ export const SearchTabbed: React.FC = () => {
                                   }, 200);
                                 }}
                                 placeholder="e.g., jay.bsky.team or me"
-                                className="flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                                className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                                 style={{
                                   backgroundColor: "var(--bsky-bg-secondary)",
                                   borderColor: "var(--bsky-border-primary)",
@@ -2383,11 +2392,15 @@ export const SearchTabbed: React.FC = () => {
 
                       {/* Date Inputs */}
                       <div className="flex items-center gap-2 text-xs">
-                        <span style={{ color: "var(--bsky-text-secondary)" }}>
+                        <label
+                          htmlFor="search-date-from"
+                          style={{ color: "var(--bsky-text-secondary)" }}
+                        >
                           from
-                        </span>
+                        </label>
                         <div className="relative">
                           <input
+                            id="search-date-from"
                             type="date"
                             value={filters.sinceDate}
                             max={filters.untilDate || undefined}
@@ -2397,7 +2410,7 @@ export const SearchTabbed: React.FC = () => {
                                 sinceDate: e.target.value,
                               }))
                             }
-                            className="cursor-pointer rounded-md border px-2 py-1 pr-7 text-xs focus:outline-none focus:ring-2"
+                            className="cursor-pointer rounded-md border px-2 py-1 pr-7 text-xs focus-visible:outline-none focus-visible:ring-2"
                             style={{
                               backgroundColor: "var(--bsky-bg-secondary)",
                               borderColor: "var(--bsky-border-primary)",
@@ -2406,6 +2419,14 @@ export const SearchTabbed: React.FC = () => {
                               colorScheme: "dark",
                               width: "140px",
                             }}
+                            aria-describedby={
+                              filters.sinceDate &&
+                              filters.untilDate &&
+                              new Date(filters.sinceDate) >
+                                new Date(filters.untilDate)
+                                ? "date-error"
+                                : undefined
+                            }
                           />
                           {filters.sinceDate && (
                             <button
@@ -2417,16 +2438,21 @@ export const SearchTabbed: React.FC = () => {
                               }
                               className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 transition-opacity hover:opacity-70"
                               style={{ color: "var(--bsky-text-secondary)" }}
+                              aria-label="Clear from date"
                             >
-                              <X size={12} />
+                              <X size={12} aria-hidden="true" />
                             </button>
                           )}
                         </div>
-                        <span style={{ color: "var(--bsky-text-secondary)" }}>
+                        <label
+                          htmlFor="search-date-to"
+                          style={{ color: "var(--bsky-text-secondary)" }}
+                        >
                           to
-                        </span>
+                        </label>
                         <div className="relative">
                           <input
+                            id="search-date-to"
                             type="date"
                             value={filters.untilDate}
                             min={filters.sinceDate || undefined}
@@ -2436,7 +2462,7 @@ export const SearchTabbed: React.FC = () => {
                                 untilDate: e.target.value,
                               }))
                             }
-                            className="cursor-pointer rounded-md border px-2 py-1 pr-7 text-xs focus:outline-none focus:ring-2"
+                            className="cursor-pointer rounded-md border px-2 py-1 pr-7 text-xs focus-visible:outline-none focus-visible:ring-2"
                             style={{
                               backgroundColor: "var(--bsky-bg-secondary)",
                               borderColor: "var(--bsky-border-primary)",
@@ -2445,6 +2471,14 @@ export const SearchTabbed: React.FC = () => {
                               colorScheme: "dark",
                               width: "140px",
                             }}
+                            aria-describedby={
+                              filters.sinceDate &&
+                              filters.untilDate &&
+                              new Date(filters.sinceDate) >
+                                new Date(filters.untilDate)
+                                ? "date-error"
+                                : undefined
+                            }
                           />
                           {filters.untilDate && (
                             <button
@@ -2456,8 +2490,9 @@ export const SearchTabbed: React.FC = () => {
                               }
                               className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 transition-opacity hover:opacity-70"
                               style={{ color: "var(--bsky-text-secondary)" }}
+                              aria-label="Clear to date"
                             >
-                              <X size={12} />
+                              <X size={12} aria-hidden="true" />
                             </button>
                           )}
                         </div>
@@ -2469,6 +2504,8 @@ export const SearchTabbed: React.FC = () => {
                         new Date(filters.sinceDate) >
                           new Date(filters.untilDate) && (
                           <p
+                            id="date-error"
+                            role="alert"
                             className="mt-2 text-xs"
                             style={{ color: "var(--bsky-error)" }}
                           >
@@ -2509,7 +2546,7 @@ export const SearchTabbed: React.FC = () => {
                                 }));
                               }}
                               placeholder='e.g., "hello world"'
-                              className="flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                              className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                               style={{
                                 backgroundColor: "var(--bsky-bg-secondary)",
                                 borderColor: "var(--bsky-border-primary)",
@@ -2568,7 +2605,7 @@ export const SearchTabbed: React.FC = () => {
                                 }));
                               }}
                               placeholder="e.g., bluesky"
-                              className="flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                              className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                               style={{
                                 backgroundColor: "var(--bsky-bg-secondary)",
                                 borderColor: "var(--bsky-border-primary)",
@@ -2654,7 +2691,7 @@ export const SearchTabbed: React.FC = () => {
                                   }, 200);
                                 }}
                                 placeholder="e.g., alice.bsky.social or me"
-                                className="flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                                className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                                 style={{
                                   backgroundColor: "var(--bsky-bg-secondary)",
                                   borderColor: "var(--bsky-border-primary)",
@@ -2813,7 +2850,7 @@ export const SearchTabbed: React.FC = () => {
                                 }));
                               }}
                               placeholder="e.g., npr.org"
-                              className="flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                              className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                               style={{
                                 backgroundColor: "var(--bsky-bg-secondary)",
                                 borderColor: "var(--bsky-border-primary)",
@@ -2865,7 +2902,7 @@ export const SearchTabbed: React.FC = () => {
                             language: e.target.value,
                           }))
                         }
-                        className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                        className="w-full rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                         style={{
                           backgroundColor: "var(--bsky-bg-secondary)",
                           borderColor: "var(--bsky-border-primary)",
@@ -2936,18 +2973,13 @@ export const SearchTabbed: React.FC = () => {
             )}
 
             {isLoading && (
-              <div className="py-6 text-center">
-                <div
-                  className="mx-auto h-10 w-10 animate-spin rounded-full border-b-2"
-                  style={{ borderColor: "var(--bsky-primary)" }}
-                ></div>
-                <p
-                  className="mt-3 text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
-                >
-                  Searching...
-                </p>
-              </div>
+              <LoadingState
+                variant="spinner"
+                size="lg"
+                message="Searching..."
+                centered
+                className="py-6"
+              />
             )}
 
             {error && (
@@ -3497,4 +3529,6 @@ export const SearchTabbed: React.FC = () => {
       )}
     </div>
   );
-};
+});
+
+SearchTabbed.displayName = "SearchTabbed";

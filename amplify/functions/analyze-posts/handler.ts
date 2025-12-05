@@ -7,6 +7,7 @@ import {
   createMissingParameterError,
   createOptionsResponse,
   createSuccessResponse,
+  createTimeoutError,
   getCorrelationId,
   isOptionsRequest,
   logError,
@@ -17,6 +18,11 @@ import {
   createUnauthorizedResponse,
   type AuthResult,
 } from "../shared/cognito-auth";
+import {
+  createAnthropicClient,
+  MaxRetriesExceededError,
+  TimeoutError,
+} from "../shared/resilience";
 import {
   checkUserRateLimit,
   createUserRateLimitResponse,
@@ -268,20 +274,31 @@ Engagement: ${engagement} (${post.likes || 0} likes, ${post.reposts || 0} repost
       })
       .join("\n\n");
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250929",
-        max_tokens: 3000,
-        messages: [
-          {
-            role: "user",
-            content: `You are a social media analytics expert. Analyze these posts from a Bluesky user and provide insights about their content, writing style, and engagement patterns.
+    // Create resilient client for Anthropic API with retry and timeout
+    // Using longer timeout for large post analysis
+    const client = createAnthropicClient({
+      name: "analyze-posts",
+      timeout: 45000, // 45s for complex analysis
+    });
+
+    let aiResult;
+    try {
+      const response = await client.fetch(
+        "https://api.anthropic.com/v1/messages",
+        {
+          method: "POST",
+          headers: {
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-5-20250929",
+            max_tokens: 3000,
+            messages: [
+              {
+                role: "user",
+                content: `You are a social media analytics expert. Analyze these posts from a Bluesky user and provide insights about their content, writing style, and engagement patterns.
 
 POSTS TO ANALYZE:
 ${postsContext}
@@ -319,33 +336,38 @@ IMPORTANT GUIDELINES:
 6. Be specific and constructive
 7. Base everything on actual data from the posts
 8. Your response MUST be valid JSON only - start with { and end with }`,
-          },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logError(
-        "analyze-posts",
-        `Anthropic API error: ${response.status}`,
-        correlationId,
-        {
-          statusCode: response.status,
-          errorText,
+              },
+            ],
+          }),
         },
+        correlationId
       );
-      return createExternalApiError(
-        "Anthropic",
-        errorText,
-        event,
-        correlationId,
-      );
-    }
 
-    const data = await response.json();
-    const cleanedText = cleanJsonResponse(data.content[0].text);
-    const aiResult = JSON.parse(cleanedText);
+      const data = await response.json();
+      const cleanedText = cleanJsonResponse(data.content[0].text);
+      aiResult = JSON.parse(cleanedText);
+    } catch (apiError) {
+      if (apiError instanceof TimeoutError) {
+        logError("analyze-posts", apiError, correlationId, {
+          errorType: "timeout",
+        });
+        return createTimeoutError("Anthropic API call", event, correlationId);
+      }
+
+      if (apiError instanceof MaxRetriesExceededError) {
+        logError("analyze-posts", apiError, correlationId, {
+          attempts: apiError.attempts,
+        });
+        return createExternalApiError(
+          "Anthropic",
+          `Failed after ${apiError.attempts} attempts`,
+          event,
+          correlationId
+        );
+      }
+
+      throw apiError;
+    }
 
     // Calculate optimal posting times from the raw data
     const postingTimeData = analyzePostingTimes(postsToAnalyze);

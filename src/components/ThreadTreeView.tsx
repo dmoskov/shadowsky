@@ -11,6 +11,7 @@ import {
   Repeat2,
 } from "lucide-react";
 import React, {
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -77,7 +78,37 @@ interface ThreadTreeViewProps {
   className?: string;
 }
 
-export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
+/**
+ * Custom comparison function for React.memo
+ * Prevents unnecessary re-renders by comparing only relevant props
+ */
+function areThreadTreeViewPropsEqual(
+  prevProps: ThreadTreeViewProps,
+  nextProps: ThreadTreeViewProps,
+): boolean {
+  // Compare posts array identity (shallow comparison)
+  // This is efficient because the parent component should provide stable references
+  if (prevProps.posts !== nextProps.posts) return false;
+
+  // Compare URIs
+  if (prevProps.rootUri !== nextProps.rootUri) return false;
+  if (prevProps.highlightUri !== nextProps.highlightUri) return false;
+  if (prevProps.currentUserDid !== nextProps.currentUserDid) return false;
+
+  // Compare boolean/number props
+  if (prevProps.enableKeyboardNav !== nextProps.enableKeyboardNav) return false;
+  if (prevProps.showEngagementStats !== nextProps.showEngagementStats)
+    return false;
+  if (prevProps.initialFoldDepth !== nextProps.initialFoldDepth) return false;
+
+  // Compare className
+  if (prevProps.className !== nextProps.className) return false;
+
+  // Callbacks are expected to be stable (using useCallback in parent)
+  return true;
+}
+
+const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
   posts,
   rootUri,
   highlightUri,
@@ -544,7 +575,7 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
                 : "none",
               // Left border color based on depth for visual grouping
               borderLeft: isCurrentUser
-                ? "4px solid rgb(34, 197, 94)"
+                ? "4px solid var(--bsky-success-light)"
                 : node.depth > 0
                   ? `3px solid ${branchBorderColor}`
                   : "none",
@@ -580,13 +611,7 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
                 </span>
               )}
               {(node.totalSiblings ?? 0) > 1 && (
-                <span
-                  className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs"
-                  style={{
-                    backgroundColor: "rgba(147, 51, 234, 0.1)",
-                    color: "rgb(147, 51, 234)",
-                  }}
-                >
+                <span className="bg-bsky-quote/10 flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-bsky-quote">
                   <GitBranch size={10} />
                   {(node.siblingIndex ?? 0) + 1}/{node.totalSiblings}
                 </span>
@@ -938,7 +963,7 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
               className="flex items-center gap-1.5 text-lg font-semibold"
               style={{ color: "var(--bsky-text-primary)" }}
             >
-              <Heart size={18} style={{ color: "rgb(239, 68, 68)" }} />
+              <Heart size={18} className="text-bsky-like" />
               {stats.totalLikes}
             </span>
             <span
@@ -953,7 +978,7 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
               className="flex items-center gap-1.5 text-lg font-semibold"
               style={{ color: "var(--bsky-text-primary)" }}
             >
-              <Repeat2 size={18} style={{ color: "rgb(34, 197, 94)" }} />
+              <Repeat2 size={18} className="text-bsky-repost" />
               {stats.totalReposts}
             </span>
             <span
@@ -983,13 +1008,22 @@ export const ThreadTreeView: React.FC<ThreadTreeViewProps> = ({
 };
 
 /**
+ * Memoized ThreadTreeView for optimal scroll performance
+ * Uses custom comparator to prevent cascading re-renders during feed scrolling
+ */
+export const ThreadTreeView = memo(
+  ThreadTreeViewComponent,
+  areThreadTreeViewPropsEqual,
+);
+
+/**
  * ThreadTreeViewWithContext - Wrapper that provides ThreadContext
  *
  * Use this component when you need access to shared thread state across multiple components.
  * The ThreadTreeView component can be used directly for simple cases where context sharing
  * is not needed.
  */
-export const ThreadTreeViewWithContext: React.FC<ThreadTreeViewProps> = (
+const ThreadTreeViewWithContextComponent: React.FC<ThreadTreeViewProps> = (
   props,
 ) => {
   return (
@@ -1003,3 +1037,11 @@ export const ThreadTreeViewWithContext: React.FC<ThreadTreeViewProps> = (
     </ThreadProvider>
   );
 };
+
+/**
+ * Memoized ThreadTreeViewWithContext for optimal performance
+ */
+export const ThreadTreeViewWithContext = memo(
+  ThreadTreeViewWithContextComponent,
+  areThreadTreeViewPropsEqual,
+);

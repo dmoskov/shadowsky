@@ -79,17 +79,38 @@
     @apply hover:bg-bsky-bg-hover;
   }
 
-  /* Touch target optimization for mobile */
+  /* Touch target optimization - WCAG 2.1 Level AAA requires 44x44px minimum */
+  /* These classes apply touch targets across all breakpoints for consistency */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  .touch-target-sm {
+    @apply min-h-[44px] min-w-[44px] p-3;
+  }
+
+  /* Touch target with flex centering for icon buttons */
+  .touch-target-icon {
+    @apply flex min-h-[44px] min-w-[44px] items-center justify-center;
+  }
+
+  /* Touch target for inline elements (links in text, etc.) */
+  .touch-target-inline {
+    @apply inline-flex min-h-[44px] items-center;
+  }
+
+  /* Touch target for list/menu items */
+  .touch-target-list-item {
+    @apply min-h-[44px] px-4 py-3;
+  }
+
+  /* Touch target for form inputs */
+  .touch-target-input {
+    @apply min-h-[44px] px-3 py-2;
+  }
+
   @media (max-width: 640px) {
-    .touch-target {
-      @apply min-h-[44px] min-w-[44px];
-    }
-
-    .touch-target-sm {
-      @apply min-h-[44px] min-w-[44px] p-3;
-    }
-
-    /* Ensure all interactive elements meet minimum size */
+    /* Ensure all interactive elements meet minimum size on mobile */
     button:not(.no-touch-optimize),
     a:not(.no-touch-optimize),
     [role="button"]:not(.no-touch-optimize) {
@@ -369,6 +390,45 @@ body::-webkit-scrollbar-thumb:hover {
       opacity: 0.6;
     }
   }
+
+  /* Deep link highlight animation for post navigation */
+  .deep-link-highlight {
+    animation: deep-link-pulse 2s ease-out;
+    position: relative;
+  }
+
+  .deep-link-highlight::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 0.5rem;
+    border: 2px solid var(--bsky-primary);
+    animation: deep-link-border-fade 2s ease-out forwards;
+    pointer-events: none;
+  }
+
+  @keyframes deep-link-pulse {
+    0% {
+      background-color: rgba(var(--bsky-primary-rgb, 59, 130, 246), 0.15);
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+
+  @keyframes deep-link-border-fade {
+    0% {
+      opacity: 1;
+      border-color: var(--bsky-primary);
+    }
+    70% {
+      opacity: 0.7;
+    }
+    100% {
+      opacity: 0;
+      border-color: transparent;
+    }
+  }
 }
 
 /* Custom range input styling */
@@ -454,10 +514,11 @@ input[type="range"]::-moz-range-thumb:hover {
   }
 }
 
-/* Enhanced focus indicators for accessibility */
+/* Enhanced focus indicators for accessibility - WCAG 2.1 AAA */
+/* Uses CSS custom properties from bluesky-theme.css for consistent focus rings */
 html.enhanced-focus *:focus {
-  outline: 3px solid var(--bsky-primary) !important;
-  outline-offset: 2px !important;
+  outline: var(--focus-ring-width) solid var(--focus-ring-color) !important;
+  outline-offset: var(--focus-ring-offset) !important;
 }
 
 html.enhanced-focus *:focus:not(:focus-visible) {
@@ -465,8 +526,10 @@ html.enhanced-focus *:focus:not(:focus-visible) {
 }
 
 html.enhanced-focus *:focus-visible {
-  outline: 3px solid var(--bsky-primary) !important;
-  outline-offset: 2px !important;
+  outline: var(--focus-ring-width) solid var(--focus-ring-color) !important;
+  outline-offset: var(--focus-ring-offset) !important;
+  box-shadow: 0 0 0 var(--focus-ring-glow-size)
+    rgba(var(--focus-ring-color-rgb), var(--focus-ring-glow-opacity)) !important;
 }
 
 /* Reduced motion for users who prefer it */

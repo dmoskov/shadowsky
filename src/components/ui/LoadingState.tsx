@@ -1,12 +1,17 @@
 import { Loader } from "lucide-react";
 import React, {
   createContext,
+  Suspense,
   useCallback,
   useContext,
-  useEffect,
-  useRef,
   useState,
 } from "react";
+import {
+  useDelayedBoolean,
+  useMinDuration,
+  useTimeout,
+} from "../../hooks/useTiming";
+import { TIMING } from "../../utils/timing";
 
 /**
  * Loading State Design System
@@ -31,9 +36,13 @@ import React, {
 // Loading Tokens - Centralized timing configuration
 // ============================================================================
 
+/**
+ * Loading tokens - re-exported from centralized timing utilities for backward compatibility.
+ * New code should import directly from '../../utils/timing'.
+ */
 export const LOADING_TOKENS = {
   /** Minimum time to show loading state to prevent flash (ms) */
-  MIN_DISPLAY_DURATION: 300,
+  MIN_DISPLAY_DURATION: TIMING.MIN_LOADING_DURATION,
   /** Skeleton pulse animation duration (ms) */
   SKELETON_PULSE_DURATION: 2000,
   /** Shimmer animation duration (ms) */
@@ -41,7 +50,7 @@ export const LOADING_TOKENS = {
   /** Spinner rotation duration (ms) */
   SPINNER_DURATION: 1000,
   /** Delay before showing loading indicator for quick operations (ms) */
-  LOADING_DELAY: 150,
+  LOADING_DELAY: TIMING.LOADING_DELAY,
 } as const;
 
 // ============================================================================
@@ -104,6 +113,25 @@ interface LoadingBoundaryProps {
   delayMs?: number;
 }
 
+interface SuspenseLoadingBoundaryProps {
+  /** Children to render (may include lazy-loaded components) */
+  children: React.ReactNode;
+  /** Custom fallback component */
+  fallback?: React.ReactNode;
+  /** Component name for error reporting */
+  componentName?: string;
+  /** Whether to use delayed fallback display to prevent flash */
+  delayFallback?: boolean;
+  /** Custom delay duration in ms (uses LOADING_TOKENS.LOADING_DELAY by default) */
+  delayMs?: number;
+  /** Size of the default loading indicator */
+  size?: LoadingSize;
+  /** Custom error fallback component */
+  errorFallback?: React.ReactNode;
+  /** Callback when an error occurs */
+  onError?: (error: Error) => void;
+}
+
 // ============================================================================
 // Size Mappings
 // ============================================================================
@@ -139,44 +167,15 @@ const TEXT_SIZES: Record<LoadingSize, string> = {
 /**
  * Hook to enforce minimum loading duration.
  * Prevents jarring flash of loading state for quick operations.
+ *
+ * @deprecated Use useMinDuration from '../../hooks/useTiming' directly.
+ * This export is maintained for backward compatibility.
  */
 export function useMinLoadingDuration(
   isLoading: boolean,
   minDuration: number = LOADING_TOKENS.MIN_DISPLAY_DURATION,
 ): boolean {
-  const [showLoading, setShowLoading] = useState(isLoading);
-  const loadingStartRef = useRef<number | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    if (isLoading) {
-      // Started loading
-      loadingStartRef.current = Date.now();
-      setShowLoading(true);
-    } else if (loadingStartRef.current !== null) {
-      // Finished loading - check if min duration has passed
-      const elapsed = Date.now() - loadingStartRef.current;
-      const remaining = Math.max(0, minDuration - elapsed);
-
-      if (remaining > 0) {
-        timeoutRef.current = setTimeout(() => {
-          setShowLoading(false);
-          loadingStartRef.current = null;
-        }, remaining);
-      } else {
-        setShowLoading(false);
-        loadingStartRef.current = null;
-      }
-    }
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isLoading, minDuration]);
-
-  return showLoading;
+  return useMinDuration(isLoading, minDuration);
 }
 
 // ============================================================================
@@ -186,34 +185,15 @@ export function useMinLoadingDuration(
 /**
  * Hook to delay showing loading state.
  * Prevents flash of loading for quick operations.
+ *
+ * @deprecated Use useDelayedBoolean from '../../hooks/useTiming' directly.
+ * This export is maintained for backward compatibility.
  */
 export function useDelayedLoading(
   isLoading: boolean,
   delay: number = LOADING_TOKENS.LOADING_DELAY,
 ): boolean {
-  const [showLoading, setShowLoading] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    if (isLoading) {
-      timeoutRef.current = setTimeout(() => {
-        setShowLoading(true);
-      }, delay);
-    } else {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      setShowLoading(false);
-    }
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isLoading, delay]);
-
-  return showLoading;
+  return useDelayedBoolean(isLoading, delay);
 }
 
 // ============================================================================
@@ -356,14 +336,11 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
 }) => {
   const [showDelayed, setShowDelayed] = useState(!delay);
 
-  useEffect(() => {
-    if (delay) {
-      const timer = setTimeout(() => {
-        setShowDelayed(true);
-      }, delayDuration);
-      return () => clearTimeout(timer);
-    }
-  }, [delay, delayDuration]);
+  // Use the shared timing hook for delayed display
+  useTimeout(
+    () => setShowDelayed(true),
+    delay && !showDelayed ? delayDuration : null,
+  );
 
   if (!showDelayed) {
     return null;
@@ -509,6 +486,210 @@ export const LoadingBoundary: React.FC<LoadingBoundaryProps> = ({
 
   return <>{children}</>;
 };
+
+// ============================================================================
+// Delayed Fallback Component (internal)
+// ============================================================================
+
+/**
+ * Internal component that delays rendering of fallback content.
+ * This prevents a flash of loading state for quick operations.
+ */
+const DelayedFallback: React.FC<{
+  children: React.ReactNode;
+  delayMs: number;
+}> = ({ children, delayMs }) => {
+  const [showFallback, setShowFallback] = useState(delayMs === 0);
+
+  // Use the shared timing hook for delayed display
+  useTimeout(
+    () => setShowFallback(true),
+    delayMs > 0 && !showFallback ? delayMs : null,
+  );
+
+  if (!showFallback) {
+    return null;
+  }
+
+  return <>{children}</>;
+};
+
+// ============================================================================
+// Suspense Loading Boundary Component
+// ============================================================================
+
+/**
+ * A Suspense-integrated loading boundary that enforces consistent loading behavior
+ * across the app using the standardized LOADING_TOKENS timing system.
+ *
+ * Features:
+ * - Wraps React Suspense for lazy-loaded components
+ * - Configurable delayed fallback display (prevents flash for quick loads)
+ * - Consistent timing using LOADING_TOKENS
+ * - Optional error handling integration
+ * - Proper accessibility attributes
+ *
+ * @example
+ * // Basic usage with default skeleton
+ * <SuspenseLoadingBoundary componentName="UserProfile">
+ *   <LazyUserProfile userId={userId} />
+ * </SuspenseLoadingBoundary>
+ *
+ * @example
+ * // With custom fallback and delay
+ * <SuspenseLoadingBoundary
+ *   fallback={<ProfileSkeleton />}
+ *   delayFallback={true}
+ *   delayMs={150}
+ *   componentName="Profile"
+ * >
+ *   <LazyProfile />
+ * </SuspenseLoadingBoundary>
+ *
+ * @example
+ * // With error handling
+ * <SuspenseLoadingBoundary
+ *   componentName="Dashboard"
+ *   onError={(error) => analytics.trackError(error)}
+ *   errorFallback={<DashboardErrorState />}
+ * >
+ *   <LazyDashboard />
+ * </SuspenseLoadingBoundary>
+ */
+export const SuspenseLoadingBoundary: React.FC<
+  SuspenseLoadingBoundaryProps
+> = ({
+  children,
+  fallback,
+  componentName,
+  delayFallback = true,
+  delayMs = LOADING_TOKENS.LOADING_DELAY,
+  size = "md",
+  errorFallback,
+  onError,
+}) => {
+  // Create the fallback content
+  const fallbackContent = fallback || (
+    <LoadingState
+      variant="skeleton"
+      size={size}
+      centered={true}
+      aria-label={
+        componentName ? `Loading ${componentName}` : "Loading content"
+      }
+    />
+  );
+
+  // Optionally wrap fallback with delay to prevent flash
+  const delayedFallbackContent = delayFallback ? (
+    <DelayedFallback delayMs={delayMs}>{fallbackContent}</DelayedFallback>
+  ) : (
+    fallbackContent
+  );
+
+  // Wrap with accessibility attributes
+  const accessibleFallback = (
+    <div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      aria-label={componentName ? `Loading ${componentName}` : "Loading"}
+    >
+      {delayedFallbackContent}
+    </div>
+  );
+
+  // If error handling is requested, wrap with error boundary
+  if (errorFallback || onError) {
+    return (
+      <SuspenseErrorBoundary
+        fallback={errorFallback}
+        onError={onError}
+        componentName={componentName}
+      >
+        <Suspense fallback={accessibleFallback}>{children}</Suspense>
+      </SuspenseErrorBoundary>
+    );
+  }
+
+  return <Suspense fallback={accessibleFallback}>{children}</Suspense>;
+};
+
+// ============================================================================
+// Suspense Error Boundary (internal)
+// ============================================================================
+
+interface SuspenseErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+  onError?: (error: Error) => void;
+  componentName?: string;
+}
+
+interface SuspenseErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+/**
+ * Internal error boundary for use with SuspenseLoadingBoundary.
+ * Provides a consistent error handling experience.
+ */
+class SuspenseErrorBoundary extends React.Component<
+  SuspenseErrorBoundaryProps,
+  SuspenseErrorBoundaryState
+> {
+  constructor(props: SuspenseErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): SuspenseErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    this.props.onError?.(error);
+    console.error(
+      `SuspenseLoadingBoundary error${this.props.componentName ? ` in ${this.props.componentName}` : ""}:`,
+      error,
+      errorInfo,
+    );
+  }
+
+  render(): React.ReactNode {
+    if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
+      // Default error UI
+      return (
+        <div
+          className="flex min-h-[100px] items-center justify-center p-4"
+          role="alert"
+          aria-live="assertive"
+        >
+          <div className="text-center">
+            <p className="text-sm text-bsky-text-secondary">
+              {this.props.componentName
+                ? `Failed to load ${this.props.componentName}`
+                : "Failed to load content"}
+            </p>
+            <button
+              onClick={() => this.setState({ hasError: false, error: null })}
+              className="mt-2 text-sm text-bsky-primary hover:underline"
+            >
+              Try again
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 // ============================================================================
 // Column Header Skeleton

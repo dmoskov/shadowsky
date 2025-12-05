@@ -78,7 +78,7 @@ const Toggle: React.FC<ToggleProps> = ({
       aria-label={label}
       onClick={() => onChange(!enabled)}
       disabled={disabled}
-      className={`relative h-6 w-11 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+      className={`relative h-6 w-11 rounded-full spring-toggle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
         disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
       }`}
       style={{
@@ -89,7 +89,7 @@ const Toggle: React.FC<ToggleProps> = ({
       }}
     >
       <span
-        className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+        className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm spring-toggle ${
           enabled ? "translate-x-5" : "translate-x-0"
         }`}
       />

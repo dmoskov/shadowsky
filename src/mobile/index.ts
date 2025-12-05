@@ -31,17 +31,17 @@
  */
 
 // Components
-export { PostCard, FeedList } from "./components";
+export { FeedList, PostCard } from "./components";
 
 // Types
+export { FEED_CONSTANTS } from "./types";
 export type {
-  MobilePostData,
-  PostCardProps,
   FeedListProps,
+  MobilePostData,
   PostActionBarProps,
+  PostCardProps,
   PostImage,
 } from "./types";
-export { FEED_CONSTANTS } from "./types";
 
 // Hooks
 export { useFeedActions } from "./hooks";

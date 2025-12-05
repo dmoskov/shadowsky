@@ -14,6 +14,7 @@
 
 import Dexie, { type Table } from "dexie";
 import { createLogger } from "../../../utils/logger";
+import { BaseStorageProvider } from "./storage-provider";
 import type {
   BatchResult,
   EncryptionLevel,
@@ -29,7 +30,6 @@ import type {
   StorageStatus,
   TransactionContext,
 } from "./types";
-import { BaseStorageProvider } from "./storage-provider";
 
 const logger = createLogger("WebStorageAdapter");
 
@@ -104,7 +104,8 @@ class StorageDatabase extends Dexie {
     // Build schema from predefined stores
     const schema: Record<string, string> = {};
     for (const [storeName, storeSchema] of Object.entries(STORE_SCHEMAS)) {
-      schema[storeName] = `${storeSchema.keyPath}, ${storeSchema.indexes.join(", ")}`;
+      schema[storeName] =
+        `${storeSchema.keyPath}, ${storeSchema.indexes.join(", ")}`;
     }
 
     this.version(DB_VERSION).stores(schema);
@@ -555,8 +556,13 @@ export class WebStorageAdapter extends BaseStorageProvider {
         return table.count();
       }
 
-      // Apply filters
-      const filtered = await this.applyFilters(table, query.filters);
+      // Apply filters - need to deserialize first for entity field filtering
+      const records = await table.toArray();
+      const entities: T[] = [];
+      for (const record of records) {
+        entities.push(await this.deserializeRecord<T>(record));
+      }
+      const filtered = this.applyEntityFilters(entities, query.filters);
       return filtered.length;
     } catch (error) {
       logger.error(`Failed to count ${store}:`, error);
@@ -576,21 +582,34 @@ export class WebStorageAdapter extends BaseStorageProvider {
     try {
       const table = this.db!.getStore<StoredRecord>(store);
 
-      // Get all records (with optional filters)
-      let records: StoredRecord[];
+      // Get all records
+      const records = await table.toArray();
+
+      // Deserialize all records first to enable filtering on entity fields
+      let entities: T[] = [];
+      for (const record of records) {
+        entities.push(await this.deserializeRecord<T>(record));
+      }
+
+      // Apply filters on deserialized entities
       if (query.filters?.length) {
-        records = await this.applyFilters(table, query.filters);
-      } else {
-        records = await table.toArray();
+        entities = this.applyEntityFilters(entities, query.filters);
       }
 
       // Sort
       if (query.sortBy) {
         const sortField = query.sortBy as string;
         const sortDir = query.sortDirection === "desc" ? -1 : 1;
-        records.sort((a, b) => {
-          const aVal = a[sortField];
-          const bVal = b[sortField];
+        entities.sort((a, b) => {
+          const aVal = (a as Record<string, unknown>)[sortField] as
+            | string
+            | number
+            | undefined;
+          const bVal = (b as Record<string, unknown>)[sortField] as
+            | string
+            | number
+            | undefined;
+          if (aVal === undefined || bVal === undefined) return 0;
           if (aVal < bVal) return -1 * sortDir;
           if (aVal > bVal) return 1 * sortDir;
           return 0;
@@ -598,16 +617,10 @@ export class WebStorageAdapter extends BaseStorageProvider {
       }
 
       // Paginate
-      const total = records.length;
+      const total = entities.length;
       const offset = query.offset || 0;
       const limit = query.limit || 100;
-      const paginatedRecords = records.slice(offset, offset + limit);
-
-      // Deserialize
-      const items: T[] = [];
-      for (const record of paginatedRecords) {
-        items.push(await this.deserializeRecord<T>(record));
-      }
+      const items = entities.slice(offset, offset + limit);
 
       return {
         items,
@@ -628,23 +641,24 @@ export class WebStorageAdapter extends BaseStorageProvider {
     return result.items[0] || null;
   }
 
-  private async applyFilters<T extends StorageEntity>(
-    table: Table<StoredRecord>,
+  /**
+   * Apply filters to deserialized entities
+   */
+  private applyEntityFilters<T extends StorageEntity>(
+    entities: T[],
     filters: QueryFilter<T>[],
-  ): Promise<StoredRecord[]> {
-    // Start with all records
-    let records = await table.toArray();
+  ): T[] {
+    let result = entities;
 
-    // Apply each filter
     for (const filter of filters) {
       const field = filter.field as string;
-      records = records.filter((record) => {
-        const value = record[field];
+      result = result.filter((entity) => {
+        const value = (entity as Record<string, unknown>)[field];
         return this.matchFilter(value, filter.operator, filter.value);
       });
     }
 
-    return records;
+    return result;
   }
 
   private matchFilter(
@@ -817,7 +831,8 @@ export class WebStorageAdapter extends BaseStorageProvider {
     }
 
     // Extract indexed fields from entity for querying
-    const schema = STORE_SCHEMAS[Object.keys(STORE_SCHEMAS)[0]] || DEFAULT_SCHEMA;
+    const schema =
+      STORE_SCHEMAS[Object.keys(STORE_SCHEMAS)[0]] || DEFAULT_SCHEMA;
     const indexedFields: Record<string, unknown> = {};
     for (const field of schema.indexes) {
       if (field in entity) {

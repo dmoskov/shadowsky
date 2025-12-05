@@ -143,7 +143,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search messages..."
-            className="w-full rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary py-2 pl-10 pr-10 text-sm text-bsky-text-primary placeholder-bsky-text-secondary focus:border-bsky-primary focus:outline-none"
+            className="w-full rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary py-2 pl-10 pr-10 text-sm text-bsky-text-primary placeholder-bsky-text-secondary focus-visible:border-bsky-primary focus-visible:outline-none"
             aria-label="Search messages"
           />
           {query && (
@@ -204,7 +204,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
                     senderDid: e.target.value || undefined,
                   })
                 }
-                className="w-full rounded border border-bsky-border-primary bg-bsky-bg-primary px-2 py-1.5 text-sm text-bsky-text-primary focus:border-bsky-primary focus:outline-none"
+                className="w-full rounded border border-bsky-border-primary bg-bsky-bg-primary px-2 py-1.5 text-sm text-bsky-text-primary focus-visible:border-bsky-primary focus-visible:outline-none"
               >
                 <option value="">All senders</option>
                 {senders.map((sender) => (
@@ -237,7 +237,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
                         : undefined,
                     })
                   }
-                  className="w-full rounded border border-bsky-border-primary bg-bsky-bg-primary px-2 py-1.5 text-sm text-bsky-text-primary focus:border-bsky-primary focus:outline-none"
+                  className="w-full rounded border border-bsky-border-primary bg-bsky-bg-primary px-2 py-1.5 text-sm text-bsky-text-primary focus-visible:border-bsky-primary focus-visible:outline-none"
                 />
               </div>
               <div>
@@ -258,7 +258,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
                         : undefined,
                     })
                   }
-                  className="w-full rounded border border-bsky-border-primary bg-bsky-bg-primary px-2 py-1.5 text-sm text-bsky-text-primary focus:border-bsky-primary focus:outline-none"
+                  className="w-full rounded border border-bsky-border-primary bg-bsky-bg-primary px-2 py-1.5 text-sm text-bsky-text-primary focus-visible:border-bsky-primary focus-visible:outline-none"
                 />
               </div>
             </div>
@@ -321,7 +321,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
               <button
                 key={result.message.id}
                 onClick={() => handleResultClick(result)}
-                className="w-full cursor-pointer p-3 text-left transition-colors hover:bg-bsky-bg-secondary focus:bg-bsky-bg-secondary focus:outline-none"
+                className="w-full cursor-pointer p-3 text-left transition-colors hover:bg-bsky-bg-secondary focus-visible:bg-bsky-bg-secondary focus-visible:outline-none"
               >
                 <div className="flex items-center gap-2 text-xs text-bsky-text-secondary">
                   <span className="font-medium">

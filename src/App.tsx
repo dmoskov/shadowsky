@@ -18,7 +18,9 @@ import { OAuthCallback } from "./components/OAuthCallback";
 import { StorageErrorProvider } from "./components/providers/StorageErrorProvider";
 import { Sidebar } from "./components/Sidebar";
 import { AriaLiveProvider } from "./components/ui/AriaLiveRegion";
-import { PageLoader } from "./components/ui/PageLoader";
+import { ConnectedOfflineIndicator } from "./components/ui/OfflineIndicator";
+import { RouteSkeletonFallback } from "./components/ui/RouteSkeletonFallback";
+import { SkipLinks } from "./components/ui/SkipLinks";
 import { AccessibilityProvider } from "./contexts/AccessibilityContext";
 import { ActionSyncProvider } from "./contexts/ActionSyncContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
@@ -40,10 +42,14 @@ import { analytics } from "./services/analytics";
 import { appPreferencesService } from "./services/app-preferences-service";
 import { initializeCoreStorage } from "./services/data-services-initializer";
 import { NotificationStorageDB } from "./services/notification-storage-db";
+import { webVitalsMonitor } from "./services/web-vitals-monitor";
 import { cleanupLocalStorage } from "./utils/cleanupLocalStorage";
 import "./utils/debug-control"; // Initialize debug controls
 import { lazyWithRetry } from "./utils/lazyWithRetry";
 import { removeTrailingSlash } from "./utils/removeTrailingSlash";
+
+// Initialize Web Vitals monitoring early for accurate metrics
+webVitalsMonitor.init();
 
 // Lazy load non-critical components that are conditionally rendered
 // Using lazyWithRetry to handle chunk load failures after deployments
@@ -90,6 +96,16 @@ const SwipeIndicator = lazyWithRetry(() =>
 const FloatingActionButton = lazyWithRetry(() =>
   import("./components/ui/FloatingActionButton").then((m) => ({
     default: m.FloatingActionButton,
+  })),
+);
+const DevPerformanceOverlay = lazyWithRetry(() =>
+  import("./components/DevPerformanceOverlay").then((m) => ({
+    default: m.DevPerformanceOverlay,
+  })),
+);
+const BackgroundSyncIndicator = lazyWithRetry(() =>
+  import("./components/ui/BackgroundSyncIndicator").then((m) => ({
+    default: m.BackgroundSyncIndicator,
   })),
 );
 
@@ -399,17 +415,14 @@ function AppContent() {
       style={{ background: "var(--bsky-bg-primary)" }}
       {...swipeHandlers}
     >
-      {/* Skip navigation link for accessibility */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-      >
-        Skip to main content
-      </a>
+      {/* Skip navigation links for keyboard users - WCAG 2.4.1 Bypass Blocks */}
+      <SkipLinks />
       <Suspense fallback={null}>
         <BackgroundNotificationLoader />
       </Suspense>
       <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+      {/* Offline/reconnection status indicator */}
+      <ConnectedOfflineIndicator position="top" />
       <div
         className={`relative flex ${isHomeRoute ? "" : "mx-auto 2xl:max-w-[1536px]"}`}
       >
@@ -424,17 +437,62 @@ function AppContent() {
           aria-label="Main content"
           className={`mt-16 min-h-[calc(100vh-4rem)] flex-1 pb-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto lg:pb-0`}
         >
-          <Suspense fallback={<PageLoader />}>
+          <Suspense fallback={<RouteSkeletonFallback />}>
             <Routes>
               <Route path="/home" element={<SkyDeck />} />
               <Route path="/" element={<SkyDeck />} />
-              <Route path="/timeline" element={<VisualTimeline />} />
-              <Route path="/analytics" element={<UserAnalytics />} />
+              <Route
+                path="/timeline"
+                element={
+                  <ErrorBoundary
+                    componentName="Visual Timeline"
+                    onError={(error) => {
+                      analytics.trackError(error, "VisualTimeline");
+                    }}
+                  >
+                    <VisualTimeline />
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <ErrorBoundary
+                    componentName="User Analytics"
+                    onError={(error) => {
+                      analytics.trackError(error, "UserAnalytics");
+                    }}
+                  >
+                    <UserAnalytics />
+                  </ErrorBoundary>
+                }
+              />
               <Route
                 path="/analytics/notifications"
-                element={<NotificationsAnalytics />}
+                element={
+                  <ErrorBoundary
+                    componentName="Notifications Analytics"
+                    onError={(error) => {
+                      analytics.trackError(error, "NotificationsAnalytics");
+                    }}
+                  >
+                    <NotificationsAnalytics />
+                  </ErrorBoundary>
+                }
               />
-              <Route path="/notifications" element={<Notifications />} />
+              <Route
+                path="/notifications"
+                element={
+                  <ErrorBoundary
+                    componentName="Notifications"
+                    onError={(error) => {
+                      analytics.trackError(error, "Notifications");
+                    }}
+                  >
+                    <Notifications />
+                  </ErrorBoundary>
+                }
+              />
               <Route
                 path="/messages"
                 element={
@@ -448,7 +506,19 @@ function AppContent() {
                   </ErrorBoundary>
                 }
               />
-              <Route path="/bookmarks" element={<Bookmarks />} />
+              <Route
+                path="/bookmarks"
+                element={
+                  <ErrorBoundary
+                    componentName="Bookmarks"
+                    onError={(error) => {
+                      analytics.trackError(error, "Bookmarks");
+                    }}
+                  >
+                    <Bookmarks />
+                  </ErrorBoundary>
+                }
+              />
               <Route
                 path="/lists"
                 element={
@@ -488,7 +558,19 @@ function AppContent() {
                   </ErrorBoundary>
                 }
               />
-              <Route path="/search" element={<Search />} />
+              <Route
+                path="/search"
+                element={
+                  <ErrorBoundary
+                    componentName="Search"
+                    onError={(error) => {
+                      analytics.trackError(error, "Search");
+                    }}
+                  >
+                    <Search />
+                  </ErrorBoundary>
+                }
+              />
               <Route
                 path="/scheduled"
                 element={
@@ -502,13 +584,58 @@ function AppContent() {
                   </ErrorBoundary>
                 }
               />
-              <Route path="/profile/:handle" element={<ProfilePageWithKey />} />
+              <Route
+                path="/profile/:handle"
+                element={
+                  <ErrorBoundary
+                    componentName="Profile"
+                    onError={(error) => {
+                      analytics.trackError(error, "ProfilePage");
+                    }}
+                  >
+                    <ProfilePageWithKey />
+                  </ErrorBoundary>
+                }
+              />
               <Route
                 path="/thread/:handle/:postId"
-                element={<ThreadPageWithKey />}
+                element={
+                  <ErrorBoundary
+                    componentName="Thread"
+                    onError={(error) => {
+                      analytics.trackError(error, "ThreadPage");
+                    }}
+                  >
+                    <ThreadPageWithKey />
+                  </ErrorBoundary>
+                }
               />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/settings/:section" element={<Settings />} />
+              <Route
+                path="/settings"
+                element={
+                  <ErrorBoundary
+                    componentName="Settings"
+                    onError={(error) => {
+                      analytics.trackError(error, "Settings");
+                    }}
+                  >
+                    <Settings />
+                  </ErrorBoundary>
+                }
+              />
+              <Route
+                path="/settings/:section"
+                element={
+                  <ErrorBoundary
+                    componentName="Settings"
+                    onError={(error) => {
+                      analytics.trackError(error, "Settings");
+                    }}
+                  >
+                    <Settings />
+                  </ErrorBoundary>
+                }
+              />
               <Route path="/compression-test" element={<CompressionTest />} />
               <Route path="*" element={<Navigate to="/home" replace />} />
             </Routes>
@@ -531,6 +658,8 @@ function AppContent() {
           <NotificationPermissionPrompt />
         </ErrorBoundary>
         <DebugConsole />
+        <DevPerformanceOverlay />
+        <BackgroundSyncIndicator />
         <ColumnMigrationNotice />
         <CommandPalette
           isOpen={isCommandPaletteOpen}

@@ -74,9 +74,7 @@ export class MobileStorageAdapter extends BaseStorageProvider {
   constructor(config: Partial<MobileStorageConfig> = {}) {
     super();
     this.config = { ...DEFAULT_CONFIG, ...config };
-    logger.log(
-      `MobileStorageAdapter stub created for ${this.config.platform}`,
-    );
+    logger.log(`MobileStorageAdapter stub created for ${this.config.platform}`);
   }
 
   // ==================== Lifecycle ====================
@@ -93,8 +91,10 @@ export class MobileStorageAdapter extends BaseStorageProvider {
 
   async isAvailable(): Promise<boolean> {
     // Check if running in React Native environment
-    // @ts-expect-error - React Native global
-    const isReactNative = typeof global !== "undefined" && global.__DEV__ !== undefined;
+    // In React Native, __DEV__ is a global boolean
+    const globalAny = global as unknown as { __DEV__?: boolean };
+    const isReactNative =
+      typeof globalAny !== "undefined" && globalAny.__DEV__ !== undefined;
     return isReactNative;
   }
 
@@ -142,7 +142,9 @@ export class MobileStorageAdapter extends BaseStorageProvider {
     ids: string[],
     _options?: StorageOptions,
   ): Promise<T[]> {
-    logger.log(`MobileStorageAdapter.getMany(${store}, ${ids.length} ids) - stub`);
+    logger.log(
+      `MobileStorageAdapter.getMany(${store}, ${ids.length} ids) - stub`,
+    );
     this.throwNotImplemented("getMany");
   }
 
@@ -168,7 +170,9 @@ export class MobileStorageAdapter extends BaseStorageProvider {
     entities: T[],
     _options?: StorageOptions,
   ): Promise<BatchResult> {
-    logger.log(`MobileStorageAdapter.putMany(${store}, ${entities.length} entities) - stub`);
+    logger.log(
+      `MobileStorageAdapter.putMany(${store}, ${entities.length} entities) - stub`,
+    );
     this.throwNotImplemented("putMany");
   }
 
@@ -186,7 +190,9 @@ export class MobileStorageAdapter extends BaseStorageProvider {
     ids: string[],
     _options?: StorageOptions,
   ): Promise<BatchResult> {
-    logger.log(`MobileStorageAdapter.deleteMany(${store}, ${ids.length} ids) - stub`);
+    logger.log(
+      `MobileStorageAdapter.deleteMany(${store}, ${ids.length} ids) - stub`,
+    );
     this.throwNotImplemented("deleteMany");
   }
 
@@ -232,7 +238,9 @@ export class MobileStorageAdapter extends BaseStorageProvider {
     stores: string[],
     mode: "readonly" | "readwrite",
   ): Promise<TransactionContext> {
-    logger.log(`MobileStorageAdapter.beginTransaction(${stores}, ${mode}) - stub`);
+    logger.log(
+      `MobileStorageAdapter.beginTransaction(${stores}, ${mode}) - stub`,
+    );
     this.throwNotImplemented("beginTransaction");
   }
 

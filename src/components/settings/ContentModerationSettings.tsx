@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Clock, Plus, Shield, Tag, Users, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
+import { moderationHistoryDB } from "../../services/moderation-history-db";
 
 // Muted/blocked user interfaces
 interface MutedUser {
@@ -390,6 +391,21 @@ export const ContentModerationSettings: React.FC = () => {
       const profile = await profileService.getProfile(handle);
 
       await profileService.mute(profile.did);
+
+      // Record mute to history
+      try {
+        await moderationHistoryDB.init();
+        await moderationHistoryDB.recordMute({
+          subjectDid: profile.did,
+          subjectHandle: profile.handle,
+          subjectDisplayName: profile.displayName,
+          subjectAvatar: profile.avatar,
+          createdAt: Date.now(),
+        });
+      } catch (historyErr) {
+        console.warn("Failed to record mute to history:", historyErr);
+      }
+
       setNewMuteHandle("");
       setMessage({
         type: "success",
@@ -417,6 +433,15 @@ export const ContentModerationSettings: React.FC = () => {
     try {
       const profileService = getProfileService(agent);
       await profileService.unmute(did);
+
+      // Record unmute to history
+      try {
+        await moderationHistoryDB.init();
+        await moderationHistoryDB.recordUnmute(did);
+      } catch (historyErr) {
+        console.warn("Failed to record unmute to history:", historyErr);
+      }
+
       setMessage({
         type: "success",
         text: `Unmuted @${handle}`,
@@ -443,6 +468,15 @@ export const ContentModerationSettings: React.FC = () => {
     try {
       const profileService = getProfileService(agent);
       await profileService.unblock(blockUri);
+
+      // Record unblock to history
+      try {
+        await moderationHistoryDB.init();
+        await moderationHistoryDB.recordUnblock(blockUri);
+      } catch (historyErr) {
+        console.warn("Failed to record unblock to history:", historyErr);
+      }
+
       setMessage({
         type: "success",
         text: `Unblocked @${handle}`,
@@ -956,15 +990,11 @@ export const ContentModerationSettings: React.FC = () => {
       {/* Status Message */}
       {message && (
         <div
-          className="rounded-lg p-3 text-sm"
-          style={{
-            backgroundColor:
-              message.type === "success"
-                ? "rgba(34, 197, 94, 0.1)"
-                : "rgba(239, 68, 68, 0.1)",
-            color: message.type === "success" ? "#22c55e" : "#ef4444",
-            border: `1px solid ${message.type === "success" ? "rgba(34, 197, 94, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
-          }}
+          className={`rounded-lg border p-3 text-sm ${
+            message.type === "success"
+              ? "border-bsky-success/30 bg-bsky-success/10 text-bsky-success"
+              : "border-bsky-error/30 bg-bsky-error/10 text-bsky-error"
+          }`}
         >
           {message.text}
         </div>

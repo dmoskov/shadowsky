@@ -168,7 +168,7 @@ export const NotificationPermissionPrompt: React.FC = () => {
                 ref={enableButtonRef}
                 onClick={handleEnable}
                 disabled={isSubscribing}
-                className="flex flex-1 items-center justify-center gap-2 rounded px-3 py-2 text-sm font-medium transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded px-3 py-2 text-sm font-medium transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50"
                 style={{
                   background: "var(--bsky-primary)",
                   color: "white",
@@ -190,7 +190,7 @@ export const NotificationPermissionPrompt: React.FC = () => {
               <button
                 onClick={handleDismiss}
                 disabled={isSubscribing}
-                className="rounded px-3 py-2 text-sm font-medium transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                className="rounded px-3 py-2 text-sm font-medium transition-colors hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
                 style={{
                   background: "var(--bsky-bg-tertiary)",
                   color: "var(--bsky-text-secondary)",
@@ -206,7 +206,7 @@ export const NotificationPermissionPrompt: React.FC = () => {
 
           <button
             onClick={handleDismiss}
-            className="rounded text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             aria-label="Dismiss notification prompt"
             style={{
               // @ts-expect-error CSS custom property for focus ring
@@ -254,7 +254,7 @@ export const NotificationBlockedBanner: React.FC = () => {
       </div>
       <button
         onClick={() => setDismissed(true)}
-        className="text-gray-400 hover:text-gray-600"
+        className="flex min-h-[44px] min-w-[44px] items-center justify-center text-gray-400 hover:text-gray-600"
         aria-label="Dismiss"
       >
         <X className="h-4 w-4" />

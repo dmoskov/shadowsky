@@ -14,7 +14,7 @@
 
 import type { AppBskyFeedDefs } from "@atproto/api";
 import { formatDistanceToNow } from "date-fns";
-import React, { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import {
   Image,
   Pressable,
@@ -67,7 +67,13 @@ const Avatar = memo(function Avatar({
 
   if (onPress) {
     return (
-      <Pressable onPress={onPress} hitSlop={8}>
+      <Pressable
+        onPress={onPress}
+        hitSlop={12}
+        style={{ minWidth: 44, minHeight: 44 }}
+        accessibilityRole="button"
+        accessibilityLabel="View profile"
+      >
         {content}
       </Pressable>
     );
@@ -102,7 +108,12 @@ const AuthorHeader = memo(function AuthorHeader({
 
   return (
     <View style={styles.authorContainer}>
-      <Pressable onPress={handlePress} style={styles.authorInfo}>
+      <Pressable
+        onPress={handlePress}
+        style={styles.authorInfo}
+        accessibilityRole="button"
+        accessibilityLabel={`View ${author.displayName || author.handle}'s profile`}
+      >
         <Text style={styles.displayName} numberOfLines={1}>
           {author.displayName || author.handle}
         </Text>
@@ -135,7 +146,12 @@ const RepostReason = memo(function RepostReason({
   }, [by.handle, onPress]);
 
   return (
-    <Pressable onPress={handlePress} style={styles.repostReason}>
+    <Pressable
+      onPress={handlePress}
+      style={styles.repostReason}
+      accessibilityRole="button"
+      accessibilityLabel={`View ${by.displayName || by.handle}'s profile`}
+    >
       <Text style={styles.repostIcon}>↻</Text>
       <Text style={styles.repostText}>
         {by.displayName || by.handle} reposted
@@ -152,7 +168,7 @@ const ActionBar = memo(function ActionBar({
   onLike,
   onRepost,
   onReply,
-  onQuote,
+  onQuote: _onQuote,
   onBookmark,
 }: {
   post: AppBskyFeedDefs.PostView;
@@ -162,6 +178,8 @@ const ActionBar = memo(function ActionBar({
   onQuote?: () => void;
   onBookmark?: () => void;
 }) {
+  // Note: onQuote is available for future quote button implementation
+  void _onQuote;
   const isLiked = !!post.viewer?.like;
   const isReposted = !!post.viewer?.repost;
 
@@ -295,9 +313,7 @@ const QuotedPost = memo(function QuotedPost({
   if (record.$type === "app.bsky.embed.record#viewBlocked") {
     return (
       <View style={styles.quotedPostDeleted}>
-        <Text style={styles.quotedPostDeletedText}>
-          Post from blocked user
-        </Text>
+        <Text style={styles.quotedPostDeletedText}>Post from blocked user</Text>
       </View>
     );
   }
@@ -474,9 +490,7 @@ function PostCardComponent({
           />
 
           {/* Post text */}
-          {record?.text && (
-            <Text style={styles.postText}>{record.text}</Text>
-          )}
+          {record?.text && <Text style={styles.postText}>{record.text}</Text>}
 
           {/* Embedded content */}
           {renderEmbed()}
@@ -546,6 +560,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
     marginLeft: 60,
+    minHeight: 44,
+    paddingVertical: 8,
   } as ViewStyle,
   repostIcon: {
     fontSize: 14,
@@ -572,6 +588,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     flexShrink: 1,
+    minHeight: 44,
+    paddingVertical: 8,
   } as ViewStyle,
   displayName: {
     fontSize: 15,
@@ -605,8 +623,11 @@ const styles = StyleSheet.create({
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    justifyContent: "center",
+    minWidth: 44,
+    minHeight: 44,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   } as ViewStyle,
   actionIcon: {
     fontSize: 16,

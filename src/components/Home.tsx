@@ -18,7 +18,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
@@ -31,19 +31,35 @@ import {
 import { useBookmarks } from "../hooks/useBookmarks";
 import { useIntersectionLoader } from "../hooks/useIntersectionLoader";
 import { useModerationPreferences } from "../hooks/useModerationPreferences";
+import { useFeedCaching, useOfflineFeedStatus } from "../hooks/useOfflineFeed";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
+import { usePostDeepLink } from "../hooks/usePostDeepLink";
+import { useMinDuration } from "../hooks/useTiming";
 import { columnService } from "../services/column-service";
+import { offlineStorageDB } from "../services/offline-storage-db";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
+import { lazyWithRetry } from "../utils/lazyWithRetry";
 import { createLogger } from "../utils/logger";
-import { FeedDiscovery } from "./FeedDiscovery";
-import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
-import { ThreadModal } from "./ThreadModal";
-import { VideoPlayer } from "./VideoPlayer";
+import { Spinner } from "./ui/LoadingState";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { ProgressiveImage } from "./ui/ProgressiveImage";
 import { RichText } from "./ui/RichText";
 import { FeedSkeleton } from "./ui/SkeletonLoader";
+
+// Code-split heavy components to improve initial load time
+const FeedDiscovery = lazyWithRetry(() =>
+  import("./FeedDiscovery").then((m) => ({ default: m.FeedDiscovery })),
+);
+const ImageGallery = lazyWithRetry(() =>
+  import("./ImageGallery").then((m) => ({ default: m.ImageGallery })),
+);
+const ThreadModal = lazyWithRetry(() =>
+  import("./ThreadModal").then((m) => ({ default: m.ThreadModal })),
+);
+const VideoPlayer = lazyWithRetry(() =>
+  import("./VideoPlayer").then((m) => ({ default: m.VideoPlayer })),
+);
 
 const logger = createLogger("Home");
 
@@ -152,6 +168,15 @@ export const Home: React.FC<HomeProps> = React.memo(
     const { isPostHidden } = useHiddenPosts();
     const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
     const { shouldFilterFeedItem } = useModerationPreferences();
+    // Offline feed support - caching and status tracking
+    const offlineStatus = useOfflineFeedStatus();
+    const { cacheFeedItems } = useFeedCaching("timeline");
+    const [isServingCachedFeed, setIsServingCachedFeed] = useState(false);
+    // Deep link support for direct navigation to posts via URL fragments
+    // The hook automatically scrolls to the post via DOM id/data attributes
+    usePostDeepLink({
+      enabled: isFocused,
+    });
     // Removed hoveredPost state to prevent re-renders - using CSS hover instead
     // Use initialFeedUri if provided, otherwise get from column preferences
     const [selectedFeed, setSelectedFeed] = React.useState<FeedType>(() => {
@@ -373,6 +398,53 @@ export const Home: React.FC<HomeProps> = React.memo(
       queryFn: async ({ pageParam }: { pageParam?: string }) => {
         if (!agent) throw new Error("Not authenticated");
 
+        // If offline and this is the first page, try to serve from cache
+        if (!navigator.onLine && !pageParam) {
+          logger.info("Offline - attempting to serve cached feed");
+          setIsServingCachedFeed(true);
+
+          try {
+            await offlineStorageDB.init();
+            const cachedItems = await offlineStorageDB.getFeedItems(
+              100,
+              "timeline",
+            );
+
+            if (cachedItems.length > 0) {
+              logger.info(`Serving ${cachedItems.length} cached items`);
+              // Transform cached items back to feed format
+              const transformedFeed = cachedItems.map((item) => ({
+                post: {
+                  uri: item.uri,
+                  cid: item.cid,
+                  indexedAt: item.indexedAt,
+                  author: item.author,
+                  record: item.record,
+                  replyCount: item.replyCount,
+                  repostCount: item.repostCount,
+                  likeCount: item.likeCount,
+                  viewer: {}, // Viewer state not persisted offline
+                },
+                _fromOfflineCache: true,
+                _cachedAt: item._offlineCachedAt,
+              }));
+
+              return {
+                feed: transformedFeed,
+                cursor: undefined,
+                _fromCache: true,
+              };
+            }
+          } catch (cacheError) {
+            logger.error("Failed to get cached feed:", cacheError);
+          }
+
+          throw new Error(
+            "You are offline and no cached content is available. Connect to the internet to view your feed.",
+          );
+        }
+
+        setIsServingCachedFeed(false);
         let response;
 
         try {
@@ -428,8 +500,58 @@ export const Home: React.FC<HomeProps> = React.memo(
                 }
               }
           }
+
+          // Cache timeline feed items for offline access (only first page)
+          if (
+            response?.data?.feed &&
+            !pageParam &&
+            (selectedFeed === "following" || selectedFeed === "recent")
+          ) {
+            cacheFeedItems(response.data.feed);
+          }
         } catch (error: any) {
           debug.error(`Failed to fetch feed ${selectedFeed}:`, error);
+
+          // If fetch failed and we're possibly offline, try cache
+          if (!navigator.onLine && !pageParam) {
+            try {
+              await offlineStorageDB.init();
+              const cachedItems = await offlineStorageDB.getFeedItems(
+                100,
+                "timeline",
+              );
+
+              if (cachedItems.length > 0) {
+                logger.info(
+                  `Network error - serving ${cachedItems.length} cached items`,
+                );
+                setIsServingCachedFeed(true);
+                const transformedFeed = cachedItems.map((item) => ({
+                  post: {
+                    uri: item.uri,
+                    cid: item.cid,
+                    indexedAt: item.indexedAt,
+                    author: item.author,
+                    record: item.record,
+                    replyCount: item.replyCount,
+                    repostCount: item.repostCount,
+                    likeCount: item.likeCount,
+                    viewer: {},
+                  },
+                  _fromOfflineCache: true,
+                  _cachedAt: item._offlineCachedAt,
+                }));
+
+                return {
+                  feed: transformedFeed,
+                  cursor: undefined,
+                  _fromCache: true,
+                };
+              }
+            } catch {
+              // Fall through to error handling
+            }
+          }
 
           // Provide more user-friendly error messages
           if (error?.message?.includes("List not found")) {
@@ -468,16 +590,38 @@ export const Home: React.FC<HomeProps> = React.memo(
       staleTime: MOBILE_CONFIG.STALE_TIME,
       gcTime: MOBILE_CONFIG.GC_TIME,
       refetchOnMount: false, // Don't automatically refetch
+      retry: (failureCount, _error) => {
+        // Don't retry if offline
+        if (!navigator.onLine) return false;
+        // Otherwise retry up to 3 times
+        return failureCount < 3;
+      },
     });
 
     const {
       data,
-      isLoading,
+      isLoading: isLoadingRaw,
       error,
       fetchNextPage,
       hasNextPage,
       isFetchingNextPage,
     } = feedQuery;
+
+    // Apply minimum duration to prevent jarring flash of loading state
+    const isLoading = useMinDuration(isLoadingRaw);
+
+    // Refresh feed when coming back online from cached data
+    useEffect(() => {
+      if (offlineStatus.isOnline && isServingCachedFeed) {
+        logger.info("Back online - refreshing feed");
+        queryClient.invalidateQueries({ queryKey: ["timeline", selectedFeed] });
+      }
+    }, [
+      offlineStatus.isOnline,
+      isServingCachedFeed,
+      queryClient,
+      selectedFeed,
+    ]);
 
     const posts = React.useMemo(() => {
       if (!data?.pages) return [];
@@ -554,6 +698,8 @@ export const Home: React.FC<HomeProps> = React.memo(
                 ? "from-blue-500/3 border-l-4 border-blue-500 bg-gradient-to-r to-transparent"
                 : ""
             } ${isFocused ? "bg-blue-500/3 outline outline-2 outline-offset-[-2px] outline-blue-500" : ""}`}
+            id={`post-${post.uri.split("/").pop()}`}
+            data-post-id={post.uri.split("/").pop()}
             data-post-uri={post.uri}
             tabIndex={isFocused ? 0 : -1}
             aria-selected={isFocused}
@@ -611,19 +757,12 @@ export const Home: React.FC<HomeProps> = React.memo(
             {item.reply?.parent && (
               <div className="relative">
                 {/* Reply indicator with background */}
-                <div className="mb-3 flex items-center gap-2 rounded-lg border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-blue-500/5 px-3 py-2 backdrop-blur-sm">
+                <div className="border-bsky-primary/20 from-bsky-primary/10 to-bsky-primary/5 mb-3 flex items-center gap-2 rounded-lg border bg-gradient-to-br px-3 py-2 backdrop-blur-sm">
                   <div className="flex items-center">
                     <div className="flex w-12 justify-center">
-                      <div
-                        className="h-6 w-0.5"
-                        style={{ backgroundColor: "rgb(29, 155, 240)" }}
-                      ></div>
+                      <div className="h-6 w-0.5 bg-bsky-primary"></div>
                     </div>
-                    <Reply
-                      size={16}
-                      className="mr-2"
-                      style={{ color: "rgb(29, 155, 240)" }}
-                    />
+                    <Reply size={16} className="mr-2 text-bsky-primary" />
                   </div>
                   <div className="flex-1">
                     <span
@@ -635,8 +774,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                         handle={item.reply.parent.author?.handle || "unknown"}
                       >
                         <button
-                          className="font-semibold hover:underline"
-                          style={{ color: "rgb(29, 155, 240)" }}
+                          className="font-semibold text-bsky-primary hover:underline"
                           onClick={(e) => {
                             e.stopPropagation();
                             // Navigate to parent post
@@ -661,10 +799,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                   </div>
                 </div>
                 {/* Connecting line from reply indicator to avatar */}
-                <div
-                  className="absolute left-6 top-full h-3 w-0.5"
-                  style={{ backgroundColor: "rgba(29, 155, 240, 0.3)" }}
-                ></div>
+                <div className="bg-bsky-primary/30 absolute left-6 top-full h-3 w-0.5"></div>
               </div>
             )}
 
@@ -672,19 +807,12 @@ export const Home: React.FC<HomeProps> = React.memo(
             {!item.reply?.parent && post.record?.reply?.parent && (
               <div className="relative">
                 {/* Reply indicator with background */}
-                <div className="mb-3 flex items-center gap-2 rounded-lg border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-blue-500/5 px-3 py-2 backdrop-blur-sm">
+                <div className="border-bsky-primary/20 from-bsky-primary/10 to-bsky-primary/5 mb-3 flex items-center gap-2 rounded-lg border bg-gradient-to-br px-3 py-2 backdrop-blur-sm">
                   <div className="flex items-center">
                     <div className="flex w-12 justify-center">
-                      <div
-                        className="h-6 w-0.5"
-                        style={{ backgroundColor: "rgb(29, 155, 240)" }}
-                      ></div>
+                      <div className="h-6 w-0.5 bg-bsky-primary"></div>
                     </div>
-                    <Reply
-                      size={16}
-                      className="mr-2"
-                      style={{ color: "rgb(29, 155, 240)" }}
-                    />
+                    <Reply size={16} className="mr-2 text-bsky-primary" />
                   </div>
                   <span
                     className="text-sm font-medium"
@@ -694,10 +822,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                   </span>
                 </div>
                 {/* Connecting line from reply indicator to avatar */}
-                <div
-                  className="absolute left-6 top-full h-3 w-0.5"
-                  style={{ backgroundColor: "rgba(29, 155, 240, 0.3)" }}
-                ></div>
+                <div className="bg-bsky-primary/30 absolute left-6 top-full h-3 w-0.5"></div>
               </div>
             )}
 
@@ -1448,16 +1573,31 @@ export const Home: React.FC<HomeProps> = React.memo(
               className="mt-2 overflow-hidden rounded-lg"
               onClick={(e) => e.stopPropagation()}
             >
-              <VideoPlayer
-                src={proxifyBskyVideo(embed.playlist) || ""}
-                thumbnail={
-                  embed.thumbnail
-                    ? proxifyBskyVideo(embed.thumbnail)
-                    : undefined
+              <Suspense
+                fallback={
+                  <div
+                    className="flex items-center justify-center bg-bsky-bg-tertiary"
+                    style={{
+                      aspectRatio: embed.aspectRatio
+                        ? `${embed.aspectRatio.width}/${embed.aspectRatio.height}`
+                        : "16/9",
+                    }}
+                  >
+                    <Spinner size="md" aria-label="Loading video" />
+                  </div>
                 }
-                aspectRatio={embed.aspectRatio}
-                alt={embed.alt}
-              />
+              >
+                <VideoPlayer
+                  src={proxifyBskyVideo(embed.playlist) || ""}
+                  thumbnail={
+                    embed.thumbnail
+                      ? proxifyBskyVideo(embed.thumbnail)
+                      : undefined
+                  }
+                  aspectRatio={embed.aspectRatio}
+                  alt={embed.alt}
+                />
+              </Suspense>
             </div>
           );
         }
@@ -1727,40 +1867,63 @@ export const Home: React.FC<HomeProps> = React.memo(
           <div ref={loadMoreRef} className="h-20" />
         </div>
 
-        <FeedDiscovery
-          isOpen={showFeedDiscovery}
-          onClose={() => {
-            if (onCloseFeedDiscovery) {
-              onCloseFeedDiscovery();
-            } else {
-              setInternalShowFeedDiscovery(false);
-            }
-          }}
-        />
-
-        {galleryImages && (
-          <ImageGallery
-            images={galleryImages}
-            initialIndex={galleryIndex}
+        <Suspense fallback={null}>
+          <FeedDiscovery
+            isOpen={showFeedDiscovery}
             onClose={() => {
-              setGalleryImages(null);
-              setGalleryIndex(0);
+              if (onCloseFeedDiscovery) {
+                onCloseFeedDiscovery();
+              } else {
+                setInternalShowFeedDiscovery(false);
+              }
             }}
           />
+        </Suspense>
+
+        {galleryImages && (
+          <Suspense
+            fallback={
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+                <Spinner size="lg" aria-label="Loading gallery" />
+              </div>
+            }
+          >
+            <ImageGallery
+              images={galleryImages}
+              initialIndex={galleryIndex}
+              onClose={() => {
+                setGalleryImages(null);
+                setGalleryIndex(0);
+              }}
+            />
+          </Suspense>
         )}
 
         {showThread && selectedPost && (
-          <ThreadModal
-            postUri={selectedPost.uri}
-            openToReply={openThreadToReply}
-            openToQuote={openThreadToQuote}
-            onClose={() => {
-              setShowThread(false);
-              setSelectedPost(null);
-              setOpenThreadToReply(false);
-              setOpenThreadToQuote(false);
-            }}
-          />
+          <Suspense
+            fallback={
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="flex flex-col items-center gap-3 rounded-lg bg-bsky-bg-secondary p-6 shadow-bsky-lg">
+                  <Spinner size="lg" aria-label="Loading thread" />
+                  <p className="text-sm text-bsky-text-secondary">
+                    Loading thread...
+                  </p>
+                </div>
+              </div>
+            }
+          >
+            <ThreadModal
+              postUri={selectedPost.uri}
+              openToReply={openThreadToReply}
+              openToQuote={openThreadToQuote}
+              onClose={() => {
+                setShowThread(false);
+                setSelectedPost(null);
+                setOpenThreadToReply(false);
+                setOpenThreadToQuote(false);
+              }}
+            />
+          </Suspense>
         )}
       </div>
     );

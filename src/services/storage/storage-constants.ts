@@ -35,6 +35,7 @@ export const AT_PROTO_COLLECTIONS = {
   BOOKMARKS: "com.shadowsky.bookmarks", // Changed to plural for singleton
   DRAFTS: "com.shadowsky.drafts", // Changed to plural for singleton
   LIST: "com.shadowsky.list", // Individual list records
+  PIN: "com.shadowsky.pin", // Pinned posts on profile
 } as const;
 
 // AT Protocol record keys (for singleton records)

@@ -2,9 +2,16 @@
  * OAuth Service for AT Protocol authentication
  * Uses @atproto/oauth-client-browser for secure OAuth flow
  *
- * NOTE: The @atproto/oauth-client-browser package (~327KB) is dynamically imported
- * only when OAuth functionality is needed (login click or session restoration).
- * This reduces the initial bundle size for users who don't use OAuth.
+ * NOTE: The @atproto/oauth-client-browser package (~328KB) is dynamically imported
+ * only when OAuth functionality is actually needed:
+ * 1. When there's an existing OAuth session to restore
+ * 2. When the user initiates OAuth login
+ * 3. When handling an OAuth callback
+ *
+ * This deferred loading reduces initial bundle size for users who:
+ * - Haven't used OAuth before
+ * - Use app-password authentication
+ * - Are visiting for the first time
  */
 
 import { Agent } from "@atproto/api";
@@ -16,6 +23,73 @@ import type {
   OAuthSession,
 } from "@atproto/oauth-client-browser";
 
+// OAuth client IndexedDB database name (matches @atproto/oauth-client-browser)
+const OAUTH_DB_NAME = "@atproto-oauth-client";
+
+/**
+ * Lightweight check if an OAuth session might exist without loading the full OAuth client.
+ * This checks if the OAuth IndexedDB database exists and has data.
+ * Returns true if we should load the full OAuth client, false if we can skip it.
+ */
+export async function hasExistingOAuthSession(): Promise<boolean> {
+  // Check if we're on an OAuth callback URL - if so, we definitely need the client
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("code") || params.has("state") || params.has("iss")) {
+    debug.log("OAuth callback detected, will load OAuth client");
+    return true;
+  }
+
+  // Check if IndexedDB is available
+  if (!("indexedDB" in window)) {
+    return false;
+  }
+
+  return new Promise((resolve) => {
+    try {
+      // Try to open the OAuth database
+      const request = indexedDB.open(OAUTH_DB_NAME);
+
+      request.onerror = () => {
+        // Database doesn't exist or error accessing it
+        resolve(false);
+      };
+
+      request.onsuccess = () => {
+        const db = request.result;
+        try {
+          // Check if the database has any object stores (indicating it was initialized)
+          const hasStores = db.objectStoreNames.length > 0;
+          db.close();
+
+          if (hasStores) {
+            debug.log("Existing OAuth database found, will load OAuth client");
+          }
+          resolve(hasStores);
+        } catch {
+          db.close();
+          resolve(false);
+        }
+      };
+
+      request.onupgradeneeded = () => {
+        // This means the database doesn't exist (we're creating it)
+        // Abort the upgrade and clean up
+        request.transaction?.abort();
+        // Delete the database we just created
+        indexedDB.deleteDatabase(OAUTH_DB_NAME);
+        resolve(false);
+      };
+
+      // Timeout after 500ms to prevent blocking
+      setTimeout(() => {
+        resolve(false);
+      }, 500);
+    } catch {
+      resolve(false);
+    }
+  });
+}
+
 // Lazy-loaded OAuth client module
 let OAuthClientModule: typeof import("@atproto/oauth-client-browser") | null =
   null;
@@ -24,7 +98,7 @@ async function loadOAuthClient(): Promise<
   typeof import("@atproto/oauth-client-browser")
 > {
   if (!OAuthClientModule) {
-    debug.log("Loading OAuth client module...");
+    debug.log("Loading OAuth client module (~328KB)...");
     OAuthClientModule = await import("@atproto/oauth-client-browser");
     debug.log("OAuth client module loaded");
   }

@@ -137,7 +137,7 @@ export function InlineReplyComposer({
         onChange={setText}
         onKeyDown={handleKeyDown}
         placeholder="Write your reply..."
-        className="w-full resize-none rounded border p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full resize-none rounded border p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         style={{
           backgroundColor: "var(--bsky-bg-secondary)",
           borderColor: "var(--bsky-border-primary)",

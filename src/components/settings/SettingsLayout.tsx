@@ -1,8 +1,10 @@
 import {
   Accessibility,
+  Activity,
   Bell,
   Database,
   HardDrive,
+  History,
   Palette,
   PenTool,
   Search,
@@ -152,6 +154,12 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
             path: "/settings/moderation",
           },
           {
+            id: "moderation-history",
+            label: "Moderation History",
+            icon: History,
+            path: "/settings/moderation-history",
+          },
+          {
             id: "data",
             label: "Data & Storage",
             icon: Database,
@@ -162,6 +170,12 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
             label: "Media Cache",
             icon: HardDrive,
             path: "/settings/media-cache",
+          },
+          {
+            id: "performance",
+            label: "Performance",
+            icon: Activity,
+            path: "/settings/performance",
           },
         ],
       },

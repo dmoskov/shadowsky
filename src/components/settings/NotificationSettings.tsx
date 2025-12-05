@@ -190,7 +190,7 @@ export const NotificationSettings: React.FC = () => {
               onClick={() =>
                 handleToggle(type.key as keyof typeof notifications)
               }
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              className={`relative inline-flex h-6 w-11 items-center rounded-full spring-toggle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
                 notifications[type.key as keyof typeof notifications]
                   ? "bg-blue-500"
                   : "bg-gray-300 dark:bg-gray-600"
@@ -201,7 +201,7 @@ export const NotificationSettings: React.FC = () => {
               }
             >
               <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-200 ${
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg spring-toggle ${
                   notifications[type.key as keyof typeof notifications]
                     ? "translate-x-6"
                     : "translate-x-0.5"
@@ -214,15 +214,11 @@ export const NotificationSettings: React.FC = () => {
 
       {message && (
         <div
-          className="rounded-lg p-3 text-sm"
-          style={{
-            backgroundColor:
-              message.type === "success"
-                ? "rgba(34, 197, 94, 0.1)"
-                : "rgba(239, 68, 68, 0.1)",
-            color: message.type === "success" ? "#22c55e" : "#ef4444",
-            border: `1px solid ${message.type === "success" ? "rgba(34, 197, 94, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
-          }}
+          className={`rounded-lg border p-3 text-sm ${
+            message.type === "success"
+              ? "border-bsky-success/30 bg-bsky-success/10 text-bsky-success"
+              : "border-bsky-error/30 bg-bsky-error/10 text-bsky-error"
+          }`}
         >
           {message.text}
         </div>

@@ -39,6 +39,14 @@ sleep 3
 take_screenshot "01-login" "http://127.0.0.1:5173/" 2
 
 # We need to login first - using AppleScript to fill form
+# Credentials are read from environment variables
+if [ -z "$VITE_TEST_IDENTIFIER" ] || [ -z "$VITE_TEST_PASSWORD" ]; then
+    echo "Error: Test credentials not set."
+    echo "Please export VITE_TEST_IDENTIFIER and VITE_TEST_PASSWORD"
+    echo "Or source your .env.local file: source .env.local"
+    exit 1
+fi
+
 echo "Logging in..."
 osascript <<EOF
 tell application "Google Chrome"
@@ -48,10 +56,10 @@ tell application "Google Chrome"
             const handleInput = document.querySelector('input[type=\"text\"]');
             const passwordInput = document.querySelector('input[type=\"password\"]');
             const submitButton = document.querySelector('button[type=\"submit\"]');
-            
+
             if (handleInput && passwordInput && submitButton) {
-                handleInput.value = 'clood41.bsky.social';
-                passwordInput.value = '5FFThQrGSYwz';
+                handleInput.value = '${VITE_TEST_IDENTIFIER}';
+                passwordInput.value = '${VITE_TEST_PASSWORD}';
                 handleInput.dispatchEvent(new Event('input', { bubbles: true }));
                 passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
                 setTimeout(() => submitButton.click(), 500);

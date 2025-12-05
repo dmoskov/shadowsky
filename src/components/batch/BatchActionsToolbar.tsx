@@ -139,15 +139,15 @@ export const BatchActionsToolbar: React.FC<BatchActionsToolbarProps> = ({
 
   const getButtonClasses = (variant: "default" | "danger" | "warning") => {
     const base =
-      "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2";
+      "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
 
     switch (variant) {
       case "danger":
-        return `${base} bg-red-100 text-red-700 hover:bg-red-200 focus:ring-red-500 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50`;
+        return `${base} bg-red-100 text-red-700 hover:bg-red-200 focus-visible:ring-red-500 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50`;
       case "warning":
-        return `${base} bg-amber-100 text-amber-700 hover:bg-amber-200 focus:ring-amber-500 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50`;
+        return `${base} bg-amber-100 text-amber-700 hover:bg-amber-200 focus-visible:ring-amber-500 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50`;
       default:
-        return `${base} bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700`;
+        return `${base} bg-gray-100 text-gray-700 hover:bg-gray-200 focus-visible:ring-gray-500 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700`;
     }
   };
 

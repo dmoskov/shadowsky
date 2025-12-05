@@ -26,12 +26,9 @@ async function testComponentsLoad() {
       const loginForm = await page.locator('.login-form').isVisible();
       console.log(`   ${loginForm ? '✅' : '❌'} Login component (core/Login.tsx) loads`);
       
-      // Try to login if we have test credentials
-      if (loginForm) {
-        await page.fill('input[name="identifier"]', 'test.account');
-        await page.fill('input[name="password"]', 'test-password');
-        console.log('   ℹ️  Filled test credentials');
-      }
+      // Login requires credentials from environment variables
+      // Set VITE_TEST_IDENTIFIER and VITE_TEST_PASSWORD in .env.local
+      console.log('   ℹ️  Login required - use getTestCredentials() helper');
     } else {
       console.log('✨ Already authenticated, testing main components:\n');
       

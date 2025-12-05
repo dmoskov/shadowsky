@@ -247,7 +247,7 @@ export function Toast({ toast, onDismiss }: ToastProps) {
               handleAction();
             }}
             disabled={actionTriggered}
-            className="hover:bg-bsky-primary-hover mt-2 rounded-md bg-bsky-primary px-3 py-1.5 text-xs font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-bsky-primary disabled:cursor-not-allowed disabled:opacity-50"
+            className="hover:bg-bsky-primary-hover mt-2 min-h-[44px] rounded-md bg-bsky-primary px-4 py-2 text-sm font-medium text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bsky-primary disabled:cursor-not-allowed disabled:opacity-50"
           >
             {toast.action.label}
           </button>
@@ -272,7 +272,7 @@ export function Toast({ toast, onDismiss }: ToastProps) {
             e.stopPropagation();
             dismiss(true);
           }}
-          className="flex-shrink-0 rounded-md p-1 text-bsky-text-tertiary transition-colors duration-150 hover:bg-bsky-bg-hover hover:text-bsky-text-primary focus:outline-none focus:ring-2 focus:ring-bsky-primary"
+          className="flex min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-md p-2 text-bsky-text-tertiary transition-colors duration-150 hover:bg-bsky-bg-hover hover:text-bsky-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bsky-primary"
           aria-label="Dismiss notification"
         >
           <X className="h-4 w-4" aria-hidden="true" />

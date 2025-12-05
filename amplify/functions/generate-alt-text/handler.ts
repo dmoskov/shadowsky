@@ -10,13 +10,14 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import * as crypto from "crypto";
 import {
+  CachePresets,
+  createCachedSuccessResponse,
   createConfigError,
   createExternalApiError,
   createInternalError,
   createInvalidParameterError,
   createMissingParameterError,
   createOptionsResponse,
-  createSuccessResponse,
   createTimeoutError,
   getCorrelationId,
   isOptionsRequest,
@@ -300,10 +301,14 @@ export const handler = async (event: any) => {
       logInfo("generate-alt-text", "Cache hit", correlationId, {
         imageHash: imageHash.substring(0, 8),
       });
-      return createSuccessResponse(
+      // Cached alt-text can have longer browser cache since same image = same alt text
+      return createCachedSuccessResponse(
         { altText: cachedAltText, cached: true },
         event,
-        { correlationId },
+        {
+          cacheConfig: CachePresets.LONG,
+          correlationId,
+        },
       );
     }
 
@@ -471,7 +476,9 @@ export const handler = async (event: any) => {
         { latencyMs },
       );
 
-      return createSuccessResponse({ altText, cached: false }, event, {
+      // Fresh alt-text generation - use medium cache
+      return createCachedSuccessResponse({ altText, cached: false }, event, {
+        cacheConfig: CachePresets.MEDIUM,
         correlationId,
       });
     } catch (apiError: any) {
