@@ -3,6 +3,17 @@ import { appPreferencesService } from "../app-preferences-service";
 import { ColumnStorageBackend } from "./column-storage-backend";
 import { Column, StoredColumn } from "./types";
 
+// Type for column data stored in AT Protocol
+interface ColumnAtProtoData {
+  id: string;
+  type: string;
+  title?: string;
+  data?: string;
+  createdAt: string;
+  updatedAt: string;
+  selectedFeedUri?: string;
+}
+
 export class ColumnAtProtoBackend implements ColumnStorageBackend {
   private agent: BskyAgent | null = null;
 
@@ -16,10 +27,10 @@ export class ColumnAtProtoBackend implements ColumnStorageBackend {
       throw new Error("Agent not set");
     }
 
-    const columnData = columns.map((col: any) => {
+    const columnData = columns.map((col: Column) => {
       const storedCol = col as StoredColumn;
 
-      const columnItem: any = {
+      const columnItem: ColumnAtProtoData = {
         id: col.id,
         type: col.type as string, // Convert to string for storage
         title: col.title,

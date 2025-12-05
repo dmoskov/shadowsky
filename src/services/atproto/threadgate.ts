@@ -6,6 +6,38 @@ export interface ThreadgateSettings {
   allowedLists?: string[]; // AT-URIs of lists for custom restrictions
 }
 
+// Type definitions for threadgate records from AT Protocol
+interface ThreadgateFollowingRule {
+  $type: "app.bsky.feed.threadgate#followingRule";
+}
+
+interface ThreadgateMentionRule {
+  $type: "app.bsky.feed.threadgate#mentionRule";
+}
+
+interface ThreadgateListRule {
+  $type: "app.bsky.feed.threadgate#listRule";
+  list: string;
+}
+
+type ThreadgateAllowRule =
+  | ThreadgateFollowingRule
+  | ThreadgateMentionRule
+  | ThreadgateListRule;
+
+interface ThreadgateRecordValue {
+  $type: "app.bsky.feed.threadgate";
+  post: string;
+  allow?: ThreadgateAllowRule[];
+  createdAt: string;
+}
+
+interface ListRecordEntry {
+  uri: string;
+  cid: string;
+  value: ThreadgateRecordValue;
+}
+
 export class ThreadgateService {
   constructor(private agent: AtpAgent) {}
 
@@ -111,9 +143,9 @@ export class ThreadgateService {
       });
 
       // Find the threadgate for this specific post
-      const threadgate = response.data.records.find(
-        (record: any) => record.value.post === postUri,
-      );
+      const threadgate = (
+        response.data.records as unknown as ListRecordEntry[]
+      ).find((record) => record.value.post === postUri);
 
       if (!threadgate) {
         return null;
@@ -157,8 +189,8 @@ export class ThreadgateService {
   /**
    * Build allow rules based on permission settings
    */
-  private buildAllowRules(settings: ThreadgateSettings) {
-    const allow: any[] = [];
+  private buildAllowRules(settings: ThreadgateSettings): ThreadgateAllowRule[] {
+    const allow: ThreadgateAllowRule[] = [];
 
     switch (settings.permission) {
       case "following":
@@ -188,7 +220,9 @@ export class ThreadgateService {
   /**
    * Parse a threadgate record into settings
    */
-  private parseThreadgateRecord(record: any): ThreadgateSettings {
+  private parseThreadgateRecord(
+    record: ThreadgateRecordValue,
+  ): ThreadgateSettings {
     if (!record.allow || record.allow.length === 0) {
       return { permission: "none" };
     }
@@ -205,9 +239,10 @@ export class ThreadgateService {
           permission: "everyone", // We'll treat custom lists as a special case
           allowedLists: record.allow
             .filter(
-              (rule: any) => rule.$type === "app.bsky.feed.threadgate#listRule",
+              (rule): rule is ThreadgateListRule =>
+                rule.$type === "app.bsky.feed.threadgate#listRule",
             )
-            .map((rule: any) => rule.list),
+            .map((rule) => rule.list),
         };
       default:
         return { permission: "everyone" };

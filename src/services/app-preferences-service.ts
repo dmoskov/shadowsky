@@ -183,14 +183,15 @@ export class AppPreferencesService {
           backgroundRefresh: shadowSkyPref.backgroundRefresh,
         };
         // Mark that we loaded from AT Protocol
-        (prefs as any).isStoredInAtProto = true;
+        prefs.isStoredInAtProto = true;
         logger.log("Converted preferences:", prefs);
         this.preferencesCache = prefs;
         return prefs;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // 400 error means record doesn't exist yet, which is normal
-      if (error?.status !== 400) {
+      const errObj = error as Record<string, unknown>;
+      if (errObj?.status !== 400) {
         logger.log("Failed to fetch preferences from AT Protocol:", error);
       }
     }
@@ -210,7 +211,7 @@ export class AppPreferencesService {
         backgroundRefresh: localPrefs.backgroundRefresh,
       };
       // Mark that we loaded from localStorage
-      (validatedPrefs as any).isStoredInAtProto = false;
+      validatedPrefs.isStoredInAtProto = false;
       this.preferencesCache = validatedPrefs;
       // Don't migrate automatically - wait for user action
       return validatedPrefs;
@@ -279,16 +280,17 @@ export class AppPreferencesService {
               repo: did,
               collection: PREFERENCES_COLLECTION,
               rkey: PREFERENCES_RKEY,
-              record: shadowSkyPref as any,
+              record: shadowSkyPref as unknown as Record<string, unknown>,
             });
-          } catch (putError: any) {
+          } catch (putError: unknown) {
             // If record doesn't exist, create it
-            if (putError?.status === 400) {
+            const putErrObj = putError as Record<string, unknown>;
+            if (putErrObj?.status === 400) {
               await this.agent!.api.com.atproto.repo.createRecord({
                 repo: did,
                 collection: PREFERENCES_COLLECTION,
                 rkey: PREFERENCES_RKEY,
-                record: shadowSkyPref as any,
+                record: shadowSkyPref as unknown as Record<string, unknown>,
               });
             } else {
               throw putError;
@@ -352,11 +354,11 @@ export class AppPreferencesService {
             repo: this.agent!.session?.did || "",
             collection: PREFERENCES_COLLECTION,
             rkey: PREFERENCES_RKEY,
-            record: shadowSkyPref as any,
+            record: shadowSkyPref as unknown as Record<string, unknown>,
           });
         }, "createDefaultPreferences");
 
-        (defaultPrefs as any).isStoredInAtProto = true;
+        defaultPrefs.isStoredInAtProto = true;
         logger.log("Created default preferences in AT Protocol");
       } catch (error) {
         logger.log(
@@ -413,9 +415,10 @@ export class AppPreferencesService {
       if (response.data.value) {
         return response.data.value as unknown as ShadowSkyColumns;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // 400 error means record doesn't exist yet
-      if (error?.status !== 400) {
+      const errObj = error as Record<string, unknown>;
+      if (errObj?.status !== 400) {
         logger.log("Failed to fetch columns from AT Protocol:", error);
       }
     }
@@ -451,16 +454,17 @@ export class AppPreferencesService {
             repo: did,
             collection: COLUMNS_COLLECTION,
             rkey: COLUMNS_RKEY,
-            record: columnsPref as any,
+            record: columnsPref as unknown as Record<string, unknown>,
           });
-        } catch (putError: any) {
+        } catch (putError: unknown) {
           // If record doesn't exist, create it
-          if (putError?.status === 400) {
+          const putErrObj = putError as Record<string, unknown>;
+          if (putErrObj?.status === 400) {
             await this.agent!.api.com.atproto.repo.createRecord({
               repo: did,
               collection: COLUMNS_COLLECTION,
               rkey: COLUMNS_RKEY,
-              record: columnsPref as any,
+              record: columnsPref as unknown as Record<string, unknown>,
             });
           } else {
             throw putError;

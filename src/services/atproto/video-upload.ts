@@ -41,6 +41,16 @@ const logger = createLogger("VideoUploadService");
 const metricsTracker = getVideoUploadMetricsTracker();
 
 /**
+ * Enhanced error interface with additional context for retries
+ */
+interface EnhancedError extends Error {
+  status?: number;
+  code?: string;
+  retryable?: boolean;
+  jobId?: string;
+}
+
+/**
  * Secure in-memory token storage with automatic expiration
  * Tokens are never persisted to localStorage or cookies
  */
@@ -223,23 +233,55 @@ const tokenManager = new TokenManager();
  * - Status polling: 3 attempts, shorter delays to avoid blocking user
  * - Upload: Uses API_RETRY_OPTIONS for longer timeouts
  */
+/**
+ * Helper to extract error status code from unknown error
+ */
+function getErrorStatusCode(error: unknown): number | undefined {
+  if (typeof error === "object" && error !== null) {
+    const errObj = error as Record<string, unknown>;
+    if (typeof errObj.status === "number") {
+      return errObj.status;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Helper to extract error message from unknown error
+ */
+function getErrorMessageString(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "object" && error !== null) {
+    const errObj = error as Record<string, unknown>;
+    if (typeof errObj.message === "string") {
+      return errObj.message;
+    }
+  }
+  return String(error);
+}
+
 const VIDEO_SERVICE_AUTH_RETRY_OPTIONS: RetryOptions = {
   maxAttempts: 3,
   initialDelayMs: 500,
   maxDelayMs: 2000,
   backoffFactor: 2,
-  retryableErrors: (error: any) => {
+  retryableErrors: (error: unknown) => {
+    const status = getErrorStatusCode(error);
+    const message = getErrorMessageString(error);
+
     // Don't retry on authentication errors (401)
-    if (error?.status === 401 || error?.message?.includes("401")) {
+    if (status === 401 || message.includes("401")) {
       return false;
     }
 
     // Don't retry on client errors (400, 403)
     if (
-      error?.status === 400 ||
-      error?.status === 403 ||
-      error?.message?.includes("400") ||
-      error?.message?.includes("403")
+      status === 400 ||
+      status === 403 ||
+      message.includes("400") ||
+      message.includes("403")
     ) {
       return false;
     }
@@ -251,20 +293,20 @@ const VIDEO_SERVICE_AUTH_RETRY_OPTIONS: RetryOptions = {
 
     // Retry on server errors (500, 503)
     if (
-      error?.status >= 500 ||
-      error?.message?.includes("500") ||
-      error?.message?.includes("503")
+      (status !== undefined && status >= 500) ||
+      message.includes("500") ||
+      message.includes("503")
     ) {
       return true;
     }
 
     // Retry on rate limits (429)
-    if (error?.status === 429 || error?.message?.includes("429")) {
+    if (status === 429 || message.includes("429")) {
       return true;
     }
 
     // Retry on timeout errors
-    if (error?.message?.toLowerCase().includes("timeout")) {
+    if (message.toLowerCase().includes("timeout")) {
       return true;
     }
 
@@ -277,19 +319,22 @@ const VIDEO_STATUS_POLLING_RETRY_OPTIONS: RetryOptions = {
   initialDelayMs: 1000,
   maxDelayMs: 3000,
   backoffFactor: 2,
-  retryableErrors: (error: any) => {
+  retryableErrors: (error: unknown) => {
+    const status = getErrorStatusCode(error);
+    const message = getErrorMessageString(error);
+
     // Retry on network errors
     if (error instanceof TypeError) {
       return true;
     }
 
     // Retry on server errors (500, 503)
-    if (error?.status >= 500) {
+    if (status !== undefined && status >= 500) {
       return true;
     }
 
     // Retry on rate limits (429)
-    if (error?.status === 429 || error?.message?.includes("429")) {
+    if (status === 429 || message.includes("429")) {
       return true;
     }
 
@@ -358,7 +403,7 @@ export class VideoUploadService {
             );
 
             return validatedResponse;
-          } catch (error: any) {
+          } catch (error: unknown) {
             // Map to standardized error format
             const standardError = mapATProtoError(
               error,
@@ -368,7 +413,9 @@ export class VideoUploadService {
             logError(standardError, "getServiceAuth");
 
             // Re-throw with enhanced context
-            const enhancedError: any = new Error(standardError.message);
+            const enhancedError: EnhancedError = new Error(
+              standardError.message,
+            ) as EnhancedError;
             enhancedError.status = standardError.context.status;
             enhancedError.code = standardError.code;
             enhancedError.retryable = standardError.retryable;
@@ -454,7 +501,7 @@ export class VideoUploadService {
             "Content-Type": mimeType,
             "Content-Length": videoData.length.toString(),
           },
-          body: videoData as any,
+          body: videoData as BodyInit,
         },
         {
           ...API_RETRY_OPTIONS,
@@ -496,15 +543,15 @@ export class VideoUploadService {
           uploadResult,
           "app.bsky.video.uploadVideo",
         );
-      } catch (validationError: any) {
-        const error = mapATProtoError(
+      } catch (validationError: unknown) {
+        const mappedError = mapATProtoError(
           validationError,
           "app.bsky.video.uploadVideo",
           { uploadId, rawResponse: uploadResult },
         );
-        logError(error, "uploadVideo");
-        metricsTracker.failUpload(uploadId, new Error(error.message));
-        throw new Error(error.message);
+        logError(mappedError, "uploadVideo");
+        metricsTracker.failUpload(uploadId, new Error(mappedError.message));
+        throw new Error(mappedError.message);
       }
 
       const jobId = validatedUploadResult.jobId;
@@ -577,7 +624,7 @@ export class VideoUploadService {
                 );
 
                 return validatedResponse;
-              } catch (error: any) {
+              } catch (error: unknown) {
                 // Map to standardized error format
                 const standardError = mapATProtoError(
                   error,
@@ -586,7 +633,9 @@ export class VideoUploadService {
                 );
 
                 // Re-throw with enhanced context
-                const enhancedError: any = new Error(standardError.message);
+                const enhancedError: EnhancedError = new Error(
+                  standardError.message,
+                ) as EnhancedError;
                 enhancedError.status = standardError.context.status;
                 enhancedError.code = standardError.code;
                 enhancedError.retryable = standardError.retryable;
@@ -673,7 +722,7 @@ export class VideoUploadService {
           // Wait 1 second before next poll
           await new Promise((resolve) => setTimeout(resolve, 1000));
           attempts++;
-        } catch (error: any) {
+        } catch (error: unknown) {
           // If polling fails after all retries, log and re-throw
           logger.error(
             `[${uploadId}] Job status polling failed after retries (attempt ${attempts + 1}/${maxAttempts}):`,
@@ -710,14 +759,20 @@ export class VideoUploadService {
       tokenManager.clearToken(uploadId);
 
       throw new Error(timeoutError.message);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Clear service auth token on any error to prevent token leakage
       tokenManager.clearToken(uploadId);
 
       // Map error to standardized format if not already mapped
       let standardError: StandardErrorResponse;
 
-      if (error.code && error.message && error.context) {
+      // Check if already a standardized error
+      const errObj = error as Record<string, unknown>;
+      if (
+        typeof errObj?.code === "string" &&
+        typeof errObj?.message === "string" &&
+        typeof errObj?.context === "object"
+      ) {
         // Already a standardized error
         standardError = error as StandardErrorResponse;
       } else {

@@ -20,6 +20,37 @@ import { createLogger } from "../utils/logger";
 
 const logger = createLogger("BackgroundSyncService");
 
+// Type definitions for experimental browser APIs
+interface PeriodicSyncManager {
+  register(tag: string, options?: { minInterval: number }): Promise<void>;
+  unregister(tag: string): Promise<void>;
+  getTags(): Promise<string[]>;
+}
+
+interface SyncManager {
+  register(tag: string): Promise<void>;
+  getTags(): Promise<string[]>;
+}
+
+interface NavigatorWithBadge extends Navigator {
+  setAppBadge(count?: number): Promise<void>;
+  clearAppBadge(): Promise<void>;
+}
+
+interface NetworkInformation {
+  type?: string;
+  effectiveType?: string;
+}
+
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation;
+}
+
+interface ServiceWorkerRegistrationWithSync extends ServiceWorkerRegistration {
+  periodicSync?: PeriodicSyncManager;
+  sync?: SyncManager;
+}
+
 // Sync tag constants
 export const SYNC_TAGS = {
   TIMELINE_REFRESH: "timeline-refresh",
@@ -262,8 +293,9 @@ class BackgroundSyncService {
     const interval = this.getIntervalForFrequency(preferences.frequency);
 
     try {
-      // TypeScript doesn't have full types for periodicSync yet
-      const periodicSync = (this.registration as any).periodicSync;
+      // Use extended type for periodicSync
+      const registration = this.registration as ServiceWorkerRegistrationWithSync;
+      const periodicSync = registration.periodicSync;
 
       if (periodicSync) {
         // Register timeline refresh
@@ -311,8 +343,9 @@ class BackgroundSyncService {
     }
 
     try {
-      // TypeScript doesn't have full types for sync yet
-      const sync = (this.registration as any).sync;
+      // Use extended type for sync
+      const registration = this.registration as ServiceWorkerRegistrationWithSync;
+      const sync = registration.sync;
 
       if (sync) {
         const preferences = this.getPreferences();
@@ -345,7 +378,8 @@ class BackgroundSyncService {
     }
 
     try {
-      const periodicSync = (this.registration as any).periodicSync;
+      const registration = this.registration as ServiceWorkerRegistrationWithSync;
+      const periodicSync = registration.periodicSync;
 
       if (periodicSync) {
         // Unregister all sync tags
@@ -453,7 +487,8 @@ class BackgroundSyncService {
     }
 
     try {
-      const periodicSync = (this.registration as any).periodicSync;
+      const registration = this.registration as ServiceWorkerRegistrationWithSync;
+      const periodicSync = registration.periodicSync;
       if (periodicSync) {
         const tags = await periodicSync.getTags();
         return tags.includes(SYNC_TAGS.TIMELINE_REFRESH);
@@ -491,10 +526,11 @@ class BackgroundSyncService {
   private async updateBadgeCount(count: number): Promise<void> {
     if ("setAppBadge" in navigator) {
       try {
+        const nav = navigator as NavigatorWithBadge;
         if (count > 0) {
-          await (navigator as any).setAppBadge(count);
+          await nav.setAppBadge(count);
         } else {
-          await (navigator as any).clearAppBadge();
+          await nav.clearAppBadge();
         }
         logger.info(`Updated badge count: ${count}`);
       } catch (error) {
@@ -509,7 +545,8 @@ class BackgroundSyncService {
   async clearBadge(): Promise<void> {
     if ("clearAppBadge" in navigator) {
       try {
-        await (navigator as any).clearAppBadge();
+        const nav = navigator as NavigatorWithBadge;
+        await nav.clearAppBadge();
         logger.info("Cleared badge count");
       } catch (error) {
         logger.error("Failed to clear badge:", error);
@@ -614,7 +651,8 @@ class BackgroundSyncService {
    * Check if device is on WiFi (best effort detection)
    */
   private isOnWifi(): boolean {
-    const connection = (navigator as any).connection;
+    const nav = navigator as NavigatorWithConnection;
+    const connection = nav.connection;
     if (connection) {
       return connection.type === "wifi";
     }
@@ -626,7 +664,8 @@ class BackgroundSyncService {
    * Check if device is on a slow connection
    */
   private isOnSlowConnection(): boolean {
-    const connection = (navigator as any).connection;
+    const nav = navigator as NavigatorWithConnection;
+    const connection = nav.connection;
     if (connection) {
       // Check effective connection type
       const effectiveType = connection.effectiveType;

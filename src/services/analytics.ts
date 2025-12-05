@@ -1,9 +1,16 @@
 // Google Analytics service for tracking user behavior and app usage
 
+// Google Analytics gtag type
+type GTagArgs =
+  | [command: "js", date: Date]
+  | [command: "config", measurementId: string, config?: Record<string, unknown>]
+  | [command: "set", params: Record<string, unknown>]
+  | [command: "event", eventName: string, params?: Record<string, unknown>];
+
 declare global {
   interface Window {
-    gtag: (...args: any[]) => void;
-    dataLayer: any[];
+    gtag: (...args: GTagArgs | unknown[]) => void;
+    dataLayer: unknown[];
   }
 }
 
@@ -20,7 +27,7 @@ export interface AnalyticsEvent {
   action: string;
   label?: string;
   value?: number;
-  custom_parameters?: Record<string, any>;
+  custom_parameters?: Record<string, unknown>;
 }
 
 class AnalyticsService {
@@ -68,7 +75,7 @@ class AnalyticsService {
   trackEvent(event: AnalyticsEvent) {
     if (!this.initialized) return;
 
-    const parameters: Record<string, any> = {
+    const parameters: Record<string, unknown> = {
       event_category: event.category,
       event_label: event.label,
       value: event.value,
@@ -167,7 +174,7 @@ class AnalyticsService {
   trackPerformance(
     metric: string,
     value: number,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
   ) {
     this.trackEvent({
       category: "performance",

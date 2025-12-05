@@ -10,6 +10,12 @@ export interface LoginOptions {
   authFactorToken?: string;
 }
 
+// Extended error type for auth factor required errors
+interface AuthFactorError extends Error {
+  status: "AuthFactorTokenRequired";
+  originalError: unknown;
+}
+
 export class AuthWrapper {
   private agent: BskyAgent;
 
@@ -31,19 +37,21 @@ export class AuthWrapper {
       });
 
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Check if this is an auth factor required error
+      const errObj = error as Record<string, unknown>;
       if (
-        error?.status === "AuthFactorTokenRequired" ||
-        error?.error === "AuthFactorTokenRequired" ||
-        error?.message?.includes("AuthFactorTokenRequired")
+        errObj?.status === "AuthFactorTokenRequired" ||
+        errObj?.error === "AuthFactorTokenRequired" ||
+        (typeof errObj?.message === "string" &&
+          errObj.message.includes("AuthFactorTokenRequired"))
       ) {
         // Re-throw with a more user-friendly message
         const authError = new Error(
           "A sign in code has been sent to your email address",
-        );
-        (authError as any).status = "AuthFactorTokenRequired";
-        (authError as any).originalError = error;
+        ) as AuthFactorError;
+        authError.status = "AuthFactorTokenRequired";
+        authError.originalError = error;
         throw authError;
       }
 

@@ -39,9 +39,12 @@ export class DraftCustomRecordBackend extends DraftStorageBackend {
     this.errorCallback = callback;
   }
 
-  private handleError(error: any, action: string): void {
+  private handleError(error: unknown, action: string): void {
     if (this.errorCallback) {
-      this.errorCallback(error, action);
+      this.errorCallback(
+        error instanceof Error ? error : new Error(String(error)),
+        action,
+      );
     } else {
       console.error(`Failed to ${action}:`, error);
     }

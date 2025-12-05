@@ -16,9 +16,12 @@ export class DraftSingletonBackend extends DraftStorageBackend {
     this.errorCallback = callback;
   }
 
-  private handleError(error: any, action: string): void {
+  private handleError(error: unknown, action: string): void {
     if (this.errorCallback) {
-      this.errorCallback(error, action);
+      this.errorCallback(
+        error instanceof Error ? error : new Error(String(error)),
+        action,
+      );
     } else {
       logger.error(`Failed to ${action}:`, error);
     }
@@ -73,8 +76,9 @@ export class DraftSingletonBackend extends DraftStorageBackend {
           `Loaded ${draftsData.drafts.length} drafts from AT Protocol`,
         );
       }
-    } catch (error: any) {
-      if (error?.status === 400) {
+    } catch (error: unknown) {
+      const errObj = error as Record<string, unknown>;
+      if (errObj?.status === 400) {
         // Record doesn't exist yet, which is normal for new users
         logger.log("No drafts record found, will create on first save");
       } else {
@@ -163,7 +167,7 @@ export class DraftSingletonBackend extends DraftStorageBackend {
           repo: did,
           collection: AT_PROTO_COLLECTIONS.DRAFTS,
           rkey: AT_PROTO_RKEYS.DRAFTS,
-          record: draftsData as any,
+          record: draftsData as unknown as Record<string, unknown>,
         });
       } else {
         // Create new record
@@ -171,7 +175,7 @@ export class DraftSingletonBackend extends DraftStorageBackend {
           repo: did,
           collection: AT_PROTO_COLLECTIONS.DRAFTS,
           rkey: AT_PROTO_RKEYS.DRAFTS,
-          record: draftsData as any,
+          record: draftsData as unknown as Record<string, unknown>,
         });
         this.recordUri = response.data.uri;
       }

@@ -21,6 +21,18 @@ import {
 import { createLogger } from "../utils/logger";
 import { analytics } from "./analytics";
 
+// Type definitions for navigator extension APIs
+interface NetworkInformation {
+  effectiveType?: string;
+}
+
+interface NavigatorWithExtensions extends Navigator {
+  connection?: NetworkInformation;
+  mozConnection?: NetworkInformation;
+  webkitConnection?: NetworkInformation;
+  deviceMemory?: number;
+}
+
 const logger = createLogger("WebVitalsMonitor");
 
 // Analytics configuration
@@ -260,10 +272,9 @@ class WebVitalsMonitor {
    * Get effective connection type if available
    */
   private getConnectionType(): string {
+    const nav = navigator as NavigatorWithExtensions;
     const connection =
-      (navigator as any).connection ||
-      (navigator as any).mozConnection ||
-      (navigator as any).webkitConnection;
+      nav.connection || nav.mozConnection || nav.webkitConnection;
     return connection?.effectiveType || "unknown";
   }
 
@@ -271,7 +282,8 @@ class WebVitalsMonitor {
    * Get device memory if available
    */
   private getDeviceMemory(): number | undefined {
-    return (navigator as any).deviceMemory;
+    const nav = navigator as NavigatorWithExtensions;
+    return nav.deviceMemory;
   }
 
   /**

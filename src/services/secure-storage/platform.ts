@@ -6,24 +6,34 @@
 
 import type { Platform } from "./types";
 
+// Type definitions for native bridge objects
+interface CapacitorGlobal {
+  getPlatform?: () => string;
+}
+
+interface WindowWithNativeBridges extends Window {
+  Capacitor?: CapacitorGlobal;
+  ReactNativeWebView?: object;
+  cordova?: object;
+}
+
 /**
  * Detect the current platform
  */
 export function detectPlatform(): Platform {
   // Check for React Native/Capacitor/Cordova native bridges
   if (typeof window !== "undefined") {
+    const win = window as WindowWithNativeBridges;
+
     // Check for Capacitor
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).Capacitor) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const platform = (window as any).Capacitor.getPlatform?.();
+    if (win.Capacitor) {
+      const platform = win.Capacitor.getPlatform?.();
       if (platform === "ios") return "ios";
       if (platform === "android") return "android";
     }
 
     // Check for React Native WebView
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).ReactNativeWebView) {
+    if (win.ReactNativeWebView) {
       // React Native injects this, but we can't easily determine iOS vs Android
       // without additional checks
       const userAgent = navigator.userAgent || "";
@@ -32,8 +42,7 @@ export function detectPlatform(): Platform {
     }
 
     // Check for Cordova
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).cordova) {
+    if (win.cordova) {
       const platform = navigator.platform?.toLowerCase() || "";
       if (platform.includes("iphone") || platform.includes("ipad"))
         return "ios";
