@@ -847,20 +847,24 @@ export const NotificationsFeed: React.FC = () => {
                           marginLeft: "3rem",
                         }}
                       >
-                        {item.notifications.map((notification) => (
-                          <NotificationItem
-                            key={`${notification.uri}-${notification.indexedAt}`}
-                            notification={notification}
-                            postMap={postMap}
-                            getNotificationIcon={getNotificationIcon}
-                            showTypeLabel={filter === "all"}
-                            isFetchingMore={isFetchingMore}
-                            fetchedPosts={fetchedPosts}
-                            totalPosts={totalPosts}
-                            setSelectedPostUri={setSelectedPostUri}
-                            markAsRead={markAsRead}
-                          />
-                        ))}
+                        {item.notifications.map((notification) => {
+                          const notificationKey = `${notification.uri}-${notification.indexedAt}`;
+                          return (
+                            <NotificationItem
+                              key={notificationKey}
+                              notification={notification}
+                              postMap={postMap}
+                              getNotificationIcon={getNotificationIcon}
+                              showTypeLabel={filter === "all"}
+                              isFetchingMore={isFetchingMore}
+                              fetchedPosts={fetchedPosts}
+                              totalPosts={totalPosts}
+                              setSelectedPostUri={setSelectedPostUri}
+                              markAsRead={markAsRead}
+                              isNew={isTransitioning && newNotificationIds.has(notificationKey)}
+                            />
+                          );
+                        })}
                         <button
                           onClick={() => {
                             const newExpanded = new Set(expandedAggregations);
@@ -881,9 +885,10 @@ export const NotificationsFeed: React.FC = () => {
                   </div>
                 );
               } else {
+                const notificationKey = `${item.notification.uri}-${item.notification.indexedAt}`;
                 return (
                   <NotificationItem
-                    key={`${item.notification.uri}-${item.notification.indexedAt}`}
+                    key={notificationKey}
                     notification={item.notification}
                     postMap={postMap}
                     getNotificationIcon={getNotificationIcon}
@@ -893,6 +898,7 @@ export const NotificationsFeed: React.FC = () => {
                     totalPosts={totalPosts}
                     setSelectedPostUri={setSelectedPostUri}
                     markAsRead={markAsRead}
+                    isNew={isTransitioning && newNotificationIds.has(notificationKey)}
                   />
                 );
               }
@@ -900,20 +906,24 @@ export const NotificationsFeed: React.FC = () => {
           })()
         ) : (
           // Show regular notifications for mentions, replies, and images tabs (no aggregation)
-          filteredNotifications.map((notification: Notification, index) => (
-            <NotificationItem
-              key={`${notification.uri}-${notification.indexedAt}-${index}`}
-              notification={notification}
-              postMap={postMap}
-              getNotificationIcon={getNotificationIcon}
-              showTypeLabel={filter === "all"}
-              isFetchingMore={isFetchingMore}
-              fetchedPosts={fetchedPosts}
-              totalPosts={totalPosts}
-              setSelectedPostUri={setSelectedPostUri}
-              markAsRead={markAsRead}
-            />
-          ))
+          filteredNotifications.map((notification: Notification, index) => {
+            const notificationKey = `${notification.uri}-${notification.indexedAt}`;
+            return (
+              <NotificationItem
+                key={`${notificationKey}-${index}`}
+                notification={notification}
+                postMap={postMap}
+                getNotificationIcon={getNotificationIcon}
+                showTypeLabel={filter === "all"}
+                isFetchingMore={isFetchingMore}
+                fetchedPosts={fetchedPosts}
+                totalPosts={totalPosts}
+                setSelectedPostUri={setSelectedPostUri}
+                markAsRead={markAsRead}
+                isNew={isTransitioning && newNotificationIds.has(notificationKey)}
+              />
+            );
+          })
         )}
 
         {/* Loading more indicator */}
