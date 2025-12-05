@@ -2,6 +2,59 @@ import type { BskyAgent } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { API_RETRY_OPTIONS, fetchWithRetry } from "../utils/retry";
 
+/**
+ * Raw API response types for DM service
+ */
+interface ApiConvoMember {
+  did: string;
+  handle?: string;
+  displayName?: string;
+  avatar?: string;
+}
+
+interface ApiMessage {
+  id: string;
+  rev: string;
+  text: string;
+  sentAt: string;
+  sender: {
+    did: string;
+  };
+  facets?: ApiMessageFacet[];
+}
+
+interface ApiMessageFacet {
+  $type: string;
+}
+
+interface ApiConvo {
+  id: string;
+  rev: string;
+  members: ApiConvoMember[];
+  muted?: boolean;
+  unreadCount?: number;
+  lastMessage?: ApiMessage;
+}
+
+interface ApiListConvosResponse {
+  convos: ApiConvo[];
+  cursor?: string;
+}
+
+interface ApiGetMessagesResponse {
+  messages: ApiMessage[];
+  cursor?: string;
+}
+
+interface ApiGetConvoResponse {
+  convo: ApiConvo;
+}
+
+interface ApiError extends Error {
+  status?: number;
+  statusCode?: number;
+}
+
 export interface DmConversation {
   id: string;
   rev: string;
@@ -81,12 +134,12 @@ class DmService {
         API_RETRY_OPTIONS,
       );
 
-      const response = await apiResponse.json();
+      const response = (await apiResponse.json()) as ApiListConvosResponse;
 
-      return response.convos.map((convo: any) => ({
+      return response.convos.map((convo: ApiConvo) => ({
         id: convo.id,
         rev: convo.rev,
-        members: convo.members.map((member: any) => ({
+        members: convo.members.map((member: ApiConvoMember) => ({
           did: member.did,
           handle: member.handle,
           displayName: member.displayName,
@@ -106,11 +159,12 @@ class DmService {
             }
           : undefined,
       }));
-    } catch (error: any) {
-      if (error.status === 401 || error.statusCode === 401) {
+    } catch (error: unknown) {
+      const apiErr = error as ApiError;
+      if (apiErr.status === 401 || apiErr.statusCode === 401) {
         throw new Error("Authentication required. Please sign in again.");
       }
-      if (error.status === 403 || error.statusCode === 403) {
+      if (apiErr.status === 403 || apiErr.statusCode === 403) {
         throw new Error(
           "This app password doesn't have permission to access direct messages. Please create a new app password with Direct Messages enabled.",
         );
