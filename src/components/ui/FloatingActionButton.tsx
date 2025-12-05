@@ -1,6 +1,7 @@
 import { PenTool } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { usePrefersReducedMotion } from "../../contexts/AccessibilityContext";
 import { useFeatureTracking } from "../../hooks/useAnalytics";
 
 interface FloatingActionButtonProps {
@@ -14,6 +15,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   const { trackFeatureAction } = useFeatureTracking("mobile_ui");
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     let ticking = false;
@@ -52,16 +54,24 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
     navigate("/compose");
   };
 
+  // For reduced motion: use instant visibility change without transform/scale
+  const getTransformStyle = () => {
+    if (prefersReducedMotion) {
+      return isVisible ? "none" : "translateY(100px)";
+    }
+    return isVisible
+      ? "scale(1) translateY(0)"
+      : "scale(0.8) translateY(100px)";
+  };
+
   return (
     <button
       onClick={handleClick}
-      className={`fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300 lg:hidden ${className}`}
+      className={`fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg lg:hidden ${prefersReducedMotion ? "" : "transition-all duration-300"} ${className}`}
       style={{
         backgroundColor: "var(--bsky-primary)",
         color: "white",
-        transform: isVisible
-          ? "scale(1) translateY(0)"
-          : "scale(0.8) translateY(100px)",
+        transform: getTransformStyle(),
         opacity: isVisible ? 1 : 0,
         pointerEvents: isVisible ? "auto" : "none",
         boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
@@ -71,34 +81,40 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
     >
       <PenTool size={24} />
 
-      {/* Ripple effect on tap */}
-      <span
-        className="absolute inset-0 rounded-full"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%)",
-          transform: "scale(0)",
-          opacity: 0,
-          animation: "none",
-        }}
-      />
+      {/* Ripple effect on tap - disabled for reduced motion */}
+      {!prefersReducedMotion && (
+        <>
+          <span
+            className="absolute inset-0 rounded-full"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%)",
+              transform: "scale(0)",
+              opacity: 0,
+              animation: "none",
+            }}
+          />
 
-      <style>{`
-        button:active span {
-          animation: ripple 0.6s ease-out !important;
-        }
-        
-        @keyframes ripple {
-          0% {
-            transform: scale(0);
-            opacity: 1;
-          }
-          100% {
-            transform: scale(1.5);
-            opacity: 0;
-          }
-        }
-      `}</style>
+          <style>{`
+            @media (prefers-reduced-motion: no-preference) {
+              button:active span {
+                animation: ripple 0.6s ease-out !important;
+              }
+            }
+
+            @keyframes ripple {
+              0% {
+                transform: scale(0);
+                opacity: 1;
+              }
+              100% {
+                transform: scale(1.5);
+                opacity: 0;
+              }
+            }
+          `}</style>
+        </>
+      )}
     </button>
   );
 };

@@ -246,3 +246,41 @@
     top: 0; /* Reset to 0 for desktop where scrolling is within main */
   }
 }
+
+/* ============================================
+ * Reduced Motion Preferences
+ * ============================================
+ * Disable transitions and animations for users who prefer reduced motion.
+ * This helps users with vestibular disorders avoid motion-triggered discomfort.
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  .image-grid-item,
+  .image-grid-img,
+  .image-grid-alt,
+  .lightbox-button,
+  .lightbox-thumbnail,
+  .scroll-shadow-overlay::before,
+  .scroll-shadow-overlay::after {
+    transition: none !important;
+  }
+
+  .image-grid-loading {
+    animation: none !important;
+  }
+}
+
+/* User preference override via data attribute */
+html[data-reduce-motion="true"] .image-grid-item,
+html[data-reduce-motion="true"] .image-grid-img,
+html[data-reduce-motion="true"] .image-grid-alt,
+html[data-reduce-motion="true"] .lightbox-button,
+html[data-reduce-motion="true"] .lightbox-thumbnail,
+html[data-reduce-motion="true"] .scroll-shadow-overlay::before,
+html[data-reduce-motion="true"] .scroll-shadow-overlay::after {
+  transition: none !important;
+}
+
+html[data-reduce-motion="true"] .image-grid-loading {
+  animation: none !important;
+}

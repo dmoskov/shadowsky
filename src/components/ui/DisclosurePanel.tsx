@@ -11,6 +11,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
+import { usePrefersReducedMotion } from "../../contexts/AccessibilityContext";
 
 /**
  * DisclosurePanel - A unified expand/collapse component
@@ -408,6 +409,10 @@ export function DisclosureContent({
   const contentRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number | "auto">(isOpen ? "auto" : 0);
   const [shouldRender, setShouldRender] = useState(isOpen);
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  // Disable animation when user prefers reduced motion
+  const shouldAnimate = animate && !prefersReducedMotion;
 
   useEffect(() => {
     if (isOpen) {
@@ -416,7 +421,7 @@ export function DisclosureContent({
   }, [isOpen]);
 
   useEffect(() => {
-    if (!animate) {
+    if (!shouldAnimate) {
       setHeight(isOpen ? "auto" : 0);
       return;
     }
@@ -443,7 +448,7 @@ export function DisclosureContent({
         });
       });
     }
-  }, [isOpen, animate]);
+  }, [isOpen, shouldAnimate]);
 
   const handleTransitionEnd = useCallback(() => {
     if (!isOpen && unmountOnClose) {
@@ -455,7 +460,7 @@ export function DisclosureContent({
     return null;
   }
 
-  const animationStyles = animate
+  const animationStyles = shouldAnimate
     ? {
         height: typeof height === "number" ? `${height}px` : height,
         overflow: "hidden" as const,
