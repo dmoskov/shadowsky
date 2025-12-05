@@ -999,7 +999,7 @@ interface FilterTabProps {
   count?: number;
 }
 
-const FilterTab: React.FC<FilterTabProps> = ({
+const FilterTab: React.FC<FilterTabProps> = React.memo(({
   active,
   onClick,
   icon,
@@ -1037,7 +1037,9 @@ const FilterTab: React.FC<FilterTabProps> = ({
       )}
     </button>
   );
-};
+});
+
+FilterTab.displayName = 'FilterTab';
 
 function getNotificationText(reason: string): string {
   switch (reason) {
@@ -1072,7 +1074,7 @@ interface NotificationItemProps {
   markAsRead: () => void;
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = ({
+const NotificationItem: React.FC<NotificationItemProps> = React.memo(({
   notification,
   postMap,
   getNotificationIcon,
@@ -1456,4 +1458,26 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
       )}
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison for performance
+  // Only re-render if notification data changes or post data is loaded/updated
+  return (
+    prevProps.notification.uri === nextProps.notification.uri &&
+    prevProps.notification.isRead === nextProps.notification.isRead &&
+    prevProps.notification.indexedAt === nextProps.notification.indexedAt &&
+    prevProps.showTypeLabel === nextProps.showTypeLabel &&
+    prevProps.isFetchingMore === nextProps.isFetchingMore &&
+    // Check if post in map has changed (for this notification's post)
+    prevProps.postMap.get(
+      (prevProps.notification.reason === "repost" || prevProps.notification.reason === "like") && prevProps.notification.reasonSubject
+        ? prevProps.notification.reasonSubject
+        : prevProps.notification.uri
+    ) === nextProps.postMap.get(
+      (nextProps.notification.reason === "repost" || nextProps.notification.reason === "like") && nextProps.notification.reasonSubject
+        ? nextProps.notification.reasonSubject
+        : nextProps.notification.uri
+    )
+  );
+});
+
+NotificationItem.displayName = 'NotificationItem';

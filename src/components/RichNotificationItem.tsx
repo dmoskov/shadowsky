@@ -42,7 +42,7 @@ interface RichNotificationItemProps {
 /**
  * Rich Notification Item with media preview and inline actions
  */
-export const RichNotificationItem: React.FC<RichNotificationItemProps> = ({
+export const RichNotificationItem: React.FC<RichNotificationItemProps> = React.memo(({
   notification,
   onView,
   onReply,
@@ -204,12 +204,23 @@ export const RichNotificationItem: React.FC<RichNotificationItemProps> = ({
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison for memoization
+  return (
+    prevProps.notification.id === nextProps.notification.id &&
+    prevProps.notification.isRead === nextProps.notification.isRead &&
+    prevProps.notification.latestTimestamp === nextProps.notification.latestTimestamp &&
+    prevProps.showActions === nextProps.showActions &&
+    prevProps.compact === nextProps.compact
+  );
+});
+
+RichNotificationItem.displayName = 'RichNotificationItem';
 
 /**
  * Notification icon based on reason
  */
-const NotificationIcon: React.FC<{ reason: string }> = ({ reason }) => {
+const NotificationIcon: React.FC<{ reason: string }> = React.memo(({ reason }) => {
   const iconProps = { size: 18 };
 
   switch (reason) {
@@ -238,7 +249,9 @@ const NotificationIcon: React.FC<{ reason: string }> = ({ reason }) => {
     default:
       return null;
   }
-};
+});
+
+NotificationIcon.displayName = 'NotificationIcon';
 
 /**
  * User avatar stack for aggregated notifications
@@ -250,7 +263,7 @@ const UserAvatarStack: React.FC<{
   onToggle: () => void;
   onUserClick: (e: React.MouseEvent, handle: string) => void;
   size: "sm" | "md";
-}> = ({ users, maxDisplay, showAll, onToggle, onUserClick, size }) => {
+}> = React.memo(({ users, maxDisplay, showAll, onToggle, onUserClick, size }) => {
   const displayUsers = showAll ? users : users.slice(0, maxDisplay);
   const remainingCount = users.length - displayUsers.length;
   const avatarSize = size === "sm" ? "h-6 w-6" : "h-8 w-8";
@@ -308,12 +321,14 @@ const UserAvatarStack: React.FC<{
       )}
     </div>
   );
-};
+});
+
+UserAvatarStack.displayName = 'UserAvatarStack';
 
 /**
  * Notification summary text
  */
-const NotificationSummary: React.FC<{ notification: GroupedNotification }> = ({
+const NotificationSummary: React.FC<{ notification: GroupedNotification }> = React.memo(({
   notification,
 }) => {
   const { users, count, reason } = notification;
@@ -406,12 +421,14 @@ const NotificationSummary: React.FC<{ notification: GroupedNotification }> = ({
       </span>
     </>
   );
-};
+});
+
+NotificationSummary.displayName = 'NotificationSummary';
 
 /**
  * Post preview card with media support
  */
-const PostPreviewCard: React.FC<{ preview: PostPreview }> = ({ preview }) => {
+const PostPreviewCard: React.FC<{ preview: PostPreview }> = React.memo(({ preview }) => {
   return (
     <div
       className="mt-2 rounded-lg p-3"
@@ -464,12 +481,14 @@ const PostPreviewCard: React.FC<{ preview: PostPreview }> = ({ preview }) => {
       )}
     </div>
   );
-};
+});
+
+PostPreviewCard.displayName = 'PostPreviewCard';
 
 /**
  * Media thumbnails grid
  */
-const MediaThumbnails: React.FC<{ thumbnails: string[] }> = ({
+const MediaThumbnails: React.FC<{ thumbnails: string[] }> = React.memo(({
   thumbnails,
 }) => {
   const gridCols =
@@ -510,7 +529,9 @@ const MediaThumbnails: React.FC<{ thumbnails: string[] }> = ({
       ))}
     </div>
   );
-};
+});
+
+MediaThumbnails.displayName = 'MediaThumbnails';
 
 /**
  * Inline action buttons
@@ -519,7 +540,7 @@ const InlineActions: React.FC<{
   notification: GroupedNotification;
   onView?: (uri: string) => void;
   onReply?: (e: React.MouseEvent) => void;
-}> = ({ notification, onView, onReply }) => {
+}> = React.memo(({ notification, onView, onReply }) => {
   const showReply = ["mention", "reply", "quote"].includes(notification.reason);
   const showView = notification.postUri != null;
 
@@ -553,7 +574,9 @@ const InlineActions: React.FC<{
       )}
     </div>
   );
-};
+});
+
+InlineActions.displayName = 'InlineActions';
 
 /**
  * Actions dropdown menu
@@ -564,7 +587,7 @@ const ActionsMenu: React.FC<{
   onReply?: () => void;
   onDismiss?: (e: React.MouseEvent) => void;
   onClose: () => void;
-}> = ({ onView, onReply, onDismiss, onClose }) => {
+}> = React.memo(({ onView, onReply, onDismiss, onClose }) => {
   return (
     <>
       {/* Backdrop */}
@@ -627,6 +650,8 @@ const ActionsMenu: React.FC<{
       </div>
     </>
   );
-};
+});
+
+ActionsMenu.displayName = 'ActionsMenu';
 
 export default RichNotificationItem;
