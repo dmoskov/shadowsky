@@ -33,7 +33,12 @@ export type ConnectionType =
 /**
  * Network quality levels for prefetch strategy decisions
  */
-export type NetworkQuality = "excellent" | "good" | "moderate" | "poor" | "offline";
+export type NetworkQuality =
+  | "excellent"
+  | "good"
+  | "moderate"
+  | "poor"
+  | "offline";
 
 /**
  * Prefetch strategy configuration based on network quality
@@ -166,7 +171,10 @@ function determineNetworkQuality(
 /**
  * Get prefetch strategy based on network quality
  */
-function getPrefetchStrategy(quality: NetworkQuality, isMobile: boolean): PrefetchStrategy {
+function getPrefetchStrategy(
+  quality: NetworkQuality,
+  isMobile: boolean,
+): PrefetchStrategy {
   const baseMaxLoads = isMobile ? 6 : 12;
 
   switch (quality) {
@@ -226,13 +234,20 @@ export function getNetworkInfo(): NetworkInfoSnapshot {
   const isOnline = navigator.onLine;
   const isMobile = window.innerWidth < 768;
 
-  const effectiveType = (connection?.effectiveType as EffectiveConnectionType) || null;
+  const effectiveType =
+    (connection?.effectiveType as EffectiveConnectionType) || null;
   const connectionType = (connection?.type as ConnectionType) || null;
   const downlink = connection?.downlink ?? null;
   const rtt = connection?.rtt ?? null;
   const saveData = connection?.saveData ?? false;
 
-  const quality = determineNetworkQuality(effectiveType, downlink, rtt, saveData, isOnline);
+  const quality = determineNetworkQuality(
+    effectiveType,
+    downlink,
+    rtt,
+    saveData,
+    isOnline,
+  );
   const prefetchStrategy = getPrefetchStrategy(quality, isMobile);
 
   return {
@@ -257,9 +272,15 @@ export type NetworkChangeCallback = (info: NetworkInfoSnapshot) => void;
  * Subscribe to network information changes
  * Returns an unsubscribe function
  */
-export function subscribeToNetworkChanges(callback: NetworkChangeCallback): () => void {
+export function subscribeToNetworkChanges(
+  callback: NetworkChangeCallback,
+): () => void {
   const connection = getNetworkConnection();
-  const listeners: Array<{ target: EventTarget; type: string; handler: EventListener }> = [];
+  const listeners: Array<{
+    target: EventTarget;
+    type: string;
+    handler: EventListener;
+  }> = [];
 
   // Initial callback with current state
   callback(getNetworkInfo());
@@ -268,11 +289,19 @@ export function subscribeToNetworkChanges(callback: NetworkChangeCallback): () =
   if (connection) {
     const connectionHandler = () => {
       const info = getNetworkInfo();
-      logger.log("Network connection changed:", info.quality, info.effectiveType);
+      logger.log(
+        "Network connection changed:",
+        info.quality,
+        info.effectiveType,
+      );
       callback(info);
     };
     connection.addEventListener("change", connectionHandler);
-    listeners.push({ target: connection, type: "change", handler: connectionHandler });
+    listeners.push({
+      target: connection,
+      type: "change",
+      handler: connectionHandler,
+    });
   }
 
   // Online/offline listeners (universal fallback)

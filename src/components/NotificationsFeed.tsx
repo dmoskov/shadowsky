@@ -178,8 +178,8 @@ export const NotificationsFeed: React.FC = () => {
   // Apply smooth transitions for batched updates
   const {
     displayNotifications: notifications,
-    isTransitioning,
-    newNotificationIds,
+    isTransitioning: _isTransitioning,
+    newNotificationIds: _newNotificationIds,
   } = useBatchedNotificationTransition(batchedNotifications, {
     transitionDuration: 300,
     enableAnimation: true,
@@ -197,7 +197,14 @@ export const NotificationsFeed: React.FC = () => {
       dataVersion: data?.pageParams?.length,
       timestamp: new Date().toISOString(),
     });
-  }, [notifications, rawNotifications.length, pendingCount, isBatchingUpdates, batchStats.batchCount, data?.pageParams]);
+  }, [
+    notifications,
+    rawNotifications.length,
+    pendingCount,
+    isBatchingUpdates,
+    batchStats.batchCount,
+    data?.pageParams,
+  ]);
 
   // Track notification view when data loads
   useEffect(() => {
@@ -1100,6 +1107,7 @@ interface NotificationItemProps {
   totalPosts?: number;
   setSelectedPostUri: (uri: string | null) => void;
   markAsRead: () => void;
+  isNew?: boolean;
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = React.memo(
@@ -1113,6 +1121,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
     totalPosts = 0,
     setSelectedPostUri,
     markAsRead,
+    isNew = false,
   }) => {
     const navigate = useNavigate();
     // Get the post for all notification types that reference posts
@@ -1407,7 +1416,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
       <div
         className={`bsky-notification cursor-pointer px-3 py-2 ${
           !notification.isRead ? "bsky-notification-unread" : ""
-        }`}
+        } ${isNew ? "bsky-notification-new" : ""}`}
         onClick={handleNotificationClick}
       >
         <div className="flex items-start gap-2">
@@ -1502,6 +1511,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
       prevProps.notification.indexedAt === nextProps.notification.indexedAt &&
       prevProps.showTypeLabel === nextProps.showTypeLabel &&
       prevProps.isFetchingMore === nextProps.isFetchingMore &&
+      prevProps.isNew === nextProps.isNew &&
       // Check if post in map has changed (for this notification's post)
       prevProps.postMap.get(
         (prevProps.notification.reason === "repost" ||

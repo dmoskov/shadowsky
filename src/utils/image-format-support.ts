@@ -159,10 +159,7 @@ export async function getSupportedFormats(): Promise<ImageFormat[]> {
  * @param format - Target format to request
  * @returns Transformed URL with format parameter
  */
-export function transformBskyCdnUrl(
-  url: string,
-  format: ImageFormat
-): string {
+export function transformBskyCdnUrl(url: string, format: ImageFormat): string {
   if (!url || !url.includes("cdn.bsky.app")) {
     return url;
   }
@@ -192,7 +189,7 @@ export function transformBskyCdnUrl(
  * @returns Array of {url, type} for picture source elements
  */
 export async function generateFormatSources(
-  baseUrl: string
+  baseUrl: string,
 ): Promise<Array<{ url: string; type: string }>> {
   if (!baseUrl) {
     return [];
@@ -251,7 +248,7 @@ export const compressionRatios: Record<ImageFormat, number> = {
  */
 export function estimateSizeSavings(
   jpegSize: number,
-  targetFormat: ImageFormat
+  targetFormat: ImageFormat,
 ): { estimatedSize: number; savingsPercent: number } {
   const ratio = compressionRatios[targetFormat];
   const estimatedSize = Math.round(jpegSize * ratio);

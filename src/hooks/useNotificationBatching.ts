@@ -106,8 +106,7 @@ export function useNotificationBatching(
       `[useNotificationBatching] Processing ${sourceNotifications.length} notifications`,
     );
 
-    const update =
-      serviceRef.current.processFullUpdate(sourceNotifications);
+    const update = serviceRef.current.processFullUpdate(sourceNotifications);
     setBatchedNotifications(update.notifications);
     setLastBatchUpdate(update);
 
@@ -193,9 +192,8 @@ export function useBatchedNotificationTransition(
 } {
   const { transitionDuration = 300, enableAnimation = true } = options;
 
-  const [displayNotifications, setDisplayNotifications] = useState<
-    Notification[]
-  >(notifications);
+  const [displayNotifications, setDisplayNotifications] =
+    useState<Notification[]>(notifications);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [newNotificationIds, setNewNotificationIds] = useState<Set<string>>(
     new Set(),

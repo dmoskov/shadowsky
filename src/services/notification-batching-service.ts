@@ -269,7 +269,10 @@ export class NotificationBatchingService {
     notifications: Notification[],
   ): Map<string, { count: number; latestTimestamp: string }> {
     const groups = this.groupNotificationsByType(notifications);
-    const counts = new Map<string, { count: number; latestTimestamp: string }>();
+    const counts = new Map<
+      string,
+      { count: number; latestTimestamp: string }
+    >();
 
     groups.forEach((groupNotifications, key) => {
       const sorted = groupNotifications.sort(

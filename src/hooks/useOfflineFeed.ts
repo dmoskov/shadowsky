@@ -126,7 +126,11 @@ export function useOfflineFeedStatus(): OfflineFeedStatus {
   useEffect(() => {
     const handleOnline = () => {
       logger.info("Device came online");
-      setStatus((prev) => ({ ...prev, isOnline: true, isServingCached: false }));
+      setStatus((prev) => ({
+        ...prev,
+        isOnline: true,
+        isServingCached: false,
+      }));
     };
 
     const handleOffline = () => {
@@ -230,7 +234,10 @@ export function useOfflineFirstFeed<T>({
 
         try {
           await offlineStorageDB.init();
-          const cachedItems = await offlineStorageDB.getFeedItems(100, feedType);
+          const cachedItems = await offlineStorageDB.getFeedItems(
+            100,
+            feedType,
+          );
 
           if (cachedItems.length > 0) {
             logger.info(`Serving ${cachedItems.length} cached items`);
@@ -267,7 +274,7 @@ export function useOfflineFirstFeed<T>({
       return data;
     },
     enabled,
-    retry: (failureCount, error) => {
+    retry: (failureCount, _error) => {
       // Don't retry if offline
       if (!navigator.onLine) return false;
       // Otherwise retry up to 3 times

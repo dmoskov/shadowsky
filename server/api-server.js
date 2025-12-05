@@ -1392,7 +1392,9 @@ ${formatPrompt}
       );
       if (highlightsMatch) {
         // Extract summary without highlights section
-        summaryText = summaryText.replace(/---HIGHLIGHTS---[\s\S]*$/, "").trim();
+        summaryText = summaryText
+          .replace(/---HIGHLIGHTS---[\s\S]*$/, "")
+          .trim();
 
         // Parse individual highlights
         const highlightLines = highlightsMatch[1].trim().split("\n");
