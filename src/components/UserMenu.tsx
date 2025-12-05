@@ -1,8 +1,9 @@
 import { ChevronDown, LogOut, Settings, User, Users } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
+import { useMenuKeyboardNavigation } from "../hooks/useMenuKeyboardNavigation";
 import { AccountManager } from "../services/account-manager";
 
 export const UserMenu: React.FC = () => {
@@ -13,8 +14,17 @@ export const UserMenu: React.FC = () => {
   } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuId = useId();
   const { session, logout } = useAuth();
   const navigate = useNavigate();
+
+  // Keyboard navigation for menu
+  useMenuKeyboardNavigation({
+    isOpen,
+    onClose: () => setIsOpen(false),
+    menuRef,
+    triggerRef: buttonRef,
+  });
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -91,6 +101,10 @@ export const UserMenu: React.FC = () => {
         }}
         className="flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-white hover:bg-opacity-10"
         style={{ color: "var(--bsky-text-primary)" }}
+        aria-label="User menu"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? menuId : undefined}
       >
         <span className="text-sm font-medium">
           @{session?.handle || "user"}
@@ -106,6 +120,9 @@ export const UserMenu: React.FC = () => {
         ReactDOM.createPortal(
           <div
             ref={menuRef}
+            id={menuId}
+            role="menu"
+            aria-label="User menu"
             className="bsky-glass fixed z-[9999] w-56 overflow-hidden rounded-lg shadow-lg"
             style={{
               backgroundColor: "var(--bsky-bg-secondary)",
@@ -138,6 +155,7 @@ export const UserMenu: React.FC = () => {
                   return (
                     <div
                       key={index}
+                      role="separator"
                       className="my-1 border-t"
                       style={{ borderColor: "var(--bsky-border-primary)" }}
                     />
@@ -148,8 +166,9 @@ export const UserMenu: React.FC = () => {
                 return (
                   <button
                     key={index}
+                    role="menuitem"
                     onClick={item.onClick}
-                    className={`flex w-full items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-blue-50 ${
+                    className={`flex w-full items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-blue-50 focus-visible:bg-blue-50 focus-visible:outline-none dark:hover:bg-blue-900/20 dark:focus-visible:bg-blue-900/20 ${
                       item.className || ""
                     }`}
                     style={{
@@ -158,7 +177,7 @@ export const UserMenu: React.FC = () => {
                         : "var(--bsky-text-primary)",
                     }}
                   >
-                    <Icon size={16} />
+                    <Icon size={16} aria-hidden="true" />
                     <span>{item.label}</span>
                   </button>
                 );

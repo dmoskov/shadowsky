@@ -192,7 +192,8 @@ class DmService {
         API_RETRY_OPTIONS,
       );
 
-      const messagesData = await messagesResponse.json();
+      const messagesData =
+        (await messagesResponse.json()) as ApiGetMessagesResponse;
 
       // Also get the conversation details
       const convoResponse = await fetchWithRetry(
@@ -203,11 +204,11 @@ class DmService {
         API_RETRY_OPTIONS,
       );
 
-      const convoData = await convoResponse.json();
+      const convoData = (await convoResponse.json()) as ApiGetConvoResponse;
       const convo = convoData.convo;
 
       const messages = messagesData.messages
-        .map((msg: any) => ({
+        .map((msg: ApiMessage) => ({
           id: msg.id,
           rev: msg.rev,
           text: msg.text,
@@ -215,12 +216,18 @@ class DmService {
           sender: {
             did: msg.sender.did,
           },
-          reactions: msg.facets?.reduce((acc: any, facet: any) => {
-            if (facet.$type === "chat.bsky.convo.defs#messageFacet") {
-              // Handle reactions if they exist
-            }
-            return acc;
-          }, {}),
+          reactions: msg.facets?.reduce(
+            (
+              acc: Record<string, { count: number; users: string[] }>,
+              facet: ApiMessageFacet,
+            ) => {
+              if (facet.$type === "chat.bsky.convo.defs#messageFacet") {
+                // Handle reactions if they exist
+              }
+              return acc;
+            },
+            {},
+          ),
         }))
         .reverse(); // Reverse to show oldest first
 
@@ -228,7 +235,7 @@ class DmService {
         conversation: {
           id: convo.id,
           rev: convo.rev,
-          members: convo.members.map((member: any) => ({
+          members: convo.members.map((member: ApiConvoMember) => ({
             did: member.did,
             handle: member.handle,
             displayName: member.displayName,
@@ -250,9 +257,10 @@ class DmService {
         },
         messages,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       debug.error("Failed to get conversation:", error);
-      if (error.status === 401 || error.statusCode === 401) {
+      const apiErr = error as ApiError;
+      if (apiErr.status === 401 || apiErr.statusCode === 401) {
         throw new Error("Authentication required. Please sign in again.");
       }
       throw error;
@@ -282,9 +290,10 @@ class DmService {
         },
         API_RETRY_OPTIONS,
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       debug.error("Failed to send message:", error);
-      if (error.status === 401 || error.statusCode === 401) {
+      const apiErr = error as ApiError;
+      if (apiErr.status === 401 || apiErr.statusCode === 401) {
         throw new Error("Authentication required. Please sign in again.");
       }
       throw error;
@@ -330,7 +339,7 @@ class DmService {
         },
         API_RETRY_OPTIONS,
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       debug.error("Failed to update read status:", error);
       // Don't throw - marking as read is not critical
     }
@@ -360,9 +369,10 @@ class DmService {
         },
         API_RETRY_OPTIONS,
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       debug.error("Failed to delete message:", error);
-      if (error.status === 401 || error.statusCode === 401) {
+      const apiErr = error as ApiError;
+      if (apiErr.status === 401 || apiErr.statusCode === 401) {
         throw new Error("Authentication required. Please sign in again.");
       }
       throw error;
@@ -389,7 +399,7 @@ class DmService {
         },
         API_RETRY_OPTIONS,
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       debug.error("Failed to mute conversation:", error);
       throw error;
     }
@@ -415,7 +425,7 @@ class DmService {
         },
         API_RETRY_OPTIONS,
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       debug.error("Failed to unmute conversation:", error);
       throw error;
     }
