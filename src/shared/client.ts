@@ -65,7 +65,14 @@ export class ATProtoClient {
       const response = await this.agent.resumeSession(session);
       return response.data as Session;
     } catch (error) {
-      debug.error("Resume session failed:", error);
+      // 400 errors are expected when there's no valid session (expired, invalid, etc.)
+      // Only log as debug info, not as an error
+      const status = (error as Error & { status?: number })?.status;
+      if (status === 400) {
+        debug.log("No valid session to resume (this is normal for logged-out users)");
+      } else {
+        debug.error("Resume session failed:", error);
+      }
       throw error;
     }
   }

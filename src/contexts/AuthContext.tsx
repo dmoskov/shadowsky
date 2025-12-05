@@ -233,13 +233,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             await initializeDataServices(atProtoClient.agent);
             dmService.setAgent(atProtoClient.agent);
           } catch (error) {
-            debug.error("Failed to resume session:", error);
+            const status = (error as Error & { status?: number })?.status;
 
-            // Only clear session for authentication errors
-            if (
+            // 400 errors are expected when session is invalid/expired - don't log as error
+            if (status === 400) {
+              debug.log("Session expired or invalid, clearing stored session");
+              atProtoClient.logout();
+            } else if (
               error instanceof SessionExpiredError ||
               error instanceof AuthenticationError ||
-              (error as Error & { status?: number })?.status === 401
+              status === 401
             ) {
               debug.log("Session invalid, clearing...");
               atProtoClient.logout();

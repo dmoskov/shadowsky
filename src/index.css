@@ -199,6 +199,17 @@ html {
   animation: skeleton-wave 1.5s ease-in-out infinite;
 }
 
+/* Disable skeleton wave animation for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-skeleton-wave::after {
+    animation: none;
+  }
+}
+
+html[data-reduce-motion="true"] .animate-skeleton-wave::after {
+  animation: none;
+}
+
 /* Prevent iOS rubber band scrolling issues */
 @media (max-width: 1024px) {
   html,
@@ -295,6 +306,19 @@ body::-webkit-scrollbar-thumb:hover {
   height: 4px;
   border-radius: 2px;
   background: var(--bsky-bg-tertiary);
+}
+
+/* Reduced motion for slider thumb hover */
+@media (prefers-reduced-motion: reduce) {
+  .bsky-slider::-webkit-slider-thumb,
+  .bsky-slider::-moz-range-thumb {
+    transition: none;
+  }
+
+  .bsky-slider::-webkit-slider-thumb:hover,
+  .bsky-slider::-moz-range-thumb:hover {
+    transform: none;
+  }
 }
 
 /* Tailwind animation utilities */
@@ -429,6 +453,19 @@ body::-webkit-scrollbar-thumb:hover {
       border-color: transparent;
     }
   }
+
+  /* Reduced motion: show static highlight instead of animation */
+  @media (prefers-reduced-motion: reduce) {
+    .deep-link-highlight {
+      animation: none;
+      background-color: rgba(var(--bsky-primary-rgb, 59, 130, 246), 0.1);
+    }
+
+    .deep-link-highlight::after {
+      animation: none;
+      opacity: 1;
+    }
+  }
 }
 
 /* Custom range input styling */
@@ -483,6 +520,19 @@ input[type="range"]::-webkit-slider-thumb:hover {
 input[type="range"]::-moz-range-thumb:hover {
   transform: scale(1.1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Reduced motion for range input thumb hover */
+@media (prefers-reduced-motion: reduce) {
+  input[type="range"]::-webkit-slider-thumb,
+  input[type="range"]::-moz-range-thumb {
+    transition: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover,
+  input[type="range"]::-moz-range-thumb:hover {
+    transform: none;
+  }
 }
 
 /* Accessibility Styles */

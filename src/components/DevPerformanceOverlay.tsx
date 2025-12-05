@@ -359,12 +359,18 @@ export function DevPerformanceOverlay() {
 
   return (
     <>
-      {/* CSS keyframes for flash animation */}
+      {/* CSS keyframes for flash animation - respects reduced motion preference */}
       <style>
         {`
           @keyframes flash {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.05); }
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            @keyframes flash {
+              0%, 100% { opacity: 1; }
+            }
           }
         `}
       </style>
