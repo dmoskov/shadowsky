@@ -79,6 +79,22 @@ export function Modal({
     setModalState("exiting");
   }, []);
 
+  // Handle Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === "Escape" &&
+        (modalState === "entering" || modalState === "open")
+      ) {
+        e.preventDefault();
+        handleClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [modalState, handleClose]);
+
   const Icon = variantIcons[variant];
   const iconColor = variantColors[variant];
 

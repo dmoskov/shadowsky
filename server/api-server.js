@@ -1158,8 +1158,17 @@ app.post("/api/thread-summary", async (req, res) => {
     });
   }
 
-  // Validate format
-  const validFormats = ["haiku", "tldr", "keypoints", "extended"];
+  // Validate format - includes legacy and progressive complexity formats
+  const validFormats = [
+    "haiku",
+    "tldr",
+    "keypoints",
+    "extended",
+    "brief",
+    "moderate",
+    "detailed",
+    "comprehensive",
+  ];
   if (!validFormats.includes(format)) {
     return res.status(400).json({
       error: "Invalid format",

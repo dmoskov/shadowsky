@@ -102,7 +102,9 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
         </div>
 
         <div className="max-h-96 overflow-y-auto p-4">
-          {isLoading && <ListItemSkeleton count={3} aria-label="Loading lists" />}
+          {isLoading && (
+            <ListItemSkeleton count={3} aria-label="Loading lists" />
+          )}
 
           {!isLoading && lists && lists.length === 0 && (
             <div className="py-8 text-center">

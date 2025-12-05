@@ -13,8 +13,8 @@ import ReactDOM from "react-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
 import { useModalSwipeBack } from "../hooks/useModalSwipeBack";
-import { useMinDuration } from "../hooks/useTiming";
 import { useThreadKeyboardShortcuts } from "../hooks/useThreadKeyboardShortcuts";
+import { useMinDuration } from "../hooks/useTiming";
 import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
 import type { ThreadSummaryResult } from "../services/anthropic";
 import { uploadBlobWithRetry } from "../utils/blob-upload";
@@ -923,10 +923,7 @@ export function ThreadModal({
           >
             <div className="mx-auto max-w-3xl p-4 md:p-8">
               {isLoading && (
-                <ThreadSkeleton
-                  replyCount={3}
-                  aria-label="Loading thread"
-                />
+                <ThreadSkeleton replyCount={3} aria-label="Loading thread" />
               )}
 
               {error && (

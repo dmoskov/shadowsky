@@ -1,4 +1,32 @@
-import type { BskyAgent } from "@atproto/api";
+import type { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
+
+/**
+ * API error structure for moderation operations
+ */
+interface ModerationApiError extends Error {
+  status?: number;
+}
+
+/**
+ * Post record structure for filtering
+ */
+interface PostRecord {
+  text?: string;
+  reply?: {
+    parent?: { uri: string };
+    root?: { uri: string };
+  };
+}
+
+/**
+ * Feed item structure for filtering
+ */
+interface FeedItem {
+  post?: AppBskyFeedDefs.PostView;
+  reason?: {
+    $type: string;
+  };
+}
 
 export interface ModerationPreferences {
   keywordFilters: string[];
@@ -25,10 +53,12 @@ export class ModerationService {
         collection: "com.shadowsky.moderation",
         rkey: "self",
       });
-      this.preferences = response.data.value as any;
-      return this.preferences as ModerationPreferences;
-    } catch (error: any) {
-      if (error?.status === 400) {
+      this.preferences = response.data
+        .value as unknown as ModerationPreferences;
+      return this.preferences;
+    } catch (error: unknown) {
+      const apiErr = error as ModerationApiError;
+      if (apiErr?.status === 400) {
         this.preferences = this.getDefaultPreferences();
         return this.preferences;
       }
@@ -55,10 +85,14 @@ export class ModerationService {
     return this.preferences;
   }
 
-  shouldFilterPost(post: any): { filtered: boolean; reason?: string } {
+  shouldFilterPost(post: AppBskyFeedDefs.PostView): {
+    filtered: boolean;
+    reason?: string;
+  } {
     const prefs = this.getPreferences();
 
-    const postText = post.record?.text?.toLowerCase() || "";
+    const record = post.record as PostRecord | undefined;
+    const postText = record?.text?.toLowerCase() || "";
 
     for (const keyword of prefs.keywordFilters) {
       if (postText.includes(keyword.toLowerCase())) {
@@ -66,14 +100,17 @@ export class ModerationService {
       }
     }
 
-    if (prefs.hideReplies && post.record?.reply) {
+    if (prefs.hideReplies && record?.reply) {
       return { filtered: true, reason: "Reply posts hidden" };
     }
 
     return { filtered: false };
   }
 
-  shouldFilterFeedItem(feedItem: any): { filtered: boolean; reason?: string } {
+  shouldFilterFeedItem(feedItem: FeedItem): {
+    filtered: boolean;
+    reason?: string;
+  } {
     const prefs = this.getPreferences();
 
     if (

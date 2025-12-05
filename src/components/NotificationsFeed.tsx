@@ -999,47 +999,42 @@ interface FilterTabProps {
   count?: number;
 }
 
-const FilterTab: React.FC<FilterTabProps> = React.memo(({
-  active,
-  onClick,
-  icon,
-  label,
-  disabled,
-  count,
-}) => {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-1 text-xs font-medium transition-all duration-200 sm:gap-1 sm:px-2 sm:py-1.5 sm:text-sm md:px-2.5 ${
-        active
-          ? "bg-bsky-primary text-white"
-          : "text-bsky-text-secondary hover:bg-bsky-bg-secondary hover:text-bsky-text-primary"
-      } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
-      aria-label={`Filter by ${label}${count !== undefined && count > 0 ? `, ${count} items` : ""}`}
-      aria-pressed={active}
-      disabled={disabled}
-      role="tab"
-      aria-selected={active}
-    >
-      <span className="flex-shrink-0" aria-hidden="true">
-        {icon}
-      </span>
-      <span className="hidden sm:inline">{label}</span>
-      {count !== undefined && count > 0 && (
-        <span
-          className={`text-[10px] font-bold sm:text-xs ${
-            active ? "text-white/90" : "text-bsky-text-tertiary"
-          }`}
-          aria-hidden="true"
-        >
-          {count}
+const FilterTab: React.FC<FilterTabProps> = React.memo(
+  ({ active, onClick, icon, label, disabled, count }) => {
+    return (
+      <button
+        onClick={onClick}
+        className={`flex items-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-1 text-xs font-medium transition-all duration-200 sm:gap-1 sm:px-2 sm:py-1.5 sm:text-sm md:px-2.5 ${
+          active
+            ? "bg-bsky-primary text-white"
+            : "text-bsky-text-secondary hover:bg-bsky-bg-secondary hover:text-bsky-text-primary"
+        } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+        aria-label={`Filter by ${label}${count !== undefined && count > 0 ? `, ${count} items` : ""}`}
+        aria-pressed={active}
+        disabled={disabled}
+        role="tab"
+        aria-selected={active}
+      >
+        <span className="flex-shrink-0" aria-hidden="true">
+          {icon}
         </span>
-      )}
-    </button>
-  );
-});
+        <span className="hidden sm:inline">{label}</span>
+        {count !== undefined && count > 0 && (
+          <span
+            className={`text-[10px] font-bold sm:text-xs ${
+              active ? "text-white/90" : "text-bsky-text-tertiary"
+            }`}
+            aria-hidden="true"
+          >
+            {count}
+          </span>
+        )}
+      </button>
+    );
+  },
+);
 
-FilterTab.displayName = 'FilterTab';
+FilterTab.displayName = "FilterTab";
 
 function getNotificationText(reason: string): string {
   switch (reason) {
@@ -1074,410 +1069,423 @@ interface NotificationItemProps {
   markAsRead: () => void;
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = React.memo(({
-  notification,
-  postMap,
-  getNotificationIcon,
-  showTypeLabel = false,
-  isFetchingMore = false,
-  fetchedPosts = 0,
-  totalPosts = 0,
-  setSelectedPostUri,
-  markAsRead,
-}) => {
-  const navigate = useNavigate();
-  // Get the post for all notification types that reference posts
-  // For reposts and likes, use reasonSubject which contains the original post URI
-  const postUri =
-    (notification.reason === "repost" || notification.reason === "like") &&
-    notification.reasonSubject
-      ? notification.reasonSubject
-      : notification.uri;
+const NotificationItem: React.FC<NotificationItemProps> = React.memo(
+  ({
+    notification,
+    postMap,
+    getNotificationIcon,
+    showTypeLabel = false,
+    isFetchingMore = false,
+    fetchedPosts = 0,
+    totalPosts = 0,
+    setSelectedPostUri,
+    markAsRead,
+  }) => {
+    const navigate = useNavigate();
+    // Get the post for all notification types that reference posts
+    // For reposts and likes, use reasonSubject which contains the original post URI
+    const postUri =
+      (notification.reason === "repost" || notification.reason === "like") &&
+      notification.reasonSubject
+        ? notification.reasonSubject
+        : notification.uri;
 
-  const post = ["like", "repost", "reply", "quote"].includes(
-    notification.reason,
-  )
-    ? postMap.get(postUri)
-    : undefined;
-  const postAuthorHandle = post?.author?.handle;
+    const post = ["like", "repost", "reply", "quote"].includes(
+      notification.reason,
+    )
+      ? postMap.get(postUri)
+      : undefined;
+    const postAuthorHandle = post?.author?.handle;
 
-  const notificationUrl = getNotificationUrl(notification, postAuthorHandle);
+    const notificationUrl = getNotificationUrl(notification, postAuthorHandle);
 
-  // Get notification type label
-  const getNotificationTypeLabel = (reason: string): string => {
-    switch (reason) {
-      case "like":
-        return "Like";
-      case "repost":
-        return "Repost";
-      case "follow":
-        return "Follow";
-      case "mention":
-        return "Mention";
-      case "reply":
-        return "Reply";
-      case "quote":
-        return "Quote";
-      case "starterpack-joined":
-        return "Starterpack Join";
-      default:
-        return reason.charAt(0).toUpperCase() + reason.slice(1);
-    }
-  };
-
-  // Helper to render post content box
-  const renderPostContent = () => {
-    // For likes, reposts, replies, and quotes - show loading state if post not yet loaded
-    if (["like", "repost", "reply", "quote"].includes(notification.reason)) {
-      if (!post) {
-        // Don't show loading indicator for individual posts during progressive loading
-        // Only show "unable to load" if we've finished fetching and still don't have the post
-        if (!isFetchingMore || fetchedPosts >= totalPosts) {
-          // Post couldn't be loaded or doesn't exist
-          return (
-            <div
-              className="mt-3 rounded-lg p-4"
-              style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                border: "1px solid var(--bsky-border-primary)",
-                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-              }}
-            >
-              <p
-                className="text-sm italic"
-                style={{ color: "var(--bsky-text-tertiary)" }}
-              >
-                Post unavailable
-              </p>
-            </div>
-          );
-        }
-        // Return null during progressive loading to avoid flicker
-        return null;
+    // Get notification type label
+    const getNotificationTypeLabel = (reason: string): string => {
+      switch (reason) {
+        case "like":
+          return "Like";
+        case "repost":
+          return "Repost";
+        case "follow":
+          return "Follow";
+        case "mention":
+          return "Mention";
+        case "reply":
+          return "Reply";
+        case "quote":
+          return "Quote";
+        case "starterpack-joined":
+          return "Starterpack Join";
+        default:
+          return reason.charAt(0).toUpperCase() + reason.slice(1);
       }
-    }
+    };
 
-    // For likes, reposts, replies, and quotes - show the referenced post
-    if (
-      ["like", "repost", "reply", "quote"].includes(notification.reason) &&
-      post
-    ) {
-      const hasImages =
-        post.embed?.$type === "app.bsky.embed.images#view" ||
-        (post.embed?.$type === "app.bsky.embed.recordWithMedia#view" &&
-          post.embed.media?.$type === "app.bsky.embed.images#view");
+    // Helper to render post content box
+    const renderPostContent = () => {
+      // For likes, reposts, replies, and quotes - show loading state if post not yet loaded
+      if (["like", "repost", "reply", "quote"].includes(notification.reason)) {
+        if (!post) {
+          // Don't show loading indicator for individual posts during progressive loading
+          // Only show "unable to load" if we've finished fetching and still don't have the post
+          if (!isFetchingMore || fetchedPosts >= totalPosts) {
+            // Post couldn't be loaded or doesn't exist
+            return (
+              <div
+                className="mt-3 rounded-lg p-4"
+                style={{
+                  backgroundColor: "var(--bsky-bg-secondary)",
+                  border: "1px solid var(--bsky-border-primary)",
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                }}
+              >
+                <p
+                  className="text-sm italic"
+                  style={{ color: "var(--bsky-text-tertiary)" }}
+                >
+                  Post unavailable
+                </p>
+              </div>
+            );
+          }
+          // Return null during progressive loading to avoid flicker
+          return null;
+        }
+      }
 
-      return (
-        <div className="mt-2 rounded-md border border-bsky-border-primary bg-bsky-bg-secondary p-2.5">
-          <div className="mb-1 flex items-center gap-1.5">
-            <span className="text-xs font-medium text-bsky-text-tertiary">
-              {notification.reason === "reply"
-                ? "Replying to your post:"
-                : notification.reason === "quote"
-                  ? "Quoting your post:"
-                  : "Your post:"}
-            </span>
-            {post.author?.handle && (
-              <ProfileHoverCard handle={post.author.handle}>
-                {post.author?.avatar ? (
-                  <img
-                    src={proxifyBskyImage(post.author.avatar)}
-                    alt={post.author.handle}
-                    className="bsky-avatar h-5 w-5 cursor-pointer transition-opacity hover:opacity-80"
-                    onClick={handleAuthorClick}
-                  />
-                ) : (
-                  <div
-                    className="bsky-avatar flex h-5 w-5 cursor-pointer items-center justify-center text-xs transition-opacity hover:opacity-80"
-                    style={{ background: "var(--bsky-bg-tertiary)" }}
-                    onClick={handleAuthorClick}
-                  >
-                    {post.author?.handle?.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </ProfileHoverCard>
-            )}
-            {post.author?.handle ? (
-              <ProfileHoverCard handle={post.author.handle}>
-                <span className="inline-flex cursor-pointer items-center text-xs font-medium text-bsky-text-secondary hover:underline">
+      // For likes, reposts, replies, and quotes - show the referenced post
+      if (
+        ["like", "repost", "reply", "quote"].includes(notification.reason) &&
+        post
+      ) {
+        const hasImages =
+          post.embed?.$type === "app.bsky.embed.images#view" ||
+          (post.embed?.$type === "app.bsky.embed.recordWithMedia#view" &&
+            post.embed.media?.$type === "app.bsky.embed.images#view");
+
+        return (
+          <div className="mt-2 rounded-md border border-bsky-border-primary bg-bsky-bg-secondary p-2.5">
+            <div className="mb-1 flex items-center gap-1.5">
+              <span className="text-xs font-medium text-bsky-text-tertiary">
+                {notification.reason === "reply"
+                  ? "Replying to your post:"
+                  : notification.reason === "quote"
+                    ? "Quoting your post:"
+                    : "Your post:"}
+              </span>
+              {post.author?.handle && (
+                <ProfileHoverCard handle={post.author.handle}>
+                  {post.author?.avatar ? (
+                    <img
+                      src={proxifyBskyImage(post.author.avatar)}
+                      alt={post.author.handle}
+                      className="bsky-avatar h-5 w-5 cursor-pointer transition-opacity hover:opacity-80"
+                      onClick={handleAuthorClick}
+                    />
+                  ) : (
+                    <div
+                      className="bsky-avatar flex h-5 w-5 cursor-pointer items-center justify-center text-xs transition-opacity hover:opacity-80"
+                      style={{ background: "var(--bsky-bg-tertiary)" }}
+                      onClick={handleAuthorClick}
+                    >
+                      {post.author?.handle?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </ProfileHoverCard>
+              )}
+              {post.author?.handle ? (
+                <ProfileHoverCard handle={post.author.handle}>
+                  <span className="inline-flex cursor-pointer items-center text-xs font-medium text-bsky-text-secondary hover:underline">
+                    <span>
+                      {post.author?.displayName ||
+                        post.author?.handle ||
+                        "Unknown"}
+                    </span>
+                    <DomainVerifiedBadgeInline handle={post.author.handle} />
+                  </span>
+                </ProfileHoverCard>
+              ) : (
+                <span className="inline-flex items-center text-xs font-medium text-bsky-text-secondary">
                   <span>
                     {post.author?.displayName ||
                       post.author?.handle ||
                       "Unknown"}
                   </span>
-                  <DomainVerifiedBadgeInline handle={post.author.handle} />
                 </span>
-              </ProfileHoverCard>
+              )}
+              {hasImages && (
+                <span
+                  className="flex items-center gap-1 text-xs"
+                  style={{ color: "var(--bsky-text-tertiary)" }}
+                >
+                  · 📷
+                </span>
+              )}
+            </div>
+
+            {post.record?.text ? (
+              <p className="text-sm leading-relaxed text-bsky-text-primary">
+                {post.record.text}
+              </p>
             ) : (
-              <span className="inline-flex items-center text-xs font-medium text-bsky-text-secondary">
-                <span>
-                  {post.author?.displayName || post.author?.handle || "Unknown"}
-                </span>
-              </span>
-            )}
-            {hasImages && (
-              <span
-                className="flex items-center gap-1 text-xs"
+              <p
+                className="text-sm italic"
                 style={{ color: "var(--bsky-text-tertiary)" }}
               >
-                · 📷
-              </span>
+                [Post with no text]
+              </p>
             )}
+
+            {/* Display images if present */}
+            {(() => {
+              if (!post.embed) return null;
+
+              let images: Array<{
+                thumb: string;
+                fullsize: string;
+                alt?: string;
+              }> = [];
+
+              // Extract images from different embed types
+              if (
+                post.embed.$type === "app.bsky.embed.images#view" &&
+                post.embed.images
+              ) {
+                images = post.embed.images;
+              } else if (
+                post.embed.$type === "app.bsky.embed.recordWithMedia#view" &&
+                post.embed.media?.$type === "app.bsky.embed.images#view" &&
+                post.embed.media.images
+              ) {
+                images = post.embed.media.images;
+              }
+
+              if (images.length === 0) return null;
+
+              return (
+                <div className="mt-3">
+                  <div
+                    className={`grid gap-2 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
+                  >
+                    {images.slice(0, 4).map((img, idx) => (
+                      <div
+                        key={idx}
+                        className="relative overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
+                        style={{
+                          borderColor: "var(--bsky-border-primary)",
+                          aspectRatio: images.length === 1 ? "16/9" : "1",
+                          maxHeight: images.length === 1 ? "200px" : "120px",
+                        }}
+                      >
+                        <img
+                          src={proxifyBskyImage(img.thumb)}
+                          alt={img.alt || ""}
+                          className="h-full w-full object-contain"
+                          loading="lazy"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        );
+      }
+
+      // For mentions - show the post where you were mentioned
+      if (
+        notification.reason === "mention" &&
+        notification.record &&
+        typeof notification.record === "object" &&
+        "text" in notification.record
+      ) {
+        return (
+          <div className="mt-2 rounded-md border border-bsky-border-primary bg-bsky-bg-secondary p-2.5">
+            <p className="text-sm leading-relaxed text-bsky-text-primary">
+              {(notification.record as { text?: string }).text}
+            </p>
+          </div>
+        );
+      }
+
+      // For follows - no post to show
+      if (notification.reason === "follow") {
+        return null;
+      }
+
+      // Fallback for any other notification types with record text
+      if (
+        notification.record &&
+        typeof notification.record === "object" &&
+        "text" in notification.record
+      ) {
+        return (
+          <div className="mt-2 rounded-md border border-bsky-border-primary bg-bsky-bg-secondary p-2.5">
+            <p
+              className="text-sm"
+              style={{ color: "var(--bsky-text-primary)", lineHeight: "1.5" }}
+            >
+              {(notification.record as { text?: string }).text}
+            </p>
+          </div>
+        );
+      }
+
+      return null;
+    };
+
+    const handleNotificationClick = (e: React.MouseEvent) => {
+      // Prevent default behavior
+      e.preventDefault();
+
+      // Mark notification as read when clicked
+      if (!notification.isRead) {
+        markAsRead();
+      }
+
+      // For likes, reposts, replies, mentions, and quotes - open thread modal
+      if (
+        ["like", "repost", "reply", "mention", "quote"].includes(
+          notification.reason,
+        )
+      ) {
+        // Use the postUri we calculated above which handles reasonSubject correctly
+        setSelectedPostUri(postUri);
+      } else if (notification.reason === "follow") {
+        // For follows, navigate to the follower's profile
+        navigate(`/profile/${notification.author.handle}`);
+      } else {
+        // Fallback - navigate if we have a URL
+        if (notificationUrl.startsWith("/")) {
+          navigate(notificationUrl);
+        } else {
+          window.open(notificationUrl, "_blank");
+        }
+      }
+    };
+
+    const handleAuthorClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      navigate(`/profile/${notification.author.handle}`);
+    };
+
+    return (
+      <div
+        className={`bsky-notification cursor-pointer px-3 py-2 ${
+          !notification.isRead ? "bsky-notification-unread" : ""
+        }`}
+        onClick={handleNotificationClick}
+      >
+        <div className="flex items-start gap-2">
+          {/* Icon and Avatar section */}
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <div className="w-5">
+              {getNotificationIcon(notification.reason)}
+            </div>
+            <ProfileHoverCard handle={notification.author.handle}>
+              {notification.author.avatar ? (
+                <img
+                  src={proxifyBskyImage(notification.author.avatar)}
+                  alt={notification.author.handle}
+                  className="bsky-avatar h-10 w-10 cursor-pointer transition-opacity hover:opacity-80"
+                  onClick={handleAuthorClick}
+                />
+              ) : (
+                <div
+                  className="bsky-avatar flex h-10 w-10 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
+                  style={{ background: "var(--bsky-bg-tertiary)" }}
+                  onClick={handleAuthorClick}
+                >
+                  <span className="text-sm font-semibold">
+                    {notification.author?.handle?.charAt(0).toUpperCase() ||
+                      "U"}
+                  </span>
+                </div>
+              )}
+            </ProfileHoverCard>
           </div>
 
-          {post.record?.text ? (
-            <p className="text-sm leading-relaxed text-bsky-text-primary">
-              {post.record.text}
-            </p>
-          ) : (
-            <p
-              className="text-sm italic"
-              style={{ color: "var(--bsky-text-tertiary)" }}
-            >
-              [Post with no text]
-            </p>
-          )}
-
-          {/* Display images if present */}
-          {(() => {
-            if (!post.embed) return null;
-
-            let images: Array<{
-              thumb: string;
-              fullsize: string;
-              alt?: string;
-            }> = [];
-
-            // Extract images from different embed types
-            if (
-              post.embed.$type === "app.bsky.embed.images#view" &&
-              post.embed.images
-            ) {
-              images = post.embed.images;
-            } else if (
-              post.embed.$type === "app.bsky.embed.recordWithMedia#view" &&
-              post.embed.media?.$type === "app.bsky.embed.images#view" &&
-              post.embed.media.images
-            ) {
-              images = post.embed.media.images;
-            }
-
-            if (images.length === 0) return null;
-
-            return (
-              <div className="mt-3">
-                <div
-                  className={`grid gap-2 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
+          {/* User info and timestamp */}
+          <div className="min-w-0 flex-1">
+            {showTypeLabel && (
+              <div className="mb-0.5 flex items-center gap-2">
+                <span
+                  className="rounded-full px-2 py-0.5 text-xs font-medium"
+                  style={{
+                    backgroundColor: "var(--bsky-bg-secondary)",
+                    color: "var(--bsky-text-secondary)",
+                    border: "1px solid var(--bsky-border-primary)",
+                  }}
                 >
-                  {images.slice(0, 4).map((img, idx) => (
-                    <div
-                      key={idx}
-                      className="relative overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
-                      style={{
-                        borderColor: "var(--bsky-border-primary)",
-                        aspectRatio: images.length === 1 ? "16/9" : "1",
-                        maxHeight: images.length === 1 ? "200px" : "120px",
-                      }}
-                    >
-                      <img
-                        src={proxifyBskyImage(img.thumb)}
-                        alt={img.alt || ""}
-                        className="h-full w-full object-contain"
-                        loading="lazy"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      );
-    }
-
-    // For mentions - show the post where you were mentioned
-    if (
-      notification.reason === "mention" &&
-      notification.record &&
-      typeof notification.record === "object" &&
-      "text" in notification.record
-    ) {
-      return (
-        <div className="mt-2 rounded-md border border-bsky-border-primary bg-bsky-bg-secondary p-2.5">
-          <p className="text-sm leading-relaxed text-bsky-text-primary">
-            {(notification.record as { text?: string }).text}
-          </p>
-        </div>
-      );
-    }
-
-    // For follows - no post to show
-    if (notification.reason === "follow") {
-      return null;
-    }
-
-    // Fallback for any other notification types with record text
-    if (
-      notification.record &&
-      typeof notification.record === "object" &&
-      "text" in notification.record
-    ) {
-      return (
-        <div className="mt-2 rounded-md border border-bsky-border-primary bg-bsky-bg-secondary p-2.5">
-          <p
-            className="text-sm"
-            style={{ color: "var(--bsky-text-primary)", lineHeight: "1.5" }}
-          >
-            {(notification.record as { text?: string }).text}
-          </p>
-        </div>
-      );
-    }
-
-    return null;
-  };
-
-  const handleNotificationClick = (e: React.MouseEvent) => {
-    // Prevent default behavior
-    e.preventDefault();
-
-    // Mark notification as read when clicked
-    if (!notification.isRead) {
-      markAsRead();
-    }
-
-    // For likes, reposts, replies, mentions, and quotes - open thread modal
-    if (
-      ["like", "repost", "reply", "mention", "quote"].includes(
-        notification.reason,
-      )
-    ) {
-      // Use the postUri we calculated above which handles reasonSubject correctly
-      setSelectedPostUri(postUri);
-    } else if (notification.reason === "follow") {
-      // For follows, navigate to the follower's profile
-      navigate(`/profile/${notification.author.handle}`);
-    } else {
-      // Fallback - navigate if we have a URL
-      if (notificationUrl.startsWith("/")) {
-        navigate(notificationUrl);
-      } else {
-        window.open(notificationUrl, "_blank");
-      }
-    }
-  };
-
-  const handleAuthorClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigate(`/profile/${notification.author.handle}`);
-  };
-
-  return (
-    <div
-      className={`bsky-notification cursor-pointer px-3 py-2 ${
-        !notification.isRead ? "bsky-notification-unread" : ""
-      }`}
-      onClick={handleNotificationClick}
-    >
-      <div className="flex items-start gap-2">
-        {/* Icon and Avatar section */}
-        <div className="flex flex-shrink-0 items-center gap-2">
-          <div className="w-5">{getNotificationIcon(notification.reason)}</div>
-          <ProfileHoverCard handle={notification.author.handle}>
-            {notification.author.avatar ? (
-              <img
-                src={proxifyBskyImage(notification.author.avatar)}
-                alt={notification.author.handle}
-                className="bsky-avatar h-10 w-10 cursor-pointer transition-opacity hover:opacity-80"
-                onClick={handleAuthorClick}
-              />
-            ) : (
-              <div
-                className="bsky-avatar flex h-10 w-10 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
-                style={{ background: "var(--bsky-bg-tertiary)" }}
-                onClick={handleAuthorClick}
-              >
-                <span className="text-sm font-semibold">
-                  {notification.author?.handle?.charAt(0).toUpperCase() || "U"}
+                  {getNotificationTypeLabel(notification.reason)}
                 </span>
               </div>
             )}
-          </ProfileHoverCard>
-        </div>
-
-        {/* User info and timestamp */}
-        <div className="min-w-0 flex-1">
-          {showTypeLabel && (
-            <div className="mb-0.5 flex items-center gap-2">
-              <span
-                className="rounded-full px-2 py-0.5 text-xs font-medium"
-                style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  color: "var(--bsky-text-secondary)",
-                  border: "1px solid var(--bsky-border-primary)",
-                }}
-              >
-                {getNotificationTypeLabel(notification.reason)}
-              </span>
-            </div>
-          )}
-          <p className="text-sm">
-            <ProfileHoverCard handle={notification.author.handle}>
-              <span className="inline-flex items-center">
-                <span
-                  className="cursor-pointer font-semibold hover:underline"
-                  style={{ color: "var(--bsky-text-primary)" }}
-                >
-                  {notification.author.displayName ||
-                    notification.author.handle}
+            <p className="text-sm">
+              <ProfileHoverCard handle={notification.author.handle}>
+                <span className="inline-flex items-center">
+                  <span
+                    className="cursor-pointer font-semibold hover:underline"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                  >
+                    {notification.author.displayName ||
+                      notification.author.handle}
+                  </span>
+                  <DomainVerifiedBadgeInline
+                    handle={notification.author.handle}
+                  />
                 </span>
-                <DomainVerifiedBadgeInline
-                  handle={notification.author.handle}
-                />
+              </ProfileHoverCard>{" "}
+              <span style={{ color: "var(--bsky-text-secondary)" }}>
+                {getNotificationText(notification.reason)}
               </span>
-            </ProfileHoverCard>{" "}
-            <span style={{ color: "var(--bsky-text-secondary)" }}>
-              {getNotificationText(notification.reason)}
-            </span>
-            <span
-              className="ml-1 text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
-            >
-              ·{" "}
-              {formatDistanceToNow(new Date(notification.indexedAt), {
-                addSuffix: true,
-              })}
-            </span>
-          </p>
+              <span
+                className="ml-1 text-xs"
+                style={{ color: "var(--bsky-text-tertiary)" }}
+              >
+                ·{" "}
+                {formatDistanceToNow(new Date(notification.indexedAt), {
+                  addSuffix: true,
+                })}
+              </span>
+            </p>
+          </div>
         </div>
+
+        {/* Show the referenced post content below, with left margin to align with profile picture */}
+        {renderPostContent() && (
+          <div className="ml-[1.75rem] mt-2">{renderPostContent()}</div>
+        )}
       </div>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison for performance
+    // Only re-render if notification data changes or post data is loaded/updated
+    return (
+      prevProps.notification.uri === nextProps.notification.uri &&
+      prevProps.notification.isRead === nextProps.notification.isRead &&
+      prevProps.notification.indexedAt === nextProps.notification.indexedAt &&
+      prevProps.showTypeLabel === nextProps.showTypeLabel &&
+      prevProps.isFetchingMore === nextProps.isFetchingMore &&
+      // Check if post in map has changed (for this notification's post)
+      prevProps.postMap.get(
+        (prevProps.notification.reason === "repost" ||
+          prevProps.notification.reason === "like") &&
+          prevProps.notification.reasonSubject
+          ? prevProps.notification.reasonSubject
+          : prevProps.notification.uri,
+      ) ===
+        nextProps.postMap.get(
+          (nextProps.notification.reason === "repost" ||
+            nextProps.notification.reason === "like") &&
+            nextProps.notification.reasonSubject
+            ? nextProps.notification.reasonSubject
+            : nextProps.notification.uri,
+        )
+    );
+  },
+);
 
-      {/* Show the referenced post content below, with left margin to align with profile picture */}
-      {renderPostContent() && (
-        <div className="ml-[1.75rem] mt-2">{renderPostContent()}</div>
-      )}
-    </div>
-  );
-}, (prevProps, nextProps) => {
-  // Custom comparison for performance
-  // Only re-render if notification data changes or post data is loaded/updated
-  return (
-    prevProps.notification.uri === nextProps.notification.uri &&
-    prevProps.notification.isRead === nextProps.notification.isRead &&
-    prevProps.notification.indexedAt === nextProps.notification.indexedAt &&
-    prevProps.showTypeLabel === nextProps.showTypeLabel &&
-    prevProps.isFetchingMore === nextProps.isFetchingMore &&
-    // Check if post in map has changed (for this notification's post)
-    prevProps.postMap.get(
-      (prevProps.notification.reason === "repost" || prevProps.notification.reason === "like") && prevProps.notification.reasonSubject
-        ? prevProps.notification.reasonSubject
-        : prevProps.notification.uri
-    ) === nextProps.postMap.get(
-      (nextProps.notification.reason === "repost" || nextProps.notification.reason === "like") && nextProps.notification.reasonSubject
-        ? nextProps.notification.reasonSubject
-        : nextProps.notification.uri
-    )
-  );
-});
-
-NotificationItem.displayName = 'NotificationItem';
+NotificationItem.displayName = "NotificationItem";

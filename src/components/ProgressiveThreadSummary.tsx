@@ -43,11 +43,12 @@ function renderMarkdown(text: string): React.ReactNode {
     if (headerMatch) {
       const level = headerMatch[1].length;
       const content = headerMatch[2];
-      const className = level === 1
-        ? "text-base font-semibold mb-2 mt-3 first:mt-0"
-        : level === 2
-          ? "text-sm font-semibold mb-1.5 mt-2.5 first:mt-0"
-          : "text-sm font-medium mb-1 mt-2 first:mt-0";
+      const className =
+        level === 1
+          ? "text-base font-semibold mb-2 mt-3 first:mt-0"
+          : level === 2
+            ? "text-sm font-semibold mb-1.5 mt-2.5 first:mt-0"
+            : "text-sm font-medium mb-1 mt-2 first:mt-0";
       return (
         <div key={pIndex} className={className}>
           {renderInlineMarkdown(content)}
@@ -86,14 +87,14 @@ function renderInlineMarkdown(text: string): React.ReactNode {
 
     // Find the earliest match
     let earliestMatch: RegExpMatchArray | null = null;
-    let matchType: 'bold' | 'italic' | null = null;
+    let matchType: "bold" | "italic" | null = null;
 
     if (boldMatch && (!italicMatch || boldMatch.index! <= italicMatch.index!)) {
       earliestMatch = boldMatch;
-      matchType = 'bold';
+      matchType = "bold";
     } else if (italicMatch) {
       earliestMatch = italicMatch;
-      matchType = 'italic';
+      matchType = "italic";
     }
 
     if (earliestMatch && earliestMatch.index !== undefined) {
@@ -103,13 +104,15 @@ function renderInlineMarkdown(text: string): React.ReactNode {
       }
 
       // Add formatted text
-      if (matchType === 'bold') {
+      if (matchType === "bold") {
         parts.push(<strong key={key++}>{earliestMatch[1]}</strong>);
       } else {
         parts.push(<em key={key++}>{earliestMatch[1]}</em>);
       }
 
-      remaining = remaining.slice(earliestMatch.index + earliestMatch[0].length);
+      remaining = remaining.slice(
+        earliestMatch.index + earliestMatch[0].length,
+      );
     } else {
       // No more matches, add remaining text
       parts.push(remaining);

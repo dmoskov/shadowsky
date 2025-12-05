@@ -4,6 +4,27 @@ import { Bookmark, BookmarkStorageBackend } from "./bookmark-backends/types";
 
 const logger = createLogger("OfficialBookmarksBackend");
 
+/**
+ * API error structure for bookmark operations
+ */
+interface BookmarkApiError extends Error {
+  status?: number;
+  statusText?: string;
+  data?: unknown;
+}
+
+/**
+ * Bookmark view from the official API
+ */
+interface BookmarkView {
+  subject: {
+    uri: string;
+    cid: string;
+  };
+  createdAt?: string;
+  item?: AppBskyFeedDefs.PostView & { $type?: string };
+}
+
 export class OfficialBookmarksBackend implements BookmarkStorageBackend {
   type = "official" as const;
   private agent: AtpAgent | null = null;
@@ -32,7 +53,7 @@ export class OfficialBookmarksBackend implements BookmarkStorageBackend {
 
       // Use the official bookmark API
       let cursor: string | undefined;
-      const allBookmarks: any[] = [];
+      const allBookmarks: BookmarkView[] = [];
 
       do {
         const response = await this.agent.app.bsky.bookmark.getBookmarks({
@@ -42,7 +63,7 @@ export class OfficialBookmarksBackend implements BookmarkStorageBackend {
 
         // Only continue if we actually got bookmarks
         if (response.data.bookmarks.length > 0) {
-          allBookmarks.push(...response.data.bookmarks);
+          allBookmarks.push(...(response.data.bookmarks as BookmarkView[]));
           cursor = response.data.cursor;
         } else {
           // Stop if no bookmarks were returned
@@ -74,11 +95,12 @@ export class OfficialBookmarksBackend implements BookmarkStorageBackend {
       }
     } catch (error) {
       logger.error("Failed to load bookmarks from server:", error);
+      const apiErr = error as BookmarkApiError;
       logger.error("Error details:", {
-        message: (error as any)?.message,
-        status: (error as any)?.status,
-        statusText: (error as any)?.statusText,
-        data: (error as any)?.data,
+        message: apiErr?.message,
+        status: apiErr?.status,
+        statusText: apiErr?.statusText,
+        data: apiErr?.data,
       });
       // Don't throw - we can still work with empty cache
     }
@@ -130,11 +152,12 @@ export class OfficialBookmarksBackend implements BookmarkStorageBackend {
       return bookmark;
     } catch (error) {
       logger.error("Failed to add bookmark:", error);
+      const apiErr = error as BookmarkApiError;
       logger.error("Error details:", {
-        message: (error as any)?.message,
-        status: (error as any)?.status,
-        statusText: (error as any)?.statusText,
-        data: (error as any)?.data,
+        message: apiErr?.message,
+        status: apiErr?.status,
+        statusText: apiErr?.statusText,
+        data: apiErr?.data,
       });
       throw error;
     }

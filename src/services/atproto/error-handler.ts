@@ -214,7 +214,7 @@ export function mapATProtoError(
   }
 
   // Server errors (500-599)
-  if (status >= 500) {
+  if (status !== undefined && status >= 500) {
     if (status === 503) {
       return createErrorResponse(
         ATProtoErrorCode.SERVER_UNAVAILABLE,
