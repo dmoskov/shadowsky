@@ -1,7 +1,7 @@
 import { RichText, type AppBskyFeedDefs } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BarChart3, Loader, X } from "lucide-react";
+import { BarChart3, X } from "lucide-react";
 import React, {
   useCallback,
   useEffect,
@@ -13,6 +13,7 @@ import ReactDOM from "react-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
 import { useModalSwipeBack } from "../hooks/useModalSwipeBack";
+import { useMinDuration } from "../hooks/useTiming";
 import { useThreadKeyboardShortcuts } from "../hooks/useThreadKeyboardShortcuts";
 import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
 import type { ThreadSummaryResult } from "../services/anthropic";
@@ -25,6 +26,7 @@ import { ThreadEngagementAnalytics } from "./ThreadEngagementAnalytics";
 import { ThreadMinimap } from "./ThreadMinimap";
 import { ThreadShortcutsHelp } from "./ThreadShortcutsHelp";
 import { ThreadViewer } from "./ThreadViewer";
+import { ThreadSkeleton } from "./ui/SkeletonLoader";
 
 interface ThreadModalProps {
   postUri: string;
@@ -101,7 +103,7 @@ export function ThreadModal({
 
   const {
     data: threadData,
-    isLoading,
+    isLoading: isLoadingRaw,
     error,
     refetch,
   } = useQuery({
@@ -173,6 +175,9 @@ export function ThreadModal({
     },
     enabled: !!agent && !!postUri,
   });
+
+  // Apply minimum duration to prevent loading flash
+  const isLoading = useMinDuration(isLoadingRaw, 300);
 
   // Extract all posts from the thread structure
   const posts = React.useMemo(() => {
@@ -918,13 +923,10 @@ export function ThreadModal({
           >
             <div className="mx-auto max-w-3xl p-4 md:p-8">
               {isLoading && (
-                <div className="flex items-center justify-center py-8">
-                  <Loader
-                    className="animate-spin"
-                    size={32}
-                    style={{ color: "var(--bsky-primary)" }}
-                  />
-                </div>
+                <ThreadSkeleton
+                  replyCount={3}
+                  aria-label="Loading thread"
+                />
               )}
 
               {error && (

@@ -76,6 +76,11 @@ import {
   NotificationFeedSkeleton,
   SearchResultSkeleton,
   ColumnHeaderSkeleton,
+  ThreadSkeleton,
+  ConversationListSkeleton,
+  MessageListSkeleton,
+  UserListSkeleton,
+  ListItemSkeleton,
 } from "@/components/ui/SkeletonLoader";
 
 // Post skeleton with optional image placeholder
@@ -89,6 +94,21 @@ import {
 
 // Column header skeleton
 <ColumnHeaderSkeleton />
+
+// Thread skeleton with configurable reply count
+<ThreadSkeleton replyCount={3} />
+
+// Direct message conversation list skeleton
+<ConversationListSkeleton count={5} />
+
+// Direct message chat skeleton
+<MessageListSkeleton count={5} />
+
+// User list skeleton (followers/following)
+<UserListSkeleton count={5} />
+
+// List items skeleton (for AddToList modal)
+<ListItemSkeleton count={3} />
 ```
 
 ### Spinner Variants
@@ -321,26 +341,34 @@ The following high-traffic components now use the standardized loading pattern w
 2. **NotificationsFeed.tsx** - Notification loading with NotificationSkeleton and 300ms minimum duration
 3. **BookmarksColumn.tsx** - Bookmarks loading with FeedSkeleton and 300ms minimum duration
 4. **SearchTabbed.tsx** - Search results loading with LoadingState spinner and 300ms minimum duration
+5. **DirectMessages.tsx** - DM conversations and messages loading with ConversationListSkeleton/MessageListSkeleton and 300ms minimum duration
+6. **UserListModal.tsx** - User list loading with UserListSkeleton and 300ms minimum duration
+7. **AddToListModal.tsx** - List loading with ListItemSkeleton and 300ms minimum duration
+8. **ThreadModal.tsx** - Thread loading with ThreadSkeleton and 300ms minimum duration
+
+### New Skeleton Components Added
+
+The following skeleton components were added to support the modal migrations:
+
+- **ThreadSkeleton** - Root post with configurable reply count for thread views
+- **ConversationListSkeleton** - DM conversation list items
+- **MessageListSkeleton** - Chat messages with alternating alignment
+- **UserListSkeleton** - User profile list items (followers/following)
+- **ListItemSkeleton** - Bluesky list items for AddToListModal
 
 ### Remaining Migration Targets
 
 #### High Traffic Components (Priority 1)
 
-1. **ThreadViewer.tsx** - Thread loading
-2. **DirectMessages.tsx** - DM loading
-3. **SearchColumn.tsx** - Search results loading
+1. **SearchColumn.tsx** - Search results loading
 
 #### Settings Components (Priority 2)
 
-1. **DataSettings.tsx** - Multiple loading states
-2. **StorageOptionSelector.tsx** - Migration loading
-3. **PrivacySettings.tsx** - Settings loading
+Settings panels primarily use action loading states (e.g., "Migrating...", "Saving...") rather than content loading. These are appropriate for inline text feedback and don't require skeleton migration.
 
-#### Modal Components (Priority 3)
-
-1. **UserListModal.tsx** - User list loading
-2. **AddToListModal.tsx** - List loading
-3. **ThreadModal.tsx** - Thread loading
+1. **DataSettings.tsx** - Uses inline "Migrating..." states for storage toggle actions
+2. **StorageOptionSelector.tsx** - Already receives `isLoading` prop, shows disabled state
+3. **PrivacySettings.tsx** - Uses inline "Saving..." text for save actions
 
 ## Best Practices
 

@@ -2,7 +2,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Plus, X } from "lucide-react";
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useMinDuration } from "../hooks/useTiming";
 import { blueskyListService } from "../services/bluesky-list-service";
+import { ListItemSkeleton } from "./ui/SkeletonLoader";
 
 interface AddToListModalProps {
   user: {
@@ -22,7 +24,7 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
   const queryClient = useQueryClient();
   const [updatingListUri, setUpdatingListUri] = useState<string | null>(null);
 
-  const { data: lists, isLoading } = useQuery({
+  const { data: lists, isLoading: isLoadingRaw } = useQuery({
     queryKey: ["lists"],
     queryFn: async () => {
       if (!agent) {
@@ -33,6 +35,9 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
     },
     enabled: !!agent,
   });
+
+  // Apply minimum duration to prevent loading flash
+  const isLoading = useMinDuration(isLoadingRaw, 300);
 
   const { data: userListUris } = useQuery({
     queryKey: ["userLists", user.did],
@@ -97,11 +102,7 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
         </div>
 
         <div className="max-h-96 overflow-y-auto p-4">
-          {isLoading && (
-            <div className="flex justify-center py-8">
-              <div className="border-t-bsky-accent-primary h-6 w-6 animate-spin rounded-full border-2 border-bsky-border-primary" />
-            </div>
-          )}
+          {isLoading && <ListItemSkeleton count={3} aria-label="Loading lists" />}
 
           {!isLoading && lists && lists.length === 0 && (
             <div className="py-8 text-center">

@@ -319,3 +319,212 @@ export const ColumnHeaderSkeleton: React.FC<ColumnHeaderSkeletonProps> = ({
     </div>
   );
 };
+
+interface ThreadSkeletonProps {
+  /** Number of reply skeletons to show */
+  replyCount?: number;
+  /** Accessibility label */
+  "aria-label"?: string;
+}
+
+export const ThreadSkeleton: React.FC<ThreadSkeletonProps> = ({
+  replyCount = 3,
+  "aria-label": ariaLabel = "Loading thread",
+}) => {
+  return (
+    <div className="space-y-4" role="status" aria-label={ariaLabel}>
+      {/* Root post skeleton - larger hero style */}
+      <div className="rounded-lg border border-bsky-border-primary p-4">
+        <div className="mb-4 flex items-center gap-3">
+          <SkeletonLoader
+            variant="circular"
+            width={48}
+            height={48}
+            aria-label="Loading avatar"
+          />
+          <div className="flex-1">
+            <SkeletonLoader width={150} height={18} className="mb-1" />
+            <SkeletonLoader width={100} height={14} />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <SkeletonLoader width="100%" height={20} />
+          <SkeletonLoader width="95%" height={20} />
+          <SkeletonLoader width="80%" height={20} />
+        </div>
+        <div className="mt-4 flex gap-4">
+          <SkeletonLoader width={60} height={24} variant="rounded" />
+          <SkeletonLoader width={60} height={24} variant="rounded" />
+          <SkeletonLoader width={60} height={24} variant="rounded" />
+        </div>
+      </div>
+
+      {/* Reply skeletons - smaller, nested style */}
+      {Array.from({ length: replyCount }).map((_, i) => (
+        <div
+          key={i}
+          className="ml-4 rounded-lg border border-bsky-border-primary p-3"
+          style={{ marginLeft: `${(i % 3) * 16 + 16}px` }}
+        >
+          <div className="flex items-start gap-3">
+            <SkeletonLoader
+              variant="circular"
+              width={36}
+              height={36}
+              aria-label={`Loading reply ${i + 1} avatar`}
+            />
+            <div className="flex-1">
+              <div className="mb-2 flex items-center gap-2">
+                <SkeletonLoader width={100} height={14} />
+                <SkeletonLoader width={60} height={14} />
+              </div>
+              <div className="space-y-1">
+                <SkeletonLoader width="90%" height={14} />
+                <SkeletonLoader width="70%" height={14} />
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+interface ConversationListSkeletonProps {
+  /** Number of conversation skeletons to show */
+  count?: number;
+  /** Accessibility label */
+  "aria-label"?: string;
+}
+
+export const ConversationListSkeleton: React.FC<
+  ConversationListSkeletonProps
+> = ({ count = 5, "aria-label": ariaLabel = "Loading conversations" }) => {
+  return (
+    <div
+      className="divide-y divide-bsky-border-primary"
+      role="status"
+      aria-label={ariaLabel}
+    >
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 p-4">
+          <SkeletonLoader
+            variant="circular"
+            width={40}
+            height={40}
+            aria-label={`Loading conversation ${i + 1}`}
+          />
+          <div className="min-w-0 flex-1">
+            <SkeletonLoader width="60%" height={16} className="mb-1" />
+            <SkeletonLoader width="40%" height={14} className="mb-1" />
+            <SkeletonLoader width="80%" height={14} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+interface MessageListSkeletonProps {
+  /** Number of message skeletons to show */
+  count?: number;
+  /** Accessibility label */
+  "aria-label"?: string;
+}
+
+export const MessageListSkeleton: React.FC<MessageListSkeletonProps> = ({
+  count = 5,
+  "aria-label": ariaLabel = "Loading messages",
+}) => {
+  return (
+    <div className="space-y-4 p-4" role="status" aria-label={ariaLabel}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div
+          key={i}
+          className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}
+        >
+          <div
+            className={`max-w-[70%] ${i % 2 === 0 ? "" : "text-right"}`}
+            style={{ width: `${Math.random() * 30 + 40}%` }}
+          >
+            <SkeletonLoader
+              variant="rounded"
+              height={48}
+              aria-label={`Loading message ${i + 1}`}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+interface UserListSkeletonProps {
+  /** Number of user skeletons to show */
+  count?: number;
+  /** Accessibility label */
+  "aria-label"?: string;
+}
+
+export const UserListSkeleton: React.FC<UserListSkeletonProps> = ({
+  count = 5,
+  "aria-label": ariaLabel = "Loading users",
+}) => {
+  return (
+    <div
+      className="divide-y divide-bsky-border-primary"
+      role="status"
+      aria-label={ariaLabel}
+    >
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 p-4">
+          <SkeletonLoader
+            variant="circular"
+            width={48}
+            height={48}
+            aria-label={`Loading user ${i + 1}`}
+          />
+          <div className="flex-1">
+            <SkeletonLoader width="40%" height={16} className="mb-1" />
+            <SkeletonLoader width="30%" height={14} className="mb-1" />
+            <SkeletonLoader width="80%" height={14} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+interface ListItemSkeletonProps {
+  /** Number of list item skeletons to show */
+  count?: number;
+  /** Accessibility label */
+  "aria-label"?: string;
+}
+
+export const ListItemSkeleton: React.FC<ListItemSkeletonProps> = ({
+  count = 3,
+  "aria-label": ariaLabel = "Loading lists",
+}) => {
+  return (
+    <div className="space-y-2 p-4" role="status" aria-label={ariaLabel}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center justify-between rounded-lg border border-bsky-border-primary p-3"
+        >
+          <div className="flex-1">
+            <SkeletonLoader
+              width="50%"
+              height={16}
+              className="mb-1"
+              aria-label={`Loading list ${i + 1}`}
+            />
+            <SkeletonLoader width="30%" height={14} />
+          </div>
+          <SkeletonLoader variant="circular" width={24} height={24} />
+        </div>
+      ))}
+    </div>
+  );
+};

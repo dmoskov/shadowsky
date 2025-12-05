@@ -4,9 +4,11 @@ import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useFocusTrap } from "../hooks/useFocusTrap";
+import { useMinDuration } from "../hooks/useTiming";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
+import { UserListSkeleton } from "./ui/SkeletonLoader";
 
 interface UserListModalProps {
   isOpen: boolean;
@@ -26,11 +28,14 @@ export function UserListModal({
   const { agent } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<AppBskyActorDefs.ProfileView[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingRaw, setLoadingRaw] = useState(true);
   const [cursor, setCursor] = useState<string | undefined>();
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
+
+  // Apply minimum duration to prevent loading flash
+  const loading = useMinDuration(loadingRaw, 300);
 
   // Accessibility: Focus trap and unique ID for aria-labelledby
   const containerRef = useFocusTrap<HTMLDivElement>(isOpen);
@@ -48,7 +53,7 @@ export function UserListModal({
 
     try {
       if (initial) {
-        setLoading(true);
+        setLoadingRaw(true);
         setUsers([]);
       } else {
         setLoadingMore(true);
@@ -90,7 +95,7 @@ export function UserListModal({
     } catch (error) {
       console.error(`Error loading ${type}:`, error);
     } finally {
-      setLoading(false);
+      setLoadingRaw(false);
       setLoadingMore(false);
     }
   };
@@ -214,12 +219,7 @@ export function UserListModal({
           tabIndex={0}
         >
           {loading ? (
-            <div className="flex justify-center p-8" aria-live="polite">
-              <div
-                className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"
-                aria-label="Loading users"
-              ></div>
-            </div>
+            <UserListSkeleton count={5} aria-label="Loading users" />
           ) : users.length === 0 ? (
             <div
               className="p-8 text-center text-gray-500 dark:text-gray-400"
