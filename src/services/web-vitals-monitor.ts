@@ -10,6 +10,7 @@ import {
   FCPMetric,
   INPMetric,
   LCPMetric,
+  Metric,
   TTFBMetric,
   onCLS,
   onFCP,
@@ -18,8 +19,13 @@ import {
   onTTFB,
 } from "web-vitals";
 import { createLogger } from "../utils/logger";
+import { analytics } from "./analytics";
 
 const logger = createLogger("WebVitalsMonitor");
+
+// Analytics configuration
+const ANALYTICS_BATCH_DELAY = 1000; // Batch metrics for 1 second before sending
+const ANALYTICS_SAMPLE_RATE = 1.0; // Send 100% of metrics (adjust for high traffic)
 
 export interface WebVitalsMetrics {
   lcp: number | null; // Largest Contentful Paint (ms)
@@ -93,6 +99,9 @@ class WebVitalsMonitor {
   private history: WebVitalsMetrics[] = [];
   private isInitialized = false;
   private callbacks: Set<MetricUpdateCallback> = new Set();
+  private analyticsEnabled = true;
+  private pendingAnalytics: Map<string, Metric> = new Map();
+  private analyticsFlushTimer: ReturnType<typeof setTimeout> | null = null;
 
   private constructor() {
     this.metrics = this.createEmptyMetrics();
@@ -155,6 +164,136 @@ class WebVitalsMonitor {
   }
 
   /**
+   * Queue a metric for analytics reporting with batching
+   */
+  private queueForAnalytics(metric: Metric): void {
+    if (!this.analyticsEnabled) return;
+
+    // Apply sampling rate
+    if (Math.random() > ANALYTICS_SAMPLE_RATE) {
+      logger.log(`Skipping ${metric.name} due to sampling`);
+      return;
+    }
+
+    // Store the latest value for each metric (deduplication)
+    this.pendingAnalytics.set(metric.name, metric);
+
+    // Schedule flush if not already scheduled
+    if (!this.analyticsFlushTimer) {
+      this.analyticsFlushTimer = setTimeout(() => {
+        this.flushAnalytics();
+      }, ANALYTICS_BATCH_DELAY);
+    }
+  }
+
+  /**
+   * Flush pending metrics to analytics backend
+   */
+  private flushAnalytics(): void {
+    this.analyticsFlushTimer = null;
+
+    if (this.pendingAnalytics.size === 0) return;
+
+    // Send each metric to analytics
+    this.pendingAnalytics.forEach((metric) => {
+      this.sendMetricToAnalytics(metric);
+    });
+
+    this.pendingAnalytics.clear();
+    logger.log("Flushed Web Vitals metrics to analytics");
+  }
+
+  /**
+   * Send a single metric to the analytics backend
+   */
+  private sendMetricToAnalytics(metric: Metric): void {
+    try {
+      // Get the rating for this metric
+      const metricName = metric.name.toLowerCase() as
+        | "lcp"
+        | "fcp"
+        | "cls"
+        | "ttfb"
+        | "inp";
+      const rating = this.getRating(metricName, metric.value);
+
+      // Track as a performance metric using the analytics service
+      analytics.trackPerformance(`web_vital_${metric.name}`, metric.value, {
+        rating: rating.rating,
+        exceeds_budget: rating.exceedsBudget,
+        budget: rating.budget,
+        navigation_type: this.getNavigationType(),
+        effective_connection_type: this.getConnectionType(),
+        device_memory: this.getDeviceMemory(),
+      });
+
+      // Also track as a timing event for detailed analysis
+      analytics.trackTiming(
+        "Web Vitals",
+        metric.name,
+        Math.round(metric.value),
+        rating.rating,
+      );
+
+      logger.log(
+        `Sent ${metric.name} to analytics: ${metric.value.toFixed(metric.name === "CLS" ? 3 : 0)} (${rating.rating})`,
+      );
+    } catch (error) {
+      logger.error(`Failed to send ${metric.name} to analytics:`, error);
+    }
+  }
+
+  /**
+   * Get the navigation type for context
+   */
+  private getNavigationType(): string {
+    if (!("performance" in window) || !performance.getEntriesByType) {
+      return "unknown";
+    }
+    const navEntry = performance.getEntriesByType(
+      "navigation",
+    )[0] as PerformanceNavigationTiming;
+    return navEntry?.type || "unknown";
+  }
+
+  /**
+   * Get effective connection type if available
+   */
+  private getConnectionType(): string {
+    const connection =
+      (navigator as any).connection ||
+      (navigator as any).mozConnection ||
+      (navigator as any).webkitConnection;
+    return connection?.effectiveType || "unknown";
+  }
+
+  /**
+   * Get device memory if available
+   */
+  private getDeviceMemory(): number | undefined {
+    return (navigator as any).deviceMemory;
+  }
+
+  /**
+   * Enable or disable analytics reporting
+   */
+  setAnalyticsEnabled(enabled: boolean): void {
+    this.analyticsEnabled = enabled;
+    logger.log(`Analytics reporting ${enabled ? "enabled" : "disabled"}`);
+  }
+
+  /**
+   * Force flush any pending analytics (e.g., before page unload)
+   */
+  forceFlushAnalytics(): void {
+    if (this.analyticsFlushTimer) {
+      clearTimeout(this.analyticsFlushTimer);
+      this.analyticsFlushTimer = null;
+    }
+    this.flushAnalytics();
+  }
+
+  /**
    * Initialize Web Vitals monitoring
    */
   init(): void {
@@ -170,6 +309,7 @@ class WebVitalsMonitor {
     onLCP((metric: LCPMetric) => {
       this.metrics.lcp = metric.value;
       this.notifyCallbacks("lcp", metric.value);
+      this.queueForAnalytics(metric);
       logger.log(`LCP: ${metric.value.toFixed(0)}ms (${metric.rating})`);
     });
 
@@ -177,6 +317,7 @@ class WebVitalsMonitor {
     onFCP((metric: FCPMetric) => {
       this.metrics.fcp = metric.value;
       this.notifyCallbacks("fcp", metric.value);
+      this.queueForAnalytics(metric);
       logger.log(`FCP: ${metric.value.toFixed(0)}ms (${metric.rating})`);
     });
 
@@ -184,6 +325,7 @@ class WebVitalsMonitor {
     onCLS((metric: CLSMetric) => {
       this.metrics.cls = metric.value;
       this.notifyCallbacks("cls", metric.value);
+      this.queueForAnalytics(metric);
       logger.log(`CLS: ${metric.value.toFixed(3)} (${metric.rating})`);
     });
 
@@ -191,6 +333,7 @@ class WebVitalsMonitor {
     onTTFB((metric: TTFBMetric) => {
       this.metrics.ttfb = metric.value;
       this.notifyCallbacks("ttfb", metric.value);
+      this.queueForAnalytics(metric);
       logger.log(`TTFB: ${metric.value.toFixed(0)}ms (${metric.rating})`);
     });
 
@@ -198,12 +341,14 @@ class WebVitalsMonitor {
     onINP((metric: INPMetric) => {
       this.metrics.inp = metric.value;
       this.notifyCallbacks("inp", metric.value);
+      this.queueForAnalytics(metric);
       logger.log(`INP: ${metric.value.toFixed(0)}ms (${metric.rating})`);
     });
 
-    // Save metrics to history when page is about to unload
+    // Save metrics to history and flush analytics when page is about to unload
     window.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") {
+        this.forceFlushAnalytics();
         this.saveCurrentMetrics();
       }
     });
@@ -503,6 +648,8 @@ const boundMethods = {
   clearHistory: monitor.clearHistory.bind(monitor),
   subscribe: monitor.subscribe.bind(monitor),
   isActive: monitor.isMonitoringActive.bind(monitor),
+  setAnalyticsEnabled: monitor.setAnalyticsEnabled.bind(monitor),
+  forceFlushAnalytics: monitor.forceFlushAnalytics.bind(monitor),
 };
 
 /**

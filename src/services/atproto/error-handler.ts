@@ -10,6 +10,22 @@ import { createLogger } from "../../utils/logger";
 const logger = createLogger("ATProtoErrorHandler");
 
 /**
+ * Interface for AT Protocol API errors
+ */
+export interface ATProtoError extends Error {
+  status?: number;
+  response?: {
+    status?: number;
+    data?: {
+      message?: string;
+    };
+  };
+  headers?: {
+    "retry-after"?: string;
+  };
+}
+
+/**
  * Error codes for AT Protocol operations
  */
 export enum ATProtoErrorCode {
@@ -54,20 +70,29 @@ export enum ATProtoErrorCode {
 }
 
 /**
+ * Context for error responses
+ */
+export interface ErrorContext {
+  endpoint?: string;
+  uploadId?: string;
+  jobId?: string;
+  status?: number;
+  originalError?: string;
+  timestamp: string;
+  retryAfter?: string | number;
+  pollingAttempts?: number;
+  reason?: string;
+  rawResponse?: string;
+  [key: string]: string | number | undefined;
+}
+
+/**
  * Standardized error response format
  */
 export interface StandardErrorResponse {
   code: ATProtoErrorCode;
   message: string;
-  context: {
-    endpoint?: string;
-    uploadId?: string;
-    jobId?: string;
-    status?: number;
-    originalError?: string;
-    timestamp: string;
-    [key: string]: any;
-  };
+  context: ErrorContext;
   retryable: boolean;
 }
 
@@ -77,7 +102,7 @@ export interface StandardErrorResponse {
 export function createErrorResponse(
   code: ATProtoErrorCode,
   message: string,
-  context: Record<string, any> = {},
+  context: Partial<Omit<ErrorContext, "timestamp">> = {},
   retryable: boolean = false,
 ): StandardErrorResponse {
   return {
@@ -95,13 +120,14 @@ export function createErrorResponse(
  * Map AT Protocol errors to standardized format
  */
 export function mapATProtoError(
-  error: any,
+  error: ATProtoError | Error | unknown,
   endpoint?: string,
-  additionalContext: Record<string, any> = {},
+  additionalContext: Partial<Omit<ErrorContext, "timestamp">> = {},
 ): StandardErrorResponse {
-  const status = error?.status || error?.response?.status;
+  const atpError = error as ATProtoError;
+  const status = atpError?.status || atpError?.response?.status;
   const originalMessage =
-    error?.message || error?.response?.data?.message || "Unknown error";
+    atpError?.message || atpError?.response?.data?.message || "Unknown error";
 
   const context = {
     endpoint,
@@ -158,7 +184,7 @@ export function mapATProtoError(
 
   // Rate limit errors (429)
   if (status === 429 || originalMessage.toLowerCase().includes("rate limit")) {
-    const retryAfter = error?.headers?.["retry-after"];
+    const retryAfter = atpError?.headers?.["retry-after"];
     return createErrorResponse(
       ATProtoErrorCode.RATE_LIMIT_EXCEEDED,
       retryAfter
@@ -299,14 +325,22 @@ export function mapATProtoError(
 /**
  * Determine if an error is retryable
  */
-export function isRetryableError(error: StandardErrorResponse | any): boolean {
-  if (typeof error === "object" && "retryable" in error) {
-    return error.retryable;
+export function isRetryableError(
+  error: StandardErrorResponse | ATProtoError | Error | unknown,
+): boolean {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "retryable" in error &&
+    typeof (error as StandardErrorResponse).retryable === "boolean"
+  ) {
+    return (error as StandardErrorResponse).retryable;
   }
 
-  const status = error?.status || error?.response?.status;
+  const atpError = error as ATProtoError;
+  const status = atpError?.status || atpError?.response?.status;
 
-  if (status === 429 || status >= 500 || status === 503) {
+  if (status === 429 || (status && status >= 500) || status === 503) {
     return true;
   }
 
@@ -314,7 +348,9 @@ export function isRetryableError(error: StandardErrorResponse | any): boolean {
     return true;
   }
 
-  const message = error?.message?.toLowerCase() || "";
+  const message =
+    (error instanceof Error ? error.message : String(error))?.toLowerCase() ||
+    "";
   if (message.includes("timeout") || message.includes("network")) {
     return true;
   }
@@ -357,7 +393,7 @@ export function logError(
 export function createValidationError(
   message: string,
   endpoint: string,
-  rawResponse?: any,
+  rawResponse?: unknown,
 ): StandardErrorResponse {
   return createErrorResponse(
     ATProtoErrorCode.VALIDATION_SCHEMA,

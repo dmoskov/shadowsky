@@ -62,6 +62,7 @@ test-results/
 .wireit/
 *.tsbuildinfo
 .eslintcache
+bundle-stats.html
 
 # amplify
 .amplify

@@ -1,7 +1,11 @@
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+
+// Enable bundle analysis when ANALYZE=true is set
+const analyze = process.env.ANALYZE === "true";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -238,7 +242,16 @@ export default defineConfig({
         enabled: false, // Disable SW in development to avoid caching issues
       },
     }),
-  ],
+    // Bundle analysis - generates bundle-stats.html when ANALYZE=true
+    analyze &&
+      visualizer({
+        filename: "bundle-stats.html",
+        open: false,
+        gzipSize: true,
+        brotliSize: true,
+        template: "treemap", // treemap, sunburst, or network
+      }),
+  ].filter(Boolean),
   optimizeDeps: {
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   },
