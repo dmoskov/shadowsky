@@ -144,6 +144,13 @@ export const PerformanceSettings: React.FC = () => {
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
+  const refreshData = useCallback(() => {
+    setReport(webVitals.generateReport());
+    setHistory(webVitals.getHistory());
+    setTrends(webVitals.getTrendAnalysis());
+    setLastUpdate(new Date());
+  }, [webVitals]);
+
   // Initialize monitoring and load data
   useEffect(() => {
     webVitals.init();
@@ -156,14 +163,7 @@ export const PerformanceSettings: React.FC = () => {
     });
 
     return unsubscribe;
-  }, []);
-
-  const refreshData = useCallback(() => {
-    setReport(webVitals.generateReport());
-    setHistory(webVitals.getHistory());
-    setTrends(webVitals.getTrendAnalysis());
-    setLastUpdate(new Date());
-  }, []);
+  }, [webVitals, refreshData]);
 
   const handlePresetChange = (preset: BudgetPreset) => {
     setBudgetPreset(preset);

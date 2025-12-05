@@ -490,23 +490,26 @@ class WebVitalsMonitor {
 // Export singleton instance methods
 export const webVitalsMonitor = WebVitalsMonitor.getInstance();
 
+// Pre-bound methods for use in the hook (singleton, so safe to bind once)
+const monitor = WebVitalsMonitor.getInstance();
+const boundMethods = {
+  init: monitor.init.bind(monitor),
+  getMetrics: monitor.getMetrics.bind(monitor),
+  getBudget: monitor.getBudget.bind(monitor),
+  setBudget: monitor.setBudget.bind(monitor),
+  generateReport: monitor.generateReport.bind(monitor),
+  getHistory: monitor.getHistory.bind(monitor),
+  getTrendAnalysis: monitor.getTrendAnalysis.bind(monitor),
+  clearHistory: monitor.clearHistory.bind(monitor),
+  subscribe: monitor.subscribe.bind(monitor),
+  isActive: monitor.isMonitoringActive.bind(monitor),
+};
+
 /**
  * React hook for accessing Web Vitals metrics
+ * Returns a stable object reference to prevent unnecessary re-renders
  */
 export function useWebVitals() {
-  const monitor = WebVitalsMonitor.getInstance();
-
-  return {
-    init: () => monitor.init(),
-    getMetrics: () => monitor.getMetrics(),
-    getBudget: () => monitor.getBudget(),
-    setBudget: (budget: Partial<PerformanceBudget>) =>
-      monitor.setBudget(budget),
-    generateReport: () => monitor.generateReport(),
-    getHistory: () => monitor.getHistory(),
-    getTrendAnalysis: () => monitor.getTrendAnalysis(),
-    clearHistory: () => monitor.clearHistory(),
-    subscribe: (callback: MetricUpdateCallback) => monitor.subscribe(callback),
-    isActive: () => monitor.isMonitoringActive(),
-  };
+  // Return the pre-bound methods object which is stable across renders
+  return boundMethods;
 }
