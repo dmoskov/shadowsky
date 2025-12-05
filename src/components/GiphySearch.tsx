@@ -154,13 +154,10 @@ export function GiphySearch({ onSelectGif, onClose }: GiphySearchProps) {
   const displayGifs = searchTerm ? gifs : trending;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(0, 0, 0, 0.5)" }}
-    >
+    <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg"
-        style={{ background: "var(--bsky-bg-primary)" }}
+        className="modal-container modal-auto-height modal-2xl bg-bsky-bg-primary"
+        onClick={(e) => e.stopPropagation()}
       >
         <div
           className="border-b p-4"

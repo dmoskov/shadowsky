@@ -70,13 +70,10 @@ const ListSelectionDialog: React.FC<ListSelectionDialogProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50"
-      onClick={onClose}
-    >
+    <div className="modal-backdrop z-[70]" onClick={onClose}>
       <div
         ref={dialogRef}
-        className="mx-4 w-full max-w-sm overflow-hidden rounded-xl border bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900"
+        className="modal-container modal-auto-height modal-sm border bg-white dark:border-gray-700 dark:bg-gray-900"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -530,17 +527,13 @@ const UserListModalInner: React.FC<UserListModalWithBatchProps> = ({
 
   return (
     <>
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-        onClick={onClose}
-        role="presentation"
-      >
+      <div className="modal-backdrop" onClick={onClose} role="presentation">
         <div
           ref={containerRef}
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
-          className="relative max-h-[80vh] w-full max-w-md overflow-hidden rounded-lg bg-white dark:bg-gray-900"
+          className="modal-container modal-auto-height modal-md bg-white dark:bg-gray-900"
           onClick={(e) => e.stopPropagation()}
           onKeyDown={handleKeyDown}
         >

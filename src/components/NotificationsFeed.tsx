@@ -34,6 +34,7 @@ import {
   useNotifications,
   useUnreadCount,
 } from "../hooks/useNotifications";
+import { useMinDuration } from "../hooks/useTiming";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { NotificationCache } from "../utils/notificationCache";
 import { getNotificationUrl } from "../utils/url-helpers";
@@ -119,7 +120,7 @@ export const NotificationsFeed: React.FC = () => {
 
   const {
     data,
-    isLoading,
+    isLoading: isLoadingRaw,
     error,
     fetchNextPage,
     hasNextPage,
@@ -128,6 +129,9 @@ export const NotificationsFeed: React.FC = () => {
   const { data: unreadCount } = useUnreadCount();
   const { mutate: markAsRead } = useMarkNotificationsRead();
   const { data: followingSet, isLoading: isLoadingFollowing } = useFollowing();
+
+  // Apply minimum duration to prevent jarring flash of loading state
+  const isLoading = useMinDuration(isLoadingRaw);
 
   // Clear unread indicator when component mounts (user navigates to notifications)
   useEffect(() => {

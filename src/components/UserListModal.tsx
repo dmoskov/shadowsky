@@ -180,17 +180,13 @@ export function UserListModal({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-      onClick={onClose}
-      role="presentation"
-    >
+    <div className="modal-backdrop" onClick={onClose} role="presentation">
       <div
         ref={containerRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative max-h-[80vh] w-full max-w-md overflow-hidden rounded-lg bg-white dark:bg-gray-900"
+        className="modal-container modal-auto-height modal-md bg-white dark:bg-gray-900"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >

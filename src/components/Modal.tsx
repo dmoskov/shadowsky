@@ -116,7 +116,7 @@ export function Modal({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 ${backdropAnimationClass}`}
+      className={`modal-backdrop ${backdropAnimationClass}`}
       onClick={handleBackdropClick}
       onAnimationEnd={isExiting ? handleExitEnd : undefined}
       role="presentation"
@@ -128,7 +128,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
-        className={`relative w-full max-w-md overflow-hidden rounded-lg bg-white dark:bg-gray-900 ${contentAnimationClass}`}
+        className={`modal-container modal-auto-height modal-md bg-white dark:bg-gray-900 ${contentAnimationClass}`}
         onClick={(e) => e.stopPropagation()}
         onAnimationEnd={isEntering ? handleEntranceEnd : undefined}
         data-state={modalState}

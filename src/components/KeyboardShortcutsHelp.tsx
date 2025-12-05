@@ -98,25 +98,15 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+    <div className="modal-backdrop">
+      <div className="fixed inset-0" onClick={onClose} aria-hidden="true" />
 
       <div
         ref={containerRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="shortcuts-title"
-        className="relative z-10 w-full max-w-4xl rounded-lg shadow-2xl"
-        style={{
-          backgroundColor: "var(--bsky-bg-primary)",
-          border: "1px solid var(--bsky-border-primary)",
-          maxHeight: "90vh",
-          overflow: "auto",
-        }}
+        className="modal-container modal-auto-height modal-4xl z-10 border border-bsky-border-primary bg-bsky-bg-primary"
       >
         {/* Header */}
         <div

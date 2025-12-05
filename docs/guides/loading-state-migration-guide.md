@@ -108,33 +108,52 @@ import { Spinner, InlineSpinner, BorderSpinner } from "@/components/ui/LoadingSt
 
 ## Hooks
 
-### useMinLoadingDuration
+### useMinDuration (Recommended)
 
-Ensures loading state is shown for minimum duration to prevent jarring flash.
+**Primary hook for preventing jarring flash of loading state.** Import from the centralized timing utilities:
 
 ```tsx
-import { useMinLoadingDuration } from "@/components/ui/LoadingState";
+import { useMinDuration } from "@/hooks/useTiming";
 
 const Component = () => {
-  const { isLoading } = useQuery(/* ... */);
-  const showLoading = useMinLoadingDuration(isLoading, 300);
+  const { isLoading: isLoadingRaw } = useQuery(/* ... */);
 
-  return showLoading ? <LoadingState /> : <Content />;
+  // Apply minimum duration (300ms default) to prevent flash
+  const isLoading = useMinDuration(isLoadingRaw);
+
+  if (isLoading) {
+    return <FeedSkeleton count={5} />;
+  }
+
+  return <Content />;
 };
 ```
 
-### useDelayedLoading
+### useMinLoadingDuration (Deprecated)
 
-Delays showing loading state for quick operations.
+Legacy hook re-exported from LoadingState for backward compatibility. **Use `useMinDuration` instead.**
 
 ```tsx
-import { useDelayedLoading } from "@/components/ui/LoadingState";
+// Deprecated - use useMinDuration from hooks/useTiming
+import { useMinLoadingDuration } from "@/components/ui/LoadingState";
+
+const showLoading = useMinLoadingDuration(isLoading, 300);
+```
+
+### useDelayedBoolean
+
+Delays showing a true state until after a specified delay. Useful for preventing flash of loading indicators for quick operations.
+
+```tsx
+import { useDelayedBoolean } from "@/hooks/useTiming";
 
 const Component = () => {
   const { isLoading } = useQuery(/* ... */);
-  const showLoading = useDelayedLoading(isLoading, 150);
+  // Only show loading after 150ms to prevent flash for quick loads
+  const showLoading = useDelayedBoolean(isLoading, 150);
 
-  return showLoading ? <LoadingState /> : <Content />;
+  if (!showLoading) return <Content />;
+  return <LoadingState />;
 };
 ```
 
@@ -292,26 +311,32 @@ LOADING_TOKENS.SPINNER_DURATION; // 1000
 <RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
 ```
 
-## Inventory of Current Patterns
+## Migration Status
 
-The codebase contains approximately 173 ad-hoc loading implementations. Here are the high-priority migration targets:
+### Migrated Components ✅
 
-### High Traffic Components (Priority 1)
+The following high-traffic components now use the standardized loading pattern with `useMinDuration`:
 
-1. **Home.tsx** - Main feed loading
-2. **ThreadViewer.tsx** - Thread loading
-3. **NotificationsFeed.tsx** - Notification loading
-4. **SearchColumn.tsx** - Search results loading
-5. **BookmarksColumn.tsx** - Bookmarks loading
-6. **DirectMessages.tsx** - DM loading
+1. **Home.tsx** - Main feed loading with FeedSkeleton and 300ms minimum duration
+2. **NotificationsFeed.tsx** - Notification loading with NotificationSkeleton and 300ms minimum duration
+3. **BookmarksColumn.tsx** - Bookmarks loading with FeedSkeleton and 300ms minimum duration
+4. **SearchTabbed.tsx** - Search results loading with LoadingState spinner and 300ms minimum duration
 
-### Settings Components (Priority 2)
+### Remaining Migration Targets
+
+#### High Traffic Components (Priority 1)
+
+1. **ThreadViewer.tsx** - Thread loading
+2. **DirectMessages.tsx** - DM loading
+3. **SearchColumn.tsx** - Search results loading
+
+#### Settings Components (Priority 2)
 
 1. **DataSettings.tsx** - Multiple loading states
 2. **StorageOptionSelector.tsx** - Migration loading
 3. **PrivacySettings.tsx** - Settings loading
 
-### Modal Components (Priority 3)
+#### Modal Components (Priority 3)
 
 1. **UserListModal.tsx** - User list loading
 2. **AddToListModal.tsx** - List loading

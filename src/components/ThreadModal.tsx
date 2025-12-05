@@ -824,12 +824,9 @@ export function ThreadModal({
 
       <div
         {...swipeHandlers}
-        className="thread-modal-container fixed inset-0 z-[101] flex items-center justify-center p-4 md:p-8"
+        className="modal-backdrop thread-modal-container z-[101] p-0 sm:p-4 md:p-8"
       >
-        <div
-          className="relative flex h-full max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl shadow-2xl"
-          style={{ backgroundColor: "var(--bsky-bg-primary)" }}
-        >
+        <div className="modal-container modal-5xl flex flex-col bg-bsky-bg-primary sm:max-h-[90vh] sm:rounded-2xl sm:shadow-2xl">
           {/* Header with close button */}
           <div
             className="flex flex-shrink-0 items-center justify-between border-b px-4 py-3 md:px-6 md:py-4"
