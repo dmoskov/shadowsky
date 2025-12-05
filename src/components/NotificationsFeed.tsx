@@ -178,8 +178,8 @@ export const NotificationsFeed: React.FC = () => {
   // Apply smooth transitions for batched updates
   const {
     displayNotifications: notifications,
-    isTransitioning: _isTransitioning,
-    newNotificationIds: _newNotificationIds,
+    isTransitioning,
+    newNotificationIds,
   } = useBatchedNotificationTransition(batchedNotifications, {
     transitionDuration: 300,
     enableAnimation: true,
@@ -861,7 +861,10 @@ export const NotificationsFeed: React.FC = () => {
                               totalPosts={totalPosts}
                               setSelectedPostUri={setSelectedPostUri}
                               markAsRead={markAsRead}
-                              isNew={isTransitioning && newNotificationIds.has(notificationKey)}
+                              isNew={
+                                isTransitioning &&
+                                newNotificationIds.has(notificationKey)
+                              }
                             />
                           );
                         })}
@@ -898,7 +901,9 @@ export const NotificationsFeed: React.FC = () => {
                     totalPosts={totalPosts}
                     setSelectedPostUri={setSelectedPostUri}
                     markAsRead={markAsRead}
-                    isNew={isTransitioning && newNotificationIds.has(notificationKey)}
+                    isNew={
+                      isTransitioning && newNotificationIds.has(notificationKey)
+                    }
                   />
                 );
               }
@@ -920,7 +925,9 @@ export const NotificationsFeed: React.FC = () => {
                 totalPosts={totalPosts}
                 setSelectedPostUri={setSelectedPostUri}
                 markAsRead={markAsRead}
-                isNew={isTransitioning && newNotificationIds.has(notificationKey)}
+                isNew={
+                  isTransitioning && newNotificationIds.has(notificationKey)
+                }
               />
             );
           })
