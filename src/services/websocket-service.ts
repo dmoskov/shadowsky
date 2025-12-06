@@ -297,8 +297,7 @@ export class WebSocketService {
   private resetMetricsIfNeeded(): void {
     if (this.lastDisconnectedTimestamp === null) return;
 
-    const disconnectionDuration =
-      Date.now() - this.lastDisconnectedTimestamp;
+    const disconnectionDuration = Date.now() - this.lastDisconnectedTimestamp;
     if (disconnectionDuration > this.LONG_DISCONNECTION_THRESHOLD_MS) {
       this.log(
         `Long disconnection (${Math.round(disconnectionDuration / 1000)}s) - resetting metrics`,

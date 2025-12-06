@@ -50,7 +50,7 @@ export const DMMessage = forwardRef<HTMLDivElement, DMMessageProps>(
       isOptimistic,
       onRetry,
     },
-    ref
+    ref,
   ) => {
     const renderStatusIndicator = () => {
       if (!isOptimistic || !status) return null;
@@ -178,7 +178,7 @@ export const DMMessage = forwardRef<HTMLDivElement, DMMessageProps>(
         </div>
       </div>
     );
-  }
+  },
 );
 
 DMMessage.displayName = "DMMessage";

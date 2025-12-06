@@ -124,13 +124,17 @@ export const WebSocketStatus: React.FC = () => {
               {/* Health Metrics */}
               {metrics && (
                 <>
-                  <div className="mt-2 border-t pt-2" style={{ borderColor: "var(--bsky-border)" }}>
+                  <div
+                    className="mt-2 border-t pt-2"
+                    style={{ borderColor: "var(--bsky-border)" }}
+                  >
                     <div className="font-medium">Health Metrics</div>
                   </div>
                   <div>Uptime: {metrics.uptimePercent.toFixed(1)}%</div>
                   {metrics.averageLatencyMs > 0 && (
                     <div>
-                      Latency: {metrics.averageLatencyMs}ms avg / {metrics.p95LatencyMs}ms p95
+                      Latency: {metrics.averageLatencyMs}ms avg /{" "}
+                      {metrics.p95LatencyMs}ms p95
                     </div>
                   )}
                   {metrics.reconnectionCount > 0 && (
@@ -138,7 +142,8 @@ export const WebSocketStatus: React.FC = () => {
                   )}
                   {metrics.pongTimeouts > 0 && (
                     <div className="text-yellow-500">
-                      PONG Timeouts: {metrics.pongTimeouts}/{metrics.totalPingPongExchanges}
+                      PONG Timeouts: {metrics.pongTimeouts}/
+                      {metrics.totalPingPongExchanges}
                     </div>
                   )}
                   {metrics.isDegraded && metrics.degradedReason && (

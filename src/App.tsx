@@ -108,6 +108,11 @@ const BackgroundSyncIndicator = lazyWithRetry(() =>
     default: m.BackgroundSyncIndicator,
   })),
 );
+const WebSocketStressPanel = lazyWithRetry(() =>
+  import("./components/dev/WebSocketStressPanel").then((m) => ({
+    default: m.WebSocketStressPanel,
+  })),
+);
 
 // Lazy load route components for better performance
 const Bookmarks = lazyWithRetry(() =>
@@ -687,6 +692,7 @@ function AppContent() {
         <DebugConsole />
         <DevPerformanceOverlay />
         <BackgroundSyncIndicator />
+        <WebSocketStressPanel />
         <ColumnMigrationNotice />
         <CommandPalette
           isOpen={isCommandPaletteOpen}

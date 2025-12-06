@@ -11,13 +11,13 @@
 import { debug } from "@bsky/shared";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { dmService, type DmMessage } from "../services/dm-service";
 import {
   dmQueueDB,
   type DMQueueStats,
   type DMStatus,
   type OptimisticDM,
 } from "../services/dm-queue";
+import { dmService, type DmMessage } from "../services/dm-service";
 
 export interface OptimisticMessage extends DmMessage {
   _localId?: string;
@@ -31,7 +31,7 @@ export interface UseDMQueueReturn {
   // Combined messages (server + optimistic)
   getOptimisticMessages: (
     serverMessages: DmMessage[],
-    conversationId: string
+    conversationId: string,
   ) => OptimisticMessage[];
 
   // Send a new message optimistically
@@ -124,7 +124,7 @@ export function useDMQueue(): UseDMQueueReturn {
               failedCount: newStats.failedCount,
               isProcessing: processing,
             },
-          })
+          }),
         );
       } catch (error) {
         debug.error("Failed to update DM queue stats:", error);
@@ -156,7 +156,7 @@ export function useDMQueue(): UseDMQueueReturn {
         debug.error("Failed to refresh optimistic messages:", error);
       }
     },
-    [isInitialized]
+    [isInitialized],
   );
 
   // Subscribe to queue changes to refresh optimistic messages
@@ -178,15 +178,20 @@ export function useDMQueue(): UseDMQueueReturn {
    * Get combined server + optimistic messages for a conversation
    */
   const getOptimisticMessages = useCallback(
-    (serverMessages: DmMessage[], conversationId: string): OptimisticMessage[] => {
+    (
+      serverMessages: DmMessage[],
+      conversationId: string,
+    ): OptimisticMessage[] => {
       // Get optimistic messages for this conversation
       const optimistic = optimisticMessages.get(conversationId) || [];
 
       // Convert server messages to optimistic format
-      const serverOptimistic: OptimisticMessage[] = serverMessages.map((msg) => ({
-        ...msg,
-        _isOptimistic: false,
-      }));
+      const serverOptimistic: OptimisticMessage[] = serverMessages.map(
+        (msg) => ({
+          ...msg,
+          _isOptimistic: false,
+        }),
+      );
 
       // Filter out optimistic messages that have been confirmed by server
       // (by checking if server has a message with similar text sent around the same time)
@@ -214,18 +219,18 @@ export function useDMQueue(): UseDMQueueReturn {
           _retryCount: opt._retryCount,
           _lastError: opt._lastError,
           _isOptimistic: true,
-        })
+        }),
       );
 
       // Merge and sort by time
       const combined = [...serverOptimistic, ...optimisticAsMessages];
       combined.sort(
-        (a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
+        (a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime(),
       );
 
       return combined;
     },
-    [optimisticMessages]
+    [optimisticMessages],
   );
 
   /**
@@ -249,7 +254,7 @@ export function useDMQueue(): UseDMQueueReturn {
 
       return dm;
     },
-    [session?.did]
+    [session?.did],
   );
 
   /**

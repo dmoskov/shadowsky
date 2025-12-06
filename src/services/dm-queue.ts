@@ -47,7 +47,7 @@ const JITTER_FACTOR = 0.1; // 10% jitter
 function calculateBackoff(retryCount: number): number {
   const baseDelay = Math.min(
     INITIAL_RETRY_DELAY_MS * Math.pow(2, retryCount),
-    MAX_RETRY_DELAY_MS
+    MAX_RETRY_DELAY_MS,
   );
   const jitter = baseDelay * JITTER_FACTOR * (Math.random() * 2 - 1);
   return Math.floor(baseDelay + jitter);
@@ -142,7 +142,7 @@ class DMQueueDB {
    * Set the message executor function (called to actually send DMs)
    */
   setMessageExecutor(
-    executor: (dm: OptimisticDM) => Promise<string | void>
+    executor: (dm: OptimisticDM) => Promise<string | void>,
   ): void {
     this.messageExecutor = executor;
   }
@@ -165,7 +165,7 @@ class DMQueueDB {
   async enqueue(
     conversationId: string,
     text: string,
-    senderDid: string
+    senderDid: string,
   ): Promise<OptimisticDM> {
     const db = this.ensureDb();
     const localId = generateLocalId();
@@ -201,7 +201,7 @@ class DMQueueDB {
    * Get all messages for a conversation (including optimistic ones)
    */
   async getMessagesForConversation(
-    conversationId: string
+    conversationId: string,
   ): Promise<OptimisticDM[]> {
     const db = this.ensureDb();
 
@@ -289,7 +289,7 @@ class DMQueueDB {
    */
   async updateMessage(
     localId: string,
-    updates: Partial<OptimisticDM>
+    updates: Partial<OptimisticDM>,
   ): Promise<void> {
     const db = this.ensureDb();
 
@@ -403,7 +403,9 @@ class DMQueueDB {
           _status: "failed",
           _lastError: `Max retries exceeded: ${errorMessage}`,
         });
-        debug.error(`DM failed after ${MAX_RETRY_ATTEMPTS} retries: ${dm._localId}`);
+        debug.error(
+          `DM failed after ${MAX_RETRY_ATTEMPTS} retries: ${dm._localId}`,
+        );
       } else {
         // Non-network error - mark as failed immediately
         await this.updateMessage(dm._localId, {
@@ -420,7 +422,7 @@ class DMQueueDB {
    */
   private async scheduleRetry(
     dm: OptimisticDM,
-    errorMessage?: string
+    errorMessage?: string,
   ): Promise<void> {
     const newRetryCount = dm._retryCount + 1;
     const delay = calculateBackoff(newRetryCount);
@@ -434,7 +436,7 @@ class DMQueueDB {
     });
 
     debug.log(
-      `DM ${dm._localId} scheduled for retry ${newRetryCount}/${MAX_RETRY_ATTEMPTS} in ${delay}ms`
+      `DM ${dm._localId} scheduled for retry ${newRetryCount}/${MAX_RETRY_ATTEMPTS} in ${delay}ms`,
     );
 
     // Schedule the retry
@@ -520,13 +522,13 @@ class DMQueueDB {
 
           request.onsuccess = () => {
             const messages = (request.result as OptimisticDM[]).filter(
-              (msg) => !msg._nextRetryAt || msg._nextRetryAt <= now
+              (msg) => !msg._nextRetryAt || msg._nextRetryAt <= now,
             );
             resolve(messages);
           };
 
           request.onerror = () => reject(request.error);
-        }
+        },
       );
 
       // Also get any messages stuck in "sending" state (e.g., from page refresh)
@@ -541,13 +543,13 @@ class DMQueueDB {
             // Only process messages that have been stuck for more than 10 seconds
             const stuckThreshold = now - 10000;
             const messages = (request.result as OptimisticDM[]).filter(
-              (msg) => msg._createdAt < stuckThreshold
+              (msg) => msg._createdAt < stuckThreshold,
             );
             resolve(messages);
           };
 
           request.onerror = () => reject(request.error);
-        }
+        },
       );
 
       const allToProcess = [...retryingMessages, ...stuckMessages];
@@ -593,7 +595,7 @@ class DMQueueDB {
         "NetworkError",
       ];
       return networkIndicators.some((indicator) =>
-        error.message.toLowerCase().includes(indicator.toLowerCase())
+        error.message.toLowerCase().includes(indicator.toLowerCase()),
       );
     }
     return false;

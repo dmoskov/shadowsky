@@ -1,7 +1,13 @@
 import { debug } from "@bsky/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Search, X } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useDMQueue } from "../hooks/useDMQueue";
 import { useMinDuration } from "../hooks/useTiming";
@@ -189,7 +195,10 @@ export const DirectMessages: React.FC = () => {
   // Get combined messages (server + optimistic)
   const combinedMessages = useMemo(() => {
     if (!conversationData?.messages || !selectedConversation) return [];
-    return getOptimisticMessages(conversationData.messages, selectedConversation);
+    return getOptimisticMessages(
+      conversationData.messages,
+      selectedConversation,
+    );
   }, [conversationData?.messages, selectedConversation, getOptimisticMessages]);
 
   // Scroll to bottom when messages change (unless highlighted)

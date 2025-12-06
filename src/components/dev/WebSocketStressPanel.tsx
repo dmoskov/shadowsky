@@ -58,10 +58,16 @@ export function WebSocketStressPanel() {
       const newState = service._debugGetState();
       setState(newState);
       // Sync inputs with actual values if they differ and user isn't actively editing
-      if (newState.latency !== latencyInput && document.activeElement?.id !== "latency-slider") {
+      if (
+        newState.latency !== latencyInput &&
+        document.activeElement?.id !== "latency-slider"
+      ) {
         setLatencyInput(newState.latency);
       }
-      if (newState.packetLoss !== packetLossInput && document.activeElement?.id !== "packet-loss-slider") {
+      if (
+        newState.packetLoss !== packetLossInput &&
+        document.activeElement?.id !== "packet-loss-slider"
+      ) {
         setPacketLossInput(newState.packetLoss);
       }
     }
@@ -130,9 +136,12 @@ export function WebSocketStressPanel() {
     if (service && !isFlooding) {
       setIsFlooding(true);
       setFloodProgress(0);
-      const progressInterval = setInterval(() => {
-        setFloodProgress((prev) => Math.min(prev + 5, 95));
-      }, (floodCount * floodInterval) / 20);
+      const progressInterval = setInterval(
+        () => {
+          setFloodProgress((prev) => Math.min(prev + 5, 95));
+        },
+        (floodCount * floodInterval) / 20,
+      );
 
       try {
         await service._debugFloodMessages(floodCount, floodInterval);
@@ -158,7 +167,9 @@ export function WebSocketStressPanel() {
     }
   };
 
-  const getStateColor = (connectionState?: WebSocketConnectionState): string => {
+  const getStateColor = (
+    connectionState?: WebSocketConnectionState,
+  ): string => {
     switch (connectionState) {
       case WebSocketConnectionState.CONNECTED:
         return "var(--bsky-success)";
@@ -215,18 +226,25 @@ export function WebSocketStressPanel() {
         title="WebSocket Stress Test Panel (Ctrl+Shift+W)"
       >
         {isOpen ? (
-          <ChevronRight size={16} style={{ color: "var(--bsky-text-secondary)" }} />
+          <ChevronRight
+            size={16}
+            style={{ color: "var(--bsky-text-secondary)" }}
+          />
         ) : (
-          <ChevronLeft size={16} style={{ color: "var(--bsky-text-secondary)" }} />
+          <ChevronLeft
+            size={16}
+            style={{ color: "var(--bsky-text-secondary)" }}
+          />
         )}
         <Zap
           size={20}
           style={{
-            color: state?.connectionState === WebSocketConnectionState.CONNECTED
-              ? "var(--bsky-success)"
-              : state?.connectionState === WebSocketConnectionState.ERROR
-                ? "var(--bsky-error)"
-                : "var(--bsky-primary)",
+            color:
+              state?.connectionState === WebSocketConnectionState.CONNECTED
+                ? "var(--bsky-success)"
+                : state?.connectionState === WebSocketConnectionState.ERROR
+                  ? "var(--bsky-error)"
+                  : "var(--bsky-primary)",
           }}
         />
       </button>
@@ -323,7 +341,10 @@ export function WebSocketStressPanel() {
             >
               <div>
                 <span
-                  style={{ fontSize: "11px", color: "var(--bsky-text-tertiary)" }}
+                  style={{
+                    fontSize: "11px",
+                    color: "var(--bsky-text-tertiary)",
+                  }}
                 >
                   Status
                 </span>
@@ -335,11 +356,19 @@ export function WebSocketStressPanel() {
                     marginTop: "2px",
                   }}
                 >
-                  {state?.connectionState === WebSocketConnectionState.CONNECTED ||
-                  state?.connectionState === WebSocketConnectionState.DEGRADED ? (
-                    <Wifi size={14} style={{ color: getStateColor(state?.connectionState) }} />
+                  {state?.connectionState ===
+                    WebSocketConnectionState.CONNECTED ||
+                  state?.connectionState ===
+                    WebSocketConnectionState.DEGRADED ? (
+                    <Wifi
+                      size={14}
+                      style={{ color: getStateColor(state?.connectionState) }}
+                    />
                   ) : (
-                    <WifiOff size={14} style={{ color: getStateColor(state?.connectionState) }} />
+                    <WifiOff
+                      size={14}
+                      style={{ color: getStateColor(state?.connectionState) }}
+                    />
                   )}
                   <span
                     style={{
@@ -354,7 +383,10 @@ export function WebSocketStressPanel() {
               </div>
               <div>
                 <span
-                  style={{ fontSize: "11px", color: "var(--bsky-text-tertiary)" }}
+                  style={{
+                    fontSize: "11px",
+                    color: "var(--bsky-text-tertiary)",
+                  }}
                 >
                   WebSocket
                 </span>
@@ -370,7 +402,10 @@ export function WebSocketStressPanel() {
               </div>
               <div>
                 <span
-                  style={{ fontSize: "11px", color: "var(--bsky-text-tertiary)" }}
+                  style={{
+                    fontSize: "11px",
+                    color: "var(--bsky-text-tertiary)",
+                  }}
                 >
                   Authenticated
                 </span>
@@ -388,7 +423,10 @@ export function WebSocketStressPanel() {
               </div>
               <div>
                 <span
-                  style={{ fontSize: "11px", color: "var(--bsky-text-tertiary)" }}
+                  style={{
+                    fontSize: "11px",
+                    color: "var(--bsky-text-tertiary)",
+                  }}
                 >
                   Reconnects
                 </span>
@@ -404,7 +442,10 @@ export function WebSocketStressPanel() {
               </div>
               <div>
                 <span
-                  style={{ fontSize: "11px", color: "var(--bsky-text-tertiary)" }}
+                  style={{
+                    fontSize: "11px",
+                    color: "var(--bsky-text-tertiary)",
+                  }}
                 >
                   Sent / Received
                 </span>
@@ -420,7 +461,10 @@ export function WebSocketStressPanel() {
               </div>
               <div>
                 <span
-                  style={{ fontSize: "11px", color: "var(--bsky-text-tertiary)" }}
+                  style={{
+                    fontSize: "11px",
+                    color: "var(--bsky-text-tertiary)",
+                  }}
                 >
                   Latency (avg)
                 </span>
@@ -471,7 +515,10 @@ export function WebSocketStressPanel() {
                 }}
               >
                 <span
-                  style={{ fontSize: "13px", color: "var(--bsky-text-primary)" }}
+                  style={{
+                    fontSize: "13px",
+                    color: "var(--bsky-text-primary)",
+                  }}
                 >
                   Delay: {latencyInput}ms
                 </span>
@@ -566,7 +613,10 @@ export function WebSocketStressPanel() {
                 }}
               >
                 <span
-                  style={{ fontSize: "13px", color: "var(--bsky-text-primary)" }}
+                  style={{
+                    fontSize: "13px",
+                    color: "var(--bsky-text-primary)",
+                  }}
                 >
                   Drop Rate: {packetLossInput}%
                 </span>
@@ -833,7 +883,10 @@ export function WebSocketStressPanel() {
               )}
               <button
                 onClick={handleFloodMessages}
-                disabled={isFlooding || state?.connectionState !== WebSocketConnectionState.CONNECTED}
+                disabled={
+                  isFlooding ||
+                  state?.connectionState !== WebSocketConnectionState.CONNECTED
+                }
                 style={{
                   width: "100%",
                   padding: "8px 12px",
@@ -850,7 +903,11 @@ export function WebSocketStressPanel() {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "6px",
-                  opacity: state?.connectionState !== WebSocketConnectionState.CONNECTED ? 0.5 : 1,
+                  opacity:
+                    state?.connectionState !==
+                    WebSocketConnectionState.CONNECTED
+                      ? 0.5
+                      : 1,
                 }}
               >
                 <Zap size={14} />
