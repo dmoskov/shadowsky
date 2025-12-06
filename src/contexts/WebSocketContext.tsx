@@ -284,14 +284,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     updateStats();
   }, [updateStats]);
 
-  const handleAuthExpired = useCallback(
-    (event: AuthExpiredEvent) => {
-      debug.error("🔐 [WebSocket] Auth expired:", event.reason);
-      setAuthExpiredReason(event.reason);
-      setShowAuthExpiredModal(true);
-    },
-    [],
-  );
+  const handleAuthExpired = useCallback((event: AuthExpiredEvent) => {
+    debug.error("🔐 [WebSocket] Auth expired:", event.reason);
+    setAuthExpiredReason(event.reason);
+    setShowAuthExpiredModal(true);
+  }, []);
 
   const handleReLogin = useCallback(() => {
     setShowAuthExpiredModal(false);
@@ -392,6 +389,8 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     const disconnectHandler: EventHandler = () => handleDisconnect();
     const reconnectHandler: EventHandler = () => handleReconnect();
     const errorHandler: EventHandler = () => handleError();
+    const authExpiredHandler: EventHandler = (event) =>
+      handleAuthExpired(event as AuthExpiredEvent);
 
     // Store handler references for cleanup
     handlersRef.current = {
@@ -401,6 +400,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       disconnect: disconnectHandler,
       reconnect: reconnectHandler,
       error: errorHandler,
+      authExpired: authExpiredHandler,
     };
 
     // Register handlers
@@ -410,6 +410,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     service.on(WebSocketEventType.DISCONNECT, disconnectHandler);
     service.on(WebSocketEventType.RECONNECT, reconnectHandler);
     service.on(WebSocketEventType.ERROR, errorHandler);
+    service.on(WebSocketEventType.AUTH_EXPIRED, authExpiredHandler);
 
     service.connect();
     isInitialized.current = true;
@@ -469,6 +470,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
           currentService.off(WebSocketEventType.RECONNECT, handlers.reconnect);
         if (handlers.error)
           currentService.off(WebSocketEventType.ERROR, handlers.error);
+        if (handlers.authExpired)
+          currentService.off(
+            WebSocketEventType.AUTH_EXPIRED,
+            handlers.authExpired,
+          );
       }
 
       // Clear handler refs
@@ -479,6 +485,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         disconnect: null,
         reconnect: null,
         error: null,
+        authExpired: null,
       };
     };
   }, [
@@ -490,6 +497,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     handleDisconnect,
     handleReconnect,
     handleError,
+    handleAuthExpired,
     updatePollingInterval,
   ]);
 
@@ -508,6 +516,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   return (
     <WebSocketContext.Provider value={value}>
       {children}
+      <AuthExpiredModal
+        isOpen={showAuthExpiredModal}
+        onReLogin={handleReLogin}
+        reason={authExpiredReason}
+      />
     </WebSocketContext.Provider>
   );
 };
