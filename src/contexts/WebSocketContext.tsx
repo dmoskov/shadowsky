@@ -11,6 +11,8 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { AuthExpiredModal } from "../components/AuthExpiredModal";
+import { WS_CONFIG } from "../config/websocket.config";
 import { pushNotificationService } from "../services/push-notification-service";
 import {
   getWebSocketService,
@@ -20,19 +22,13 @@ import type { PushNotificationPayload } from "../types/push-notifications";
 import {
   WebSocketConnectionState,
   WebSocketEventType,
+  type AuthExpiredEvent,
   type NewNotificationEvent,
   type NotificationCountEvent,
   type WebSocketMessage,
   type WebSocketStats,
 } from "../types/websocket";
 import { useAuth } from "./AuthContext";
-
-// Polling intervals based on connection state
-const STATS_POLLING_INTERVAL_CONNECTED = 30000; // 30 seconds when connected
-const STATS_POLLING_INTERVAL_DISCONNECTED = 5000; // 5 seconds when disconnected/reconnecting
-
-// Debounce delay for batching notification updates
-const NOTIFICATION_DEBOUNCE_MS = 100;
 
 interface WebSocketContextType {
   isConnected: boolean;
@@ -59,7 +55,7 @@ interface WebSocketProviderProps {
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   children,
 }) => {
-  const { isAuthenticated, session } = useAuth();
+  const { isAuthenticated, session, logout } = useAuth();
   const queryClient = useQueryClient();
   const [connectionState, setConnectionState] =
     useState<WebSocketConnectionState>(WebSocketConnectionState.DISCONNECTED);
@@ -69,6 +65,10 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     messagesSent: 0,
     messagesReceived: 0,
   });
+
+  // Auth expired modal state
+  const [showAuthExpiredModal, setShowAuthExpiredModal] = useState(false);
+  const [authExpiredReason, setAuthExpiredReason] = useState<string>();
 
   const isInitialized = useRef(false);
   const reconnectAttemptTimer = useRef<ReturnType<typeof setTimeout> | null>(
@@ -95,6 +95,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     disconnect: EventHandler | null;
     reconnect: EventHandler | null;
     error: EventHandler | null;
+    authExpired: EventHandler | null;
   }>({
     newNotification: null,
     notificationCount: null,
@@ -102,6 +103,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     disconnect: null,
     reconnect: null,
     error: null,
+    authExpired: null,
   });
 
   const updateStats = useCallback(() => {
@@ -123,8 +125,8 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
       // Set new interval based on connection state
       const interval = isConnected
-        ? STATS_POLLING_INTERVAL_CONNECTED
-        : STATS_POLLING_INTERVAL_DISCONNECTED;
+        ? WS_CONFIG.STATS_POLL_CONNECTED_MS
+        : WS_CONFIG.STATS_POLL_DISCONNECTED_MS;
 
       debug.log(`📊 [WebSocket] Stats polling interval: ${interval / 1000}s`);
       statsIntervalRef.current = setInterval(updateStats, interval);
@@ -201,7 +203,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       notificationDebounceTimerRef.current = setTimeout(() => {
         flushPendingNotifications();
         notificationDebounceTimerRef.current = null;
-      }, NOTIFICATION_DEBOUNCE_MS);
+      }, WS_CONFIG.NOTIFICATION_DEBOUNCE_MS);
 
       // Show push notification via service worker for better handling
       // (Push notifications are shown immediately, not debounced)
@@ -253,7 +255,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       countDebounceTimerRef.current = setTimeout(() => {
         flushPendingCount();
         countDebounceTimerRef.current = null;
-      }, NOTIFICATION_DEBOUNCE_MS);
+      }, WS_CONFIG.NOTIFICATION_DEBOUNCE_MS);
     },
     [flushPendingCount],
   );
@@ -282,6 +284,21 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     updateStats();
   }, [updateStats]);
 
+  const handleAuthExpired = useCallback(
+    (event: AuthExpiredEvent) => {
+      debug.error("🔐 [WebSocket] Auth expired:", event.reason);
+      setAuthExpiredReason(event.reason);
+      setShowAuthExpiredModal(true);
+    },
+    [],
+  );
+
+  const handleReLogin = useCallback(() => {
+    setShowAuthExpiredModal(false);
+    setAuthExpiredReason(undefined);
+    logout();
+  }, [logout]);
+
   const reconnect = useCallback(() => {
     const service = getWebSocketService();
     if (service) {
@@ -289,7 +306,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       service.disconnect();
       setTimeout(() => {
         service.connect();
-      }, 1000);
+      }, WS_CONFIG.MANUAL_RECONNECT_DELAY_MS);
     }
   }, []);
 
@@ -319,6 +336,8 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
             service.off(WebSocketEventType.RECONNECT, handlers.reconnect);
           if (handlers.error)
             service.off(WebSocketEventType.ERROR, handlers.error);
+          if (handlers.authExpired)
+            service.off(WebSocketEventType.AUTH_EXPIRED, handlers.authExpired);
 
           // Clear handler refs
           handlersRef.current = {
@@ -328,6 +347,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
             disconnect: null,
             reconnect: null,
             error: null,
+            authExpired: null,
           };
 
           service.disconnect();
@@ -355,10 +375,10 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     const service = initializeWebSocketService({
       url: wsUrl,
       accessToken: session.accessJwt,
-      authTimeout: 10000,
-      reconnectDelay: 5000,
-      maxReconnectAttempts: 10,
-      heartbeatInterval: 30000,
+      authTimeout: WS_CONFIG.AUTH_TIMEOUT_MS,
+      reconnectDelay: WS_CONFIG.INITIAL_RECONNECT_DELAY_MS,
+      maxReconnectAttempts: WS_CONFIG.MAX_RECONNECT_ATTEMPTS,
+      heartbeatInterval: WS_CONFIG.HEARTBEAT_INTERVAL_MS,
       debug: true,
     });
 

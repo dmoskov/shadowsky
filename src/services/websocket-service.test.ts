@@ -1,5 +1,57 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { calculateBackoff } from "./websocket-service";
+import { calculateBackoff, WebSocketService } from "./websocket-service";
+import {
+  WebSocketConnectionState,
+  WebSocketEventType,
+} from "../types/websocket";
+
+// Mock the debug module
+vi.mock("@bsky/shared", () => ({
+  debug: {
+    log: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+// Mock WebSocket
+class MockWebSocket {
+  static CONNECTING = 0;
+  static OPEN = 1;
+  static CLOSING = 2;
+  static CLOSED = 3;
+
+  readyState = MockWebSocket.CONNECTING;
+  onopen: (() => void) | null = null;
+  onclose:
+    | ((event: { code: number; reason: string; wasClean: boolean }) => void)
+    | null = null;
+  onerror: ((event: unknown) => void) | null = null;
+  onmessage: ((event: { data: string }) => void) | null = null;
+
+  send = vi.fn();
+  close = vi.fn((code?: number, reason?: string) => {
+    this.readyState = MockWebSocket.CLOSED;
+    if (this.onclose) {
+      this.onclose({
+        code: code || 1000,
+        reason: reason || "",
+        wasClean: true,
+      });
+    }
+  });
+
+  // Helper to simulate connection open
+  simulateOpen() {
+    this.readyState = MockWebSocket.OPEN;
+    if (this.onopen) this.onopen();
+  }
+
+  // Helper to simulate message received
+  simulateMessage(data: string) {
+    if (this.onmessage) this.onmessage({ data });
+  }
+}
 
 describe("calculateBackoff", () => {
   describe("without jitter (deterministic)", () => {
@@ -135,5 +187,224 @@ describe("calculateBackoff", () => {
       expect(delay).toBe(4000);
       mathRandomSpy.mockRestore();
     });
+  });
+});
+
+describe("WebSocketService PONG timeout detection", () => {
+  let mockWs: MockWebSocket;
+  let service: WebSocketService;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    mockWs = new MockWebSocket();
+    // @ts-expect-error - Mocking global WebSocket
+    global.WebSocket = vi.fn(() => mockWs);
+    service = new WebSocketService({
+      url: "wss://test.example.com",
+      debug: true,
+    });
+  });
+
+  afterEach(() => {
+    service.disconnect();
+    vi.useRealTimers();
+    vi.clearAllMocks();
+  });
+
+  it("should start PONG timeout after sending PING", () => {
+    // Connect without authentication
+    service.connect();
+    mockWs.simulateOpen();
+
+    // Heartbeat should start, wait for first ping (default 30s interval)
+    vi.advanceTimersByTime(30000);
+
+    // Verify PING was sent
+    expect(mockWs.send).toHaveBeenCalledWith(
+      expect.stringContaining(WebSocketEventType.PING),
+    );
+
+    // PONG timeout should be pending (10 seconds)
+    // Verify by advancing time less than timeout
+    vi.advanceTimersByTime(5000);
+    expect(service.getConnectionState()).toBe(
+      WebSocketConnectionState.CONNECTED,
+    );
+  });
+
+  it("should clear PONG timeout when PONG is received", () => {
+    service.connect();
+    mockWs.simulateOpen();
+
+    // Wait for first ping
+    vi.advanceTimersByTime(30000);
+
+    // Simulate PONG response
+    mockWs.simulateMessage(
+      JSON.stringify({
+        type: WebSocketEventType.PONG,
+        timestamp: new Date().toISOString(),
+      }),
+    );
+
+    // Verify connection is still healthy after full PONG timeout would have elapsed
+    vi.advanceTimersByTime(15000); // Past the 10s timeout
+    expect(service.getConnectionState()).toBe(
+      WebSocketConnectionState.CONNECTED,
+    );
+  });
+
+  it("should trigger reconnection on PONG timeout", () => {
+    service.connect();
+    mockWs.simulateOpen();
+
+    // Wait for first ping
+    vi.advanceTimersByTime(30000);
+
+    // Do NOT send PONG, let timeout occur
+    vi.advanceTimersByTime(10000); // PONG_TIMEOUT
+
+    // Should close with code 4002
+    expect(mockWs.close).toHaveBeenCalledWith(4002, "PONG timeout");
+
+    // Connection state should change to reconnecting
+    expect(service.getConnectionState()).toBe(
+      WebSocketConnectionState.RECONNECTING,
+    );
+  });
+
+  it("should track latency when PONG is received", () => {
+    service.connect();
+    mockWs.simulateOpen();
+
+    // Wait for first ping
+    vi.advanceTimersByTime(30000);
+
+    // Simulate 50ms latency
+    vi.advanceTimersByTime(50);
+    mockWs.simulateMessage(
+      JSON.stringify({
+        type: WebSocketEventType.PONG,
+        timestamp: new Date().toISOString(),
+      }),
+    );
+
+    const stats = service.getStats();
+    expect(stats.lastPingLatency).toBe(50);
+    expect(stats.averageLatency).toBe(50);
+  });
+
+  it("should calculate average latency over multiple pings", () => {
+    service.connect();
+    mockWs.simulateOpen();
+
+    // First ping/pong with 100ms latency
+    vi.advanceTimersByTime(30000);
+    vi.advanceTimersByTime(100);
+    mockWs.simulateMessage(
+      JSON.stringify({
+        type: WebSocketEventType.PONG,
+        timestamp: new Date().toISOString(),
+      }),
+    );
+
+    // Second ping/pong with 50ms latency
+    vi.advanceTimersByTime(30000 - 100); // Rest of interval
+    vi.advanceTimersByTime(50);
+    mockWs.simulateMessage(
+      JSON.stringify({
+        type: WebSocketEventType.PONG,
+        timestamp: new Date().toISOString(),
+      }),
+    );
+
+    const stats = service.getStats();
+    expect(stats.lastPingLatency).toBe(50);
+    expect(stats.averageLatency).toBe(75); // (100 + 50) / 2
+  });
+
+  it("should clear PONG timeout on disconnect", () => {
+    service.connect();
+    mockWs.simulateOpen();
+
+    // Wait for first ping
+    vi.advanceTimersByTime(30000);
+
+    // Disconnect before PONG timeout
+    service.disconnect();
+
+    // Verify no errors when timeout would have fired
+    vi.advanceTimersByTime(15000);
+    expect(service.getConnectionState()).toBe(
+      WebSocketConnectionState.DISCONNECTED,
+    );
+  });
+
+  it("should handle unsolicited PONG messages", () => {
+    service.connect();
+    mockWs.simulateOpen();
+
+    // Receive PONG without sending PING (server-initiated)
+    mockWs.simulateMessage(
+      JSON.stringify({
+        type: WebSocketEventType.PONG,
+        timestamp: new Date().toISOString(),
+      }),
+    );
+
+    // Should not throw, connection should remain stable
+    expect(service.getConnectionState()).toBe(
+      WebSocketConnectionState.CONNECTED,
+    );
+
+    // Latency should not be recorded for unsolicited PONG
+    const stats = service.getStats();
+    expect(stats.lastPingLatency).toBeUndefined();
+  });
+
+  it("should set error message on PONG timeout", () => {
+    service.connect();
+    mockWs.simulateOpen();
+
+    // Wait for first ping
+    vi.advanceTimersByTime(30000);
+
+    // Let timeout occur
+    vi.advanceTimersByTime(10000);
+
+    const stats = service.getStats();
+    expect(stats.lastError).toBe("PONG timeout - server unresponsive");
+  });
+
+  it("should not leak timers after multiple reconnection cycles", () => {
+    // First connection
+    service.connect();
+    mockWs.simulateOpen();
+    vi.advanceTimersByTime(30000); // First ping
+
+    // Simulate zombie connection (no PONG response)
+    vi.advanceTimersByTime(10000);
+
+    // Create new mock for reconnection
+    mockWs = new MockWebSocket();
+    // @ts-expect-error - Mocking global WebSocket
+    global.WebSocket = vi.fn(() => mockWs);
+
+    // Wait for reconnect (with jitter, use a large value)
+    vi.advanceTimersByTime(10000);
+
+    // Second connection
+    mockWs.simulateOpen();
+
+    // Should be connected again
+    expect(service.getConnectionState()).toBe(
+      WebSocketConnectionState.CONNECTED,
+    );
+
+    // Clean disconnect
+    service.disconnect();
+    expect(service.getConnectionState()).toBe(
+      WebSocketConnectionState.DISCONNECTED,
+    );
   });
 });

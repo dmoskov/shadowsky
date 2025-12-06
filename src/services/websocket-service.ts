@@ -474,12 +474,22 @@ export class WebSocketService {
     }
   }
 
-  private scheduleReconnect(): void {
+  private scheduleReconnect(unlimitedRetries = false): void {
     if (this.isIntentionallyClosed) {
       return;
     }
 
-    if (this.stats.reconnectAttempts >= this.config.maxReconnectAttempts) {
+    // Check for fatal auth errors - don't retry
+    if (this.isAuthFatalError) {
+      this.log("Skipping reconnect due to fatal auth error", "warn");
+      return;
+    }
+
+    // Only check max attempts if not doing unlimited retries
+    if (
+      !unlimitedRetries &&
+      this.stats.reconnectAttempts >= this.config.maxReconnectAttempts
+    ) {
       this.log(
         `Max reconnection attempts (${this.config.maxReconnectAttempts}) reached`,
         "error",
@@ -499,8 +509,12 @@ export class WebSocketService {
       true,
     );
 
+    const attemptsDisplay = unlimitedRetries
+      ? `${this.stats.reconnectAttempts}/∞`
+      : `${this.stats.reconnectAttempts}/${this.config.maxReconnectAttempts}`;
+
     this.log(
-      `Scheduling reconnection attempt ${this.stats.reconnectAttempts}/${this.config.maxReconnectAttempts} in ${delay}ms`,
+      `Scheduling reconnection attempt ${attemptsDisplay} in ${delay}ms`,
     );
 
     this.reconnectTimer = setTimeout(() => {
@@ -517,10 +531,7 @@ export class WebSocketService {
     this.stopHeartbeat();
     this.heartbeatTimer = setInterval(() => {
       if (this.isConnected()) {
-        this.send({
-          type: WebSocketEventType.PING,
-          timestamp: new Date().toISOString(),
-        });
+        this.sendPing();
       }
     }, this.config.heartbeatInterval);
     this.log(
@@ -528,11 +539,80 @@ export class WebSocketService {
     );
   }
 
+  private sendPing(): void {
+    // Record when ping was sent for latency tracking
+    this.lastPingTime = Date.now();
+
+    this.send({
+      type: WebSocketEventType.PING,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Start PONG timeout - if no response within PONG_TIMEOUT, connection is zombie
+    this.pongTimeoutTimer = setTimeout(() => {
+      this.handlePongTimeout();
+    }, this.PONG_TIMEOUT);
+
+    this.log(`PING sent, expecting PONG within ${this.PONG_TIMEOUT}ms`);
+  }
+
+  private handlePong(): void {
+    // Clear the PONG timeout since we received a response
+    if (this.pongTimeoutTimer) {
+      clearTimeout(this.pongTimeoutTimer);
+      this.pongTimeoutTimer = null;
+    }
+
+    // Calculate latency if we have a ping time
+    if (this.lastPingTime !== null) {
+      const latency = Date.now() - this.lastPingTime;
+      this.stats.lastPingLatency = latency;
+
+      // Track latency history for average calculation
+      this.latencyHistory.push(latency);
+      if (this.latencyHistory.length > this.MAX_LATENCY_SAMPLES) {
+        this.latencyHistory.shift();
+      }
+
+      // Calculate average latency
+      const sum = this.latencyHistory.reduce((a, b) => a + b, 0);
+      this.stats.averageLatency = Math.round(sum / this.latencyHistory.length);
+
+      this.log(
+        `PONG received, latency: ${latency}ms, avg: ${this.stats.averageLatency}ms`,
+      );
+      this.lastPingTime = null;
+    } else {
+      this.log("PONG received (unsolicited)");
+    }
+  }
+
+  private handlePongTimeout(): void {
+    this.log("PONG timeout - server unresponsive, reconnecting...", "warn");
+    this.stats.lastError = "PONG timeout - server unresponsive";
+    this.lastPingTime = null;
+
+    // Clear the timeout reference
+    this.pongTimeoutTimer = null;
+
+    // Close the existing connection and reconnect
+    if (this.ws) {
+      this.ws.close(4002, "PONG timeout");
+    }
+
+    this.scheduleReconnect();
+  }
+
   private stopHeartbeat(): void {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = null;
       this.log("Heartbeat stopped");
+    }
+    // Also clear any pending PONG timeout
+    if (this.pongTimeoutTimer) {
+      clearTimeout(this.pongTimeoutTimer);
+      this.pongTimeoutTimer = null;
     }
   }
 
@@ -544,6 +624,10 @@ export class WebSocketService {
     if (this.authTimeoutTimer) {
       clearTimeout(this.authTimeoutTimer);
       this.authTimeoutTimer = null;
+    }
+    if (this.pongTimeoutTimer) {
+      clearTimeout(this.pongTimeoutTimer);
+      this.pongTimeoutTimer = null;
     }
     this.stopHeartbeat();
   }
