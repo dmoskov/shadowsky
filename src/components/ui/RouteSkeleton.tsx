@@ -1,11 +1,11 @@
 import React from "react";
 import {
+  ConversationListSkeleton,
   FeedSkeleton,
   NotificationFeedSkeleton,
   SearchResultSkeleton,
   SkeletonLoader,
   ThreadSkeleton as ThreadSkeletonBase,
-  ConversationListSkeleton,
 } from "./SkeletonLoader";
 
 /**
