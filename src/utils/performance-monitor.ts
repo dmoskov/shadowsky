@@ -1,10 +1,22 @@
 import {
+  inpOptimizationService,
+  type LongTaskEntry,
+} from "../services/inp-optimization-service";
+import {
   WebVitalsMetrics,
   webVitalsMonitor,
 } from "../services/web-vitals-monitor";
 import { createLogger } from "./logger";
 
 const logger = createLogger("PerformanceMonitor");
+
+export interface LongTaskStats {
+  count: number;
+  totalDuration: number;
+  averageDuration: number;
+  maxDuration: number;
+  recentCount: number;
+}
 
 export interface PerformanceMetrics {
   fps: number;
@@ -14,6 +26,8 @@ export interface PerformanceMetrics {
     jsHeapSizeLimit: number;
   };
   longTasks: number;
+  longTaskStats?: LongTaskStats;
+  isUserInteracting?: boolean;
   webVitals?: WebVitalsMetrics;
 }
 
@@ -26,12 +40,13 @@ export class PerformanceMonitor {
   private lastTime = performance.now();
   private fps = 60;
   private longTaskCount = 0;
-  private observer?: PerformanceObserver;
   private rafId?: number;
   private isMonitoring = false;
+  private inpServiceInitialized = false;
+  private longTaskUnsubscribe?: () => void;
 
   private constructor() {
-    this.setupLongTaskObserver();
+    this.setupINPOptimization();
   }
 
   static getInstance(): PerformanceMonitor {
@@ -50,10 +65,15 @@ export class PerformanceMonitor {
     this.isMonitoring = true;
     this.measureFPS();
 
-    // Also initialize Web Vitals monitoring
+    // Initialize Web Vitals monitoring
     webVitalsMonitor.init();
 
-    logger.log("Performance monitoring started (including Web Vitals)");
+    // Initialize INP optimization service
+    this.setupINPOptimization();
+
+    logger.log(
+      "Performance monitoring started (including Web Vitals and INP optimization)",
+    );
   }
 
   /**
@@ -89,6 +109,12 @@ export class PerformanceMonitor {
     // Add Web Vitals metrics if monitoring is active
     if (webVitalsMonitor.isMonitoringActive()) {
       metrics.webVitals = webVitalsMonitor.getMetrics();
+    }
+
+    // Add detailed long task stats from INP optimization service
+    if (this.inpServiceInitialized) {
+      metrics.longTaskStats = inpOptimizationService.getLongTaskStats();
+      metrics.isUserInteracting = inpOptimizationService.isInteracting();
     }
 
     return metrics;
@@ -150,28 +176,55 @@ export class PerformanceMonitor {
     this.rafId = requestAnimationFrame(() => this.measureFPS());
   }
 
-  private setupLongTaskObserver(): void {
-    if (!("PerformanceObserver" in window)) return;
+  /**
+   * Set up INP optimization service for long task detection
+   */
+  private setupINPOptimization(): void {
+    if (this.inpServiceInitialized) return;
 
     try {
-      this.observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          // Count tasks longer than 50ms
-          if (entry.duration > 50) {
-            this.longTaskCount++;
-            logger.log("Long task detected:", {
-              duration: entry.duration,
-              name: entry.name,
-            });
-          }
-        }
-      });
+      // Initialize the INP optimization service
+      inpOptimizationService.init();
+      this.inpServiceInitialized = true;
 
-      // Observe long tasks
-      this.observer.observe({ entryTypes: ["longtask"] });
-    } catch (_e) {
-      logger.log("Long task observer not supported");
+      // Subscribe to long task events to keep our count in sync
+      this.longTaskUnsubscribe = inpOptimizationService.onLongTask(
+        (entry: LongTaskEntry) => {
+          this.longTaskCount++;
+          logger.log("Long task detected via INP service:", {
+            duration: entry.duration,
+            name: entry.name,
+            attribution: entry.attribution,
+          });
+        },
+      );
+
+      logger.log(
+        "INP optimization service initialized for long task detection",
+      );
+    } catch (error) {
+      logger.warn("Failed to initialize INP optimization service:", error);
     }
+  }
+
+  /**
+   * Get the INP optimization service for advanced usage
+   */
+  getINPService() {
+    return inpOptimizationService;
+  }
+
+  /**
+   * Clean up resources when stopping monitoring
+   */
+  cleanup(): void {
+    this.stop();
+    if (this.longTaskUnsubscribe) {
+      this.longTaskUnsubscribe();
+      this.longTaskUnsubscribe = undefined;
+    }
+    this.inpServiceInitialized = false;
+    logger.log("Performance monitor cleaned up");
   }
 }
 
@@ -186,5 +239,17 @@ export function usePerformanceMonitor() {
     stop: () => monitor.stop(),
     getMetrics: () => monitor.getMetrics(),
     isLowEndDevice: () => monitor.isLowEndDevice(),
+    cleanup: () => monitor.cleanup(),
+    getINPService: () => monitor.getINPService(),
   };
 }
+
+// Re-export types from INP optimization service for convenience
+export {
+  deferTask,
+  processInChunks,
+  runWhenIdle,
+  TaskPriority,
+  yieldToMain,
+} from "../services/inp-optimization-service";
+export type { LongTaskEntry } from "../services/inp-optimization-service";

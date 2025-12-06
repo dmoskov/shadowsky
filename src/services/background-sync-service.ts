@@ -294,7 +294,8 @@ class BackgroundSyncService {
 
     try {
       // Use extended type for periodicSync
-      const registration = this.registration as ServiceWorkerRegistrationWithSync;
+      const registration = this
+        .registration as ServiceWorkerRegistrationWithSync;
       const periodicSync = registration.periodicSync;
 
       if (periodicSync) {
@@ -344,7 +345,8 @@ class BackgroundSyncService {
 
     try {
       // Use extended type for sync
-      const registration = this.registration as ServiceWorkerRegistrationWithSync;
+      const registration = this
+        .registration as ServiceWorkerRegistrationWithSync;
       const sync = registration.sync;
 
       if (sync) {
@@ -378,7 +380,8 @@ class BackgroundSyncService {
     }
 
     try {
-      const registration = this.registration as ServiceWorkerRegistrationWithSync;
+      const registration = this
+        .registration as ServiceWorkerRegistrationWithSync;
       const periodicSync = registration.periodicSync;
 
       if (periodicSync) {
@@ -487,7 +490,8 @@ class BackgroundSyncService {
     }
 
     try {
-      const registration = this.registration as ServiceWorkerRegistrationWithSync;
+      const registration = this
+        .registration as ServiceWorkerRegistrationWithSync;
       const periodicSync = registration.periodicSync;
       if (periodicSync) {
         const tags = await periodicSync.getTags();

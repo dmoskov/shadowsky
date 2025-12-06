@@ -69,7 +69,9 @@ export class ATProtoClient {
       // Only log as debug info, not as an error
       const status = (error as Error & { status?: number })?.status;
       if (status === 400) {
-        debug.log("No valid session to resume (this is normal for logged-out users)");
+        debug.log(
+          "No valid session to resume (this is normal for logged-out users)",
+        );
       } else {
         debug.error("Resume session failed:", error);
       }
