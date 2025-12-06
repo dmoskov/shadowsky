@@ -18,6 +18,7 @@ import {
   CheckCircle,
   ChevronUp,
   RefreshCw,
+  SignalLow,
   Wifi,
   WifiOff,
   X,
@@ -89,6 +90,113 @@ const getSubsystemIcon = (name: string, level: HealthLevel) => {
     default:
       return getHealthIcon(level);
   }
+};
+
+// Degraded connection indicator component
+const DegradedIndicator: React.FC<{
+  isVisible: boolean;
+  reason?: string;
+}> = ({ isVisible, reason }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  if (!isVisible) return null;
+
+  return (
+    <div
+      className="fixed bottom-20 left-4 z-50 lg:bottom-4"
+      role="status"
+      aria-live="polite"
+    >
+      <div
+        className="relative flex items-center gap-2 rounded-full px-3 py-2 shadow-lg transition-all duration-300 ease-out"
+        style={{
+          background: "var(--bsky-bg-secondary)",
+          border: "1px solid var(--bsky-border)",
+          animation: "degraded-fade-in 0.3s ease-out",
+        }}
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        onFocus={() => setShowTooltip(true)}
+        onBlur={() => setShowTooltip(false)}
+        tabIndex={0}
+        aria-label="Slow connection - notifications may be delayed. Check your network connection."
+      >
+        {/* Yellow indicator with shape distinction for accessibility */}
+        <div className="relative flex h-5 w-5 items-center justify-center">
+          <SignalLow className="h-4 w-4 text-yellow-500" aria-hidden="true" />
+          <div
+            className="absolute -right-0.5 -top-0.5 h-2 w-2 animate-pulse rounded-full bg-yellow-500"
+            aria-hidden="true"
+          />
+        </div>
+        <span
+          className="text-xs font-medium"
+          style={{ color: "var(--bsky-text-secondary)" }}
+        >
+          Slow
+        </span>
+
+        {/* Tooltip */}
+        {showTooltip && (
+          <div
+            className="absolute bottom-full left-0 mb-2 w-56 rounded-lg p-3 shadow-xl"
+            style={{
+              background: "var(--bsky-bg-secondary)",
+              border: "1px solid var(--bsky-border)",
+            }}
+            role="tooltip"
+          >
+            <p
+              className="mb-1 text-sm font-medium"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              Slow connection
+            </p>
+            <p
+              className="mb-2 text-xs"
+              style={{ color: "var(--bsky-text-secondary)" }}
+            >
+              Notifications may be delayed
+            </p>
+            <p
+              className="text-xs"
+              style={{ color: "var(--bsky-text-tertiary)" }}
+            >
+              💡 Check your network connection
+            </p>
+            {reason && (
+              <p
+                className="mt-2 border-t pt-2 text-xs"
+                style={{
+                  color: "var(--bsky-text-tertiary)",
+                  borderColor: "var(--bsky-border)",
+                }}
+              >
+                {reason}
+              </p>
+            )}
+            {/* Tooltip arrow */}
+            <div
+              className="absolute -bottom-1.5 left-4 h-3 w-3 rotate-45"
+              style={{
+                background: "var(--bsky-bg-secondary)",
+                border: "1px solid var(--bsky-border)",
+                borderTop: "none",
+                borderLeft: "none",
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Screen reader only text with full context */}
+      <span className="sr-only">
+        Connection quality degraded. Notifications may be delayed. Check your
+        network connection.
+        {reason && ` Technical details: ${reason}`}
+      </span>
+    </div>
+  );
 };
 
 // Subsystem row component
@@ -175,15 +283,31 @@ export const StatusBar: React.FC = () => {
     }
   }, [isExpanded, setIsExpanded]);
 
-  // Don't render if no issues and not visible
-  if (!isVisible && !status.hasIssues) {
+  // Extract degraded state from status
+  const { isDegradedSustained, degradedReason } = status;
+
+  // Don't render if no issues and not visible (but still render degraded indicator if needed)
+  if (!isVisible && !status.hasIssues && !isDegradedSustained) {
     return null;
   }
 
   const { overallHealth, subsystems, issueCount } = status;
 
+  // If only showing degraded indicator (no other issues)
+  if (!isVisible && !status.hasIssues && isDegradedSustained) {
+    return (
+      <DegradedIndicator isVisible={true} reason={degradedReason} />
+    );
+  }
+
   return (
     <>
+      {/* Degraded connection indicator (separate from main status bar) */}
+      <DegradedIndicator
+        isVisible={isDegradedSustained}
+        reason={degradedReason}
+      />
+
       {/* ARIA live region for screen readers */}
       <div
         role="status"

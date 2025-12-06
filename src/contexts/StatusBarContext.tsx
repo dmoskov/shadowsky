@@ -15,6 +15,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useMutationQueue } from "../hooks/useMutationQueue";
@@ -22,6 +23,9 @@ import { getRateLimiterStats } from "../services/rate-limiter";
 import { WebSocketConnectionState } from "../types/websocket";
 import { useAuth } from "./AuthContext";
 import { useWebSocket } from "./WebSocketContext";
+
+// Threshold for showing degraded indicator (30 seconds)
+const DEGRADED_SUSTAINED_THRESHOLD_MS = 30000;
 
 // Health levels in order of severity
 export type HealthLevel = "healthy" | "warning" | "error" | "critical";
@@ -49,6 +53,9 @@ export interface SystemStatus {
   };
   hasIssues: boolean;
   issueCount: number;
+  // Degraded connection state (shown only after sustained degradation)
+  isDegradedSustained: boolean;
+  degradedReason?: string;
 }
 
 interface StatusBarContextType {
@@ -87,6 +94,45 @@ export const StatusBarProvider: React.FC<StatusBarProviderProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Track sustained degradation state
+  const [isDegradedSustained, setIsDegradedSustained] = useState(false);
+  const degradedStartTimeRef = useRef<number | null>(null);
+  const degradedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Check if currently in degraded state
+  const isDegraded = connectionState === WebSocketConnectionState.DEGRADED;
+  const degradedReason = wsStats.metrics?.degradedReason;
+
+  // Track sustained degradation (30s+ to avoid flicker)
+  useEffect(() => {
+    if (isDegraded) {
+      // Start tracking if not already
+      if (degradedStartTimeRef.current === null) {
+        degradedStartTimeRef.current = Date.now();
+
+        // Set timer to mark as sustained after threshold
+        degradedTimerRef.current = setTimeout(() => {
+          setIsDegradedSustained(true);
+        }, DEGRADED_SUSTAINED_THRESHOLD_MS);
+      }
+    } else {
+      // Clear degraded state
+      degradedStartTimeRef.current = null;
+      if (degradedTimerRef.current) {
+        clearTimeout(degradedTimerRef.current);
+        degradedTimerRef.current = null;
+      }
+      setIsDegradedSustained(false);
+    }
+
+    return () => {
+      if (degradedTimerRef.current) {
+        clearTimeout(degradedTimerRef.current);
+        degradedTimerRef.current = null;
+      }
+    };
+  }, [isDegraded]);
+
   // Update rate limit stats periodically
   useEffect(() => {
     const updateRateLimits = () => {
@@ -124,6 +170,18 @@ export const StatusBarProvider: React.FC<StatusBarProviderProps> = ({
             connectedAt: wsStats.connectedAt,
             messagesSent: wsStats.messagesSent,
             messagesReceived: wsStats.messagesReceived,
+          },
+        };
+      case WebSocketConnectionState.DEGRADED:
+        return {
+          name: "WebSocket",
+          level: "warning",
+          message: "Slow connection",
+          details: {
+            connectedAt: wsStats.connectedAt,
+            messagesSent: wsStats.messagesSent,
+            messagesReceived: wsStats.messagesReceived,
+            degradedReason: wsStats.metrics?.degradedReason,
           },
         };
       case WebSocketConnectionState.CONNECTING:
@@ -341,6 +399,8 @@ export const StatusBarProvider: React.FC<StatusBarProviderProps> = ({
       subsystems,
       hasIssues: overallHealth !== "healthy",
       issueCount,
+      isDegradedSustained,
+      degradedReason,
     };
   }, [
     websocketStatus,
@@ -348,6 +408,8 @@ export const StatusBarProvider: React.FC<StatusBarProviderProps> = ({
     rateLimitStatus,
     networkStatus,
     refreshTrigger,
+    isDegradedSustained,
+    degradedReason,
   ]);
 
   // Memoize context value to prevent unnecessary re-renders of consumers
