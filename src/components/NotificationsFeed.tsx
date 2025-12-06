@@ -816,19 +816,21 @@ export const NotificationsFeed: React.FC = () => {
                       fetchedPosts={fetchedPosts}
                       totalPosts={totalPosts}
                       markAsRead={markAsRead}
+                      isExpanded={isExpanded}
                       onNavigate={(url) => {
                         // Check if this is a thread URL
                         if (url.startsWith("/thread/")) {
                           // Extract the post URI from the URL path
                           // URL format: /thread/handle/postId
                           // For thread URLs, we need to use the correct URI based on notification type
-                          const firstNotification = item.notifications[0];
+                          // Use targetPostUri if available, otherwise fall back to reasonSubject/uri
                           const postUri =
-                            (item.reason === "repost" ||
+                            item.targetPostUri ||
+                            ((item.reason === "repost" ||
                               item.reason === "like") &&
-                            firstNotification.reasonSubject
-                              ? firstNotification.reasonSubject
-                              : firstNotification.uri;
+                            item.notifications[0].reasonSubject
+                              ? item.notifications[0].reasonSubject
+                              : item.notifications[0].uri);
                           setSelectedPostUri(postUri);
                         } else if (url.startsWith("/profile/")) {
                           // Navigate to profile

@@ -1,12 +1,12 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
 import { formatDistanceToNow } from "date-fns";
-import { Heart, Quote, Repeat2, UserPlus } from "lucide-react";
+import { ChevronDown, ChevronUp, Heart, Quote, Repeat2, UserPlus } from "lucide-react";
 import React from "react";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { getNotificationUrl } from "../utils/url-helpers";
 
-interface AggregatedNotification {
+export interface AggregatedNotification {
   type: "aggregated";
   reason: string;
   count: number;
@@ -18,14 +18,16 @@ interface AggregatedNotification {
   }>;
   latestTimestamp: string;
   notifications: Notification[];
+  /** The target post URI for likes/reposts (reasonSubject) */
+  targetPostUri?: string;
 }
 
-interface SingleNotification {
+export interface SingleNotification {
   type: "single";
   notification: Notification;
 }
 
-type ProcessedNotification = AggregatedNotification | SingleNotification;
+export type ProcessedNotification = AggregatedNotification | SingleNotification;
 
 export function aggregateNotifications(
   notifications: Notification[],
@@ -33,7 +35,7 @@ export function aggregateNotifications(
   const processed: ProcessedNotification[] = [];
   const aggregationWindow = 24 * 60 * 60 * 1000; // 24 hours in milliseconds for better grouping
 
-  // Group notifications by reason and URI (for post-specific grouping)
+  // Group notifications by reason and target post (for post-specific grouping)
   const groups = new Map<string, Notification[]>();
 
   notifications.forEach((notification) => {
@@ -49,10 +51,19 @@ export function aggregateNotifications(
         "repost-via-repost",
       ].includes(notification.reason)
     ) {
-      // For follows and starterpack-joined, group all together. For likes/reposts/quotes, group by post URI
-      const key = ["follow", "starterpack-joined"].includes(notification.reason)
-        ? `${notification.reason}-all`
-        : `${notification.reason}-${notification.uri || "no-uri"}`;
+      // For follows and starterpack-joined, group all together
+      // For likes/reposts, group by reasonSubject (the post being liked/reposted)
+      // For quotes, group by uri (the quoting post)
+      let key: string;
+      if (["follow", "starterpack-joined"].includes(notification.reason)) {
+        key = `${notification.reason}-all`;
+      } else if (["like", "repost", "like-via-repost", "repost-via-repost"].includes(notification.reason)) {
+        // Use reasonSubject for likes/reposts - this is the post being acted upon
+        key = `${notification.reason}-${notification.reasonSubject || notification.uri || "no-uri"}`;
+      } else {
+        // For quotes, use uri
+        key = `${notification.reason}-${notification.uri || "no-uri"}`;
+      }
 
       if (!groups.has(key)) {
         groups.set(key, []);
@@ -120,6 +131,13 @@ export function aggregateNotifications(
           uniqueUsers.set(n.author.did, n.author);
         });
 
+        // Get the target post URI for likes/reposts
+        const firstNotification = cluster[0];
+        const targetPostUri =
+          ["like", "repost", "like-via-repost", "repost-via-repost"].includes(reason)
+            ? firstNotification.reasonSubject || firstNotification.uri
+            : firstNotification.uri;
+
         const aggregated: AggregatedNotification = {
           type: "aggregated",
           reason,
@@ -132,6 +150,7 @@ export function aggregateNotifications(
           })),
           latestTimestamp: cluster[0].indexedAt,
           notifications: cluster,
+          targetPostUri,
         };
 
         processed.push(aggregated);
@@ -171,6 +190,8 @@ interface AggregatedNotificationItemProps {
   totalPosts?: number;
   percentageFetched?: number;
   markAsRead?: () => void;
+  /** Whether this aggregated notification is currently expanded */
+  isExpanded?: boolean;
 }
 
 export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProps> =
@@ -186,6 +207,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
       totalPosts = 0,
       percentageFetched: _percentageFetched = 100,
       markAsRead,
+      isExpanded = false,
     }) => {
       const getIcon = () => {
         switch (item.reason) {
@@ -249,34 +271,46 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
         }
       };
 
+      // Format user display names for summary text
+      const formatUserSummary = () => {
+        const users = item.users;
+        const count = item.count;
+
+        if (users.length === 1) {
+          const name = users[0].displayName || `@${users[0].handle}`;
+          if (count === 1) {
+            return name;
+          }
+          return `${name} and ${count - 1} others`;
+        }
+
+        if (users.length === 2 && count === 2) {
+          const name1 = users[0].displayName || `@${users[0].handle}`;
+          const name2 = users[1].displayName || `@${users[1].handle}`;
+          return `${name1} and ${name2}`;
+        }
+
+        // More than 2 users
+        const firstName = users[0].displayName || `@${users[0].handle}`;
+        return `${firstName} and ${count - 1} others`;
+      };
+
       const getActionText = () => {
         switch (item.reason) {
           case "like":
-            return item.count === 1
-              ? "liked your post"
-              : `recent likes on your post`;
+            return "liked your post";
           case "repost":
-            return item.count === 1
-              ? "reposted your post"
-              : `reposts of your post`;
+            return "reposted your post";
           case "follow":
-            return item.count === 1 ? "followed you" : "new followers";
+            return "followed you";
           case "quote":
-            return item.count === 1
-              ? "quoted your post"
-              : `quotes of your post`;
+            return "quoted your post";
           case "starterpack-joined":
-            return item.count === 1
-              ? "joined via your starterpack"
-              : "joined via your starterpack";
+            return "joined via your starterpack";
           case "like-via-repost":
-            return item.count === 1
-              ? "liked a repost of your post"
-              : `likes on reposts of your post`;
+            return "liked a repost of your post";
           case "repost-via-repost":
-            return item.count === 1
-              ? "reposted a repost of your post"
-              : `reposts of reposts of your post`;
+            return "reposted a repost of your post";
           default:
             return "interacted with your post";
         }
@@ -288,10 +322,9 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
 
       // Get URL for the first notification (most recent)
       const firstNotification = item.notifications[0];
-      const post =
-        ["like", "repost"].includes(firstNotification.reason) && postMap
-          ? postMap.get(firstNotification.uri)
-          : undefined;
+      // Use targetPostUri for post lookup (this is reasonSubject for likes/reposts)
+      const postUri = item.targetPostUri || firstNotification.reasonSubject || firstNotification.uri;
+      const post = postMap?.get(postUri);
       const postAuthorHandle = post?.author?.handle;
       const primaryUrl = getNotificationUrl(
         firstNotification,
@@ -415,13 +448,16 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                 </div>
               )}
 
-              {/* Aggregated text with timestamp */}
+              {/* Aggregated text with timestamp - "X people liked your post" format */}
               <p className="text-sm">
                 <span
-                  className="font-bold"
+                  className="font-semibold"
                   style={{ color: "var(--bsky-text-primary)" }}
                 >
-                  {item.count} {getActionText()}
+                  {formatUserSummary()}
+                </span>{" "}
+                <span style={{ color: "var(--bsky-text-secondary)" }}>
+                  {getActionText()}
                 </span>
                 <span
                   className="ml-1 text-xs"
@@ -434,29 +470,57 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                 </span>
               </p>
 
-              {/* User names preview */}
-              <p
-                className="mt-0.5 text-xs"
-                style={{ color: "var(--bsky-text-secondary)" }}
-              >
-                {displayUsers.map((user, idx) => (
-                  <span key={user.did}>
-                    <span
-                      className="cursor-pointer hover:underline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (onNavigate) {
-                          onNavigate(`/profile/${user.handle}`);
-                        }
-                      }}
-                    >
-                      {user.displayName || user.handle}
+              {/* Show all user names when count > 2 for more context */}
+              {item.count > 2 && (
+                <p
+                  className="mt-0.5 text-xs"
+                  style={{ color: "var(--bsky-text-tertiary)" }}
+                >
+                  {displayUsers.map((user, idx) => (
+                    <span key={user.did}>
+                      <span
+                        className="cursor-pointer hover:underline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onNavigate) {
+                            onNavigate(`/profile/${user.handle}`);
+                          }
+                        }}
+                      >
+                        {user.displayName || user.handle}
+                      </span>
+                      {idx < displayUsers.length - 1 && ", "}
                     </span>
-                    {idx < displayUsers.length - 1 && ", "}
-                  </span>
-                ))}
-                {remainingCount > 0 && ` and ${remainingCount} others`}
-              </p>
+                  ))}
+                  {remainingCount > 0 && ` and ${remainingCount} more`}
+                </p>
+              )}
+
+              {/* Expand/collapse button for aggregated notifications with more than 2 items */}
+              {item.count > 2 && onExpand && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onExpand();
+                  }}
+                  className="mt-2 flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-bsky-bg-secondary"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                  aria-expanded={isExpanded}
+                  aria-label={isExpanded ? "Collapse notifications" : `Show all ${item.count} notifications`}
+                >
+                  {isExpanded ? (
+                    <>
+                      <ChevronUp size={14} />
+                      <span>Collapse</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown size={14} />
+                      <span>Show all {item.count}</span>
+                    </>
+                  )}
+                </button>
+              )}
 
               {hasUnread && (
                 <div
@@ -470,15 +534,9 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
           {/* Post preview below, with left margin to align with content */}
           {item.reason !== "follow" &&
             (() => {
-              // Try to get the post from postMap first for richer content
-              // For reposts and likes, use reasonSubject which contains the original post URI
-              const notification = item.notifications[0];
-              const postUri =
-                (item.reason === "repost" || item.reason === "like") &&
-                notification.reasonSubject
-                  ? notification.reasonSubject
-                  : notification.uri;
-              const post = postMap?.get(postUri);
+              // Use targetPostUri for post lookup (already computed correctly for likes/reposts)
+              const targetUri = item.targetPostUri || postUri;
+              const post = postMap?.get(targetUri);
 
               // Show loading indicator if this specific post hasn't been fetched yet
               // and we're still in the process of fetching posts
