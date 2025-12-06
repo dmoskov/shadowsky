@@ -457,9 +457,20 @@ export const NotificationsFeed: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div>
+      <div className="skeleton-stagger">
         {Array.from({ length: 8 }).map((_, i) => (
-          <NotificationSkeleton key={i} />
+          <div
+            key={i}
+            className="animate-skeleton-reveal"
+            style={
+              {
+                "--reveal-delay": `${i * 40}ms`,
+                "--reveal-duration": "300ms",
+              } as React.CSSProperties
+            }
+          >
+            <NotificationSkeleton />
+          </div>
         ))}
       </div>
     );

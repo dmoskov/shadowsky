@@ -1,5 +1,13 @@
 import React from "react";
 
+// Re-export skeleton transition components for easy access
+export {
+  ContentReveal,
+  SkeletonTransition,
+  SkeletonTransitionList,
+  useSkeletonTransition,
+} from "./SkeletonTransition";
+
 /**
  * Skeleton Loader Design System
  *

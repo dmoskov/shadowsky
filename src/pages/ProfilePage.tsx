@@ -459,7 +459,11 @@ export default function ProfilePage() {
   };
 
   if (loading) {
-    return <ProfileSkeleton />;
+    return (
+      <div className="skeleton-stagger">
+        <ProfileSkeleton />
+      </div>
+    );
   }
 
   if (error || !profile) {

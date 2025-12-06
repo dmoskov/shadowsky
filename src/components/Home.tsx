@@ -1782,7 +1782,11 @@ export const Home: React.FC<HomeProps> = React.memo(
     );
 
     if (isLoading) {
-      return <FeedSkeleton count={5} />;
+      return (
+        <div className="skeleton-stagger mx-auto max-w-2xl px-3 sm:px-4">
+          <FeedSkeleton count={5} />
+        </div>
+      );
     }
 
     if (error) {
@@ -1830,11 +1834,17 @@ export const Home: React.FC<HomeProps> = React.memo(
             aria-label="Posts"
           >
             {visibleItems.map((item: any, index: number) => (
-              <PostItem
+              <div
                 key={`${item.post.uri}-page${item._pageIndex}-item${item._itemIndex}`}
-                item={item}
-                index={index}
-              />
+                className="content-enter"
+                style={
+                  {
+                    animationDelay: `${Math.min(index * 30, 300)}ms`,
+                  } as React.CSSProperties
+                }
+              >
+                <PostItem item={item} index={index} />
+              </div>
             ))}
           </div>
 

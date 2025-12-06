@@ -12,6 +12,12 @@ import {
   useTimeout,
 } from "../../hooks/useTiming";
 import { TIMING } from "../../utils/timing";
+import {
+  ContentReveal,
+  SkeletonTransition,
+  SkeletonTransitionList,
+  useSkeletonTransition,
+} from "./SkeletonTransition";
 
 /**
  * Loading State Design System
@@ -719,3 +725,14 @@ export const ColumnHeaderSkeleton: React.FC<{ className?: string }> = ({
 // ============================================================================
 
 export default LoadingState;
+
+// ============================================================================
+// Re-export Skeleton Transition Components
+// ============================================================================
+
+export {
+  ContentReveal,
+  SkeletonTransition,
+  SkeletonTransitionList,
+  useSkeletonTransition,
+};
