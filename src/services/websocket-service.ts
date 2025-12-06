@@ -5,7 +5,9 @@ import {
   WebSocketConnectionState,
   WebSocketEventType,
   type WebSocketConfig,
+  type WebSocketDebugState,
   type WebSocketMessage,
+  type WebSocketMetrics,
   type WebSocketStats,
 } from "../types/websocket";
 
@@ -64,7 +66,30 @@ export class WebSocketService {
   private readonly PONG_TIMEOUT = WS_CONFIG.PONG_TIMEOUT_MS; // 10 seconds
   private lastPingTime: number | null = null;
   private latencyHistory: number[] = [];
-  private readonly MAX_LATENCY_SAMPLES = 10;
+  private readonly MAX_LATENCY_SAMPLES = 100; // Expanded for p95 calculation
+
+  // Health metrics tracking
+  private metricsStartTime: number = Date.now();
+  private totalConnectedTime: number = 0;
+  private lastConnectedTimestamp: number | null = null;
+  private lastDisconnectedTimestamp: number | null = null;
+  private totalReconnections: number = 0;
+  private pongTimeoutCount: number = 0;
+  private totalPingPongExchanges: number = 0;
+
+  // Degraded state thresholds
+  private readonly P95_LATENCY_THRESHOLD_MS = 5000; // 5 seconds
+  private readonly PACKET_LOSS_THRESHOLD_PERCENT = 10; // 10%
+  private readonly LONG_DISCONNECTION_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+
+  // Debug mode simulation settings
+  private _debugLatency = 0;
+  private _debugPacketLossPercent = 0;
+  private _debugMessageQueue: Array<{
+    message: WebSocketMessage;
+    sendAt: number;
+  }> = [];
+  private _debugQueueTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(config: WebSocketConfig) {
     this.config = {
@@ -164,7 +189,137 @@ export class WebSocketService {
   }
 
   public getStats(): WebSocketStats {
-    return { ...this.stats };
+    return {
+      ...this.stats,
+      metrics: this.calculateMetrics(),
+    };
+  }
+
+  /**
+   * Calculate the p95 latency from the latency history.
+   * Returns the value at the 95th percentile of sorted samples.
+   */
+  private calculateP95Latency(): number {
+    if (this.latencyHistory.length === 0) return 0;
+
+    // Sort a copy of the array
+    const sorted = [...this.latencyHistory].sort((a, b) => a - b);
+    const p95Index = Math.floor(sorted.length * 0.95);
+    return sorted[Math.min(p95Index, sorted.length - 1)];
+  }
+
+  /**
+   * Calculate the packet loss percentage based on PONG timeouts.
+   */
+  private calculatePacketLossPercent(): number {
+    if (this.totalPingPongExchanges === 0) return 0;
+    return (this.pongTimeoutCount / this.totalPingPongExchanges) * 100;
+  }
+
+  /**
+   * Calculate the uptime percentage since metrics started.
+   */
+  private calculateUptimePercent(): number {
+    const now = Date.now();
+    const totalTime = now - this.metricsStartTime;
+    if (totalTime === 0) return 0;
+
+    // Add current connected session if connected
+    let connectedTime = this.totalConnectedTime;
+    if (
+      this.lastConnectedTimestamp !== null &&
+      (this.stats.connectionState === WebSocketConnectionState.CONNECTED ||
+        this.stats.connectionState === WebSocketConnectionState.DEGRADED)
+    ) {
+      connectedTime += now - this.lastConnectedTimestamp;
+    }
+
+    return Math.min(100, (connectedTime / totalTime) * 100);
+  }
+
+  /**
+   * Check if connection is in a degraded state based on latency and packet loss.
+   */
+  private checkDegradedState(): { isDegraded: boolean; reason?: string } {
+    const p95Latency = this.calculateP95Latency();
+    const packetLoss = this.calculatePacketLossPercent();
+
+    if (p95Latency > this.P95_LATENCY_THRESHOLD_MS) {
+      return {
+        isDegraded: true,
+        reason: `High latency: p95 ${p95Latency}ms > ${this.P95_LATENCY_THRESHOLD_MS}ms threshold`,
+      };
+    }
+
+    if (packetLoss > this.PACKET_LOSS_THRESHOLD_PERCENT) {
+      return {
+        isDegraded: true,
+        reason: `High packet loss: ${packetLoss.toFixed(1)}% > ${this.PACKET_LOSS_THRESHOLD_PERCENT}% threshold`,
+      };
+    }
+
+    return { isDegraded: false };
+  }
+
+  /**
+   * Calculate comprehensive connection health metrics.
+   */
+  private calculateMetrics(): WebSocketMetrics {
+    const p95Latency = this.calculateP95Latency();
+    const avgLatency =
+      this.latencyHistory.length > 0
+        ? Math.round(
+            this.latencyHistory.reduce((a, b) => a + b, 0) /
+              this.latencyHistory.length,
+          )
+        : 0;
+    const degradedState = this.checkDegradedState();
+
+    return {
+      uptimePercent: Math.round(this.calculateUptimePercent() * 100) / 100,
+      reconnectionCount: this.totalReconnections,
+      averageLatencyMs: avgLatency,
+      p95LatencyMs: p95Latency,
+      messagesSent: this.stats.messagesSent,
+      messagesReceived: this.stats.messagesReceived,
+      lastConnectedAt: this.lastConnectedTimestamp,
+      lastDisconnectedAt: this.lastDisconnectedTimestamp,
+      pongTimeouts: this.pongTimeoutCount,
+      totalPingPongExchanges: this.totalPingPongExchanges,
+      isDegraded: degradedState.isDegraded,
+      degradedReason: degradedState.reason,
+    };
+  }
+
+  /**
+   * Reset metrics after a long disconnection period.
+   */
+  private resetMetricsIfNeeded(): void {
+    if (this.lastDisconnectedTimestamp === null) return;
+
+    const disconnectionDuration =
+      Date.now() - this.lastDisconnectedTimestamp;
+    if (disconnectionDuration > this.LONG_DISCONNECTION_THRESHOLD_MS) {
+      this.log(
+        `Long disconnection (${Math.round(disconnectionDuration / 1000)}s) - resetting metrics`,
+      );
+      this.resetMetrics();
+    }
+  }
+
+  /**
+   * Reset all metrics to initial state.
+   */
+  public resetMetrics(): void {
+    this.metricsStartTime = Date.now();
+    this.totalConnectedTime = 0;
+    this.lastConnectedTimestamp = null;
+    this.lastDisconnectedTimestamp = null;
+    this.totalReconnections = 0;
+    this.pongTimeoutCount = 0;
+    this.totalPingPongExchanges = 0;
+    this.latencyHistory = [];
+    this.log("Metrics reset");
   }
 
   public getConnectionState(): WebSocketConnectionState {
@@ -174,7 +329,8 @@ export class WebSocketService {
   public isConnected(): boolean {
     return (
       this.ws?.readyState === WebSocket.OPEN &&
-      this.stats.connectionState === WebSocketConnectionState.CONNECTED
+      (this.stats.connectionState === WebSocketConnectionState.CONNECTED ||
+        this.stats.connectionState === WebSocketConnectionState.DEGRADED)
     );
   }
 
@@ -563,6 +719,9 @@ export class WebSocketService {
       this.pongTimeoutTimer = null;
     }
 
+    // Track successful PING/PONG exchange
+    this.totalPingPongExchanges++;
+
     // Calculate latency if we have a ping time
     if (this.lastPingTime !== null) {
       const latency = Date.now() - this.lastPingTime;
@@ -582,8 +741,33 @@ export class WebSocketService {
         `PONG received, latency: ${latency}ms, avg: ${this.stats.averageLatency}ms`,
       );
       this.lastPingTime = null;
+
+      // Check and update degraded state after receiving latency sample
+      this.updateDegradedState();
     } else {
       this.log("PONG received (unsolicited)");
+    }
+  }
+
+  /**
+   * Update connection state to DEGRADED or CONNECTED based on health metrics.
+   */
+  private updateDegradedState(): void {
+    const degradedCheck = this.checkDegradedState();
+    const currentState = this.stats.connectionState;
+
+    if (
+      degradedCheck.isDegraded &&
+      currentState === WebSocketConnectionState.CONNECTED
+    ) {
+      this.log(`Connection degraded: ${degradedCheck.reason}`, "warn");
+      this.updateConnectionState(WebSocketConnectionState.DEGRADED);
+    } else if (
+      !degradedCheck.isDegraded &&
+      currentState === WebSocketConnectionState.DEGRADED
+    ) {
+      this.log("Connection recovered from degraded state");
+      this.updateConnectionState(WebSocketConnectionState.CONNECTED);
     }
   }
 
@@ -591,6 +775,10 @@ export class WebSocketService {
     this.log("PONG timeout - server unresponsive, reconnecting...", "warn");
     this.stats.lastError = "PONG timeout - server unresponsive";
     this.lastPingTime = null;
+
+    // Track PONG timeout for packet loss metrics
+    this.pongTimeoutCount++;
+    this.totalPingPongExchanges++;
 
     // Clear the timeout reference
     this.pongTimeoutTimer = null;
@@ -633,6 +821,42 @@ export class WebSocketService {
   }
 
   private updateConnectionState(state: WebSocketConnectionState): void {
+    const previousState = this.stats.connectionState;
+    const now = Date.now();
+
+    // Track connected time when transitioning away from connected/degraded states
+    if (
+      (previousState === WebSocketConnectionState.CONNECTED ||
+        previousState === WebSocketConnectionState.DEGRADED) &&
+      state !== WebSocketConnectionState.CONNECTED &&
+      state !== WebSocketConnectionState.DEGRADED &&
+      this.lastConnectedTimestamp !== null
+    ) {
+      this.totalConnectedTime += now - this.lastConnectedTimestamp;
+      this.lastDisconnectedTimestamp = now;
+      this.lastConnectedTimestamp = null;
+    }
+
+    // Track when connection is established
+    if (
+      (state === WebSocketConnectionState.CONNECTED ||
+        state === WebSocketConnectionState.DEGRADED) &&
+      previousState !== WebSocketConnectionState.CONNECTED &&
+      previousState !== WebSocketConnectionState.DEGRADED
+    ) {
+      // Check if we should reset metrics after long disconnection
+      this.resetMetricsIfNeeded();
+      this.lastConnectedTimestamp = now;
+    }
+
+    // Track reconnections
+    if (
+      state === WebSocketConnectionState.RECONNECTING &&
+      previousState !== WebSocketConnectionState.RECONNECTING
+    ) {
+      this.totalReconnections++;
+    }
+
     this.stats.connectionState = state;
     this.log(`Connection state: ${state}`);
   }
@@ -662,6 +886,178 @@ export class WebSocketService {
         default:
           debug.log(`${prefix} ${message}`);
       }
+    }
+  }
+
+  // =================================================================
+  // DEBUG METHODS - For stress testing and simulation
+  // These methods are prefixed with _debug to indicate they should
+  // only be used in development/testing scenarios
+  // =================================================================
+
+  /**
+   * Set artificial latency for all outgoing messages
+   * @param ms - Delay in milliseconds (0 to disable)
+   */
+  public _debugSetLatency(ms: number): void {
+    this._debugLatency = Math.max(0, Math.min(ms, 10000)); // Cap at 10 seconds
+    this.log(`[DEBUG] Latency set to ${this._debugLatency}ms`, "warn");
+
+    // Start or stop the queue processor based on latency setting
+    if (this._debugLatency > 0 && !this._debugQueueTimer) {
+      this._debugQueueTimer = setInterval(() => {
+        this._processDebugQueue();
+      }, 50);
+    } else if (this._debugLatency === 0 && this._debugQueueTimer) {
+      clearInterval(this._debugQueueTimer);
+      this._debugQueueTimer = null;
+      // Flush any remaining queued messages
+      this._debugMessageQueue.forEach(({ message }) => {
+        this._sendImmediate(message);
+      });
+      this._debugMessageQueue = [];
+    }
+  }
+
+  /**
+   * Get the current artificial latency setting
+   */
+  public _debugGetLatency(): number {
+    return this._debugLatency;
+  }
+
+  /**
+   * Set packet loss percentage for simulating unreliable networks
+   * @param percent - Percentage of messages to drop (0-100)
+   */
+  public _debugSetPacketLoss(percent: number): void {
+    this._debugPacketLossPercent = Math.max(0, Math.min(percent, 100));
+    this.log(
+      `[DEBUG] Packet loss set to ${this._debugPacketLossPercent}%`,
+      "warn",
+    );
+  }
+
+  /**
+   * Get the current packet loss percentage
+   */
+  public _debugGetPacketLoss(): number {
+    return this._debugPacketLossPercent;
+  }
+
+  /**
+   * Force disconnect with a specific close code
+   * @param code - WebSocket close code (1000-4999)
+   */
+  public _debugForceDisconnect(code: number = 1006): void {
+    this.log(`[DEBUG] Forcing disconnect with code ${code}`, "warn");
+    if (this.ws) {
+      // Mark as not intentionally closed so reconnect will happen
+      this.isIntentionallyClosed = false;
+      this.ws.close(code, `Debug forced disconnect (code: ${code})`);
+    }
+  }
+
+  /**
+   * Force a reconnection cycle
+   */
+  public _debugForceReconnect(): void {
+    this.log("[DEBUG] Forcing reconnection cycle", "warn");
+    if (this.ws) {
+      this.isIntentionallyClosed = false;
+      this.ws.close(1000, "Debug forced reconnect");
+    }
+    // Immediately schedule reconnect
+    this.scheduleReconnect();
+  }
+
+  /**
+   * Send multiple messages rapidly for stress testing
+   * @param count - Number of messages to send
+   * @param intervalMs - Interval between messages (default 10ms)
+   * @returns Promise that resolves when flood is complete
+   */
+  public _debugFloodMessages(
+    count: number,
+    intervalMs: number = 10,
+  ): Promise<number> {
+    return new Promise((resolve) => {
+      this.log(
+        `[DEBUG] Flooding ${count} messages at ${intervalMs}ms interval`,
+      );
+      let sent = 0;
+      const flood = setInterval(() => {
+        if (sent >= count || !this.isConnected()) {
+          clearInterval(flood);
+          this.log(`[DEBUG] Flood complete: sent ${sent} messages`);
+          resolve(sent);
+          return;
+        }
+        this.send({
+          type: WebSocketEventType.PING,
+          timestamp: new Date().toISOString(),
+        });
+        sent++;
+      }, intervalMs);
+    });
+  }
+
+  /**
+   * Get current debug settings and internal state
+   */
+  public _debugGetState(): WebSocketDebugState {
+    return {
+      latency: this._debugLatency,
+      packetLoss: this._debugPacketLossPercent,
+      queuedMessages: this._debugMessageQueue.length,
+      connectionState: this.stats.connectionState,
+      isAuthenticated: this.isAuthenticated,
+      reconnectAttempts: this.stats.reconnectAttempts,
+      wsReadyState: this.ws?.readyState ?? null,
+      messagesSent: this.stats.messagesSent,
+      messagesReceived: this.stats.messagesReceived,
+      lastPingLatency: this.stats.lastPingLatency,
+      averageLatency: this.stats.averageLatency,
+    };
+  }
+
+  /**
+   * Reset all debug settings to defaults
+   */
+  public _debugReset(): void {
+    this._debugSetLatency(0);
+    this._debugSetPacketLoss(0);
+    this.log("[DEBUG] All debug settings reset");
+  }
+
+  /**
+   * Internal method to send a message immediately, bypassing debug simulations
+   */
+  private _sendImmediate(message: WebSocketMessage): boolean {
+    if (this.ws?.readyState !== WebSocket.OPEN) {
+      return false;
+    }
+    try {
+      this.ws.send(JSON.stringify(message));
+      this.stats.messagesSent++;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Process the debug message queue (used when latency simulation is enabled)
+   */
+  private _processDebugQueue(): void {
+    const now = Date.now();
+    const toSend = this._debugMessageQueue.filter((item) => item.sendAt <= now);
+    this._debugMessageQueue = this._debugMessageQueue.filter(
+      (item) => item.sendAt > now,
+    );
+
+    for (const { message } of toSend) {
+      this._sendImmediate(message);
     }
   }
 }

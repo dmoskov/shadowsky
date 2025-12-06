@@ -1,14 +1,14 @@
 import { debug } from "@bsky/shared";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Search, X } from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useDMQueue } from "../hooks/useDMQueue";
 import { useMinDuration } from "../hooks/useTiming";
 import { getDmSearchDB } from "../services/dm-search-db";
 import { dmService, type DmConversation } from "../services/dm-service";
+import { DMMessage } from "./DMMessage";
 import { DmSearch } from "./DmSearch";
-import { MessageReactions } from "./MessageReactions";
 import {
   ConversationListSkeleton,
   MessageListSkeleton,
@@ -175,33 +175,29 @@ export const DirectMessages: React.FC = () => {
     loadSenders();
   }, []);
 
-  // Send message mutation
-  const sendMessageMutation = useMutation({
-    mutationFn: ({
-      conversationId,
-      text,
-    }: {
-      conversationId: string;
-      text: string;
-    }) => dmService.sendMessage(conversationId, text),
-    onSuccess: () => {
-      setMessageText("");
-      queryClient.invalidateQueries({
-        queryKey: ["dm-conversation", selectedConversation],
-      });
-      queryClient.invalidateQueries({ queryKey: ["dm-conversations"] });
-    },
-    onError: (error) => {
-      debug.error("Failed to send message:", error);
-    },
-  });
+  // Use optimistic DM queue
+  const {
+    getOptimisticMessages,
+    sendMessage: sendOptimisticMessage,
+    retryMessage,
+    isInitialized: isQueueInitialized,
+  } = useDMQueue();
+
+  // Track if we're currently sending
+  const [isSending, setIsSending] = useState(false);
+
+  // Get combined messages (server + optimistic)
+  const combinedMessages = useMemo(() => {
+    if (!conversationData?.messages || !selectedConversation) return [];
+    return getOptimisticMessages(conversationData.messages, selectedConversation);
+  }, [conversationData?.messages, selectedConversation, getOptimisticMessages]);
 
   // Scroll to bottom when messages change (unless highlighted)
   useEffect(() => {
     if (!highlightedMessageId) {
       messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
     }
-  }, [conversationData?.messages, highlightedMessageId]);
+  }, [combinedMessages, highlightedMessageId]);
 
   // Mark conversation as read when selected
   useEffect(() => {
@@ -261,14 +257,30 @@ export const DirectMessages: React.FC = () => {
     [selectedConversation],
   );
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedConversation || !messageText.trim()) return;
+    if (!selectedConversation || !messageText.trim() || isSending) return;
 
-    sendMessageMutation.mutate({
-      conversationId: selectedConversation,
-      text: messageText.trim(),
-    });
+    const text = messageText.trim();
+    setMessageText(""); // Clear input immediately for optimistic feel
+    setIsSending(true);
+
+    try {
+      await sendOptimisticMessage(selectedConversation, text);
+      // Invalidate queries after a delay to pick up server confirmation
+      setTimeout(() => {
+        queryClient.invalidateQueries({
+          queryKey: ["dm-conversation", selectedConversation],
+        });
+        queryClient.invalidateQueries({ queryKey: ["dm-conversations"] });
+      }, 2000);
+    } catch (error) {
+      debug.error("Failed to queue message:", error);
+      // Restore the message text if queuing failed
+      setMessageText(text);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const getOtherMember = (conversation: DmConversation) => {
@@ -565,9 +577,9 @@ export const DirectMessages: React.FC = () => {
               aria-label="Message history"
               aria-live="polite"
             >
-              {loadingMessages ? (
+              {loadingMessages && !isQueueInitialized ? (
                 <MessageListSkeleton count={5} aria-label="Loading messages" />
-              ) : conversationData.messages.length === 0 ? (
+              ) : combinedMessages.length === 0 ? (
                 <div
                   className="text-center"
                   style={{ color: "var(--bsky-text-secondary)" }}
@@ -576,39 +588,28 @@ export const DirectMessages: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  {conversationData.messages.map((message) => {
+                  {combinedMessages.map((message) => {
                     const isOwnMessage = message.sender.did === session?.did;
                     const isHighlighted = highlightedMessageId === message.id;
+                    const messageKey = message._localId || message.id;
                     return (
-                      <div
-                        key={message.id}
+                      <DMMessage
+                        key={messageKey}
                         ref={(el) => setMessageRef(message.id, el)}
-                        className={`mb-4 flex transition-all duration-500 ${isOwnMessage ? "justify-end" : ""} ${
-                          isHighlighted
-                            ? "rounded-lg bg-yellow-100 p-2 ring-2 ring-yellow-400 dark:bg-yellow-900/30 dark:ring-yellow-600"
-                            : ""
-                        }`}
-                        data-message-id={message.id}
-                      >
-                        <div className="max-w-[70%]">
-                          <div
-                            className={`rounded-lg p-2 px-4 ${isOwnMessage ? "bg-bsky-primary text-white" : "bg-bsky-bg-secondary text-bsky-text-primary"}`}
-                          >
-                            <div>{message.text}</div>
-                            <div className="mt-1 text-xs opacity-70">
-                              {formatDistanceToNow(new Date(message.sentAt), {
-                                addSuffix: true,
-                              })}
-                            </div>
-                          </div>
-                          <MessageReactions
-                            conversationId={selectedConversation}
-                            messageId={message.id}
-                            reactions={message.reactions}
-                            isOwnMessage={isOwnMessage}
-                          />
-                        </div>
-                      </div>
+                        messageId={message.id}
+                        text={message.text}
+                        sentAt={message.sentAt}
+                        isOwnMessage={isOwnMessage}
+                        isHighlighted={isHighlighted}
+                        conversationId={selectedConversation}
+                        reactions={message.reactions}
+                        localId={message._localId}
+                        status={message._status}
+                        retryCount={message._retryCount}
+                        lastError={message._lastError}
+                        isOptimistic={message._isOptimistic}
+                        onRetry={retryMessage}
+                      />
                     );
                   })}
                   <div ref={messagesEndRef} />
@@ -633,15 +634,9 @@ export const DirectMessages: React.FC = () => {
                 />
                 <button
                   type="submit"
-                  disabled={
-                    !messageText.trim() || sendMessageMutation.isPending
-                  }
+                  disabled={!messageText.trim() || isSending}
                   className="cursor-pointer rounded-lg border-none bg-bsky-primary px-6 py-2 font-semibold text-white transition-colors duration-200 hover:bg-bsky-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label={
-                    sendMessageMutation.isPending
-                      ? "Sending message..."
-                      : "Send message"
-                  }
+                  aria-label={isSending ? "Sending message..." : "Send message"}
                 >
                   Send
                 </button>

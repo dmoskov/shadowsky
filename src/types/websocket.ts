@@ -91,6 +91,7 @@ export type WebSocketMessage =
 export enum WebSocketConnectionState {
   CONNECTING = "connecting",
   CONNECTED = "connected",
+  DEGRADED = "degraded",
   DISCONNECTED = "disconnected",
   RECONNECTING = "reconnecting",
   ERROR = "error",
@@ -106,6 +107,33 @@ export interface WebSocketConfig {
   debug?: boolean;
 }
 
+export interface WebSocketMetrics {
+  /** Percentage of time the connection has been up (0-100) */
+  uptimePercent: number;
+  /** Total number of reconnection attempts since service started */
+  reconnectionCount: number;
+  /** Average latency from PING/PONG timing in milliseconds */
+  averageLatencyMs: number;
+  /** 95th percentile latency in milliseconds */
+  p95LatencyMs: number;
+  /** Total messages sent */
+  messagesSent: number;
+  /** Total messages received */
+  messagesReceived: number;
+  /** Timestamp of last successful connection */
+  lastConnectedAt: number | null;
+  /** Timestamp of last disconnection */
+  lastDisconnectedAt: number | null;
+  /** Number of PONG timeouts (packet loss indicator) */
+  pongTimeouts: number;
+  /** Total PING/PONG exchanges */
+  totalPingPongExchanges: number;
+  /** Whether the connection is currently degraded */
+  isDegraded: boolean;
+  /** Reason for degraded state, if applicable */
+  degradedReason?: string;
+}
+
 export interface WebSocketStats {
   connectionState: WebSocketConnectionState;
   connectedAt?: Date;
@@ -114,5 +142,33 @@ export interface WebSocketStats {
   messagesReceived: number;
   lastError?: string;
   lastPingLatency?: number;
+  averageLatency?: number;
+  /** Extended health metrics */
+  metrics?: WebSocketMetrics;
+}
+
+/** Debug state for WebSocket stress testing panel */
+export interface WebSocketDebugState {
+  /** Artificial latency in milliseconds */
+  latency: number;
+  /** Packet loss percentage (0-100) */
+  packetLoss: number;
+  /** Number of messages currently queued due to latency simulation */
+  queuedMessages: number;
+  /** Current connection state */
+  connectionState: WebSocketConnectionState;
+  /** Whether authenticated with the server */
+  isAuthenticated: boolean;
+  /** Current reconnect attempt count */
+  reconnectAttempts: number;
+  /** Raw WebSocket readyState (0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED) */
+  wsReadyState: number | null;
+  /** Total messages sent */
+  messagesSent: number;
+  /** Total messages received */
+  messagesReceived: number;
+  /** Last ping latency in ms */
+  lastPingLatency?: number;
+  /** Average latency in ms */
   averageLatency?: number;
 }

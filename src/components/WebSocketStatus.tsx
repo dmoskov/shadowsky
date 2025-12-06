@@ -1,4 +1,10 @@
-import { Activity, AlertCircle, CheckCircle, WifiOff } from "lucide-react";
+import {
+  Activity,
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle,
+  WifiOff,
+} from "lucide-react";
 import React, { useState } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { WebSocketConnectionState } from "../types/websocket";
@@ -12,10 +18,14 @@ export const WebSocketStatus: React.FC = () => {
     return null;
   }
 
+  const metrics = stats.metrics;
+
   const getStatusIcon = () => {
     switch (connectionState) {
       case WebSocketConnectionState.CONNECTED:
         return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case WebSocketConnectionState.DEGRADED:
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
       case WebSocketConnectionState.CONNECTING:
       case WebSocketConnectionState.RECONNECTING:
         return <Activity className="h-4 w-4 animate-pulse text-yellow-500" />;
@@ -30,6 +40,8 @@ export const WebSocketStatus: React.FC = () => {
     switch (connectionState) {
       case WebSocketConnectionState.CONNECTED:
         return "Connected";
+      case WebSocketConnectionState.DEGRADED:
+        return "Degraded";
       case WebSocketConnectionState.CONNECTING:
         return "Connecting...";
       case WebSocketConnectionState.RECONNECTING:
@@ -45,6 +57,8 @@ export const WebSocketStatus: React.FC = () => {
     switch (connectionState) {
       case WebSocketConnectionState.CONNECTED:
         return "bg-green-500";
+      case WebSocketConnectionState.DEGRADED:
+        return "bg-yellow-500";
       case WebSocketConnectionState.CONNECTING:
       case WebSocketConnectionState.RECONNECTING:
         return "bg-yellow-500";
@@ -106,6 +120,35 @@ export const WebSocketStatus: React.FC = () => {
               {stats.reconnectAttempts > 0 && (
                 <div>Reconnect Attempts: {stats.reconnectAttempts}</div>
               )}
+
+              {/* Health Metrics */}
+              {metrics && (
+                <>
+                  <div className="mt-2 border-t pt-2" style={{ borderColor: "var(--bsky-border)" }}>
+                    <div className="font-medium">Health Metrics</div>
+                  </div>
+                  <div>Uptime: {metrics.uptimePercent.toFixed(1)}%</div>
+                  {metrics.averageLatencyMs > 0 && (
+                    <div>
+                      Latency: {metrics.averageLatencyMs}ms avg / {metrics.p95LatencyMs}ms p95
+                    </div>
+                  )}
+                  {metrics.reconnectionCount > 0 && (
+                    <div>Total Reconnections: {metrics.reconnectionCount}</div>
+                  )}
+                  {metrics.pongTimeouts > 0 && (
+                    <div className="text-yellow-500">
+                      PONG Timeouts: {metrics.pongTimeouts}/{metrics.totalPingPongExchanges}
+                    </div>
+                  )}
+                  {metrics.isDegraded && metrics.degradedReason && (
+                    <div className="text-yellow-500">
+                      Degraded: {metrics.degradedReason}
+                    </div>
+                  )}
+                </>
+              )}
+
               {stats.lastError && (
                 <div className="text-red-500">Error: {stats.lastError}</div>
               )}
