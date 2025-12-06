@@ -72,7 +72,12 @@ export function useRAFScroll(
   // Only update options ref when element changes (key option that affects subscription)
   useEffect(() => {
     optionsRef.current = options;
-  }, [options.element, options.priority, options.threshold, options.onDirectionChange]);
+  }, [
+    options.element,
+    options.priority,
+    options.threshold,
+    options.onDirectionChange,
+  ]);
 
   useEffect(() => {
     const handleScroll: ScrollCallback = (state) => {
@@ -183,16 +188,18 @@ export function useScrollPosition(
  *   showThreshold: 100
  * });
  */
-export function useScrollVisibility(options: {
-  /** Hide when scrolling down (default: true) */
-  hideOnScrollDown?: boolean;
-  /** Show when scrolling up (default: true) */
-  showOnScrollUp?: boolean;
-  /** Minimum scroll position before hiding (default: 100) */
-  showThreshold?: number;
-  /** Element to track (default: window) */
-  element?: HTMLElement | null;
-} = {}): boolean {
+export function useScrollVisibility(
+  options: {
+    /** Hide when scrolling down (default: true) */
+    hideOnScrollDown?: boolean;
+    /** Show when scrolling up (default: true) */
+    showOnScrollUp?: boolean;
+    /** Minimum scroll position before hiding (default: 100) */
+    showThreshold?: number;
+    /** Element to track (default: window) */
+    element?: HTMLElement | null;
+  } = {},
+): boolean {
   const {
     hideOnScrollDown = true,
     showOnScrollUp = true,
@@ -329,7 +336,8 @@ export function useInfiniteScroll(options: {
         if (!canLoadMore || !elementRef.current) return;
 
         const el = elementRef.current;
-        const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+        const distanceFromBottom =
+          el.scrollHeight - el.scrollTop - el.clientHeight;
 
         if (distanceFromBottom < threshold) {
           onLoadMoreRef.current();

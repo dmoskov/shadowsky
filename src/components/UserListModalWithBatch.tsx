@@ -582,7 +582,9 @@ const UserListModalInner: React.FC<UserListModalWithBatchProps> = ({
           <div
             ref={(el) => {
               // Combine refs for keyboard navigation and infinite scroll
-              (listRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+              (
+                listRef as React.MutableRefObject<HTMLDivElement | null>
+              ).current = el;
               infiniteScrollRef(el);
             }}
             className={`max-h-[calc(80vh-73px)] overflow-y-auto ${isSelectionMode ? "pb-20" : ""}`}

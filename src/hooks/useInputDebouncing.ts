@@ -10,10 +10,10 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   inputDebouncingService,
-  type InteractionType,
+  type DebouncedFunction,
   type InteractionConfig,
   type InteractionMetrics,
-  type DebouncedFunction,
+  type InteractionType,
   type ThrottledFunction,
 } from "../services/input-debouncing-service";
 
@@ -42,10 +42,12 @@ import {
  *   return <input value={query} onChange={handleChange} />;
  * }
  */
-export function useDebouncedInteraction<T extends (...args: unknown[]) => unknown>(
+export function useDebouncedInteraction<
+  T extends (...args: unknown[]) => unknown,
+>(
   callback: T,
   type: InteractionType = "custom",
-  customDelay?: number
+  customDelay?: number,
 ): DebouncedFunction<T> {
   const callbackRef = useRef(callback);
   const debouncedRef = useRef<DebouncedFunction<T> | null>(null);
@@ -60,7 +62,7 @@ export function useDebouncedInteraction<T extends (...args: unknown[]) => unknow
     debouncedRef.current = inputDebouncingService.debounce(
       ((...args: Parameters<T>) => callbackRef.current(...args)) as T,
       type,
-      customDelay
+      customDelay,
     );
 
     return () => {
@@ -73,7 +75,7 @@ export function useDebouncedInteraction<T extends (...args: unknown[]) => unknow
     ((...args: Parameters<T>) => {
       debouncedRef.current?.(...args);
     }) as DebouncedFunction<T>,
-    []
+    [],
   );
 
   // Add control methods
@@ -113,10 +115,12 @@ export function useDebouncedInteraction<T extends (...args: unknown[]) => unknow
  *   }, [throttledTrack]);
  * }
  */
-export function useThrottledInteraction<T extends (...args: unknown[]) => unknown>(
+export function useThrottledInteraction<
+  T extends (...args: unknown[]) => unknown,
+>(
   callback: T,
   type: InteractionType = "scrolling",
-  customInterval?: number
+  customInterval?: number,
 ): ThrottledFunction<T> {
   const callbackRef = useRef(callback);
   const throttledRef = useRef<ThrottledFunction<T> | null>(null);
@@ -131,7 +135,7 @@ export function useThrottledInteraction<T extends (...args: unknown[]) => unknow
     throttledRef.current = inputDebouncingService.throttle(
       ((...args: Parameters<T>) => callbackRef.current(...args)) as T,
       type,
-      customInterval
+      customInterval,
     );
 
     return () => {
@@ -144,7 +148,7 @@ export function useThrottledInteraction<T extends (...args: unknown[]) => unknow
     ((...args: Parameters<T>) => {
       throttledRef.current?.(...args);
     }) as ThrottledFunction<T>,
-    []
+    [],
   );
 
   // Add cancel method
@@ -202,7 +206,7 @@ export function useEffectiveDelay(type: InteractionType): number {
  * }
  */
 export function useInteractionMetrics(
-  type: InteractionType
+  type: InteractionType,
 ): InteractionMetrics | undefined {
   return useMemo(() => inputDebouncingService.getMetrics(type), [type]);
 }
@@ -234,35 +238,37 @@ export function useInputDebouncingService() {
       getConfig: inputDebouncingService.getConfig.bind(inputDebouncingService),
       /** Get effective delay for an interaction type */
       getEffectiveDelay: inputDebouncingService.getEffectiveDelay.bind(
-        inputDebouncingService
+        inputDebouncingService,
       ),
       /** Get metrics for an interaction type */
-      getMetrics: inputDebouncingService.getMetrics.bind(inputDebouncingService),
+      getMetrics: inputDebouncingService.getMetrics.bind(
+        inputDebouncingService,
+      ),
       /** Get all metrics */
       getAllMetrics: inputDebouncingService.getAllMetrics.bind(
-        inputDebouncingService
+        inputDebouncingService,
       ),
       /** Reset metrics */
       resetMetrics: inputDebouncingService.resetMetrics.bind(
-        inputDebouncingService
+        inputDebouncingService,
       ),
       /** Cancel all pending interactions */
       cancelAll: inputDebouncingService.cancelAll.bind(inputDebouncingService),
       /** Check if device is low-end */
       isDeviceLowEnd: inputDebouncingService.isDeviceLowEnd.bind(
-        inputDebouncingService
+        inputDebouncingService,
       ),
       /** Get performance multiplier */
       getPerformanceMultiplier:
         inputDebouncingService.getPerformanceMultiplier.bind(
-          inputDebouncingService
+          inputDebouncingService,
         ),
       /** Generate performance report */
       generateReport: inputDebouncingService.generateReport.bind(
-        inputDebouncingService
+        inputDebouncingService,
       ),
     }),
-    []
+    [],
   );
 }
 
@@ -282,7 +288,7 @@ export function useInputDebouncingService() {
  */
 export function useTypingDebounce<T extends (...args: unknown[]) => unknown>(
   callback: T,
-  customDelay?: number
+  customDelay?: number,
 ): DebouncedFunction<T> {
   return useDebouncedInteraction(callback, "typing", customDelay);
 }
@@ -303,7 +309,7 @@ export function useTypingDebounce<T extends (...args: unknown[]) => unknown>(
  */
 export function useSearchDebounce<T extends (...args: unknown[]) => unknown>(
   callback: T,
-  customDelay?: number
+  customDelay?: number,
 ): DebouncedFunction<T> {
   return useDebouncedInteraction(callback, "searching", customDelay);
 }
@@ -328,7 +334,7 @@ export function useSearchDebounce<T extends (...args: unknown[]) => unknown>(
  */
 export function useScrollThrottle<T extends (...args: unknown[]) => unknown>(
   callback: T,
-  customInterval?: number
+  customInterval?: number,
 ): ThrottledFunction<T> {
   return useThrottledInteraction(callback, "scrolling", customInterval);
 }
@@ -353,7 +359,7 @@ export function useScrollThrottle<T extends (...args: unknown[]) => unknown>(
  */
 export function useResizeDebounce<T extends (...args: unknown[]) => unknown>(
   callback: T,
-  customDelay?: number
+  customDelay?: number,
 ): DebouncedFunction<T> {
   return useDebouncedInteraction(callback, "resizing", customDelay);
 }

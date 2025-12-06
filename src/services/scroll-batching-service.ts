@@ -113,8 +113,6 @@ class ScrollBatchingService {
   private windowRafId: number | null = null;
   private windowIsScheduled = false;
   private windowLastScrollY = 0;
-  // Track X scroll for future horizontal scroll support
-  private _windowLastScrollX = 0;
   private windowLastTimestamp = 0;
   private windowScrollEndTimer: ReturnType<typeof setTimeout> | null = null;
   private windowIsScrolling = false;
@@ -270,7 +268,6 @@ class ScrollBatchingService {
     if (typeof window === "undefined") return;
 
     this.windowLastScrollY = window.scrollY;
-    this._windowLastScrollX = window.scrollX;
     this.windowLastTimestamp = performance.now();
 
     this.windowBoundHandler = () => this.scheduleWindowUpdate();
@@ -333,7 +330,6 @@ class ScrollBatchingService {
 
     // Update last values
     this.windowLastScrollY = currentScrollY;
-    this._windowLastScrollX = currentScrollX;
     this.windowLastTimestamp = now;
 
     // Notify subscribers by priority
@@ -411,7 +407,9 @@ class ScrollBatchingService {
     // Sort by priority
     const sorted = Array.from(subscribers.values()).sort((a, b) => {
       const priorityOrder = { high: 0, normal: 1, low: 2 };
-      return priorityOrder[a.options.priority] - priorityOrder[b.options.priority];
+      return (
+        priorityOrder[a.options.priority] - priorityOrder[b.options.priority]
+      );
     });
 
     for (const subscriber of sorted) {

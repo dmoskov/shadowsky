@@ -22,17 +22,18 @@ const ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
   thread: () => import("../pages/ThreadPage"),
   notifications: () =>
     import("../components/Notifications").then((m) => m.Notifications),
-  search: () => import("../components/SearchTabbed").then((m) => m.SearchTabbed),
+  search: () =>
+    import("../components/SearchTabbed").then((m) => m.SearchTabbed),
   messages: () =>
     import("../components/DirectMessages").then((m) => m.DirectMessages),
-  bookmarks: () =>
-    import("../components/Bookmarks").then((m) => m.Bookmarks),
+  bookmarks: () => import("../components/Bookmarks").then((m) => m.Bookmarks),
   settings: () => import("../pages/Settings").then((m) => m.Settings),
   compose: () => import("../components/Composer").then((m) => m.Composer),
   lists: () => import("../components/Lists").then((m) => m.Lists),
   timeline: () =>
     import("../components/VisualTimeline").then((m) => m.VisualTimeline),
-  analytics: () => import("../pages/UserAnalytics").then((m) => m.UserAnalytics),
+  analytics: () =>
+    import("../pages/UserAnalytics").then((m) => m.UserAnalytics),
 };
 
 /**
