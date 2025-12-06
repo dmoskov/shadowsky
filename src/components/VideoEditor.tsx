@@ -27,6 +27,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { layoutMeasurementService } from "../services/layout-measurement-service";
 import {
   generateVideoThumbnails,
   getVideoMetadata,

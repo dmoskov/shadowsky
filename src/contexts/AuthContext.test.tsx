@@ -861,6 +861,7 @@ describe("AuthContext", () => {
     });
 
     it("should expose OAuth availability status", async () => {
+      vi.mocked(hasExistingOAuthSession).mockResolvedValue(true);
       vi.mocked(oauthService.isAvailable).mockReturnValue(true);
 
       const { result } = renderHook(() => useAuth(), {
@@ -902,6 +903,7 @@ describe("AuthContext", () => {
     });
 
     it("should call OAuth signOut for OAuth auth", async () => {
+      vi.mocked(hasExistingOAuthSession).mockResolvedValue(true);
       vi.mocked(oauthService.init).mockResolvedValue(mockOAuthState);
 
       const { result } = renderHook(() => useAuth(), {
@@ -940,6 +942,7 @@ describe("AuthContext", () => {
     });
 
     it("should handle OAuth signOut error gracefully", async () => {
+      vi.mocked(hasExistingOAuthSession).mockResolvedValue(true);
       vi.mocked(oauthService.init).mockResolvedValue(mockOAuthState);
       vi.mocked(oauthService.signOut).mockRejectedValue(
         new Error("Sign out failed"),
@@ -968,6 +971,7 @@ describe("AuthContext", () => {
 
   describe("Agent Exposure", () => {
     it("should expose OAuth agent when using OAuth auth", async () => {
+      vi.mocked(hasExistingOAuthSession).mockResolvedValue(true);
       vi.mocked(oauthService.init).mockResolvedValue(mockOAuthState);
 
       const { result } = renderHook(() => useAuth(), {

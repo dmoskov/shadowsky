@@ -19,6 +19,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { layoutMeasurementService } from "../services/layout-measurement-service";
 
 // Filter presets with CSS filter values - Instagram-style filters
 const FILTER_PRESETS = {
@@ -248,56 +249,63 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
   };
 
   // Initialize crop area
-  const initCrop = () => {
+  const initCrop = useCallback(() => {
     if (!previewRef.current || !imageRef.current) return;
 
     const img = imageRef.current;
-    const rect = img.getBoundingClientRect();
 
-    // Start with full image
-    let newCropArea: CropArea = {
-      x: 0,
-      y: 0,
-      width: rect.width,
-      height: rect.height,
-    };
-
-    // Apply aspect ratio if selected
-    const aspectRatio = ASPECT_RATIOS[selectedAspectRatio].ratio;
-    if (aspectRatio) {
-      const imgAspect = rect.width / rect.height;
-      if (imgAspect > aspectRatio) {
-        // Image is wider - constrain by height
-        const newWidth = rect.height * aspectRatio;
-        newCropArea = {
-          x: (rect.width - newWidth) / 2,
+    // Use batched measurement service to avoid layout thrashing
+    layoutMeasurementService.measureElement(
+      img,
+      (rect) => {
+        // Start with full image
+        let newCropArea: CropArea = {
+          x: 0,
           y: 0,
-          width: newWidth,
+          width: rect.width,
           height: rect.height,
         };
-      } else {
-        // Image is taller - constrain by width
-        const newHeight = rect.width / aspectRatio;
-        newCropArea = {
-          x: 0,
-          y: (rect.height - newHeight) / 2,
-          width: rect.width,
-          height: newHeight,
-        };
-      }
-    }
 
-    setCropArea(newCropArea);
-    setIsCropping(true);
-    setActiveTab("crop");
-  };
+        // Apply aspect ratio if selected
+        const aspectRatio = ASPECT_RATIOS[selectedAspectRatio].ratio;
+        if (aspectRatio) {
+          const imgAspect = rect.width / rect.height;
+          if (imgAspect > aspectRatio) {
+            // Image is wider - constrain by height
+            const newWidth = rect.height * aspectRatio;
+            newCropArea = {
+              x: (rect.width - newWidth) / 2,
+              y: 0,
+              width: newWidth,
+              height: rect.height,
+            };
+          } else {
+            // Image is taller - constrain by width
+            const newHeight = rect.width / aspectRatio;
+            newCropArea = {
+              x: 0,
+              y: (rect.height - newHeight) / 2,
+              width: rect.width,
+              height: newHeight,
+            };
+          }
+        }
+
+        setCropArea(newCropArea);
+        setIsCropping(true);
+        setActiveTab("crop");
+      },
+      { priority: "high" }
+    );
+  }, [selectedAspectRatio]);
 
   // Handle crop area mouse events
   const handleCropMouseDown = (e: React.MouseEvent, mode: string) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const rect = imageRef.current?.getBoundingClientRect();
+    // Use sync measurement for drag operations (captured once at start)
+    const rect = layoutMeasurementService.measureElementSync(imageRef.current);
     if (!rect) return;
 
     cropStartRef.current = {
@@ -435,14 +443,18 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
         let cropHeight = sourceHeight;
 
         if (cropArea && imageRef.current) {
-          const displayRect = imageRef.current.getBoundingClientRect();
-          const scaleX = img.width / displayRect.width;
-          const scaleY = img.height / displayRect.height;
+          const displayRect = layoutMeasurementService.measureElementSync(
+            imageRef.current
+          );
+          if (displayRect) {
+            const scaleX = img.width / displayRect.width;
+            const scaleY = img.height / displayRect.height;
 
-          cropX = cropArea.x * scaleX;
-          cropY = cropArea.y * scaleY;
-          cropWidth = cropArea.width * scaleX;
-          cropHeight = cropArea.height * scaleY;
+            cropX = cropArea.x * scaleX;
+            cropY = cropArea.y * scaleY;
+            cropWidth = cropArea.width * scaleX;
+            cropHeight = cropArea.height * scaleY;
+          }
         }
 
         // Set canvas size based on crop and rotation
@@ -615,40 +627,54 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
     setCurrentIndex(index);
   };
 
-  // Apply aspect ratio to existing crop
+  // Apply aspect ratio to existing crop - only triggers on aspect ratio change
   useEffect(() => {
     if (isCropping && cropArea && imageRef.current) {
       const aspectRatio = ASPECT_RATIOS[selectedAspectRatio].ratio;
       if (!aspectRatio) return;
 
-      const rect = imageRef.current.getBoundingClientRect();
-      const centerX = cropArea.x + cropArea.width / 2;
-      const centerY = cropArea.y + cropArea.height / 2;
+      // Use batched measurement to avoid layout thrashing
+      layoutMeasurementService.measureElement(
+        imageRef.current,
+        (rect) => {
+          // Re-check cropArea in callback since it's async
+          setCropArea((currentCropArea) => {
+            if (!currentCropArea) return currentCropArea;
 
-      let newWidth = cropArea.width;
-      let newHeight = cropArea.width / aspectRatio;
+            const centerX = currentCropArea.x + currentCropArea.width / 2;
+            const centerY = currentCropArea.y + currentCropArea.height / 2;
 
-      if (newHeight > rect.height) {
-        newHeight = rect.height;
-        newWidth = newHeight * aspectRatio;
-      }
+            let newWidth = currentCropArea.width;
+            let newHeight = currentCropArea.width / aspectRatio;
 
-      const newX = Math.max(
-        0,
-        Math.min(centerX - newWidth / 2, rect.width - newWidth),
+            if (newHeight > rect.height) {
+              newHeight = rect.height;
+              newWidth = newHeight * aspectRatio;
+            }
+
+            const newX = Math.max(
+              0,
+              Math.min(centerX - newWidth / 2, rect.width - newWidth)
+            );
+            const newY = Math.max(
+              0,
+              Math.min(centerY - newHeight / 2, rect.height - newHeight)
+            );
+
+            return {
+              x: newX,
+              y: newY,
+              width: newWidth,
+              height: newHeight,
+            };
+          });
+        },
+        { priority: "high" }
       );
-      const newY = Math.max(
-        0,
-        Math.min(centerY - newHeight / 2, rect.height - newHeight),
-      );
-
-      setCropArea({
-        x: newX,
-        y: newY,
-        width: newWidth,
-        height: newHeight,
-      });
     }
+    // Only trigger on selectedAspectRatio change - cropArea and isCropping
+    // are read but shouldn't trigger re-runs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAspectRatio]);
 
   return (

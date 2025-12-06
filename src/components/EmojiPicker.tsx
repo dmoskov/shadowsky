@@ -2083,7 +2083,11 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
               rowCount={rowCount}
               rowHeight={CELL_SIZE}
               defaultHeight={gridHeight}
-              style={{ margin: "0 auto", width: COLUMN_COUNT * CELL_SIZE, height: gridHeight }}
+              style={{
+                margin: "0 auto",
+                width: COLUMN_COUNT * CELL_SIZE,
+                height: gridHeight,
+              }}
             />
           )}
         </div>
