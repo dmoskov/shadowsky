@@ -48,7 +48,7 @@ const TrackedChart: React.FC<{
   return <div ref={ref}>{children}</div>;
 };
 
-export const NotificationsAnalytics: React.FC = () => {
+export const NotificationsAnalytics: React.FC = React.memo(function NotificationsAnalytics() {
   const { agent, session } = useAuth();
   const [timeRange, setTimeRange] = React.useState<TimeRange>("7d");
   const [activityView, setActivityView] = React.useState<"received" | "sent">(
@@ -1846,4 +1846,4 @@ export const NotificationsAnalytics: React.FC = () => {
       </div>
     </div>
   );
-};
+});

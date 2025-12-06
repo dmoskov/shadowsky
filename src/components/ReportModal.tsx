@@ -274,7 +274,7 @@ export function ReportModal({
               </div>
               <button
                 onClick={handleClose}
-                className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="touch-target-icon rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -336,7 +336,7 @@ export function ReportModal({
               </div>
               <button
                 onClick={handleClose}
-                className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="touch-target-icon rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 <X className="h-5 w-5" />
               </button>

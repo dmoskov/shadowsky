@@ -328,6 +328,33 @@ function AppContent() {
     isAuthenticated,
   );
 
+  // Listen for keyboard-navigate custom events from KeyboardShortcutsContext
+  // This handles the g+key navigation sequences (g+h, g+n, g+m, etc.)
+  useEffect(() => {
+    const handleKeyboardNavigate = (event: Event) => {
+      const customEvent = event as CustomEvent<{ to: string }>;
+      const destination = customEvent.detail.to;
+
+      // Handle profile navigation specially since it needs the user's handle
+      if (destination === "/profile" && session?.handle) {
+        navigate(`/profile/${session.handle}`);
+      } else if (destination !== "/profile") {
+        navigate(destination);
+      }
+    };
+
+    window.addEventListener(
+      "keyboard-navigate",
+      handleKeyboardNavigate as EventListener,
+    );
+    return () => {
+      window.removeEventListener(
+        "keyboard-navigate",
+        handleKeyboardNavigate as EventListener,
+      );
+    };
+  }, [navigate, session?.handle]);
+
   // Auto-collapse sidebar when viewport is too narrow for 3 columns
   useEffect(() => {
     const checkViewportWidth = async () => {

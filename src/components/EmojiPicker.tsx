@@ -1995,7 +1995,7 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
             </h3>
             <button
               onClick={onClose}
-              className="rounded p-1 hover:bg-gray-100"
+              className="touch-target-icon rounded hover:bg-gray-100 dark:hover:bg-gray-800"
               aria-label="Close"
             >
               <X size={20} />

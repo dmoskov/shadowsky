@@ -893,7 +893,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                     <button
                       onClick={() => adjustTrim("start", "left")}
                       disabled={trim.start <= 0}
-                      className="rounded p-1 transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
+                      className="touch-target-icon rounded transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
                       style={{ color: "var(--bsky-text-primary)" }}
                     >
                       <ChevronLeft size={16} />

@@ -49,6 +49,8 @@ const logger = createLogger("ThreadViewer");
 
 // localStorage key prefix for thread collapse state
 const COLLAPSE_STATE_PREFIX = "thread-collapse-state-";
+// sessionStorage key prefix for thread scroll position
+const SCROLL_POSITION_PREFIX = "thread-scroll-position-";
 
 // Helper to get/set collapse state from localStorage
 function getPersistedCollapseState(threadId: string): Set<string> {
@@ -72,6 +74,51 @@ function setPersistedCollapseState(threadId: string, state: Set<string>) {
     );
   } catch (e) {
     logger.error("Error saving collapse state to localStorage:", e);
+  }
+}
+
+// Helper to get/set scroll position from sessionStorage
+interface ScrollPositionData {
+  scrollTop: number;
+  focusedIndex: number;
+  timestamp: number;
+}
+
+function getPersistedScrollPosition(threadId: string): ScrollPositionData | null {
+  try {
+    const stored = sessionStorage.getItem(`${SCROLL_POSITION_PREFIX}${threadId}`);
+    if (stored) {
+      const parsed = JSON.parse(stored) as ScrollPositionData;
+      // Expire positions older than 30 minutes to prevent stale data
+      const thirtyMinutes = 30 * 60 * 1000;
+      if (Date.now() - parsed.timestamp < thirtyMinutes) {
+        return parsed;
+      }
+      // Clear expired position
+      sessionStorage.removeItem(`${SCROLL_POSITION_PREFIX}${threadId}`);
+    }
+  } catch (e) {
+    logger.error("Error reading scroll position from sessionStorage:", e);
+  }
+  return null;
+}
+
+function setPersistedScrollPosition(threadId: string, data: ScrollPositionData) {
+  try {
+    sessionStorage.setItem(
+      `${SCROLL_POSITION_PREFIX}${threadId}`,
+      JSON.stringify(data),
+    );
+  } catch (e) {
+    logger.error("Error saving scroll position to sessionStorage:", e);
+  }
+}
+
+export function clearPersistedScrollPosition(threadId: string) {
+  try {
+    sessionStorage.removeItem(`${SCROLL_POSITION_PREFIX}${threadId}`);
+  } catch (e) {
+    logger.error("Error clearing scroll position from sessionStorage:", e);
   }
 }
 
