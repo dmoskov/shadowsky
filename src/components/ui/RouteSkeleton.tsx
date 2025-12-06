@@ -4,6 +4,8 @@ import {
   NotificationFeedSkeleton,
   SearchResultSkeleton,
   SkeletonLoader,
+  ThreadSkeleton as ThreadSkeletonBase,
+  ConversationListSkeleton,
 } from "./SkeletonLoader";
 
 /**
@@ -62,45 +64,10 @@ export const ColumnSkeleton: React.FC = () => {
 
 /**
  * Skeleton for thread/post view
+ * Re-exports the enhanced ThreadSkeleton from SkeletonLoader
  */
 export const ThreadSkeleton: React.FC = () => {
-  return (
-    <div
-      className="mx-auto max-w-2xl p-4"
-      role="status"
-      aria-label="Loading thread"
-    >
-      {/* Main post */}
-      <div className="mb-4 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-4">
-        <div className="flex gap-3">
-          <SkeletonLoader variant="circular" width={48} height={48} />
-          <div className="flex-1">
-            <div className="mb-2 flex items-center gap-2">
-              <SkeletonLoader width={120} height={18} />
-              <SkeletonLoader width={80} height={14} />
-            </div>
-            <div className="space-y-2">
-              <SkeletonLoader width="100%" height={18} />
-              <SkeletonLoader width="95%" height={18} />
-              <SkeletonLoader width="80%" height={18} />
-            </div>
-            <div className="mt-4 flex gap-6">
-              <SkeletonLoader width={60} height={24} variant="rounded" />
-              <SkeletonLoader width={60} height={24} variant="rounded" />
-              <SkeletonLoader width={60} height={24} variant="rounded" />
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* Reply section */}
-      <div className="space-y-0">
-        <div className="border-b border-bsky-border-primary py-3">
-          <SkeletonLoader width={80} height={16} />
-        </div>
-        <FeedSkeleton count={3} />
-      </div>
-    </div>
-  );
+  return <ThreadSkeletonBase replyCount={4} />;
 };
 
 /**
@@ -176,6 +143,7 @@ export const BookmarksSkeleton: React.FC = () => {
 
 /**
  * Skeleton for messages/DM page
+ * Uses the enhanced ConversationListSkeleton for conversation list view
  */
 export const MessagesSkeleton: React.FC = () => {
   return (
@@ -184,19 +152,7 @@ export const MessagesSkeleton: React.FC = () => {
       role="status"
       aria-label="Loading messages"
     >
-      {/* Conversation list */}
-      <div className="divide-y divide-bsky-border-primary">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 p-4">
-            <SkeletonLoader variant="circular" width={48} height={48} />
-            <div className="flex-1">
-              <SkeletonLoader width="60%" height={16} className="mb-1" />
-              <SkeletonLoader width="80%" height={14} />
-            </div>
-            <SkeletonLoader width={40} height={12} />
-          </div>
-        ))}
-      </div>
+      <ConversationListSkeleton count={6} />
     </div>
   );
 };
@@ -341,6 +297,10 @@ export const AnalyticsSkeleton: React.FC = () => {
 };
 
 /**
- * Re-export ProfileSkeleton for consistency
+ * Re-export skeleton components from SkeletonLoader for consistency
  */
-export { ProfileSkeleton } from "./SkeletonLoader";
+export {
+  ConversationListSkeleton,
+  DMSkeleton,
+  ProfileSkeleton,
+} from "./SkeletonLoader";

@@ -655,7 +655,10 @@ export function VideoPlayer({
         }}
       >
         {/* Placeholder layer for CLS prevention */}
-        <div className="placeholder-layer placeholder-animated absolute inset-0 bg-bsky-bg-tertiary" aria-hidden="true" />
+        <div
+          className="placeholder-layer placeholder-animated absolute inset-0 bg-bsky-bg-tertiary"
+          aria-hidden="true"
+        />
 
         {thumbnail ? (
           <img
@@ -665,11 +668,17 @@ export function VideoPlayer({
             style={{ position: "relative", zIndex: 1 }}
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700" style={{ zIndex: 1 }}>
+          <div
+            className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700"
+            style={{ zIndex: 1 }}
+          >
             <span className="text-gray-500 dark:text-gray-400">Video</span>
           </div>
         )}
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 transition-opacity hover:bg-opacity-40" style={{ zIndex: 2 }}>
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 transition-opacity hover:bg-opacity-40"
+          style={{ zIndex: 2 }}
+        >
           <div className="rounded-full bg-black bg-opacity-60 p-4 transition-transform hover:scale-110">
             <Play className="h-12 w-12 fill-white text-white" />
           </div>
@@ -688,7 +697,10 @@ export function VideoPlayer({
         data-aspect-ratio="true"
       >
         {/* Placeholder layer for CLS prevention */}
-        <div className="placeholder-layer placeholder-animated absolute inset-0 bg-bsky-bg-tertiary" aria-hidden="true" />
+        <div
+          className="placeholder-layer placeholder-animated absolute inset-0 bg-bsky-bg-tertiary"
+          aria-hidden="true"
+        />
 
         {thumbnail ? (
           <img
@@ -698,7 +710,10 @@ export function VideoPlayer({
             style={{ position: "relative", zIndex: 1 }}
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700" style={{ zIndex: 1 }}>
+          <div
+            className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700"
+            style={{ zIndex: 1 }}
+          >
             <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
           </div>
         )}

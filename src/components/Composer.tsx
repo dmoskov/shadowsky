@@ -1,11 +1,15 @@
+import type { AppBskyFeedDefs } from "@atproto/api";
 import { RichText } from "@atproto/api";
 import {
   AlertCircle,
   CheckCircle,
+  ExternalLink,
   FileText,
   GripVertical,
   Image,
+  Link,
   Loader,
+  MessageCircle,
   MessageSquare,
   Plus,
   Save,
@@ -31,10 +35,12 @@ import { useAuth } from "../contexts/AuthContext";
 import { useLinkPreview } from "../hooks/useLinkPreview";
 import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
 import { analytics } from "../services/analytics";
-import type {
-  StyleMatchedWritingFeedback,
-  ThreadOptimizationResult,
-  ToneOption,
+import {
+  fetchLinkMetadata,
+  type LinkMetadata,
+  type StyleMatchedWritingFeedback,
+  type ThreadOptimizationResult,
+  type ToneOption,
 } from "../services/anthropic";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { ThreadgateService } from "../services/atproto/threadgate";
@@ -56,10 +62,13 @@ import { uploadBlobWithRetry } from "../utils/blob-upload";
 import { isGifFile } from "../utils/gif-to-video";
 import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { createLogger } from "../utils/logger";
+import { parseBskyUrl } from "../utils/url-helpers";
+import { extractFirstBskyPostUrl, extractFirstLinkUrl } from "./composer/utils";
 import { type MentionTypeaheadHandle } from "./MentionTypeahead";
 import { ReplyControls, type ReplyPermission } from "./ReplyControls";
 import { AISettingsPanel } from "./settings/AISettingsPanel";
 import { ThreadComposer } from "./ThreadComposer";
+import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { UploadProgressBar } from "./ui/UploadProgressBar";
 // Lazy-loaded sub-components for mobile performance
 const ComposerTextArea = React.lazy(() =>
@@ -208,7 +217,7 @@ async function getVideoDuration(file: File): Promise<number> {
 }
 
 export function Composer() {
-  const { agent } = useAuth();
+  const { agent, session } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [text, setText] = useState("");
   const [posts, setPosts] = useState<string[]>([]);
@@ -220,6 +229,7 @@ export function Composer() {
   const [postStatus, setPostStatus] = useState<{
     type: "idle" | "posting" | "success" | "error" | "loading";
     message?: string;
+    postUrl?: string;
   } | null>({ type: "idle" });
   const [media, setMedia] = useState<UploadedMedia[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1432,6 +1442,7 @@ export function Composer() {
         postMediaMap.get(reorderedIndex)!.push(mediaData);
       }
 
+      let rootPost: { uri: string; cid: string } | undefined;
       let lastPost: { uri: string; cid: string } | undefined;
 
       for (let i = 0; i < numberedPosts.length; i++) {
@@ -1453,11 +1464,13 @@ export function Composer() {
         };
 
         // Add reply info for subsequent posts
-        if (i > 0 && lastPost) {
+        // root = first post in thread (stays constant)
+        // parent = previous post in thread (changes each iteration)
+        if (i > 0 && rootPost && lastPost) {
           postData.reply = {
             root: {
-              uri: lastPost.uri,
-              cid: lastPost.cid,
+              uri: rootPost.uri,
+              cid: rootPost.cid,
             },
             parent: {
               uri: lastPost.uri,
@@ -1528,68 +1541,95 @@ export function Composer() {
           }
         }
 
-        // Add external link embed for first post if no media and link preview is available
-        if (
-          i === 0 &&
-          !postData.embed &&
-          linkPreviewEnabled &&
-          linkPreview.metadata
-        ) {
-          logger.log("Adding external link embed:", linkPreview.metadata.url);
+        // Add external link embed if no media and post contains a URL
+        // For the first post, use cached linkPreview if available
+        // For other posts, extract URL and fetch metadata dynamically
+        if (!postData.embed && linkPreviewEnabled) {
+          let metadata = null;
+          const postText = numberedPosts[i];
+          const postUrl = extractFirstLinkUrl(postText);
 
-          const externalEmbed: {
-            $type: string;
-            external: {
-              uri: string;
-              title: string;
-              description: string;
-              thumb?: any;
-            };
-          } = {
-            $type: "app.bsky.embed.external",
-            external: {
-              uri: linkPreview.metadata.url,
-              title: linkPreview.metadata.title,
-              description: linkPreview.metadata.description,
-            },
-          };
-
-          // Upload thumbnail if available
-          if (linkPreview.metadata.imageUrl) {
+          if (i === 0 && linkPreview.metadata) {
+            // Use cached metadata for first post
+            metadata = linkPreview.metadata;
+          } else if (postUrl) {
+            // Fetch metadata for URLs in other posts
             try {
-              // Fetch the image
-              const imageResponse = await fetch(linkPreview.metadata.imageUrl);
-              if (imageResponse.ok) {
-                const imageBlob = await imageResponse.blob();
-                const imageData = new Uint8Array(await imageBlob.arrayBuffer());
-
-                const uploadResult = await uploadBlobWithRetry(
-                  agent,
-                  imageData,
-                  { encoding: imageBlob.type || "image/jpeg" },
-                );
-
-                externalEmbed.external.thumb = uploadResult.data.blob;
-                logger.log("Uploaded link preview thumbnail");
-              }
-            } catch (thumbError) {
+              logger.log(`Fetching link metadata for post ${i + 1}:`, postUrl);
+              metadata = await fetchLinkMetadata(postUrl);
+            } catch (metadataError) {
               logger.error(
-                "Failed to upload link preview thumbnail:",
-                thumbError,
+                `Failed to fetch link metadata for post ${i + 1}:`,
+                metadataError,
               );
-              // Continue without thumbnail
             }
           }
 
-          postData.embed = externalEmbed;
+          if (metadata) {
+            logger.log("Adding external link embed:", metadata.url);
+
+            const externalEmbed: {
+              $type: string;
+              external: {
+                uri: string;
+                title: string;
+                description: string;
+                thumb?: any;
+              };
+            } = {
+              $type: "app.bsky.embed.external",
+              external: {
+                uri: metadata.url,
+                title: metadata.title,
+                description: metadata.description,
+              },
+            };
+
+            // Upload thumbnail if available
+            if (metadata.imageUrl) {
+              try {
+                // Fetch the image
+                const imageResponse = await fetch(metadata.imageUrl);
+                if (imageResponse.ok) {
+                  const imageBlob = await imageResponse.blob();
+                  const imageData = new Uint8Array(
+                    await imageBlob.arrayBuffer(),
+                  );
+
+                  const uploadResult = await uploadBlobWithRetry(
+                    agent,
+                    imageData,
+                    { encoding: imageBlob.type || "image/jpeg" },
+                  );
+
+                  externalEmbed.external.thumb = uploadResult.data.blob;
+                  logger.log("Uploaded link preview thumbnail");
+                }
+              } catch (thumbError) {
+                logger.error(
+                  "Failed to upload link preview thumbnail:",
+                  thumbError,
+                );
+                // Continue without thumbnail
+              }
+            }
+
+            postData.embed = externalEmbed;
+          }
         }
 
         // eslint-disable-next-line prefer-const
         result = await agent.post(postData);
-        lastPost = {
+        const currentPost = {
           uri: result.uri,
           cid: result.cid,
         };
+
+        // First post becomes the root for all subsequent posts
+        if (i === 0) {
+          rootPost = currentPost;
+        }
+        lastPost = currentPost;
 
         // Create threadgate for the first post if reply permissions are set
         if (i === 0 && replyPermission !== "everyone") {
@@ -1614,9 +1654,16 @@ export function Composer() {
         }
       }
 
+      // Construct the Bluesky URL for the thread
+      const postUrl =
+        rootPost && session?.handle
+          ? `https://bsky.app/profile/${session.handle}/post/${rootPost.uri.split("/").pop()}`
+          : undefined;
+
       setPostStatus({
         type: "success",
-        message: "Thread posted successfully!",
+        message: "Thread posted!",
+        postUrl,
       });
 
       setText("");
@@ -2824,6 +2871,12 @@ export function Composer() {
                     </div>
                   )}
 
+                  {/* Link preview (if post has a URL and no media) */}
+                  {!hasMedia && <InlinePostLinkPreview postText={post} />}
+
+                  {/* Quote post preview (if post has a Bluesky URL) */}
+                  <InlinePostQuotePreview postText={post} />
+
                   {/* Show attachments for this post */}
                   {(originalIndex === 0
                     ? media.filter(
@@ -3031,17 +3084,29 @@ export function Composer() {
             {postStatus.type === "error" && (
               <AlertCircle className="text-red-600" size={16} />
             )}
-            <span
-              className={`flex-1 text-sm ${
-                postStatus.type === "posting"
-                  ? "text-blue-700"
-                  : postStatus.type === "success"
-                    ? "text-green-700"
-                    : "text-red-700"
-              }`}
-            >
-              {postStatus.message}
-            </span>
+            {postStatus.type === "success" && postStatus.postUrl ? (
+              <a
+                href={postStatus.postUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-1 items-center gap-1 text-sm text-green-700 hover:underline"
+              >
+                {postStatus.message}
+                <ExternalLink size={12} />
+              </a>
+            ) : (
+              <span
+                className={`flex-1 text-sm ${
+                  postStatus.type === "posting"
+                    ? "text-blue-700"
+                    : postStatus.type === "success"
+                      ? "text-green-700"
+                      : "text-red-700"
+                }`}
+              >
+                {postStatus.message}
+              </span>
+            )}
             {postStatus.type === "posting" && countdown && (
               <button
                 className="flex items-center gap-1 rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-blue-700"
@@ -3117,3 +3182,264 @@ export function Composer() {
     </div>
   );
 }
+
+/**
+ * Link preview component for inline thread preview
+ */
+const InlinePostLinkPreview: React.FC<{ postText: string }> = ({
+  postText,
+}) => {
+  const [metadata, setMetadata] = useState<LinkMetadata | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const url = extractFirstLinkUrl(postText);
+
+  useEffect(() => {
+    if (!url) {
+      setMetadata(null);
+      return;
+    }
+
+    let cancelled = false;
+    const fetchMetadataAsync = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchLinkMetadata(url);
+        if (!cancelled) {
+          setMetadata(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setError("Failed to load preview");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    const timer = setTimeout(fetchMetadataAsync, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [url]);
+
+  if (!url) return null;
+
+  if (loading) {
+    return (
+      <div
+        className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
+        style={{
+          borderColor: "var(--bsky-border-primary)",
+          color: "var(--bsky-text-secondary)",
+        }}
+      >
+        <Loader size={14} className="animate-spin" />
+        <span>Loading link preview...</span>
+      </div>
+    );
+  }
+
+  if (error || !metadata) {
+    if (error) {
+      return (
+        <div
+          className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
+          style={{
+            borderColor: "var(--bsky-border-primary)",
+            color: "var(--bsky-text-tertiary)",
+          }}
+        >
+          <Link size={14} />
+          <span className="truncate">{url}</span>
+        </div>
+      );
+    }
+    return null;
+  }
+
+  let domain = "";
+  try {
+    domain = new URL(metadata.url).hostname.replace("www.", "");
+  } catch {
+    domain = metadata.url;
+  }
+
+  return (
+    <div
+      className="mt-2 overflow-hidden rounded-lg border"
+      style={{ borderColor: "var(--bsky-border-primary)" }}
+    >
+      {metadata.imageUrl && (
+        <div
+          className="h-32 w-full bg-cover bg-center"
+          style={{ backgroundImage: `url(${metadata.imageUrl})` }}
+        />
+      )}
+      <div className="p-3">
+        <div
+          className="mb-1 text-xs"
+          style={{ color: "var(--bsky-text-tertiary)" }}
+        >
+          {domain}
+        </div>
+        <div
+          className="line-clamp-2 text-sm font-medium"
+          style={{ color: "var(--bsky-text-primary)" }}
+        >
+          {metadata.title}
+        </div>
+        {metadata.description && (
+          <div
+            className="mt-1 line-clamp-2 text-xs"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
+            {metadata.description}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Quote post preview component for inline thread preview
+ */
+const InlinePostQuotePreview: React.FC<{ postText: string }> = ({
+  postText,
+}) => {
+  const [quotedPost, setQuotedPost] = useState<AppBskyFeedDefs.PostView | null>(
+    null,
+  );
+  const [loading, setLoading] = useState(false);
+
+  const bskyUrl = extractFirstBskyPostUrl(postText);
+
+  useEffect(() => {
+    if (!bskyUrl) {
+      setQuotedPost(null);
+      return;
+    }
+
+    let cancelled = false;
+    const fetchQuotedPost = async () => {
+      const parsed = parseBskyUrl(bskyUrl);
+      if (!parsed || !parsed.postId) return;
+
+      setLoading(true);
+      try {
+        const { atProtoClient } = await import("../services/atproto");
+        const agent = atProtoClient.agent;
+        if (!agent) return;
+
+        let did = parsed.did;
+        if (!did && parsed.handle) {
+          try {
+            const profileResponse = await agent.getProfile({
+              actor: parsed.handle,
+            });
+            did = profileResponse.data.did;
+          } catch {
+            return;
+          }
+        }
+
+        if (!did) return;
+
+        const uri = `at://${did}/app.bsky.feed.post/${parsed.postId}`;
+        const response = await agent.app.bsky.feed.getPosts({ uris: [uri] });
+
+        if (!cancelled && response.data.posts.length > 0) {
+          setQuotedPost(response.data.posts[0]);
+        }
+      } catch {
+        // Silently fail
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    const timer = setTimeout(fetchQuotedPost, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [bskyUrl]);
+
+  if (!bskyUrl) return null;
+
+  if (loading) {
+    return (
+      <div
+        className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
+        style={{
+          borderColor: "var(--bsky-border-primary)",
+          color: "var(--bsky-text-secondary)",
+        }}
+      >
+        <Loader size={14} className="animate-spin" />
+        <span>Loading quoted post...</span>
+      </div>
+    );
+  }
+
+  if (!quotedPost) return null;
+
+  const record = quotedPost.record as { text?: string };
+  return (
+    <div
+      className="mt-2 overflow-hidden rounded-lg border"
+      style={{ borderColor: "var(--bsky-border-primary)" }}
+    >
+      <div
+        className="flex items-center gap-2 px-3 py-1.5 text-xs"
+        style={{
+          backgroundColor: "var(--bsky-bg-tertiary)",
+          borderBottom: "1px solid var(--bsky-border-primary)",
+          color: "var(--bsky-text-secondary)",
+        }}
+      >
+        <MessageCircle size={12} />
+        <span>Quoted post</span>
+      </div>
+      <div className="p-3">
+        <div className="mb-2 flex items-center gap-2">
+          <ProfileHoverCard handle={quotedPost.author.handle}>
+            <img
+              src={quotedPost.author.avatar || "/default-avatar.svg"}
+              alt=""
+              className="h-5 w-5 cursor-pointer rounded-full"
+            />
+          </ProfileHoverCard>
+          <ProfileHoverCard handle={quotedPost.author.handle}>
+            <span
+              className="cursor-pointer text-sm font-semibold hover:underline"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              {quotedPost.author.displayName || quotedPost.author.handle}
+            </span>
+          </ProfileHoverCard>
+          <span
+            className="text-sm"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
+            @{quotedPost.author.handle}
+          </span>
+        </div>
+        <p
+          className="line-clamp-3 text-sm"
+          style={{ color: "var(--bsky-text-primary)" }}
+        >
+          {record?.text || ""}
+        </p>
+      </div>
+    </div>
+  );
+};
