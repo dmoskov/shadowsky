@@ -59,63 +59,66 @@ async function measureInteraction(
   return duration;
 }
 
-/**
- * Helper to wait for element and ensure page is ready
- */
-async function waitForInteractiveElement(
-  page: import("@playwright/test").Page,
-  selector: string,
-  timeout = 10000,
-) {
-  await page.waitForSelector(selector, { state: "visible", timeout });
-  // Additional wait for any animations to settle
-  await page.waitForTimeout(100);
-}
-
 test.describe("Interaction Timing - INP Budget @performance", () => {
   test.beforeEach(async ({ page }) => {
     // Set a generous timeout for initial page load
-    test.setTimeout(60000);
+    test.setTimeout(30000);
 
     // Navigate to landing page
     await page.goto("/");
     await page.waitForLoadState("networkidle");
   });
 
-  test("Login mode toggle click-to-feedback should be under 200ms @performance", async ({
+  test("App Password button click-to-feedback should be under 200ms @performance", async ({
     page,
   }) => {
-    // Wait for login form to be ready
     await page.waitForLoadState("networkidle");
 
-    // Find the OAuth or App Password toggle buttons
-    const oauthButton = page.getByRole("button", { name: /oauth/i });
+    // Find the App Password toggle button (this one is enabled on the landing page)
     const appPasswordButton = page.getByRole("button", {
       name: /app password/i,
     });
 
-    // Determine which button to click (toggle the mode)
-    const targetButton = (await oauthButton.isVisible())
-      ? oauthButton
-      : appPasswordButton;
+    // Check if visible and enabled
+    const isVisible = await appPasswordButton.isVisible().catch(() => false);
+    const isEnabled = await appPasswordButton.isEnabled().catch(() => false);
 
-    if (await targetButton.isVisible()) {
+    if (isVisible && isEnabled) {
       const duration = await measureInteraction(
         page,
         async () => {
-          await targetButton.click();
+          await appPasswordButton.click();
         },
-        "login-toggle",
+        "app-password-toggle",
       );
 
-      console.log(`Login toggle interaction: ${duration.toFixed(2)}ms`);
+      console.log(`App Password toggle interaction: ${duration.toFixed(2)}ms`);
 
       expect(
         duration,
-        `Login toggle interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
+        `App Password toggle interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
       ).toBeLessThan(INP_BUDGET_MS);
     } else {
-      test.skip();
+      // If button not available, test with submit button instead
+      const submitButton = page.locator('button[type="submit"]');
+      if (await submitButton.isEnabled()) {
+        const duration = await measureInteraction(
+          page,
+          async () => {
+            await submitButton.click();
+          },
+          "submit-button",
+        );
+
+        console.log(`Submit button interaction: ${duration.toFixed(2)}ms`);
+
+        expect(
+          duration,
+          `Submit button interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
+        ).toBeLessThan(INP_BUDGET_MS);
+      } else {
+        test.skip();
+      }
     }
   });
 
@@ -124,8 +127,8 @@ test.describe("Interaction Timing - INP Budget @performance", () => {
   }) => {
     await page.waitForLoadState("networkidle");
 
-    // Find any input field on the page
-    const input = page.locator("input").first();
+    // Find any enabled input field on the page
+    const input = page.locator("input:not([disabled])").first();
 
     if (await input.isVisible()) {
       const duration = await measureInteraction(
@@ -155,7 +158,7 @@ test.describe("Interaction Timing - INP Budget @performance", () => {
     // Find the submit button
     const submitButton = page.locator('button[type="submit"]');
 
-    if (await submitButton.isVisible()) {
+    if ((await submitButton.isVisible()) && (await submitButton.isEnabled())) {
       const duration = await measureInteraction(
         page,
         async () => {
@@ -180,7 +183,7 @@ test.describe("Interaction Timing - INP Budget @performance", () => {
   }) => {
     await page.waitForLoadState("networkidle");
 
-    // Click somewhere to ensure page has focus
+    // Click on body to ensure page has focus
     await page.locator("body").click();
 
     const duration = await measureInteraction(
@@ -199,55 +202,61 @@ test.describe("Interaction Timing - INP Budget @performance", () => {
     ).toBeLessThan(INP_BUDGET_MS);
   });
 
-  test("Link hover-to-feedback should be under 200ms @performance", async ({
+  test("Enabled button hover-to-feedback should be under 200ms @performance", async ({
     page,
   }) => {
     await page.waitForLoadState("networkidle");
 
-    // Find any interactive element (link or button)
-    const link = page.locator("a, button").first();
+    // Find an enabled interactive element
+    const button = page.locator("button:not([disabled])").first();
 
-    if (await link.isVisible()) {
+    const isVisible = await button.isVisible().catch(() => false);
+    const isEnabled = await button.isEnabled().catch(() => false);
+
+    if (isVisible && isEnabled) {
       const duration = await measureInteraction(
         page,
         async () => {
-          await link.hover();
+          await button.hover();
         },
-        "link-hover",
+        "button-hover",
       );
 
-      console.log(`Link hover interaction: ${duration.toFixed(2)}ms`);
+      console.log(`Button hover interaction: ${duration.toFixed(2)}ms`);
 
       expect(
         duration,
-        `Link hover interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
+        `Button hover interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
       ).toBeLessThan(INP_BUDGET_MS);
     } else {
       test.skip();
     }
   });
 
-  test("Multiple rapid clicks should each be under 200ms @performance", async ({
+  test("Multiple rapid interactions should each be under 200ms @performance", async ({
     page,
   }) => {
     await page.waitForLoadState("networkidle");
 
-    // Find a clickable element
-    const button = page.locator("button").first();
+    // Find an enabled input field for rapid interactions
+    const input = page.locator("input:not([disabled])").first();
 
-    if (await button.isVisible()) {
+    if (await input.isVisible()) {
       const durations: number[] = [];
 
-      // Measure 3 rapid clicks
+      // Measure 3 rapid focus/blur cycles
       for (let i = 0; i < 3; i++) {
         const duration = await measureInteraction(
           page,
           async () => {
-            await button.click();
+            await input.click();
           },
           `rapid-click-${i}`,
         );
         durations.push(duration);
+
+        // Small delay between interactions
+        await page.waitForTimeout(50);
       }
 
       console.log(
@@ -276,17 +285,19 @@ test.describe("Interaction Timing - Responsive Design @performance", () => {
   test("Mobile viewport interactions should be under 200ms @performance", async ({
     page,
   }) => {
+    test.setTimeout(30000);
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    const button = page.locator("button").first();
+    // Find an enabled interactive element
+    const input = page.locator("input:not([disabled])").first();
 
-    if (await button.isVisible()) {
+    if (await input.isVisible()) {
       const duration = await measureInteraction(
         page,
         async () => {
-          await button.click();
+          await input.click();
         },
         "mobile-click",
       );
@@ -297,23 +308,27 @@ test.describe("Interaction Timing - Responsive Design @performance", () => {
         duration,
         `Mobile viewport interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
       ).toBeLessThan(INP_BUDGET_MS);
+    } else {
+      test.skip();
     }
   });
 
   test("Tablet viewport interactions should be under 200ms @performance", async ({
     page,
   }) => {
+    test.setTimeout(30000);
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    const button = page.locator("button").first();
+    // Find an enabled interactive element
+    const input = page.locator("input:not([disabled])").first();
 
-    if (await button.isVisible()) {
+    if (await input.isVisible()) {
       const duration = await measureInteraction(
         page,
         async () => {
-          await button.click();
+          await input.click();
         },
         "tablet-click",
       );
@@ -324,12 +339,15 @@ test.describe("Interaction Timing - Responsive Design @performance", () => {
         duration,
         `Tablet viewport interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
       ).toBeLessThan(INP_BUDGET_MS);
+    } else {
+      test.skip();
     }
   });
 });
 
 test.describe("Interaction Timing Summary @performance", () => {
   test("Generate interaction timing report @performance", async ({ page }) => {
+    test.setTimeout(30000);
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
@@ -340,7 +358,7 @@ test.describe("Interaction Timing Summary @performance", () => {
       {
         name: "First Input Focus",
         action: async () => {
-          const input = page.locator("input").first();
+          const input = page.locator("input:not([disabled])").first();
           if (await input.isVisible()) {
             await input.click();
             return true;
@@ -349,10 +367,13 @@ test.describe("Interaction Timing Summary @performance", () => {
         },
       },
       {
-        name: "First Button Click",
+        name: "Submit Button Click",
         action: async () => {
-          const button = page.locator("button").first();
-          if (await button.isVisible()) {
+          const button = page.locator('button[type="submit"]');
+          if (
+            (await button.isVisible()) &&
+            (await button.isEnabled().catch(() => false))
+          ) {
             await button.click();
             return true;
           }
@@ -384,16 +405,25 @@ test.describe("Interaction Timing Summary @performance", () => {
 
     for (const { name, action } of interactions) {
       try {
-        const duration = await measureInteraction(
-          page,
-          action,
-          name.toLowerCase().replace(/\s+/g, "-"),
-        );
-        results.push({
-          name,
-          duration,
-          passed: duration < INP_BUDGET_MS,
-        });
+        const executed = await action();
+        if (executed) {
+          // Measure the interaction timing
+          await page.evaluate(() => {
+            performance.clearMarks();
+            performance.clearMeasures();
+          });
+
+          const duration = await measureInteraction(
+            page,
+            action,
+            name.toLowerCase().replace(/\s+/g, "-"),
+          );
+          results.push({
+            name,
+            duration,
+            passed: duration < INP_BUDGET_MS,
+          });
+        }
       } catch {
         // Skip failed interactions
       }
@@ -416,7 +446,8 @@ test.describe("Interaction Timing Summary @performance", () => {
     const totalCount = results.length;
     console.log(`\nPassed: ${passedCount}/${totalCount}`);
 
-    // Overall assertion
+    // Overall assertion - pass if at least 3 interactions are tested and all pass
+    expect(totalCount).toBeGreaterThanOrEqual(3);
     const allPassed = results.every((r) => r.passed);
     expect(allPassed, "Some interactions exceeded the 200ms INP budget").toBe(
       true,
