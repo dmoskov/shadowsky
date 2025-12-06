@@ -295,9 +295,7 @@ export const StatusBar: React.FC = () => {
 
   // If only showing degraded indicator (no other issues)
   if (!isVisible && !status.hasIssues && isDegradedSustained) {
-    return (
-      <DegradedIndicator isVisible={true} reason={degradedReason} />
-    );
+    return <DegradedIndicator isVisible={true} reason={degradedReason} />;
   }
 
   return (

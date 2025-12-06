@@ -1,6 +1,134 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AuthErrorCategory } from "../types/websocket";
-import { calculateBackoff, categorizeAuthError } from "./websocket-service";
+import {
+  AuthErrorCategory,
+  WebSocketConnectionState,
+  WebSocketEventType,
+} from "../types/websocket";
+import {
+  calculateBackoff,
+  categorizeAuthError,
+  WebSocketService,
+} from "./websocket-service";
+
+// ============================================================================
+// Mock WebSocket Implementation
+// ============================================================================
+
+type MockWebSocketEventType = "open" | "close" | "message" | "error";
+type MockWebSocketEventHandler = (event: unknown) => void;
+
+/**
+ * MockWebSocket - Simulates WebSocket behavior for testing FSM transitions
+ *
+ * Features:
+ * - Simulates connection states (CONNECTING, OPEN, CLOSING, CLOSED)
+ * - Allows manual triggering of events (open, close, message, error)
+ * - Tracks sent messages for verification
+ * - Configurable connection delay
+ */
+class MockWebSocket {
+  static readonly CONNECTING = 0;
+  static readonly OPEN = 1;
+  static readonly CLOSING = 2;
+  static readonly CLOSED = 3;
+
+  readyState: number = MockWebSocket.CONNECTING;
+  url: string;
+  sentMessages: string[] = [];
+  private eventHandlers: Map<
+    MockWebSocketEventType,
+    MockWebSocketEventHandler
+  > = new Map();
+
+  // Event handlers
+  onopen: ((event: Event) => void) | null = null;
+  onclose: ((event: CloseEvent) => void) | null = null;
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  onerror: ((event: Event) => void) | null = null;
+
+  constructor(url: string) {
+    this.url = url;
+    // Store reference for test access
+    MockWebSocket.instances.push(this);
+  }
+
+  // Static storage for test access
+  static instances: MockWebSocket[] = [];
+  static clearInstances(): void {
+    MockWebSocket.instances = [];
+  }
+
+  send(data: string): void {
+    if (this.readyState !== MockWebSocket.OPEN) {
+      throw new Error("WebSocket is not open");
+    }
+    this.sentMessages.push(data);
+  }
+
+  close(code?: number, reason?: string): void {
+    this.readyState = MockWebSocket.CLOSING;
+    // Simulate async close
+    setTimeout(() => {
+      this.readyState = MockWebSocket.CLOSED;
+      if (this.onclose) {
+        this.onclose({
+          code: code || 1000,
+          reason: reason || "",
+          wasClean: code === 1000,
+        } as CloseEvent);
+      }
+    }, 0);
+  }
+
+  // Test helpers to simulate events
+  simulateOpen(): void {
+    this.readyState = MockWebSocket.OPEN;
+    if (this.onopen) {
+      this.onopen(new Event("open"));
+    }
+  }
+
+  simulateClose(
+    code: number = 1000,
+    reason: string = "",
+    wasClean: boolean = true,
+  ): void {
+    this.readyState = MockWebSocket.CLOSED;
+    if (this.onclose) {
+      this.onclose({ code, reason, wasClean } as CloseEvent);
+    }
+  }
+
+  simulateMessage(data: object): void {
+    if (this.onmessage) {
+      this.onmessage({ data: JSON.stringify(data) } as MessageEvent);
+    }
+  }
+
+  simulateError(message: string = "Connection error"): void {
+    if (this.onerror) {
+      this.onerror(new ErrorEvent("error", { message }));
+    }
+  }
+
+  addEventListener(
+    type: MockWebSocketEventType,
+    handler: MockWebSocketEventHandler,
+  ): void {
+    this.eventHandlers.set(type, handler);
+  }
+
+  removeEventListener(type: MockWebSocketEventType): void {
+    this.eventHandlers.delete(type);
+  }
+}
+
+// Install mock globally
+const originalWebSocket = global.WebSocket;
+
+// ============================================================================
+// calculateBackoff Tests (existing)
+// ============================================================================
 
 describe("calculateBackoff", () => {
   describe("without jitter (deterministic)", () => {
@@ -139,17 +267,9 @@ describe("calculateBackoff", () => {
   });
 });
 
-// Note: Integration tests for WebSocket PONG timeout detection require
-// a real WebSocket mock environment. The implementation has been verified
-// through manual testing and the build compiles successfully.
-//
-// Key PONG timeout features implemented:
-// - PONG_TIMEOUT constant (10 seconds) in websocket.config.ts
-// - pongTimeoutTimer to track timeout after PING
-// - sendPing() records lastPingTime and starts timeout
-// - handlePong() clears timeout and calculates latency
-// - handlePongTimeout() closes with code 4002 and schedules reconnect
-// - clearTimers() and stopHeartbeat() clean up pongTimeoutTimer
+// ============================================================================
+// categorizeAuthError Tests (existing)
+// ============================================================================
 
 describe("categorizeAuthError", () => {
   describe("TOKEN_INVALID category (fatal, no retry)", () => {
@@ -486,6 +606,1581 @@ describe("categorizeAuthError", () => {
       // Both patterns present, but network patterns are checked before server patterns
       expect(categorizeAuthError("connection error: service unavailable")).toBe(
         AuthErrorCategory.NETWORK_ERROR,
+      );
+    });
+  });
+});
+
+// ============================================================================
+// WebSocket State Machine Tests
+// ============================================================================
+
+describe("WebSocketService - State Machine", () => {
+  let service: WebSocketService;
+  let mockWs: MockWebSocket;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    MockWebSocket.clearInstances();
+    // @ts-expect-error - Mocking global WebSocket
+    global.WebSocket = MockWebSocket;
+
+    // Use deterministic backoff for tests
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    global.WebSocket = originalWebSocket;
+    if (service) {
+      service.disconnect();
+    }
+  });
+
+  // Helper to get the latest mock WebSocket instance
+  function getLatestMockWs(): MockWebSocket {
+    return MockWebSocket.instances[MockWebSocket.instances.length - 1];
+  }
+
+  // Helper to create service with test config
+  function createService(
+    overrides: Partial<{
+      url: string;
+      accessToken: string;
+      reconnectDelay: number;
+      maxReconnectAttempts: number;
+      heartbeatInterval: number;
+      authTimeout: number;
+      debug: boolean;
+    }> = {},
+  ): WebSocketService {
+    return new WebSocketService({
+      url: "wss://test.example.com/ws",
+      reconnectDelay: 1000,
+      maxReconnectAttempts: 3,
+      heartbeatInterval: 5000,
+      authTimeout: 2000,
+      debug: false,
+      ...overrides,
+    });
+  }
+
+  // ============================================================================
+  // State Enter/Exit Tests (all 6 states)
+  // ============================================================================
+
+  describe("State Lifecycle - All 6 States", () => {
+    describe("DISCONNECTED state", () => {
+      it("should start in DISCONNECTED state", () => {
+        service = createService();
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DISCONNECTED,
+        );
+      });
+
+      it("should enter DISCONNECTED state on disconnect()", () => {
+        service = createService();
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        service.disconnect();
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DISCONNECTED,
+        );
+      });
+
+      it("should enter DISCONNECTED state on clean close", () => {
+        service = createService();
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateClose(1000, "Normal closure", true);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DISCONNECTED,
+        );
+      });
+    });
+
+    describe("CONNECTING state", () => {
+      it("should enter CONNECTING state when connect() is called", () => {
+        service = createService();
+        service.connect();
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTING,
+        );
+      });
+
+      it("should exit CONNECTING state when connection opens", () => {
+        service = createService();
+        service.connect();
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTING,
+        );
+
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        // Without token, goes directly to CONNECTED
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+      });
+
+      it("should exit CONNECTING state on connection error", () => {
+        service = createService();
+        service.connect();
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTING,
+        );
+
+        mockWs = getLatestMockWs();
+        mockWs.simulateError("Connection failed");
+        mockWs.simulateClose(1006, "Connection failed", false);
+
+        // Should transition to RECONNECTING (since it wasn't intentionally closed)
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.RECONNECTING,
+        );
+      });
+    });
+
+    describe("CONNECTED state", () => {
+      it("should enter CONNECTED state after successful connection (no auth)", () => {
+        service = createService();
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+        expect(service.isConnected()).toBe(true);
+      });
+
+      it("should enter CONNECTED state after successful auth", () => {
+        service = createService({ accessToken: "test-token" });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        // Should stay in CONNECTING until auth success
+        mockWs.simulateMessage({
+          type: WebSocketEventType.AUTH_SUCCESS,
+          timestamp: new Date().toISOString(),
+        });
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+      });
+
+      it("should exit CONNECTED state on disconnect", () => {
+        service = createService();
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+
+        service.disconnect();
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DISCONNECTED,
+        );
+      });
+    });
+
+    describe("DEGRADED state", () => {
+      it("should enter DEGRADED state when p95 latency exceeds threshold", () => {
+        // Use heartbeat interval longer than the latency we simulate to avoid overlapping
+        service = createService({ heartbeatInterval: 10000 });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+
+        // Simulate high latency PONG responses (>5000ms threshold)
+        // Use latency just under PONG timeout (10000ms) but above degraded threshold (5000ms)
+        for (let i = 0; i < 20; i++) {
+          // Trigger heartbeat
+          vi.advanceTimersByTime(10000);
+          // Simulate PONG response after 6000ms delay (above 5000ms threshold, below 10000ms timeout)
+          vi.advanceTimersByTime(6000);
+          mockWs.simulateMessage({
+            type: WebSocketEventType.PONG,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DEGRADED,
+        );
+      });
+
+      it("should exit DEGRADED state when metrics recover", () => {
+        service = createService({ heartbeatInterval: 10000 });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        // First, push into degraded state with high latency
+        for (let i = 0; i < 20; i++) {
+          vi.advanceTimersByTime(10000);
+          vi.advanceTimersByTime(6000);
+          mockWs.simulateMessage({
+            type: WebSocketEventType.PONG,
+            timestamp: new Date().toISOString(),
+          });
+        }
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DEGRADED,
+        );
+
+        // Now send many low-latency PONGs to recover
+        // Need enough to shift the p95 below threshold (100 samples max)
+        for (let i = 0; i < 100; i++) {
+          vi.advanceTimersByTime(10000);
+          vi.advanceTimersByTime(50); // Low latency
+          mockWs.simulateMessage({
+            type: WebSocketEventType.PONG,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+      });
+    });
+
+    describe("RECONNECTING state", () => {
+      it("should enter RECONNECTING state after unclean close", () => {
+        service = createService();
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+
+        // Simulate unclean close
+        mockWs.simulateClose(1006, "Connection lost", false);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.RECONNECTING,
+        );
+      });
+
+      it("should exit RECONNECTING state when reconnection succeeds", () => {
+        service = createService();
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateClose(1006, "Connection lost", false);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.RECONNECTING,
+        );
+
+        // Advance timer to trigger reconnect
+        vi.advanceTimersByTime(1000);
+
+        // New WebSocket should be created
+        const newMockWs = getLatestMockWs();
+        expect(newMockWs).not.toBe(mockWs);
+        newMockWs.simulateOpen();
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+      });
+
+      it("should exit RECONNECTING state to ERROR after max attempts", () => {
+        service = createService({ maxReconnectAttempts: 2 });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateClose(1006, "Connection lost", false);
+
+        // First reconnect attempt
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.RECONNECTING,
+        );
+        vi.advanceTimersByTime(1000);
+
+        let currentMockWs = getLatestMockWs();
+        currentMockWs.simulateClose(1006, "Connection lost", false);
+
+        // Second reconnect attempt
+        vi.advanceTimersByTime(2000);
+        currentMockWs = getLatestMockWs();
+        currentMockWs.simulateClose(1006, "Connection lost", false);
+
+        // After max attempts, should be in ERROR state
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.ERROR,
+        );
+      });
+    });
+
+    describe("ERROR state", () => {
+      it("should enter ERROR state after max reconnect attempts", () => {
+        service = createService({ maxReconnectAttempts: 1 });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateClose(1006, "Connection lost", false);
+
+        vi.advanceTimersByTime(1000);
+        const newMockWs = getLatestMockWs();
+        newMockWs.simulateClose(1006, "Failed again", false);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.ERROR,
+        );
+      });
+
+      it("should enter ERROR state on fatal auth failure (token invalid)", () => {
+        service = createService({ accessToken: "invalid-token" });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        // Auth failure with token invalid pattern
+        mockWs.simulateMessage({
+          type: WebSocketEventType.AUTH_FAILURE,
+          error: "Token expired",
+          timestamp: new Date().toISOString(),
+        });
+
+        // Allow the close to process
+        vi.advanceTimersByTime(0);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.ERROR,
+        );
+      });
+
+      it("should allow fresh connect() after ERROR state (when user re-authenticates)", () => {
+        service = createService({ accessToken: "invalid-token" });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateMessage({
+          type: WebSocketEventType.AUTH_FAILURE,
+          error: "Token expired",
+          timestamp: new Date().toISOString(),
+        });
+        vi.advanceTimersByTime(0);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.ERROR,
+        );
+
+        // User re-authenticates and calls connect() again
+        service.connect();
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTING,
+        );
+      });
+    });
+  });
+
+  // ============================================================================
+  // All 18 State Transitions
+  // ============================================================================
+
+  describe("State Transitions - All 18 documented transitions", () => {
+    // Transition 1: DISCONNECTED -> CONNECTING (connect())
+    describe("Transition 1: DISCONNECTED -> CONNECTING", () => {
+      it("should transition from DISCONNECTED to CONNECTING on connect()", () => {
+        service = createService();
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DISCONNECTED,
+        );
+
+        service.connect();
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTING,
+        );
+      });
+    });
+
+    // Transition 2: CONNECTING -> CONNECTED (onopen + no auth / auth success)
+    describe("Transition 2: CONNECTING -> CONNECTED", () => {
+      it("should transition to CONNECTED on onopen (no auth required)", () => {
+        service = createService();
+        service.connect();
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTING,
+        );
+
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+      });
+
+      it("should transition to CONNECTED on auth success", () => {
+        service = createService({ accessToken: "test-token" });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        mockWs.simulateMessage({
+          type: WebSocketEventType.AUTH_SUCCESS,
+          timestamp: new Date().toISOString(),
+        });
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+      });
+    });
+
+    // Transition 3: CONNECTING -> DISCONNECTED (onclose wasClean)
+    describe("Transition 3: CONNECTING -> DISCONNECTED", () => {
+      it("should transition to DISCONNECTED on clean close during connecting", () => {
+        service = createService();
+        service.connect();
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTING,
+        );
+
+        mockWs = getLatestMockWs();
+        service.disconnect(); // This sets intentionally closed flag
+
+        // Manually trigger the close since disconnect() calls ws.close()
+        vi.advanceTimersByTime(0);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DISCONNECTED,
+        );
+      });
+    });
+
+    // Transition 4: CONNECTING -> RECONNECTING (connection failure)
+    describe("Transition 4: CONNECTING -> RECONNECTING", () => {
+      it("should transition to RECONNECTING on connection failure", () => {
+        service = createService();
+        service.connect();
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTING,
+        );
+
+        mockWs = getLatestMockWs();
+        mockWs.simulateClose(1006, "Connection failed", false);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.RECONNECTING,
+        );
+      });
+    });
+
+    // Transition 5: CONNECTING -> ERROR (auth failure - token invalid)
+    describe("Transition 5: CONNECTING -> ERROR", () => {
+      it("should transition to ERROR on auth failure with invalid token", () => {
+        service = createService({ accessToken: "invalid-token" });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        mockWs.simulateMessage({
+          type: WebSocketEventType.AUTH_FAILURE,
+          error: "Token expired",
+          timestamp: new Date().toISOString(),
+        });
+        vi.advanceTimersByTime(0);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.ERROR,
+        );
+      });
+
+      it("should transition to ERROR on auth timeout", () => {
+        service = createService({
+          accessToken: "test-token",
+          authTimeout: 1000,
+          maxReconnectAttempts: 0,
+        });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        // Don't send auth response, let it timeout
+        vi.advanceTimersByTime(1001);
+        vi.advanceTimersByTime(0); // Process close
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.ERROR,
+        );
+      });
+    });
+
+    // Transition 6: CONNECTED -> DISCONNECTED (intentional disconnect)
+    describe("Transition 6: CONNECTED -> DISCONNECTED", () => {
+      it("should transition to DISCONNECTED on intentional disconnect", () => {
+        service = createService();
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+
+        service.disconnect();
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DISCONNECTED,
+        );
+      });
+    });
+
+    // Transition 7: CONNECTED -> RECONNECTING (unclean close)
+    describe("Transition 7: CONNECTED -> RECONNECTING", () => {
+      it("should transition to RECONNECTING on unclean close", () => {
+        service = createService();
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+
+        mockWs.simulateClose(1006, "Connection lost", false);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.RECONNECTING,
+        );
+      });
+
+      it("should transition to RECONNECTING on PONG timeout", () => {
+        service = createService({ heartbeatInterval: 100 });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+
+        // Trigger heartbeat
+        vi.advanceTimersByTime(100);
+
+        // Don't respond to PING, let PONG timeout (default 10000ms)
+        vi.advanceTimersByTime(10001);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.RECONNECTING,
+        );
+      });
+    });
+
+    // Transition 8: CONNECTED -> DEGRADED (high latency)
+    describe("Transition 8: CONNECTED -> DEGRADED", () => {
+      it("should transition to DEGRADED when p95 latency exceeds 5000ms", () => {
+        // Use heartbeat interval longer than latency to avoid overlap
+        service = createService({ heartbeatInterval: 10000 });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+
+        // Generate enough high-latency samples
+        for (let i = 0; i < 20; i++) {
+          vi.advanceTimersByTime(10000); // Heartbeat triggers PING
+          vi.advanceTimersByTime(5500); // Simulate 5.5s latency (under 10s PONG timeout)
+          mockWs.simulateMessage({
+            type: WebSocketEventType.PONG,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DEGRADED,
+        );
+      });
+    });
+
+    // Transition 9: CONNECTED -> ERROR (should not happen directly in normal flow)
+    // This is covered by auth failure handling
+
+    // Transition 10: DEGRADED -> CONNECTED (metrics recover)
+    describe("Transition 10: DEGRADED -> CONNECTED", () => {
+      it("should transition back to CONNECTED when metrics recover", () => {
+        service = createService({ heartbeatInterval: 10000 });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        // Push into DEGRADED state
+        for (let i = 0; i < 20; i++) {
+          vi.advanceTimersByTime(10000);
+          vi.advanceTimersByTime(5500);
+          mockWs.simulateMessage({
+            type: WebSocketEventType.PONG,
+            timestamp: new Date().toISOString(),
+          });
+        }
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DEGRADED,
+        );
+
+        // Recover with low-latency samples (need enough to shift p95)
+        for (let i = 0; i < 100; i++) {
+          vi.advanceTimersByTime(10000);
+          vi.advanceTimersByTime(50);
+          mockWs.simulateMessage({
+            type: WebSocketEventType.PONG,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+      });
+    });
+
+    // Transition 11: DEGRADED -> RECONNECTING (connection lost)
+    describe("Transition 11: DEGRADED -> RECONNECTING", () => {
+      it("should transition to RECONNECTING when connection is lost while degraded", () => {
+        service = createService({ heartbeatInterval: 10000 });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        // Push into DEGRADED state
+        for (let i = 0; i < 20; i++) {
+          vi.advanceTimersByTime(10000);
+          vi.advanceTimersByTime(5500);
+          mockWs.simulateMessage({
+            type: WebSocketEventType.PONG,
+            timestamp: new Date().toISOString(),
+          });
+        }
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DEGRADED,
+        );
+
+        // Simulate connection loss
+        mockWs.simulateClose(1006, "Connection lost", false);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.RECONNECTING,
+        );
+      });
+    });
+
+    // Transition 12: DEGRADED -> DISCONNECTED (intentional disconnect)
+    describe("Transition 12: DEGRADED -> DISCONNECTED", () => {
+      it("should transition to DISCONNECTED on intentional disconnect while degraded", () => {
+        service = createService({ heartbeatInterval: 10000 });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        // Push into DEGRADED state
+        for (let i = 0; i < 20; i++) {
+          vi.advanceTimersByTime(10000);
+          vi.advanceTimersByTime(5500);
+          mockWs.simulateMessage({
+            type: WebSocketEventType.PONG,
+            timestamp: new Date().toISOString(),
+          });
+        }
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DEGRADED,
+        );
+
+        service.disconnect();
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DISCONNECTED,
+        );
+      });
+    });
+
+    // Transition 13: RECONNECTING -> CONNECTING (reconnect timer fires)
+    describe("Transition 13: RECONNECTING -> CONNECTING", () => {
+      it("should transition to CONNECTING when reconnect timer fires", () => {
+        service = createService();
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateClose(1006, "Connection lost", false);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.RECONNECTING,
+        );
+
+        // Advance timer to trigger reconnect (1000ms with 0.5 random = 1000ms)
+        vi.advanceTimersByTime(1000);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTING,
+        );
+      });
+    });
+
+    // Transition 14: RECONNECTING -> CONNECTED (successful reconnection)
+    describe("Transition 14: RECONNECTING -> CONNECTED", () => {
+      it("should transition to CONNECTED after successful reconnection", () => {
+        service = createService();
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateClose(1006, "Connection lost", false);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.RECONNECTING,
+        );
+
+        vi.advanceTimersByTime(1000);
+        const newMockWs = getLatestMockWs();
+        newMockWs.simulateOpen();
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+      });
+    });
+
+    // Transition 15: RECONNECTING -> ERROR (max attempts exceeded)
+    describe("Transition 15: RECONNECTING -> ERROR", () => {
+      it("should transition to ERROR when max reconnect attempts exceeded", () => {
+        service = createService({
+          maxReconnectAttempts: 2,
+          reconnectDelay: 100,
+        });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateClose(1006, "Connection lost", false);
+
+        // Attempt 1
+        vi.advanceTimersByTime(100);
+        let currentWs = getLatestMockWs();
+        currentWs.simulateClose(1006, "Failed", false);
+
+        // Attempt 2
+        vi.advanceTimersByTime(200);
+        currentWs = getLatestMockWs();
+        currentWs.simulateClose(1006, "Failed", false);
+
+        // Should be in ERROR after exhausting attempts
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.ERROR,
+        );
+      });
+    });
+
+    // Transition 16: RECONNECTING -> DISCONNECTED (intentional disconnect during reconnect)
+    describe("Transition 16: RECONNECTING -> DISCONNECTED", () => {
+      it("should transition to DISCONNECTED when disconnect is called during reconnection", () => {
+        service = createService();
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateClose(1006, "Connection lost", false);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.RECONNECTING,
+        );
+
+        service.disconnect();
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DISCONNECTED,
+        );
+      });
+    });
+
+    // Transition 17: ERROR -> CONNECTING (fresh connect after error)
+    describe("Transition 17: ERROR -> CONNECTING", () => {
+      it("should allow fresh connect() from ERROR state", () => {
+        service = createService({ maxReconnectAttempts: 0 });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateClose(1006, "Connection lost", false);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.ERROR,
+        );
+
+        // Call connect() again
+        service.connect();
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTING,
+        );
+      });
+    });
+
+    // Transition 18: ERROR -> DISCONNECTED (disconnect from error state)
+    describe("Transition 18: ERROR -> DISCONNECTED", () => {
+      it("should transition to DISCONNECTED when disconnect is called from ERROR state", () => {
+        service = createService({ maxReconnectAttempts: 0 });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateClose(1006, "Connection lost", false);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.ERROR,
+        );
+
+        service.disconnect();
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DISCONNECTED,
+        );
+      });
+    });
+  });
+
+  // ============================================================================
+  // Guard Conditions Tests
+  // ============================================================================
+
+  describe("Guard Conditions", () => {
+    describe("Duplicate connection prevention", () => {
+      it("should not create new connection if already OPEN", () => {
+        service = createService();
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        const wsCountBefore = MockWebSocket.instances.length;
+        service.connect(); // Try to connect again
+
+        expect(MockWebSocket.instances.length).toBe(wsCountBefore);
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+      });
+
+      it("should not create new connection if already CONNECTING", () => {
+        service = createService();
+        service.connect();
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTING,
+        );
+
+        const wsCountBefore = MockWebSocket.instances.length;
+        service.connect(); // Try to connect again
+
+        expect(MockWebSocket.instances.length).toBe(wsCountBefore);
+      });
+    });
+
+    describe("Intentional close flag", () => {
+      it("should not schedule reconnect when intentionally closed", () => {
+        service = createService();
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        service.disconnect();
+
+        // Verify state is DISCONNECTED, not RECONNECTING
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DISCONNECTED,
+        );
+
+        // Advance time significantly - should not attempt reconnect
+        vi.advanceTimersByTime(60000);
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DISCONNECTED,
+        );
+      });
+    });
+
+    describe("Fatal auth error flag", () => {
+      it("should not schedule reconnect after fatal auth error", () => {
+        service = createService({ accessToken: "bad-token" });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        mockWs.simulateMessage({
+          type: WebSocketEventType.AUTH_FAILURE,
+          error: "Token expired",
+          timestamp: new Date().toISOString(),
+        });
+        vi.advanceTimersByTime(0);
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.ERROR,
+        );
+
+        // Advance time significantly - should not attempt reconnect
+        vi.advanceTimersByTime(60000);
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.ERROR,
+        );
+      });
+    });
+
+    describe("Max reconnect attempts guard", () => {
+      it("should stop reconnecting after max attempts", () => {
+        service = createService({
+          maxReconnectAttempts: 2,
+          reconnectDelay: 100,
+        });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateClose(1006, "Lost", false);
+
+        // Attempt 1
+        vi.advanceTimersByTime(100);
+        getLatestMockWs().simulateClose(1006, "Lost", false);
+
+        // Attempt 2
+        vi.advanceTimersByTime(200);
+        getLatestMockWs().simulateClose(1006, "Lost", false);
+
+        const wsCountBefore = MockWebSocket.instances.length;
+
+        // Should not create more WebSocket instances
+        vi.advanceTimersByTime(10000);
+        expect(MockWebSocket.instances.length).toBe(wsCountBefore);
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.ERROR,
+        );
+      });
+    });
+  });
+
+  // ============================================================================
+  // Idempotent Operations Tests
+  // ============================================================================
+
+  describe("Idempotent Operations", () => {
+    it("connect() should be idempotent when already connected", () => {
+      service = createService();
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      const state1 = service.getStats();
+      service.connect();
+      const state2 = service.getStats();
+
+      expect(state1.connectionState).toBe(state2.connectionState);
+      expect(MockWebSocket.instances.length).toBe(1);
+    });
+
+    it("disconnect() should be idempotent", () => {
+      service = createService();
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      service.disconnect();
+      const state1 = service.getConnectionState();
+      service.disconnect();
+      const state2 = service.getConnectionState();
+
+      expect(state1).toBe(WebSocketConnectionState.DISCONNECTED);
+      expect(state2).toBe(WebSocketConnectionState.DISCONNECTED);
+    });
+  });
+
+  // ============================================================================
+  // Degradation Threshold Tests
+  // ============================================================================
+
+  describe("Degradation Thresholds", () => {
+    describe("P95 Latency Threshold (5000ms)", () => {
+      it("should not degrade when p95 latency is exactly at threshold", () => {
+        service = createService({ heartbeatInterval: 10000 });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        // Send PONGs with exactly 5000ms latency
+        for (let i = 0; i < 20; i++) {
+          vi.advanceTimersByTime(10000);
+          vi.advanceTimersByTime(5000); // Exactly at threshold
+          mockWs.simulateMessage({
+            type: WebSocketEventType.PONG,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        // Should still be CONNECTED (threshold is >5000, not >=5000)
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+      });
+
+      it("should degrade when p95 latency exceeds threshold", () => {
+        service = createService({ heartbeatInterval: 10000 });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        // Send PONGs with 5001ms latency
+        for (let i = 0; i < 20; i++) {
+          vi.advanceTimersByTime(10000);
+          vi.advanceTimersByTime(5001); // Just over threshold
+          mockWs.simulateMessage({
+            type: WebSocketEventType.PONG,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DEGRADED,
+        );
+      });
+    });
+
+    describe("Packet Loss Threshold (10%)", () => {
+      it("should degrade when packet loss exceeds 10%", () => {
+        service = createService({ heartbeatInterval: 100 });
+        service.connect();
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+
+        // Simulate 11% packet loss: 11 timeouts out of 100 exchanges
+        // First, send some successful exchanges with low latency
+        for (let i = 0; i < 89; i++) {
+          vi.advanceTimersByTime(100);
+          vi.advanceTimersByTime(50);
+          mockWs.simulateMessage({
+            type: WebSocketEventType.PONG,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        // Now trigger PONG timeouts
+        for (let i = 0; i < 11; i++) {
+          vi.advanceTimersByTime(100); // Heartbeat
+          vi.advanceTimersByTime(10001); // PONG timeout
+          // The service will reconnect after timeout, need to restore connection
+          const newWs = getLatestMockWs();
+          newWs.simulateOpen();
+        }
+
+        const metrics = service.getStats().metrics;
+        expect(metrics?.isDegraded).toBe(true);
+      });
+    });
+  });
+
+  // ============================================================================
+  // Event Emission Tests
+  // ============================================================================
+
+  describe("Event Emission", () => {
+    it("should emit CONNECT event when connected", () => {
+      service = createService();
+      const connectHandler = vi.fn();
+      service.on(WebSocketEventType.CONNECT, connectHandler);
+
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      expect(connectHandler).toHaveBeenCalledTimes(1);
+    });
+
+    it("should emit DISCONNECT event when disconnected", () => {
+      service = createService();
+      const disconnectHandler = vi.fn();
+      service.on(WebSocketEventType.DISCONNECT, disconnectHandler);
+
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+      service.disconnect();
+      vi.advanceTimersByTime(0);
+
+      expect(disconnectHandler).toHaveBeenCalled();
+    });
+
+    it("should emit RECONNECT event before each reconnection attempt", () => {
+      service = createService({ reconnectDelay: 100 });
+      const reconnectHandler = vi.fn();
+      service.on(WebSocketEventType.RECONNECT, reconnectHandler);
+
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+      mockWs.simulateClose(1006, "Lost", false);
+
+      vi.advanceTimersByTime(100);
+
+      expect(reconnectHandler).toHaveBeenCalledTimes(1);
+    });
+
+    it("should emit AUTH_SUCCESS event on successful auth", () => {
+      service = createService({ accessToken: "valid-token" });
+      const authSuccessHandler = vi.fn();
+      service.on(WebSocketEventType.AUTH_SUCCESS, authSuccessHandler);
+
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+      mockWs.simulateMessage({
+        type: WebSocketEventType.AUTH_SUCCESS,
+        timestamp: new Date().toISOString(),
+      });
+
+      expect(authSuccessHandler).toHaveBeenCalledTimes(1);
+    });
+
+    it("should emit AUTH_FAILURE event on auth failure", () => {
+      service = createService({ accessToken: "bad-token" });
+      const authFailureHandler = vi.fn();
+      service.on(WebSocketEventType.AUTH_FAILURE, authFailureHandler);
+
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+      mockWs.simulateMessage({
+        type: WebSocketEventType.AUTH_FAILURE,
+        error: "Invalid token",
+        timestamp: new Date().toISOString(),
+      });
+
+      expect(authFailureHandler).toHaveBeenCalledTimes(1);
+    });
+
+    it("should emit AUTH_EXPIRED event on fatal auth failure", () => {
+      service = createService({ accessToken: "expired-token" });
+      const authExpiredHandler = vi.fn();
+      service.on(WebSocketEventType.AUTH_EXPIRED, authExpiredHandler);
+
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+      mockWs.simulateMessage({
+        type: WebSocketEventType.AUTH_FAILURE,
+        error: "Token expired",
+        timestamp: new Date().toISOString(),
+      });
+
+      expect(authExpiredHandler).toHaveBeenCalledTimes(1);
+    });
+
+    it("should emit ERROR event on errors", () => {
+      service = createService();
+      const errorHandler = vi.fn();
+      service.on(WebSocketEventType.ERROR, errorHandler);
+
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateError("Test error");
+
+      expect(errorHandler).toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
+  // Heartbeat & PONG Timeout Tests
+  // ============================================================================
+
+  describe("Heartbeat and PONG Timeout", () => {
+    it("should start heartbeat after connection established", () => {
+      service = createService({ heartbeatInterval: 1000 });
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      expect(mockWs.sentMessages.length).toBe(0);
+
+      vi.advanceTimersByTime(1000);
+
+      // Should have sent a PING
+      expect(mockWs.sentMessages.length).toBe(1);
+      const pingMessage = JSON.parse(mockWs.sentMessages[0]);
+      expect(pingMessage.type).toBe(WebSocketEventType.PING);
+    });
+
+    it("should handle PONG response and calculate latency", () => {
+      service = createService({ heartbeatInterval: 1000 });
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      // Trigger heartbeat
+      vi.advanceTimersByTime(1000);
+
+      // Simulate some latency
+      vi.advanceTimersByTime(100);
+      mockWs.simulateMessage({
+        type: WebSocketEventType.PONG,
+        timestamp: new Date().toISOString(),
+      });
+
+      const stats = service.getStats();
+      expect(stats.lastPingLatency).toBeGreaterThanOrEqual(100);
+    });
+
+    it("should trigger reconnect on PONG timeout", () => {
+      service = createService({ heartbeatInterval: 1000 });
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+      expect(service.getConnectionState()).toBe(
+        WebSocketConnectionState.CONNECTED,
+      );
+
+      // Trigger heartbeat
+      vi.advanceTimersByTime(1000);
+
+      // Wait for PONG timeout (10000ms)
+      vi.advanceTimersByTime(10001);
+
+      expect(service.getConnectionState()).toBe(
+        WebSocketConnectionState.RECONNECTING,
+      );
+    });
+
+    it("should clear PONG timeout when PONG is received", () => {
+      service = createService({ heartbeatInterval: 1000 });
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      // Trigger heartbeat
+      vi.advanceTimersByTime(1000);
+
+      // Respond before timeout
+      vi.advanceTimersByTime(5000);
+      mockWs.simulateMessage({
+        type: WebSocketEventType.PONG,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Advance past the original timeout
+      vi.advanceTimersByTime(6000);
+
+      // Should still be connected
+      expect(service.getConnectionState()).toBe(
+        WebSocketConnectionState.CONNECTED,
+      );
+    });
+  });
+
+  // ============================================================================
+  // Metrics Tracking Tests
+  // ============================================================================
+
+  describe("Metrics Tracking", () => {
+    it("should track reconnection count", () => {
+      service = createService({ reconnectDelay: 100 });
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+      mockWs.simulateClose(1006, "Lost", false);
+
+      expect(service.getStats().metrics?.reconnectionCount).toBe(1);
+
+      vi.advanceTimersByTime(100);
+      getLatestMockWs().simulateOpen();
+      getLatestMockWs().simulateClose(1006, "Lost", false);
+
+      expect(service.getStats().metrics?.reconnectionCount).toBe(2);
+    });
+
+    it("should track PONG timeout count for packet loss calculation", () => {
+      service = createService({ heartbeatInterval: 100 });
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      // Trigger a PONG timeout
+      vi.advanceTimersByTime(100);
+      vi.advanceTimersByTime(10001);
+
+      const metrics = service.getStats().metrics;
+      expect(metrics?.pongTimeouts).toBe(1);
+      expect(metrics?.totalPingPongExchanges).toBe(1);
+    });
+
+    it("should calculate uptime percentage", () => {
+      service = createService();
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      // Let some time pass while connected
+      vi.advanceTimersByTime(10000);
+
+      const metrics = service.getStats().metrics;
+      expect(metrics?.uptimePercent).toBeGreaterThan(0);
+    });
+
+    it("should track messages sent and received", () => {
+      service = createService();
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      service.send({
+        type: WebSocketEventType.PING,
+        timestamp: new Date().toISOString(),
+      });
+      mockWs.simulateMessage({
+        type: WebSocketEventType.PONG,
+        timestamp: new Date().toISOString(),
+      });
+
+      const stats = service.getStats();
+      expect(stats.messagesSent).toBeGreaterThanOrEqual(1);
+      expect(stats.messagesReceived).toBeGreaterThanOrEqual(1);
+    });
+
+    it("should reset metrics on long disconnection", () => {
+      service = createService();
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      // Disconnect and wait for long disconnection threshold (5 minutes)
+      service.disconnect();
+      vi.advanceTimersByTime(6 * 60 * 1000);
+
+      // Reconnect - metrics should be reset
+      service.connect();
+      const newMockWs = getLatestMockWs();
+      newMockWs.simulateOpen();
+
+      // The resetMetrics should have been called, so reconnectionCount should be 0
+      // (since we didn't actually go through the reconnection flow, it's a fresh connect)
+      expect(service.getStats().metrics?.reconnectionCount).toBe(0);
+    });
+  });
+
+  // ============================================================================
+  // Auth Flow Tests
+  // ============================================================================
+
+  describe("Authentication Flow", () => {
+    it("should send auth message when token is provided", () => {
+      service = createService({ accessToken: "test-token" });
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      // Auth message should be sent
+      expect(mockWs.sentMessages.length).toBe(1);
+      const authMessage = JSON.parse(mockWs.sentMessages[0]);
+      expect(authMessage.type).toBe(WebSocketEventType.AUTH);
+      expect(authMessage.token).toBe("test-token");
+    });
+
+    it("should start auth timeout after sending auth message", () => {
+      service = createService({
+        accessToken: "test-token",
+        authTimeout: 1000,
+        maxReconnectAttempts: 0,
+      });
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      // Wait for auth timeout
+      vi.advanceTimersByTime(1001);
+      vi.advanceTimersByTime(0); // Process close
+
+      expect(service.getConnectionState()).toBe(WebSocketConnectionState.ERROR);
+    });
+
+    it("should clear auth timeout on auth success", () => {
+      service = createService({ accessToken: "test-token", authTimeout: 1000 });
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      mockWs.simulateMessage({
+        type: WebSocketEventType.AUTH_SUCCESS,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Wait past the original timeout
+      vi.advanceTimersByTime(2000);
+
+      // Should still be connected
+      expect(service.getConnectionState()).toBe(
+        WebSocketConnectionState.CONNECTED,
+      );
+    });
+
+    it("should retry on server error during auth", () => {
+      service = createService({
+        accessToken: "test-token",
+        reconnectDelay: 100,
+      });
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      mockWs.simulateMessage({
+        type: WebSocketEventType.AUTH_FAILURE,
+        error: "Internal server error",
+        statusCode: 500,
+        timestamp: new Date().toISOString(),
+      });
+      vi.advanceTimersByTime(0);
+
+      expect(service.getConnectionState()).toBe(
+        WebSocketConnectionState.RECONNECTING,
+      );
+    });
+
+    it("should retry with unlimited attempts on network error during auth", () => {
+      service = createService({
+        accessToken: "test-token",
+        reconnectDelay: 100,
+        maxReconnectAttempts: 1,
+      });
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      mockWs.simulateMessage({
+        type: WebSocketEventType.AUTH_FAILURE,
+        error: "Connection timeout",
+        timestamp: new Date().toISOString(),
+      });
+      vi.advanceTimersByTime(0);
+
+      expect(service.getConnectionState()).toBe(
+        WebSocketConnectionState.RECONNECTING,
+      );
+
+      // Should continue retrying even past maxReconnectAttempts for network errors
+      vi.advanceTimersByTime(100);
+      let currentWs = getLatestMockWs();
+      currentWs.simulateOpen();
+      currentWs.simulateMessage({
+        type: WebSocketEventType.AUTH_FAILURE,
+        error: "Connection timeout",
+        timestamp: new Date().toISOString(),
+      });
+      vi.advanceTimersByTime(0);
+
+      // Should still be trying (not in ERROR state)
+      expect(service.getConnectionState()).toBe(
+        WebSocketConnectionState.RECONNECTING,
+      );
+    });
+  });
+
+  // ============================================================================
+  // Message Handling Tests
+  // ============================================================================
+
+  describe("Message Handling", () => {
+    it("should respond to server PING with PONG", () => {
+      service = createService();
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      const messagesBefore = mockWs.sentMessages.length;
+      mockWs.simulateMessage({
+        type: WebSocketEventType.PING,
+        timestamp: new Date().toISOString(),
+      });
+
+      expect(mockWs.sentMessages.length).toBe(messagesBefore + 1);
+      const pongMessage = JSON.parse(
+        mockWs.sentMessages[mockWs.sentMessages.length - 1],
+      );
+      expect(pongMessage.type).toBe(WebSocketEventType.PONG);
+    });
+
+    it("should emit custom events to registered handlers", () => {
+      service = createService();
+      const handler = vi.fn();
+      service.on(WebSocketEventType.NEW_NOTIFICATION, handler);
+
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      mockWs.simulateMessage({
+        type: WebSocketEventType.NEW_NOTIFICATION,
+        notification: { uri: "test" },
+        timestamp: new Date().toISOString(),
+      });
+
+      expect(handler).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle invalid JSON gracefully", () => {
+      service = createService();
+      const errorHandler = vi.fn();
+      service.on(WebSocketEventType.ERROR, errorHandler);
+
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      // Send invalid JSON
+      if (mockWs.onmessage) {
+        mockWs.onmessage({ data: "not valid json" } as MessageEvent);
+      }
+
+      expect(errorHandler).toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
+  // Connection Cleanup Tests
+  // ============================================================================
+
+  describe("Connection Cleanup", () => {
+    it("should clear all timers on disconnect", () => {
+      service = createService({ heartbeatInterval: 100 });
+      service.connect();
+      mockWs = getLatestMockWs();
+      mockWs.simulateOpen();
+
+      // Start heartbeat
+      vi.advanceTimersByTime(100);
+
+      service.disconnect();
+
+      // Advance time significantly - no timers should fire
+      vi.advanceTimersByTime(60000);
+
+      expect(service.getConnectionState()).toBe(
+        WebSocketConnectionState.DISCONNECTED,
+      );
+    });
+
+    it("should handle rapid connect/disconnect cycles", () => {
+      service = createService();
+
+      for (let i = 0; i < 10; i++) {
+        service.connect();
+        service.disconnect();
+      }
+
+      expect(service.getConnectionState()).toBe(
+        WebSocketConnectionState.DISCONNECTED,
       );
     });
   });
