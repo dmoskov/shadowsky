@@ -1,5 +1,6 @@
 import { Clock, Search, Smile, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import { Grid } from "react-window";
 import { useDelayedValue } from "../hooks/useTiming";
 
 interface EmojiPickerProps {
@@ -1849,6 +1850,51 @@ const EMOJI_CATEGORIES = {
 const STORAGE_KEY = "bsky-recent-emojis";
 const MAX_RECENT_EMOJIS = 30;
 
+// Grid virtualization constants
+const COLUMN_COUNT = 8;
+const CELL_SIZE = 44; // Size of each emoji cell in pixels (text-2xl + p-2 padding)
+
+// Cell props type for react-window v2 Grid
+interface EmojiCellProps {
+  emojis: string[];
+  onSelect: (emoji: string) => void;
+}
+
+// Cell component for react-window v2 Grid
+function EmojiCell({
+  columnIndex,
+  rowIndex,
+  style,
+  emojis,
+  onSelect,
+}: {
+  columnIndex: number;
+  rowIndex: number;
+  style: CSSProperties;
+  emojis: string[];
+  onSelect: (emoji: string) => void;
+}) {
+  const index = rowIndex * COLUMN_COUNT + columnIndex;
+  const emoji = emojis[index];
+
+  if (!emoji) return <div style={style} />;
+
+  return (
+    <div style={style}>
+      <button
+        onClick={() => onSelect(emoji)}
+        className="flex h-full w-full items-center justify-center rounded text-2xl hover:bg-gray-100"
+        style={{
+          background: "transparent",
+          transition: "background 0.2s",
+        }}
+      >
+        {emoji}
+      </button>
+    </div>
+  );
+}
+
 export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
   const [selectedCategory, setSelectedCategory] = useState("smileys");
   const [searchTerm, setSearchTerm] = useState("");
@@ -1906,6 +1952,26 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
       ? EMOJI_CATEGORIES.smileys.emojis
       : EMOJI_CATEGORIES[selectedCategory as keyof typeof EMOJI_CATEGORIES]
           .emojis;
+
+  // Calculate grid dimensions
+  const rowCount = Math.ceil(displayEmojis.length / COLUMN_COUNT);
+  const gridContainerRef = useRef<HTMLDivElement>(null);
+  const [gridHeight, setGridHeight] = useState(300);
+
+  // Measure container height for the virtualized grid
+  useEffect(() => {
+    const container = gridContainerRef.current;
+    if (container) {
+      const observer = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (entry) {
+          setGridHeight(entry.contentRect.height);
+        }
+      });
+      observer.observe(container);
+      return () => observer.disconnect();
+    }
+  }, []);
 
   return (
     <div
@@ -1999,7 +2065,7 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div ref={gridContainerRef} className="flex-1 overflow-hidden p-2">
           {displayEmojis.length === 0 && debouncedSearchTerm && (
             <div className="py-8 text-center">
               <p style={{ color: "var(--bsky-text-secondary)" }}>
@@ -2008,21 +2074,18 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
             </div>
           )}
 
-          <div className="grid grid-cols-8 gap-1">
-            {displayEmojis.map((emoji, index) => (
-              <button
-                key={`${emoji}-${index}`}
-                onClick={() => handleSelectEmoji(emoji)}
-                className="rounded p-2 text-2xl hover:bg-gray-100"
-                style={{
-                  background: "transparent",
-                  transition: "background 0.2s",
-                }}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
+          {displayEmojis.length > 0 && (
+            <Grid<EmojiCellProps>
+              cellComponent={EmojiCell}
+              cellProps={{ emojis: displayEmojis, onSelect: handleSelectEmoji }}
+              columnCount={COLUMN_COUNT}
+              columnWidth={CELL_SIZE}
+              rowCount={rowCount}
+              rowHeight={CELL_SIZE}
+              defaultHeight={gridHeight}
+              style={{ margin: "0 auto", width: COLUMN_COUNT * CELL_SIZE, height: gridHeight }}
+            />
+          )}
         </div>
       </div>
     </div>

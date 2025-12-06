@@ -12,6 +12,7 @@ vi.mock("../services/oauth-service", () => ({
     handleCallback: vi.fn(),
     signOut: vi.fn(),
   },
+  hasExistingOAuthSession: vi.fn(),
 }));
 
 vi.mock("../services/atproto", () => ({
@@ -128,7 +129,10 @@ import { columnService } from "../services/column-service";
 import { initializeDataServices } from "../services/data-services-initializer";
 import { dmService } from "../services/dm-service";
 import { draftService } from "../services/draft-service";
-import { oauthService } from "../services/oauth-service";
+import {
+  hasExistingOAuthSession,
+  oauthService,
+} from "../services/oauth-service";
 
 // Test wrapper
 function createWrapper() {
@@ -166,6 +170,7 @@ describe("AuthContext", () => {
     vi.clearAllMocks();
 
     // Reset all mock implementations to default
+    vi.mocked(hasExistingOAuthSession).mockResolvedValue(false);
     vi.mocked(oauthService.init).mockResolvedValue(null);
     vi.mocked(oauthService.isAvailable).mockReturnValue(false);
     vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(null);
@@ -356,6 +361,7 @@ describe("AuthContext", () => {
     });
 
     it("should prioritize OAuth session over localStorage session", async () => {
+      vi.mocked(hasExistingOAuthSession).mockResolvedValue(true);
       vi.mocked(oauthService.init).mockResolvedValue(mockOAuthState);
       vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(mockSession);
 

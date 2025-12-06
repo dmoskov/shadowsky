@@ -7,8 +7,9 @@ import {
   Smile,
   X,
 } from "lucide-react";
-import React, { useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { debounce, INTERACTION_TIMING } from "../utils/timing";
 import { useVideoCompression } from "../hooks/useVideoCompression";
 import { debug } from "../shared/debug";
 import { compressImage, isCompressibleImage } from "../utils/image-compression";
@@ -123,12 +124,41 @@ export function BaseComposer({
     thumbnailTime: 1,
   });
 
+  // Create a stable debounced callback for parent onChange
+  // This prevents cascading re-renders on every keystroke
+  const debouncedOnChangeRef = useRef<
+    ((text: string) => void) & { cancel: () => void } | null
+  >(null);
+
+  // Memoize the debounced function creation
+  const getDebouncedOnChange = useCallback(() => {
+    if (!onChange) return null;
+    if (!debouncedOnChangeRef.current) {
+      debouncedOnChangeRef.current = debounce(
+        ((text: unknown) => onChange(text as string)) as (
+          ...args: unknown[]
+        ) => unknown,
+        INTERACTION_TIMING.TYPING,
+      ) as ((text: string) => void) & { cancel: () => void };
+    }
+    return debouncedOnChangeRef.current;
+  }, [onChange]);
+
+  // Cancel debounced callback on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      debouncedOnChangeRef.current?.cancel();
+    };
+  }, []);
+
   // Handle text change
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     if (newText.length <= maxLength) {
+      // Update local state immediately for responsive cursor feedback
       setText(newText);
-      onChange?.(newText);
+      // Debounce parent callback to prevent cascading re-renders
+      getDebouncedOnChange()?.(newText);
       setError(null);
     }
   };
@@ -441,7 +471,8 @@ export function BaseComposer({
 
     if (newText.length <= maxLength) {
       setText(newText);
-      onChange?.(newText);
+      // Use debounced callback for consistency with text input
+      getDebouncedOnChange()?.(newText);
 
       // Restore focus and cursor position
       setTimeout(() => {

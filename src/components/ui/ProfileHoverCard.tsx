@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRoutePrefetch } from "../../hooks/useRoutePrefetch";
+import { layoutMeasurementService } from "../../services/layout-measurement-service";
 import { proxifyBskyImage } from "../../utils/image-proxy";
 import { DomainVerifiedBadge } from "./DomainVerifiedBadge";
 
@@ -87,40 +88,46 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
             }
           }
 
-          // Calculate position
+          // Calculate position using batched measurement service
           if (triggerRef.current) {
-            const rect = triggerRef.current.getBoundingClientRect();
-            const cardWidth = 320;
-            const cardHeight = 250; // Increased to account for actual rendered height
-            const padding = 16; // Increased padding for better spacing
+            layoutMeasurementService.measureElement(
+              triggerRef.current,
+              (rect) => {
+                const cardWidth = 320;
+                const cardHeight = 250; // Increased to account for actual rendered height
+                const padding = 16; // Increased padding for better spacing
 
-            // Try to center the card horizontally relative to the trigger
-            let left = rect.left + rect.width / 2 - cardWidth / 2;
-            let top = rect.bottom + padding;
+                // Try to center the card horizontally relative to the trigger
+                let left = rect.left + rect.width / 2 - cardWidth / 2;
+                let top = rect.bottom + padding;
 
-            // Keep card within viewport horizontally
-            // If card would overflow on the left, align to left edge
-            if (left < padding) {
-              left = padding;
-            }
-            // If card would overflow on the right, align to right edge
-            else if (left + cardWidth > window.innerWidth - padding) {
-              left = window.innerWidth - cardWidth - padding;
-            }
+                // Keep card within viewport horizontally
+                // If card would overflow on the left, align to left edge
+                if (left < padding) {
+                  left = padding;
+                }
+                // If card would overflow on the right, align to right edge
+                else if (left + cardWidth > window.innerWidth - padding) {
+                  left = window.innerWidth - cardWidth - padding;
+                }
 
-            // If card would go below viewport, show it above the trigger
-            if (top + cardHeight > window.innerHeight - padding) {
-              top = rect.top - cardHeight - padding;
-              // If it still doesn't fit above, just show it at the top with some padding
-              if (top < padding) {
-                top = padding;
-              }
-            }
+                // If card would go below viewport, show it above the trigger
+                if (top + cardHeight > window.innerHeight - padding) {
+                  top = rect.top - cardHeight - padding;
+                  // If it still doesn't fit above, just show it at the top with some padding
+                  if (top < padding) {
+                    top = padding;
+                  }
+                }
 
-            setCardPosition({ top, left });
+                setCardPosition({ top, left });
+                setShowCard(true);
+              },
+              { priority: "high" }
+            );
+          } else {
+            setShowCard(true);
           }
-
-          setShowCard(true);
         }, delay);
       } else {
         // Clear the show timeout if user moves mouse away before delay
