@@ -66,6 +66,31 @@ export const WS_CONFIG = {
    * Allows the disconnect to complete cleanly.
    */
   MANUAL_RECONNECT_DELAY_MS: 1000,
+
+  // Engagement update configuration
+  /**
+   * Interval between batched engagement subscription updates.
+   * Controls how often visible post URIs are sent to the server.
+   */
+  ENGAGEMENT_SUBSCRIPTION_BATCH_MS: 500,
+
+  /**
+   * Debounce delay for engagement updates from server.
+   * Batches multiple updates to reduce React render churn.
+   */
+  ENGAGEMENT_UPDATE_DEBOUNCE_MS: 100,
+
+  /**
+   * Maximum number of posts to subscribe for engagement updates.
+   * Limits server load and client processing.
+   */
+  ENGAGEMENT_MAX_SUBSCRIPTIONS: 50,
+
+  /**
+   * Throttle interval for viewport tracking to reduce CPU usage.
+   * How often to check which posts are visible.
+   */
+  ENGAGEMENT_VIEWPORT_THROTTLE_MS: 250,
 } as const;
 
 /**

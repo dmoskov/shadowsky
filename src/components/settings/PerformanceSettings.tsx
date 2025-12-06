@@ -8,9 +8,12 @@ import {
   CheckCircle2,
   Clock,
   Gauge,
+  Heart,
   RefreshCw,
   Trash2,
+  Wifi,
   XCircle,
+  Zap,
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -21,6 +24,11 @@ import {
   getRatingColor,
   METRIC_INFO,
 } from "../../config/performance-budget";
+import { useRealTimeEngagementFlag } from "../../hooks/useRealTimeEngagement";
+import {
+  type EngagementServiceMetrics,
+  getRealTimeEngagementService,
+} from "../../services/real-time-engagement-service";
 import {
   PerformanceBudget,
   useWebVitals,
@@ -144,6 +152,12 @@ export const PerformanceSettings: React.FC = () => {
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
+  // Real-time engagement settings
+  const { isEnabled: isEngagementEnabled, setEnabled: setEngagementEnabled } =
+    useRealTimeEngagementFlag();
+  const [engagementMetrics, setEngagementMetrics] =
+    useState<EngagementServiceMetrics | null>(null);
+
   const refreshData = useCallback(() => {
     setReport(webVitals.generateReport());
     setHistory(webVitals.getHistory());
@@ -190,6 +204,18 @@ export const PerformanceSettings: React.FC = () => {
     setHistory([]);
     setTrends([]);
   };
+
+  // Update engagement metrics periodically
+  useEffect(() => {
+    const updateEngagementMetrics = () => {
+      const service = getRealTimeEngagementService();
+      setEngagementMetrics(service.getMetrics());
+    };
+
+    updateEngagementMetrics();
+    const interval = setInterval(updateEngagementMetrics, 2000);
+    return () => clearInterval(interval);
+  }, [isEngagementEnabled]);
 
   // Calculate overall score color
   const getScoreColor = (score: number) => {
@@ -611,6 +637,179 @@ export const PerformanceSettings: React.FC = () => {
             </table>
           </div>
         )}
+      </div>
+
+      {/* Real-Time Engagement Section */}
+      <div
+        className="rounded-lg p-6"
+        style={{
+          backgroundColor: "var(--bsky-bg-secondary)",
+          border: "1px solid var(--bsky-border-primary)",
+        }}
+      >
+        <div className="mb-4 flex items-center gap-2">
+          <Zap className="h-5 w-5 text-amber-500" aria-hidden="true" />
+          <h2
+            className="text-lg font-semibold"
+            style={{ color: "var(--bsky-text-primary)" }}
+          >
+            Real-Time Engagement
+          </h2>
+          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+            Beta
+          </span>
+        </div>
+
+        <p
+          className="mb-4 text-sm"
+          style={{ color: "var(--bsky-text-secondary)" }}
+        >
+          Receive live updates for like, repost, and reply counts on posts
+          visible in your feed. Requires an active WebSocket connection.
+        </p>
+
+        {/* Toggle Switch */}
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <span
+              className="font-medium"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              Enable Real-Time Engagement
+            </span>
+            <p
+              className="text-sm"
+              style={{ color: "var(--bsky-text-tertiary)" }}
+            >
+              Updates engagement counts automatically as they change
+            </p>
+          </div>
+          <button
+            onClick={() => setEngagementEnabled(!isEngagementEnabled)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${
+              isEngagementEnabled
+                ? "bg-blue-600"
+                : "bg-gray-300 dark:bg-gray-600"
+            }`}
+            role="switch"
+            aria-checked={isEngagementEnabled}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                isEngagementEnabled ? "translate-x-5" : "translate-x-0.5"
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Engagement Metrics */}
+        {isEngagementEnabled && engagementMetrics && (
+          <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div
+              className="rounded-lg p-3"
+              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+            >
+              <div className="flex items-center gap-2">
+                <Wifi
+                  className={`h-4 w-4 ${engagementMetrics.isActive ? "text-green-500" : "text-gray-400"}`}
+                />
+                <span
+                  className="text-xs font-medium"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  Status
+                </span>
+              </div>
+              <p
+                className="mt-1 text-sm font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                {engagementMetrics.isActive ? "Active" : "Inactive"}
+              </p>
+            </div>
+
+            <div
+              className="rounded-lg p-3"
+              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+            >
+              <div className="flex items-center gap-2">
+                <Heart className="h-4 w-4 text-red-500" />
+                <span
+                  className="text-xs font-medium"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  Subscriptions
+                </span>
+              </div>
+              <p
+                className="mt-1 text-sm font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                {engagementMetrics.activeSubscriptions} posts
+              </p>
+            </div>
+
+            <div
+              className="rounded-lg p-3"
+              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+            >
+              <div className="flex items-center gap-2">
+                <Activity className="h-4 w-4 text-blue-500" />
+                <span
+                  className="text-xs font-medium"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  Updates Received
+                </span>
+              </div>
+              <p
+                className="mt-1 text-sm font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                {engagementMetrics.updatesReceived}
+              </p>
+            </div>
+
+            <div
+              className="rounded-lg p-3"
+              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+            >
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-purple-500" />
+                <span
+                  className="text-xs font-medium"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  Viewport Update
+                </span>
+              </div>
+              <p
+                className="mt-1 text-sm font-semibold"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                {Math.round(engagementMetrics.avgViewportUpdateIntervalMs)}ms
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Performance Note */}
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <div>
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                Performance Considerations
+              </p>
+              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                Real-time engagement uses WebSocket connections and viewport
+                tracking. Updates are throttled and batched to minimize CPU
+                usage. Disable if you notice performance issues on older
+                devices.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Info Section */}

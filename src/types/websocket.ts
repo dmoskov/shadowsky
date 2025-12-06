@@ -18,6 +18,11 @@ export enum WebSocketEventType {
   NOTIFICATION_READ = "notification:read",
   NOTIFICATION_COUNT = "notification:count",
 
+  // Engagement events (real-time like/repost count updates)
+  ENGAGEMENT_SUBSCRIBE = "engagement:subscribe",
+  ENGAGEMENT_UNSUBSCRIBE = "engagement:unsubscribe",
+  ENGAGEMENT_UPDATE = "engagement:update",
+
   // System events
   PING = "ping",
   PONG = "pong",
@@ -71,6 +76,40 @@ export interface AuthExpiredEvent extends WebSocketEvent {
   reason: string;
 }
 
+/**
+ * Engagement counts for a single post
+ */
+export interface PostEngagement {
+  uri: string;
+  likeCount: number;
+  repostCount: number;
+  replyCount: number;
+}
+
+/**
+ * Subscribe to engagement updates for specific post URIs
+ */
+export interface EngagementSubscribeEvent extends WebSocketEvent {
+  type: WebSocketEventType.ENGAGEMENT_SUBSCRIBE;
+  postUris: string[];
+}
+
+/**
+ * Unsubscribe from engagement updates
+ */
+export interface EngagementUnsubscribeEvent extends WebSocketEvent {
+  type: WebSocketEventType.ENGAGEMENT_UNSUBSCRIBE;
+  postUris: string[];
+}
+
+/**
+ * Server-sent event containing batched engagement updates
+ */
+export interface EngagementUpdateEvent extends WebSocketEvent {
+  type: WebSocketEventType.ENGAGEMENT_UPDATE;
+  updates: PostEngagement[];
+}
+
 export enum AuthErrorCategory {
   TOKEN_INVALID = "token_invalid",
   SERVER_ERROR = "server_error",
@@ -86,6 +125,9 @@ export type WebSocketMessage =
   | AuthSuccessEvent
   | AuthFailureEvent
   | AuthExpiredEvent
+  | EngagementSubscribeEvent
+  | EngagementUnsubscribeEvent
+  | EngagementUpdateEvent
   | WebSocketEvent;
 
 export enum WebSocketConnectionState {
