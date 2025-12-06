@@ -1,0 +1,647 @@
+/* ==========================================
+ * Responsive Placeholder System for CLS Prevention
+ * ==========================================
+ * Uses CSS container queries to provide zero CLS loading states
+ * by reserving exact space for content before loading completes.
+ *
+ * Design Principles:
+ * 1. Reserve exact space using aspect-ratio or explicit dimensions
+ * 2. Use container queries for responsive behavior
+ * 3. Provide smooth transitions without layout shift
+ * 4. Support all media types (images, video, embeds)
+ */
+
+/* ==========================================
+ * Container Query Setup
+ * ==========================================
+ */
+
+/* Define container contexts for responsive placeholders */
+.placeholder-container {
+  container-type: inline-size;
+  container-name: placeholder;
+}
+
+/* Feed item container for context-aware sizing */
+.feed-item-container {
+  container-type: inline-size;
+  container-name: feed-item;
+}
+
+/* Post content container */
+.post-content-container {
+  container-type: inline-size;
+  container-name: post-content;
+}
+
+/* Media container with size containment */
+.media-container {
+  container-type: inline-size;
+  container-name: media;
+  contain: layout style;
+}
+
+/* ==========================================
+ * Base Placeholder Styles
+ * ==========================================
+ */
+
+/* Base placeholder with intrinsic sizing */
+.placeholder-base {
+  position: relative;
+  width: 100%;
+  background-color: var(--bsky-bg-tertiary);
+  overflow: hidden;
+  contain: layout style paint;
+}
+
+/* Placeholder animation - subtle pulse */
+.placeholder-animated {
+  animation: placeholder-pulse var(--loading-pulse-duration, 2000ms)
+    cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes placeholder-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Shimmer effect overlay */
+.placeholder-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.placeholder-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer var(--loading-shimmer-duration, 2000ms) linear infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Dark mode shimmer adjustment */
+.dark .placeholder-shimmer::after,
+[data-theme="dark"] .placeholder-shimmer::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 100%
+  );
+}
+
+/* ==========================================
+ * Aspect Ratio Placeholders
+ * ==========================================
+ * Pre-defined aspect ratios for common media types.
+ * These prevent CLS by reserving exact vertical space.
+ */
+
+/* Standard aspect ratios using CSS aspect-ratio property */
+.placeholder-aspect-square {
+  aspect-ratio: 1 / 1;
+}
+
+.placeholder-aspect-16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+.placeholder-aspect-4-3 {
+  aspect-ratio: 4 / 3;
+}
+
+.placeholder-aspect-3-2 {
+  aspect-ratio: 3 / 2;
+}
+
+.placeholder-aspect-2-3 {
+  aspect-ratio: 2 / 3;
+}
+
+.placeholder-aspect-9-16 {
+  aspect-ratio: 9 / 16;
+}
+
+/* Custom aspect ratio via CSS custom property */
+.placeholder-aspect-custom {
+  aspect-ratio: var(--placeholder-aspect-ratio, 16 / 9);
+}
+
+/* Fallback padding-bottom method for older browsers */
+.placeholder-aspect-fallback {
+  height: 0;
+  padding-bottom: var(--placeholder-padding, 56.25%);
+}
+
+/* ==========================================
+ * Image Placeholders
+ * ==========================================
+ */
+
+/* Single image placeholder with intrinsic sizing */
+.placeholder-image {
+  position: relative;
+  width: 100%;
+  background-color: var(--bsky-bg-tertiary);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  contain: layout style paint;
+}
+
+/* Image placeholder with maximum height constraints */
+.placeholder-image-constrained {
+  max-height: var(--placeholder-max-height, 500px);
+}
+
+/* Responsive image sizing based on container width */
+@container placeholder (min-width: 400px) {
+  .placeholder-image-responsive {
+    max-height: 400px;
+  }
+}
+
+@container placeholder (min-width: 600px) {
+  .placeholder-image-responsive {
+    max-height: 500px;
+  }
+}
+
+/* Grid of images with consistent aspect ratios */
+.placeholder-image-grid {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.placeholder-image-grid-1 {
+  grid-template-columns: 1fr;
+}
+
+.placeholder-image-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.placeholder-image-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.placeholder-image-grid-4 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+/* Special 3-image layout: first spans two rows */
+.placeholder-image-grid-3-special > :first-child {
+  grid-row: span 2;
+  grid-column: span 2;
+}
+
+/* Container query responsive grid */
+@container placeholder (max-width: 300px) {
+  .placeholder-image-grid-responsive {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================
+ * Video Placeholders
+ * ==========================================
+ */
+
+/* Video placeholder with play button indicator */
+.placeholder-video {
+  position: relative;
+  width: 100%;
+  background-color: var(--bsky-bg-tertiary);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  contain: layout style paint;
+  aspect-ratio: var(--video-aspect-ratio, 16 / 9);
+}
+
+/* Play button placeholder */
+.placeholder-video::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.4);
+  opacity: 0.6;
+}
+
+.placeholder-video::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-40%, -50%);
+  border-style: solid;
+  border-width: 12px 0 12px 20px;
+  border-color: transparent transparent transparent rgba(255, 255, 255, 0.8);
+}
+
+/* ==========================================
+ * Avatar Placeholders
+ * ==========================================
+ */
+
+.placeholder-avatar {
+  border-radius: 9999px;
+  background-color: var(--bsky-bg-tertiary);
+  contain: layout style paint;
+}
+
+.placeholder-avatar-xs {
+  width: 24px;
+  height: 24px;
+}
+
+.placeholder-avatar-sm {
+  width: 32px;
+  height: 32px;
+}
+
+.placeholder-avatar-md {
+  width: 48px;
+  height: 48px;
+}
+
+.placeholder-avatar-lg {
+  width: 64px;
+  height: 64px;
+}
+
+.placeholder-avatar-xl {
+  width: 128px;
+  height: 128px;
+}
+
+/* ==========================================
+ * Text Placeholders
+ * ==========================================
+ */
+
+.placeholder-text {
+  height: 1em;
+  border-radius: 0.25rem;
+  background-color: var(--bsky-bg-tertiary);
+}
+
+.placeholder-text-sm {
+  height: 0.875em;
+}
+
+.placeholder-text-lg {
+  height: 1.25em;
+}
+
+/* Multi-line text placeholder */
+.placeholder-text-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.placeholder-text-lines > * {
+  height: 1em;
+  border-radius: 0.25rem;
+  background-color: var(--bsky-bg-tertiary);
+}
+
+/* Varying line widths for natural appearance */
+.placeholder-text-lines > :nth-child(1) {
+  width: 100%;
+}
+
+.placeholder-text-lines > :nth-child(2) {
+  width: 90%;
+}
+
+.placeholder-text-lines > :nth-child(3) {
+  width: 70%;
+}
+
+/* ==========================================
+ * Embed/Card Placeholders
+ * ==========================================
+ */
+
+/* External link card placeholder */
+.placeholder-embed-card {
+  position: relative;
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--bsky-border-primary);
+  background-color: var(--bsky-bg-secondary);
+  overflow: hidden;
+  contain: layout style;
+}
+
+/* Card with image preview */
+.placeholder-embed-card-with-image {
+  min-height: 200px;
+}
+
+.placeholder-embed-card-image {
+  aspect-ratio: 2 / 1;
+  background-color: var(--bsky-bg-tertiary);
+}
+
+.placeholder-embed-card-content {
+  padding: 0.75rem;
+}
+
+/* Quote post placeholder */
+.placeholder-quote-post {
+  position: relative;
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--bsky-border-primary);
+  background-color: var(--bsky-bg-primary);
+  contain: layout style;
+}
+
+/* ==========================================
+ * Post/Feed Item Placeholders
+ * ==========================================
+ */
+
+/* Full post placeholder with stable height */
+.placeholder-post {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--bsky-border-primary);
+  min-height: var(--post-min-height, 120px);
+  contain: layout style;
+}
+
+.placeholder-post-avatar {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 9999px;
+  background-color: var(--bsky-bg-tertiary);
+}
+
+.placeholder-post-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.placeholder-post-header {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.placeholder-post-name {
+  width: 120px;
+  height: 1rem;
+  border-radius: 0.25rem;
+  background-color: var(--bsky-bg-tertiary);
+}
+
+.placeholder-post-handle {
+  width: 80px;
+  height: 0.875rem;
+  border-radius: 0.25rem;
+  background-color: var(--bsky-bg-tertiary);
+}
+
+.placeholder-post-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.placeholder-post-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.placeholder-post-action {
+  width: 50px;
+  height: 1.25rem;
+  border-radius: 0.25rem;
+  background-color: var(--bsky-bg-tertiary);
+}
+
+/* Container-responsive post placeholder */
+@container feed-item (max-width: 400px) {
+  .placeholder-post-responsive .placeholder-post-header {
+    flex-wrap: wrap;
+  }
+
+  .placeholder-post-responsive .placeholder-post-actions {
+    gap: 0.5rem;
+  }
+}
+
+/* ==========================================
+ * Profile Placeholders
+ * ==========================================
+ */
+
+.placeholder-profile-banner {
+  aspect-ratio: 3 / 1;
+  background-color: var(--bsky-bg-tertiary);
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.placeholder-profile-header {
+  position: relative;
+  margin-top: -64px;
+  padding: 0 1rem;
+}
+
+.placeholder-profile-avatar-large {
+  width: 128px;
+  height: 128px;
+  border-radius: 9999px;
+  border: 4px solid var(--bsky-bg-primary);
+  background-color: var(--bsky-bg-tertiary);
+}
+
+/* ==========================================
+ * Notification Placeholders
+ * ==========================================
+ */
+
+.placeholder-notification {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--bsky-border-primary);
+  min-height: 72px;
+  contain: layout style;
+}
+
+/* ==========================================
+ * Stable Content Wrappers
+ * ==========================================
+ * Wrappers that provide stable sizing during content loading
+ */
+
+/* Stable wrapper that maintains dimensions during loading */
+.stable-content-wrapper {
+  position: relative;
+  width: 100%;
+  contain: layout style;
+}
+
+/* When content is loading, show placeholder */
+.stable-content-wrapper[data-loading="true"] {
+  min-height: var(--stable-min-height, auto);
+}
+
+/* Transition for smooth content reveal */
+.stable-content-wrapper > .content {
+  opacity: 1;
+  transition: opacity var(--transition-normal, 200ms) var(--ease-entrance);
+}
+
+.stable-content-wrapper[data-loading="true"] > .content {
+  opacity: 0;
+}
+
+/* ==========================================
+ * Media Placeholder Component
+ * ==========================================
+ * Component that wraps media and maintains stable dimensions
+ */
+
+.media-placeholder-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background-color: var(--bsky-bg-tertiary);
+  contain: layout style paint;
+}
+
+/* Use aspect-ratio when dimensions are known */
+.media-placeholder-wrapper[data-aspect-ratio] {
+  aspect-ratio: var(--media-aspect-ratio, 16 / 9);
+}
+
+/* Use explicit height when only height is known */
+.media-placeholder-wrapper[data-height] {
+  height: var(--media-height);
+}
+
+/* Placeholder state (before content loads) */
+.media-placeholder-wrapper .placeholder-layer {
+  position: absolute;
+  inset: 0;
+  background-color: var(--bsky-bg-tertiary);
+  z-index: 1;
+  transition: opacity var(--transition-slow, 300ms) var(--ease-entrance);
+}
+
+.media-placeholder-wrapper[data-loaded="true"] .placeholder-layer {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Content layer (the actual media) */
+.media-placeholder-wrapper .content-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.media-placeholder-wrapper .content-layer > img,
+.media-placeholder-wrapper .content-layer > video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ==========================================
+ * Reduced Motion Support
+ * ==========================================
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  .placeholder-animated {
+    animation: none;
+  }
+
+  .placeholder-shimmer::after {
+    animation: none;
+  }
+
+  .media-placeholder-wrapper .placeholder-layer,
+  .stable-content-wrapper > .content {
+    transition: none;
+  }
+}
+
+/* User-toggled reduced motion */
+html[data-reduce-motion="true"] .placeholder-animated {
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .placeholder-shimmer::after {
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .media-placeholder-wrapper .placeholder-layer,
+html[data-reduce-motion="true"] .stable-content-wrapper > .content {
+  transition: none;
+}
+
+/* ==========================================
+ * High Contrast Mode Support
+ * ==========================================
+ */
+
+@media (prefers-contrast: more) {
+  .placeholder-base,
+  .placeholder-image,
+  .placeholder-video,
+  .placeholder-avatar,
+  .placeholder-text,
+  .media-placeholder-wrapper {
+    border: 1px solid var(--bsky-border-primary);
+  }
+}
+
+[data-high-contrast="true"] .placeholder-base,
+[data-high-contrast="true"] .placeholder-image,
+[data-high-contrast="true"] .placeholder-video,
+[data-high-contrast="true"] .placeholder-avatar,
+[data-high-contrast="true"] .placeholder-text,
+[data-high-contrast="true"] .media-placeholder-wrapper {
+  border: 1px solid var(--bsky-border-primary);
+}

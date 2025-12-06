@@ -110,51 +110,75 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
 
   return (
     <>
-      <div className={`mt-2 grid gap-1 ${gridClass} ${className} relative`}>
+      {/*
+        Image grid container with CSS container query support
+        Uses aspect-ratio for CLS prevention - reserves space before images load
+      */}
+      <div
+        className={`mt-2 grid gap-1 ${gridClass} ${className} placeholder-container relative`}
+        role="group"
+        aria-label={`Image gallery with ${images.length} image${images.length > 1 ? "s" : ""}`}
+      >
         {images.map((img, idx) => {
           // Special layout for 3 images: first image takes 2/3, others 1/3 each
           const isThreeImageLayout = images.length === 3;
           const colSpan =
             isThreeImageLayout && idx === 0 ? "col-span-2 row-span-2" : "";
 
+          // Calculate aspect ratio for CLS prevention
+          // For 3-image layout: first image is square, others are 4:3
+          // For other layouts: 4:3 (75% padding = 4:3 ratio)
+          const aspectRatioValue = isThreeImageLayout && idx === 0 ? 1 : 4 / 3;
+
           return (
             <div
               key={idx}
-              className={`relative cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-95 ${colSpan}`}
+              className={`media-placeholder-wrapper relative cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-95 ${colSpan}`}
               onClick={(e) => handleImageClick(e, idx)}
-              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              style={{
+                backgroundColor: "var(--bsky-bg-tertiary)",
+                // Use CSS aspect-ratio for CLS prevention - reserves exact space before image loads
+                aspectRatio: aspectRatioValue,
+                // Maximum height constraints
+                maxHeight: isThreeImageLayout && idx === 0 ? "500px" : "350px",
+              }}
+              data-aspect-ratio="true"
             >
+              {/* Loading state placeholder - uses CSS animation from placeholder-system.css */}
               <div
-                className="relative w-full"
-                style={{
-                  paddingBottom:
-                    isThreeImageLayout && idx === 0 ? "100%" : "75%",
+                className="placeholder-layer placeholder-animated absolute inset-0 bg-bsky-bg-tertiary"
+                aria-hidden="true"
+              />
+
+              {/* Image with lazy loading */}
+              <img
+                src={proxifyBskyImage(img.thumb)}
+                alt={img.alt || "Image attachment"}
+                className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
+                loading="lazy"
+                decoding="async"
+                onLoad={(e) => {
+                  const imgEl = e.target as HTMLImageElement;
+                  imgEl.style.opacity = "1";
+                  // Mark parent as loaded for placeholder fade-out
+                  const parent = imgEl.closest(".media-placeholder-wrapper");
+                  if (parent) {
+                    parent.setAttribute("data-loaded", "true");
+                  }
                 }}
-              >
-                <img
-                  src={proxifyBskyImage(img.thumb)}
-                  alt={img.alt || "Image attachment"}
-                  className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
-                  loading="lazy"
-                  onLoad={(e) => {
-                    const img = e.target as HTMLImageElement;
-                    img.style.opacity = "1";
-                  }}
-                  style={{
-                    opacity: 0,
-                    filter: blurMedia && !showContent ? "blur(20px)" : "none",
-                  }}
-                />
-                {/* Loading state placeholder with blur effect */}
-                <div
-                  className="absolute inset-0 animate-pulse bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900"
-                  style={{ zIndex: -1, filter: "blur(20px)" }}
-                  aria-hidden="true"
-                />
-              </div>
+                style={{
+                  opacity: 0,
+                  filter: blurMedia && !showContent ? "blur(20px)" : "none",
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              />
+
+              {/* Alt text indicator badge */}
               {img.alt && (
                 <div
                   className="absolute bottom-0 left-0 right-0 bg-black/60 p-1.5 text-xs text-white opacity-0 transition-opacity hover:opacity-100"
+                  style={{ zIndex: 2 }}
                   aria-label="Alt text available"
                   title={`Alt text: ${img.alt}`}
                 >

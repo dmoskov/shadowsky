@@ -591,9 +591,16 @@ export function VideoPlayer({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isVideoLoaded, isFullscreen, duration, volume, handlePlayPause]);
 
-  const paddingBottom = aspectRatio
-    ? `${(aspectRatio.height / aspectRatio.width) * 100}%`
-    : "56.25%"; // Default to 16:9
+  // Calculate aspect ratio for CLS prevention
+  // Use CSS aspect-ratio property instead of padding-bottom for better CLS handling
+  const videoAspectRatio = aspectRatio
+    ? aspectRatio.width / aspectRatio.height
+    : 16 / 9; // Default to 16:9
+
+  // Container style with CSS aspect-ratio for CLS prevention
+  const containerStyle: React.CSSProperties = {
+    aspectRatio: videoAspectRatio,
+  };
 
   // Error state with retry option
   const renderError = () => (
@@ -628,8 +635,9 @@ export function VideoPlayer({
     return (
       <div
         ref={containerRef}
-        className="relative cursor-pointer overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
-        style={{ paddingBottom }}
+        className="media-placeholder-wrapper relative cursor-pointer overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
+        style={containerStyle}
+        data-aspect-ratio="true"
         onClick={handleLoadVideo}
         onMouseDown={(e) => e.stopPropagation()}
         onDragStart={(e) => e.preventDefault()}
@@ -646,18 +654,22 @@ export function VideoPlayer({
           }
         }}
       >
+        {/* Placeholder layer for CLS prevention */}
+        <div className="placeholder-layer placeholder-animated absolute inset-0 bg-bsky-bg-tertiary" aria-hidden="true" />
+
         {thumbnail ? (
           <img
             src={thumbnail}
             alt={alt || "Video thumbnail"}
             className="absolute inset-0 h-full w-full object-cover"
+            style={{ position: "relative", zIndex: 1 }}
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700">
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700" style={{ zIndex: 1 }}>
             <span className="text-gray-500 dark:text-gray-400">Video</span>
           </div>
         )}
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 transition-opacity hover:bg-opacity-40">
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 transition-opacity hover:bg-opacity-40" style={{ zIndex: 2 }}>
           <div className="rounded-full bg-black bg-opacity-60 p-4 transition-transform hover:scale-110">
             <Play className="h-12 w-12 fill-white text-white" />
           </div>
@@ -671,17 +683,22 @@ export function VideoPlayer({
     return (
       <div
         ref={containerRef}
-        className="relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
-        style={{ paddingBottom }}
+        className="media-placeholder-wrapper relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
+        style={containerStyle}
+        data-aspect-ratio="true"
       >
+        {/* Placeholder layer for CLS prevention */}
+        <div className="placeholder-layer placeholder-animated absolute inset-0 bg-bsky-bg-tertiary" aria-hidden="true" />
+
         {thumbnail ? (
           <img
             src={thumbnail}
             alt={alt || "Video thumbnail"}
             className="absolute inset-0 h-full w-full object-cover"
+            style={{ position: "relative", zIndex: 1 }}
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700">
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700" style={{ zIndex: 1 }}>
             <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
           </div>
         )}
@@ -692,8 +709,10 @@ export function VideoPlayer({
   return (
     <div
       ref={containerRef}
-      className="relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
-      style={{ paddingBottom }}
+      className="media-placeholder-wrapper relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
+      style={containerStyle}
+      data-aspect-ratio="true"
+      data-loaded={isVideoLoaded ? "true" : "false"}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
       onDragStart={(e) => e.preventDefault()}

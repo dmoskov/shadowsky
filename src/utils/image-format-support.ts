@@ -255,3 +255,112 @@ export function estimateSizeSavings(
   const savingsPercent = Math.round((1 - ratio) * 100);
   return { estimatedSize, savingsPercent };
 }
+
+/**
+ * LQIP (Low-Quality Image Placeholder) Configuration
+ *
+ * LQIP generation strategy: CDN Transformation
+ * The Bluesky CDN supports different size variants via URL path:
+ * - feed_fullsize: Full resolution images
+ * - feed_thumbnail: Smaller thumbnails (~150px)
+ *
+ * For LQIP, we use the thumbnail variant which is already cached by the CDN.
+ * This approach requires no build changes and leverages existing CDN infrastructure.
+ */
+
+export interface LQIPConfig {
+  /** Enable LQIP blur-up effect */
+  enabled: boolean;
+  /** Blur radius in pixels for the placeholder */
+  blurRadius: number;
+  /** Transition duration in milliseconds */
+  transitionDuration: number;
+  /** Whether to use WebP for LQIP when supported (smaller size) */
+  preferWebP: boolean;
+}
+
+/** Default LQIP configuration */
+export const DEFAULT_LQIP_CONFIG: LQIPConfig = {
+  enabled: true,
+  blurRadius: 20,
+  transitionDuration: 400,
+  preferWebP: true,
+};
+
+/**
+ * Generate a Low-Quality Image Placeholder URL from a Bluesky CDN URL.
+ *
+ * Uses CDN transformation to request a thumbnail variant, which is:
+ * - Already cached by the CDN (no additional server processing)
+ * - Typically ~2-5KB vs ~50-200KB for full images
+ * - Loaded quickly to show immediate visual feedback
+ *
+ * @param url - Original Bluesky CDN image URL
+ * @param config - LQIP configuration options
+ * @returns LQIP URL or original URL if not a Bluesky CDN URL
+ */
+export function generateLQIPUrl(
+  url: string,
+  config: Partial<LQIPConfig> = {},
+): string {
+  if (!url) return url;
+
+  const mergedConfig = { ...DEFAULT_LQIP_CONFIG, ...config };
+
+  // Only transform Bluesky CDN URLs
+  if (!url.includes("cdn.bsky.app")) {
+    return url;
+  }
+
+  // Transform feed_fullsize to feed_thumbnail for LQIP
+  // URL structure: https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:.../cid@jpeg
+  let lqipUrl = url.replace("/feed_fullsize/", "/feed_thumbnail/");
+
+  // If URL doesn't have fullsize, it might already be a thumbnail or other variant
+  // In that case, just use the URL as-is for the placeholder
+  if (lqipUrl === url && !url.includes("/feed_thumbnail/")) {
+    // Try to extract and rebuild with thumbnail
+    const feedMatch = url.match(
+      /cdn\.bsky\.app\/img\/([^/]+)\/plain\/(did:[^/]+)\/([^@]+)(@\w+)?/,
+    );
+    if (feedMatch) {
+      const [, , did, cid, format] = feedMatch;
+      lqipUrl = `https://cdn.bsky.app/img/feed_thumbnail/plain/${did}/${cid}${format || "@jpeg"}`;
+    }
+  }
+
+  // Optionally convert to WebP for smaller LQIP file size
+  if (mergedConfig.preferWebP && webpSupported) {
+    lqipUrl = transformBskyCdnUrl(lqipUrl, "webp");
+  }
+
+  return lqipUrl;
+}
+
+/**
+ * Check if a URL is from the Bluesky CDN and supports LQIP generation
+ * @param url - URL to check
+ * @returns true if LQIP can be generated for this URL
+ */
+export function supportsLQIP(url: string): boolean {
+  if (!url) return false;
+  return url.includes("cdn.bsky.app/img/");
+}
+
+/**
+ * Get the full-resolution URL from a thumbnail URL
+ * Useful for restoring the original URL from an LQIP
+ *
+ * @param url - Thumbnail or LQIP URL
+ * @returns Full-resolution URL
+ */
+export function getFullResolutionUrl(url: string): string {
+  if (!url) return url;
+
+  if (!url.includes("cdn.bsky.app")) {
+    return url;
+  }
+
+  // Transform feed_thumbnail back to feed_fullsize
+  return url.replace("/feed_thumbnail/", "/feed_fullsize/");
+}
