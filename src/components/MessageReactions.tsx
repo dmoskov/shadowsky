@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { dmService } from "../services/dm-service";
+import { layoutMeasurementService } from "../services/layout-measurement-service";
 import { EmojiPicker } from "./EmojiPicker";
 
 interface MessageReactionsProps {
@@ -68,14 +69,22 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
 
   const handleAddReactionClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const rect = e.currentTarget.getBoundingClientRect();
-    setPickerPosition({
-      top: rect.bottom + window.scrollY + 5,
-      left: isOwnMessage
-        ? rect.right + window.scrollX - 300
-        : rect.left + window.scrollX,
-    });
-    setShowEmojiPicker(true);
+    const target = e.currentTarget;
+
+    // Use batched measurement service for positioning
+    layoutMeasurementService.measureElement(
+      target,
+      (rect) => {
+        setPickerPosition({
+          top: rect.bottom + window.scrollY + 5,
+          left: isOwnMessage
+            ? rect.right + window.scrollX - 300
+            : rect.left + window.scrollX,
+        });
+        setShowEmojiPicker(true);
+      },
+      { priority: "high" }
+    );
   };
 
   const handleEmojiSelect = (emoji: string) => {

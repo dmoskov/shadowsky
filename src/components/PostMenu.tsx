@@ -25,6 +25,7 @@ import { useToast } from "../contexts/ToastContext";
 import { useMenuKeyboardNavigation } from "../hooks/useMenuKeyboardNavigation";
 import { usePinnedPosts } from "../hooks/usePinnedPosts";
 import { generateShareablePostUrl } from "../hooks/usePostDeepLink";
+import { layoutMeasurementService } from "../services/layout-measurement-service";
 import { moderationHistoryDB } from "../services/moderation-history-db";
 import { isWebShareSupported, sharePost } from "../services/share-service";
 import { AddToListModal } from "./AddToListModal";
@@ -392,46 +393,54 @@ export const PostMenu: React.FC<PostMenuProps> = ({
           onClick={(e) => {
             e.stopPropagation();
             if (!isOpen && buttonRef.current) {
-              const rect = buttonRef.current.getBoundingClientRect();
-              const menuWidth = 224; // 224px = w-56
-              const menuHeight = 400; // Approximate max height of menu
-              const viewportHeight = window.innerHeight;
-              const viewportWidth = window.innerWidth;
+              // Use batched measurement service for positioning
+              layoutMeasurementService.measureElement(
+                buttonRef.current,
+                (rect) => {
+                  const menuWidth = 224; // 224px = w-56
+                  const menuHeight = 400; // Approximate max height of menu
+                  const viewportHeight = window.innerHeight;
+                  const viewportWidth = window.innerWidth;
 
-              // Calculate horizontal position (prefer right-aligned to button)
-              let left = rect.right - menuWidth;
-              // Ensure menu doesn't overflow left edge
-              if (left < 8) {
-                left = 8;
-              }
-              // Ensure menu doesn't overflow right edge
-              if (left + menuWidth > viewportWidth - 8) {
-                left = viewportWidth - menuWidth - 8;
-              }
+                  // Calculate horizontal position (prefer right-aligned to button)
+                  let left = rect.right - menuWidth;
+                  // Ensure menu doesn't overflow left edge
+                  if (left < 8) {
+                    left = 8;
+                  }
+                  // Ensure menu doesn't overflow right edge
+                  if (left + menuWidth > viewportWidth - 8) {
+                    left = viewportWidth - menuWidth - 8;
+                  }
 
-              // Calculate vertical position (check if there's space below)
-              const spaceBelow = viewportHeight - rect.bottom;
-              const spaceAbove = rect.top;
+                  // Calculate vertical position (check if there's space below)
+                  const spaceBelow = viewportHeight - rect.bottom;
+                  const spaceAbove = rect.top;
 
-              let top;
-              if (spaceBelow >= menuHeight || spaceBelow > spaceAbove) {
-                // Position below the button
-                top = rect.bottom + 8;
-              } else {
-                // Position above the button
-                top = rect.top - menuHeight - 8;
-                // Ensure menu doesn't overflow top edge
-                if (top < 8) {
-                  top = 8;
-                }
-              }
+                  let top;
+                  if (spaceBelow >= menuHeight || spaceBelow > spaceAbove) {
+                    // Position below the button
+                    top = rect.bottom + 8;
+                  } else {
+                    // Position above the button
+                    top = rect.top - menuHeight - 8;
+                    // Ensure menu doesn't overflow top edge
+                    if (top < 8) {
+                      top = 8;
+                    }
+                  }
 
-              setMenuPosition({
-                top,
-                left,
-              });
+                  setMenuPosition({
+                    top,
+                    left,
+                  });
+                  setIsOpen(true);
+                },
+                { priority: "high" }
+              );
+            } else {
+              setIsOpen(false);
             }
-            setIsOpen(!isOpen);
           }}
           className="touch-target-sm flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-2 transition-opacity hover:opacity-70"
           aria-label="More options"

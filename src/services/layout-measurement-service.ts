@@ -415,8 +415,8 @@ class LayoutMeasurementService {
       }
     }
 
-    logger.debug(
-      `[LayoutMeasurement] Processed ${measurements.size} measurements in frame ${this.currentFrameId}`
+    logger.log(
+      `Processed ${measurements.size} measurements in frame ${this.currentFrameId}`
     );
   }
 
@@ -480,7 +480,7 @@ class LayoutMeasurementService {
     this.measurementCache.clear();
     this.isScheduled = false;
 
-    logger.debug("[LayoutMeasurement] Service cleaned up");
+    logger.log("Service cleaned up");
   }
 }
 

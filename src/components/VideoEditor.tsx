@@ -271,7 +271,12 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDraggingRef.current || !timelineRef.current || !metadata) return;
 
-      const rect = timelineRef.current.getBoundingClientRect();
+      // Use sync measurement with caching for drag operations
+      const rect = layoutMeasurementService.measureElementSync(
+        timelineRef.current
+      );
+      if (!rect) return;
+
       const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
       const time = (x / rect.width) * metadata.duration;
 

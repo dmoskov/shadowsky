@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import React from "react";
 import ReactDOM from "react-dom";
+import { layoutMeasurementService } from "../services/layout-measurement-service";
 import type { Column } from "../types/column";
 
 interface ColumnHeaderProps {
@@ -125,13 +126,21 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
               ref={feedButtonRef}
               onClick={() => {
                 if (!showFeedDropdown && feedButtonRef.current) {
-                  const rect = feedButtonRef.current.getBoundingClientRect();
-                  setFeedMenuPosition({
-                    top: rect.bottom + 4,
-                    right: window.innerWidth - rect.right,
-                  });
+                  // Use batched measurement service for positioning
+                  layoutMeasurementService.measureElement(
+                    feedButtonRef.current,
+                    (rect) => {
+                      setFeedMenuPosition({
+                        top: rect.bottom + 4,
+                        right: window.innerWidth - rect.right,
+                      });
+                      setShowFeedDropdown(true);
+                    },
+                    { priority: "high" }
+                  );
+                } else {
+                  setShowFeedDropdown(false);
                 }
-                setShowFeedDropdown(!showFeedDropdown);
               }}
               className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
               title="Change feed"
@@ -210,13 +219,21 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
             ref={moreButtonRef}
             onClick={() => {
               if (!showMenu && moreButtonRef.current) {
-                const rect = moreButtonRef.current.getBoundingClientRect();
-                setMoreMenuPosition({
-                  top: rect.bottom + 4,
-                  right: window.innerWidth - rect.right,
-                });
+                // Use batched measurement service for positioning
+                layoutMeasurementService.measureElement(
+                  moreButtonRef.current,
+                  (rect) => {
+                    setMoreMenuPosition({
+                      top: rect.bottom + 4,
+                      right: window.innerWidth - rect.right,
+                    });
+                    setShowMenu(true);
+                  },
+                  { priority: "high" }
+                );
+              } else {
+                setShowMenu(false);
               }
-              setShowMenu(!showMenu);
             }}
             className="rounded-md p-2 transition-opacity hover:opacity-70"
             title="More options"
