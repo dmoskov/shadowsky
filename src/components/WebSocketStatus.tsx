@@ -8,11 +8,13 @@ import {
 import React, { useState } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { WebSocketConnectionState } from "../types/websocket";
+import { ConnectionQualityBadge, useDebugMode } from "./ConnectionQualityBadge";
 
 export const WebSocketStatus: React.FC = () => {
   const { isConnected, connectionState, stats, reconnect, isEnabled } =
     useWebSocket();
   const [isExpanded, setIsExpanded] = useState(false);
+  const isDebugMode = useDebugMode();
 
   if (!isEnabled) {
     return null;
@@ -84,6 +86,10 @@ export const WebSocketStatus: React.FC = () => {
           style={{ color: "var(--bsky-text-primary)" }}
         >
           {getStatusIcon()}
+          {/* Connection quality badge - only visible in debug mode */}
+          {isDebugMode && !isExpanded && (
+            <ConnectionQualityBadge latencyMs={metrics?.averageLatencyMs} />
+          )}
           {isExpanded && (
             <div className="flex-1">
               <div className="flex items-center gap-2">
@@ -128,7 +134,15 @@ export const WebSocketStatus: React.FC = () => {
                     className="mt-2 border-t pt-2"
                     style={{ borderColor: "var(--bsky-border)" }}
                   >
-                    <div className="font-medium">Health Metrics</div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Health Metrics</span>
+                      {isDebugMode && (
+                        <ConnectionQualityBadge
+                          latencyMs={metrics.averageLatencyMs}
+                          showLabel
+                        />
+                      )}
+                    </div>
                   </div>
                   <div>Uptime: {metrics.uptimePercent.toFixed(1)}%</div>
                   {metrics.averageLatencyMs > 0 && (
