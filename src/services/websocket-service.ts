@@ -14,6 +14,19 @@ import {
 type EventHandler = (event: WebSocketMessage) => void;
 
 /**
+ * WebSocket Service - Finite State Machine for Connection Management
+ *
+ * See: docs/websocket-state-machine.md for complete state machine documentation
+ *
+ * States: DISCONNECTED, CONNECTING, CONNECTED, DEGRADED, RECONNECTING, ERROR
+ * Key behaviors:
+ * - Automatic reconnection with exponential backoff
+ * - Authentication with configurable timeout
+ * - Heartbeat monitoring with PONG timeout detection
+ * - Health metrics and degraded state detection
+ */
+
+/**
  * Calculate exponential backoff delay with optional jitter.
  * Jitter helps prevent thundering herd when multiple clients reconnect
  * simultaneously after a server restart.
@@ -109,12 +122,22 @@ export class WebSocketService {
     };
   }
 
+  /**
+   * STATE: DISCONNECTED -> CONNECTING
+   * See: docs/websocket-state-machine.md#connection-establishment-flow
+   *
+   * Guards:
+   * - Returns early if already OPEN (idempotent)
+   * - Returns early if already CONNECTING (prevents duplicate connections)
+   */
   public connect(): void {
+    // Guard: Already fully connected
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.log("Already connected");
       return;
     }
 
+    // Guard: Connection already in progress
     if (
       this.ws?.readyState === WebSocket.CONNECTING ||
       this.stats.connectionState === WebSocketConnectionState.CONNECTING
@@ -142,6 +165,13 @@ export class WebSocketService {
     }
   }
 
+  /**
+   * STATE: Any -> DISCONNECTED
+   * See: docs/websocket-state-machine.md#race-condition-handling
+   *
+   * Sets isIntentionallyClosed flag to prevent any scheduled reconnections.
+   * Clean close with code 1000.
+   */
   public disconnect(): void {
     this.log("Disconnecting WebSocket");
     this.isIntentionallyClosed = true;
@@ -333,9 +363,17 @@ export class WebSocketService {
     );
   }
 
+  /**
+   * Setup WebSocket event listeners for state machine transitions
+   * See: docs/websocket-state-machine.md#state-diagram
+   */
   private setupEventListeners(): void {
     if (!this.ws) return;
 
+    /**
+     * STATE: CONNECTING -> CONNECTED (no token) or CONNECTING -> (auth flow)
+     * See: docs/websocket-state-machine.md#authentication-flow
+     */
     this.ws.onopen = () => {
       this.log("WebSocket transport connected, sending authentication...");
       this.stats.reconnectAttempts = 0;
@@ -347,6 +385,7 @@ export class WebSocketService {
         this.startAuthTimeout();
       } else {
         // No token provided, emit connect event immediately
+        // STATE: CONNECTING -> CONNECTED (bypassing auth)
         this.log("No access token configured, skipping authentication");
         this.isAuthenticated = true;
         this.updateConnectionState(WebSocketConnectionState.CONNECTED);
@@ -358,6 +397,12 @@ export class WebSocketService {
       }
     };
 
+    /**
+     * STATE: CONNECTED/DEGRADED -> DISCONNECTED or RECONNECTING
+     * See: docs/websocket-state-machine.md#transition-details
+     *
+     * If wasClean=false and not intentionally closed, schedules reconnect.
+     */
     this.ws.onclose = (event) => {
       this.log(
         `WebSocket closed: ${event.code} ${event.reason || "No reason"}`,
@@ -460,6 +505,13 @@ export class WebSocketService {
     this.log(`Authentication timeout started (${this.config.authTimeout}ms)`);
   }
 
+  /**
+   * STATE: (auth flow) -> CONNECTED
+   * See: docs/websocket-state-machine.md#authentication-flow
+   *
+   * Called when auth:success message received. Clears auth timeout,
+   * starts heartbeat, and emits both AUTH_SUCCESS and CONNECT events.
+   */
   private handleAuthSuccess(): void {
     if (this.authTimeoutTimer) {
       clearTimeout(this.authTimeoutTimer);
@@ -545,6 +597,15 @@ export class WebSocketService {
     return AuthErrorCategory.SERVER_ERROR;
   }
 
+  /**
+   * STATE: (auth flow) -> ERROR or RECONNECTING
+   * See: docs/websocket-state-machine.md#authentication-flow
+   *
+   * Categorizes auth errors into TOKEN_INVALID (fatal), SERVER_ERROR, or NETWORK_ERROR.
+   * - TOKEN_INVALID: Sets isAuthFatalError, emits AUTH_EXPIRED, no retry
+   * - SERVER_ERROR: Retries with max attempts
+   * - NETWORK_ERROR: Retries unlimited (network will eventually come back)
+   */
   private handleAuthFailure(error: string, statusCode?: number): void {
     if (this.authTimeoutTimer) {
       clearTimeout(this.authTimeoutTimer);
@@ -629,18 +690,30 @@ export class WebSocketService {
     }
   }
 
+  /**
+   * STATE: Any -> RECONNECTING -> CONNECTING (after delay)
+   * See: docs/websocket-state-machine.md#reconnection-flow
+   *
+   * Guards:
+   * - Returns if isIntentionallyClosed (user called disconnect())
+   * - Returns if isAuthFatalError (token was invalid)
+   * - Returns and sets ERROR if max attempts exceeded (unless unlimitedRetries)
+   *
+   * Uses exponential backoff with jitter to prevent thundering herd.
+   */
   private scheduleReconnect(unlimitedRetries = false): void {
+    // Guard: User explicitly disconnected
     if (this.isIntentionallyClosed) {
       return;
     }
 
-    // Check for fatal auth errors - don't retry
+    // Guard: Fatal auth error - don't retry
     if (this.isAuthFatalError) {
       this.log("Skipping reconnect due to fatal auth error", "warn");
       return;
     }
 
-    // Only check max attempts if not doing unlimited retries
+    // Guard: Max attempts reached (unless unlimited)
     if (
       !unlimitedRetries &&
       this.stats.reconnectAttempts >= this.config.maxReconnectAttempts
@@ -711,6 +784,10 @@ export class WebSocketService {
     this.log(`PING sent, expecting PONG within ${this.PONG_TIMEOUT}ms`);
   }
 
+  /**
+   * Handle PONG response - updates latency metrics and checks degraded state
+   * See: docs/websocket-state-machine.md#heartbeatpong-timeout-flow
+   */
   private handlePong(): void {
     // Clear the PONG timeout since we received a response
     if (this.pongTimeoutTimer) {
@@ -749,7 +826,14 @@ export class WebSocketService {
   }
 
   /**
-   * Update connection state to DEGRADED or CONNECTED based on health metrics.
+   * STATE: CONNECTED <-> DEGRADED
+   * See: docs/websocket-state-machine.md#connection-states (DEGRADED section)
+   *
+   * Transitions to DEGRADED when:
+   * - P95 latency > 5000ms
+   * - Packet loss > 10%
+   *
+   * Recovers to CONNECTED when metrics are back within thresholds.
    */
   private updateDegradedState(): void {
     const degradedCheck = this.checkDegradedState();
@@ -759,17 +843,26 @@ export class WebSocketService {
       degradedCheck.isDegraded &&
       currentState === WebSocketConnectionState.CONNECTED
     ) {
+      // STATE: CONNECTED -> DEGRADED
       this.log(`Connection degraded: ${degradedCheck.reason}`, "warn");
       this.updateConnectionState(WebSocketConnectionState.DEGRADED);
     } else if (
       !degradedCheck.isDegraded &&
       currentState === WebSocketConnectionState.DEGRADED
     ) {
+      // STATE: DEGRADED -> CONNECTED (recovered)
       this.log("Connection recovered from degraded state");
       this.updateConnectionState(WebSocketConnectionState.CONNECTED);
     }
   }
 
+  /**
+   * STATE: CONNECTED/DEGRADED -> RECONNECTING
+   * See: docs/websocket-state-machine.md#heartbeatpong-timeout-flow
+   *
+   * Server is unresponsive (zombie connection). Close with code 4002 and reconnect.
+   * Increments pongTimeoutCount for packet loss metrics.
+   */
   private handlePongTimeout(): void {
     this.log("PONG timeout - server unresponsive, reconnecting...", "warn");
     this.stats.lastError = "PONG timeout - server unresponsive";
@@ -819,6 +912,15 @@ export class WebSocketService {
     this.stopHeartbeat();
   }
 
+  /**
+   * Central state transition handler - updates metrics and logs state changes
+   * See: docs/websocket-state-machine.md#state-transition-table
+   *
+   * Tracks:
+   * - Total connected time (for uptime calculation)
+   * - Last connected/disconnected timestamps
+   * - Total reconnection count
+   */
   private updateConnectionState(state: WebSocketConnectionState): void {
     const previousState = this.stats.connectionState;
     const now = Date.now();
