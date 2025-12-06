@@ -57,6 +57,7 @@ test-screenshots/
 playwright-report/
 test-results/
 .test-credentials
+.lighthouseci/
 
 # Build artifacts
 .wireit/

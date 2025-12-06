@@ -444,12 +444,82 @@ it("should complete bookmark flow", async () => {
 });
 ```
 
+### Visual Regression Tests
+
+Visual regression tests capture screenshots of the application and compare them against baseline images to detect unintended visual changes.
+
+#### Running Visual Regression Tests
+
+```bash
+# Run all visual regression tests
+npx playwright test visual-regression.spec.ts
+
+# Run with UI mode for debugging
+npx playwright test visual-regression.spec.ts --ui
+
+# Run specific test
+npx playwright test visual-regression.spec.ts -g "Landing page styling"
+```
+
+#### Updating Baseline Snapshots
+
+When making intentional UI changes, you need to update the baseline snapshots:
+
+```bash
+# Update all snapshots
+npx playwright test visual-regression.spec.ts --update-snapshots
+
+# Update specific test snapshots
+npx playwright test visual-regression.spec.ts -g "Landing page" --update-snapshots
+```
+
+#### Screenshot Storage
+
+- **Baseline snapshots**: `tests/visual-regression.spec.ts-snapshots/`
+- **Baseline (alternate)**: `tests/visual-regression-baseline.spec.ts-snapshots/`
+
+#### When to Update Baselines
+
+Update baseline screenshots when:
+
+1. **Intentional design changes** are made
+2. **New features** are added with UI changes
+3. **CSS refactoring** is complete
+
+**Important**: Always review generated snapshots before committing to ensure they look correct.
+
+#### Test Credentials
+
+Visual regression tests that require authentication need test credentials. Set environment variables:
+
+```bash
+export TEST_USER="your-handle.bsky.social"
+export TEST_PASS="your-app-password"
+```
+
+Or add to `.env.local`:
+
+```
+VITE_TEST_IDENTIFIER=your-handle.bsky.social
+VITE_TEST_PASSWORD=your-app-password
+```
+
+#### CI Integration
+
+Visual regression tests run in CI and will fail if screenshots don't match baselines. When a test fails:
+
+1. Download the test artifacts from CI
+2. Review the diff images
+3. If changes are intentional, update baselines locally and commit
+4. If changes are unintentional, fix the regression
+
 ### Test Coverage Goals
 
 - **Utilities**: 90%+ coverage
 - **Services**: 80%+ coverage
 - **Components**: 70%+ coverage
 - **Critical paths**: 100% coverage
+- **Visual regression**: All major pages and viewports covered
 
 ## Submitting Changes
 

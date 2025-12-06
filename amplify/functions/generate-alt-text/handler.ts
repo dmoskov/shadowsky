@@ -32,6 +32,7 @@ import {
   publishMetrics,
   publishMonitoringMetrics,
 } from "../shared/cloudwatch-metrics";
+import { handleWarmupEvent } from "../shared/warmup";
 
 // Track invocations to periodically publish monitoring metrics
 let invocationCount = 0;
@@ -263,6 +264,12 @@ async function retryWithBackoff<T>(
 }
 
 export const handler = async (event: any) => {
+  // Handle warmup events immediately to minimize cold start latency
+  const warmupResponse = handleWarmupEvent(event, 'generate-alt-text');
+  if (warmupResponse) {
+    return warmupResponse;
+  }
+
   const correlationId = getCorrelationId(event);
 
   // Publish monitoring metrics every 10 invocations

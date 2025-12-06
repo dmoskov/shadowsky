@@ -2,9 +2,14 @@ import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:5173";
 
+// Performance tests should run against production build for accurate timing
+const isPerformanceTest = process.env.PERFORMANCE_TEST === "true";
+
 export default defineConfig({
   testDir: "./tests",
-  testMatch: ["e2e/**/*.spec.ts", "visual-regression*.spec.ts"],
+  testMatch: isPerformanceTest
+    ? ["performance/**/*.spec.ts"]
+    : ["e2e/**/*.spec.ts", "visual-regression*.spec.ts"],
   timeout: 60 * 1000,
   expect: {
     timeout: 10000,
@@ -35,7 +40,9 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "npm run dev",
+    // Performance tests should use production build (npm run preview)
+    // Regular tests use development server for faster iteration
+    command: isPerformanceTest ? "npm run preview" : "npm run dev",
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,

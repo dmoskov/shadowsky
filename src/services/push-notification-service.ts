@@ -22,8 +22,12 @@ const logger = createLogger("PushNotificationService");
 const STORAGE_KEYS = {
   PUSH_SETTINGS: "shadowsky:push-settings",
   PUSH_SUBSCRIPTION: "shadowsky:push-subscription",
+  PUSH_SUBSCRIPTION_ID: "shadowsky:push-subscription-id",
   PUSH_DISMISSED: "shadowsky:push-dismissed",
 } as const;
+
+// Server API base URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 /**
  * Convert VAPID key from base64 to Uint8Array
@@ -48,6 +52,7 @@ class PushNotificationService {
   private static instance: PushNotificationService;
   private serviceWorkerRegistration: ServiceWorkerRegistration | null = null;
   private subscription: PushSubscription | null = null;
+  private serverSubscriptionId: string | null = null;
   private settings: PushNotificationSettings = DEFAULT_PUSH_SETTINGS;
   private messageHandlers: Map<string, Set<(payload: unknown) => void>> =
     new Map();
@@ -56,6 +61,8 @@ class PushNotificationService {
   private constructor() {
     // Load settings from storage
     this.loadSettings();
+    // Load subscription ID from storage
+    this.loadSubscriptionId();
   }
 
   static getInstance(): PushNotificationService {
@@ -207,6 +214,22 @@ class PushNotificationService {
       // Save subscription locally
       this.saveSubscription(subscription);
 
+      // Register subscription with server
+      const subscriptionId =
+        await this.registerSubscriptionWithServer(subscription);
+
+      if (subscriptionId) {
+        this.serverSubscriptionId = subscriptionId;
+        this.saveSubscriptionId(subscriptionId);
+        logger.info("Push subscription registered with server", {
+          subscriptionId,
+        });
+      } else {
+        logger.warn(
+          "Failed to register subscription with server - push notifications may not work when offline",
+        );
+      }
+
       // Enable settings
       this.settings.enabled = true;
       this.saveSettings();
@@ -224,13 +247,19 @@ class PushNotificationService {
    * Unsubscribe from push notifications
    */
   async unsubscribe(): Promise<boolean> {
-    if (!this.subscription) {
-      return true;
-    }
-
     try {
-      await this.subscription.unsubscribe();
-      this.subscription = null;
+      // Unsubscribe from server first if we have a subscription ID
+      if (this.serverSubscriptionId) {
+        await this.unregisterSubscriptionFromServer(this.serverSubscriptionId);
+        this.serverSubscriptionId = null;
+        localStorage.removeItem(STORAGE_KEYS.PUSH_SUBSCRIPTION_ID);
+      }
+
+      // Unsubscribe from browser push manager
+      if (this.subscription) {
+        await this.subscription.unsubscribe();
+        this.subscription = null;
+      }
 
       // Remove from local storage
       localStorage.removeItem(STORAGE_KEYS.PUSH_SUBSCRIPTION);
@@ -683,7 +712,7 @@ class PushNotificationService {
   /**
    * Handle subscription change from service worker
    */
-  private handleSubscriptionChange(payload: unknown): void {
+  private async handleSubscriptionChange(payload: unknown): Promise<void> {
     const data = payload as {
       subscription: PushSubscriptionJSON | null;
       action: string;
@@ -693,7 +722,36 @@ class PushNotificationService {
     if (data.action === "expired" || !data.subscription) {
       logger.warn("Push subscription expired");
       this.subscription = null;
+      this.serverSubscriptionId = null;
       localStorage.removeItem(STORAGE_KEYS.PUSH_SUBSCRIPTION);
+      localStorage.removeItem(STORAGE_KEYS.PUSH_SUBSCRIPTION_ID);
+    } else if (data.action === "renewed" && data.subscription) {
+      // Re-register the renewed subscription with the server
+      logger.info("Push subscription renewed, re-registering with server");
+      try {
+        // Get the new subscription from push manager
+        if (this.serviceWorkerRegistration) {
+          const newSubscription =
+            await this.serviceWorkerRegistration.pushManager.getSubscription();
+          if (newSubscription) {
+            this.subscription = newSubscription;
+            this.saveSubscription(newSubscription);
+
+            // Register with server
+            const subscriptionId =
+              await this.registerSubscriptionWithServer(newSubscription);
+            if (subscriptionId) {
+              this.serverSubscriptionId = subscriptionId;
+              this.saveSubscriptionId(subscriptionId);
+              logger.info("Renewed subscription registered with server", {
+                subscriptionId,
+              });
+            }
+          }
+        }
+      } catch (error) {
+        logger.error("Failed to re-register renewed subscription:", error);
+      }
     }
   }
 
@@ -736,6 +794,160 @@ class PushNotificationService {
       );
     } catch (error) {
       logger.error("Failed to save push subscription:", error);
+    }
+  }
+
+  /**
+   * Save subscription ID to local storage
+   */
+  private saveSubscriptionId(subscriptionId: string): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.PUSH_SUBSCRIPTION_ID, subscriptionId);
+    } catch (error) {
+      logger.error("Failed to save subscription ID:", error);
+    }
+  }
+
+  /**
+   * Load subscription ID from local storage
+   */
+  private loadSubscriptionId(): void {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.PUSH_SUBSCRIPTION_ID);
+      if (stored) {
+        this.serverSubscriptionId = stored;
+      }
+    } catch (error) {
+      logger.error("Failed to load subscription ID:", error);
+    }
+  }
+
+  /**
+   * Register subscription with the server
+   * Returns the server-assigned subscription ID on success, null on failure
+   */
+  private async registerSubscriptionWithServer(
+    subscription: PushSubscription,
+  ): Promise<string | null> {
+    const payload = this.getSubscriptionPayloadFromSubscription(subscription);
+    if (!payload) {
+      logger.error("Failed to create subscription payload");
+      return null;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/push-subscription`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        logger.error("Server rejected push subscription:", {
+          status: response.status,
+          error: errorData.error,
+          details: errorData.details,
+        });
+        return null;
+      }
+
+      const data = await response.json();
+      return data.subscriptionId || null;
+    } catch (error) {
+      logger.error("Failed to register subscription with server:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Unregister subscription from the server
+   */
+  private async unregisterSubscriptionFromServer(
+    subscriptionId: string,
+  ): Promise<boolean> {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/push-subscription/${subscriptionId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok && response.status !== 404) {
+        logger.error("Failed to unregister subscription from server:", {
+          status: response.status,
+        });
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      logger.error("Failed to unregister subscription from server:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Create subscription payload from PushSubscription
+   */
+  private getSubscriptionPayloadFromSubscription(
+    subscription: PushSubscription,
+  ): PushSubscriptionPayload | null {
+    const json = subscription.toJSON();
+    if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) {
+      return null;
+    }
+
+    return {
+      endpoint: json.endpoint,
+      keys: {
+        p256dh: json.keys.p256dh,
+        auth: json.keys.auth,
+      },
+      expirationTime: subscription.expirationTime,
+      userAgent: navigator.userAgent,
+      createdAt: Date.now(),
+    };
+  }
+
+  /**
+   * Get the server subscription ID
+   */
+  getServerSubscriptionId(): string | null {
+    return this.serverSubscriptionId;
+  }
+
+  /**
+   * Refresh the subscription registration with the server
+   * Useful when the user logs in or subscription may be stale
+   */
+  async refreshServerRegistration(): Promise<boolean> {
+    if (!this.subscription) {
+      logger.info("No active subscription to refresh");
+      return false;
+    }
+
+    try {
+      const subscriptionId = await this.registerSubscriptionWithServer(
+        this.subscription,
+      );
+
+      if (subscriptionId) {
+        this.serverSubscriptionId = subscriptionId;
+        this.saveSubscriptionId(subscriptionId);
+        logger.info("Subscription registration refreshed", { subscriptionId });
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      logger.error("Failed to refresh subscription registration:", error);
+      return false;
     }
   }
 

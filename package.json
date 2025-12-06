@@ -20,6 +20,8 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:a11y": "playwright test --grep @accessibility --reporter=html,json",
+    "test:perf": "npm run build:app && PERFORMANCE_TEST=true playwright test --grep @performance --reporter=html",
+    "test:perf:headed": "npm run build:app && PERFORMANCE_TEST=true playwright test --grep @performance --headed",
     "test:format": "wireit",
     "test:lint": "wireit",
     "test:types": "wireit",
@@ -53,6 +55,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
     "@eslint/js": "^9.32.0",
+    "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.57.0",
     "@testing-library/jest-dom": "^6.7.0",
     "@testing-library/react": "^16.3.0",

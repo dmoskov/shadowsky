@@ -14,6 +14,7 @@ import {
   MaxRetriesExceededError,
   TimeoutError,
 } from "../shared/resilience";
+import { handleWarmupEvent } from "../shared/warmup";
 
 interface ThreadPost {
   text: string;
@@ -92,6 +93,12 @@ function setCachedSummary(key: string, value: any) {
 }
 
 export const handler: APIGatewayProxyHandler = async (event) => {
+  // Handle warmup events immediately to minimize cold start latency
+  const warmupResponse = handleWarmupEvent(event, 'thread-summary');
+  if (warmupResponse) {
+    return warmupResponse;
+  }
+
   const correlationId = getCorrelationId(event);
 
   try {

@@ -11,15 +11,19 @@ const VISUAL_CONFIG = {
 
 // Check if credentials are available
 function hasCredentials() {
-  const identifier = process.env.TEST_USER || process.env.VITE_TEST_IDENTIFIER || "";
-  const password = process.env.TEST_PASS || process.env.VITE_TEST_PASSWORD || "";
+  const identifier =
+    process.env.TEST_USER || process.env.VITE_TEST_IDENTIFIER || "";
+  const password =
+    process.env.TEST_PASS || process.env.VITE_TEST_PASSWORD || "";
   return !!(identifier && password);
 }
 
 // Helper to get credentials from environment variables
 function getCredentials() {
-  const identifier = process.env.TEST_USER || process.env.VITE_TEST_IDENTIFIER || "";
-  const password = process.env.TEST_PASS || process.env.VITE_TEST_PASSWORD || "";
+  const identifier =
+    process.env.TEST_USER || process.env.VITE_TEST_IDENTIFIER || "";
+  const password =
+    process.env.TEST_PASS || process.env.VITE_TEST_PASSWORD || "";
 
   if (!identifier || !password) {
     throw new Error(
@@ -34,10 +38,15 @@ function getCredentials() {
 async function login(page: any) {
   const { identifier, password } = getCredentials();
   // Wait for the login form to be visible
-  await page.waitForSelector('input[placeholder*="handle" i], input[placeholder*="Username" i], input[placeholder*="email" i]', { timeout: 10000 });
+  await page.waitForSelector(
+    'input[placeholder*="handle" i], input[placeholder*="Username" i], input[placeholder*="email" i]',
+    { timeout: 10000 },
+  );
 
   // Fill in credentials - try different input selectors
-  const handleInput = page.locator('input[placeholder*="handle" i], input[placeholder*="Username" i]').first();
+  const handleInput = page
+    .locator('input[placeholder*="handle" i], input[placeholder*="Username" i]')
+    .first();
   await handleInput.fill(identifier);
 
   const passwordInput = page.locator('input[type="password"]').first();
@@ -64,7 +73,10 @@ test.describe("Visual Regression Baseline - Landing Page", () => {
   test("14 - Loading States", async ({ page }) => {
     // Navigate without waiting for full network idle to capture loading state
     await page.goto(TEST_URL);
-    await expect(page).toHaveScreenshot("14-loading-skeleton.png", VISUAL_CONFIG);
+    await expect(page).toHaveScreenshot(
+      "14-loading-skeleton.png",
+      VISUAL_CONFIG,
+    );
   });
 });
 
@@ -143,7 +155,7 @@ test.describe("Component Details - Buttons", () => {
   test("Button States", async ({ page }) => {
     await page.waitForTimeout(2000);
     // Capture the primary button state from the sidebar or main interface
-    const button = page.locator('button').first();
+    const button = page.locator("button").first();
     if (await button.isVisible()) {
       await expect(button).toHaveScreenshot("button-primary-normal.png");
 
@@ -155,9 +167,13 @@ test.describe("Component Details - Buttons", () => {
   test("Secondary Button States", async ({ page }) => {
     await page.waitForTimeout(2000);
     // Find secondary/outline style buttons
-    const secondaryButton = page.locator('button[class*="secondary"], button[class*="outline"]').first();
-    if (await secondaryButton.count() > 0) {
-      await expect(secondaryButton).toHaveScreenshot("button-secondary-normal.png");
+    const secondaryButton = page
+      .locator('button[class*="secondary"], button[class*="outline"]')
+      .first();
+    if ((await secondaryButton.count()) > 0) {
+      await expect(secondaryButton).toHaveScreenshot(
+        "button-secondary-normal.png",
+      );
     }
   });
 });

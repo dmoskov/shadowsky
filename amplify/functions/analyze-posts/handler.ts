@@ -28,6 +28,7 @@ import {
   createUserRateLimitResponse,
   STRICT_USER_RATE_LIMIT,
 } from "../shared/user-rate-limiter";
+import { handleWarmupEvent } from "../shared/warmup";
 
 interface PostData {
   text: string;
@@ -163,6 +164,12 @@ interface RequestBody {
 }
 
 export const handler = async (event: any) => {
+  // Handle warmup events immediately to minimize cold start latency
+  const warmupResponse = handleWarmupEvent(event, 'analyze-posts');
+  if (warmupResponse) {
+    return warmupResponse;
+  }
+
   const correlationId = getCorrelationId(event);
 
   // Handle OPTIONS request for CORS preflight

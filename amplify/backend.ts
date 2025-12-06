@@ -7,7 +7,7 @@ import {
   RestApi,
 } from 'aws-cdk-lib/aws-apigateway';
 import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
-import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
+import { Rule, RuleTargetInput, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
@@ -254,6 +254,53 @@ const processorRule = new Rule(mainStack, 'ScheduledPostsProcessorRule', {
 });
 
 processorRule.addTarget(new LambdaFunction(backend.scheduledPostsProcessor.resources.lambda));
+
+// ============================================================================
+// Lambda Cold Start Warmup Strategy
+// ============================================================================
+// CloudWatch Events rule to invoke AI Lambda functions every 5 minutes
+// to keep containers warm and eliminate 3-5s cold start latency.
+// The warmup handler in each function returns immediately without processing,
+// minimizing execution time and cost (~$10-20/month estimated).
+
+const warmupRule = new Rule(mainStack, 'AILambdaWarmupRule', {
+  schedule: Schedule.rate(Duration.minutes(5)),
+  description: 'Keeps AI Lambda functions warm to eliminate cold start latency',
+});
+
+// Add all AI Lambda functions as targets with warmup event input
+// The event includes a warmup marker that handlers detect and return early
+const warmupEventInput = RuleTargetInput.fromObject({
+  warmup: true,
+  source: 'shadowsky-warmup',
+  timestamp: RuleTargetInput.fromEventPath('$.time'),
+});
+
+// Core AI-powered features that benefit from warmup
+warmupRule.addTarget(new LambdaFunction(backend.writingFeedback.resources.lambda, {
+  event: warmupEventInput,
+}));
+warmupRule.addTarget(new LambdaFunction(backend.adjustTone.resources.lambda, {
+  event: warmupEventInput,
+}));
+warmupRule.addTarget(new LambdaFunction(backend.optimizeThread.resources.lambda, {
+  event: warmupEventInput,
+}));
+warmupRule.addTarget(new LambdaFunction(backend.suggestHashtags.resources.lambda, {
+  event: warmupEventInput,
+}));
+warmupRule.addTarget(new LambdaFunction(backend.styleAnalysis.resources.lambda, {
+  event: warmupEventInput,
+}));
+warmupRule.addTarget(new LambdaFunction(backend.analyzePosts.resources.lambda, {
+  event: warmupEventInput,
+}));
+warmupRule.addTarget(new LambdaFunction(backend.generateAltText.resources.lambda, {
+  event: warmupEventInput,
+}));
+warmupRule.addTarget(new LambdaFunction(backend.threadSummary.resources.lambda, {
+  event: warmupEventInput,
+}));
 
 // Create CloudWatch Dashboard for Anthropic API monitoring
 const monitoringStack = backend.createStack('monitoring-stack');

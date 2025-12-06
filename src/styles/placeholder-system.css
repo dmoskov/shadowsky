@@ -9,6 +9,11 @@
  * 2. Use container queries for responsive behavior
  * 3. Provide smooth transitions without layout shift
  * 4. Support all media types (images, video, embeds)
+ *
+ * BEM Structure:
+ * - .placeholder (base class with shared properties)
+ * - .placeholder--animated (pulse animation modifier)
+ * - .placeholder--shimmer (shimmer effect modifier)
  */
 
 /* ==========================================
@@ -42,11 +47,12 @@
 }
 
 /* ==========================================
- * Base Placeholder Styles
+ * Base Placeholder Class (BEM Block)
  * ==========================================
  */
 
-/* Base placeholder with intrinsic sizing */
+/* Unified base placeholder with shared properties */
+.placeholder,
 .placeholder-base {
   position: relative;
   width: 100%;
@@ -55,7 +61,13 @@
   contain: layout style paint;
 }
 
-/* Placeholder animation - subtle pulse */
+/* ==========================================
+ * Placeholder Animation Modifiers (BEM Modifiers)
+ * ==========================================
+ */
+
+/* Pulse animation - subtle opacity cycling */
+.placeholder--animated,
 .placeholder-animated {
   animation: placeholder-pulse var(--loading-pulse-duration, 2000ms)
     cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -71,12 +83,14 @@
   }
 }
 
-/* Shimmer effect overlay */
+/* Shimmer effect - horizontal light sweep */
+.placeholder--shimmer,
 .placeholder-shimmer {
   position: relative;
   overflow: hidden;
 }
 
+.placeholder--shimmer::after,
 .placeholder-shimmer::after {
   content: "";
   position: absolute;
@@ -88,10 +102,11 @@
     transparent 100%
   );
   background-size: 200% 100%;
-  animation: shimmer var(--loading-shimmer-duration, 2000ms) linear infinite;
+  animation: placeholder-shimmer var(--loading-shimmer-duration, 2000ms) linear
+    infinite;
 }
 
-@keyframes shimmer {
+@keyframes placeholder-shimmer {
   0% {
     background-position: 200% 0;
   }
@@ -101,7 +116,9 @@
 }
 
 /* Dark mode shimmer adjustment */
+.dark .placeholder--shimmer::after,
 .dark .placeholder-shimmer::after,
+[data-theme="dark"] .placeholder--shimmer::after,
 [data-theme="dark"] .placeholder-shimmer::after {
   background: linear-gradient(
     90deg,
@@ -588,15 +605,18 @@
 }
 
 /* ==========================================
- * Reduced Motion Support
+ * Accessibility: Reduced Motion Support
  * ==========================================
+ * Consolidated @media query for all animation modifiers
  */
 
 @media (prefers-reduced-motion: reduce) {
+  .placeholder--animated,
   .placeholder-animated {
     animation: none;
   }
 
+  .placeholder--shimmer::after,
   .placeholder-shimmer::after {
     animation: none;
   }
@@ -607,11 +627,10 @@
   }
 }
 
-/* User-toggled reduced motion */
-html[data-reduce-motion="true"] .placeholder-animated {
-  animation: none;
-}
-
+/* User-toggled reduced motion (consolidated) */
+html[data-reduce-motion="true"] .placeholder--animated,
+html[data-reduce-motion="true"] .placeholder-animated,
+html[data-reduce-motion="true"] .placeholder--shimmer::after,
 html[data-reduce-motion="true"] .placeholder-shimmer::after {
   animation: none;
 }
@@ -622,11 +641,12 @@ html[data-reduce-motion="true"] .stable-content-wrapper > .content {
 }
 
 /* ==========================================
- * High Contrast Mode Support
+ * Accessibility: High Contrast Mode Support
  * ==========================================
  */
 
 @media (prefers-contrast: more) {
+  .placeholder,
   .placeholder-base,
   .placeholder-image,
   .placeholder-video,
@@ -637,6 +657,7 @@ html[data-reduce-motion="true"] .stable-content-wrapper > .content {
   }
 }
 
+[data-high-contrast="true"] .placeholder,
 [data-high-contrast="true"] .placeholder-base,
 [data-high-contrast="true"] .placeholder-image,
 [data-high-contrast="true"] .placeholder-video,

@@ -47,6 +47,7 @@ import {
   TimeoutError,
   type ResilienceConfig,
 } from './resilience';
+import { handleWarmupEvent } from './warmup';
 
 /**
  * Configuration for building the Anthropic API prompt
@@ -125,6 +126,12 @@ export function createAnthropicHandler<TBody = Record<string, unknown>, TResult 
   } = config;
 
   return async (event: unknown): Promise<LambdaResponse> => {
+    // Handle warmup events immediately to minimize cold start latency
+    const warmupResponse = handleWarmupEvent(event, name);
+    if (warmupResponse) {
+      return warmupResponse;
+    }
+
     const correlationId = getCorrelationId(event);
 
     // Handle OPTIONS request for CORS preflight

@@ -5,15 +5,19 @@ const TEST_URL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:5173";
 
 // Check if credentials are available
 function hasCredentials() {
-  const identifier = process.env.TEST_USER || process.env.VITE_TEST_IDENTIFIER || "";
-  const password = process.env.TEST_PASS || process.env.VITE_TEST_PASSWORD || "";
+  const identifier =
+    process.env.TEST_USER || process.env.VITE_TEST_IDENTIFIER || "";
+  const password =
+    process.env.TEST_PASS || process.env.VITE_TEST_PASSWORD || "";
   return !!(identifier && password);
 }
 
 // Helper to get credentials from environment variables
 function getCredentials() {
-  const identifier = process.env.TEST_USER || process.env.VITE_TEST_IDENTIFIER || "";
-  const password = process.env.TEST_PASS || process.env.VITE_TEST_PASSWORD || "";
+  const identifier =
+    process.env.TEST_USER || process.env.VITE_TEST_IDENTIFIER || "";
+  const password =
+    process.env.TEST_PASS || process.env.VITE_TEST_PASSWORD || "";
 
   if (!identifier || !password) {
     throw new Error(
@@ -28,10 +32,15 @@ function getCredentials() {
 async function login(page: any) {
   const { identifier, password } = getCredentials();
   // Wait for the login form to be visible
-  await page.waitForSelector('input[placeholder*="handle" i], input[placeholder*="Username" i], input[placeholder*="email" i]', { timeout: 10000 });
+  await page.waitForSelector(
+    'input[placeholder*="handle" i], input[placeholder*="Username" i], input[placeholder*="email" i]',
+    { timeout: 10000 },
+  );
 
   // Fill in credentials - try different input selectors
-  const handleInput = page.locator('input[placeholder*="handle" i], input[placeholder*="Username" i]').first();
+  const handleInput = page
+    .locator('input[placeholder*="handle" i], input[placeholder*="Username" i]')
+    .first();
   await handleInput.fill(identifier);
 
   const passwordInput = page.locator('input[type="password"]').first();
