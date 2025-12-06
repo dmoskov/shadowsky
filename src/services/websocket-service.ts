@@ -27,6 +27,81 @@ type EventHandler = (event: WebSocketMessage) => void;
  */
 
 /**
+ * Categorize authentication errors to determine retry behavior.
+ *
+ * Categories:
+ * - TOKEN_INVALID: Fatal errors (401, 403, expired tokens) - no retry
+ * - SERVER_ERROR: Server-side issues (500+) - limited retries
+ * - NETWORK_ERROR: Network issues (timeout, DNS) - unlimited retries
+ *
+ * @param error - The error message string
+ * @param statusCode - Optional HTTP status code
+ * @returns The error category
+ */
+export function categorizeAuthError(
+  error: string,
+  statusCode?: number,
+): AuthErrorCategory {
+  // Check status code first
+  if (statusCode !== undefined) {
+    if (statusCode === 401 || statusCode === 403) {
+      return AuthErrorCategory.TOKEN_INVALID;
+    }
+    if (statusCode >= 500 && statusCode < 600) {
+      return AuthErrorCategory.SERVER_ERROR;
+    }
+  }
+
+  // Check error message patterns for token-related issues
+  const tokenInvalidPatterns = [
+    "invalid token",
+    "token expired",
+    "token revoked",
+    "unauthorized",
+    "forbidden",
+    "invalid credentials",
+    "authentication required",
+    "session expired",
+    "invalid session",
+  ];
+
+  const lowerError = error.toLowerCase();
+  if (tokenInvalidPatterns.some((pattern) => lowerError.includes(pattern))) {
+    return AuthErrorCategory.TOKEN_INVALID;
+  }
+
+  // Check for network-related patterns
+  const networkPatterns = [
+    "timeout",
+    "network",
+    "connection",
+    "econnrefused",
+    "enotfound",
+    "dns",
+  ];
+
+  if (networkPatterns.some((pattern) => lowerError.includes(pattern))) {
+    return AuthErrorCategory.NETWORK_ERROR;
+  }
+
+  // Check for server error patterns
+  const serverPatterns = [
+    "server error",
+    "internal error",
+    "service unavailable",
+    "bad gateway",
+    "gateway timeout",
+  ];
+
+  if (serverPatterns.some((pattern) => lowerError.includes(pattern))) {
+    return AuthErrorCategory.SERVER_ERROR;
+  }
+
+  // Default to server error for unknown cases (allows retry)
+  return AuthErrorCategory.SERVER_ERROR;
+}
+
+/**
  * Calculate exponential backoff delay with optional jitter.
  * Jitter helps prevent thundering herd when multiple clients reconnect
  * simultaneously after a server restart.
@@ -534,69 +609,6 @@ export class WebSocketService {
     });
   }
 
-  private categorizeAuthError(
-    error: string,
-    statusCode?: number,
-  ): AuthErrorCategory {
-    // Check status code first
-    if (statusCode !== undefined) {
-      if (statusCode === 401 || statusCode === 403) {
-        return AuthErrorCategory.TOKEN_INVALID;
-      }
-      if (statusCode >= 500 && statusCode < 600) {
-        return AuthErrorCategory.SERVER_ERROR;
-      }
-    }
-
-    // Check error message patterns for token-related issues
-    const tokenInvalidPatterns = [
-      "invalid token",
-      "token expired",
-      "token revoked",
-      "unauthorized",
-      "forbidden",
-      "invalid credentials",
-      "authentication required",
-      "session expired",
-      "invalid session",
-    ];
-
-    const lowerError = error.toLowerCase();
-    if (tokenInvalidPatterns.some((pattern) => lowerError.includes(pattern))) {
-      return AuthErrorCategory.TOKEN_INVALID;
-    }
-
-    // Check for network-related patterns
-    const networkPatterns = [
-      "timeout",
-      "network",
-      "connection",
-      "econnrefused",
-      "enotfound",
-      "dns",
-    ];
-
-    if (networkPatterns.some((pattern) => lowerError.includes(pattern))) {
-      return AuthErrorCategory.NETWORK_ERROR;
-    }
-
-    // Check for server error patterns
-    const serverPatterns = [
-      "server error",
-      "internal error",
-      "service unavailable",
-      "bad gateway",
-      "gateway timeout",
-    ];
-
-    if (serverPatterns.some((pattern) => lowerError.includes(pattern))) {
-      return AuthErrorCategory.SERVER_ERROR;
-    }
-
-    // Default to server error for unknown cases (allows retry)
-    return AuthErrorCategory.SERVER_ERROR;
-  }
-
   /**
    * STATE: (auth flow) -> ERROR or RECONNECTING
    * See: docs/websocket-state-machine.md#authentication-flow
@@ -615,7 +627,7 @@ export class WebSocketService {
     this.isAuthenticated = false;
     this.stats.lastError = `Authentication failed: ${error}`;
 
-    const category = this.categorizeAuthError(error, statusCode);
+    const category = categorizeAuthError(error, statusCode);
     this.log(
       `Authentication failed: ${error} (category: ${category}, status: ${statusCode ?? "unknown"})`,
       "error",

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { calculateBackoff } from "./websocket-service";
+import { AuthErrorCategory } from "../types/websocket";
+import { calculateBackoff, categorizeAuthError } from "./websocket-service";
 
 describe("calculateBackoff", () => {
   describe("without jitter (deterministic)", () => {
@@ -149,3 +150,343 @@ describe("calculateBackoff", () => {
 // - handlePong() clears timeout and calculates latency
 // - handlePongTimeout() closes with code 4002 and schedules reconnect
 // - clearTimers() and stopHeartbeat() clean up pongTimeoutTimer
+
+describe("categorizeAuthError", () => {
+  describe("TOKEN_INVALID category (fatal, no retry)", () => {
+    describe("status code based categorization", () => {
+      it("should return TOKEN_INVALID for 401 status code", () => {
+        expect(categorizeAuthError("any error", 401)).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+      });
+
+      it("should return TOKEN_INVALID for 403 status code", () => {
+        expect(categorizeAuthError("any error", 403)).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+      });
+
+      it("should prioritize status code over error message patterns", () => {
+        // Even with a network-related message, 401 should be TOKEN_INVALID
+        expect(categorizeAuthError("connection timeout", 401)).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+        expect(categorizeAuthError("network error occurred", 403)).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+      });
+    });
+
+    describe("error message pattern based categorization", () => {
+      it("should return TOKEN_INVALID for 'token expired' pattern", () => {
+        expect(categorizeAuthError("Your token expired")).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+        expect(categorizeAuthError("TOKEN EXPIRED")).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+      });
+
+      it("should return TOKEN_INVALID for 'unauthorized' pattern", () => {
+        expect(categorizeAuthError("Unauthorized access")).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+        expect(categorizeAuthError("UNAUTHORIZED")).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+      });
+
+      it("should return TOKEN_INVALID for 'invalid token' pattern", () => {
+        expect(categorizeAuthError("Invalid token provided")).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+      });
+
+      it("should return TOKEN_INVALID for 'token revoked' pattern", () => {
+        expect(categorizeAuthError("Your token revoked by admin")).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+      });
+
+      it("should return TOKEN_INVALID for 'forbidden' pattern", () => {
+        expect(categorizeAuthError("Forbidden - access denied")).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+      });
+
+      it("should return TOKEN_INVALID for 'invalid credentials' pattern", () => {
+        expect(categorizeAuthError("Invalid credentials provided")).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+      });
+
+      it("should return TOKEN_INVALID for 'authentication required' pattern", () => {
+        expect(categorizeAuthError("Authentication required")).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+      });
+
+      it("should return TOKEN_INVALID for 'session expired' pattern", () => {
+        expect(categorizeAuthError("Your session expired")).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+      });
+
+      it("should return TOKEN_INVALID for 'invalid session' pattern", () => {
+        expect(categorizeAuthError("Invalid session token")).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+      });
+
+      it("should be case-insensitive for pattern matching", () => {
+        expect(categorizeAuthError("TOKEN EXPIRED")).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+        expect(categorizeAuthError("Token Expired")).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+        expect(categorizeAuthError("token expired")).toBe(
+          AuthErrorCategory.TOKEN_INVALID,
+        );
+      });
+    });
+  });
+
+  describe("SERVER_ERROR category (limited retries)", () => {
+    describe("status code based categorization", () => {
+      it("should return SERVER_ERROR for 500 status code", () => {
+        expect(categorizeAuthError("any error", 500)).toBe(
+          AuthErrorCategory.SERVER_ERROR,
+        );
+      });
+
+      it("should return SERVER_ERROR for 502 status code", () => {
+        expect(categorizeAuthError("any error", 502)).toBe(
+          AuthErrorCategory.SERVER_ERROR,
+        );
+      });
+
+      it("should return SERVER_ERROR for 503 status code", () => {
+        expect(categorizeAuthError("any error", 503)).toBe(
+          AuthErrorCategory.SERVER_ERROR,
+        );
+      });
+
+      it("should return SERVER_ERROR for 504 status code", () => {
+        expect(categorizeAuthError("any error", 504)).toBe(
+          AuthErrorCategory.SERVER_ERROR,
+        );
+      });
+
+      it("should return SERVER_ERROR for any 5xx status code", () => {
+        expect(categorizeAuthError("error", 501)).toBe(
+          AuthErrorCategory.SERVER_ERROR,
+        );
+        expect(categorizeAuthError("error", 520)).toBe(
+          AuthErrorCategory.SERVER_ERROR,
+        );
+        expect(categorizeAuthError("error", 599)).toBe(
+          AuthErrorCategory.SERVER_ERROR,
+        );
+      });
+
+      it("should NOT treat 600+ as SERVER_ERROR via status code", () => {
+        // 600+ is not a standard HTTP status, should fall through to message patterns
+        expect(categorizeAuthError("unknown error", 600)).toBe(
+          AuthErrorCategory.SERVER_ERROR, // Falls through to default
+        );
+      });
+    });
+
+    describe("error message pattern based categorization", () => {
+      it("should return SERVER_ERROR for 'service unavailable' pattern", () => {
+        expect(categorizeAuthError("Service unavailable")).toBe(
+          AuthErrorCategory.SERVER_ERROR,
+        );
+      });
+
+      it("should return SERVER_ERROR for 'server error' pattern", () => {
+        expect(categorizeAuthError("Internal server error")).toBe(
+          AuthErrorCategory.SERVER_ERROR,
+        );
+      });
+
+      it("should return SERVER_ERROR for 'internal error' pattern", () => {
+        expect(categorizeAuthError("Internal error occurred")).toBe(
+          AuthErrorCategory.SERVER_ERROR,
+        );
+      });
+
+      it("should return SERVER_ERROR for 'bad gateway' pattern", () => {
+        expect(categorizeAuthError("Bad gateway - upstream failed")).toBe(
+          AuthErrorCategory.SERVER_ERROR,
+        );
+      });
+
+      it("should return NETWORK_ERROR for 'gateway timeout' due to timeout pattern priority", () => {
+        // Note: 'gateway timeout' contains 'timeout' which is a NETWORK_ERROR pattern
+        // Network patterns are checked before server patterns, so this returns NETWORK_ERROR
+        expect(categorizeAuthError("Gateway timeout occurred")).toBe(
+          AuthErrorCategory.NETWORK_ERROR,
+        );
+      });
+
+      it("should return SERVER_ERROR for 'bad gateway' pattern (no timeout word)", () => {
+        // 'bad gateway' without 'timeout' correctly returns SERVER_ERROR
+        expect(categorizeAuthError("502 Bad gateway error")).toBe(
+          AuthErrorCategory.SERVER_ERROR,
+        );
+      });
+    });
+  });
+
+  describe("NETWORK_ERROR category (unlimited retries)", () => {
+    describe("error message pattern based categorization", () => {
+      it("should return NETWORK_ERROR for 'timeout' pattern", () => {
+        expect(categorizeAuthError("Request timeout")).toBe(
+          AuthErrorCategory.NETWORK_ERROR,
+        );
+        expect(categorizeAuthError("Connection timed out")).toBe(
+          AuthErrorCategory.NETWORK_ERROR,
+        );
+      });
+
+      it("should return NETWORK_ERROR for 'econnrefused' pattern", () => {
+        expect(categorizeAuthError("ECONNREFUSED")).toBe(
+          AuthErrorCategory.NETWORK_ERROR,
+        );
+        expect(categorizeAuthError("connect ECONNREFUSED 127.0.0.1:8080")).toBe(
+          AuthErrorCategory.NETWORK_ERROR,
+        );
+      });
+
+      it("should return NETWORK_ERROR for 'dns' pattern", () => {
+        expect(categorizeAuthError("DNS lookup failed")).toBe(
+          AuthErrorCategory.NETWORK_ERROR,
+        );
+        expect(categorizeAuthError("getaddrinfo DNS resolution error")).toBe(
+          AuthErrorCategory.NETWORK_ERROR,
+        );
+      });
+
+      it("should return NETWORK_ERROR for 'network' pattern", () => {
+        expect(categorizeAuthError("Network error")).toBe(
+          AuthErrorCategory.NETWORK_ERROR,
+        );
+        expect(categorizeAuthError("A network problem occurred")).toBe(
+          AuthErrorCategory.NETWORK_ERROR,
+        );
+      });
+
+      it("should return NETWORK_ERROR for 'connection' pattern", () => {
+        expect(categorizeAuthError("Connection refused")).toBe(
+          AuthErrorCategory.NETWORK_ERROR,
+        );
+        expect(categorizeAuthError("Failed to establish connection")).toBe(
+          AuthErrorCategory.NETWORK_ERROR,
+        );
+      });
+
+      it("should return NETWORK_ERROR for 'enotfound' pattern", () => {
+        expect(categorizeAuthError("ENOTFOUND")).toBe(
+          AuthErrorCategory.NETWORK_ERROR,
+        );
+        expect(categorizeAuthError("getaddrinfo ENOTFOUND hostname")).toBe(
+          AuthErrorCategory.NETWORK_ERROR,
+        );
+      });
+    });
+  });
+
+  describe("default behavior and edge cases", () => {
+    it("should return SERVER_ERROR for unknown/ambiguous errors", () => {
+      expect(categorizeAuthError("Something went wrong")).toBe(
+        AuthErrorCategory.SERVER_ERROR,
+      );
+      expect(categorizeAuthError("Unknown error")).toBe(
+        AuthErrorCategory.SERVER_ERROR,
+      );
+      expect(categorizeAuthError("")).toBe(AuthErrorCategory.SERVER_ERROR);
+    });
+
+    it("should return SERVER_ERROR when status code is not 401/403/5xx", () => {
+      expect(categorizeAuthError("error", 400)).toBe(
+        AuthErrorCategory.SERVER_ERROR,
+      );
+      expect(categorizeAuthError("error", 404)).toBe(
+        AuthErrorCategory.SERVER_ERROR,
+      );
+      expect(categorizeAuthError("error", 200)).toBe(
+        AuthErrorCategory.SERVER_ERROR,
+      );
+    });
+
+    it("should handle undefined status code", () => {
+      expect(categorizeAuthError("generic error", undefined)).toBe(
+        AuthErrorCategory.SERVER_ERROR,
+      );
+    });
+
+    it("should handle errors with multiple matching patterns - first match wins", () => {
+      // TOKEN_INVALID patterns are checked before NETWORK_ERROR patterns
+      // This error contains both 'connection' (network) and 'unauthorized' (token)
+      // 'unauthorized' is checked first, so it should be TOKEN_INVALID
+      expect(categorizeAuthError("unauthorized connection attempt")).toBe(
+        AuthErrorCategory.TOKEN_INVALID,
+      );
+    });
+
+    it("should handle complex error messages with embedded patterns", () => {
+      expect(
+        categorizeAuthError("Error: token expired at 2024-01-01T00:00:00Z"),
+      ).toBe(AuthErrorCategory.TOKEN_INVALID);
+
+      expect(
+        categorizeAuthError("WebSocket connection failed: ECONNREFUSED"),
+      ).toBe(AuthErrorCategory.NETWORK_ERROR);
+
+      expect(
+        categorizeAuthError("HTTP 503: Service temporarily unavailable"),
+      ).toBe(AuthErrorCategory.SERVER_ERROR);
+    });
+  });
+
+  describe("priority order verification", () => {
+    it("status code 401/403 should take priority over all message patterns", () => {
+      // Even if message suggests network error, 401 status means token invalid
+      expect(categorizeAuthError("timeout connecting", 401)).toBe(
+        AuthErrorCategory.TOKEN_INVALID,
+      );
+      // Even if message suggests server error, 403 status means token invalid
+      expect(categorizeAuthError("internal server error", 403)).toBe(
+        AuthErrorCategory.TOKEN_INVALID,
+      );
+    });
+
+    it("status code 5xx should take priority over message patterns", () => {
+      // Even if message suggests network error, 500 status means server error
+      expect(categorizeAuthError("connection timeout", 500)).toBe(
+        AuthErrorCategory.SERVER_ERROR,
+      );
+      // Even if message suggests token error, 503 status means server error
+      expect(categorizeAuthError("unauthorized", 503)).toBe(
+        AuthErrorCategory.SERVER_ERROR,
+      );
+    });
+
+    it("TOKEN_INVALID message patterns should take priority over NETWORK_ERROR patterns", () => {
+      // 'forbidden' is a TOKEN_INVALID pattern, 'connection' is a NETWORK_ERROR pattern
+      // TOKEN_INVALID is checked first
+      expect(categorizeAuthError("forbidden connection")).toBe(
+        AuthErrorCategory.TOKEN_INVALID,
+      );
+    });
+
+    it("NETWORK_ERROR patterns should take priority over SERVER_ERROR patterns", () => {
+      // Both patterns present, but network patterns are checked before server patterns
+      expect(categorizeAuthError("connection error: service unavailable")).toBe(
+        AuthErrorCategory.NETWORK_ERROR,
+      );
+    });
+  });
+});
