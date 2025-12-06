@@ -27,6 +27,7 @@ import { getProfileCacheService } from "../services/profile-cache-service";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { constructAtUri, parseBskyUrl } from "../utils/url-helpers";
 import { ThreadViewer } from "./ThreadViewer";
+import { EmptyState } from "./ui/EmptyState";
 
 interface SearchFilters {
   query: string;

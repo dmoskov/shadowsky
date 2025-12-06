@@ -273,7 +273,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
 
       // Use sync measurement with caching for drag operations
       const rect = layoutMeasurementService.measureElementSync(
-        timelineRef.current
+        timelineRef.current,
       );
       if (!rect) return;
 

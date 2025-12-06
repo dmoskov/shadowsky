@@ -9,11 +9,11 @@ import {
 } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { debounce, INTERACTION_TIMING } from "../utils/timing";
 import { useVideoCompression } from "../hooks/useVideoCompression";
 import { debug } from "../shared/debug";
 import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { safeCreateObjectURL, safeRevokeObjectURL } from "../utils/retry";
+import { debounce, INTERACTION_TIMING } from "../utils/timing";
 import {
   BLUESKY_MAX_VIDEO_SIZE,
   isVideoFile,
@@ -127,7 +127,7 @@ export function BaseComposer({
   // Create a stable debounced callback for parent onChange
   // This prevents cascading re-renders on every keystroke
   const debouncedOnChangeRef = useRef<
-    ((text: string) => void) & { cancel: () => void } | null
+    (((text: string) => void) & { cancel: () => void }) | null
   >(null);
 
   // Memoize the debounced function creation

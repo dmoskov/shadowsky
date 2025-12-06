@@ -26,6 +26,7 @@ import {
   useResponsiveCollapseThresholds,
 } from "../hooks/useResponsiveCollapseThresholds";
 import { proxifyBskyImage } from "../utils/image-proxy";
+import { EmptyState } from "./ui/EmptyState";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { RichText } from "./ui/RichText";
 export {
@@ -996,11 +997,7 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
         {threadTree.length > 0 ? (
           threadTree.map((rootNode) => renderNode(rootNode, true))
         ) : (
-          <div className="flex items-center justify-center py-8">
-            <p style={{ color: "var(--bsky-text-secondary)" }}>
-              No posts to display
-            </p>
-          </div>
+          <EmptyState variant="thread" compact />
         )}
       </div>
     </div>

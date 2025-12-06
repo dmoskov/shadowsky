@@ -136,7 +136,7 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
                       });
                       setShowFeedDropdown(true);
                     },
-                    { priority: "high" }
+                    { priority: "high" },
                   );
                 } else {
                   setShowFeedDropdown(false);
@@ -229,7 +229,7 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
                     });
                     setShowMenu(true);
                   },
-                  { priority: "high" }
+                  { priority: "high" },
                 );
               } else {
                 setShowMenu(false);

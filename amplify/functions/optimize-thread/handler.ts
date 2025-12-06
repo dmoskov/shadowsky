@@ -1,79 +1,31 @@
-import {
-  cleanJsonResponse,
-  createConfigError,
-  createExternalApiError,
-  createInternalError,
-  createMissingParameterError,
-  createOptionsResponse,
-  createSuccessResponse,
-  createTimeoutError,
-  getCorrelationId,
-  isOptionsRequest,
-  logError,
-  logInfo,
-  parseEventBody,
-} from "../shared/api-response";
-import {
-  createAnthropicClient,
-  MaxRetriesExceededError,
-  TimeoutError,
-} from "../shared/resilience";
+/**
+ * Optimize Thread Handler
+ *
+ * Analyzes long-form content and splits it into optimal thread segments
+ * for social media posting, maintaining narrative flow and engagement.
+ */
+
+import { createAnthropicHandler, truncateText } from '../shared/handler-factory';
+import { MODELS } from '../shared/model-config';
 
 interface RequestBody {
   text?: string;
   maxCharsPerPost?: number;
 }
 
-export const handler = async (event: any) => {
-  const correlationId = getCorrelationId(event);
+export const handler = createAnthropicHandler<RequestBody>({
+  name: 'optimize-thread',
+  requiredParams: ['text'],
+  logMessage: (body) => `Optimizing thread with max ${body.maxCharsPerPost || 300} chars/post`,
+  buildPrompt: (body) => {
+    const text = body.text!;
+    const maxCharsPerPost = body.maxCharsPerPost || 300;
+    const truncatedText = truncateText(text, 5000);
 
-  // Handle OPTIONS request for CORS preflight
-  if (isOptionsRequest(event)) {
-    return createOptionsResponse(event);
-  }
-
-  try {
-    const body = parseEventBody<RequestBody>(event);
-    const { text, maxCharsPerPost = 300 } = body || {};
-
-    if (!text) {
-      return createMissingParameterError("text", event, correlationId);
-    }
-
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      return createConfigError("ANTHROPIC_API_KEY", event, correlationId);
-    }
-
-    logInfo(
-      "optimize-thread",
-      `Optimizing thread with max ${maxCharsPerPost} chars/post`,
-      correlationId,
-    );
-
-    // Truncate very long text to avoid context issues (5000 chars is reasonable for thread splitting)
-    const truncatedText = text.length > 5000 ? text.substring(0, 4997) + "..." : text;
-
-    // Create resilient client for Anthropic API with retry and timeout
-    const client = createAnthropicClient({ name: "optimize-thread" });
-
-    try {
-      const response = await client.fetch(
-        "https://api.anthropic.com/v1/messages",
-        {
-          method: "POST",
-          headers: {
-            "x-api-key": apiKey,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "claude-sonnet-4-5-20250929",
-            max_tokens: 2000,
-            messages: [
-              {
-                role: "user",
-                content: `Optimize this text for a social media thread with a maximum of ${maxCharsPerPost} characters per post.
+    return {
+      model: MODELS.SONNET,
+      maxTokens: 2000,
+      prompt: `Optimize this text for a social media thread with a maximum of ${maxCharsPerPost} characters per post.
 
 Text: "${truncatedText}"
 
@@ -105,48 +57,15 @@ Rules:
 - Choose the most appropriate format based on content type
 
 Your response MUST be valid JSON only.`,
-              },
-            ],
-          }),
-        },
-        correlationId
-      );
-
-      const data = await response.json();
-      const cleanedText = cleanJsonResponse(data.content[0].text);
-      const result = JSON.parse(cleanedText);
-
-      logInfo(
-        "optimize-thread",
-        `Thread optimized into ${result.totalPosts} segments`,
-        correlationId,
-      );
-
-      return createSuccessResponse(result, event, { correlationId });
-    } catch (apiError) {
-      if (apiError instanceof TimeoutError) {
-        logError("optimize-thread", apiError, correlationId, {
-          errorType: "timeout",
-        });
-        return createTimeoutError("Anthropic API call", event, correlationId);
-      }
-
-      if (apiError instanceof MaxRetriesExceededError) {
-        logError("optimize-thread", apiError, correlationId, {
-          attempts: apiError.attempts,
-        });
-        return createExternalApiError(
-          "Anthropic",
-          `Failed after ${apiError.attempts} attempts`,
-          event,
-          correlationId
-        );
-      }
-
-      throw apiError;
-    }
-  } catch (error) {
-    logError("optimize-thread", error, correlationId);
-    return createInternalError(error, event, correlationId);
-  }
-};
+    };
+  },
+  processResponse: (result) => {
+    const response = result as { totalPosts?: number; segments?: unknown[] };
+    return {
+      ...response,
+      _meta: {
+        segmentCount: response.totalPosts || response.segments?.length || 0,
+      },
+    };
+  },
+});

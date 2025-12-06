@@ -34,6 +34,7 @@ import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
 import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
+import { EmptyState } from "./ui/EmptyState";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { RichText } from "./ui/RichText";
 import { VideoPlayer } from "./VideoPlayer";
@@ -84,9 +85,13 @@ interface ScrollPositionData {
   timestamp: number;
 }
 
-function getPersistedScrollPosition(threadId: string): ScrollPositionData | null {
+function getPersistedScrollPosition(
+  threadId: string,
+): ScrollPositionData | null {
   try {
-    const stored = sessionStorage.getItem(`${SCROLL_POSITION_PREFIX}${threadId}`);
+    const stored = sessionStorage.getItem(
+      `${SCROLL_POSITION_PREFIX}${threadId}`,
+    );
     if (stored) {
       const parsed = JSON.parse(stored) as ScrollPositionData;
       // Expire positions older than 30 minutes to prevent stale data
@@ -103,7 +108,10 @@ function getPersistedScrollPosition(threadId: string): ScrollPositionData | null
   return null;
 }
 
-function setPersistedScrollPosition(threadId: string, data: ScrollPositionData) {
+function setPersistedScrollPosition(
+  threadId: string,
+  data: ScrollPositionData,
+) {
   try {
     sessionStorage.setItem(
       `${SCROLL_POSITION_PREFIX}${threadId}`,
@@ -1966,11 +1974,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
 
         {/* No posts fallback */}
         {!rootPostObject && threadTree.length === 0 && (
-          <div className="p-8 text-center">
-            <p style={{ color: "var(--bsky-text-secondary)" }}>
-              No posts to display
-            </p>
-          </div>
+          <EmptyState variant="thread" compact />
         )}
 
         {/* Continue Thread button - shown when user has posts in the thread */}

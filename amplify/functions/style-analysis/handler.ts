@@ -1,97 +1,52 @@
-import {
-  cleanJsonResponse,
-  createConfigError,
-  createExternalApiError,
-  createInternalError,
-  createInvalidParameterError,
-  createMissingParameterError,
-  createOptionsResponse,
-  createSuccessResponse,
-  createTimeoutError,
-  getCorrelationId,
-  isOptionsRequest,
-  logError,
-  logInfo,
-  parseEventBody,
-} from "../shared/api-response";
-import {
-  createAnthropicClient,
-  MaxRetriesExceededError,
-  TimeoutError,
-} from "../shared/resilience";
+/**
+ * Style Analysis Handler
+ *
+ * Analyzes a user's writing style based on their historical posts and
+ * compares a current draft to that established style.
+ */
+
+import { createAnthropicHandler, truncateText } from '../shared/handler-factory';
+import { MODELS } from '../shared/model-config';
 
 interface RequestBody {
   currentText?: string;
   historicalPosts?: string[];
 }
 
-export const handler = async (event: any) => {
-  const correlationId = getCorrelationId(event);
-
-  // Handle OPTIONS request for CORS preflight
-  if (isOptionsRequest(event)) {
-    return createOptionsResponse(event);
-  }
-
-  try {
-    const body = parseEventBody<RequestBody>(event);
-    const { currentText, historicalPosts } = body || {};
-
-    if (!currentText) {
-      return createMissingParameterError("currentText", event, correlationId);
+export const handler = createAnthropicHandler<RequestBody>({
+  name: 'style-analysis',
+  requiredParams: ['currentText'],
+  validate: (body) => {
+    if (!body.historicalPosts || !Array.isArray(body.historicalPosts)) {
+      return {
+        valid: false,
+        error: {
+          paramName: 'historicalPosts',
+          reason: 'Must be an array of strings',
+        },
+      };
     }
+    return { valid: true };
+  },
+  logMessage: (body) =>
+    `Analyzing style against ${body.historicalPosts?.length || 0} historical posts`,
+  buildPrompt: (body) => {
+    const currentText = body.currentText!;
+    const historicalPosts = body.historicalPosts!;
 
-    if (!historicalPosts || !Array.isArray(historicalPosts)) {
-      return createInvalidParameterError(
-        "historicalPosts",
-        "Must be an array of strings",
-        event,
-        correlationId,
-      );
-    }
+    // Truncate posts to avoid context size issues
+    const truncatePost = (text: string): string => truncateText(text, 500);
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      return createConfigError("ANTHROPIC_API_KEY", event, correlationId);
-    }
-
-    logInfo(
-      "style-analysis",
-      `Analyzing style against ${historicalPosts.length} historical posts`,
-      correlationId,
-    );
-
-    // Truncate long posts to avoid context size issues
-    const truncateText = (text: string, max: number = 500): string =>
-      text.length <= max ? text : text.substring(0, max - 3) + "...";
-
-    // Build the historical posts context
+    // Build the historical posts context (limit to 20 posts)
     const historicalContext = historicalPosts
-      .slice(0, 20) // Limit to 20 most recent posts
-      .map((post, i) => `${i + 1}. ${truncateText(post)}`)
-      .join("\n");
+      .slice(0, 20)
+      .map((post, i) => `${i + 1}. ${truncatePost(post)}`)
+      .join('\n');
 
-    // Create resilient client for Anthropic API with retry and timeout
-    const client = createAnthropicClient({ name: "style-analysis" });
-
-    let result;
-    try {
-      const response = await client.fetch(
-        "https://api.anthropic.com/v1/messages",
-        {
-          method: "POST",
-          headers: {
-            "x-api-key": apiKey,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "claude-sonnet-4-5-20250929",
-            max_tokens: 1000,
-            messages: [
-              {
-                role: "user",
-                content: `You are a writing style analyst. Analyze the user's writing style based on their historical posts, then compare their current draft to that style.
+    return {
+      model: MODELS.SONNET,
+      maxTokens: 1000,
+      prompt: `You are a writing style analyst. Analyze the user's writing style based on their historical posts, then compare their current draft to that style.
 
 HISTORICAL POSTS:
 ${historicalContext}
@@ -121,48 +76,6 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
 3. Base analysis on actual patterns from historical posts
 4. Be constructive and helpful, not critical
 5. Start directly with { and end with }`,
-              },
-            ],
-          }),
-        },
-        correlationId
-      );
-
-      const data = await response.json();
-      const cleanedText = cleanJsonResponse(data.content[0].text);
-      result = JSON.parse(cleanedText);
-    } catch (apiError) {
-      if (apiError instanceof TimeoutError) {
-        logError("style-analysis", apiError, correlationId, {
-          errorType: "timeout",
-        });
-        return createTimeoutError("Anthropic API call", event, correlationId);
-      }
-
-      if (apiError instanceof MaxRetriesExceededError) {
-        logError("style-analysis", apiError, correlationId, {
-          attempts: apiError.attempts,
-        });
-        return createExternalApiError(
-          "Anthropic",
-          `Failed after ${apiError.attempts} attempts`,
-          event,
-          correlationId
-        );
-      }
-
-      throw apiError;
-    }
-
-    logInfo(
-      "style-analysis",
-      "Style analysis completed successfully",
-      correlationId,
-    );
-
-    return createSuccessResponse(result, event, { correlationId });
-  } catch (error) {
-    logError("style-analysis", error, correlationId);
-    return createInternalError(error, event, correlationId);
-  }
-};
+    };
+  },
+});

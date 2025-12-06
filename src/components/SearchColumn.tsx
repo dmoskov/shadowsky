@@ -24,9 +24,9 @@ import { useTrendingData } from "../hooks/useTrending";
 import type { SearchHistoryEntry } from "../services/search-history-db";
 import { ExploreEmptyState } from "./ExploreEmptyState";
 import { PostCard } from "./PostCard";
-import { EmptyState } from "./ui/EmptyState";
 import { SearchFilterPanel } from "./SearchFilterPanel";
 import { ThreadModal } from "./ThreadModal";
+import { EmptyState } from "./ui/EmptyState";
 
 interface SearchColumnProps {
   isFocused?: boolean;

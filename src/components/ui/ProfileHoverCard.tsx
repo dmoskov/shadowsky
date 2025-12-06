@@ -123,7 +123,7 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
                 setCardPosition({ top, left });
                 setShowCard(true);
               },
-              { priority: "high" }
+              { priority: "high" },
             );
           } else {
             setShowCard(true);

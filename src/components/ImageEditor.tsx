@@ -295,7 +295,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
         setIsCropping(true);
         setActiveTab("crop");
       },
-      { priority: "high" }
+      { priority: "high" },
     );
   }, [selectedAspectRatio]);
 
@@ -444,7 +444,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
 
         if (cropArea && imageRef.current) {
           const displayRect = layoutMeasurementService.measureElementSync(
-            imageRef.current
+            imageRef.current,
           );
           if (displayRect) {
             const scaleX = img.width / displayRect.width;
@@ -654,11 +654,11 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
 
             const newX = Math.max(
               0,
-              Math.min(centerX - newWidth / 2, rect.width - newWidth)
+              Math.min(centerX - newWidth / 2, rect.width - newWidth),
             );
             const newY = Math.max(
               0,
-              Math.min(centerY - newHeight / 2, rect.height - newHeight)
+              Math.min(centerY - newHeight / 2, rect.height - newHeight),
             );
 
             return {
@@ -669,7 +669,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
             };
           });
         },
-        { priority: "high" }
+        { priority: "high" },
       );
     }
     // Only trigger on selectedAspectRatio change - cropArea and isCropping

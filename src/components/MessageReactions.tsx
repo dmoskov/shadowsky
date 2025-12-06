@@ -83,7 +83,7 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
         });
         setShowEmojiPicker(true);
       },
-      { priority: "high" }
+      { priority: "high" },
     );
   };
 

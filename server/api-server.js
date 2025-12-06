@@ -233,10 +233,7 @@ app.post("/api/generate-alt-text", async (req, res) => {
 
     // Cache alt text for 2 minutes with stale-while-revalidate
     // Same image should return same alt text (deterministic based on image content)
-    res.set(
-      "Cache-Control",
-      "public, max-age=120, stale-while-revalidate=300",
-    );
+    res.set("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
     res.json({ altText });
   } catch (error) {
     console.error("Error generating alt text:", error);
@@ -870,10 +867,7 @@ Provide specific evidence and quotes to support your analysis. Start directly wi
     setCachedProfileAnalysis(cacheKey, result);
 
     // Add HTTP cache headers - profile analysis is deterministic based on posts content
-    res.set(
-      "Cache-Control",
-      "public, max-age=120, stale-while-revalidate=300",
-    );
+    res.set("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
     res.json({
       ...result,
       cached: false,
@@ -1119,10 +1113,7 @@ app.post("/api/fetch-link-metadata", async (req, res) => {
     });
 
     // Link metadata is relatively static - cache for 5 minutes with longer stale-while-revalidate
-    res.set(
-      "Cache-Control",
-      "public, max-age=300, stale-while-revalidate=600",
-    );
+    res.set("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
     res.json({
       url,
       title: title || new URL(url).hostname,
@@ -1472,10 +1463,7 @@ ${formatPrompt}
 
     // Add HTTP cache headers - thread summaries are deterministic based on post content
     // Browser can cache for 2 minutes and serve stale while revalidating
-    res.set(
-      "Cache-Control",
-      "public, max-age=120, stale-while-revalidate=300",
-    );
+    res.set("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
     res.json(result);
   } catch (error) {
     console.error("Error generating thread summary:", error);

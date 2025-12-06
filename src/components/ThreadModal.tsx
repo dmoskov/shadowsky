@@ -86,9 +86,12 @@ export function ThreadModal({
   const gpuScrollRef = useScrollContainerGPU();
 
   // Callback for restoring scroll position from persisted state
-  const handleRestoreScrollPosition = useCallback((savedFocusedIndex: number) => {
-    setFocusedPostIndex(savedFocusedIndex);
-  }, []);
+  const handleRestoreScrollPosition = useCallback(
+    (savedFocusedIndex: number) => {
+      setFocusedPostIndex(savedFocusedIndex);
+    },
+    [],
+  );
 
   // Handle explicit thread close - clears persisted scroll position
   const handleClose = useCallback(() => {
@@ -843,7 +846,10 @@ export function ThreadModal({
 
   return ReactDOM.createPortal(
     <>
-      <div className="fixed inset-0 z-[100] bg-black/70" onClick={onClose} />
+      <div
+        className="fixed inset-0 z-[100] bg-black/70"
+        onClick={handleClose}
+      />
 
       {/* Sticky ThreadContextBar - appears when scrolled past thread stats */}
       {posts.length > 0 && (
@@ -920,7 +926,7 @@ export function ThreadModal({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  onClose();
+                  handleClose();
                 }}
                 className="rounded-full p-2 transition-all hover:scale-110 hover:bg-gray-100 dark:hover:bg-gray-800"
                 style={{ color: "var(--bsky-text-secondary)" }}
@@ -1085,6 +1091,8 @@ export function ThreadModal({
                     contextBarSentinelRef={contextBarSentinelRef}
                     focusedIndex={focusedPostIndex}
                     onFocusedIndexChange={setFocusedPostIndex}
+                    scrollContainerRef={scrollContainerRef}
+                    onRestoreScrollPosition={handleRestoreScrollPosition}
                     onPostClick={(clickedPost, action) => {
                       const post =
                         posts.find((p) => p.uri === clickedPost.uri) || null;

@@ -436,7 +436,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
                   });
                   setIsOpen(true);
                 },
-                { priority: "high" }
+                { priority: "high" },
               );
             } else {
               setIsOpen(false);

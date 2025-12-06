@@ -8,6 +8,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { blueskyListService } from "../services/bluesky-list-service";
 import { PostCard } from "./PostCard";
 import { ThreadModal } from "./ThreadModal";
+import { EmptyState } from "./ui/EmptyState";
 
 // Store scroll positions for each list
 const scrollPositions = new Map<string, number>();
@@ -263,17 +264,9 @@ export const ListTimeline: React.FC = () => {
 
       <div ref={containerRef} className="flex-1 overflow-hidden">
         {!members || members.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <p className="text-bsky-text-secondary">
-              No members in this list yet. Add members from their profile pages.
-            </p>
-          </div>
+          <EmptyState variant="list-members" compact />
         ) : posts.length === 0 && !loading ? (
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <p className="text-bsky-text-secondary">
-              No posts from list members yet
-            </p>
-          </div>
+          <EmptyState variant="list" compact />
         ) : posts.length > 0 ? (
           <List
             listRef={listRef}

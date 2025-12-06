@@ -52,6 +52,7 @@ import {
   getSuggestedPostingTimes,
   ScheduledPost,
 } from "../services/scheduled-posts";
+import { EmptyState } from "./ui/EmptyState";
 
 type ViewMode = "day" | "week" | "month";
 type DisplayMode = "calendar" | "queue";
@@ -767,24 +768,7 @@ const QueueView: React.FC<{
   );
 
   if (sortedPosts.length === 0) {
-    return (
-      <div className="py-12 text-center">
-        <Clock
-          size={48}
-          className="mx-auto mb-4 opacity-50"
-          style={{ color: "var(--bsky-text-secondary)" }}
-        />
-        <h3
-          className="mb-2 text-lg font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
-        >
-          No scheduled posts
-        </h3>
-        <p className="text-sm" style={{ color: "var(--bsky-text-secondary)" }}>
-          Schedule a post to see it here
-        </p>
-      </div>
-    );
+    return <EmptyState variant="scheduled" />;
   }
 
   return (

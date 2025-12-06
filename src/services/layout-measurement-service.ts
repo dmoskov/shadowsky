@@ -175,10 +175,12 @@ class LayoutMeasurementService {
   measureElement(
     element: Element | null,
     callback: MeasurementCallback,
-    options: MeasurementOptions = {}
+    options: MeasurementOptions = {},
   ): string | null {
     if (!element) {
-      logger.warn("[LayoutMeasurement] measureElement called with null element");
+      logger.warn(
+        "[LayoutMeasurement] measureElement called with null element",
+      );
       return null;
     }
 
@@ -267,7 +269,7 @@ class LayoutMeasurementService {
   measureElements(
     elements: (Element | null)[],
     callback: (results: (MeasurementResult | null)[]) => void,
-    options: MeasurementOptions = {}
+    options: MeasurementOptions = {},
   ): string[] {
     const validElements = elements.filter((el): el is Element => el !== null);
 
@@ -276,7 +278,9 @@ class LayoutMeasurementService {
       return [];
     }
 
-    const results: (MeasurementResult | null)[] = new Array(elements.length).fill(null);
+    const results: (MeasurementResult | null)[] = new Array(
+      elements.length,
+    ).fill(null);
     const requestIds: string[] = [];
     let completedCount = 0;
 
@@ -296,7 +300,7 @@ class LayoutMeasurementService {
             callback(results);
           }
         },
-        options
+        options,
       );
 
       if (requestId) {
@@ -371,7 +375,7 @@ class LayoutMeasurementService {
       (a, b) => {
         const priorityOrder = { high: 0, normal: 1, low: 2 };
         return priorityOrder[a.priority] - priorityOrder[b.priority];
-      }
+      },
     );
 
     // Batch read all measurements first (read phase)
@@ -410,13 +414,13 @@ class LayoutMeasurementService {
       } catch (error) {
         logger.error(
           `[LayoutMeasurement] Error in callback for request ${request.id}:`,
-          error
+          error,
         );
       }
     }
 
     logger.log(
-      `Processed ${measurements.size} measurements in frame ${this.currentFrameId}`
+      `Processed ${measurements.size} measurements in frame ${this.currentFrameId}`,
     );
   }
 
@@ -528,7 +532,7 @@ export const resetLayoutMeasurementService =
 export const measureElement = (
   element: Element | null,
   callback: MeasurementCallback,
-  options?: MeasurementOptions
+  options?: MeasurementOptions,
 ) => layoutMeasurementService.measureElement(element, callback, options);
 
 /**
@@ -537,7 +541,7 @@ export const measureElement = (
 export const measureElements = (
   elements: (Element | null)[],
   callback: (results: (MeasurementResult | null)[]) => void,
-  options?: MeasurementOptions
+  options?: MeasurementOptions,
 ) => layoutMeasurementService.measureElements(elements, callback, options);
 
 /**
