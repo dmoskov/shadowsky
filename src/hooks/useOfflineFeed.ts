@@ -1,19 +1,20 @@
 /**
  * useOfflineFeed Hook
  *
- * Bridges feed queries with offline storage for offline-first architecture.
- * Automatically caches feed items to IndexedDB when online, and serves
- * cached content when offline.
+ * Bridges feed queries with offline storage for stability-first architecture.
+ * Implements stale-while-revalidate pattern for instant loads with background sync.
  *
  * Features:
+ * - Stale-while-revalidate: Serve cached data instantly, refresh in background
  * - Transparent caching of feed items on successful fetches
  * - Automatic fallback to cached data when offline
  * - Real-time online/offline detection
  * - Cache status reporting for UI indicators
+ * - Background refresh on visibility change
  */
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   offlineStorageDB,
   type OfflineFeedItem,
@@ -335,6 +336,286 @@ export async function prefetchFeedForOffline(
   } catch (error) {
     logger.error("Failed to prefetch feed:", error);
   }
+}
+
+/**
+ * Cache freshness configuration
+ */
+const CACHE_CONFIG = {
+  // Maximum age of cached data before showing stale indicator (5 minutes)
+  STALE_THRESHOLD_MS: 5 * 60 * 1000,
+  // Maximum age of cached data before forcing refresh (30 minutes)
+  MAX_AGE_MS: 30 * 60 * 1000,
+  // Minimum time between background refreshes (30 seconds)
+  MIN_REFRESH_INTERVAL_MS: 30 * 1000,
+  // Time to wait before refreshing after visibility change (100ms for stability)
+  VISIBILITY_REFRESH_DELAY_MS: 100,
+};
+
+export interface StaleWhileRevalidateStatus {
+  /** Whether we're showing cached data */
+  isServingCached: boolean;
+  /** Whether cache data is considered stale */
+  isStale: boolean;
+  /** Whether a background refresh is in progress */
+  isRefreshing: boolean;
+  /** Timestamp when cache was last updated */
+  lastCachedAt: number | null;
+  /** Time until next refresh is allowed */
+  refreshCooldownMs: number;
+}
+
+/**
+ * Hook for stale-while-revalidate feed caching
+ *
+ * This hook provides instant loading by serving cached data immediately
+ * while fetching fresh data in the background. This improves perceived
+ * performance and stability without requiring true offline support.
+ *
+ * Features:
+ * - Serves cached data instantly for faster initial load
+ * - Fetches fresh data in background without blocking UI
+ * - Automatic refresh when tab becomes visible
+ * - Cooldown between refreshes to prevent excessive requests
+ * - Stale indicator for UI feedback
+ */
+export function useStaleWhileRevalidateFeed(
+  feedType: "timeline" | "author" | "list" = "timeline",
+) {
+  const queryClient = useQueryClient();
+  const [status, setStatus] = useState<StaleWhileRevalidateStatus>({
+    isServingCached: false,
+    isStale: false,
+    isRefreshing: false,
+    lastCachedAt: null,
+    refreshCooldownMs: 0,
+  });
+  const lastRefreshTimeRef = useRef<number>(0);
+  const refreshInProgressRef = useRef<boolean>(false);
+
+  // Get cached data from IndexedDB
+  const getCachedFeed = useCallback(async () => {
+    try {
+      await offlineStorageDB.init();
+      const metadata = await offlineStorageDB.getMetadata(`feed_${feedType}`);
+      const cachedItems = await offlineStorageDB.getFeedItems(100, feedType);
+
+      if (cachedItems.length > 0) {
+        const lastCachedAt = metadata?.lastSyncAt || Date.now();
+        const age = Date.now() - lastCachedAt;
+        const isStale = age > CACHE_CONFIG.STALE_THRESHOLD_MS;
+
+        return {
+          items: cachedItems.map(transformFromOfflineItem),
+          lastCachedAt,
+          isStale,
+          age,
+        };
+      }
+      return null;
+    } catch (error) {
+      logger.error("Failed to get cached feed:", error);
+      return null;
+    }
+  }, [feedType]);
+
+  // Update status with cache age
+  const updateCacheStatus = useCallback(async () => {
+    try {
+      await offlineStorageDB.init();
+      const metadata = await offlineStorageDB.getMetadata(`feed_${feedType}`);
+
+      if (metadata?.lastSyncAt) {
+        const age = Date.now() - metadata.lastSyncAt;
+        const isStale = age > CACHE_CONFIG.STALE_THRESHOLD_MS;
+        const timeSinceLastRefresh = Date.now() - lastRefreshTimeRef.current;
+        const cooldown = Math.max(
+          0,
+          CACHE_CONFIG.MIN_REFRESH_INTERVAL_MS - timeSinceLastRefresh,
+        );
+
+        setStatus((prev) => ({
+          ...prev,
+          lastCachedAt: metadata.lastSyncAt,
+          isStale,
+          refreshCooldownMs: cooldown,
+        }));
+      }
+    } catch {
+      // Ignore errors
+    }
+  }, [feedType]);
+
+  // Check if refresh is allowed (respects cooldown)
+  const canRefresh = useCallback(() => {
+    const timeSinceLastRefresh = Date.now() - lastRefreshTimeRef.current;
+    return (
+      timeSinceLastRefresh >= CACHE_CONFIG.MIN_REFRESH_INTERVAL_MS &&
+      !refreshInProgressRef.current
+    );
+  }, []);
+
+  // Trigger background refresh
+  const triggerBackgroundRefresh = useCallback(
+    async (queryKey: string[]) => {
+      if (!canRefresh()) {
+        logger.info(
+          "Skipping refresh - cooldown active or refresh in progress",
+        );
+        return;
+      }
+
+      refreshInProgressRef.current = true;
+      lastRefreshTimeRef.current = Date.now();
+      setStatus((prev) => ({ ...prev, isRefreshing: true }));
+
+      try {
+        logger.info("Triggering background feed refresh");
+        // Invalidate the query to trigger a refetch
+        await queryClient.invalidateQueries({ queryKey });
+      } finally {
+        refreshInProgressRef.current = false;
+        setStatus((prev) => ({ ...prev, isRefreshing: false }));
+        await updateCacheStatus();
+      }
+    },
+    [canRefresh, queryClient, updateCacheStatus],
+  );
+
+  // Listen for visibility changes to refresh on tab focus
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        // Small delay to let other operations settle
+        setTimeout(() => {
+          updateCacheStatus();
+        }, CACHE_CONFIG.VISIBILITY_REFRESH_DELAY_MS);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [updateCacheStatus]);
+
+  // Initialize cache status on mount
+  useEffect(() => {
+    updateCacheStatus();
+  }, [updateCacheStatus]);
+
+  return {
+    status,
+    getCachedFeed,
+    canRefresh,
+    triggerBackgroundRefresh,
+    updateCacheStatus,
+  };
+}
+
+/**
+ * Hook for automatic background refresh on visibility change
+ *
+ * Refreshes feed data when the tab becomes visible after being hidden,
+ * ensuring users see fresh content when returning to the app.
+ */
+export function useVisibilityRefresh(
+  queryKey: string[],
+  options: {
+    enabled?: boolean;
+    minHiddenDuration?: number; // Minimum time tab must be hidden before refresh (ms)
+  } = {},
+) {
+  const { enabled = true, minHiddenDuration = 60000 } = options; // Default: 1 minute
+  const queryClient = useQueryClient();
+  const hiddenAtRef = useRef<number | null>(null);
+  const { canRefresh } = useStaleWhileRevalidateFeed();
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        hiddenAtRef.current = Date.now();
+      } else if (
+        document.visibilityState === "visible" &&
+        hiddenAtRef.current
+      ) {
+        const hiddenDuration = Date.now() - hiddenAtRef.current;
+        hiddenAtRef.current = null;
+
+        // Only refresh if tab was hidden long enough and we can refresh
+        if (hiddenDuration >= minHiddenDuration && canRefresh()) {
+          logger.info(
+            `Tab was hidden for ${Math.round(hiddenDuration / 1000)}s - refreshing feed`,
+          );
+          queryClient.invalidateQueries({ queryKey });
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [enabled, minHiddenDuration, queryKey, queryClient, canRefresh]);
+}
+
+/**
+ * Hook to pre-populate query cache with cached data for instant first load
+ *
+ * Call this early in the app lifecycle to ensure cached data is available
+ * immediately when the feed component mounts.
+ */
+export function useFeedCacheWarmup(
+  queryKey: string[],
+  feedType: "timeline" | "author" | "list" = "timeline",
+) {
+  const queryClient = useQueryClient();
+  const hasWarmedUpRef = useRef(false);
+
+  useEffect(() => {
+    if (hasWarmedUpRef.current) return;
+
+    const warmup = async () => {
+      try {
+        // Check if query already has data
+        const existingData = queryClient.getQueryData(queryKey);
+        if (existingData) {
+          return;
+        }
+
+        await offlineStorageDB.init();
+        const cachedItems = await offlineStorageDB.getFeedItems(100, feedType);
+
+        if (cachedItems.length > 0) {
+          logger.info(
+            `Pre-populating cache with ${cachedItems.length} items for instant load`,
+          );
+
+          // Pre-populate the query cache with cached data
+          // This makes the data available immediately when the component mounts
+          queryClient.setQueryData(queryKey, {
+            pages: [
+              {
+                feed: cachedItems.map(transformFromOfflineItem),
+                cursor: undefined,
+                _fromCache: true,
+                _cachedAt: cachedItems[0]?._offlineCachedAt || Date.now(),
+              },
+            ],
+            pageParams: [undefined],
+          });
+
+          hasWarmedUpRef.current = true;
+        }
+      } catch (error) {
+        logger.error("Failed to warm up feed cache:", error);
+      }
+    };
+
+    warmup();
+  }, [queryKey, queryClient, feedType]);
 }
 
 export default useOfflineFirstFeed;

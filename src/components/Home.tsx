@@ -31,7 +31,12 @@ import {
 import { useBookmarks } from "../hooks/useBookmarks";
 import { useIntersectionLoader } from "../hooks/useIntersectionLoader";
 import { useModerationPreferences } from "../hooks/useModerationPreferences";
-import { useFeedCaching, useOfflineFeedStatus } from "../hooks/useOfflineFeed";
+import {
+  useFeedCacheWarmup,
+  useFeedCaching,
+  useOfflineFeedStatus,
+  useVisibilityRefresh,
+} from "../hooks/useOfflineFeed";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { usePostDeepLink } from "../hooks/usePostDeepLink";
 import { useMinDuration } from "../hooks/useTiming";
@@ -194,6 +199,17 @@ export const Home: React.FC<HomeProps> = React.memo(
         }
       }
     }, [initialFeedUri, columnId]);
+
+    // Stability-focused caching: warm up cache for instant first load
+    // Pre-populates React Query cache with IndexedDB data before component fetches
+    useFeedCacheWarmup(["timeline", selectedFeed], "timeline");
+
+    // Auto-refresh feed when tab becomes visible after being hidden for 1+ minute
+    useVisibilityRefresh(["timeline", selectedFeed], {
+      enabled: isFocused,
+      minHiddenDuration: 60000, // 1 minute
+    });
+
     const [internalShowFeedDiscovery, setInternalShowFeedDiscovery] =
       useState(false);
     const showFeedDiscovery =
