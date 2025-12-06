@@ -3,11 +3,14 @@ import { defineConfig, devices } from "@playwright/test";
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:5173";
 
 export default defineConfig({
-  testDir: "./tests/e2e",
-  testMatch: "**/*.spec.ts",
-  timeout: 30 * 1000,
+  testDir: "./tests",
+  testMatch: ["e2e/**/*.spec.ts", "visual-regression*.spec.ts"],
+  timeout: 60 * 1000,
   expect: {
-    timeout: 5000,
+    timeout: 10000,
+    toHaveScreenshot: {
+      maxDiffPixels: 100,
+    },
   },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

@@ -1,23 +1,12 @@
-import {
-  cleanJsonResponse,
-  createConfigError,
-  createExternalApiError,
-  createInternalError,
-  createMissingParameterError,
-  createOptionsResponse,
-  createSuccessResponse,
-  createTimeoutError,
-  getCorrelationId,
-  isOptionsRequest,
-  logError,
-  logInfo,
-  parseEventBody,
-} from "../shared/api-response";
-import {
-  createAnthropicClient,
-  MaxRetriesExceededError,
-  TimeoutError,
-} from "../shared/resilience";
+/**
+ * Adjust Tone Handler
+ *
+ * Rewrites social media posts with a different tone while preserving
+ * the core message, hashtags, mentions, and links.
+ */
+
+import { createAnthropicHandler, truncateText } from '../shared/handler-factory';
+import { MODELS } from '../shared/model-config';
 
 interface RequestBody {
   text?: string;
@@ -25,64 +14,27 @@ interface RequestBody {
 }
 
 const toneDescriptions: Record<string, string> = {
-  professional: "formal, clear, and business-appropriate language",
-  casual: "relaxed, conversational, and friendly language",
-  humorous:
-    "witty, playful, and entertaining language while maintaining the core message",
-  informative: "educational, fact-focused, and explanatory language",
-  inspirational: "motivating, uplifting, and encouraging language",
+  professional: 'formal, clear, and business-appropriate language',
+  casual: 'relaxed, conversational, and friendly language',
+  humorous: 'witty, playful, and entertaining language while maintaining the core message',
+  informative: 'educational, fact-focused, and explanatory language',
+  inspirational: 'motivating, uplifting, and encouraging language',
 };
 
-export const handler = async (event: any) => {
-  const correlationId = getCorrelationId(event);
+export const handler = createAnthropicHandler<RequestBody>({
+  name: 'adjust-tone',
+  requiredParams: ['text', 'tone'],
+  logMessage: (body) => `Adjusting tone to: ${body.tone}`,
+  buildPrompt: (body) => {
+    const text = body.text!;
+    const tone = body.tone!;
+    const truncatedText = truncateText(text, 2000);
+    const toneDescription = toneDescriptions[tone] || tone;
 
-  // Handle OPTIONS request for CORS preflight
-  if (isOptionsRequest(event)) {
-    return createOptionsResponse(event);
-  }
-
-  try {
-    const body = parseEventBody<RequestBody>(event);
-    const { text, tone } = body || {};
-
-    if (!text) {
-      return createMissingParameterError("text", event, correlationId);
-    }
-
-    if (!tone) {
-      return createMissingParameterError("tone", event, correlationId);
-    }
-
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      return createConfigError("ANTHROPIC_API_KEY", event, correlationId);
-    }
-
-    logInfo("adjust-tone", `Adjusting tone to: ${tone}`, correlationId);
-
-    // Truncate very long text to avoid context issues
-    const truncatedText = text.length > 2000 ? text.substring(0, 1997) + "..." : text;
-
-    // Create resilient client for Anthropic API with retry and timeout
-    const client = createAnthropicClient({ name: "adjust-tone" });
-
-    try {
-      const response = await client.fetch(
-        "https://api.anthropic.com/v1/messages",
-        {
-          method: "POST",
-          headers: {
-            "x-api-key": apiKey,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "claude-sonnet-4-5-20250929",
-            max_tokens: 1000,
-            messages: [
-              {
-                role: "user",
-                content: `Adjust the tone of this social media post to be ${toneDescriptions[tone] || tone}.
+    return {
+      model: MODELS.SONNET,
+      maxTokens: 1000,
+      prompt: `Adjust the tone of this social media post to be ${toneDescription}.
 
 Original post: "${truncatedText}"
 
@@ -100,44 +52,6 @@ Important:
 - Make the changes subtle and natural
 
 Your response MUST be valid JSON only. Start with { and end with }.`,
-              },
-            ],
-          }),
-        },
-        correlationId
-      );
-
-      const data = await response.json();
-      const cleanedText = cleanJsonResponse(data.content[0].text);
-      const result = JSON.parse(cleanedText);
-
-      logInfo("adjust-tone", "Tone adjusted successfully", correlationId);
-
-      return createSuccessResponse(result, event, { correlationId });
-    } catch (apiError) {
-      if (apiError instanceof TimeoutError) {
-        logError("adjust-tone", apiError, correlationId, {
-          errorType: "timeout",
-        });
-        return createTimeoutError("Anthropic API call", event, correlationId);
-      }
-
-      if (apiError instanceof MaxRetriesExceededError) {
-        logError("adjust-tone", apiError, correlationId, {
-          attempts: apiError.attempts,
-        });
-        return createExternalApiError(
-          "Anthropic",
-          `Failed after ${apiError.attempts} attempts`,
-          event,
-          correlationId
-        );
-      }
-
-      throw apiError;
-    }
-  } catch (error) {
-    logError("adjust-tone", error, correlationId);
-    return createInternalError(error, event, correlationId);
-  }
-};
+    };
+  },
+});
