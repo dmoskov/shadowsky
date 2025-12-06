@@ -11,6 +11,7 @@ export enum WebSocketEventType {
   AUTH = "auth",
   AUTH_SUCCESS = "auth:success",
   AUTH_FAILURE = "auth:failure",
+  AUTH_EXPIRED = "auth:expired",
 
   // Notification events
   NEW_NOTIFICATION = "notification:new",
@@ -61,6 +62,19 @@ export interface AuthSuccessEvent extends WebSocketEvent {
 export interface AuthFailureEvent extends WebSocketEvent {
   type: WebSocketEventType.AUTH_FAILURE;
   error: string;
+  statusCode?: number;
+  category?: AuthErrorCategory;
+}
+
+export interface AuthExpiredEvent extends WebSocketEvent {
+  type: WebSocketEventType.AUTH_EXPIRED;
+  reason: string;
+}
+
+export enum AuthErrorCategory {
+  TOKEN_INVALID = "token_invalid",
+  SERVER_ERROR = "server_error",
+  NETWORK_ERROR = "network_error",
 }
 
 export type WebSocketMessage =
@@ -71,6 +85,7 @@ export type WebSocketMessage =
   | AuthEvent
   | AuthSuccessEvent
   | AuthFailureEvent
+  | AuthExpiredEvent
   | WebSocketEvent;
 
 export enum WebSocketConnectionState {
@@ -98,4 +113,6 @@ export interface WebSocketStats {
   messagesSent: number;
   messagesReceived: number;
   lastError?: string;
+  lastPingLatency?: number;
+  averageLatency?: number;
 }

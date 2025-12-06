@@ -1,5 +1,7 @@
 import { debug } from "@bsky/shared";
+import { WS_CONFIG } from "../config/websocket.config";
 import {
+  AuthErrorCategory,
   WebSocketConnectionState,
   WebSocketEventType,
   type WebSocketConfig,
@@ -8,6 +10,38 @@ import {
 } from "../types/websocket";
 
 type EventHandler = (event: WebSocketMessage) => void;
+
+/**
+ * Calculate exponential backoff delay with optional jitter.
+ * Jitter helps prevent thundering herd when multiple clients reconnect
+ * simultaneously after a server restart.
+ *
+ * @param attempt - The current reconnection attempt number (1-indexed)
+ * @param baseDelay - The base delay in milliseconds (default 5000)
+ * @param maxDelay - The maximum delay cap in milliseconds (default 30000)
+ * @param jitter - Whether to add ±20% randomization (default true)
+ * @returns The calculated delay in milliseconds
+ */
+export function calculateBackoff(
+  attempt: number,
+  baseDelay: number = WS_CONFIG.INITIAL_RECONNECT_DELAY_MS,
+  maxDelay: number = WS_CONFIG.MAX_RECONNECT_DELAY_MS,
+  jitter: boolean = true,
+): number {
+  // Calculate base exponential delay: baseDelay * 2^(attempt-1)
+  const exponentialDelay = Math.min(
+    baseDelay * Math.pow(2, attempt - 1),
+    maxDelay,
+  );
+
+  if (!jitter) {
+    return exponentialDelay;
+  }
+
+  // Add ±20% jitter to spread reconnection attempts
+  const jitterFactor = 0.8 + Math.random() * 0.4;
+  return Math.floor(exponentialDelay * jitterFactor);
+}
 
 type RequiredWebSocketConfig = Required<
   Omit<WebSocketConfig, "accessToken">
@@ -20,16 +54,24 @@ export class WebSocketService {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private authTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
+  private pongTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
   private stats: WebSocketStats;
   private isIntentionallyClosed = false;
   private isAuthenticated = false;
+  private isAuthFatalError = false;
+
+  // PONG timeout detection for zombie connections
+  private readonly PONG_TIMEOUT = WS_CONFIG.PONG_TIMEOUT_MS; // 10 seconds
+  private lastPingTime: number | null = null;
+  private latencyHistory: number[] = [];
+  private readonly MAX_LATENCY_SAMPLES = 10;
 
   constructor(config: WebSocketConfig) {
     this.config = {
-      reconnectDelay: 5000,
-      maxReconnectAttempts: 10,
-      heartbeatInterval: 30000,
-      authTimeout: 10000,
+      reconnectDelay: WS_CONFIG.INITIAL_RECONNECT_DELAY_MS,
+      maxReconnectAttempts: WS_CONFIG.MAX_RECONNECT_ATTEMPTS,
+      heartbeatInterval: WS_CONFIG.HEARTBEAT_INTERVAL_MS,
+      authTimeout: WS_CONFIG.AUTH_TIMEOUT_MS,
       debug: false,
       ...config,
     };
@@ -58,6 +100,11 @@ export class WebSocketService {
 
     this.isIntentionallyClosed = false;
     this.isAuthenticated = false;
+    // Only reset fatal error flag on fresh connect calls, not reconnect attempts
+    // This allows fresh connect() to work after user re-authenticates
+    if (this.stats.reconnectAttempts === 0) {
+      this.isAuthFatalError = false;
+    }
     this.updateConnectionState(WebSocketConnectionState.CONNECTING);
     this.log(`Connecting to WebSocket: ${this.config.url}`);
 
@@ -195,8 +242,10 @@ export class WebSocketService {
       }
 
       if (message.type === WebSocketEventType.AUTH_FAILURE) {
+        const authFailure = message as { error?: string; statusCode?: number };
         this.handleAuthFailure(
-          (message as { error?: string }).error || "Authentication failed",
+          authFailure.error || "Authentication failed",
+          authFailure.statusCode,
         );
         return;
       }
@@ -206,6 +255,12 @@ export class WebSocketService {
           type: WebSocketEventType.PONG,
           timestamp: new Date().toISOString(),
         });
+        return;
+      }
+
+      // Handle PONG response from server
+      if (message.type === WebSocketEventType.PONG) {
+        this.handlePong();
         return;
       }
 
@@ -272,7 +327,70 @@ export class WebSocketService {
     });
   }
 
-  private handleAuthFailure(error: string): void {
+  private categorizeAuthError(
+    error: string,
+    statusCode?: number,
+  ): AuthErrorCategory {
+    // Check status code first
+    if (statusCode !== undefined) {
+      if (statusCode === 401 || statusCode === 403) {
+        return AuthErrorCategory.TOKEN_INVALID;
+      }
+      if (statusCode >= 500 && statusCode < 600) {
+        return AuthErrorCategory.SERVER_ERROR;
+      }
+    }
+
+    // Check error message patterns for token-related issues
+    const tokenInvalidPatterns = [
+      "invalid token",
+      "token expired",
+      "token revoked",
+      "unauthorized",
+      "forbidden",
+      "invalid credentials",
+      "authentication required",
+      "session expired",
+      "invalid session",
+    ];
+
+    const lowerError = error.toLowerCase();
+    if (tokenInvalidPatterns.some((pattern) => lowerError.includes(pattern))) {
+      return AuthErrorCategory.TOKEN_INVALID;
+    }
+
+    // Check for network-related patterns
+    const networkPatterns = [
+      "timeout",
+      "network",
+      "connection",
+      "econnrefused",
+      "enotfound",
+      "dns",
+    ];
+
+    if (networkPatterns.some((pattern) => lowerError.includes(pattern))) {
+      return AuthErrorCategory.NETWORK_ERROR;
+    }
+
+    // Check for server error patterns
+    const serverPatterns = [
+      "server error",
+      "internal error",
+      "service unavailable",
+      "bad gateway",
+      "gateway timeout",
+    ];
+
+    if (serverPatterns.some((pattern) => lowerError.includes(pattern))) {
+      return AuthErrorCategory.SERVER_ERROR;
+    }
+
+    // Default to server error for unknown cases (allows retry)
+    return AuthErrorCategory.SERVER_ERROR;
+  }
+
+  private handleAuthFailure(error: string, statusCode?: number): void {
     if (this.authTimeoutTimer) {
       clearTimeout(this.authTimeoutTimer);
       this.authTimeoutTimer = null;
@@ -280,20 +398,64 @@ export class WebSocketService {
 
     this.isAuthenticated = false;
     this.stats.lastError = `Authentication failed: ${error}`;
-    this.log(`Authentication failed: ${error}`, "error");
 
+    const category = this.categorizeAuthError(error, statusCode);
+    this.log(
+      `Authentication failed: ${error} (category: ${category}, status: ${statusCode ?? "unknown"})`,
+      "error",
+    );
+
+    // Emit AUTH_FAILURE with category information
     this.emit({
       type: WebSocketEventType.AUTH_FAILURE,
       error,
+      statusCode,
+      category,
       timestamp: new Date().toISOString(),
     });
 
-    // Close the connection and schedule reconnect
+    // Handle based on error category
+    if (category === AuthErrorCategory.TOKEN_INVALID) {
+      // Fatal error - don't retry, emit auth expired event
+      this.isAuthFatalError = true;
+      this.log(
+        "Token invalid - stopping reconnection attempts, emitting auth_expired",
+        "error",
+      );
+
+      this.emit({
+        type: WebSocketEventType.AUTH_EXPIRED,
+        reason: error,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Close the connection without scheduling reconnect
+      if (this.ws) {
+        this.ws.close(4001, "Authentication failed - invalid token");
+      }
+      this.updateConnectionState(WebSocketConnectionState.ERROR);
+      // Do NOT schedule reconnect for token invalid errors
+      return;
+    }
+
+    // Close the connection
     if (this.ws) {
       this.ws.close(4001, "Authentication failed");
     }
     this.updateConnectionState(WebSocketConnectionState.ERROR);
-    this.scheduleReconnect();
+
+    if (category === AuthErrorCategory.NETWORK_ERROR) {
+      // Network errors - retry without max attempt limit
+      this.log(
+        "Network error during auth - will retry with backoff (no max attempts)",
+        "warn",
+      );
+      this.scheduleReconnect(true); // true = unlimited retries
+    } else {
+      // Server errors - normal backoff with max attempts
+      this.log("Server error during auth - will retry with backoff", "warn");
+      this.scheduleReconnect();
+    }
   }
 
   private emit(event: WebSocketMessage): void {
@@ -330,10 +492,11 @@ export class WebSocketService {
     this.updateConnectionState(WebSocketConnectionState.RECONNECTING);
     this.stats.reconnectAttempts++;
 
-    const delay = Math.min(
-      this.config.reconnectDelay *
-        Math.pow(2, this.stats.reconnectAttempts - 1),
-      30000,
+    const delay = calculateBackoff(
+      this.stats.reconnectAttempts,
+      this.config.reconnectDelay,
+      WS_CONFIG.MAX_RECONNECT_DELAY_MS,
+      true,
     );
 
     this.log(
