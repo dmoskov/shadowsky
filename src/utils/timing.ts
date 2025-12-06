@@ -5,6 +5,10 @@
  * across the application. These utilities help prevent common timing-related
  * issues like flash of loading state, jittery UI updates, and rapid re-renders.
  *
+ * For INP-optimized debouncing with adaptive delays, see:
+ * - InputDebouncingService: services/input-debouncing-service.ts
+ * - React hooks: hooks/useInputDebouncing.ts
+ *
  * @module utils/timing
  */
 
@@ -39,6 +43,36 @@ export const TIMING = {
   SCROLL_THROTTLE: 16,
   /** Pointer events re-enable delay after scroll stops (ms) */
   SCROLL_END_DELAY: 150,
+} as const;
+
+/**
+ * Interaction-specific timing constants.
+ * These values are optimized for good INP (Interaction to Next Paint) scores.
+ *
+ * For adaptive debouncing that responds to device capabilities,
+ * use the InputDebouncingService instead.
+ *
+ * @see services/input-debouncing-service.ts
+ */
+export const INTERACTION_TIMING = {
+  /** Typing debounce delay (ms) - balances responsiveness with performance */
+  TYPING: 150,
+  /** Click debounce delay (ms) - immediate for critical interactions */
+  CLICKING: 0,
+  /** Scroll throttle interval (ms) - ~60fps for smooth scrolling */
+  SCROLLING: 16,
+  /** Resize debounce delay (ms) - allows layout recalculation to batch */
+  RESIZING: 150,
+  /** Search debounce delay (ms) - longer delay to reduce API calls */
+  SEARCHING: 300,
+  /** Navigation debounce delay (ms) - quick but prevents double-clicks */
+  NAVIGATION: 50,
+  /** Media control throttle interval (ms) */
+  MEDIA: 100,
+  /** Form input debounce delay (ms) */
+  FORM: 200,
+  /** INP budget target (ms) - Google's threshold for "good" INP */
+  INP_BUDGET: 200,
 } as const;
 
 // ============================================================================
