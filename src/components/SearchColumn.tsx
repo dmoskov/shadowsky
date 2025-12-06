@@ -24,6 +24,7 @@ import { useTrendingData } from "../hooks/useTrending";
 import type { SearchHistoryEntry } from "../services/search-history-db";
 import { ExploreEmptyState } from "./ExploreEmptyState";
 import { PostCard } from "./PostCard";
+import { EmptyState } from "./ui/EmptyState";
 import { SearchFilterPanel } from "./SearchFilterPanel";
 import { ThreadModal } from "./ThreadModal";
 
@@ -720,22 +721,11 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
 
         {/* Empty State - No Results */}
         {activeQuery && !isLoading && filteredResults.length === 0 && (
-          <div className="p-8 text-center">
-            <Search
-              size={48}
-              className="mx-auto mb-4"
-              style={{ color: "var(--bsky-text-tertiary)" }}
-            />
-            <p style={{ color: "var(--bsky-text-primary)" }}>
-              No results found
-            </p>
-            <p
-              className="mt-2 text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
-            >
-              Try different keywords or adjust your filters
-            </p>
-          </div>
+          <EmptyState
+            variant="search"
+            message="Try different keywords or adjust your filters"
+            compact
+          />
         )}
 
         {/* Results List */}

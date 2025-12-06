@@ -172,6 +172,10 @@ export interface ThreadViewerProps {
   // Controlled focus index for external navigation (e.g., minimap)
   focusedIndex?: number;
   onFocusedIndexChange?: (index: number) => void;
+  // Scroll container ref for scroll position tracking (passed from parent modal)
+  scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
+  // Callback to restore initial focused index from persisted state
+  onRestoreScrollPosition?: (focusedIndex: number) => void;
 }
 
 export const ThreadViewer: React.FC<ThreadViewerProps> = ({
@@ -192,6 +196,8 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   contextBarSentinelRef,
   focusedIndex: controlledFocusedIndex,
   onFocusedIndexChange,
+  scrollContainerRef,
+  onRestoreScrollPosition,
 }) => {
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -261,6 +267,90 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   // Ref for virtualized thread list
   const virtualListRef = useRef<VirtualizedThreadListHandle>(null);
+  // Track if we've already restored scroll position
+  const hasRestoredScrollPosition = useRef(false);
+  // Debounce timer for scroll position saving
+  const scrollSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Save scroll position on scroll (debounced)
+  useEffect(() => {
+    if (!threadId || !scrollContainerRef?.current) return;
+
+    const scrollContainer = scrollContainerRef.current;
+
+    const handleScroll = () => {
+      // Clear any pending save
+      if (scrollSaveTimerRef.current) {
+        clearTimeout(scrollSaveTimerRef.current);
+      }
+
+      // Debounce the save to avoid excessive writes
+      scrollSaveTimerRef.current = setTimeout(() => {
+        const scrollTop = scrollContainer.scrollTop;
+        setPersistedScrollPosition(threadId, {
+          scrollTop,
+          focusedIndex: focusedPostIndex,
+          timestamp: Date.now(),
+        });
+      }, 150); // 150ms debounce
+    };
+
+    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      scrollContainer.removeEventListener("scroll", handleScroll);
+      // Clear pending timer on cleanup
+      if (scrollSaveTimerRef.current) {
+        clearTimeout(scrollSaveTimerRef.current);
+      }
+    };
+  }, [threadId, scrollContainerRef, focusedPostIndex]);
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    if (!threadId || hasRestoredScrollPosition.current) return;
+    if (!scrollContainerRef?.current) return;
+    // Don't restore if there's a highlight URI (user navigated to specific post)
+    if (highlightUri) return;
+
+    const savedPosition = getPersistedScrollPosition(threadId);
+    if (!savedPosition) return;
+
+    hasRestoredScrollPosition.current = true;
+
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      const scrollContainer = scrollContainerRef.current;
+      if (!scrollContainer) return;
+
+      // Restore scroll position
+      scrollContainer.scrollTop = savedPosition.scrollTop;
+
+      // Restore focused index if we have a callback
+      if (savedPosition.focusedIndex >= 0 && onRestoreScrollPosition) {
+        onRestoreScrollPosition(savedPosition.focusedIndex);
+      }
+    });
+  }, [threadId, scrollContainerRef, highlightUri, onRestoreScrollPosition]);
+
+  // Save position on unmount/navigation away
+  useEffect(() => {
+    return () => {
+      if (!threadId || !scrollContainerRef?.current) return;
+
+      const scrollContainer = scrollContainerRef.current;
+      const scrollTop = scrollContainer.scrollTop;
+
+      // Only save if we've scrolled somewhere meaningful
+      if (scrollTop > 0) {
+        setPersistedScrollPosition(threadId, {
+          scrollTop,
+          focusedIndex: focusedPostIndex,
+          timestamp: Date.now(),
+        });
+      }
+    };
+  }, [threadId, scrollContainerRef, focusedPostIndex]);
 
   // Get optimistic post mutations
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =

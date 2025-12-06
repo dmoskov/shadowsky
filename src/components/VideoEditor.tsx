@@ -907,7 +907,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                     <button
                       onClick={() => adjustTrim("start", "right")}
                       disabled={trim.start >= trim.end - 1}
-                      className="rounded p-1 transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
+                      className="touch-target-icon rounded transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
                       style={{ color: "var(--bsky-text-primary)" }}
                     >
                       <ChevronRight size={16} />
@@ -936,7 +936,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                     <button
                       onClick={() => adjustTrim("end", "left")}
                       disabled={trim.end <= trim.start + 1}
-                      className="rounded p-1 transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
+                      className="touch-target-icon rounded transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
                       style={{ color: "var(--bsky-text-primary)" }}
                     >
                       <ChevronLeft size={16} />
@@ -950,7 +950,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                     <button
                       onClick={() => adjustTrim("end", "right")}
                       disabled={!metadata || trim.end >= metadata.duration}
-                      className="rounded p-1 transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
+                      className="touch-target-icon rounded transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
                       style={{ color: "var(--bsky-text-primary)" }}
                     >
                       <ChevronRight size={16} />

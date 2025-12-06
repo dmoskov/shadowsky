@@ -26,7 +26,7 @@ import { ThreadContextBar } from "./ThreadContextBar";
 import { ThreadEngagementAnalytics } from "./ThreadEngagementAnalytics";
 import { ThreadMinimap } from "./ThreadMinimap";
 import { ThreadShortcutsHelp } from "./ThreadShortcutsHelp";
-import { ThreadViewer } from "./ThreadViewer";
+import { ThreadViewer, clearPersistedScrollPosition } from "./ThreadViewer";
 import { ThreadSkeleton } from "./ui/SkeletonLoader";
 
 interface ThreadModalProps {
@@ -85,9 +85,22 @@ export function ThreadModal({
   // GPU acceleration for scroll container
   const gpuScrollRef = useScrollContainerGPU();
 
+  // Callback for restoring scroll position from persisted state
+  const handleRestoreScrollPosition = useCallback((savedFocusedIndex: number) => {
+    setFocusedPostIndex(savedFocusedIndex);
+  }, []);
+
+  // Handle explicit thread close - clears persisted scroll position
+  const handleClose = useCallback(() => {
+    // Clear the persisted scroll position when explicitly closing
+    clearPersistedScrollPosition(postUri);
+    onClose();
+  }, [postUri, onClose]);
+
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      // Note: ESC key is considered explicit close, so it clears scroll position
+      if (e.key === "Escape") handleClose();
     };
 
     window.addEventListener("keydown", handleEsc);

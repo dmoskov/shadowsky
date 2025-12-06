@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import { List, ListImperativeAPI, useDynamicRowHeight } from "react-window";
 import { PostCard } from "./PostCard";
+import { EmptyState } from "./ui/EmptyState";
 
 /**
  * Memoized PostRow component to prevent re-renders when scrolling
@@ -728,13 +729,7 @@ export const VirtualizedPostList = React.forwardRef<
     if (items.length === 0 && !isLoading) {
       return (
         <div ref={containerRef} className="flex-1 overflow-hidden">
-          {emptyState || (
-            <div className="flex flex-col items-center justify-center p-8 text-center">
-              <p style={{ color: "var(--bsky-text-secondary)" }}>
-                No posts to display
-              </p>
-            </div>
-          )}
+          {emptyState || <EmptyState variant="posts" compact />}
         </div>
       );
     }

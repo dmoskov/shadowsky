@@ -10,9 +10,13 @@
 
 import {
   BookmarkIcon,
+  Clock,
   CloudOff,
+  FileText,
   Inbox,
+  List,
   MessageSquare,
+  Pin,
   Search,
   Users,
   type LucideIcon,
@@ -33,7 +37,13 @@ export type EmptyStateVariant =
   | "notifications"
   | "offline"
   | "error"
-  | "first-time";
+  | "first-time"
+  | "posts"
+  | "scheduled"
+  | "list"
+  | "list-members"
+  | "pinned"
+  | "thread";
 
 interface EmptyStateAction {
   label: string;
@@ -120,6 +130,42 @@ const variantConfigs: Record<EmptyStateVariant, VariantConfig> = {
     message: "Get started by exploring the features available to you.",
     illustration: "empty",
     icon: Inbox,
+  },
+  posts: {
+    title: "No posts yet",
+    message: "Posts will appear here once available.",
+    illustration: "empty",
+    icon: FileText,
+  },
+  scheduled: {
+    title: "No scheduled posts",
+    message: "Schedule a post to see it here.",
+    illustration: "empty",
+    icon: Clock,
+  },
+  list: {
+    title: "No posts from list members",
+    message: "Posts from list members will appear here.",
+    illustration: "empty",
+    icon: List,
+  },
+  "list-members": {
+    title: "No members in this list",
+    message: "Add members from their profile pages.",
+    illustration: "empty",
+    icon: Users,
+  },
+  pinned: {
+    title: "No pinned posts",
+    message: "Pin posts to feature them on your profile.",
+    illustration: "empty",
+    icon: Pin,
+  },
+  thread: {
+    title: "No posts to display",
+    message: "This thread appears to be empty.",
+    illustration: "empty",
+    icon: MessageSquare,
   },
 };
 
