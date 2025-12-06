@@ -1376,9 +1376,7 @@ export default function ProfilePage() {
                 Loading pinned posts...
               </div>
             ) : pinnedPosts.length === 0 ? (
-              <div className="py-8 text-center text-gray-500">
-                No pinned posts.
-              </div>
+              <EmptyState variant="pinned" compact />
             ) : (
               <List
                 listRef={listRef}
@@ -1440,9 +1438,12 @@ export default function ProfilePage() {
                 Loading top posts...
               </div>
             ) : topPostsData?.topPosts.length === 0 ? (
-              <div className="py-8 text-center text-gray-500">
-                No top posts found.
-              </div>
+              <EmptyState
+                variant="posts"
+                title="No top posts found"
+                message="Top posts will appear here once available."
+                compact
+              />
             ) : topPostsData?.topPosts && topPostsData.topPosts.length > 0 ? (
               <List
                 listRef={listRef}
@@ -1478,9 +1479,7 @@ export default function ProfilePage() {
         ) : (
           <div style={{ height: listHeight }}>
             {posts.length === 0 && !postsLoading ? (
-              <div className="py-8 text-center text-gray-500">
-                No posts found.
-              </div>
+              <EmptyState variant="posts" compact />
             ) : posts.length > 0 ? (
               <List
                 listRef={listRef}
