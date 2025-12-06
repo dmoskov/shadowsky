@@ -1,7 +1,14 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
 import { formatDistanceToNow } from "date-fns";
-import { ChevronDown, ChevronUp, Heart, Quote, Repeat2, UserPlus } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Heart,
+  Quote,
+  Repeat2,
+  UserPlus,
+} from "lucide-react";
 import React from "react";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { getNotificationUrl } from "../utils/url-helpers";
@@ -57,7 +64,11 @@ export function aggregateNotifications(
       let key: string;
       if (["follow", "starterpack-joined"].includes(notification.reason)) {
         key = `${notification.reason}-all`;
-      } else if (["like", "repost", "like-via-repost", "repost-via-repost"].includes(notification.reason)) {
+      } else if (
+        ["like", "repost", "like-via-repost", "repost-via-repost"].includes(
+          notification.reason,
+        )
+      ) {
         // Use reasonSubject for likes/reposts - this is the post being acted upon
         key = `${notification.reason}-${notification.reasonSubject || notification.uri || "no-uri"}`;
       } else {
@@ -133,10 +144,14 @@ export function aggregateNotifications(
 
         // Get the target post URI for likes/reposts
         const firstNotification = cluster[0];
-        const targetPostUri =
-          ["like", "repost", "like-via-repost", "repost-via-repost"].includes(reason)
-            ? firstNotification.reasonSubject || firstNotification.uri
-            : firstNotification.uri;
+        const targetPostUri = [
+          "like",
+          "repost",
+          "like-via-repost",
+          "repost-via-repost",
+        ].includes(reason)
+          ? firstNotification.reasonSubject || firstNotification.uri
+          : firstNotification.uri;
 
         const aggregated: AggregatedNotification = {
           type: "aggregated",
@@ -323,7 +338,10 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
       // Get URL for the first notification (most recent)
       const firstNotification = item.notifications[0];
       // Use targetPostUri for post lookup (this is reasonSubject for likes/reposts)
-      const postUri = item.targetPostUri || firstNotification.reasonSubject || firstNotification.uri;
+      const postUri =
+        item.targetPostUri ||
+        firstNotification.reasonSubject ||
+        firstNotification.uri;
       const post = postMap?.get(postUri);
       const postAuthorHandle = post?.author?.handle;
       const primaryUrl = getNotificationUrl(
@@ -506,7 +524,11 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                   className="mt-2 flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-bsky-bg-secondary"
                   style={{ color: "var(--bsky-text-secondary)" }}
                   aria-expanded={isExpanded}
-                  aria-label={isExpanded ? "Collapse notifications" : `Show all ${item.count} notifications`}
+                  aria-label={
+                    isExpanded
+                      ? "Collapse notifications"
+                      : `Show all ${item.count} notifications`
+                  }
                 >
                   {isExpanded ? (
                     <>
