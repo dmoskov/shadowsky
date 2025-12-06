@@ -12,6 +12,7 @@ import React, {
 import ReactDOM from "react-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
+import { useScrollContainerGPU } from "../hooks/useGPUAcceleration";
 import { useModalSwipeBack } from "../hooks/useModalSwipeBack";
 import { useThreadKeyboardShortcuts } from "../hooks/useThreadKeyboardShortcuts";
 import { useMinDuration } from "../hooks/useTiming";
@@ -81,6 +82,8 @@ export function ThreadModal({
   const contextBarSentinelRef = useRef<HTMLDivElement>(null);
   // Ref for scrollable thread container (for minimap viewport tracking)
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // GPU acceleration for scroll container
+  const gpuScrollRef = useScrollContainerGPU();
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -917,8 +920,14 @@ export function ThreadModal({
 
           {/* Scrollable content */}
           <div
-            ref={scrollContainerRef}
-            className="bsky-scrollbar flex-1 overflow-y-auto"
+            ref={(el) => {
+              // Combine refs: scrollContainerRef for minimap, gpuScrollRef for GPU acceleration
+              (
+                scrollContainerRef as React.MutableRefObject<HTMLDivElement | null>
+              ).current = el;
+              gpuScrollRef(el);
+            }}
+            className="gpu-scroll-container bsky-scrollbar flex-1 overflow-y-auto"
             style={{ minHeight: 0 }}
           >
             <div className="mx-auto max-w-3xl p-4 md:p-8">

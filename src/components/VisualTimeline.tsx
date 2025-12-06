@@ -19,6 +19,7 @@ import {
 import React from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
+import { useScrollContainerGPU } from "../hooks/useGPUAcceleration";
 import { useNotificationPosts } from "../hooks/useNotificationPosts";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { throttle, TIMING } from "../utils/timing";
@@ -74,6 +75,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
     const navigate = useNavigate();
     const containerRef = React.useRef<HTMLDivElement>(null);
     const scrollableRef = React.useRef<HTMLDivElement>(null);
+    const gpuScrollRef = useScrollContainerGPU();
     const timelineItemsRef = React.useRef<Map<string, HTMLDivElement>>(
       new Map(),
     );
@@ -1317,8 +1319,18 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
       >
         {/* Scrollable content wrapper */}
         <div
-          className={isInSkyDeck ? "flex-1 overflow-y-auto" : ""}
-          ref={scrollableRef}
+          className={
+            isInSkyDeck ? "gpu-scroll-container flex-1 overflow-y-auto" : ""
+          }
+          ref={(el) => {
+            // Combine refs: scrollableRef for local state, gpuScrollRef for GPU acceleration
+            (
+              scrollableRef as React.MutableRefObject<HTMLDivElement | null>
+            ).current = el;
+            if (isInSkyDeck) {
+              gpuScrollRef(el);
+            }
+          }}
         >
           <div className="relative">
             {/* New notifications banner */}

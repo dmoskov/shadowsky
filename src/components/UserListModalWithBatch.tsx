@@ -24,6 +24,7 @@ import {
   type BatchActionType,
 } from "../contexts/BatchSelectionContext";
 import { useFocusTrap } from "../hooks/useFocusTrap";
+import { useInfiniteScroll } from "../hooks/useRAFScroll";
 import {
   executeBatchOperation,
   executeUndoBatchOperation,
@@ -306,16 +307,13 @@ const UserListModalInner: React.FC<UserListModalWithBatchProps> = ({
     [navigate, onClose, isSelectionMode],
   );
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const element = e.currentTarget;
-    if (
-      element.scrollHeight - element.scrollTop <= element.clientHeight + 100 &&
-      hasMore &&
-      !loadingMore
-    ) {
-      loadUsers();
-    }
-  };
+  // Use RAF-batched infinite scroll
+  const { ref: infiniteScrollRef } = useInfiniteScroll({
+    onLoadMore: () => loadUsers(),
+    hasMore,
+    isLoading: loadingMore,
+    threshold: 100,
+  });
 
   // Keyboard navigation
   const handleKeyDown = useCallback(
@@ -582,9 +580,12 @@ const UserListModalInner: React.FC<UserListModalWithBatchProps> = ({
 
           {/* User list */}
           <div
-            ref={listRef}
+            ref={(el) => {
+              // Combine refs for keyboard navigation and infinite scroll
+              (listRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+              infiniteScrollRef(el);
+            }}
             className={`max-h-[calc(80vh-73px)] overflow-y-auto ${isSelectionMode ? "pb-20" : ""}`}
-            onScroll={handleScroll}
             role="listbox"
             aria-label={`${title} list`}
             aria-multiselectable={isSelectionMode}

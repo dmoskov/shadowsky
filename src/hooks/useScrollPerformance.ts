@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useScrollPerformanceOptimized } from "./useRAFScroll";
 
 interface ScrollPerformanceOptions {
-  /** Enable passive scrolling for better performance */
+  /** Enable passive scrolling for better performance (now always true with RAF batching) */
   passive?: boolean;
-  /** Throttle scroll events (ms) */
+  /** Throttle scroll events (ms) - deprecated, RAF batching handles this */
   throttle?: number;
   /** Disable pointer events during scroll */
   disablePointerEventsOnScroll?: boolean;
@@ -11,72 +11,20 @@ interface ScrollPerformanceOptions {
 
 /**
  * Hook to optimize scroll performance on mobile devices
- * Reduces jank and improves smoothness
+ * Now uses RAF batching service for smooth 60fps scrolling
+ *
+ * @deprecated Use useScrollPerformanceOptimized from useRAFScroll.ts directly
  */
 export function useScrollPerformance(
   element: HTMLElement | null,
   options: ScrollPerformanceOptions = {},
 ) {
-  const {
-    passive = true,
-    throttle = 16, // ~60fps
-    disablePointerEventsOnScroll = true,
-  } = options;
+  const { disablePointerEventsOnScroll = true } = options;
 
-  const scrollTimer = useRef<NodeJS.Timeout>();
-  const isScrolling = useRef(false);
-
-  useEffect(() => {
-    if (!element) return;
-
-    let lastScrollTime = 0;
-
-    const handleScroll = (_e: Event) => {
-      const now = Date.now();
-
-      // Throttle scroll events
-      if (throttle && now - lastScrollTime < throttle) {
-        return;
-      }
-      lastScrollTime = now;
-
-      // Disable pointer events during scroll for better performance
-      if (disablePointerEventsOnScroll && !isScrolling.current) {
-        isScrolling.current = true;
-        document.body.style.pointerEvents = "none";
-      }
-
-      // Re-enable pointer events after scroll stops
-      if (scrollTimer.current) {
-        clearTimeout(scrollTimer.current);
-      }
-
-      scrollTimer.current = setTimeout(() => {
-        if (disablePointerEventsOnScroll) {
-          document.body.style.pointerEvents = "";
-          isScrolling.current = false;
-        }
-      }, 150);
-    };
-
-    // Use passive event listener for better scroll performance
-    element.addEventListener("scroll", handleScroll, { passive });
-
-    return () => {
-      element.removeEventListener("scroll", handleScroll);
-      if (scrollTimer.current) {
-        clearTimeout(scrollTimer.current);
-      }
-      // Reset pointer events on cleanup
-      if (disablePointerEventsOnScroll) {
-        document.body.style.pointerEvents = "";
-      }
-    };
-  }, [element, passive, throttle, disablePointerEventsOnScroll]);
-
-  return {
-    isScrolling: isScrolling.current,
-  };
+  // Delegate to RAF-based implementation
+  return useScrollPerformanceOptimized(element, {
+    disablePointerEvents: disablePointerEventsOnScroll,
+  });
 }
 
 // Note: usePrefersReducedMotion has moved to AccessibilityContext

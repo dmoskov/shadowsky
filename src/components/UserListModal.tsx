@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useFocusTrap } from "../hooks/useFocusTrap";
+import { useInfiniteScroll } from "../hooks/useRAFScroll";
 import { useMinDuration } from "../hooks/useTiming";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
@@ -108,16 +109,13 @@ export function UserListModal({
     [navigate, onClose],
   );
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const element = e.currentTarget;
-    if (
-      element.scrollHeight - element.scrollTop <= element.clientHeight + 100 &&
-      hasMore &&
-      !loadingMore
-    ) {
-      loadUsers();
-    }
-  };
+  // Use RAF-batched infinite scroll
+  const { ref: infiniteScrollRef } = useInfiniteScroll({
+    onLoadMore: () => loadUsers(),
+    hasMore,
+    isLoading: loadingMore,
+    threshold: 100,
+  });
 
   // Keyboard navigation handler for the modal
   const handleKeyDown = useCallback(
@@ -211,9 +209,12 @@ export function UserListModal({
 
         {/* User list */}
         <div
-          ref={listRef}
+          ref={(el) => {
+            // Combine refs for keyboard navigation and infinite scroll
+            (listRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+            infiniteScrollRef(el);
+          }}
           className="max-h-[calc(80vh-73px)] overflow-y-auto"
-          onScroll={handleScroll}
           role="listbox"
           aria-label={`${title} list`}
           tabIndex={0}

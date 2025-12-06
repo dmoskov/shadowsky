@@ -8,10 +8,12 @@ import React, {
   useState,
 } from "react";
 import { useErrorTracking } from "../hooks/useErrorTracking";
+import { useScrollContainerGPU } from "../hooks/useGPUAcceleration";
+import { useRAFScroll } from "../hooks/useRAFScroll";
 import { columnService } from "../services/column-service";
+import type { ScrollState } from "../services/scroll-batching-service";
 import { useStorageErrorManager } from "../services/storage/storage-error-manager";
 import type { Column } from "../types/column";
-import { throttle, TIMING } from "../utils/timing";
 import { BookmarksColumn } from "./BookmarksColumn";
 import { ColumnHeader } from "./ColumnHeader";
 import { DirectMessagesColumn } from "./DirectMessagesColumn";
@@ -40,6 +42,7 @@ const SkyColumn = memo(
     isFocused = false,
   }: SkyColumnProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const gpuScrollRef = useScrollContainerGPU();
     const { handleStorageError } = useStorageErrorManager();
     const { logError } = useErrorTracking();
     const [hasScrollTop, setHasScrollTop] = useState(false);
@@ -57,55 +60,50 @@ const SkyColumn = memo(
     const [showScrollButton, setShowScrollButton] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    useEffect(() => {
-      const checkScroll = () => {
-        let scrollTop = 0;
-        let scrollHeight = 0;
-        let clientHeight = 0;
+    // Use RAF-batched scroll handling for both element and window
+    const handleScrollUpdate = useCallback((state: ScrollState) => {
+      // Get scroll dimensions based on source
+      let scrollTop: number;
+      let scrollHeight: number;
+      let clientHeight: number;
 
-        // Check the column's scroll container first
-        if (scrollContainerRef.current) {
-          scrollTop = scrollContainerRef.current.scrollTop;
-          scrollHeight = scrollContainerRef.current.scrollHeight;
-          clientHeight = scrollContainerRef.current.clientHeight;
-        }
-
-        // In mobile view, check window scroll
-        if (scrollTop === 0 && window.innerWidth < 768) {
-          scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-          scrollHeight = document.documentElement.scrollHeight;
-          clientHeight = window.innerHeight;
-        }
-
-        setHasScrollTop(scrollTop > 10);
-        setHasScrollBottom(scrollTop < scrollHeight - clientHeight - 10);
-        // Show scroll button when scrolled down more than 200px
-        setShowScrollButton(scrollTop > 200);
-      };
-
-      // Throttle scroll handler for 60fps (16ms)
-      const handleScroll = throttle(checkScroll, TIMING.SCROLL_THROTTLE);
-
-      const scrollContainer = scrollContainerRef.current;
-
-      if (scrollContainer) {
-        scrollContainer.addEventListener("scroll", handleScroll, {
-          passive: true,
-        });
+      if (state.source === "element" && scrollContainerRef.current) {
+        scrollTop = scrollContainerRef.current.scrollTop;
+        scrollHeight = scrollContainerRef.current.scrollHeight;
+        clientHeight = scrollContainerRef.current.clientHeight;
+      } else {
+        // Window scroll - used on mobile
+        scrollTop = state.scrollY;
+        scrollHeight = document.documentElement.scrollHeight;
+        clientHeight = window.innerHeight;
       }
 
-      // Also listen to window scroll in mobile view
-      window.addEventListener("scroll", handleScroll, { passive: true });
+      setHasScrollTop(scrollTop > 10);
+      setHasScrollBottom(scrollTop < scrollHeight - clientHeight - 10);
+      setShowScrollButton(scrollTop > 200);
+    }, []);
 
-      checkScroll(); // Initial check
+    // Subscribe to element scroll (for desktop column view)
+    useRAFScroll(handleScrollUpdate, {
+      element: scrollContainerRef.current,
+    });
 
-      return () => {
-        if (scrollContainer) {
-          scrollContainer.removeEventListener("scroll", handleScroll);
-        }
-        window.removeEventListener("scroll", handleScroll);
-      };
-    }, [column.type]);
+    // Subscribe to window scroll (for mobile view)
+    useRAFScroll(handleScrollUpdate);
+
+    // Initial check on mount
+    useEffect(() => {
+      handleScrollUpdate({
+        scrollY: window.scrollY,
+        scrollX: window.scrollX,
+        previousScrollY: 0,
+        direction: 0,
+        velocity: 0,
+        timestamp: performance.now(),
+        isScrolling: false,
+        source: "window",
+      });
+    }, [handleScrollUpdate, column.type]);
 
     // Listen for refresh feed events (from mobile tab bar double tap)
     useEffect(() => {
@@ -372,8 +370,14 @@ const SkyColumn = memo(
           />
           <div className="relative flex-1 overflow-hidden">
             <div
-              ref={scrollContainerRef}
-              className="bsky-scrollbar h-full overflow-y-auto overflow-x-hidden"
+              ref={(el) => {
+                // Combine refs: scrollContainerRef for local state, gpuScrollRef for GPU acceleration
+                (
+                  scrollContainerRef as React.MutableRefObject<HTMLDivElement | null>
+                ).current = el;
+                gpuScrollRef(el);
+              }}
+              className="gpu-scroll-container bsky-scrollbar h-full overflow-y-auto overflow-x-hidden"
             >
               {content}
             </div>

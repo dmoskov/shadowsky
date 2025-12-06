@@ -3,6 +3,7 @@ import React, { useRef } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useUnreadNotificationCount } from "../hooks/useNotifications";
+import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 
 export const MobileTabBar: React.FC = () => {
   const { session } = useAuth();
@@ -10,13 +11,20 @@ export const MobileTabBar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const lastTapRef = useRef<number>(0);
+  const { getRoutePrefetchHandlers, getProfilePrefetchHandlers } =
+    useRoutePrefetch();
 
   const tabs = [
     { path: "/", label: "Home", icon: Home },
     { path: "/search", label: "Search", icon: Search },
     { path: "/notifications", label: "Notifs", icon: Bell },
     { path: "/messages", label: "DMs", icon: Mail },
-    { path: `/profile/${session?.handle || ""}`, label: "Profile", icon: User },
+    {
+      path: `/profile/${session?.handle || ""}`,
+      label: "Profile",
+      icon: User,
+      profileHandle: session?.handle,
+    },
   ];
 
   const handleHomeClick = (e: React.MouseEvent) => {
@@ -99,7 +107,14 @@ export const MobileTabBar: React.FC = () => {
             );
           }
 
-          // Regular NavLink for other tabs
+          // Regular NavLink for other tabs with prefetching
+          // Profile links get profile-specific prefetching
+          // Other links get route chunk prefetching
+          const prefetchHandlers =
+            "profileHandle" in tab && tab.profileHandle
+              ? getProfilePrefetchHandlers(tab.profileHandle)
+              : getRoutePrefetchHandlers(tab.path);
+
           return (
             <NavLink
               key={tab.path}
@@ -115,6 +130,7 @@ export const MobileTabBar: React.FC = () => {
                   ? "var(--bsky-primary)"
                   : "var(--bsky-text-secondary)",
               })}
+              {...prefetchHandlers}
             >
               <div className="relative">
                 {React.createElement(tab.icon, {

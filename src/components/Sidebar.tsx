@@ -16,6 +16,7 @@ import React from "react";
 import { NavLink } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useUnreadNotificationCount } from "../hooks/useNotifications";
+import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -30,6 +31,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { session } = useAuth();
   const { data: unreadCount } = useUnreadNotificationCount();
+  const { getRoutePrefetchHandlers, getProfilePrefetchHandlers } =
+    useRoutePrefetch();
 
   const navItems = [
     { path: "/", label: "Home", icon: Home },
@@ -49,6 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       path: `/profile/${session?.handle || ""}`,
       label: "Profile",
       icon: User,
+      profileHandle: session?.handle,
     },
     { path: "/analytics", label: "Analytics", icon: BarChart3 },
   ];
@@ -95,6 +99,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <nav className={`space-y-1 ${isCollapsed ? "px-2" : "px-4"} pt-4`}>
           {navItems.map((item) => {
+            // Get prefetch handlers based on item type
+            // Profile links get profile-specific prefetching
+            // Other links get route chunk prefetching
+            const prefetchHandlers =
+              "profileHandle" in item && item.profileHandle
+                ? getProfilePrefetchHandlers(item.profileHandle)
+                : getRoutePrefetchHandlers(item.path);
+
             return (
               <NavLink
                 key={item.path}
@@ -114,6 +126,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     : "transparent",
                 })}
                 title={isCollapsed ? item.label : undefined}
+                {...prefetchHandlers}
               >
                 <div className="relative">
                   <item.icon

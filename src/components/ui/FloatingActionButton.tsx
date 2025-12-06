@@ -1,8 +1,9 @@
 import { PenTool } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router";
 import { usePrefersReducedMotion } from "../../contexts/AccessibilityContext";
 import { useFeatureTracking } from "../../hooks/useAnalytics";
+import { useScrollVisibility } from "../../hooks/useRAFScroll";
 
 interface FloatingActionButtonProps {
   className?: string;
@@ -13,35 +14,14 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
 }) => {
   const navigate = useNavigate();
   const { trackFeatureAction } = useFeatureTracking("mobile_ui");
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
   const prefersReducedMotion = usePrefersReducedMotion();
 
-  useEffect(() => {
-    let ticking = false;
-
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-
-          // Hide when scrolling down, show when scrolling up
-          if (currentScrollY > lastScrollY && currentScrollY > 100) {
-            setIsVisible(false);
-          } else if (currentScrollY < lastScrollY) {
-            setIsVisible(true);
-          }
-
-          setLastScrollY(currentScrollY);
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  // Use RAF-batched scroll visibility hook
+  const isVisible = useScrollVisibility({
+    hideOnScrollDown: true,
+    showOnScrollUp: true,
+    showThreshold: 100,
+  });
 
   const handleClick = () => {
     trackFeatureAction("fab_compose_clicked");
