@@ -1846,14 +1846,11 @@ export const Search: React.FC = () => {
             )}
 
             {searchResults && searchResults.posts.length === 0 && (
-              <div className="bsky-glass rounded-xl p-4 text-center">
-                <p
-                  className="text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
-                >
-                  No posts found matching your search criteria.
-                </p>
-              </div>
+              <EmptyState
+                variant="search"
+                message="No posts found matching your search criteria."
+                compact
+              />
             )}
 
             {searchResults && searchResults.posts.length > 0 && (

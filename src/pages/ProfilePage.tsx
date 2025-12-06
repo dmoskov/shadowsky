@@ -22,6 +22,7 @@ import { PostCard } from "../components/PostCard";
 import { ReportModal } from "../components/ReportModal";
 import { ThreadModal } from "../components/ThreadModal";
 import { DomainVerifiedBadge } from "../components/ui/DomainVerifiedBadge";
+import { EmptyState } from "../components/ui/EmptyState";
 import { ProfileSkeleton } from "../components/ui/SkeletonLoader";
 import { UserListModal } from "../components/UserListModal";
 import { useAuth } from "../contexts/AuthContext";
