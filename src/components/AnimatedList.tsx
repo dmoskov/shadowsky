@@ -33,11 +33,7 @@ export interface AnimatedListProps<T extends AnimatedListItem> {
   /** Array of items to render */
   items: T[];
   /** Render function for each item */
-  renderItem: (
-    item: T,
-    index: number,
-    isNew: boolean,
-  ) => React.ReactNode;
+  renderItem: (item: T, index: number, isNew: boolean) => React.ReactNode;
   /** Unique key for the list (used for scroll position tracking) */
   listKey?: string;
   /** Enable animations (default: true) */
@@ -80,7 +76,7 @@ function prefersReducedMotion(): boolean {
 export function AnimatedList<T extends AnimatedListItem>({
   items,
   renderItem,
-  listKey = "default",
+  listKey: _listKey = "default",
   enableAnimations = true,
   animationDuration = 300,
   showNewContentIndicator = true,
@@ -116,7 +112,10 @@ export function AnimatedList<T extends AnimatedListItem>({
       scrollPositionRef.current = window.scrollY;
 
       // Clear pending count when user scrolls to top
-      if (scrollPositionRef.current < scrollThreshold && pendingAboveCount > 0) {
+      if (
+        scrollPositionRef.current < scrollThreshold &&
+        pendingAboveCount > 0
+      ) {
         setPendingAboveCount(0);
         onAcknowledgeNewItems?.();
       }
@@ -144,7 +143,9 @@ export function AnimatedList<T extends AnimatedListItem>({
 
       // Wait for React to update DOM
       requestAnimationFrame(() => {
-        const updatedChildren = container.querySelectorAll("[data-list-item-id]");
+        const updatedChildren = container.querySelectorAll(
+          "[data-list-item-id]",
+        );
 
         updatedChildren.forEach((child, index) => {
           const id = child.getAttribute("data-list-item-id");
@@ -291,11 +292,7 @@ export function AnimatedList<T extends AnimatedListItem>({
         .join(" ");
 
       return (
-        <div
-          key={item.id}
-          data-list-item-id={item.id}
-          className={itemClasses}
-        >
+        <div key={item.id} data-list-item-id={item.id} className={itemClasses}>
           {renderItem(item, index, isNew)}
         </div>
       );
@@ -352,7 +349,7 @@ export interface UseAnimatedListItemResult {
 }
 
 export function useAnimatedListItem({
-  id,
+  id: _id,
   isNew,
   animationDuration = 300,
   highlightDuration = 2000,

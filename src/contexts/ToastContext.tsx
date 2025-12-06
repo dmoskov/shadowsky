@@ -2,6 +2,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -9,6 +10,9 @@ import React, {
 import { ToastContainer } from "../components/Toast";
 
 export type ToastType = "success" | "error" | "warning" | "info";
+
+/** Toast priority levels for queue management */
+export type ToastPriority = "low" | "normal" | "high" | "urgent";
 
 export interface ToastAction {
   label: string;
@@ -25,6 +29,12 @@ export interface ToastOptions {
   showCountdown?: boolean;
   /** Callback when toast expires (after countdown) */
   onExpire?: () => void;
+  /** Priority level for queue ordering (default: normal) */
+  priority?: ToastPriority;
+  /** Group ID for deduplication - only one toast per group shown at a time */
+  groupId?: string;
+  /** Whether this toast should replace existing toasts with the same groupId */
+  replaceGroup?: boolean;
 }
 
 export interface ToastData {
@@ -40,6 +50,20 @@ export interface ToastData {
   showCountdown?: boolean;
   /** Callback when toast expires */
   onExpire?: () => void;
+  /** Priority level for queue ordering */
+  priority: ToastPriority;
+  /** Group ID for deduplication */
+  groupId?: string;
+}
+
+/** Queue configuration options */
+export interface ToastQueueConfig {
+  /** Maximum number of visible toasts (default: 3) */
+  maxVisible: number;
+  /** Rate limit: minimum ms between toasts (default: 300) */
+  rateLimitMs: number;
+  /** Whether to enable grouping/deduplication (default: true) */
+  enableGrouping: boolean;
 }
 
 interface ToastContextType {
@@ -53,6 +77,10 @@ interface ToastContextType {
     onExpire: () => void,
     duration?: number,
   ) => string;
+  /** Get current queue stats */
+  getQueueStats: () => { visible: number; queued: number; total: number };
+  /** Update queue configuration */
+  updateQueueConfig: (config: Partial<ToastQueueConfig>) => void;
 }
 
 const ToastContext = createContext<ToastContextType | null>(null);
@@ -64,9 +92,129 @@ const DEFAULT_DURATIONS: Record<ToastType, number> = {
   info: 3000,
 };
 
+/** Priority weights for sorting (higher = shown first) */
+const PRIORITY_WEIGHTS: Record<ToastPriority, number> = {
+  low: 1,
+  normal: 2,
+  high: 3,
+  urgent: 4,
+};
+
+const DEFAULT_QUEUE_CONFIG: ToastQueueConfig = {
+  maxVisible: 3,
+  rateLimitMs: 300,
+  enableGrouping: true,
+};
+
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = useState<ToastData[]>([]);
+  // All toasts (both visible and queued)
+  const [allToasts, setAllToasts] = useState<ToastData[]>([]);
+  // Queue configuration
+  const [queueConfig, setQueueConfig] =
+    useState<ToastQueueConfig>(DEFAULT_QUEUE_CONFIG);
+  // Rate limiting
+  const lastToastTimeRef = useRef<number>(0);
+  const pendingToastsRef = useRef<ToastData[]>([]);
+  const rateLimitTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const toastIdCounter = useRef(0);
+
+  /**
+   * Sort toasts by priority (urgent first) and then by creation time
+   */
+  const sortToastsByPriority = useCallback(
+    (toasts: ToastData[]): ToastData[] => {
+      return [...toasts].sort((a, b) => {
+        const priorityDiff =
+          PRIORITY_WEIGHTS[b.priority] - PRIORITY_WEIGHTS[a.priority];
+        if (priorityDiff !== 0) return priorityDiff;
+        // For same priority, urgent/high should be newest first, low/normal oldest first
+        if (a.priority === "urgent" || a.priority === "high") {
+          return b.createdAt - a.createdAt; // Newest first for high priority
+        }
+        return a.createdAt - b.createdAt; // Oldest first for normal priority
+      });
+    },
+    [],
+  );
+
+  /**
+   * Get visible toasts (limited by maxVisible) and queued toasts
+   */
+  const { visibleToasts, queuedToasts } = useMemo(() => {
+    const sorted = sortToastsByPriority(allToasts);
+    return {
+      visibleToasts: sorted.slice(0, queueConfig.maxVisible),
+      queuedToasts: sorted.slice(queueConfig.maxVisible),
+    };
+  }, [allToasts, queueConfig.maxVisible, sortToastsByPriority]);
+
+  /**
+   * Process pending toasts with rate limiting
+   */
+  const processPendingToasts = useCallback(() => {
+    if (pendingToastsRef.current.length === 0) return;
+
+    const now = Date.now();
+    const timeSinceLastToast = now - lastToastTimeRef.current;
+
+    if (timeSinceLastToast >= queueConfig.rateLimitMs) {
+      // Process next pending toast
+      const nextToast = pendingToastsRef.current.shift();
+      if (nextToast) {
+        lastToastTimeRef.current = now;
+        setAllToasts((prev) => [...prev, nextToast]);
+      }
+
+      // Schedule next processing if more pending
+      if (pendingToastsRef.current.length > 0) {
+        rateLimitTimerRef.current = setTimeout(
+          processPendingToasts,
+          queueConfig.rateLimitMs,
+        );
+      }
+    } else {
+      // Schedule for when rate limit allows
+      const delay = queueConfig.rateLimitMs - timeSinceLastToast;
+      rateLimitTimerRef.current = setTimeout(processPendingToasts, delay);
+    }
+  }, [queueConfig.rateLimitMs]);
+
+  /**
+   * Add a toast to the queue with rate limiting
+   */
+  const addToastToQueue = useCallback(
+    (toast: ToastData) => {
+      const now = Date.now();
+      const timeSinceLastToast = now - lastToastTimeRef.current;
+
+      // Urgent toasts bypass rate limiting
+      if (
+        toast.priority === "urgent" ||
+        timeSinceLastToast >= queueConfig.rateLimitMs
+      ) {
+        lastToastTimeRef.current = now;
+        setAllToasts((prev) => [...prev, toast]);
+      } else {
+        // Add to pending queue
+        pendingToastsRef.current.push(toast);
+        // Schedule processing if not already scheduled
+        if (!rateLimitTimerRef.current) {
+          const delay = queueConfig.rateLimitMs - timeSinceLastToast;
+          rateLimitTimerRef.current = setTimeout(processPendingToasts, delay);
+        }
+      }
+    },
+    [queueConfig.rateLimitMs, processPendingToasts],
+  );
+
+  // Cleanup rate limit timer on unmount
+  useEffect(() => {
+    return () => {
+      if (rateLimitTimerRef.current) {
+        clearTimeout(rateLimitTimerRef.current);
+      }
+    };
+  }, []);
 
   const showToast = useCallback(
     (message: string, options?: ToastOptions): string => {
@@ -74,6 +222,34 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       const type = options?.type ?? "info";
       const duration = options?.duration ?? DEFAULT_DURATIONS[type];
       const dismissible = options?.dismissible ?? true;
+      const priority = options?.priority ?? "normal";
+      const groupId = options?.groupId;
+
+      // Handle grouping/deduplication
+      if (groupId && queueConfig.enableGrouping) {
+        if (options?.replaceGroup) {
+          // Remove existing toasts with the same groupId
+          setAllToasts((prev) =>
+            prev.filter((toast) => toast.groupId !== groupId),
+          );
+          // Also remove from pending queue
+          pendingToastsRef.current = pendingToastsRef.current.filter(
+            (toast) => toast.groupId !== groupId,
+          );
+        } else {
+          // Check if a toast with this groupId already exists
+          const existingInQueue = allToasts.some(
+            (toast) => toast.groupId === groupId,
+          );
+          const existingInPending = pendingToastsRef.current.some(
+            (toast) => toast.groupId === groupId,
+          );
+          if (existingInQueue || existingInPending) {
+            // Skip this toast, return the id of the existing one
+            return id;
+          }
+        }
+      }
 
       const newToast: ToastData = {
         id,
@@ -85,13 +261,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         action: options?.action,
         showCountdown: options?.showCountdown,
         onExpire: options?.onExpire,
+        priority,
+        groupId,
       };
 
-      setToasts((prev) => [...prev, newToast]);
-
+      addToastToQueue(newToast);
       return id;
     },
-    [],
+    [addToastToQueue, allToasts, queueConfig.enableGrouping],
   );
 
   const showUndoToast = useCallback(
@@ -106,6 +283,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         duration,
         dismissible: false,
         showCountdown: true,
+        priority: "high", // Undo toasts should have high priority
         action: {
           label: "Undo",
           onClick: onUndo,
@@ -117,23 +295,62 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   );
 
   const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    setAllToasts((prev) => prev.filter((toast) => toast.id !== id));
+    // Also remove from pending queue if present
+    pendingToastsRef.current = pendingToastsRef.current.filter(
+      (toast) => toast.id !== id,
+    );
   }, []);
 
   const dismissAllToasts = useCallback(() => {
-    setToasts([]);
+    setAllToasts([]);
+    pendingToastsRef.current = [];
+    if (rateLimitTimerRef.current) {
+      clearTimeout(rateLimitTimerRef.current);
+      rateLimitTimerRef.current = undefined;
+    }
+  }, []);
+
+  const getQueueStats = useCallback(() => {
+    return {
+      visible: visibleToasts.length,
+      queued: queuedToasts.length + pendingToastsRef.current.length,
+      total: allToasts.length + pendingToastsRef.current.length,
+    };
+  }, [visibleToasts.length, queuedToasts.length, allToasts.length]);
+
+  const updateQueueConfig = useCallback((config: Partial<ToastQueueConfig>) => {
+    setQueueConfig((prev) => ({ ...prev, ...config }));
   }, []);
 
   // Memoize context value to prevent unnecessary re-renders of consumers
   const contextValue = useMemo(
-    () => ({ showToast, dismissToast, dismissAllToasts, showUndoToast }),
-    [showToast, dismissToast, dismissAllToasts, showUndoToast],
+    () => ({
+      showToast,
+      dismissToast,
+      dismissAllToasts,
+      showUndoToast,
+      getQueueStats,
+      updateQueueConfig,
+    }),
+    [
+      showToast,
+      dismissToast,
+      dismissAllToasts,
+      showUndoToast,
+      getQueueStats,
+      updateQueueConfig,
+    ],
   );
 
   return (
     <ToastContext.Provider value={contextValue}>
       {children}
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+      <ToastContainer
+        toasts={visibleToasts}
+        queuedCount={queuedToasts.length + pendingToastsRef.current.length}
+        onDismiss={dismissToast}
+      />
     </ToastContext.Provider>
   );
 }

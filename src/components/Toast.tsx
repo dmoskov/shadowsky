@@ -1,15 +1,30 @@
-import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle,
+  Info,
+  Layers,
+  X,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ToastData, ToastType } from "../contexts/ToastContext";
+import type {
+  ToastData,
+  ToastPriority,
+  ToastType,
+} from "../contexts/ToastContext";
 
 interface ToastProps {
   toast: ToastData;
   onDismiss: (id: string) => void;
+  /** Position in the visible stack (0 = most recent) */
+  stackPosition?: number;
 }
 
 interface ToastContainerProps {
   toasts: ToastData[];
   onDismiss: (id: string) => void;
+  /** Number of toasts queued but not visible */
+  queuedCount?: number;
 }
 
 const COUNTDOWN_UPDATE_INTERVAL = 100; // Update countdown every 100ms for smooth animation
@@ -35,10 +50,25 @@ const TOAST_BORDER_COLORS: Record<ToastType, string> = {
   info: "border-l-bsky-info",
 };
 
+/** Priority indicator styling */
+const PRIORITY_INDICATORS: Record<
+  ToastPriority,
+  { label: string; className: string } | null
+> = {
+  low: null, // No indicator for low priority
+  normal: null, // No indicator for normal priority
+  high: { label: "High Priority", className: "bg-bsky-warning text-white" },
+  urgent: { label: "Urgent", className: "bg-bsky-error text-white" },
+};
+
 const SWIPE_THRESHOLD = 100;
 const SWIPE_VELOCITY_THRESHOLD = 0.5;
 
-export function Toast({ toast, onDismiss }: ToastProps) {
+export function Toast({
+  toast,
+  onDismiss,
+  stackPosition: _stackPosition = 0,
+}: ToastProps) {
   const [isExiting, setIsExiting] = useState(false);
   const [translateX, setTranslateX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -53,6 +83,7 @@ export function Toast({ toast, onDismiss }: ToastProps) {
   const Icon = TOAST_ICONS[toast.type];
   const colorClass = TOAST_COLORS[toast.type];
   const borderColorClass = TOAST_BORDER_COLORS[toast.type];
+  const priorityIndicator = PRIORITY_INDICATORS[toast.priority];
 
   const dismiss = useCallback(
     (skipExpire = false) => {
@@ -227,6 +258,14 @@ export function Toast({ toast, onDismiss }: ToastProps) {
       </div>
 
       <div className="min-w-0 flex-1">
+        {/* Priority indicator badge */}
+        {priorityIndicator && (
+          <span
+            className={`mb-1 inline-block rounded px-1.5 py-0.5 text-xs font-medium ${priorityIndicator.className}`}
+          >
+            {priorityIndicator.label}
+          </span>
+        )}
         <div className="flex items-center gap-2">
           <p className="flex-1 break-words text-sm font-medium text-bsky-text-primary">
             {toast.message}
@@ -282,7 +321,11 @@ export function Toast({ toast, onDismiss }: ToastProps) {
   );
 }
 
-export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
+export function ToastContainer({
+  toasts,
+  onDismiss,
+  queuedCount = 0,
+}: ToastContainerProps) {
   return (
     <>
       {/* ARIA live region for screen readers */}
@@ -292,6 +335,11 @@ export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
             {toast.type}: {toast.message}
           </div>
         ))}
+        {queuedCount > 0 && (
+          <div>
+            {queuedCount} more notification{queuedCount > 1 ? "s" : ""} in queue
+          </div>
+        )}
       </div>
 
       {/* Visual toast container - bottom-right, stacking upward */}
@@ -299,8 +347,28 @@ export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
         className="pointer-events-none fixed bottom-4 right-4 z-50 flex max-h-screen flex-col-reverse gap-2 overflow-hidden"
         style={{ maxHeight: "calc(100vh - 32px)" }}
       >
-        {toasts.map((toast) => (
-          <Toast key={toast.id} toast={toast} onDismiss={onDismiss} />
+        {/* Queue indicator - shows when there are more toasts waiting */}
+        {queuedCount > 0 && (
+          <div
+            className="pointer-events-auto flex w-full max-w-sm items-center justify-center gap-2 rounded-lg border border-bsky-border-primary bg-bsky-bg-tertiary px-3 py-2 text-xs text-bsky-text-secondary shadow-sm"
+            role="status"
+            aria-label={`${queuedCount} more notification${queuedCount > 1 ? "s" : ""} waiting`}
+          >
+            <Layers className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>
+              +{queuedCount} more notification{queuedCount > 1 ? "s" : ""}
+            </span>
+          </div>
+        )}
+
+        {/* Visible toasts */}
+        {toasts.map((toast, index) => (
+          <Toast
+            key={toast.id}
+            toast={toast}
+            onDismiss={onDismiss}
+            stackPosition={index}
+          />
         ))}
       </div>
     </>

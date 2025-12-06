@@ -28,14 +28,16 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: ["⌘", "P"], description: "Go to profile" },
       { keys: ["⌘", "/"], description: "Go to search" },
       { keys: ["⌘", ","], description: "Open settings" },
-      { keys: ["G", "H"], description: "Go to home" },
-      { keys: ["G", "N"], description: "Go to notifications" },
-      { keys: ["G", "M"], description: "Go to messages" },
-      { keys: ["G", "B"], description: "Go to bookmarks" },
+      { keys: ["G", "then", "H"], description: "Go to home (vim-style)" },
+      { keys: ["G", "then", "N"], description: "Go to notifications" },
+      { keys: ["G", "then", "M"], description: "Go to messages" },
+      { keys: ["G", "then", "B"], description: "Go to bookmarks" },
+      { keys: ["G", "then", "P"], description: "Go to profile" },
+      { keys: ["G", "then", "S"], description: "Go to search" },
     ],
   },
   {
-    category: "Actions",
+    category: "Post Actions",
     shortcuts: [
       { keys: ["C"], description: "Compose new post" },
       { keys: ["R"], description: "Reply to post (when focused)" },
@@ -43,6 +45,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: ["T"], description: "Repost (when focused)" },
       { keys: ["S"], description: "Share post (when focused)" },
       { keys: ["B"], description: "Bookmark post (when focused)" },
+      { keys: ["O"], description: "Open post details (when focused)" },
       { keys: ["Enter"], description: "Open post details (when focused)" },
     ],
   },
@@ -53,8 +56,13 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: ["K"], description: "Previous post" },
       { keys: ["↓"], description: "Next post (alternative)" },
       { keys: ["↑"], description: "Previous post (alternative)" },
+      { keys: ["Home"], description: "First post" },
+      { keys: ["End"], description: "Last post" },
+      { keys: ["Page Up"], description: "Jump up 5 posts" },
+      { keys: ["Page Down"], description: "Jump down 5 posts" },
       { keys: ["Space"], description: "Scroll down" },
       { keys: ["Shift", "Space"], description: "Scroll up" },
+      { keys: ["Esc"], description: "Clear selection" },
     ],
   },
   {
@@ -164,23 +172,38 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
                     <div className="flex items-center gap-1">
                       {shortcut.keys.map((key, keyIndex) => (
                         <React.Fragment key={keyIndex}>
-                          <kbd
-                            className="min-w-[2rem] rounded px-2 py-1 text-center text-xs font-medium"
-                            style={{
-                              backgroundColor: "var(--bsky-bg-secondary)",
-                              color: "var(--bsky-text-primary)",
-                              border: "1px solid var(--bsky-border-primary)",
-                            }}
-                          >
-                            {key}
-                          </kbd>
-                          {keyIndex < shortcut.keys.length - 1 && (
+                          {key === "then" ? (
                             <span
-                              className="text-xs"
+                              className="px-1 text-xs"
                               style={{ color: "var(--bsky-text-tertiary)" }}
                             >
-                              +
+                              then
                             </span>
+                          ) : (
+                            <>
+                              <kbd
+                                className="min-w-[2rem] rounded px-2 py-1 text-center text-xs font-medium"
+                                style={{
+                                  backgroundColor: "var(--bsky-bg-secondary)",
+                                  color: "var(--bsky-text-primary)",
+                                  border:
+                                    "1px solid var(--bsky-border-primary)",
+                                }}
+                              >
+                                {key}
+                              </kbd>
+                              {keyIndex < shortcut.keys.length - 1 &&
+                                shortcut.keys[keyIndex + 1] !== "then" && (
+                                  <span
+                                    className="text-xs"
+                                    style={{
+                                      color: "var(--bsky-text-tertiary)",
+                                    }}
+                                  >
+                                    +
+                                  </span>
+                                )}
+                            </>
                           )}
                         </React.Fragment>
                       ))}

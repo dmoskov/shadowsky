@@ -60,6 +60,9 @@ const KeyboardShortcutsContext = createContext<
   KeyboardShortcutsContextType | undefined
 >(undefined);
 
+// G-key sequence timeout in milliseconds
+const G_KEY_TIMEOUT = 1000;
+
 export function KeyboardShortcutsProvider({
   children,
 }: {
@@ -67,6 +70,10 @@ export function KeyboardShortcutsProvider({
 }) {
   const [focusedPost, setFocusedPost] = useState<FocusedPostInfo | null>(null);
   const [isShortcutsHelpOpen, setIsShortcutsHelpOpen] = useState(false);
+
+  // Track g-key prefix for vim-style navigation sequences (g+h, g+n, etc.)
+  const gKeyPendingRef = useRef(false);
+  const gKeyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Store registered action callbacks by column ID
   const actionCallbacksRef = useRef<Map<string, PostActionCallbacks>>(
@@ -158,6 +165,15 @@ export function KeyboardShortcutsProvider({
     callbacks?.onNavigatePrev?.();
   }, [getCurrentCallbacks]);
 
+  // Clear g-key pending state
+  const clearGKeyPending = useCallback(() => {
+    gKeyPendingRef.current = false;
+    if (gKeyTimeoutRef.current) {
+      clearTimeout(gKeyTimeoutRef.current);
+      gKeyTimeoutRef.current = null;
+    }
+  }, []);
+
   // Global keyboard event handler
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -168,8 +184,103 @@ export function KeyboardShortcutsProvider({
       if (event.ctrlKey || event.altKey || event.metaKey) return;
 
       let handled = false;
+      const key = event.key.toLowerCase();
 
-      switch (event.key.toLowerCase()) {
+      // Handle g-key sequences (vim-style navigation)
+      if (gKeyPendingRef.current) {
+        clearGKeyPending();
+
+        // Navigate based on the second key in the sequence
+        switch (key) {
+          case "h":
+            // g+h: Go to home
+            window.dispatchEvent(
+              new CustomEvent("keyboard-navigate", { detail: { to: "/home" } }),
+            );
+            handled = true;
+            break;
+
+          case "n":
+            // g+n: Go to notifications
+            window.dispatchEvent(
+              new CustomEvent("keyboard-navigate", {
+                detail: { to: "/notifications" },
+              }),
+            );
+            handled = true;
+            break;
+
+          case "m":
+            // g+m: Go to messages
+            window.dispatchEvent(
+              new CustomEvent("keyboard-navigate", {
+                detail: { to: "/messages" },
+              }),
+            );
+            handled = true;
+            break;
+
+          case "b":
+            // g+b: Go to bookmarks
+            window.dispatchEvent(
+              new CustomEvent("keyboard-navigate", {
+                detail: { to: "/bookmarks" },
+              }),
+            );
+            handled = true;
+            break;
+
+          case "p":
+            // g+p: Go to profile
+            window.dispatchEvent(
+              new CustomEvent("keyboard-navigate", {
+                detail: { to: "/profile" },
+              }),
+            );
+            handled = true;
+            break;
+
+          case "s":
+            // g+s: Go to search
+            window.dispatchEvent(
+              new CustomEvent("keyboard-navigate", {
+                detail: { to: "/search" },
+              }),
+            );
+            handled = true;
+            break;
+        }
+
+        if (handled) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        return;
+      }
+
+      switch (key) {
+        case "g":
+          // Start g-key sequence
+          gKeyPendingRef.current = true;
+          // Clear after timeout if no second key pressed
+          gKeyTimeoutRef.current = setTimeout(() => {
+            gKeyPendingRef.current = false;
+          }, G_KEY_TIMEOUT);
+          handled = true;
+          break;
+
+        case "j":
+          // Navigate to next post (vim-style)
+          navigateNext();
+          handled = true;
+          break;
+
+        case "k":
+          // Navigate to previous post (vim-style)
+          navigatePrev();
+          handled = true;
+          break;
+
         case "l":
           // Like focused post
           if (focusedPost) {
@@ -210,6 +321,7 @@ export function KeyboardShortcutsProvider({
           }
           break;
 
+        case "o":
         case "enter":
           // Open focused post details
           if (focusedPost) {
@@ -246,7 +358,10 @@ export function KeyboardShortcutsProvider({
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      clearGKeyPending();
+    };
   }, [
     areShortcutsEnabled,
     focusedPost,
@@ -256,6 +371,9 @@ export function KeyboardShortcutsProvider({
     bookmarkPost,
     sharePost,
     openPost,
+    navigateNext,
+    navigatePrev,
+    clearGKeyPending,
   ]);
 
   // Memoize context value to prevent unnecessary re-renders of consumers
