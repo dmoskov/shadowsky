@@ -5,7 +5,13 @@
 
 const MAX_DIMENSION = 1000; // Bluesky stores with longest side at 1000px
 const MAX_FILE_SIZE = 1000000; // 1MB (Bluesky's limit)
+const PROFILE_IMAGE_MAX_SIZE = 976560; // ~976KB for profile images (avatar/banner)
 const COMPRESSION_STEP = 0.05; // Reduce quality by 5% each iteration
+
+// Profile image dimensions
+const AVATAR_SIZE = 400; // Square avatar
+const BANNER_WIDTH = 1500; // Banner width
+const BANNER_HEIGHT = 500; // Banner height (3:1 aspect ratio)
 
 // Common aspect ratios that display well on Bluesky
 const ASPECT_RATIOS = {
@@ -202,4 +208,141 @@ export function isCompressibleImage(file: File): boolean {
     file.type === "image/png" ||
     file.type === "image/webp"
   );
+}
+
+/**
+ * Compress profile images (avatar or banner) to meet Bluesky's requirements
+ * Avatar: Square, max ~976KB
+ * Banner: 3:1 aspect ratio, max ~976KB
+ */
+export async function compressProfileImage(
+  file: File,
+  type: "avatar" | "banner",
+): Promise<File> {
+  // Skip if already under limit and correct format
+  if (file.size <= PROFILE_IMAGE_MAX_SIZE && file.type === "image/jpeg") {
+    return file;
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const img = new Image();
+
+      img.onload = async () => {
+        try {
+          let targetWidth: number;
+          let targetHeight: number;
+          let cropX = 0;
+          let cropY = 0;
+          let cropWidth = img.width;
+          let cropHeight = img.height;
+
+          if (type === "avatar") {
+            // Square crop from center
+            targetWidth = AVATAR_SIZE;
+            targetHeight = AVATAR_SIZE;
+            const size = Math.min(img.width, img.height);
+            cropX = (img.width - size) / 2;
+            cropY = (img.height - size) / 2;
+            cropWidth = size;
+            cropHeight = size;
+          } else {
+            // Banner: 3:1 aspect ratio
+            targetWidth = BANNER_WIDTH;
+            targetHeight = BANNER_HEIGHT;
+            const targetRatio = BANNER_WIDTH / BANNER_HEIGHT; // 3:1
+            const currentRatio = img.width / img.height;
+
+            if (currentRatio > targetRatio) {
+              // Image is wider - crop width
+              cropWidth = img.height * targetRatio;
+              cropX = (img.width - cropWidth) / 2;
+            } else {
+              // Image is taller - crop height
+              cropHeight = img.width / targetRatio;
+              cropY = (img.height - cropHeight) / 2;
+            }
+
+            // Scale down if source is smaller
+            if (cropWidth < targetWidth) {
+              targetWidth = Math.round(cropWidth);
+              targetHeight = Math.round(cropHeight);
+            }
+          }
+
+          // Create canvas
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Could not get canvas context"));
+            return;
+          }
+
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+
+          // Enable image smoothing
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+
+          // Draw cropped and scaled image
+          ctx.drawImage(
+            img,
+            cropX,
+            cropY,
+            cropWidth,
+            cropHeight,
+            0,
+            0,
+            targetWidth,
+            targetHeight,
+          );
+
+          // Compress to JPEG with decreasing quality until under size limit
+          let quality = 0.92;
+          let blob: Blob | null = null;
+
+          while (quality > 0.1) {
+            blob = await new Promise<Blob | null>((resolve) => {
+              canvas.toBlob((b) => resolve(b), "image/jpeg", quality);
+            });
+
+            if (blob && blob.size <= PROFILE_IMAGE_MAX_SIZE) {
+              break;
+            }
+
+            quality -= COMPRESSION_STEP;
+          }
+
+          if (!blob) {
+            reject(new Error("Failed to compress profile image"));
+            return;
+          }
+
+          const compressedFile = new File(
+            [blob],
+            file.name.replace(/\.[^.]+$/, ".jpg"),
+            { type: "image/jpeg" },
+          );
+
+          console.log(
+            `Compressed ${type} from ${(file.size / 1024).toFixed(0)}KB to ${(compressedFile.size / 1024).toFixed(0)}KB`,
+            `(${img.width}x${img.height} → ${targetWidth}x${targetHeight})`,
+          );
+
+          resolve(compressedFile);
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = e.target?.result as string;
+    };
+
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
 }

@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   Bookmark,
   Heart,
+  Loader,
   MessageCircle,
   MoreVertical,
   Repeat2,
@@ -14,16 +15,18 @@ import React, { memo } from "react";
 import { useNavigate } from "react-router";
 import { useModerationPreferences } from "../hooks/useModerationPreferences";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
+import { fetchLinkMetadata, type LinkMetadata } from "../services/anthropic";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
 import { isValidUrl } from "../utils/security";
 import { parseBskyUrl } from "../utils/url-helpers";
+import { extractFirstLinkUrl } from "./composer/utils";
 import { ImageGallery } from "./ImageGallery";
-import { VideoPlayer } from "./VideoPlayer";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { ProgressiveImage } from "./ui/ProgressiveImage";
 import { RichText } from "./ui/RichText";
+import { VideoPlayer } from "./VideoPlayer";
 
 const logger = createLogger("PostRenderer");
 
@@ -176,6 +179,118 @@ const BskyUrlEmbed: React.FC<{
                   ))}
               </div>
             )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Component to detect and render external URLs as link previews
+const ExternalLinkEmbed: React.FC<{
+  text: string;
+}> = ({ text }) => {
+  const [metadata, setMetadata] = React.useState<LinkMetadata | null>(null);
+  const [loading, setLoading] = React.useState(false);
+
+  const url = extractFirstLinkUrl(text);
+
+  React.useEffect(() => {
+    if (!url) {
+      setMetadata(null);
+      return;
+    }
+
+    let cancelled = false;
+    const fetchMetadataAsync = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchLinkMetadata(url);
+        if (!cancelled) {
+          setMetadata(data);
+        }
+      } catch (error) {
+        logger.error("Failed to fetch link metadata:", error);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    // Debounce
+    const timer = setTimeout(fetchMetadataAsync, 100);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [url]);
+
+  if (!url) return null;
+
+  if (loading) {
+    return (
+      <div
+        className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
+        style={{
+          borderColor: "var(--bsky-border-primary)",
+          color: "var(--bsky-text-secondary)",
+        }}
+      >
+        <Loader size={14} className="animate-spin" />
+        <span>Loading link preview...</span>
+      </div>
+    );
+  }
+
+  if (!metadata) return null;
+
+  let domain = "";
+  try {
+    domain = new URL(metadata.url).hostname.replace("www.", "");
+  } catch {
+    domain = metadata.url;
+  }
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isValidUrl(metadata.url)) {
+      window.open(metadata.url, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  return (
+    <div
+      className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+      style={{ borderColor: "var(--bsky-border-primary)" }}
+      onClick={handleClick}
+    >
+      {metadata.imageUrl && (
+        <img
+          src={metadata.imageUrl}
+          alt=""
+          className="h-40 w-full object-cover"
+        />
+      )}
+      <div className="p-3">
+        <div
+          className="mb-1 text-xs"
+          style={{ color: "var(--bsky-text-tertiary)" }}
+        >
+          {domain}
+        </div>
+        <div
+          className="line-clamp-2 text-sm font-medium"
+          style={{ color: "var(--bsky-text-primary)" }}
+        >
+          {metadata.title}
+        </div>
+        {metadata.description && (
+          <div
+            className="mt-1 line-clamp-2 text-sm"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
+            {metadata.description}
           </div>
         )}
       </div>
@@ -702,8 +817,11 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
 
       return (
         <div
-          className="mt-2 cursor-pointer rounded-lg border p-2.5 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          className="relative mt-2 cursor-pointer overflow-hidden rounded-lg border p-2.5 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
+          style={{
+            borderColor: "var(--bsky-border-primary)",
+            backgroundColor: "var(--bsky-bg-primary)",
+          }}
           onClick={(e) => {
             e.stopPropagation();
             if (externalUri && isUriValid) {
@@ -731,13 +849,13 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
             />
           )}
           <div
-            className="text-sm font-semibold"
+            className="line-clamp-2 text-sm font-semibold"
             style={{ color: "var(--bsky-text-primary)" }}
           >
             {embed.external.title}
           </div>
           <div
-            className="mt-1 text-xs"
+            className="mt-1 line-clamp-2 text-xs"
             style={{ color: "var(--bsky-text-secondary)" }}
           >
             {embed.external.description}
@@ -866,17 +984,23 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
             </div>
 
             {/* Post content */}
-            <div className="mt-1">
+            <div className="mt-1 overflow-hidden">
               <p
-                className="whitespace-pre-wrap"
+                className="whitespace-pre-wrap break-words"
                 style={{ color: "var(--bsky-text-primary)" }}
               >
                 <RichText text={record?.text || ""} facets={record?.facets} />
               </p>
               {post.embed && renderEmbed(post.embed)}
-              {/* If no embed but text contains a bsky URL, try to render it */}
+              {/* If no embed but text contains URLs, try to render them */}
               {!post.embed && record?.text && (
-                <BskyUrlEmbed text={record.text} onQuoteClick={onQuoteClick} />
+                <>
+                  <ExternalLinkEmbed text={record.text} />
+                  <BskyUrlEmbed
+                    text={record.text}
+                    onQuoteClick={onQuoteClick}
+                  />
+                </>
               )}
             </div>
 

@@ -1,10 +1,14 @@
+import type { AppBskyFeedDefs } from "@atproto/api";
 import { RichText } from "@atproto/api";
 import {
   AlertCircle,
   CheckCircle,
+  ExternalLink,
   Eye,
   GripVertical,
+  Link,
   Loader,
+  MessageCircle,
   Plus,
   Save,
   Send,
@@ -14,6 +18,7 @@ import {
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useFocusTrap } from "../hooks/useFocusTrap";
+import { fetchLinkMetadata, type LinkMetadata } from "../services/anthropic";
 import {
   deleteDraft,
   generateDraftId,
@@ -22,6 +27,9 @@ import {
   type ThreadDraft,
 } from "../services/drafts";
 import { createLogger } from "../utils/logger";
+import { parseBskyUrl } from "../utils/url-helpers";
+import { extractFirstBskyPostUrl, extractFirstLinkUrl } from "./composer/utils";
+import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 
 const logger = createLogger("ThreadComposer");
 
@@ -46,7 +54,7 @@ export function ThreadComposer({
   initialDraftId,
   onThreadPosted,
 }: ThreadComposerProps) {
-  const { agent } = useAuth();
+  const { agent, session } = useAuth();
   const containerRef = useFocusTrap<HTMLDivElement>(isOpen);
 
   // Thread posts state
@@ -63,6 +71,7 @@ export function ThreadComposer({
   const [status, setStatus] = useState<{
     type: "idle" | "saving" | "saved" | "posting" | "success" | "error";
     message?: string;
+    postUrl?: string;
   }>({ type: "idle" });
 
   // Drag and drop state
@@ -356,6 +365,7 @@ export function ThreadComposer({
     setStatus({ type: "posting", message: "Posting thread..." });
 
     try {
+      let rootPost: { uri: string; cid: string } | undefined;
       let lastPost: { uri: string; cid: string } | undefined;
 
       for (let i = 0; i < validPosts.length; i++) {
@@ -381,18 +391,26 @@ export function ThreadComposer({
         };
 
         // Add reply info for subsequent posts
-        if (i > 0 && lastPost) {
+        // root = first post in thread (stays constant)
+        // parent = previous post in thread (changes each iteration)
+        if (i > 0 && rootPost && lastPost) {
           postData.reply = {
-            root: lastPost,
+            root: rootPost,
             parent: lastPost,
           };
         }
 
         const result = await agent.post(postData);
-        lastPost = {
+        const currentPost = {
           uri: result.uri,
           cid: result.cid,
         };
+
+        // First post becomes the root for all subsequent posts
+        if (i === 0) {
+          rootPost = currentPost;
+        }
+        lastPost = currentPost;
 
         // Small delay between posts to avoid rate limiting
         if (i < validPosts.length - 1) {
@@ -400,7 +418,13 @@ export function ThreadComposer({
         }
       }
 
-      setStatus({ type: "success", message: "Thread posted!" });
+      // Construct the Bluesky URL for the thread
+      const postUrl =
+        rootPost && session?.handle
+          ? `https://bsky.app/profile/${session.handle}/post/${rootPost.uri.split("/").pop()}`
+          : undefined;
+
+      setStatus({ type: "success", message: "Thread posted!", postUrl });
 
       // Delete the draft if it exists
       if (draftId) {
@@ -427,7 +451,7 @@ export function ThreadComposer({
     } finally {
       setIsPosting(false);
     }
-  }, [agent, posts, draftId, onThreadPosted, onClose]);
+  }, [agent, session, posts, draftId, onThreadPosted, onClose]);
 
   // Calculate total characters
   const totalChars = posts.reduce((sum, p) => sum + p.text.length, 0);
@@ -465,26 +489,39 @@ export function ThreadComposer({
             >
               Create Thread
             </h2>
-            {status.type !== "idle" && (
-              <span
-                className="flex items-center gap-1 text-sm"
-                style={{
-                  color:
-                    status.type === "error"
-                      ? "var(--bsky-error)"
-                      : status.type === "success"
-                        ? "var(--bsky-success)"
-                        : "var(--bsky-text-secondary)",
-                }}
-              >
-                {status.type === "saving" && (
-                  <Loader size={14} className="animate-spin" />
-                )}
-                {status.type === "saved" && <CheckCircle size={14} />}
-                {status.type === "error" && <AlertCircle size={14} />}
-                {status.message}
-              </span>
-            )}
+            {status.type !== "idle" &&
+              (status.type === "success" && status.postUrl ? (
+                <a
+                  href={status.postUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-sm hover:underline"
+                  style={{ color: "var(--bsky-success)" }}
+                >
+                  <CheckCircle size={14} />
+                  {status.message}
+                  <ExternalLink size={12} />
+                </a>
+              ) : (
+                <span
+                  className="flex items-center gap-1 text-sm"
+                  style={{
+                    color:
+                      status.type === "error"
+                        ? "var(--bsky-error)"
+                        : status.type === "success"
+                          ? "var(--bsky-success)"
+                          : "var(--bsky-text-secondary)",
+                  }}
+                >
+                  {status.type === "saving" && (
+                    <Loader size={14} className="animate-spin" />
+                  )}
+                  {status.type === "saved" && <CheckCircle size={14} />}
+                  {status.type === "error" && <AlertCircle size={14} />}
+                  {status.message}
+                </span>
+              ))}
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -560,6 +597,10 @@ export function ThreadComposer({
                       >
                         {post.text}
                       </p>
+                      {/* Link preview */}
+                      <ThreadPostLinkPreview postText={post.text} />
+                      {/* Quote post preview */}
+                      <ThreadPostQuotePreview postText={post.text} />
                     </div>
                   ))}
               </div>
@@ -751,3 +792,264 @@ export function ThreadComposer({
     </div>
   );
 }
+
+/**
+ * Link preview component for thread posts containing URLs
+ */
+const ThreadPostLinkPreview: React.FC<{ postText: string }> = ({
+  postText,
+}) => {
+  const [metadata, setMetadata] = useState<LinkMetadata | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const url = extractFirstLinkUrl(postText);
+
+  useEffect(() => {
+    if (!url) {
+      setMetadata(null);
+      return;
+    }
+
+    let cancelled = false;
+    const fetchMetadataAsync = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchLinkMetadata(url);
+        if (!cancelled) {
+          setMetadata(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setError("Failed to load preview");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    const timer = setTimeout(fetchMetadataAsync, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [url]);
+
+  if (!url) return null;
+
+  if (loading) {
+    return (
+      <div
+        className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
+        style={{
+          borderColor: "var(--bsky-border-primary)",
+          color: "var(--bsky-text-secondary)",
+        }}
+      >
+        <Loader size={14} className="animate-spin" />
+        <span>Loading link preview...</span>
+      </div>
+    );
+  }
+
+  if (error || !metadata) {
+    if (error) {
+      return (
+        <div
+          className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
+          style={{
+            borderColor: "var(--bsky-border-primary)",
+            color: "var(--bsky-text-tertiary)",
+          }}
+        >
+          <Link size={14} />
+          <span className="truncate">{url}</span>
+        </div>
+      );
+    }
+    return null;
+  }
+
+  let domain = "";
+  try {
+    domain = new URL(metadata.url).hostname.replace("www.", "");
+  } catch {
+    domain = metadata.url;
+  }
+
+  return (
+    <div
+      className="mt-2 overflow-hidden rounded-lg border"
+      style={{ borderColor: "var(--bsky-border-primary)" }}
+    >
+      {metadata.imageUrl && (
+        <div
+          className="h-32 w-full bg-cover bg-center"
+          style={{ backgroundImage: `url(${metadata.imageUrl})` }}
+        />
+      )}
+      <div className="p-3">
+        <div
+          className="mb-1 text-xs"
+          style={{ color: "var(--bsky-text-tertiary)" }}
+        >
+          {domain}
+        </div>
+        <div
+          className="line-clamp-2 text-sm font-medium"
+          style={{ color: "var(--bsky-text-primary)" }}
+        >
+          {metadata.title}
+        </div>
+        {metadata.description && (
+          <div
+            className="mt-1 line-clamp-2 text-xs"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
+            {metadata.description}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Quote post preview component for thread posts containing Bluesky URLs
+ */
+const ThreadPostQuotePreview: React.FC<{ postText: string }> = ({
+  postText,
+}) => {
+  const [quotedPost, setQuotedPost] = useState<AppBskyFeedDefs.PostView | null>(
+    null,
+  );
+  const [loading, setLoading] = useState(false);
+
+  const bskyUrl = extractFirstBskyPostUrl(postText);
+
+  useEffect(() => {
+    if (!bskyUrl) {
+      setQuotedPost(null);
+      return;
+    }
+
+    let cancelled = false;
+    const fetchQuotedPost = async () => {
+      const parsed = parseBskyUrl(bskyUrl);
+      if (!parsed || !parsed.postId) return;
+
+      setLoading(true);
+      try {
+        const { atProtoClient } = await import("../services/atproto");
+        const agent = atProtoClient.agent;
+        if (!agent) return;
+
+        let did = parsed.did;
+        if (!did && parsed.handle) {
+          try {
+            const profileResponse = await agent.getProfile({
+              actor: parsed.handle,
+            });
+            did = profileResponse.data.did;
+          } catch {
+            return;
+          }
+        }
+
+        if (!did) return;
+
+        const uri = `at://${did}/app.bsky.feed.post/${parsed.postId}`;
+        const response = await agent.app.bsky.feed.getPosts({ uris: [uri] });
+
+        if (!cancelled && response.data.posts.length > 0) {
+          setQuotedPost(response.data.posts[0]);
+        }
+      } catch {
+        // Silently fail
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    const timer = setTimeout(fetchQuotedPost, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [bskyUrl]);
+
+  if (!bskyUrl) return null;
+
+  if (loading) {
+    return (
+      <div
+        className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
+        style={{
+          borderColor: "var(--bsky-border-primary)",
+          color: "var(--bsky-text-secondary)",
+        }}
+      >
+        <Loader size={14} className="animate-spin" />
+        <span>Loading quoted post...</span>
+      </div>
+    );
+  }
+
+  if (!quotedPost) return null;
+
+  const record = quotedPost.record as { text?: string };
+  return (
+    <div
+      className="mt-2 overflow-hidden rounded-lg border"
+      style={{ borderColor: "var(--bsky-border-primary)" }}
+    >
+      <div
+        className="flex items-center gap-2 px-3 py-1.5 text-xs"
+        style={{
+          backgroundColor: "var(--bsky-bg-tertiary)",
+          borderBottom: "1px solid var(--bsky-border-primary)",
+          color: "var(--bsky-text-secondary)",
+        }}
+      >
+        <MessageCircle size={12} />
+        <span>Quoted post</span>
+      </div>
+      <div className="p-3">
+        <div className="mb-2 flex items-center gap-2">
+          <ProfileHoverCard handle={quotedPost.author.handle}>
+            <img
+              src={quotedPost.author.avatar || "/default-avatar.svg"}
+              alt=""
+              className="h-5 w-5 cursor-pointer rounded-full"
+            />
+          </ProfileHoverCard>
+          <ProfileHoverCard handle={quotedPost.author.handle}>
+            <span
+              className="cursor-pointer text-sm font-semibold hover:underline"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              {quotedPost.author.displayName || quotedPost.author.handle}
+            </span>
+          </ProfileHoverCard>
+          <span
+            className="text-sm"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
+            @{quotedPost.author.handle}
+          </span>
+        </div>
+        <p
+          className="line-clamp-3 text-sm"
+          style={{ color: "var(--bsky-text-primary)" }}
+        >
+          {record?.text || ""}
+        </p>
+      </div>
+    </div>
+  );
+};

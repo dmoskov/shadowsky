@@ -1,9 +1,13 @@
 import { queryClient } from "@bsky/shared";
 import { useQuery } from "@tanstack/react-query";
-import { Camera, Upload } from "lucide-react";
+import { Camera, Loader, Upload } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { uploadBlobWithRetry } from "../../utils/blob-upload";
+import {
+  compressProfileImage,
+  isCompressibleImage,
+} from "../../utils/image-compression";
 import { proxifyBskyImage } from "../../utils/image-proxy";
 
 export const AccountSettings: React.FC = () => {
@@ -15,6 +19,9 @@ export const AccountSettings: React.FC = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCompressing, setIsCompressing] = useState<
+    "avatar" | "banner" | null
+  >(null);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -44,18 +51,37 @@ export const AccountSettings: React.FC = () => {
     }
   }, [profile]);
 
-  const handleImageChange = (type: "avatar" | "banner", file: File) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (type === "avatar") {
-        setAvatar(reader.result as string);
-        setAvatarFile(file);
-      } else {
-        setBanner(reader.result as string);
-        setBannerFile(file);
+  const handleImageChange = async (type: "avatar" | "banner", file: File) => {
+    setIsCompressing(type);
+    setMessage(null);
+
+    try {
+      // Compress the image if it's a compressible format
+      let processedFile = file;
+      if (isCompressibleImage(file)) {
+        processedFile = await compressProfileImage(file, type);
       }
-    };
-    reader.readAsDataURL(file);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (type === "avatar") {
+          setAvatar(reader.result as string);
+          setAvatarFile(processedFile);
+        } else {
+          setBanner(reader.result as string);
+          setBannerFile(processedFile);
+        }
+        setIsCompressing(null);
+      };
+      reader.readAsDataURL(processedFile);
+    } catch (error) {
+      console.error(`Failed to process ${type} image:`, error);
+      setMessage({
+        type: "error",
+        text: `Failed to process image. Please try a different file.`,
+      });
+      setIsCompressing(null);
+    }
   };
 
   const uploadImage = async (file: File): Promise<{ blob: any }> => {
@@ -177,6 +203,14 @@ export const AccountSettings: React.FC = () => {
                 className="h-full w-full object-cover"
               />
             )}
+            {isCompressing === "banner" && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="flex items-center gap-2 text-white">
+                  <Loader size={20} className="animate-spin" />
+                  <span className="text-sm">Compressing...</span>
+                </div>
+              </div>
+            )}
             <input
               ref={bannerInputRef}
               type="file"
@@ -186,10 +220,12 @@ export const AccountSettings: React.FC = () => {
                 if (file) handleImageChange("banner", file);
               }}
               className="hidden"
+              disabled={isCompressing !== null}
             />
             <button
               onClick={() => bannerInputRef.current?.click()}
-              className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 transition-all hover:bg-opacity-50"
+              disabled={isCompressing !== null}
+              className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 transition-all hover:bg-opacity-50 disabled:cursor-not-allowed"
             >
               <div className="flex items-center gap-2 rounded-lg bg-black bg-opacity-75 px-3 py-2 text-sm text-white opacity-0 transition-all hover:opacity-100">
                 <Upload size={16} />
@@ -212,6 +248,11 @@ export const AccountSettings: React.FC = () => {
                 alt="Profile avatar"
                 className="h-24 w-24 rounded-full border-4 border-white dark:border-gray-900"
               />
+              {isCompressing === "avatar" && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-50">
+                  <Loader size={24} className="animate-spin text-white" />
+                </div>
+              )}
               <input
                 ref={avatarInputRef}
                 type="file"
@@ -221,10 +262,12 @@ export const AccountSettings: React.FC = () => {
                   if (file) handleImageChange("avatar", file);
                 }}
                 className="hidden"
+                disabled={isCompressing !== null}
               />
               <button
                 onClick={() => avatarInputRef.current?.click()}
-                className="absolute bottom-0 right-0 rounded-full bg-blue-500 p-2 text-white shadow-lg transition-all hover:bg-blue-600"
+                disabled={isCompressing !== null}
+                className="absolute bottom-0 right-0 rounded-full bg-blue-500 p-2 text-white shadow-lg transition-all hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Camera size={16} />
               </button>

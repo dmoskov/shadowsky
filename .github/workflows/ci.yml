@@ -192,3 +192,88 @@ jobs:
             accessibility-report.json
             playwright-report/
           retention-days: 30
+
+  performance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run Performance Tests (INP Budget)
+        run: npm run test:perf
+        env:
+          PERFORMANCE_TEST: "true"
+          PLAYWRIGHT_BASE_URL: "http://127.0.0.1:5174"
+      - name: Generate Performance Summary
+        if: always()
+        run: |
+          echo "## Interaction Timing (INP) Performance Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### INP Budget: 200ms" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Tests verify that key user interactions complete within the 200ms INP budget." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Interaction | Budget |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Button clicks | < 200ms |" >> $GITHUB_STEP_SUMMARY
+          echo "| Form input focus | < 200ms |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tab navigation | < 200ms |" >> $GITHUB_STEP_SUMMARY
+          echo "| Login toggle | < 200ms |" >> $GITHUB_STEP_SUMMARY
+          echo "| Link hover | < 200ms |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "See Playwright report for detailed timing results." >> $GITHUB_STEP_SUMMARY
+      - name: Upload Performance Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-report
+          path: playwright-report/
+          retention-days: 30
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: performance-test-results
+          path: test-results/
+          retention-days: 30
+
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Build application
+        run: npm run build:ci
+      - name: Run Lighthouse CI
+        run: npx @lhci/cli autorun
+      - name: Generate Lighthouse Summary
+        if: always()
+        run: |
+          echo "## Lighthouse Performance Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Core Web Vitals Thresholds" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Threshold | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| LCP (Largest Contentful Paint) | < 2.5s | Required |" >> $GITHUB_STEP_SUMMARY
+          echo "| INP (via TBT proxy) | < 200ms | Required |" >> $GITHUB_STEP_SUMMARY
+          echo "| CLS (Cumulative Layout Shift) | < 0.1 | Required |" >> $GITHUB_STEP_SUMMARY
+          echo "| FCP (First Contentful Paint) | < 1.8s | Required |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "See Lighthouse report artifact for detailed results." >> $GITHUB_STEP_SUMMARY
+      - name: Upload Lighthouse Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/
+          retention-days: 30

@@ -36,6 +36,13 @@ interface ThreadModalProps {
   openToQuote?: boolean; // When true, opens with the post ready to quote
 }
 
+// Track whether there are more posts above the current view
+interface ThreadAncestorState {
+  hasMoreAbove: boolean;
+  topMostUri: string | null; // URI of the highest post we have
+  topMostParentUri: string | null; // URI of the parent we haven't fetched yet
+}
+
 interface ReplyState {
   isReplying: boolean;
   replyToPost: AppBskyFeedDefs.PostView | null;
@@ -72,10 +79,21 @@ export function ThreadModal({
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [focusedPostIndex, setFocusedPostIndex] = useState(0);
   const [highlightedPostUri, setHighlightedPostUri] = useState(postUri);
+  const [ancestorState, setAncestorState] = useState<ThreadAncestorState>({
+    hasMoreAbove: false,
+    topMostUri: null,
+    topMostParentUri: null,
+  });
+  const [isLoadingMoreAbove, setIsLoadingMoreAbove] = useState(false);
 
-  // Reset highlighted post when postUri changes
+  // Reset highlighted post and ancestor state when postUri changes
   useEffect(() => {
     setHighlightedPostUri(postUri);
+    setAncestorState({
+      hasMoreAbove: false,
+      topMostUri: null,
+      topMostParentUri: null,
+    });
   }, [postUri]);
 
   // Ref for ThreadContextBar sentinel element (placed after thread stats)
@@ -131,7 +149,12 @@ export function ThreadModal({
       if (!agent) throw new Error("Not authenticated");
 
       try {
-        const response = await agent.getPostThread({ uri: postUri, depth: 10 });
+        // Fetch with parent: 3 to get up to 3 levels of ancestors
+        const response = await agent.getPostThread({
+          uri: postUri,
+          depth: 10,
+          parentHeight: 3,
+        });
         debug.log("Thread response:", response);
 
         // Check the response type to provide better error messages
@@ -174,6 +197,43 @@ export function ThreadModal({
             `INVALID_THREAD_TYPE: ${thread.$type || "undefined"}`,
           );
         }
+
+        // Check if we found the root or if there's more above
+        // Traverse up to find the topmost post we have
+        let topMost = thread as AppBskyFeedDefs.ThreadViewPost;
+        let hasMoreAbove = false;
+        let topMostParentUri: string | null = null;
+
+        while (topMost.parent) {
+          if (topMost.parent.$type === "app.bsky.feed.defs#threadViewPost") {
+            topMost = topMost.parent as AppBskyFeedDefs.ThreadViewPost;
+          } else if (
+            topMost.parent.$type === "app.bsky.feed.defs#notFoundPost" ||
+            topMost.parent.$type === "app.bsky.feed.defs#blockedPost"
+          ) {
+            // Parent exists but is not accessible - we've hit the effective root
+            break;
+          } else {
+            break;
+          }
+        }
+
+        // Check if the topmost post is actually the root or if it has a reply reference
+        const topMostRecord = topMost.post?.record as {
+          reply?: { parent?: { uri: string } };
+        };
+        if (topMostRecord?.reply?.parent?.uri) {
+          // This post is a reply, so there's more above that we didn't fetch
+          hasMoreAbove = true;
+          topMostParentUri = topMostRecord.reply.parent.uri;
+        }
+
+        // Update ancestor state
+        setAncestorState({
+          hasMoreAbove,
+          topMostUri: topMost.post?.uri || null,
+          topMostParentUri,
+        });
 
         return thread;
       } catch (err: any) {
@@ -446,6 +506,76 @@ export function ThreadModal({
     },
     [posts.length],
   );
+
+  // Handler for loading more posts above (navigate to parent thread)
+  const handleLoadMoreAbove = useCallback(async () => {
+    if (!ancestorState.topMostParentUri || !agent) return;
+
+    setIsLoadingMoreAbove(true);
+    try {
+      // Navigate to the parent post's thread - this will show the thread from that post's perspective
+      // The parent post will become the new center, showing 3 levels above it
+      const parentUri = ancestorState.topMostParentUri;
+
+      // Clear the current persisted scroll position before navigating
+      clearPersistedScrollPosition(postUri);
+
+      // Update the highlighted post to the current topmost so user can find their place
+      setHighlightedPostUri(ancestorState.topMostUri || postUri);
+
+      // Invalidate the current query and fetch from the parent
+      queryClient.setQueryData(["thread", postUri], undefined);
+
+      // Fetch thread from the parent URI with same parameters
+      const response = await agent.getPostThread({
+        uri: parentUri,
+        depth: 10,
+        parentHeight: 3,
+      });
+
+      if (response.data.thread.$type === "app.bsky.feed.defs#threadViewPost") {
+        // Check new ancestor state
+        let topMost = response.data.thread as AppBskyFeedDefs.ThreadViewPost;
+        let hasMoreAbove = false;
+        let topMostParentUri: string | null = null;
+
+        while (topMost.parent) {
+          if (topMost.parent.$type === "app.bsky.feed.defs#threadViewPost") {
+            topMost = topMost.parent as AppBskyFeedDefs.ThreadViewPost;
+          } else {
+            break;
+          }
+        }
+
+        const topMostRecord = topMost.post?.record as {
+          reply?: { parent?: { uri: string } };
+        };
+        if (topMostRecord?.reply?.parent?.uri) {
+          hasMoreAbove = true;
+          topMostParentUri = topMostRecord.reply.parent.uri;
+        }
+
+        setAncestorState({
+          hasMoreAbove,
+          topMostUri: topMost.post?.uri || null,
+          topMostParentUri,
+        });
+
+        // Update the query cache with the new thread data
+        queryClient.setQueryData(["thread", postUri], response.data.thread);
+      }
+    } catch (err) {
+      debug.error("Failed to load more posts above:", err);
+    } finally {
+      setIsLoadingMoreAbove(false);
+    }
+  }, [
+    agent,
+    ancestorState.topMostParentUri,
+    ancestorState.topMostUri,
+    postUri,
+    queryClient,
+  ]);
 
   // Ref for composer focus
   const composerRef = useRef<HTMLDivElement>(null);
@@ -1093,6 +1223,9 @@ export function ThreadModal({
                     onFocusedIndexChange={setFocusedPostIndex}
                     scrollContainerRef={scrollContainerRef}
                     onRestoreScrollPosition={handleRestoreScrollPosition}
+                    hasMoreAbove={ancestorState.hasMoreAbove}
+                    isLoadingMoreAbove={isLoadingMoreAbove}
+                    onLoadMoreAbove={handleLoadMoreAbove}
                     onPostClick={(clickedPost, action) => {
                       const post =
                         posts.find((p) => p.uri === clickedPost.uri) || null;

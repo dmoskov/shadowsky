@@ -774,6 +774,7 @@ export function ThreadPlannerComposer({
     setStatus({ type: "posting", message: "Posting thread..." });
 
     try {
+      let rootPost: { uri: string; cid: string } | undefined;
       let lastPost: { uri: string; cid: string } | undefined;
 
       for (let i = 0; i < validPosts.length; i++) {
@@ -833,18 +834,26 @@ export function ThreadPlannerComposer({
         }
 
         // Add reply info for subsequent posts
-        if (i > 0 && lastPost) {
+        // root = first post in thread (stays constant)
+        // parent = previous post in thread (changes each iteration)
+        if (i > 0 && rootPost && lastPost) {
           postData.reply = {
-            root: lastPost,
+            root: rootPost,
             parent: lastPost,
           };
         }
 
         const result = await agent.post(postData);
-        lastPost = {
+        const currentPost = {
           uri: result.uri,
           cid: result.cid,
         };
+
+        // First post becomes the root for all subsequent posts
+        if (i === 0) {
+          rootPost = currentPost;
+        }
+        lastPost = currentPost;
 
         // Small delay between posts to avoid rate limiting
         if (i < validPosts.length - 1) {

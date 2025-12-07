@@ -184,6 +184,10 @@ export interface ThreadViewerProps {
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
   // Callback to restore initial focused index from persisted state
   onRestoreScrollPosition?: (focusedIndex: number) => void;
+  // Ancestor state - indicates if there are more posts above
+  hasMoreAbove?: boolean;
+  isLoadingMoreAbove?: boolean;
+  onLoadMoreAbove?: () => void;
 }
 
 export const ThreadViewer: React.FC<ThreadViewerProps> = ({
@@ -206,6 +210,9 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   onFocusedIndexChange,
   scrollContainerRef,
   onRestoreScrollPosition,
+  hasMoreAbove = false,
+  isLoadingMoreAbove = false,
+  onLoadMoreAbove,
 }) => {
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -1783,6 +1790,45 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   return (
     <>
       <div ref={containerRef} className={`thread-viewer ${className}`}>
+        {/* Load More Above indicator - shown when thread is truncated */}
+        {hasMoreAbove && onLoadMoreAbove && (
+          <div className="mb-4">
+            <button
+              onClick={onLoadMoreAbove}
+              disabled={isLoadingMoreAbove}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-3 transition-colors hover:border-solid disabled:cursor-not-allowed disabled:opacity-50"
+              style={{
+                borderColor: "var(--bsky-border-primary)",
+                backgroundColor: "var(--bsky-bg-secondary)",
+                color: "var(--bsky-text-secondary)",
+              }}
+            >
+              {isLoadingMoreAbove ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span className="text-sm font-medium">
+                    Loading earlier posts...
+                  </span>
+                </>
+              ) : (
+                <>
+                  <ChevronUp size={16} />
+                  <span className="text-sm font-medium">
+                    Load earlier posts in thread
+                  </span>
+                  <ChevronUp size={16} />
+                </>
+              )}
+            </button>
+            <div
+              className="mt-2 text-center text-xs"
+              style={{ color: "var(--bsky-text-tertiary)" }}
+            >
+              This thread continues above
+            </div>
+          </div>
+        )}
+
         {/* Hero Root Post */}
         {rootPostObject && (
           <div className="mb-6">

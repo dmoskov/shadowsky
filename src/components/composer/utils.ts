@@ -231,6 +231,46 @@ export function extractUrls(text: string): string[] {
   return matches || [];
 }
 
+// Bluesky URL patterns - these become quote posts, not link previews
+const BSKY_URL_PATTERNS = [
+  /https?:\/\/(?:www\.)?bsky\.app\/profile\/[^/]+\/post\/[a-zA-Z0-9]+/i,
+  /https?:\/\/(?:www\.)?staging\.bsky\.app\/profile\/[^/]+\/post\/[a-zA-Z0-9]+/i,
+];
+
+/**
+ * Check if a URL is a Bluesky post URL (should become quote post, not link preview)
+ */
+export function isBskyPostUrl(url: string): boolean {
+  return BSKY_URL_PATTERNS.some((pattern) => pattern.test(url));
+}
+
+/**
+ * Extract the first non-Bluesky URL from text for link preview
+ * Bluesky URLs are handled separately as quote posts
+ */
+export function extractFirstLinkUrl(text: string): string | null {
+  const urls = extractUrls(text);
+  for (const url of urls) {
+    if (!isBskyPostUrl(url)) {
+      return url;
+    }
+  }
+  return null;
+}
+
+/**
+ * Extract the first Bluesky post URL from text (for quote post embedding)
+ */
+export function extractFirstBskyPostUrl(text: string): string | null {
+  const urls = extractUrls(text);
+  for (const url of urls) {
+    if (isBskyPostUrl(url)) {
+      return url;
+    }
+  }
+  return null;
+}
+
 /**
  * Extract existing hashtags from text
  */

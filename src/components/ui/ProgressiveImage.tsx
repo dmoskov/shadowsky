@@ -1,8 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  DEFAULT_LQIP_CONFIG,
+  generateLQIPUrl,
   getCachedSupport,
   getFormatSupport,
+  supportsLQIP,
   transformBskyCdnUrl,
+  type LQIPConfig,
 } from "../../utils/image-format-support";
 import {
   getNetworkInfo,
@@ -24,6 +28,18 @@ interface ProgressiveImageProps {
   priority?: boolean; // Skip lazy loading for above-the-fold images
   /** Enable skeleton overlay crossfade (default: true) */
   showSkeleton?: boolean;
+  /** Enable LQIP blur-up effect (default: true for supported URLs) */
+  enableLQIP?: boolean;
+  /** LQIP configuration options */
+  lqipConfig?: Partial<LQIPConfig>;
+  /**
+   * Aspect ratio for CLS prevention (width/height).
+   * When provided, the container will reserve space based on this ratio.
+   * Can be a number (e.g., 16/9) or preset string ("16:9", "4:3", "square").
+   */
+  aspectRatio?: number | "16:9" | "4:3" | "3:2" | "2:3" | "square" | "9:16";
+  /** Maximum height constraint for the image */
+  maxHeight?: number | string;
 }
 
 // Network-aware concurrent load limits
@@ -32,6 +48,7 @@ let currentPrefetchStrategy: PrefetchStrategy =
   getNetworkInfo().prefetchStrategy;
 let currentLoads = 0;
 const loadQueue: Array<() => void> = [];
+let isProcessingQueue = false;
 
 // Subscribe to network changes and update strategy
 if (typeof window !== "undefined") {
@@ -41,8 +58,6 @@ if (typeof window !== "undefined") {
     processLoadQueue();
   });
 }
-
-let isProcessingQueue = false;
 
 async function processLoadQueue() {
   // Use network-aware max concurrent loads
@@ -77,6 +92,16 @@ async function processLoadQueue() {
   isProcessingQueue = false;
 }
 
+// Aspect ratio presets for CLS prevention
+const ASPECT_RATIO_PRESETS: Record<string, number> = {
+  "16:9": 16 / 9,
+  "4:3": 4 / 3,
+  "3:2": 3 / 2,
+  "2:3": 2 / 3,
+  square: 1,
+  "9:16": 9 / 16,
+};
+
 export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   src,
   alt,
@@ -89,15 +114,48 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   onError,
   priority = false,
   showSkeleton = true,
+  enableLQIP = true,
+  lqipConfig,
+  aspectRatio,
+  maxHeight,
 }) => {
   const [imgSrc, setImgSrc] = useState(placeholderSrc || "");
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(priority);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [lqipLoaded, setLqipLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+  const lqipRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // Merge LQIP config with defaults
+  const mergedLqipConfig = useMemo(
+    () => ({ ...DEFAULT_LQIP_CONFIG, ...lqipConfig }),
+    [lqipConfig],
+  );
+
+  // Determine if we should use LQIP for this image
+  const useLQIP = useMemo(
+    () => enableLQIP && mergedLqipConfig.enabled && supportsLQIP(src),
+    [enableLQIP, mergedLqipConfig.enabled, src],
+  );
+
+  // Generate LQIP URL
+  const lqipUrl = useMemo(
+    () => (useLQIP ? generateLQIPUrl(src, mergedLqipConfig) : ""),
+    [useLQIP, src, mergedLqipConfig],
+  );
+
+  // Track the last successfully loaded src to prevent re-loading the same image
+  const loadedSrcRef = useRef<string | null>(null);
+
+  // Stable callback refs to prevent effect re-runs from callback identity changes
+  const onLoadRef = useRef(onLoad);
+  const onErrorRef = useRef(onError);
+  onLoadRef.current = onLoad;
+  onErrorRef.current = onError;
 
   // Format support detection for AVIF/WebP optimization
   const [formatSupport, setFormatSupport] = useState(getCachedSupport);
@@ -144,16 +202,19 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   }, [imgSrc, isBskyCdn, formatSupport.avif, formatSupport.webp]);
 
   // Generate a low-quality placeholder if not provided
+  // Note: For Bluesky CDN images, prefer using LQIP (generateLQIPUrl) instead
   const getLowQualitySrc = (originalSrc: string) => {
+    // If LQIP is enabled and URL supports it, use LQIP URL
+    if (useLQIP && lqipUrl) {
+      return lqipUrl;
+    }
     // If it's a proxied image, add quality parameter for true low quality
     if (originalSrc.includes("/api/image-proxy")) {
       return originalSrc + "&q=10&w=50";
     }
-    // For Bluesky CDN images, use thumbnail variant
+    // For Bluesky CDN images, use thumbnail variant via generateLQIPUrl
     if (originalSrc.includes("cdn.bsky.app")) {
-      return originalSrc
-        .replace("@jpeg", "@jpeg")
-        .replace(/format=\w+/, "format=webp");
+      return generateLQIPUrl(originalSrc);
     }
     return originalSrc;
   };
@@ -203,6 +264,18 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   useEffect(() => {
     if (!shouldLoad) return;
 
+    // Skip if we've already loaded this exact src
+    if (loadedSrcRef.current === src) {
+      return;
+    }
+
+    // If src changed to a different image, reset state
+    if (loadedSrcRef.current !== null && loadedSrcRef.current !== src) {
+      setImageLoaded(false);
+      setIsLoading(true);
+      setHasError(false);
+    }
+
     const lowQualitySrc = placeholderSrc || getLowQualitySrc(src);
     setImgSrc(lowQualitySrc);
 
@@ -214,11 +287,12 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
         requestAnimationFrame(() => {
           setImgSrc(src);
           setIsLoading(false);
+          loadedSrcRef.current = src;
           // Small delay for DOM update before triggering crossfade
           requestAnimationFrame(() => {
             setImageLoaded(true);
           });
-          onLoad?.();
+          onLoadRef.current?.();
         });
         currentLoads--;
         processLoadQueue();
@@ -230,7 +304,7 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
       img.onerror = () => {
         setHasError(true);
         setIsLoading(false);
-        onError?.();
+        onErrorRef.current?.();
         currentLoads--;
         processLoadQueue();
         // Clear image reference to free memory
@@ -258,7 +332,7 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
         loadQueue.splice(index, 1);
       }
     };
-  }, [src, placeholderSrc, shouldLoad, onLoad, onError, priority]);
+  }, [src, placeholderSrc, shouldLoad, priority]);
 
   // Error state
   if (hasError) {
@@ -290,33 +364,111 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
     );
   }
 
-  // Render with skeleton overlay for crossfade effect
+  // Handle LQIP load event
+  const handleLqipLoad = () => {
+    setLqipLoaded(true);
+  };
+
+  // Calculate aspect ratio for CLS prevention
+  const computedAspectRatio = useMemo(() => {
+    // If explicit aspectRatio prop provided
+    if (aspectRatio) {
+      return typeof aspectRatio === "number"
+        ? aspectRatio
+        : ASPECT_RATIO_PRESETS[aspectRatio] || 16 / 9;
+    }
+    // Calculate from width/height if both provided
+    if (width && height) {
+      return width / height;
+    }
+    // No aspect ratio (will not reserve space)
+    return undefined;
+  }, [aspectRatio, width, height]);
+
+  // Container styles for CLS prevention
+  const containerStyles = useMemo((): React.CSSProperties => {
+    const styles: React.CSSProperties = {
+      ...style,
+    };
+
+    // Apply aspect ratio for CLS prevention (reserves space before image loads)
+    if (computedAspectRatio) {
+      styles.aspectRatio = computedAspectRatio;
+    } else if (height) {
+      // Use explicit height if no aspect ratio
+      styles.height = typeof height === "number" ? `${height}px` : height;
+    } else {
+      styles.height = "auto";
+    }
+
+    // Apply width
+    styles.width = width
+      ? typeof width === "number"
+        ? `${width}px`
+        : width
+      : "100%";
+
+    // Apply max height constraint
+    if (maxHeight) {
+      styles.maxHeight =
+        typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight;
+    }
+
+    return styles;
+  }, [style, computedAspectRatio, width, height, maxHeight]);
+
+  // Render with LQIP blur-up effect or skeleton overlay
   return (
     <div
       ref={containerRef}
-      className={`relative overflow-hidden ${className}`}
-      style={{
-        width: width || "100%",
-        height: height || "auto",
-        ...style,
-      }}
+      className={`progressive-image-container media-placeholder-wrapper relative overflow-hidden ${className}`}
+      style={containerStyles}
+      data-aspect-ratio={computedAspectRatio ? "true" : undefined}
+      data-loaded={imageLoaded ? "true" : "false"}
     >
-      {/* Skeleton overlay - fades out as image loads */}
+      {/* LQIP (Low-Quality Image Placeholder) layer with blur effect */}
+      {useLQIP && lqipUrl && (
+        <img
+          ref={lqipRef}
+          src={lqipUrl}
+          alt=""
+          aria-hidden="true"
+          className="lqip-placeholder"
+          onLoad={handleLqipLoad}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "inherit",
+            // Blur effect that transitions out as full image loads
+            filter: `blur(${mergedLqipConfig.blurRadius}px)`,
+            // Scale up slightly to hide blur edges
+            transform: "scale(1.1)",
+            opacity: imageLoaded ? 0 : lqipLoaded ? 1 : 0,
+            transition: `opacity ${mergedLqipConfig.transitionDuration}ms var(--ease-entrance, cubic-bezier(0, 0, 0.2, 1)), filter ${mergedLqipConfig.transitionDuration}ms var(--ease-entrance, cubic-bezier(0, 0, 0.2, 1))`,
+            pointerEvents: "none",
+            zIndex: 1,
+          }}
+        />
+      )}
+
+      {/* Skeleton overlay - fades out when LQIP loads or image loads */}
       {showSkeleton && (
         <div
           className="absolute inset-0 animate-pulse bg-bsky-bg-tertiary"
           style={{
-            opacity: imageLoaded ? 0 : 1,
+            opacity: lqipLoaded || imageLoaded ? 0 : 1,
             transition:
               "opacity var(--transition-slow, 300ms) var(--ease-entrance, cubic-bezier(0, 0, 0.2, 1))",
-            pointerEvents: imageLoaded ? "none" : "auto",
-            zIndex: 1,
+            pointerEvents: lqipLoaded || imageLoaded ? "none" : "auto",
+            zIndex: 0,
           }}
           aria-hidden="true"
         />
       )}
 
-      {/* Actual image with AVIF/WebP fallback chain using picture element */}
+      {/* Full-resolution image with AVIF/WebP fallback chain using picture element */}
       {optimizedSources.length > 0 ? (
         <picture>
           {optimizedSources.map((source) => (
@@ -328,16 +480,18 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
             alt={alt}
             loading={priority ? "eager" : "lazy"}
             decoding={priority ? "sync" : "async"}
+            className="progressive-image-full"
             style={{
               opacity: imageLoaded ? 1 : 0,
-              transition:
-                "opacity var(--transition-slow, 300ms) var(--ease-entrance, cubic-bezier(0, 0, 0.2, 1))",
+              transition: `opacity ${mergedLqipConfig.transitionDuration}ms var(--ease-entrance, cubic-bezier(0, 0, 0.2, 1))`,
               willChange: isLoading ? "opacity" : "auto",
               backfaceVisibility: "hidden",
               width: "100%",
               height: "100%",
               objectFit: "inherit",
               filter: style?.filter,
+              position: "relative",
+              zIndex: 2,
             }}
             width={width}
             height={height}
@@ -355,16 +509,18 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
           alt={alt}
           loading={priority ? "eager" : "lazy"}
           decoding={priority ? "sync" : "async"}
+          className="progressive-image-full"
           style={{
             opacity: imageLoaded ? 1 : 0,
-            transition:
-              "opacity var(--transition-slow, 300ms) var(--ease-entrance, cubic-bezier(0, 0, 0.2, 1))",
+            transition: `opacity ${mergedLqipConfig.transitionDuration}ms var(--ease-entrance, cubic-bezier(0, 0, 0.2, 1))`,
             willChange: isLoading ? "opacity" : "auto",
             backfaceVisibility: "hidden",
             width: "100%",
             height: "100%",
             objectFit: "inherit",
             filter: style?.filter,
+            position: "relative",
+            zIndex: 2,
           }}
           width={width}
           height={height}

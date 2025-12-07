@@ -59,21 +59,23 @@ export const ComposerTextArea: React.FC<ComposerTextAreaProps> = ({
 }) => {
   return (
     <div className="space-y-3">
-      <MentionTypeahead
-        ref={textareaRef}
-        value={text}
-        onChange={onTextChange}
-        onPaste={onPaste}
-        placeholder="What's on your mind?"
-        className="resize-vertical font-inherit min-h-[200px] w-full rounded-lg p-4 transition-all focus-visible:border-blue-500"
-        style={{
-          background: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
-          color: "var(--bsky-text-primary)",
-          outline: "none",
-        }}
-        disabled={isPosting}
-      />
+      <div className="relative">
+        <MentionTypeahead
+          ref={textareaRef}
+          value={text}
+          onChange={onTextChange}
+          onPaste={onPaste}
+          placeholder="What's on your mind?"
+          className="composer-textarea font-inherit w-full rounded-lg p-4 transition-all focus-visible:border-blue-500"
+          style={{
+            background: "var(--bsky-bg-secondary)",
+            border: "1px solid var(--bsky-border-primary)",
+            color: "var(--bsky-text-primary)",
+            outline: "none",
+          }}
+          disabled={isPosting}
+        />
+      </div>
 
       {/* Hashtag Suggestions */}
       {(showHashtagSuggestions || isLoadingHashtags) && text.length >= 20 && (

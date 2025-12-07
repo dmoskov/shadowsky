@@ -3,6 +3,8 @@
 /* Keep complex animations and styles */
 @import "./styles/skydeck.css";
 @import "./styles/tailwind-components.css";
+/* Responsive placeholder system for CLS prevention */
+@import "./styles/placeholder-system.css";
 
 @tailwind base;
 @tailwind components;
@@ -199,14 +201,56 @@ html {
   animation: skeleton-wave 1.5s ease-in-out infinite;
 }
 
+/* Enhanced skeleton glow effect for content-specific skeletons */
+@keyframes skeleton-glow {
+  0%,
+  100% {
+    opacity: 0.6;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.05);
+  }
+}
+
+.animate-skeleton-glow {
+  animation: skeleton-glow 2s ease-in-out infinite;
+}
+
+/* Staggered skeleton animation for lists */
+.skeleton-stagger > [role="status"]:nth-child(1) {
+  animation-delay: 0ms;
+}
+.skeleton-stagger > [role="status"]:nth-child(2) {
+  animation-delay: 50ms;
+}
+.skeleton-stagger > [role="status"]:nth-child(3) {
+  animation-delay: 100ms;
+}
+.skeleton-stagger > [role="status"]:nth-child(4) {
+  animation-delay: 150ms;
+}
+.skeleton-stagger > [role="status"]:nth-child(5) {
+  animation-delay: 200ms;
+}
+
 /* Disable skeleton wave animation for reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .animate-skeleton-wave::after {
     animation: none;
   }
+
+  .animate-skeleton-glow {
+    animation: none;
+  }
 }
 
 html[data-reduce-motion="true"] .animate-skeleton-wave::after {
+  animation: none;
+}
+
+html[data-reduce-motion="true"] .animate-skeleton-glow {
   animation: none;
 }
 
@@ -415,6 +459,18 @@ body::-webkit-scrollbar-thumb:hover {
     }
   }
 
+  /* Degraded connection indicator fade-in animation */
+  @keyframes degraded-fade-in {
+    0% {
+      opacity: 0;
+      transform: translateY(10px) scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
   /* Deep link highlight animation for post navigation */
   .deep-link-highlight {
     animation: deep-link-pulse 2s ease-out;
@@ -620,6 +676,52 @@ html[data-high-contrast="true"] .dark {
   --bsky-text-tertiary: #e5e7eb;
 }
 
+/* Composer textarea resize handle styling */
+.composer-textarea {
+  resize: vertical;
+  min-height: 200px;
+}
+
+/* Style the native resize handle for webkit browsers */
+.composer-textarea::-webkit-resizer {
+  background: transparent;
+  border-width: 8px;
+  border-style: solid;
+  border-color: transparent var(--bsky-border-primary)
+    var(--bsky-border-primary) transparent;
+  border-radius: 0 0 4px 0;
+  cursor: ns-resize;
+}
+
+/* Hover effect for resize area */
+.composer-textarea:hover::-webkit-resizer {
+  border-color: transparent var(--bsky-primary) var(--bsky-primary) transparent;
+}
+
+/* Focus effect for resize area */
+.composer-textarea:focus::-webkit-resizer {
+  border-color: transparent var(--bsky-primary) var(--bsky-primary) transparent;
+}
+
+/* Responsive min-heights for composer */
+@media (min-width: 1024px) {
+  .composer-textarea {
+    min-height: 300px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .composer-textarea {
+    min-height: 400px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .composer-textarea {
+    min-height: 500px;
+  }
+}
+
 /* Mobile Performance Optimizations */
 @media (max-width: 768px) {
   /* Optimize scrolling performance */
@@ -692,4 +794,930 @@ html[data-high-contrast="true"] .dark {
   .blur-md {
     filter: none !important;
   }
+}
+
+/* ==========================================
+ * GPU Acceleration Utilities
+ * ==========================================
+ * Use these utilities for intelligent GPU layer management.
+ * The WillChangeManager service handles dynamic will-change,
+ * but these CSS classes provide static optimization for
+ * scroll containers and animated elements.
+ */
+
+/* GPU-accelerated scroll container base styles */
+.gpu-scroll-container {
+  /* Create stacking context for GPU layers */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  /* Isolate paint operations */
+  isolation: isolate;
+  /* Smooth touch scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Use contain for scroll containers to limit layout/paint scope */
+.gpu-scroll-container-contained {
+  contain: layout style paint;
+}
+
+/* Strict containment for virtualized lists (size must be known) */
+.gpu-scroll-container-strict {
+  contain: strict;
+}
+
+/* GPU layer hint for elements during scroll (use sparingly) */
+.gpu-layer {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* GPU layer with isolation for animated children */
+.gpu-layer-isolated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  isolation: isolate;
+}
+
+/* Content containment for feed items and cards */
+.gpu-content-contained {
+  contain: content;
+}
+
+/* Layout containment only (when size is dynamic) */
+.gpu-layout-contained {
+  contain: layout style;
+}
+
+@layer utilities {
+  /* Scroll container optimization utilities */
+  .scroll-gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* GPU hint for transform animations */
+  .animate-gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  /* Content containment utility */
+  .contain-content {
+    contain: content;
+  }
+
+  /* Layout containment utility */
+  .contain-layout {
+    contain: layout style;
+  }
+
+  /* Paint containment utility */
+  .contain-paint {
+    contain: paint;
+  }
+
+  /* Strict containment utility (requires fixed size) */
+  .contain-strict {
+    contain: strict;
+  }
+
+  /* Size containment utility */
+  .contain-size {
+    contain: size layout;
+  }
+
+  /* Inline-size containment utility */
+  .contain-inline-size {
+    contain: inline-size layout style;
+  }
+
+  /* Isolation utility for stacking context */
+  .isolate-layer {
+    isolation: isolate;
+  }
+}
+
+/* Scroll-triggered will-change states (managed by WillChangeManager) */
+/* These data attributes are set dynamically by the service */
+[data-gpu-active="true"] {
+  will-change: transform;
+}
+
+[data-gpu-active="scroll"] {
+  will-change: scroll-position;
+}
+
+[data-gpu-active="opacity"] {
+  will-change: opacity;
+}
+
+[data-gpu-active="transform-opacity"] {
+  will-change: transform, opacity;
+}
+
+/* Disable GPU acceleration hints for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .gpu-scroll-container,
+  .gpu-layer,
+  .gpu-layer-isolated,
+  .scroll-gpu,
+  .animate-gpu,
+  [data-gpu-active] {
+    transform: none;
+    will-change: auto;
+  }
+}
+
+html[data-reduce-motion="true"] {
+  .gpu-scroll-container,
+  .gpu-layer,
+  .gpu-layer-isolated,
+  .scroll-gpu,
+  .animate-gpu,
+  [data-gpu-active] {
+    transform: none;
+    will-change: auto;
+  }
+}
+
+/* ==========================================
+ * LQIP (Low-Quality Image Placeholder) Blur-Up Styles
+ * ==========================================
+ * Progressive image loading with blur-up transition effect.
+ * LQIP generation uses CDN transformation to request thumbnail variants.
+ */
+
+/* Container for progressive image with LQIP */
+.progressive-image-container {
+  /* Create stacking context for z-index layers */
+  isolation: isolate;
+  /* Contain paint operations for performance */
+  contain: layout paint;
+}
+
+/* LQIP placeholder layer with blur effect */
+.lqip-placeholder {
+  /* GPU acceleration for smooth blur transitions */
+  will-change: opacity, filter;
+  backface-visibility: hidden;
+  /* Ensure smooth scaling */
+  image-rendering: auto;
+}
+
+/* Full resolution image layer */
+.progressive-image-full {
+  /* GPU acceleration for smooth opacity transitions */
+  will-change: opacity;
+  backface-visibility: hidden;
+}
+
+/* Reduced motion: instant transitions instead of blur-up animation */
+@media (prefers-reduced-motion: reduce) {
+  .lqip-placeholder {
+    /* Remove blur effect for reduced motion users */
+    filter: none !important;
+    transform: none !important;
+    transition: none !important;
+    /* Instant show/hide instead of fade */
+    opacity: 0 !important;
+  }
+
+  .progressive-image-full {
+    /* Instant show instead of fade */
+    transition: none !important;
+  }
+
+  .progressive-image-container .animate-pulse {
+    animation: none !important;
+  }
+}
+
+/* Data attribute for reduced motion (manual override) */
+html[data-reduce-motion="true"] .lqip-placeholder {
+  filter: none !important;
+  transform: none !important;
+  transition: none !important;
+  opacity: 0 !important;
+}
+
+html[data-reduce-motion="true"] .progressive-image-full {
+  transition: none !important;
+}
+
+html[data-reduce-motion="true"] .progressive-image-container .animate-pulse {
+  animation: none !important;
+}
+
+/* ==========================================
+ * Content Insertion Animation System
+ * ==========================================
+ * Smooth animations for inserting new content (posts, notifications)
+ * without causing Cumulative Layout Shift (CLS).
+ * Uses CSS transforms and opacity for GPU-accelerated animations.
+ */
+
+/* Content insertion container - enables proper transform animations */
+.content-insertion-container {
+  /* Isolate stacking context for animations */
+  isolation: isolate;
+  /* Prevent content overflow during animations */
+  overflow-anchor: none;
+}
+
+/* Base animation class for content items */
+.content-item-animated {
+  /* Enable GPU acceleration for smooth transforms */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  /* Use will-change only during animation (set via JS) */
+}
+
+/* Active animation state - set by JS when animating */
+[data-animating="true"] .content-item-animated {
+  will-change: transform, opacity;
+}
+
+/* New item insertion animation */
+@keyframes content-insert {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.98);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-4px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-content-insert {
+  animation: content-insert var(--transition-slow) var(--ease-entrance) forwards;
+}
+
+/* Staggered animation delays for multiple items */
+.animate-content-insert:nth-child(1) {
+  animation-delay: 0ms;
+}
+.animate-content-insert:nth-child(2) {
+  animation-delay: 30ms;
+}
+.animate-content-insert:nth-child(3) {
+  animation-delay: 60ms;
+}
+.animate-content-insert:nth-child(4) {
+  animation-delay: 90ms;
+}
+.animate-content-insert:nth-child(5) {
+  animation-delay: 120ms;
+}
+.animate-content-insert:nth-child(6) {
+  animation-delay: 150ms;
+}
+.animate-content-insert:nth-child(7) {
+  animation-delay: 180ms;
+}
+.animate-content-insert:nth-child(8) {
+  animation-delay: 210ms;
+}
+.animate-content-insert:nth-child(9) {
+  animation-delay: 240ms;
+}
+.animate-content-insert:nth-child(10) {
+  animation-delay: 270ms;
+}
+
+/* Existing item shift-down animation */
+@keyframes content-shift-down {
+  from {
+    transform: translateY(var(--shift-distance, -100px));
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-content-shift {
+  animation: content-shift-down var(--transition-slow) var(--ease-out) forwards;
+}
+
+/* New content highlight effect */
+@keyframes content-highlight {
+  0% {
+    background-color: rgba(var(--bsky-primary-rgb, 0, 133, 255), 0.15);
+    box-shadow: inset 3px 0 0 var(--bsky-primary);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: inset 0 0 0 transparent;
+  }
+}
+
+.content-item-new {
+  position: relative;
+  animation: content-highlight 2s ease-out forwards;
+  animation-delay: var(--transition-slow);
+}
+
+/* Subtle highlight for newly inserted items */
+.content-item-new::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--bsky-primary);
+  opacity: 1;
+  animation: fade-left-border 2s ease-out forwards;
+  animation-delay: var(--transition-slow);
+}
+
+@keyframes fade-left-border {
+  0% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* New content indicator (floating pill) */
+@keyframes indicator-entrance {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@keyframes indicator-exit {
+  0% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px) scale(0.9);
+  }
+}
+
+.new-content-indicator {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--bsky-primary);
+  color: white;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  animation: indicator-entrance var(--transition-normal) var(--ease-spring)
+    forwards;
+  transition:
+    transform var(--transition-fast) var(--ease-spring-soft),
+    box-shadow var(--transition-fast) var(--ease-out);
+}
+
+.new-content-indicator:hover {
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.new-content-indicator:active {
+  transform: translateX(-50%) scale(0.98);
+}
+
+.new-content-indicator.exiting {
+  animation: indicator-exit var(--transition-normal) var(--ease-exit) forwards;
+}
+
+/* Icon animation in indicator */
+.new-content-indicator svg {
+  animation: bounce-up 1s ease-in-out infinite;
+}
+
+@keyframes bounce-up {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Reduced motion preferences for content insertion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-content-insert,
+  .animate-content-shift,
+  .content-item-new,
+  .content-item-new::before,
+  .new-content-indicator,
+  .new-content-indicator svg {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .animate-content-insert {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .new-content-indicator {
+    transform: translateX(-50%) !important;
+  }
+
+  .content-item-new {
+    background-color: rgba(var(--bsky-primary-rgb, 0, 133, 255), 0.1);
+  }
+}
+
+/* User preference for reduced motion (manual override) - content insertion */
+html[data-reduce-motion="true"] .animate-content-insert,
+html[data-reduce-motion="true"] .animate-content-shift,
+html[data-reduce-motion="true"] .content-item-new,
+html[data-reduce-motion="true"] .content-item-new::before,
+html[data-reduce-motion="true"] .new-content-indicator,
+html[data-reduce-motion="true"] .new-content-indicator svg {
+  animation: none !important;
+  transition: none !important;
+}
+
+html[data-reduce-motion="true"] .animate-content-insert {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+html[data-reduce-motion="true"] .new-content-indicator {
+  transform: translateX(-50%) !important;
+}
+
+html[data-reduce-motion="true"] .content-item-new {
+  background-color: rgba(var(--bsky-primary-rgb, 0, 133, 255), 0.1);
+}
+
+/* ==========================================
+ * Skeleton-to-Content Transition System
+ * ==========================================
+ * Smooth morphing transitions from skeleton loading states to real content.
+ * Eliminates jarring instant-replace effects with GPU-accelerated animations.
+ */
+
+/* Container setup for layered skeleton/content */
+.skeleton-transition-container {
+  position: relative;
+  isolation: isolate;
+  /* Prevent content overflow during animations */
+  overflow: hidden;
+}
+
+/* Skeleton layer - sits above content during loading */
+.skeleton-transition-skeleton {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  /* GPU acceleration for smooth transitions */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  /* Default visible state */
+  opacity: 1;
+  visibility: visible;
+  /* Transition properties set via variant classes */
+}
+
+/* Content layer - revealed when loading completes */
+.skeleton-transition-content {
+  position: relative;
+  z-index: 1;
+  /* GPU acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  /* Default hidden state */
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Active transition state */
+.skeleton-transition-container[data-transitioning="true"] {
+  /* Enable will-change during active animation */
+  will-change: contents;
+}
+
+.skeleton-transition-container[data-transitioning="true"]
+  .skeleton-transition-skeleton,
+.skeleton-transition-container[data-transitioning="true"]
+  .skeleton-transition-content {
+  will-change: opacity, transform, filter;
+}
+
+/* ==========================================
+ * Transition Variants
+ * ==========================================
+ */
+
+/* Fade Variant - Simple crossfade */
+.skeleton-transition-fade .skeleton-transition-skeleton {
+  transition: opacity var(--skeleton-transition-duration, 300ms)
+    var(--ease-entrance);
+}
+
+.skeleton-transition-fade .skeleton-transition-content {
+  transition: opacity var(--skeleton-transition-duration, 300ms)
+    var(--ease-entrance);
+}
+
+.skeleton-transition-fade .skeleton-transition-skeleton[data-visible="false"] {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.skeleton-transition-fade .skeleton-transition-content[data-visible="true"] {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Morph Variant - Scale and fade for natural feel */
+.skeleton-transition-morph .skeleton-transition-skeleton {
+  transition:
+    opacity var(--skeleton-transition-duration, 300ms) var(--ease-entrance),
+    transform var(--skeleton-transition-duration, 300ms) var(--ease-entrance);
+}
+
+.skeleton-transition-morph .skeleton-transition-content {
+  transition:
+    opacity var(--skeleton-transition-duration, 300ms) var(--ease-entrance),
+    transform var(--skeleton-transition-duration, 300ms) var(--ease-spring-soft);
+  transform: scale(0.98);
+}
+
+.skeleton-transition-morph .skeleton-transition-skeleton[data-visible="false"] {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(1.02);
+}
+
+.skeleton-transition-morph .skeleton-transition-content[data-visible="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+}
+
+/* Blur Variant - Blur out skeleton, sharp focus on content */
+.skeleton-transition-blur .skeleton-transition-skeleton {
+  transition:
+    opacity var(--skeleton-transition-duration, 300ms) var(--ease-entrance),
+    filter var(--skeleton-transition-duration, 300ms) var(--ease-entrance);
+  filter: blur(0);
+}
+
+.skeleton-transition-blur .skeleton-transition-content {
+  transition:
+    opacity var(--skeleton-transition-duration, 300ms) var(--ease-entrance),
+    filter var(--skeleton-transition-duration, 300ms) var(--ease-entrance);
+  filter: blur(4px);
+}
+
+.skeleton-transition-blur .skeleton-transition-skeleton[data-visible="false"] {
+  opacity: 0;
+  visibility: hidden;
+  filter: blur(8px);
+}
+
+.skeleton-transition-blur .skeleton-transition-content[data-visible="true"] {
+  opacity: 1;
+  visibility: visible;
+  filter: blur(0);
+}
+
+/* Slide-Up Variant - Content slides up from below */
+.skeleton-transition-slide-up .skeleton-transition-skeleton {
+  transition:
+    opacity var(--skeleton-transition-duration, 300ms) var(--ease-entrance),
+    transform var(--skeleton-transition-duration, 300ms) var(--ease-entrance);
+}
+
+.skeleton-transition-slide-up .skeleton-transition-content {
+  transition:
+    opacity var(--skeleton-transition-duration, 300ms) var(--ease-entrance),
+    transform var(--skeleton-transition-duration, 300ms) var(--ease-spring-soft);
+  transform: translateY(12px);
+}
+
+.skeleton-transition-slide-up
+  .skeleton-transition-skeleton[data-visible="false"] {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+}
+
+.skeleton-transition-slide-up
+  .skeleton-transition-content[data-visible="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Scale Variant - Subtle scale in */
+.skeleton-transition-scale .skeleton-transition-skeleton {
+  transition:
+    opacity var(--skeleton-transition-duration, 300ms) var(--ease-entrance),
+    transform var(--skeleton-transition-duration, 300ms) var(--ease-entrance);
+}
+
+.skeleton-transition-scale .skeleton-transition-content {
+  transition:
+    opacity var(--skeleton-transition-duration, 300ms) var(--ease-entrance),
+    transform var(--skeleton-transition-duration, 300ms)
+      var(--ease-spring-medium);
+  transform: scale(0.95);
+}
+
+.skeleton-transition-scale .skeleton-transition-skeleton[data-visible="false"] {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(1.05);
+}
+
+.skeleton-transition-scale .skeleton-transition-content[data-visible="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+}
+
+/* ==========================================
+ * List Item Staggered Reveal
+ * ==========================================
+ */
+
+.skeleton-transition-list {
+  position: relative;
+}
+
+.skeleton-transition-list-item {
+  position: relative;
+}
+
+/* Staggered reveal animation for list items */
+@keyframes skeleton-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-skeleton-reveal {
+  animation: skeleton-reveal var(--reveal-duration, 300ms) var(--ease-entrance)
+    forwards;
+  animation-delay: var(--reveal-delay, 0ms);
+  opacity: 0;
+}
+
+/* Enhanced staggered delays for skeleton lists */
+.skeleton-stagger > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.skeleton-stagger > *:nth-child(2) {
+  animation-delay: 30ms;
+}
+.skeleton-stagger > *:nth-child(3) {
+  animation-delay: 60ms;
+}
+.skeleton-stagger > *:nth-child(4) {
+  animation-delay: 90ms;
+}
+.skeleton-stagger > *:nth-child(5) {
+  animation-delay: 120ms;
+}
+.skeleton-stagger > *:nth-child(6) {
+  animation-delay: 150ms;
+}
+.skeleton-stagger > *:nth-child(7) {
+  animation-delay: 180ms;
+}
+.skeleton-stagger > *:nth-child(8) {
+  animation-delay: 210ms;
+}
+.skeleton-stagger > *:nth-child(9) {
+  animation-delay: 240ms;
+}
+.skeleton-stagger > *:nth-child(10) {
+  animation-delay: 270ms;
+}
+
+/* ==========================================
+ * Content Reveal Component
+ * ==========================================
+ */
+
+.content-reveal {
+  transition:
+    opacity var(--reveal-duration, 300ms) var(--ease-entrance),
+    transform var(--reveal-duration, 300ms) var(--ease-entrance);
+}
+
+/* Fade reveal */
+.content-reveal-fade {
+  opacity: 0;
+}
+
+.content-reveal-fade[data-visible="true"] {
+  opacity: 1;
+}
+
+/* Morph reveal */
+.content-reveal-morph {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+.content-reveal-morph[data-visible="true"] {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Blur reveal */
+.content-reveal-blur {
+  opacity: 0;
+  filter: blur(4px);
+}
+
+.content-reveal-blur[data-visible="true"] {
+  opacity: 1;
+  filter: blur(0);
+}
+
+/* Slide-up reveal */
+.content-reveal-slide-up {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.content-reveal-slide-up[data-visible="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Scale reveal */
+.content-reveal-scale {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.content-reveal-scale[data-visible="true"] {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ==========================================
+ * Inline Skeleton Transition
+ * ==========================================
+ * For transitioning skeleton elements inline without wrapper
+ */
+
+/* Skeleton exit animation - applied when removing skeleton */
+@keyframes skeleton-exit {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+}
+
+.skeleton-exit {
+  animation: skeleton-exit var(--transition-normal) var(--ease-exit) forwards;
+}
+
+/* Content enter animation - applied when showing content */
+@keyframes content-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.content-enter {
+  animation: content-enter var(--transition-normal) var(--ease-entrance)
+    forwards;
+}
+
+/* Content enter with slide */
+@keyframes content-enter-slide {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content-enter-slide {
+  animation: content-enter-slide var(--transition-normal) var(--ease-entrance)
+    forwards;
+}
+
+/* ==========================================
+ * Reduced Motion Support
+ * ==========================================
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all skeleton transition animations */
+  .skeleton-transition-skeleton,
+  .skeleton-transition-content,
+  .content-reveal,
+  .animate-skeleton-reveal,
+  .skeleton-exit,
+  .content-enter,
+  .content-enter-slide {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  /* Instant visibility changes instead of animations */
+  .skeleton-transition-skeleton[data-visible="false"] {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .skeleton-transition-content[data-visible="true"] {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .content-reveal[data-visible="true"] {
+    opacity: 1;
+  }
+
+  .animate-skeleton-reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* User-toggled reduced motion */
+html[data-reduce-motion="true"] .skeleton-transition-skeleton,
+html[data-reduce-motion="true"] .skeleton-transition-content,
+html[data-reduce-motion="true"] .content-reveal,
+html[data-reduce-motion="true"] .animate-skeleton-reveal,
+html[data-reduce-motion="true"] .skeleton-exit,
+html[data-reduce-motion="true"] .content-enter,
+html[data-reduce-motion="true"] .content-enter-slide {
+  transition: none !important;
+  animation: none !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+html[data-reduce-motion="true"]
+  .skeleton-transition-skeleton[data-visible="false"] {
+  opacity: 0;
+  visibility: hidden;
+}
+
+html[data-reduce-motion="true"]
+  .skeleton-transition-content[data-visible="true"] {
+  opacity: 1;
+  visibility: visible;
+}
+
+html[data-reduce-motion="true"] .content-reveal[data-visible="true"] {
+  opacity: 1;
+}
+
+html[data-reduce-motion="true"] .animate-skeleton-reveal {
+  opacity: 1;
+  transform: none;
 }

@@ -883,6 +883,7 @@ export function ComposerRefactored() {
         postMediaMap.get(reorderedIndex)!.push(mediaData);
       }
 
+      let rootPost: { uri: string; cid: string } | undefined;
       let lastPost: { uri: string; cid: string } | undefined;
 
       for (let i = 0; i < numberedPosts.length; i++) {
@@ -901,9 +902,12 @@ export function ComposerRefactored() {
           facets: rt.facets,
         };
 
-        if (i > 0 && lastPost) {
+        // Add reply info for subsequent posts
+        // root = first post in thread (stays constant)
+        // parent = previous post in thread (changes each iteration)
+        if (i > 0 && rootPost && lastPost) {
           postData.reply = {
-            root: { uri: lastPost.uri, cid: lastPost.cid },
+            root: { uri: rootPost.uri, cid: rootPost.cid },
             parent: { uri: lastPost.uri, cid: lastPost.cid },
           };
         }
@@ -996,7 +1000,13 @@ export function ComposerRefactored() {
         }
 
         const result = await state.agent.post(postData);
-        lastPost = { uri: result.uri, cid: result.cid };
+        const currentPost = { uri: result.uri, cid: result.cid };
+
+        // First post becomes the root for all subsequent posts
+        if (i === 0) {
+          rootPost = currentPost;
+        }
+        lastPost = currentPost;
 
         // Create threadgate for first post
         if (i === 0 && state.replyPermission !== "everyone") {

@@ -8,11 +8,13 @@
  * - Post content previews
  */
 
+import type { AppBskyFeedDefs } from "@atproto/api";
 import { formatDistanceToNow } from "date-fns";
 import {
   AtSign,
   ExternalLink,
   Heart,
+  Loader,
   MessageCircle,
   MoreHorizontal,
   Play,
@@ -20,13 +22,17 @@ import {
   Repeat2,
   UserPlus,
 } from "lucide-react";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { fetchLinkMetadata, type LinkMetadata } from "../services/anthropic";
 import type {
   GroupedNotification,
   NotificationUser,
   PostPreview,
 } from "../services/notification-grouping-service";
 import { proxifyBskyImage } from "../utils/image-proxy";
+import { parseBskyUrl } from "../utils/url-helpers";
+import { extractFirstBskyPostUrl, extractFirstLinkUrl } from "./composer/utils";
+import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 
 interface RichNotificationItemProps {
   notification: GroupedNotification;
@@ -483,6 +489,12 @@ const PostPreviewCard: React.FC<{ preview: PostPreview }> = React.memo(
           </p>
         )}
 
+        {/* Link preview (if text has URL) */}
+        {preview.text && <NotificationLinkPreview postText={preview.text} />}
+
+        {/* Quote post preview (if text has Bluesky URL) */}
+        {preview.text && <NotificationQuotePreview postText={preview.text} />}
+
         {/* Media preview */}
         {preview.hasImages && preview.imageThumbnails.length > 0 && (
           <MediaThumbnails thumbnails={preview.imageThumbnails} />
@@ -673,5 +685,243 @@ const ActionsMenu: React.FC<{
 });
 
 ActionsMenu.displayName = "ActionsMenu";
+
+/**
+ * Link preview component for notification post cards
+ */
+const NotificationLinkPreview: React.FC<{ postText: string }> = React.memo(
+  ({ postText }) => {
+    const [metadata, setMetadata] = useState<LinkMetadata | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const url = extractFirstLinkUrl(postText);
+
+    useEffect(() => {
+      if (!url) {
+        setMetadata(null);
+        return;
+      }
+
+      let cancelled = false;
+      const fetchMetadataAsync = async () => {
+        setLoading(true);
+        try {
+          const data = await fetchLinkMetadata(url);
+          if (!cancelled) {
+            setMetadata(data);
+          }
+        } catch {
+          // Silently fail
+        } finally {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        }
+      };
+
+      const timer = setTimeout(fetchMetadataAsync, 300);
+      return () => {
+        cancelled = true;
+        clearTimeout(timer);
+      };
+    }, [url]);
+
+    if (!url) return null;
+
+    if (loading) {
+      return (
+        <div
+          className="mt-2 flex items-center gap-2 rounded border p-2 text-xs"
+          style={{
+            borderColor: "var(--bsky-border-primary)",
+            color: "var(--bsky-text-secondary)",
+          }}
+        >
+          <Loader size={12} className="animate-spin" />
+          <span>Loading preview...</span>
+        </div>
+      );
+    }
+
+    if (!metadata) return null;
+
+    let domain = "";
+    try {
+      domain = new URL(metadata.url).hostname.replace("www.", "");
+    } catch {
+      domain = metadata.url;
+    }
+
+    return (
+      <div
+        className="mt-2 overflow-hidden rounded border"
+        style={{ borderColor: "var(--bsky-border-primary)" }}
+      >
+        {metadata.imageUrl && (
+          <div
+            className="h-24 w-full bg-cover bg-center"
+            style={{ backgroundImage: `url(${metadata.imageUrl})` }}
+          />
+        )}
+        <div className="p-2">
+          <div
+            className="mb-0.5 text-xs"
+            style={{ color: "var(--bsky-text-tertiary)" }}
+          >
+            {domain}
+          </div>
+          <div
+            className="line-clamp-1 text-xs font-medium"
+            style={{ color: "var(--bsky-text-primary)" }}
+          >
+            {metadata.title}
+          </div>
+          {metadata.description && (
+            <div
+              className="mt-0.5 line-clamp-1 text-xs"
+              style={{ color: "var(--bsky-text-secondary)" }}
+            >
+              {metadata.description}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  },
+);
+
+NotificationLinkPreview.displayName = "NotificationLinkPreview";
+
+/**
+ * Quote post preview component for notification post cards
+ */
+const NotificationQuotePreview: React.FC<{ postText: string }> = React.memo(
+  ({ postText }) => {
+    const [quotedPost, setQuotedPost] =
+      useState<AppBskyFeedDefs.PostView | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const bskyUrl = extractFirstBskyPostUrl(postText);
+
+    useEffect(() => {
+      if (!bskyUrl) {
+        setQuotedPost(null);
+        return;
+      }
+
+      let cancelled = false;
+      const fetchQuotedPost = async () => {
+        const parsed = parseBskyUrl(bskyUrl);
+        if (!parsed || !parsed.postId) return;
+
+        setLoading(true);
+        try {
+          const { atProtoClient } = await import("../services/atproto");
+          const agent = atProtoClient.agent;
+          if (!agent) return;
+
+          let did = parsed.did;
+          if (!did && parsed.handle) {
+            try {
+              const profileResponse = await agent.getProfile({
+                actor: parsed.handle,
+              });
+              did = profileResponse.data.did;
+            } catch {
+              return;
+            }
+          }
+
+          if (!did) return;
+
+          const uri = `at://${did}/app.bsky.feed.post/${parsed.postId}`;
+          const response = await agent.app.bsky.feed.getPosts({ uris: [uri] });
+
+          if (!cancelled && response.data.posts.length > 0) {
+            setQuotedPost(response.data.posts[0]);
+          }
+        } catch {
+          // Silently fail
+        } finally {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        }
+      };
+
+      const timer = setTimeout(fetchQuotedPost, 300);
+      return () => {
+        cancelled = true;
+        clearTimeout(timer);
+      };
+    }, [bskyUrl]);
+
+    if (!bskyUrl) return null;
+
+    if (loading) {
+      return (
+        <div
+          className="mt-2 flex items-center gap-2 rounded border p-2 text-xs"
+          style={{
+            borderColor: "var(--bsky-border-primary)",
+            color: "var(--bsky-text-secondary)",
+          }}
+        >
+          <Loader size={12} className="animate-spin" />
+          <span>Loading quoted post...</span>
+        </div>
+      );
+    }
+
+    if (!quotedPost) return null;
+
+    const record = quotedPost.record as { text?: string };
+    return (
+      <div
+        className="mt-2 overflow-hidden rounded border"
+        style={{ borderColor: "var(--bsky-border-primary)" }}
+      >
+        <div
+          className="flex items-center gap-1.5 px-2 py-1 text-xs"
+          style={{
+            backgroundColor: "var(--bsky-bg-tertiary)",
+            borderBottom: "1px solid var(--bsky-border-primary)",
+            color: "var(--bsky-text-secondary)",
+          }}
+        >
+          <MessageCircle size={10} />
+          <span>Quoted post</span>
+        </div>
+        <div className="p-2">
+          <div className="mb-1 flex items-center gap-1.5">
+            <ProfileHoverCard handle={quotedPost.author.handle}>
+              <img
+                src={quotedPost.author.avatar || "/default-avatar.svg"}
+                alt=""
+                className="h-4 w-4 cursor-pointer rounded-full"
+              />
+            </ProfileHoverCard>
+            <ProfileHoverCard handle={quotedPost.author.handle}>
+              <span
+                className="cursor-pointer text-xs font-medium hover:underline"
+                style={{ color: "var(--bsky-text-primary)" }}
+              >
+                {quotedPost.author.displayName || quotedPost.author.handle}
+              </span>
+            </ProfileHoverCard>
+          </div>
+          <p
+            className="line-clamp-2 text-xs"
+            style={{ color: "var(--bsky-text-primary)" }}
+          >
+            {record?.text || ""}
+          </p>
+        </div>
+      </div>
+    );
+  },
+);
+
+NotificationQuotePreview.displayName = "NotificationQuotePreview";
 
 export default RichNotificationItem;

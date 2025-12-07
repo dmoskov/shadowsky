@@ -1,11 +1,25 @@
 /**
  * ComposerThreadPreview - Level 2 (Standard) Component
  * Expandable section - shows thread preview with post reordering
+ * Includes link preview unfurling and quote post detection
  */
 
-import { GripVertical, Image, Split, Video } from "lucide-react";
-import React from "react";
+import type { AppBskyFeedDefs } from "@atproto/api";
+import {
+  GripVertical,
+  Image,
+  Link,
+  Loader,
+  MessageCircle,
+  Split,
+  Video,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { fetchLinkMetadata, type LinkMetadata } from "../../services/anthropic";
+import { parseBskyUrl } from "../../utils/url-helpers";
+import { ProfileHoverCard } from "../ui/ProfileHoverCard";
 import { MAX_POST_LENGTH, type UploadedMedia } from "./types";
+import { extractFirstBskyPostUrl, extractFirstLinkUrl } from "./utils";
 
 interface ComposerThreadPreviewProps {
   posts: string[];
@@ -281,6 +295,12 @@ const PostPreviewCard: React.FC<PostPreviewCardProps> = ({
         </div>
       )}
 
+      {/* Link preview (if post has a URL and no media) */}
+      {!hasMedia && <PostLinkPreview postText={post} />}
+
+      {/* Quote post preview (if post has a Bluesky URL) */}
+      <PostQuotePreview postText={post} />
+
       {/* Attachments for this post */}
       {(originalIndex === 0
         ? media.filter((m) => m.postIndex === undefined || m.postIndex === 0)
@@ -343,6 +363,270 @@ const PostPreviewCard: React.FC<PostPreviewCardProps> = ({
           ))}
         </div>
       )}
+    </div>
+  );
+};
+
+/**
+ * Link preview component for posts containing URLs
+ * Fetches and displays link metadata (title, description, image)
+ */
+const PostLinkPreview: React.FC<{ postText: string }> = ({ postText }) => {
+  const [metadata, setMetadata] = useState<LinkMetadata | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const url = extractFirstLinkUrl(postText);
+
+  useEffect(() => {
+    if (!url) {
+      setMetadata(null);
+      return;
+    }
+
+    let cancelled = false;
+    const fetchMetadata = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchLinkMetadata(url);
+        if (!cancelled) {
+          setMetadata(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError("Failed to load preview");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    // Debounce the fetch
+    const timer = setTimeout(fetchMetadata, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [url]);
+
+  if (!url) return null;
+
+  if (loading) {
+    return (
+      <div
+        className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
+        style={{
+          borderColor: "var(--bsky-border-primary)",
+          color: "var(--bsky-text-secondary)",
+        }}
+      >
+        <Loader size={14} className="animate-spin" />
+        <span>Loading link preview...</span>
+      </div>
+    );
+  }
+
+  if (error || !metadata) {
+    if (error) {
+      return (
+        <div
+          className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
+          style={{
+            borderColor: "var(--bsky-border-primary)",
+            color: "var(--bsky-text-tertiary)",
+          }}
+        >
+          <Link size={14} />
+          <span className="truncate">{url}</span>
+        </div>
+      );
+    }
+    return null;
+  }
+
+  // Extract domain from URL
+  let domain = "";
+  try {
+    domain = new URL(metadata.url).hostname.replace("www.", "");
+  } catch {
+    domain = metadata.url;
+  }
+
+  return (
+    <div
+      className="mt-2 overflow-hidden rounded-lg border"
+      style={{ borderColor: "var(--bsky-border-primary)" }}
+    >
+      {metadata.imageUrl && (
+        <div
+          className="h-32 w-full bg-cover bg-center"
+          style={{ backgroundImage: `url(${metadata.imageUrl})` }}
+        />
+      )}
+      <div className="p-3">
+        <div
+          className="mb-1 text-xs"
+          style={{ color: "var(--bsky-text-tertiary)" }}
+        >
+          {domain}
+        </div>
+        <div
+          className="line-clamp-2 text-sm font-medium"
+          style={{ color: "var(--bsky-text-primary)" }}
+        >
+          {metadata.title}
+        </div>
+        {metadata.description && (
+          <div
+            className="mt-1 line-clamp-2 text-xs"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
+            {metadata.description}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Quote post preview component for posts containing Bluesky URLs
+ * Fetches and displays the quoted post
+ */
+const PostQuotePreview: React.FC<{ postText: string }> = ({ postText }) => {
+  const [quotedPost, setQuotedPost] = useState<AppBskyFeedDefs.PostView | null>(
+    null,
+  );
+  const [loading, setLoading] = useState(false);
+
+  const bskyUrl = extractFirstBskyPostUrl(postText);
+
+  useEffect(() => {
+    if (!bskyUrl) {
+      setQuotedPost(null);
+      return;
+    }
+
+    let cancelled = false;
+    const fetchQuotedPost = async () => {
+      const parsed = parseBskyUrl(bskyUrl);
+      if (!parsed || !parsed.postId) return;
+
+      setLoading(true);
+      try {
+        const { atProtoClient } = await import("../../services/atproto");
+        const agent = atProtoClient.agent;
+        if (!agent) return;
+
+        // Resolve handle to DID if needed
+        let did = parsed.did;
+        if (!did && parsed.handle) {
+          try {
+            const profileResponse = await agent.getProfile({
+              actor: parsed.handle,
+            });
+            did = profileResponse.data.did;
+          } catch {
+            return;
+          }
+        }
+
+        if (!did) return;
+
+        // Construct AT URI with DID
+        const uri = `at://${did}/app.bsky.feed.post/${parsed.postId}`;
+        const response = await agent.app.bsky.feed.getPosts({ uris: [uri] });
+
+        if (!cancelled && response.data.posts.length > 0) {
+          setQuotedPost(response.data.posts[0]);
+        }
+      } catch {
+        // Silently fail - quoted post preview is optional
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    // Debounce the fetch
+    const timer = setTimeout(fetchQuotedPost, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [bskyUrl]);
+
+  if (!bskyUrl) return null;
+
+  if (loading) {
+    return (
+      <div
+        className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
+        style={{
+          borderColor: "var(--bsky-border-primary)",
+          color: "var(--bsky-text-secondary)",
+        }}
+      >
+        <Loader size={14} className="animate-spin" />
+        <span>Loading quoted post...</span>
+      </div>
+    );
+  }
+
+  if (!quotedPost) return null;
+
+  const record = quotedPost.record as { text?: string };
+  return (
+    <div
+      className="mt-2 overflow-hidden rounded-lg border"
+      style={{ borderColor: "var(--bsky-border-primary)" }}
+    >
+      <div
+        className="flex items-center gap-2 px-3 py-1.5 text-xs"
+        style={{
+          backgroundColor: "var(--bsky-bg-tertiary)",
+          borderBottom: "1px solid var(--bsky-border-primary)",
+          color: "var(--bsky-text-secondary)",
+        }}
+      >
+        <MessageCircle size={12} />
+        <span>Quoted post</span>
+      </div>
+      <div className="p-3">
+        <div className="mb-2 flex items-center gap-2">
+          <ProfileHoverCard handle={quotedPost.author.handle}>
+            <img
+              src={quotedPost.author.avatar || "/default-avatar.svg"}
+              alt=""
+              className="h-5 w-5 cursor-pointer rounded-full"
+            />
+          </ProfileHoverCard>
+          <ProfileHoverCard handle={quotedPost.author.handle}>
+            <span
+              className="cursor-pointer text-sm font-semibold hover:underline"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              {quotedPost.author.displayName || quotedPost.author.handle}
+            </span>
+          </ProfileHoverCard>
+          <span
+            className="text-sm"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
+            @{quotedPost.author.handle}
+          </span>
+        </div>
+        <p
+          className="line-clamp-3 text-sm"
+          style={{ color: "var(--bsky-text-primary)" }}
+        >
+          {record?.text || ""}
+        </p>
+      </div>
     </div>
   );
 };
