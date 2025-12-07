@@ -40,14 +40,6 @@ vi.mock("../services/account-manager", () => ({
   },
 }));
 
-vi.mock("../services/analytics", () => ({
-  analytics: {
-    trackLogin: vi.fn(),
-    trackLogout: vi.fn(),
-    setUserId: vi.fn(),
-  },
-}));
-
 vi.mock("../services/bookmark-service-wrapper", () => ({
   bookmarkService: {
     setAgent: vi.fn(),
@@ -119,7 +111,6 @@ import {
   SessionExpiredError,
 } from "@bsky/shared";
 import { AccountManager } from "../services/account-manager";
-import { analytics } from "../services/analytics";
 import { atProtoClient, ATProtoClient } from "../services/atproto";
 import {
   bookmarkService,
@@ -265,10 +256,6 @@ describe("AuthContext", () => {
       expect(initializeBookmarkService).toHaveBeenCalled();
       expect(initializeDataServices).toHaveBeenCalled();
       expect(dmService.setAgent).toHaveBeenCalled();
-
-      // Verify analytics tracked login
-      expect(analytics.trackLogin).toHaveBeenCalledWith("oauth");
-      expect(analytics.setUserId).toHaveBeenCalledWith("did:plc:oauth123");
     });
 
     it("should handle OAuth callback when no session is returned", async () => {
@@ -487,7 +474,6 @@ describe("AuthContext", () => {
       });
 
       // logout triggers a page redirect, so we verify state was cleared
-      expect(analytics.trackLogout).toHaveBeenCalled();
     });
 
     it("should logout on authentication error during refresh", async () => {
@@ -510,8 +496,6 @@ describe("AuthContext", () => {
       await act(async () => {
         await result.current.refreshSession();
       });
-
-      expect(analytics.trackLogout).toHaveBeenCalled();
     });
   });
 
@@ -625,7 +609,6 @@ describe("AuthContext", () => {
         secondAccount.session,
       );
       expect(queryClient.clear).toHaveBeenCalled();
-      expect(analytics.setUserId).toHaveBeenCalledWith("did:plc:second");
     });
 
     it("should return false when account not found", async () => {
@@ -720,7 +703,6 @@ describe("AuthContext", () => {
         "app-password-123",
         undefined,
       );
-      expect(analytics.trackLogin).toHaveBeenCalledWith("bluesky");
     });
 
     it("should login with custom PDS URL", async () => {
@@ -748,7 +730,6 @@ describe("AuthContext", () => {
       expect(atProtoClient.updateService).toHaveBeenCalledWith(
         "https://custom.pds.com",
       );
-      expect(analytics.trackLogin).toHaveBeenCalledWith("custom_pds");
     });
 
     it("should strip @ from identifier", async () => {
@@ -893,7 +874,6 @@ describe("AuthContext", () => {
         result.current.logout();
       });
 
-      expect(analytics.trackLogout).toHaveBeenCalled();
       expect(atProtoClient.logout).toHaveBeenCalled();
       expect(bookmarkService.setAgent).toHaveBeenCalledWith(null);
       expect(dmService.setAgent).toHaveBeenCalledWith(null);

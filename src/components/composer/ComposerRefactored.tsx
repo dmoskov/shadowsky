@@ -26,7 +26,6 @@ import {
   X,
 } from "lucide-react";
 import React, { useCallback, useEffect, useRef } from "react";
-import { analytics } from "../../services/analytics";
 import { ThreadgateService } from "../../services/atproto/threadgate";
 import {
   deleteDraft,
@@ -1218,29 +1217,12 @@ export function ComposerRefactored() {
       state.setIsAdjustingTone(true);
       state.setSelectedTone(tone);
 
-      analytics.trackEvent({
-        category: "composer",
-        action: "tone_adjustment_requested",
-        label: tone,
-        custom_parameters: { text_length: state.text.length },
-      });
-
       try {
         const anthropicService = await state.loadAnthropicService();
         const result = await anthropicService.adjustTone(state.text, tone);
         state.setTonePreview(result.adjustedText);
         state.setShowTonePreview(true);
         state.setShowToneOptions(false);
-
-        analytics.trackEvent({
-          category: "composer",
-          action: "tone_adjustment_success",
-          label: tone,
-          custom_parameters: {
-            original_length: state.text.length,
-            adjusted_length: result.adjustedText.length,
-          },
-        });
       } catch (error) {
         logger.error("Failed to adjust tone:", error);
         state.setPostStatus({
@@ -1249,12 +1231,6 @@ export function ComposerRefactored() {
             error instanceof Error ? error.message : "Failed to adjust tone",
         });
         state.setSelectedTone(null);
-
-        analytics.trackEvent({
-          category: "composer",
-          action: "tone_adjustment_error",
-          label: tone,
-        });
       } finally {
         state.setIsAdjustingTone(false);
       }
@@ -1268,14 +1244,6 @@ export function ComposerRefactored() {
       state.setText(state.tonePreview);
       state.setTonePreview(null);
       state.setShowTonePreview(false);
-
-      analytics.trackEvent({
-        category: "composer",
-        action: "tone_adjustment_applied",
-        label: state.selectedTone,
-        custom_parameters: { final_length: state.tonePreview.length },
-      });
-
       state.setSelectedTone(null);
       state.setPostStatus({ type: "success", message: "Tone adjusted!" });
       setTimeout(() => state.setPostStatus({ type: "idle" }), 2000);
@@ -1303,15 +1271,6 @@ export function ComposerRefactored() {
       state.setThreadOptimizationResult(null);
       state.setShowThreadPreview(false);
 
-      analytics.trackEvent({
-        category: "composer",
-        action: "thread_optimization_applied",
-        label: state.threadOptimizationResult.suggestedFormat,
-        custom_parameters: {
-          segments_applied: state.threadOptimizationResult.segments.length,
-        },
-      });
-
       state.setPostStatus({
         type: "success",
         message: `Thread optimized into ${state.threadOptimizationResult.segments.length} posts!`,
@@ -1336,12 +1295,6 @@ export function ComposerRefactored() {
 
       const spacer = currentText && !currentText.match(/[\s\n]$/) ? " " : "";
       state.setText(currentText + spacer + hashtag);
-
-      analytics.trackEvent({
-        category: "composer",
-        action: "hashtag_applied",
-        label: tag,
-      });
     },
     [state],
   );
@@ -1358,12 +1311,6 @@ export function ComposerRefactored() {
 
     state.setIsLoadingFeedback(true);
 
-    analytics.trackEvent({
-      category: "composer",
-      action: "writing_feedback_requested",
-      custom_parameters: { text_length: state.text.length },
-    });
-
     try {
       if (!state.agent) throw new Error("Not authenticated");
       const anthropicService = await state.loadAnthropicService();
@@ -1373,26 +1320,12 @@ export function ComposerRefactored() {
       );
       state.setWritingFeedback(feedback);
       state.setShowWritingFeedback(true);
-
-      analytics.trackEvent({
-        category: "composer",
-        action: "writing_feedback_success",
-        custom_parameters: {
-          has_issues: feedback.assessment.hasIssues,
-          matches_style: feedback.styleAnalysis.matchesStyle,
-        },
-      });
     } catch (error) {
       logger.error("Failed to get writing feedback:", error);
       state.setPostStatus({
         type: "error",
         message:
           error instanceof Error ? error.message : "Failed to get feedback",
-      });
-
-      analytics.trackEvent({
-        category: "composer",
-        action: "writing_feedback_error",
       });
     } finally {
       state.setIsLoadingFeedback(false);

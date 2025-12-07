@@ -20,10 +20,6 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useLocation, useNavigate } from "react-router";
-import {
-  useFeatureTracking,
-  useNotificationTracking,
-} from "../hooks/useAnalytics";
 import { useFollowing } from "../hooks/useFollowing";
 import {
   useBatchedNotificationTransition,
@@ -91,14 +87,9 @@ export const NotificationsFeed: React.FC = () => {
   const moreFiltersRef = useRef<HTMLDivElement>(null);
   const moreFiltersButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Analytics hooks
-  const { trackNotificationView } = useNotificationTracking();
-  const { trackFeatureAction } = useFeatureTracking("notifications_feed");
-
-  // Wrap setFilter to track analytics
+  // Handle filter changes
   const handleFilterChange = (newFilter: NotificationFilter) => {
     setFilter(newFilter);
-    trackFeatureAction("filter_changed", { filter: newFilter });
   };
 
   // Handle refresh
@@ -112,7 +103,6 @@ export const NotificationsFeed: React.FC = () => {
     await queryClient.invalidateQueries({ queryKey: ["notifications"] });
     await queryClient.refetchQueries({ queryKey: ["notifications"] });
     setIsRefreshing(false);
-    trackFeatureAction("notifications_refreshed", {});
   };
 
   // Reset filter if top accounts is hidden but was selected
@@ -205,16 +195,6 @@ export const NotificationsFeed: React.FC = () => {
     batchStats.batchCount,
     data?.pageParams,
   ]);
-
-  // Track notification view when data loads
-  useEffect(() => {
-    if (!isLoading && notifications.length > 0) {
-      trackNotificationView(
-        filter === "all" ? "all" : filter,
-        notifications.length,
-      );
-    }
-  }, [isLoading, notifications.length, filter, trackNotificationView]);
 
   // Cache indicator removed - no longer needed without header
 

@@ -7,7 +7,6 @@ import {
   blobUrlToDataUrl,
   fetchWithRetry,
 } from "../utils/retry";
-import { analytics } from "./analytics";
 
 const logger = createLogger("AnthropicService");
 
@@ -56,8 +55,6 @@ export async function adjustTone(
     return data;
   } catch (error) {
     logger.error("Error adjusting tone:", error);
-    analytics.trackError(error as Error, "tone_adjustment");
-
     if (error instanceof Error && error.message.includes("401")) {
       throw new Error("Tone adjustment failed: Invalid API key");
     } else if (error instanceof Error && error.message.includes("429")) {
@@ -105,8 +102,6 @@ export async function optimizeThread(
     return data;
   } catch (error) {
     logger.error("Error optimizing thread:", error);
-    analytics.trackError(error as Error, "thread_optimization");
-
     if (error instanceof Error && error.message.includes("401")) {
       throw new Error("Thread optimization failed: Invalid API key");
     } else if (error instanceof Error && error.message.includes("429")) {
@@ -152,8 +147,6 @@ export async function suggestHashtags(
     return data;
   } catch (error) {
     logger.error("Error suggesting hashtags:", error);
-    analytics.trackError(error as Error, "hashtag_suggestions");
-
     if (error instanceof Error && error.message.includes("401")) {
       throw new Error("Hashtag suggestions failed: Invalid API key");
     } else if (error instanceof Error && error.message.includes("429")) {
@@ -202,8 +195,6 @@ export async function getWritingFeedback(
     return data;
   } catch (error) {
     logger.error("Error getting writing feedback:", error);
-    analytics.trackError(error as Error, "writing_feedback");
-
     if (error instanceof Error && error.message.includes("401")) {
       throw new Error("Writing feedback failed: Invalid API key");
     } else if (error instanceof Error && error.message.includes("429")) {
@@ -272,9 +263,6 @@ export async function generateAltText(imageUrl: string): Promise<string> {
     return altText;
   } catch (error) {
     logger.error("Error generating alt text:", error);
-
-    // Track error for analytics
-    analytics.trackError(error as Error, "alt_text_generation");
 
     // Provide more specific error messages based on error type
     if (
@@ -349,8 +337,6 @@ async function analyzeWritingStyle(
     return data;
   } catch (error) {
     logger.error("Error analyzing writing style:", error);
-    analytics.trackError(error as Error, "style_analysis");
-
     if (error instanceof Error && error.message.includes("401")) {
       throw new Error("Style analysis failed: Invalid API key");
     } else if (error instanceof Error && error.message.includes("429")) {
@@ -442,7 +428,6 @@ export async function getStyleMatchedWritingFeedback(
     }
   } catch (error) {
     logger.error("Error getting style-matched writing feedback:", error);
-    analytics.trackError(error as Error, "style_matched_writing_feedback");
     throw error;
   }
 }
@@ -518,7 +503,6 @@ export async function analyzePosts(
     return data;
   } catch (error) {
     logger.error("Error analyzing posts:", error);
-    analytics.trackError(error as Error, "post_analysis");
 
     if (error instanceof Error && error.message.includes("401")) {
       throw new Error("Post analysis failed: Invalid API key");
@@ -559,7 +543,6 @@ export async function fetchLinkMetadata(url: string): Promise<LinkMetadata> {
     return data;
   } catch (error) {
     logger.error("Error fetching link metadata:", error);
-    analytics.trackError(error as Error, "link_metadata_fetch");
 
     if (error instanceof Error && error.message.includes("401")) {
       throw new Error("Link metadata fetch failed: Invalid API key");
@@ -656,7 +639,6 @@ export async function generateThreadSummary(
     return data;
   } catch (error) {
     logger.error("Error generating thread summary:", error);
-    analytics.trackError(error as Error, "thread_summary");
 
     if (error instanceof Error && error.message.includes("401")) {
       throw new Error("Thread summary failed: Invalid API key");

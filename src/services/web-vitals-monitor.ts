@@ -19,19 +19,6 @@ import {
   onTTFB,
 } from "web-vitals";
 import { createLogger } from "../utils/logger";
-import { analytics } from "./analytics";
-
-// Type definitions for navigator extension APIs
-interface NetworkInformation {
-  effectiveType?: string;
-}
-
-interface NavigatorWithExtensions extends Navigator {
-  connection?: NetworkInformation;
-  mozConnection?: NetworkInformation;
-  webkitConnection?: NetworkInformation;
-  deviceMemory?: number;
-}
 
 const logger = createLogger("WebVitalsMonitor");
 
@@ -216,74 +203,21 @@ class WebVitalsMonitor {
   }
 
   /**
-   * Send a single metric to the analytics backend
+   * Send a single metric to the analytics backend (disabled - GA removed)
    */
   private sendMetricToAnalytics(metric: Metric): void {
-    try {
-      // Get the rating for this metric
-      const metricName = metric.name.toLowerCase() as
-        | "lcp"
-        | "fcp"
-        | "cls"
-        | "ttfb"
-        | "inp";
-      const rating = this.getRating(metricName, metric.value);
+    // Get the rating for this metric
+    const metricName = metric.name.toLowerCase() as
+      | "lcp"
+      | "fcp"
+      | "cls"
+      | "ttfb"
+      | "inp";
+    const rating = this.getRating(metricName, metric.value);
 
-      // Track as a performance metric using the analytics service
-      analytics.trackPerformance(`web_vital_${metric.name}`, metric.value, {
-        rating: rating.rating,
-        exceeds_budget: rating.exceedsBudget,
-        budget: rating.budget,
-        navigation_type: this.getNavigationType(),
-        effective_connection_type: this.getConnectionType(),
-        device_memory: this.getDeviceMemory(),
-      });
-
-      // Also track as a timing event for detailed analysis
-      analytics.trackTiming(
-        "Web Vitals",
-        metric.name,
-        Math.round(metric.value),
-        rating.rating,
-      );
-
-      logger.log(
-        `Sent ${metric.name} to analytics: ${metric.value.toFixed(metric.name === "CLS" ? 3 : 0)} (${rating.rating})`,
-      );
-    } catch (error) {
-      logger.error(`Failed to send ${metric.name} to analytics:`, error);
-    }
-  }
-
-  /**
-   * Get the navigation type for context
-   */
-  private getNavigationType(): string {
-    if (!("performance" in window) || !performance.getEntriesByType) {
-      return "unknown";
-    }
-    const navEntry = performance.getEntriesByType(
-      "navigation",
-    )[0] as PerformanceNavigationTiming;
-    return navEntry?.type || "unknown";
-  }
-
-  /**
-   * Get effective connection type if available
-   */
-  private getConnectionType(): string {
-    const nav = navigator as NavigatorWithExtensions;
-    const connection =
-      nav.connection || nav.mozConnection || nav.webkitConnection;
-    return connection?.effectiveType || "unknown";
-  }
-
-  /**
-   * Get device memory if available
-   */
-  private getDeviceMemory(): number | undefined {
-    const nav = navigator as NavigatorWithExtensions;
-    return nav.deviceMemory;
+    logger.log(
+      `${metric.name}: ${metric.value.toFixed(metric.name === "CLS" ? 3 : 0)} (${rating.rating})`,
+    );
   }
 
   /**

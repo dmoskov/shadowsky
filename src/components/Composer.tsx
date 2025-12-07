@@ -34,7 +34,6 @@ import { useSearchParams } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useLinkPreview } from "../hooks/useLinkPreview";
 import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
-import { analytics } from "../services/analytics";
 import {
   fetchLinkMetadata,
   type LinkMetadata,
@@ -1888,17 +1887,6 @@ export function Composer() {
       setIsAdjustingTone(true);
       setSelectedTone(tone);
 
-      // Track tone adjustment request
-      analytics.trackEvent({
-        category: "composer",
-        action: "tone_adjustment_requested",
-        label: tone,
-        custom_parameters: {
-          text_length: text.length,
-          has_posts: posts.length > 0,
-        },
-      });
-
       try {
         const anthropicService = await loadAnthropicService();
         const result = await anthropicService.adjustTone(text, tone);
@@ -1910,34 +1898,12 @@ export function Composer() {
           originalLength: text.length,
           adjustedLength: result.adjustedText.length,
         });
-
-        // Track successful tone adjustment
-        analytics.trackEvent({
-          category: "composer",
-          action: "tone_adjustment_success",
-          label: tone,
-          custom_parameters: {
-            original_length: text.length,
-            adjusted_length: result.adjustedText.length,
-            length_change: result.adjustedText.length - text.length,
-          },
-        });
       } catch (error) {
         logger.error("Failed to adjust tone:", error);
         const errorMessage =
           error instanceof Error ? error.message : "Failed to adjust tone";
         setPostStatus({ type: "error", message: errorMessage });
         setSelectedTone(null);
-
-        // Track tone adjustment error
-        analytics.trackEvent({
-          category: "composer",
-          action: "tone_adjustment_error",
-          label: tone,
-          custom_parameters: {
-            error_message: errorMessage,
-          },
-        });
       } finally {
         setIsAdjustingTone(false);
       }
@@ -1951,17 +1917,6 @@ export function Composer() {
       setText(tonePreview);
       setTonePreview(null);
       setShowTonePreview(false);
-
-      // Track tone application
-      analytics.trackEvent({
-        category: "composer",
-        action: "tone_adjustment_applied",
-        label: selectedTone,
-        custom_parameters: {
-          final_length: tonePreview.length,
-        },
-      });
-
       setSelectedTone(null);
       setPostStatus({ type: "success", message: "Tone adjusted!" });
       setTimeout(() => setPostStatus({ type: "idle" }), 2000);
@@ -2047,17 +2002,6 @@ export function Composer() {
       setThreadOptimizationResult(null);
       setShowThreadPreview(false);
 
-      // Track optimization application
-      analytics.trackEvent({
-        category: "composer",
-        action: "thread_optimization_applied",
-        label: threadOptimizationResult.suggestedFormat,
-        custom_parameters: {
-          segments_applied: threadOptimizationResult.segments.length,
-          format_applied: threadOptimizationResult.suggestedFormat,
-        },
-      });
-
       setPostStatus({
         type: "success",
         message: `Thread optimized into ${threadOptimizationResult.segments.length} posts!`,
@@ -2087,13 +2031,6 @@ export function Composer() {
       // Add space if text doesn't end with space or newline
       const spacer = currentText && !currentText.match(/[\s\n]$/) ? " " : "";
       setText(currentText + spacer + hashtag);
-
-      // Track hashtag usage
-      analytics.trackEvent({
-        category: "composer",
-        action: "hashtag_applied",
-        label: tag,
-      });
     },
     [text],
   );
@@ -2111,15 +2048,6 @@ export function Composer() {
 
     setIsLoadingFeedback(true);
 
-    // Track feedback request
-    analytics.trackEvent({
-      category: "composer",
-      action: "writing_feedback_requested",
-      custom_parameters: {
-        text_length: text.length,
-      },
-    });
-
     try {
       if (!agent) {
         throw new Error("Not authenticated");
@@ -2132,32 +2060,11 @@ export function Composer() {
       setWritingFeedback(feedback);
       setShowWritingFeedback(true);
       debug.log("Writing feedback received", feedback);
-
-      // Track successful feedback
-      analytics.trackEvent({
-        category: "composer",
-        action: "writing_feedback_success",
-        custom_parameters: {
-          has_issues: feedback.assessment.hasIssues,
-          matches_style: feedback.styleAnalysis.matchesStyle,
-          corrections_count: feedback.correctedVersion.changes.length,
-          improvements_count: feedback.enhancedVersion.improvements.length,
-        },
-      });
     } catch (error) {
       logger.error("Failed to get writing feedback:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Failed to get feedback";
       setPostStatus({ type: "error", message: errorMessage });
-
-      // Track feedback error
-      analytics.trackEvent({
-        category: "composer",
-        action: "writing_feedback_error",
-        custom_parameters: {
-          error_message: errorMessage,
-        },
-      });
     } finally {
       setIsLoadingFeedback(false);
     }

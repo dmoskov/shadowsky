@@ -20,7 +20,6 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { useFeatureTracking } from "../hooks/useAnalytics";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { useDelayedValue } from "../hooks/useTiming";
 
@@ -53,7 +52,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const navigate = useNavigate();
   const { logout, session } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { trackFeatureAction } = useFeatureTracking("command_palette");
 
   const commands = useMemo<Command[]>(
     () => [
@@ -147,9 +145,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         section: "Actions",
         action: () => {
           toggleTheme();
-          trackFeatureAction("theme_toggled", {
-            newTheme: theme === "dark" ? "light" : "dark",
-          });
         },
       },
 
@@ -215,7 +210,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       session,
       theme,
       toggleTheme,
-      trackFeatureAction,
     ],
   );
 
@@ -247,9 +241,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       inputRef.current.focus();
       setQuery("");
       setSelectedIndex(0);
-      trackFeatureAction("command_palette_opened");
     }
-  }, [isOpen, trackFeatureAction]);
+  }, [isOpen]);
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -271,9 +264,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         case "Enter":
           e.preventDefault();
           if (filteredCommands[selectedIndex]) {
-            trackFeatureAction("command_executed", {
-              commandId: filteredCommands[selectedIndex].id,
-            });
             filteredCommands[selectedIndex].action();
           }
           break;
@@ -286,7 +276,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, selectedIndex, filteredCommands, onClose, trackFeatureAction]);
+  }, [isOpen, selectedIndex, filteredCommands, onClose]);
 
   // Scroll selected item into view
   useEffect(() => {
@@ -393,9 +383,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                             : "var(--bsky-text-secondary)",
                         }}
                         onClick={() => {
-                          trackFeatureAction("command_executed", {
-                            commandId: cmd.id,
-                          });
                           cmd.action();
                         }}
                         onMouseEnter={() => setSelectedIndex(currentIndex)}

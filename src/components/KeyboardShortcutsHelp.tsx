@@ -1,6 +1,5 @@
 import { Command, X } from "lucide-react";
 import React from "react";
-import { useFeatureTracking } from "../hooks/useAnalytics";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 
 interface ShortcutGroup {
@@ -95,13 +94,6 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
   onClose,
 }) => {
   const containerRef = useFocusTrap<HTMLDivElement>(isOpen);
-  const { trackFeatureAction } = useFeatureTracking("keyboard_shortcuts_help");
-
-  React.useEffect(() => {
-    if (isOpen) {
-      trackFeatureAction("shortcuts_help_opened");
-    }
-  }, [isOpen, trackFeatureAction]);
 
   if (!isOpen) return null;
 

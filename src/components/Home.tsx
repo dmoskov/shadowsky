@@ -24,10 +24,6 @@ import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useKeyboardShortcutsContext } from "../contexts/KeyboardShortcutsContext";
 import { useModeration } from "../contexts/ModerationContext";
-import {
-  useFeatureTracking,
-  useInteractionTracking,
-} from "../hooks/useAnalytics";
 import { useBookmarks } from "../hooks/useBookmarks";
 import { useIntersectionLoader } from "../hooks/useIntersectionLoader";
 import { useModerationPreferences } from "../hooks/useModerationPreferences";
@@ -245,9 +241,6 @@ export const Home: React.FC<HomeProps> = React.memo(
     const postRefs = useRef<{ [key: string]: HTMLDivElement }>({});
     // Removed dropdownRef - now handled by parent component
     const isKeyboardNavigationRef = useRef(false);
-
-    const { trackFeatureAction } = useFeatureTracking("home_feed");
-    const { trackClick } = useInteractionTracking();
 
     // Keyboard shortcuts context for L/R/B/S/C shortcuts
     const { setFocusedPost, registerPostActions, unregisterPostActions } =
@@ -1014,12 +1007,11 @@ export const Home: React.FC<HomeProps> = React.memo(
     // Handler functions (must be defined before keyboard navigation useEffect)
     const handlePostClick = React.useCallback(
       (post: Post) => {
-        trackClick("post", { postUri: post.uri });
         setSelectedPost(post);
         setOpenThreadToReply(false); // Reset when clicking on post normally
         setShowThread(true);
       },
-      [trackClick],
+      [],
     );
 
     // Mutations are handled by useOptimisticPosts hook
@@ -1031,8 +1023,6 @@ export const Home: React.FC<HomeProps> = React.memo(
           e.stopPropagation();
         }
         if (!agent) return;
-
-        trackFeatureAction("like_post", { postUri: post.uri });
 
         try {
           if (post.viewer?.like) {
@@ -1050,7 +1040,7 @@ export const Home: React.FC<HomeProps> = React.memo(
           debug.error("Failed to like/unlike post:", error);
         }
       },
-      [agent, likeMutation, unlikeMutation, trackFeatureAction],
+      [agent, likeMutation, unlikeMutation],
     );
 
     const handleRepost = React.useCallback(
@@ -1060,8 +1050,6 @@ export const Home: React.FC<HomeProps> = React.memo(
           e.stopPropagation();
         }
         if (!agent) return;
-
-        trackFeatureAction("repost_post", { postUri: post.uri });
 
         try {
           if (post.viewer?.repost) {
@@ -1079,7 +1067,7 @@ export const Home: React.FC<HomeProps> = React.memo(
           debug.error("Failed to repost:", error);
         }
       },
-      [agent, repostMutation, unrepostMutation, trackFeatureAction],
+      [agent, repostMutation, unrepostMutation],
     );
 
     const handleBookmark = React.useCallback(
@@ -1089,8 +1077,6 @@ export const Home: React.FC<HomeProps> = React.memo(
           e.stopPropagation();
         }
         if (!agent) return;
-
-        trackFeatureAction("bookmark_post", { postUri: post.uri });
 
         try {
           // Cast to PostView type - add indexedAt field
@@ -1105,7 +1091,7 @@ export const Home: React.FC<HomeProps> = React.memo(
           debug.error("Failed to bookmark post:", error);
         }
       },
-      [agent, toggleBookmark, trackFeatureAction],
+      [agent, toggleBookmark],
     );
 
     // Keyboard navigation
@@ -1426,9 +1412,6 @@ export const Home: React.FC<HomeProps> = React.memo(
             }));
             setGalleryImages(images);
             setGalleryIndex(index);
-            trackFeatureAction("image_gallery_opened", {
-              imageCount: images.length,
-            });
           };
 
           // Determine grid layout based on image count
@@ -1792,7 +1775,6 @@ export const Home: React.FC<HomeProps> = React.memo(
         generatedAltTexts,
         generatingAltText,
         showAltText,
-        trackFeatureAction,
         handleGenerateAltText,
       ],
     );

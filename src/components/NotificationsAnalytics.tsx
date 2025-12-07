@@ -11,42 +11,11 @@ import {
 } from "lucide-react";
 import React from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useFeatureTracking } from "../hooks/useAnalytics";
 import { useExtendedNotifications } from "../hooks/useExtendedNotifications";
-import { analytics as analyticsService } from "../services/analytics";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { BackgroundNotificationLoader } from "./BackgroundNotificationLoader";
 
 type TimeRange = "1d" | "3d" | "7d" | "4w";
-
-// Component to track when charts come into view
-const TrackedChart: React.FC<{
-  chartName: string;
-  children: React.ReactNode;
-}> = ({ chartName, children }) => {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const [hasTracked, setHasTracked] = React.useState(false);
-
-  React.useEffect(() => {
-    if (hasTracked || !ref.current) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasTracked) {
-          analyticsService.trackAnalyticsView(chartName);
-          setHasTracked(true);
-        }
-      },
-      { threshold: 0.5 },
-    );
-
-    observer.observe(ref.current);
-
-    return () => observer.disconnect();
-  }, [chartName, hasTracked]);
-
-  return <div ref={ref}>{children}</div>;
-};
 
 export const NotificationsAnalytics: React.FC = React.memo(
   function NotificationsAnalytics() {
@@ -59,17 +28,9 @@ export const NotificationsAnalytics: React.FC = React.memo(
       "received",
     );
 
-    // Analytics hooks
-    const { trackFeatureAction } = useFeatureTracking("analytics");
-
-    // Wrap setTimeRange to track analytics
+    // Handle time range changes
     const handleTimeRangeChange = (newRange: TimeRange) => {
       setTimeRange(newRange);
-      trackFeatureAction("time_range_changed", { range: newRange });
-      analyticsService.trackAnalyticsInteraction(
-        "time_range_changed",
-        newRange,
-      );
     };
 
     // Check if we have extended data available (from memory or IndexedDB)
@@ -896,14 +857,13 @@ export const NotificationsAnalytics: React.FC = React.memo(
         </div>
 
         {/* Activity Chart */}
-        <TrackedChart chartName="activity_timeline">
-          <div
-            className="bsky-card p-6"
-            style={{
-              background: "var(--bsky-bg-secondary)",
-              position: "relative",
-            }}
-          >
+        <div
+          className="bsky-card p-6"
+          style={{
+            background: "var(--bsky-bg-secondary)",
+            position: "relative",
+          }}
+        >
             <div
               className="pointer-events-none absolute right-0 top-0 h-64 w-64 opacity-5"
               style={{
@@ -1467,8 +1427,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                 )}
               </div>
             </div>
-          </div>
-        </TrackedChart>
+        </div>
 
         {/* Top Users */}
         <div className="bsky-card p-6">
@@ -1647,8 +1606,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
 
         {/* Your Activity */}
         {userActivity && (
-          <TrackedChart chartName="your_activity">
-            <div className="bsky-card p-4">
+          <div className="bsky-card p-4">
               <h2
                 className="mb-4 flex items-center gap-2 text-lg font-semibold"
                 style={{ color: "var(--bsky-text-primary)" }}
@@ -1796,7 +1754,6 @@ export const NotificationsAnalytics: React.FC = React.memo(
                 </div>
               )}
             </div>
-          </TrackedChart>
         )}
 
         {/* Engagement Summary */}

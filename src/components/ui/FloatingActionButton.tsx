@@ -2,7 +2,6 @@ import { PenTool } from "lucide-react";
 import React from "react";
 import { useNavigate } from "react-router";
 import { usePrefersReducedMotion } from "../../contexts/AccessibilityContext";
-import { useFeatureTracking } from "../../hooks/useAnalytics";
 import { useScrollVisibility } from "../../hooks/useRAFScroll";
 
 interface FloatingActionButtonProps {
@@ -13,7 +12,6 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   className = "",
 }) => {
   const navigate = useNavigate();
-  const { trackFeatureAction } = useFeatureTracking("mobile_ui");
   const prefersReducedMotion = usePrefersReducedMotion();
 
   // Use RAF-batched scroll visibility hook
@@ -24,8 +22,6 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   });
 
   const handleClick = () => {
-    trackFeatureAction("fab_compose_clicked");
-
     // Haptic feedback if available
     if (navigator.vibrate) {
       navigator.vibrate(10);

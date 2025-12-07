@@ -4,8 +4,6 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { subDays } from "date-fns";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useNotificationTracking } from "../hooks/useAnalytics";
-import { analytics } from "../services/analytics";
 import { getNotificationService } from "../services/atproto/notifications";
 import { NotificationCacheService } from "../services/notification-cache-service";
 import { ExtendedFetchCache } from "../utils/extendedFetchCache";
@@ -29,7 +27,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
   const [isIndexedDBReady, setIsIndexedDBReady] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
   const [enablePolling, setEnablePolling] = useState(false);
-  const { trackNotificationLoad } = useNotificationTracking();
 
   // Check if we already have cached data
   const cachedData = queryClient.getQueryData([
@@ -126,7 +123,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
       return;
 
     const loadCachedData = async () => {
-      const startTime = Date.now();
       const hasCached = await cacheService.hasCachedData();
       debug.log("[BackgroundNotificationLoader] Checking for cached data:", {
         hasCached,
@@ -197,18 +193,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
             },
           );
 
-          // Track cache load performance
-          const loadDuration = Date.now() - startTime;
-          trackNotificationLoad(
-            loadDuration,
-            cachedResult.notifications.length,
-            "cache",
-          );
-          analytics.trackPerformance("cache_load_duration", loadDuration, {
-            notification_count: cachedResult.notifications.length,
-            source: "indexeddb",
-          });
-
           // Prefetch posts for cached reply notifications in the background
           const { atProtoClient } = await import("../services/atproto");
           const agent = atProtoClient.agent;
@@ -244,7 +228,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
     queryClient,
     cacheService,
     isCachedDataStale,
-    trackNotificationLoad,
   ]);
 
   // Auto-fetch 4 weeks if no data exists or data is stale
@@ -275,7 +258,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
       return;
 
     const fetchData = async () => {
-      const startTime = Date.now();
       debug.log(
         "[BackgroundNotificationLoader] Starting auto-fetch of 4 weeks",
         {
@@ -411,13 +393,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
       // Invalidate analytics queries
       queryClient.invalidateQueries({ queryKey: ["notifications-analytics"] });
 
-      // Track performance metrics
-      const loadDuration = Date.now() - startTime;
-      trackNotificationLoad(loadDuration, totalNotifications, "api");
-      analytics.trackPerformance("background_load_duration", loadDuration, {
-        notification_count: totalNotifications,
-        pages_loaded: currentPage,
-      });
       queryClient.invalidateQueries({
         queryKey: ["notifications-visual-timeline"],
       });
@@ -437,7 +412,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
     queryClient,
     cacheService,
     isCachedDataStale,
-    trackNotificationLoad,
   ]);
 
   // Save new notifications to IndexedDB when data changes (from polling)

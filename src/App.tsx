@@ -35,10 +35,8 @@ import { StatusBarProvider } from "./contexts/StatusBarContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
-import { useErrorTracking, usePageTracking } from "./hooks/useAnalytics";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
-import { analytics } from "./services/analytics";
 import { appPreferencesService } from "./services/app-preferences-service";
 import { initializeCoreStorage } from "./services/data-services-initializer";
 import { NotificationStorageDB } from "./services/notification-storage-db";
@@ -244,10 +242,6 @@ function AppContent() {
 
   // Initialize swipe navigation for mobile
   const swipeHandlers = useSwipeNavigation();
-
-  // Initialize analytics tracking
-  usePageTracking();
-  useErrorTracking();
 
   // Set up global keyboard shortcuts
   useKeyboardShortcuts(
@@ -476,12 +470,7 @@ function AppContent() {
               <Route
                 path="/timeline"
                 element={
-                  <ErrorBoundary
-                    componentName="Visual Timeline"
-                    onError={(error) => {
-                      analytics.trackError(error, "VisualTimeline");
-                    }}
-                  >
+                  <ErrorBoundary componentName="Visual Timeline">
                     <VisualTimeline />
                   </ErrorBoundary>
                 }
@@ -489,12 +478,7 @@ function AppContent() {
               <Route
                 path="/analytics"
                 element={
-                  <ErrorBoundary
-                    componentName="User Analytics"
-                    onError={(error) => {
-                      analytics.trackError(error, "UserAnalytics");
-                    }}
-                  >
+                  <ErrorBoundary componentName="User Analytics">
                     <UserAnalytics />
                   </ErrorBoundary>
                 }
@@ -502,12 +486,7 @@ function AppContent() {
               <Route
                 path="/analytics/notifications"
                 element={
-                  <ErrorBoundary
-                    componentName="Notifications Analytics"
-                    onError={(error) => {
-                      analytics.trackError(error, "NotificationsAnalytics");
-                    }}
-                  >
+                  <ErrorBoundary componentName="Notifications Analytics">
                     <NotificationsAnalytics />
                   </ErrorBoundary>
                 }
@@ -515,12 +494,7 @@ function AppContent() {
               <Route
                 path="/notifications"
                 element={
-                  <ErrorBoundary
-                    componentName="Notifications"
-                    onError={(error) => {
-                      analytics.trackError(error, "Notifications");
-                    }}
-                  >
+                  <ErrorBoundary componentName="Notifications">
                     <Notifications />
                   </ErrorBoundary>
                 }
@@ -528,12 +502,7 @@ function AppContent() {
               <Route
                 path="/messages"
                 element={
-                  <ErrorBoundary
-                    componentName="Direct Messages"
-                    onError={(error) => {
-                      analytics.trackError(error, "DirectMessages");
-                    }}
-                  >
+                  <ErrorBoundary componentName="Direct Messages">
                     <DirectMessages />
                   </ErrorBoundary>
                 }
@@ -541,12 +510,7 @@ function AppContent() {
               <Route
                 path="/bookmarks"
                 element={
-                  <ErrorBoundary
-                    componentName="Bookmarks"
-                    onError={(error) => {
-                      analytics.trackError(error, "Bookmarks");
-                    }}
-                  >
+                  <ErrorBoundary componentName="Bookmarks">
                     <Bookmarks />
                   </ErrorBoundary>
                 }
@@ -554,12 +518,7 @@ function AppContent() {
               <Route
                 path="/lists"
                 element={
-                  <ErrorBoundary
-                    componentName="Lists"
-                    onError={(error) => {
-                      analytics.trackError(error, "Lists");
-                    }}
-                  >
+                  <ErrorBoundary componentName="Lists">
                     <Lists />
                   </ErrorBoundary>
                 }
@@ -567,12 +526,7 @@ function AppContent() {
               <Route
                 path="/lists/:listId"
                 element={
-                  <ErrorBoundary
-                    componentName="List Timeline"
-                    onError={(error) => {
-                      analytics.trackError(error, "ListTimeline");
-                    }}
-                  >
+                  <ErrorBoundary componentName="List Timeline">
                     <ListTimelineWithKey />
                   </ErrorBoundary>
                 }
@@ -580,12 +534,7 @@ function AppContent() {
               <Route
                 path="/compose"
                 element={
-                  <ErrorBoundary
-                    componentName="Composer"
-                    onError={(error) => {
-                      analytics.trackError(error, "Composer");
-                    }}
-                  >
+                  <ErrorBoundary componentName="Composer">
                     <Composer />
                   </ErrorBoundary>
                 }
@@ -593,12 +542,7 @@ function AppContent() {
               <Route
                 path="/search"
                 element={
-                  <ErrorBoundary
-                    componentName="Search"
-                    onError={(error) => {
-                      analytics.trackError(error, "Search");
-                    }}
-                  >
+                  <ErrorBoundary componentName="Search">
                     <Search />
                   </ErrorBoundary>
                 }
@@ -606,12 +550,7 @@ function AppContent() {
               <Route
                 path="/scheduled"
                 element={
-                  <ErrorBoundary
-                    componentName="Scheduled Posts"
-                    onError={(error) => {
-                      analytics.trackError(error, "ScheduledPosts");
-                    }}
-                  >
+                  <ErrorBoundary componentName="Scheduled Posts">
                     <ScheduledPosts />
                   </ErrorBoundary>
                 }
@@ -619,12 +558,7 @@ function AppContent() {
               <Route
                 path="/profile/:handle"
                 element={
-                  <ErrorBoundary
-                    componentName="Profile"
-                    onError={(error) => {
-                      analytics.trackError(error, "ProfilePage");
-                    }}
-                  >
+                  <ErrorBoundary componentName="Profile">
                     <ProfilePageWithKey />
                   </ErrorBoundary>
                 }
@@ -632,12 +566,7 @@ function AppContent() {
               <Route
                 path="/thread/:handle/:postId"
                 element={
-                  <ErrorBoundary
-                    componentName="Thread"
-                    onError={(error) => {
-                      analytics.trackError(error, "ThreadPage");
-                    }}
-                  >
+                  <ErrorBoundary componentName="Thread">
                     <ThreadPageWithKey />
                   </ErrorBoundary>
                 }
@@ -645,12 +574,7 @@ function AppContent() {
               <Route
                 path="/settings"
                 element={
-                  <ErrorBoundary
-                    componentName="Settings"
-                    onError={(error) => {
-                      analytics.trackError(error, "Settings");
-                    }}
-                  >
+                  <ErrorBoundary componentName="Settings">
                     <Settings />
                   </ErrorBoundary>
                 }
@@ -658,12 +582,7 @@ function AppContent() {
               <Route
                 path="/settings/:section"
                 element={
-                  <ErrorBoundary
-                    componentName="Settings"
-                    onError={(error) => {
-                      analytics.trackError(error, "Settings");
-                    }}
-                  >
+                  <ErrorBoundary componentName="Settings">
                     <Settings />
                   </ErrorBoundary>
                 }
@@ -680,13 +599,7 @@ function AppContent() {
         <FloatingActionButton />
         <SwipeIndicator />
         <StatusBar />
-        <ErrorBoundary
-          componentName="Push Notifications"
-          fallback={null}
-          onError={(error) => {
-            analytics.trackError(error, "PushNotifications");
-          }}
-        >
+        <ErrorBoundary componentName="Push Notifications" fallback={null}>
           <NotificationPermissionPrompt />
         </ErrorBoundary>
         <DebugConsole />
@@ -714,17 +627,6 @@ function App() {
     removeTrailingSlash();
   }, []);
 
-  // Initialize Google Analytics
-  useEffect(() => {
-    const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
-    if (measurementId) {
-      analytics.initialize(measurementId);
-      debug.log("Google Analytics initialized");
-    } else {
-      debug.log("Google Analytics not configured (no measurement ID)");
-    }
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -741,12 +643,7 @@ function App() {
                             <ActionSyncProvider>
                               <StorageErrorProvider>
                                 <StatusBarProvider>
-                                  <ErrorBoundary
-                                    componentName="Application"
-                                    onError={(error) => {
-                                      analytics.trackError(error, "App");
-                                    }}
-                                  >
+                                  <ErrorBoundary componentName="Application">
                                     <AppContent />
                                   </ErrorBoundary>
                                 </StatusBarProvider>

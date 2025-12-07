@@ -18,7 +18,6 @@ import React, {
   useState,
 } from "react";
 import { AccountManager } from "../services/account-manager";
-import { analytics } from "../services/analytics";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { atProtoClient, ATProtoClient } from "../services/atproto";
 import {
@@ -85,9 +84,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = useCallback(
     async (logoutAllAccounts = false) => {
-      // Track logout event
-      analytics.trackLogout();
-
       // Clear OAuth session if using OAuth
       if (authMethod === "oauth") {
         try {
@@ -206,8 +202,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             await initializeDataServices(agent);
             dmService.setAgent(agent);
 
-            // Track login
-            analytics.setUserId(oauthState.did);
             setIsLoading(false);
             return;
           }
@@ -331,10 +325,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           AccountManager.addOrUpdateAccount(newSession);
         }
 
-        // Track successful login
-        analytics.trackLogin(pdsUrl ? "custom_pds" : "bluesky");
-        analytics.setUserId(newSession.did);
-
         return true;
       } catch (error) {
         debug.error("Login error:", error);
@@ -395,9 +385,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await initializeDataServices(agent);
         dmService.setAgent(agent);
 
-        // Track successful login
-        analytics.trackLogin("oauth");
-        analytics.setUserId(state.did);
 
         return true;
       }
@@ -426,8 +413,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       dmService.setAgent(atProtoClient.agent);
 
       queryClient.clear();
-
-      analytics.setUserId(resumedSession.did);
 
       window.location.href = "/";
       return true;
