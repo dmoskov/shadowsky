@@ -10,8 +10,9 @@
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"></script>
     <script>
-      // Analytics will be initialized by the app if a measurement ID is provided
+      // Initialize gtag immediately to prevent "window.gtag is not a function" errors
       window.dataLayer = window.dataLayer || [];
+      window.gtag = function() { dataLayer.push(arguments); };
     </script>
     
   </head>

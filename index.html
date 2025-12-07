@@ -49,8 +49,12 @@
       src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"
     ></script>
     <script>
-      // Analytics will be initialized by the app if a measurement ID is provided
+      // Initialize gtag immediately to prevent "window.gtag is not a function" errors
+      // This must run before any app code that might call gtag
       window.dataLayer = window.dataLayer || [];
+      window.gtag = function () {
+        dataLayer.push(arguments);
+      };
     </script>
   </head>
   <body>
