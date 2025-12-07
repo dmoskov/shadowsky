@@ -172,6 +172,13 @@ class RoutePrefetchService {
   recordNavigation(pathname: string): void {
     if (!this.isEnabled) return;
 
+    // De-duplicate: skip if this is the same as the last navigation
+    const lastNavigation =
+      this.navigationHistory[this.navigationHistory.length - 1];
+    if (lastNavigation === pathname) {
+      return;
+    }
+
     const now = Date.now();
     this.lastNavigationTime = now;
 
