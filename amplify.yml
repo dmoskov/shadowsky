@@ -24,6 +24,14 @@ frontend:
       commands:
         # Create a 404.html that redirects to index.html for client-side routing
         - cp dist/index.html dist/404.html
+        # Invalidate CloudFront cache to ensure fresh content is served
+        - |
+          if [ -n "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
+            echo "Invalidating CloudFront cache for distribution: $CLOUDFRONT_DISTRIBUTION_ID"
+            aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*" || echo "CloudFront invalidation failed (check IAM permissions)"
+          else
+            echo "CLOUDFRONT_DISTRIBUTION_ID not set, skipping cache invalidation"
+          fi
   artifacts:
     baseDirectory: dist
     files:
