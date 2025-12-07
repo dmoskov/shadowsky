@@ -864,204 +864,344 @@ export const NotificationsAnalytics: React.FC = React.memo(
             position: "relative",
           }}
         >
-            <div
-              className="pointer-events-none absolute right-0 top-0 h-64 w-64 opacity-5"
-              style={{
-                background:
-                  "radial-gradient(circle, var(--bsky-primary) 0%, transparent 70%)",
-                transform: "translate(30%, -30%)",
-                overflow: "hidden",
-              }}
-            />
-            <div className="mb-4" style={{ position: "relative", zIndex: 10 }}>
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 text-lg font-semibold">
-                  <Activity className="text-green-500" size={20} />
-                  Activity Timeline
-                </h2>
-                {/* Activity Toggle */}
-                <div className="flex items-center gap-2 text-sm">
-                  <button
-                    onClick={() => setActivityView("received")}
-                    className={`rounded-lg px-3 py-1 transition-all ${
-                      activityView === "received" ? "font-semibold" : ""
-                    }`}
-                    style={{
-                      backgroundColor:
-                        activityView === "received"
-                          ? "var(--bsky-primary)"
-                          : "var(--bsky-bg-tertiary)",
-                      color:
-                        activityView === "received"
-                          ? "white"
-                          : "var(--bsky-text-secondary)",
-                    }}
-                  >
-                    Received
-                  </button>
-                  <button
-                    onClick={() => setActivityView("sent")}
-                    className={`rounded-lg px-3 py-1 transition-all ${
-                      activityView === "sent" ? "font-semibold" : ""
-                    }`}
-                    style={{
-                      backgroundColor:
-                        activityView === "sent"
-                          ? "var(--bsky-primary)"
-                          : "var(--bsky-bg-tertiary)",
-                      color:
-                        activityView === "sent"
-                          ? "white"
-                          : "var(--bsky-text-secondary)",
-                    }}
-                  >
-                    Sent
-                  </button>
-                </div>
-              </div>
-
-              {/* Time Range Buttons - on their own line */}
-              <div className="flex items-center gap-2">
+          <div
+            className="pointer-events-none absolute right-0 top-0 h-64 w-64 opacity-5"
+            style={{
+              background:
+                "radial-gradient(circle, var(--bsky-primary) 0%, transparent 70%)",
+              transform: "translate(30%, -30%)",
+              overflow: "hidden",
+            }}
+          />
+          <div className="mb-4" style={{ position: "relative", zIndex: 10 }}>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-lg font-semibold">
+                <Activity className="text-green-500" size={20} />
+                Activity Timeline
+              </h2>
+              {/* Activity Toggle */}
+              <div className="flex items-center gap-2 text-sm">
                 <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleTimeRangeChange("1d");
-                  }}
-                  className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
+                  onClick={() => setActivityView("received")}
+                  className={`rounded-lg px-3 py-1 transition-all ${
+                    activityView === "received" ? "font-semibold" : ""
+                  }`}
                   style={{
                     backgroundColor:
-                      timeRange === "1d"
+                      activityView === "received"
                         ? "var(--bsky-primary)"
                         : "var(--bsky-bg-tertiary)",
                     color:
-                      timeRange === "1d"
+                      activityView === "received"
                         ? "white"
                         : "var(--bsky-text-secondary)",
-                    border: "none",
                   }}
-                  type="button"
                 >
-                  24h
+                  Received
                 </button>
                 <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleTimeRangeChange("3d");
-                  }}
-                  className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
+                  onClick={() => setActivityView("sent")}
+                  className={`rounded-lg px-3 py-1 transition-all ${
+                    activityView === "sent" ? "font-semibold" : ""
+                  }`}
                   style={{
                     backgroundColor:
-                      timeRange === "3d"
+                      activityView === "sent"
                         ? "var(--bsky-primary)"
                         : "var(--bsky-bg-tertiary)",
                     color:
-                      timeRange === "3d"
+                      activityView === "sent"
                         ? "white"
                         : "var(--bsky-text-secondary)",
-                    border: "none",
                   }}
-                  type="button"
                 >
-                  3d
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleTimeRangeChange("7d");
-                  }}
-                  className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
-                  style={{
-                    backgroundColor:
-                      timeRange === "7d"
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-bg-tertiary)",
-                    color:
-                      timeRange === "7d"
-                        ? "white"
-                        : "var(--bsky-text-secondary)",
-                    border: "none",
-                  }}
-                  type="button"
-                >
-                  7d
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleTimeRangeChange("4w");
-                  }}
-                  className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
-                  style={{
-                    backgroundColor:
-                      timeRange === "4w"
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-bg-tertiary)",
-                    color:
-                      timeRange === "4w"
-                        ? "white"
-                        : "var(--bsky-text-secondary)",
-                    border: "none",
-                  }}
-                  type="button"
-                >
-                  4w
+                  Sent
                 </button>
               </div>
             </div>
 
-            <div
-              className="relative"
-              style={{ height: "300px", marginTop: "20px" }}
-            >
-              {/* Y-axis labels */}
-              <div
-                className="absolute bottom-0 left-0 top-0 flex flex-col justify-between text-xs"
-                style={{ width: "40px", color: "var(--bsky-text-secondary)" }}
+            {/* Time Range Buttons - on their own line */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleTimeRangeChange("1d");
+                }}
+                className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
+                style={{
+                  backgroundColor:
+                    timeRange === "1d"
+                      ? "var(--bsky-primary)"
+                      : "var(--bsky-bg-tertiary)",
+                  color:
+                    timeRange === "1d" ? "white" : "var(--bsky-text-secondary)",
+                  border: "none",
+                }}
+                type="button"
               >
-                <span>{currentMaxValue}</span>
-                <span>{Math.round(currentMaxValue * 0.75)}</span>
-                <span>{Math.round(currentMaxValue * 0.5)}</span>
-                <span>{Math.round(currentMaxValue * 0.25)}</span>
-                <span>0</span>
+                24h
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleTimeRangeChange("3d");
+                }}
+                className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
+                style={{
+                  backgroundColor:
+                    timeRange === "3d"
+                      ? "var(--bsky-primary)"
+                      : "var(--bsky-bg-tertiary)",
+                  color:
+                    timeRange === "3d" ? "white" : "var(--bsky-text-secondary)",
+                  border: "none",
+                }}
+                type="button"
+              >
+                3d
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleTimeRangeChange("7d");
+                }}
+                className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
+                style={{
+                  backgroundColor:
+                    timeRange === "7d"
+                      ? "var(--bsky-primary)"
+                      : "var(--bsky-bg-tertiary)",
+                  color:
+                    timeRange === "7d" ? "white" : "var(--bsky-text-secondary)",
+                  border: "none",
+                }}
+                type="button"
+              >
+                7d
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleTimeRangeChange("4w");
+                }}
+                className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
+                style={{
+                  backgroundColor:
+                    timeRange === "4w"
+                      ? "var(--bsky-primary)"
+                      : "var(--bsky-bg-tertiary)",
+                  color:
+                    timeRange === "4w" ? "white" : "var(--bsky-text-secondary)",
+                  border: "none",
+                }}
+                type="button"
+              >
+                4w
+              </button>
+            </div>
+          </div>
+
+          <div
+            className="relative"
+            style={{ height: "300px", marginTop: "20px" }}
+          >
+            {/* Y-axis labels */}
+            <div
+              className="absolute bottom-0 left-0 top-0 flex flex-col justify-between text-xs"
+              style={{ width: "40px", color: "var(--bsky-text-secondary)" }}
+            >
+              <span>{currentMaxValue}</span>
+              <span>{Math.round(currentMaxValue * 0.75)}</span>
+              <span>{Math.round(currentMaxValue * 0.5)}</span>
+              <span>{Math.round(currentMaxValue * 0.25)}</span>
+              <span>0</span>
+            </div>
+
+            {/* Chart area */}
+            <div className="relative ml-12 h-full">
+              {/* Grid lines */}
+              <div className="absolute inset-0">
+                {[0, 0.25, 0.5, 0.75, 1].map((fraction) => (
+                  <div
+                    key={fraction}
+                    className="absolute w-full"
+                    style={{
+                      bottom: `${fraction * 100}%`,
+                      borderBottom: "1px solid",
+                      borderColor: "var(--bsky-border-secondary)",
+                      opacity: fraction === 0 ? 1 : 0.2,
+                    }}
+                  />
+                ))}
               </div>
 
-              {/* Chart area */}
-              <div className="relative ml-12 h-full">
-                {/* Grid lines */}
-                <div className="absolute inset-0">
-                  {[0, 0.25, 0.5, 0.75, 1].map((fraction) => (
-                    <div
-                      key={fraction}
-                      className="absolute w-full"
-                      style={{
-                        bottom: `${fraction * 100}%`,
-                        borderBottom: "1px solid",
-                        borderColor: "var(--bsky-border-secondary)",
-                        opacity: fraction === 0 ? 1 : 0.2,
-                      }}
-                    />
-                  ))}
-                </div>
+              {/* Bars */}
+              <div
+                className="relative flex h-full items-end justify-between"
+                style={{
+                  gap: timeRange === "4w" ? "2px" : "4px",
+                  paddingBottom: "30px",
+                }}
+              >
+                {activityView === "received"
+                  ? // Received view - show notifications
+                    analytics.buckets.map((bucket, index) => {
+                      const barWidth =
+                        timeRange === "4w"
+                          ? `${100 / analytics.buckets.length}%`
+                          : `${100 / analytics.buckets.length - 1}%`;
+                      return (
+                        <div
+                          key={`${bucket.label}-${index}`}
+                          className="group relative"
+                          style={{
+                            width: barWidth,
+                            minWidth: timeRange === "4w" ? "8px" : "20px",
+                            maxWidth: timeRange === "4w" ? "30px" : "60px",
+                          }}
+                        >
+                          {/* Stacked bar */}
+                          <div className="absolute bottom-0 left-0 right-0 flex flex-col-reverse overflow-hidden rounded-t-lg transition-all duration-300 hover:opacity-90">
+                            {/* Likes - bottom of stack */}
+                            {bucket.likes > 0 && (
+                              <div
+                                className="w-full transition-all duration-500"
+                                style={{
+                                  height: `${(bucket.likes / maxValue) * 270}px`,
+                                  background:
+                                    "linear-gradient(180deg, #f87171 0%, #ef4444 100%)",
+                                }}
+                                title={`${bucket.likes} likes`}
+                              />
+                            )}
+                            {/* Reposts */}
+                            {bucket.reposts > 0 && (
+                              <div
+                                className="w-full transition-all duration-500"
+                                style={{
+                                  height: `${(bucket.reposts / maxValue) * 270}px`,
+                                  background:
+                                    "linear-gradient(180deg, #93c5fd 0%, #60a5fa 100%)",
+                                }}
+                                title={`${bucket.reposts} reposts`}
+                              />
+                            )}
+                            {/* Follows */}
+                            {bucket.follows > 0 && (
+                              <div
+                                className="w-full transition-all duration-500"
+                                style={{
+                                  height: `${(bucket.follows / maxValue) * 270}px`,
+                                  background:
+                                    "linear-gradient(180deg, #c4b5fd 0%, #a78bfa 100%)",
+                                }}
+                                title={`${bucket.follows} follows`}
+                              />
+                            )}
+                            {/* Replies */}
+                            {bucket.replies > 0 && (
+                              <div
+                                className="w-full transition-all duration-500"
+                                style={{
+                                  height: `${(bucket.replies / maxValue) * 270}px`,
+                                  background:
+                                    "linear-gradient(180deg, #86efac 0%, #4ade80 100%)",
+                                }}
+                                title={`${bucket.replies} replies`}
+                              />
+                            )}
+                            {/* Mentions - top of stack */}
+                            {bucket.mentions > 0 && (
+                              <div
+                                className="w-full transition-all duration-500"
+                                style={{
+                                  height: `${(bucket.mentions / maxValue) * 270}px`,
+                                  background:
+                                    "linear-gradient(180deg, #fda4af 0%, #fb7185 100%)",
+                                }}
+                                title={`${bucket.mentions} mentions`}
+                              />
+                            )}
+                          </div>
 
-                {/* Bars */}
-                <div
-                  className="relative flex h-full items-end justify-between"
-                  style={{
-                    gap: timeRange === "4w" ? "2px" : "4px",
-                    paddingBottom: "30px",
-                  }}
-                >
-                  {activityView === "received"
-                    ? // Received view - show notifications
-                      analytics.buckets.map((bucket, index) => {
+                          {/* Hover tooltip */}
+                          <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 transform opacity-0 transition-opacity group-hover:opacity-100">
+                            <div
+                              className="whitespace-nowrap rounded-lg px-3 py-2 text-xs"
+                              style={{
+                                backgroundColor: "var(--bsky-bg-primary)",
+                                color: "var(--bsky-text-primary)",
+                                boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                                border: "1px solid var(--bsky-border-primary)",
+                              }}
+                            >
+                              <div className="mb-1 font-bold">
+                                {bucket.total} total
+                              </div>
+                              {bucket.likes > 0 && (
+                                <div style={{ color: "#ef4444" }}>
+                                  {bucket.likes} likes
+                                </div>
+                              )}
+                              {bucket.reposts > 0 && (
+                                <div style={{ color: "#60a5fa" }}>
+                                  {bucket.reposts} reposts
+                                </div>
+                              )}
+                              {bucket.follows > 0 && (
+                                <div style={{ color: "#a78bfa" }}>
+                                  {bucket.follows} follows
+                                </div>
+                              )}
+                              {bucket.replies > 0 && (
+                                <div style={{ color: "#4ade80" }}>
+                                  {bucket.replies} replies
+                                </div>
+                              )}
+                              {bucket.mentions > 0 && (
+                                <div style={{ color: "#fb7185" }}>
+                                  {bucket.mentions} mentions
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* X-axis label */}
+                          {(timeRange !== "4w" ||
+                            index % 4 === 0 ||
+                            index === analytics.buckets.length - 1) && (
+                            <div className="absolute left-0 right-0 top-full mt-1 text-center">
+                              <span
+                                className="text-xs"
+                                style={{
+                                  color: "var(--bsky-text-secondary)",
+                                  fontSize: timeRange === "4w" ? "9px" : "10px",
+                                }}
+                              >
+                                {bucket.label}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  : sentActivity
+                    ? // Sent view - show user's posts, replies, reposts
+                      sentActivity.buckets.map((bucket, index) => {
                         const barWidth =
                           timeRange === "4w"
-                            ? `${100 / analytics.buckets.length}%`
-                            : `${100 / analytics.buckets.length - 1}%`;
+                            ? `${100 / sentActivity.buckets.length}%`
+                            : `${100 / sentActivity.buckets.length - 1}%`;
+                        const total =
+                          bucket.posts +
+                          bucket.replies +
+                          bucket.reposts +
+                          bucket.quotes;
+
                         return (
                           <div
                             key={`${bucket.label}-${index}`}
@@ -1074,40 +1214,16 @@ export const NotificationsAnalytics: React.FC = React.memo(
                           >
                             {/* Stacked bar */}
                             <div className="absolute bottom-0 left-0 right-0 flex flex-col-reverse overflow-hidden rounded-t-lg transition-all duration-300 hover:opacity-90">
-                              {/* Likes - bottom of stack */}
-                              {bucket.likes > 0 && (
+                              {/* Posts - bottom of stack */}
+                              {bucket.posts > 0 && (
                                 <div
                                   className="w-full transition-all duration-500"
                                   style={{
-                                    height: `${(bucket.likes / maxValue) * 270}px`,
+                                    height: `${(bucket.posts / maxSentValue) * 270}px`,
                                     background:
-                                      "linear-gradient(180deg, #f87171 0%, #ef4444 100%)",
+                                      "linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%)",
                                   }}
-                                  title={`${bucket.likes} likes`}
-                                />
-                              )}
-                              {/* Reposts */}
-                              {bucket.reposts > 0 && (
-                                <div
-                                  className="w-full transition-all duration-500"
-                                  style={{
-                                    height: `${(bucket.reposts / maxValue) * 270}px`,
-                                    background:
-                                      "linear-gradient(180deg, #93c5fd 0%, #60a5fa 100%)",
-                                  }}
-                                  title={`${bucket.reposts} reposts`}
-                                />
-                              )}
-                              {/* Follows */}
-                              {bucket.follows > 0 && (
-                                <div
-                                  className="w-full transition-all duration-500"
-                                  style={{
-                                    height: `${(bucket.follows / maxValue) * 270}px`,
-                                    background:
-                                      "linear-gradient(180deg, #c4b5fd 0%, #a78bfa 100%)",
-                                  }}
-                                  title={`${bucket.follows} follows`}
+                                  title={`${bucket.posts} posts`}
                                 />
                               )}
                               {/* Replies */}
@@ -1115,23 +1231,35 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                 <div
                                   className="w-full transition-all duration-500"
                                   style={{
-                                    height: `${(bucket.replies / maxValue) * 270}px`,
+                                    height: `${(bucket.replies / maxSentValue) * 270}px`,
                                     background:
                                       "linear-gradient(180deg, #86efac 0%, #4ade80 100%)",
                                   }}
                                   title={`${bucket.replies} replies`}
                                 />
                               )}
-                              {/* Mentions - top of stack */}
-                              {bucket.mentions > 0 && (
+                              {/* Reposts */}
+                              {bucket.reposts > 0 && (
                                 <div
                                   className="w-full transition-all duration-500"
                                   style={{
-                                    height: `${(bucket.mentions / maxValue) * 270}px`,
+                                    height: `${(bucket.reposts / maxSentValue) * 270}px`,
+                                    background:
+                                      "linear-gradient(180deg, #c4b5fd 0%, #a78bfa 100%)",
+                                  }}
+                                  title={`${bucket.reposts} reposts`}
+                                />
+                              )}
+                              {/* Quotes */}
+                              {bucket.quotes > 0 && (
+                                <div
+                                  className="w-full transition-all duration-500"
+                                  style={{
+                                    height: `${(bucket.quotes / maxSentValue) * 270}px`,
                                     background:
                                       "linear-gradient(180deg, #fda4af 0%, #fb7185 100%)",
                                   }}
-                                  title={`${bucket.mentions} mentions`}
+                                  title={`${bucket.quotes} quotes`}
                                 />
                               )}
                             </div>
@@ -1149,21 +1277,11 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                 }}
                               >
                                 <div className="mb-1 font-bold">
-                                  {bucket.total} total
+                                  {total} total
                                 </div>
-                                {bucket.likes > 0 && (
-                                  <div style={{ color: "#ef4444" }}>
-                                    {bucket.likes} likes
-                                  </div>
-                                )}
-                                {bucket.reposts > 0 && (
-                                  <div style={{ color: "#60a5fa" }}>
-                                    {bucket.reposts} reposts
-                                  </div>
-                                )}
-                                {bucket.follows > 0 && (
-                                  <div style={{ color: "#a78bfa" }}>
-                                    {bucket.follows} follows
+                                {bucket.posts > 0 && (
+                                  <div style={{ color: "#3b82f6" }}>
+                                    {bucket.posts} posts
                                   </div>
                                 )}
                                 {bucket.replies > 0 && (
@@ -1171,9 +1289,14 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                     {bucket.replies} replies
                                   </div>
                                 )}
-                                {bucket.mentions > 0 && (
+                                {bucket.reposts > 0 && (
+                                  <div style={{ color: "#a78bfa" }}>
+                                    {bucket.reposts} reposts
+                                  </div>
+                                )}
+                                {bucket.quotes > 0 && (
                                   <div style={{ color: "#fb7185" }}>
-                                    {bucket.mentions} mentions
+                                    {bucket.quotes} quotes
                                   </div>
                                 )}
                               </div>
@@ -1182,14 +1305,14 @@ export const NotificationsAnalytics: React.FC = React.memo(
                             {/* X-axis label */}
                             {(timeRange !== "4w" ||
                               index % 4 === 0 ||
-                              index === analytics.buckets.length - 1) && (
+                              index === sentActivity.buckets.length - 1) && (
                               <div className="absolute left-0 right-0 top-full mt-1 text-center">
                                 <span
                                   className="text-xs"
                                   style={{
-                                    color: "var(--bsky-text-secondary)",
+                                    color: "var(--bsky-text-tertiary)",
                                     fontSize:
-                                      timeRange === "4w" ? "9px" : "10px",
+                                      timeRange === "4w" ? "10px" : "12px",
                                   }}
                                 >
                                   {bucket.label}
@@ -1199,234 +1322,101 @@ export const NotificationsAnalytics: React.FC = React.memo(
                           </div>
                         );
                       })
-                    : sentActivity
-                      ? // Sent view - show user's posts, replies, reposts
-                        sentActivity.buckets.map((bucket, index) => {
-                          const barWidth =
-                            timeRange === "4w"
-                              ? `${100 / sentActivity.buckets.length}%`
-                              : `${100 / sentActivity.buckets.length - 1}%`;
-                          const total =
-                            bucket.posts +
-                            bucket.replies +
-                            bucket.reposts +
-                            bucket.quotes;
-
-                          return (
-                            <div
-                              key={`${bucket.label}-${index}`}
-                              className="group relative"
-                              style={{
-                                width: barWidth,
-                                minWidth: timeRange === "4w" ? "8px" : "20px",
-                                maxWidth: timeRange === "4w" ? "30px" : "60px",
-                              }}
-                            >
-                              {/* Stacked bar */}
-                              <div className="absolute bottom-0 left-0 right-0 flex flex-col-reverse overflow-hidden rounded-t-lg transition-all duration-300 hover:opacity-90">
-                                {/* Posts - bottom of stack */}
-                                {bucket.posts > 0 && (
-                                  <div
-                                    className="w-full transition-all duration-500"
-                                    style={{
-                                      height: `${(bucket.posts / maxSentValue) * 270}px`,
-                                      background:
-                                        "linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%)",
-                                    }}
-                                    title={`${bucket.posts} posts`}
-                                  />
-                                )}
-                                {/* Replies */}
-                                {bucket.replies > 0 && (
-                                  <div
-                                    className="w-full transition-all duration-500"
-                                    style={{
-                                      height: `${(bucket.replies / maxSentValue) * 270}px`,
-                                      background:
-                                        "linear-gradient(180deg, #86efac 0%, #4ade80 100%)",
-                                    }}
-                                    title={`${bucket.replies} replies`}
-                                  />
-                                )}
-                                {/* Reposts */}
-                                {bucket.reposts > 0 && (
-                                  <div
-                                    className="w-full transition-all duration-500"
-                                    style={{
-                                      height: `${(bucket.reposts / maxSentValue) * 270}px`,
-                                      background:
-                                        "linear-gradient(180deg, #c4b5fd 0%, #a78bfa 100%)",
-                                    }}
-                                    title={`${bucket.reposts} reposts`}
-                                  />
-                                )}
-                                {/* Quotes */}
-                                {bucket.quotes > 0 && (
-                                  <div
-                                    className="w-full transition-all duration-500"
-                                    style={{
-                                      height: `${(bucket.quotes / maxSentValue) * 270}px`,
-                                      background:
-                                        "linear-gradient(180deg, #fda4af 0%, #fb7185 100%)",
-                                    }}
-                                    title={`${bucket.quotes} quotes`}
-                                  />
-                                )}
-                              </div>
-
-                              {/* Hover tooltip */}
-                              <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 transform opacity-0 transition-opacity group-hover:opacity-100">
-                                <div
-                                  className="whitespace-nowrap rounded-lg px-3 py-2 text-xs"
-                                  style={{
-                                    backgroundColor: "var(--bsky-bg-primary)",
-                                    color: "var(--bsky-text-primary)",
-                                    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-                                    border:
-                                      "1px solid var(--bsky-border-primary)",
-                                  }}
-                                >
-                                  <div className="mb-1 font-bold">
-                                    {total} total
-                                  </div>
-                                  {bucket.posts > 0 && (
-                                    <div style={{ color: "#3b82f6" }}>
-                                      {bucket.posts} posts
-                                    </div>
-                                  )}
-                                  {bucket.replies > 0 && (
-                                    <div style={{ color: "#4ade80" }}>
-                                      {bucket.replies} replies
-                                    </div>
-                                  )}
-                                  {bucket.reposts > 0 && (
-                                    <div style={{ color: "#a78bfa" }}>
-                                      {bucket.reposts} reposts
-                                    </div>
-                                  )}
-                                  {bucket.quotes > 0 && (
-                                    <div style={{ color: "#fb7185" }}>
-                                      {bucket.quotes} quotes
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* X-axis label */}
-                              {(timeRange !== "4w" ||
-                                index % 4 === 0 ||
-                                index === sentActivity.buckets.length - 1) && (
-                                <div className="absolute left-0 right-0 top-full mt-1 text-center">
-                                  <span
-                                    className="text-xs"
-                                    style={{
-                                      color: "var(--bsky-text-tertiary)",
-                                      fontSize:
-                                        timeRange === "4w" ? "10px" : "12px",
-                                    }}
-                                  >
-                                    {bucket.label}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })
-                      : null}
-                </div>
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-3 pb-2 text-xs">
-                {activityView === "received" ? (
-                  <>
-                    <div className="flex items-center gap-1">
-                      <div
-                        className="h-3 w-3 rounded"
-                        style={{ backgroundColor: "#ef4444" }}
-                      ></div>
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
-                        Likes
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div
-                        className="h-3 w-3 rounded"
-                        style={{ backgroundColor: "#60a5fa" }}
-                      ></div>
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
-                        Reposts
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div
-                        className="h-3 w-3 rounded"
-                        style={{ backgroundColor: "#a78bfa" }}
-                      ></div>
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
-                        Follows
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div
-                        className="h-3 w-3 rounded"
-                        style={{ backgroundColor: "#4ade80" }}
-                      ></div>
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
-                        Replies
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div
-                        className="h-3 w-3 rounded"
-                        style={{ backgroundColor: "#fb7185" }}
-                      ></div>
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
-                        Mentions
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-1">
-                      <div
-                        className="h-3 w-3 rounded"
-                        style={{ backgroundColor: "#3b82f6" }}
-                      ></div>
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
-                        Posts
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div
-                        className="h-3 w-3 rounded"
-                        style={{ backgroundColor: "#4ade80" }}
-                      ></div>
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
-                        Replies
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div
-                        className="h-3 w-3 rounded"
-                        style={{ backgroundColor: "#a78bfa" }}
-                      ></div>
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
-                        Reposts
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div
-                        className="h-3 w-3 rounded"
-                        style={{ backgroundColor: "#fb7185" }}
-                      ></div>
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
-                        Quotes
-                      </span>
-                    </div>
-                  </>
-                )}
+                    : null}
               </div>
             </div>
+
+            <div className="mt-4 flex flex-wrap gap-3 pb-2 text-xs">
+              {activityView === "received" ? (
+                <>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#ef4444" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Likes
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#60a5fa" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Reposts
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#a78bfa" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Follows
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#4ade80" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Replies
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#fb7185" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Mentions
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#3b82f6" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Posts
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#4ade80" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Replies
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#a78bfa" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Reposts
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-3 w-3 rounded"
+                      style={{ backgroundColor: "#fb7185" }}
+                    ></div>
+                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      Quotes
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Top Users */}
@@ -1607,153 +1597,153 @@ export const NotificationsAnalytics: React.FC = React.memo(
         {/* Your Activity */}
         {userActivity && (
           <div className="bsky-card p-4">
-              <h2
-                className="mb-4 flex items-center gap-2 text-lg font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
-              >
-                <Send size={20} className="text-blue-500" />
-                Your Activity
-              </h2>
+            <h2
+              className="mb-4 flex items-center gap-2 text-lg font-semibold"
+              style={{ color: "var(--bsky-text-primary)" }}
+            >
+              <Send size={20} className="text-blue-500" />
+              Your Activity
+            </h2>
 
+            <div
+              className="mb-3 text-sm"
+              style={{ color: "var(--bsky-text-secondary)" }}
+            >
+              Showing cumulative engagement on original posts (not reposts) from
+              the last{" "}
+              {timeRange === "1d"
+                ? "24 hours"
+                : timeRange === "3d"
+                  ? "3 days"
+                  : timeRange === "7d"
+                    ? "7 days"
+                    : "4 weeks"}
+            </div>
+
+            <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
               <div
-                className="mb-3 text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                className="rounded-lg p-3 text-center"
+                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
               >
-                Showing cumulative engagement on original posts (not reposts)
-                from the last{" "}
-                {timeRange === "1d"
-                  ? "24 hours"
-                  : timeRange === "3d"
-                    ? "3 days"
-                    : timeRange === "7d"
-                      ? "7 days"
-                      : "4 weeks"}
-              </div>
-
-              <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
                 <div
-                  className="rounded-lg p-3 text-center"
-                  style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                  className="text-2xl font-bold"
+                  style={{ color: "var(--bsky-primary)" }}
                 >
-                  <div
-                    className="text-2xl font-bold"
-                    style={{ color: "var(--bsky-primary)" }}
-                  >
-                    {userActivity.postsCount}
-                  </div>
-                  <div
-                    className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
-                  >
-                    Posts
-                  </div>
+                  {userActivity.postsCount}
                 </div>
-
                 <div
-                  className="rounded-lg p-3 text-center"
-                  style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
-                >
-                  <div className="text-2xl font-bold text-red-500">
-                    {userActivity.likesReceived}
-                  </div>
-                  <div
-                    className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
-                  >
-                    Total Likes on Posts
-                  </div>
-                </div>
-
-                <div
-                  className="rounded-lg p-3 text-center"
-                  style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
-                >
-                  <div className="text-2xl font-bold text-blue-500">
-                    {userActivity.repostsReceived}
-                  </div>
-                  <div
-                    className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
-                  >
-                    Total Reposts
-                  </div>
-                </div>
-
-                <div
-                  className="rounded-lg p-3 text-center"
-                  style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
-                >
-                  <div className="text-2xl font-bold text-green-500">
-                    {userActivity.repliesReceived}
-                  </div>
-                  <div
-                    className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
-                  >
-                    Total Replies
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div className="text-center">
-                  <div
-                    className="font-semibold"
-                    style={{ color: "var(--bsky-text-primary)" }}
-                  >
-                    {userActivity.followersCount}
-                  </div>
-                  <div style={{ color: "var(--bsky-text-secondary)" }}>
-                    Followers
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div
-                    className="font-semibold"
-                    style={{ color: "var(--bsky-text-primary)" }}
-                  >
-                    {userActivity.followingCount}
-                  </div>
-                  <div style={{ color: "var(--bsky-text-secondary)" }}>
-                    Following
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div
-                    className="font-semibold"
-                    style={{ color: "var(--bsky-text-primary)" }}
-                  >
-                    {userActivity.postsTotal}
-                  </div>
-                  <div style={{ color: "var(--bsky-text-secondary)" }}>
-                    Total Posts
-                  </div>
-                </div>
-              </div>
-
-              {userActivity.postsCount > 0 && (
-                <div
-                  className="mt-4 text-sm"
+                  className="text-sm"
                   style={{ color: "var(--bsky-text-secondary)" }}
                 >
-                  <div className="flex items-center justify-between">
-                    <span>Engagement Rate</span>
-                    <span
-                      className="font-semibold"
-                      style={{ color: "var(--bsky-text-primary)" }}
-                    >
-                      {(
-                        (userActivity.likesReceived +
-                          userActivity.repostsReceived +
-                          userActivity.repliesReceived) /
-                        userActivity.postsCount
-                      ).toFixed(1)}{" "}
-                      per post
-                    </span>
-                  </div>
+                  Posts
                 </div>
-              )}
+              </div>
+
+              <div
+                className="rounded-lg p-3 text-center"
+                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              >
+                <div className="text-2xl font-bold text-red-500">
+                  {userActivity.likesReceived}
+                </div>
+                <div
+                  className="text-sm"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  Total Likes on Posts
+                </div>
+              </div>
+
+              <div
+                className="rounded-lg p-3 text-center"
+                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              >
+                <div className="text-2xl font-bold text-blue-500">
+                  {userActivity.repostsReceived}
+                </div>
+                <div
+                  className="text-sm"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  Total Reposts
+                </div>
+              </div>
+
+              <div
+                className="rounded-lg p-3 text-center"
+                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              >
+                <div className="text-2xl font-bold text-green-500">
+                  {userActivity.repliesReceived}
+                </div>
+                <div
+                  className="text-sm"
+                  style={{ color: "var(--bsky-text-secondary)" }}
+                >
+                  Total Replies
+                </div>
+              </div>
             </div>
+
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="text-center">
+                <div
+                  className="font-semibold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  {userActivity.followersCount}
+                </div>
+                <div style={{ color: "var(--bsky-text-secondary)" }}>
+                  Followers
+                </div>
+              </div>
+              <div className="text-center">
+                <div
+                  className="font-semibold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  {userActivity.followingCount}
+                </div>
+                <div style={{ color: "var(--bsky-text-secondary)" }}>
+                  Following
+                </div>
+              </div>
+              <div className="text-center">
+                <div
+                  className="font-semibold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  {userActivity.postsTotal}
+                </div>
+                <div style={{ color: "var(--bsky-text-secondary)" }}>
+                  Total Posts
+                </div>
+              </div>
+            </div>
+
+            {userActivity.postsCount > 0 && (
+              <div
+                className="mt-4 text-sm"
+                style={{ color: "var(--bsky-text-secondary)" }}
+              >
+                <div className="flex items-center justify-between">
+                  <span>Engagement Rate</span>
+                  <span
+                    className="font-semibold"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                  >
+                    {(
+                      (userActivity.likesReceived +
+                        userActivity.repostsReceived +
+                        userActivity.repliesReceived) /
+                      userActivity.postsCount
+                    ).toFixed(1)}{" "}
+                    per post
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Engagement Summary */}

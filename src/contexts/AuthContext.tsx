@@ -385,7 +385,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await initializeDataServices(agent);
         dmService.setAgent(agent);
 
-
         return true;
       }
 

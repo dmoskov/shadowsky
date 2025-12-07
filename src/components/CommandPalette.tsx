@@ -203,14 +203,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         },
       },
     ],
-    [
-      navigate,
-      onClose,
-      logout,
-      session,
-      theme,
-      toggleTheme,
-    ],
+    [navigate, onClose, logout, session, theme, toggleTheme],
   );
 
   const filteredCommands = useMemo(() => {

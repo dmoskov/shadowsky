@@ -31,15 +31,15 @@ const logger = createLogger("ProgressiveThreadSummary");
 
 /**
  * Simple markdown renderer for AI summaries
- * Handles: **bold**, *italic*, # headers, and newlines
+ * Handles: **bold**, *italic*, # headers, - bullet lists, 1. numbered lists, and newlines
  */
 function renderMarkdown(text: string): React.ReactNode {
-  // Split by double newlines to get paragraphs
-  const paragraphs = text.split(/\n\n+/);
+  // Split by double newlines to get paragraphs/blocks
+  const blocks = text.split(/\n\n+/);
 
-  return paragraphs.map((paragraph, pIndex) => {
+  return blocks.map((block, bIndex) => {
     // Check if it's a header
-    const headerMatch = paragraph.match(/^(#{1,3})\s+(.+)$/);
+    const headerMatch = block.match(/^(#{1,3})\s+(.+)$/);
     if (headerMatch) {
       const level = headerMatch[1].length;
       const content = headerMatch[2];
@@ -50,16 +50,109 @@ function renderMarkdown(text: string): React.ReactNode {
             ? "text-sm font-semibold mb-1.5 mt-2.5 first:mt-0"
             : "text-sm font-medium mb-1 mt-2 first:mt-0";
       return (
-        <div key={pIndex} className={className}>
+        <div key={bIndex} className={className}>
           {renderInlineMarkdown(content)}
         </div>
       );
     }
 
+    // Check if block is a list (bullet or numbered)
+    const lines = block.split(/\n/);
+    const isBulletList = lines.every(
+      (line) => /^[-*•]\s/.test(line.trim()) || line.trim() === "",
+    );
+    const isNumberedList = lines.every(
+      (line) => /^\d+[.)]\s/.test(line.trim()) || line.trim() === "",
+    );
+
+    if (isBulletList && lines.some((l) => l.trim())) {
+      return (
+        <ul key={bIndex} className="mb-2 ml-4 list-disc space-y-1 last:mb-0">
+          {lines
+            .filter((line) => line.trim())
+            .map((line, lIndex) => (
+              <li key={lIndex} className="text-sm">
+                {renderInlineMarkdown(line.trim().replace(/^[-*•]\s/, ""))}
+              </li>
+            ))}
+        </ul>
+      );
+    }
+
+    if (isNumberedList && lines.some((l) => l.trim())) {
+      return (
+        <ol key={bIndex} className="mb-2 ml-4 list-decimal space-y-1 last:mb-0">
+          {lines
+            .filter((line) => line.trim())
+            .map((line, lIndex) => (
+              <li key={lIndex} className="text-sm">
+                {renderInlineMarkdown(line.trim().replace(/^\d+[.)]\s/, ""))}
+              </li>
+            ))}
+        </ol>
+      );
+    }
+
+    // Check for inline list items (lines starting with - within a paragraph)
+    const hasInlineListItems = lines.some((line) =>
+      /^[-*•]\s/.test(line.trim()),
+    );
+    if (hasInlineListItems) {
+      // Mixed content - render list items properly
+      const elements: React.ReactNode[] = [];
+      let currentListItems: string[] = [];
+
+      lines.forEach((line, lIndex) => {
+        const trimmedLine = line.trim();
+        if (/^[-*•]\s/.test(trimmedLine)) {
+          currentListItems.push(trimmedLine.replace(/^[-*•]\s/, ""));
+        } else if (trimmedLine) {
+          // Flush any pending list items
+          if (currentListItems.length > 0) {
+            elements.push(
+              <ul
+                key={`list-${lIndex}`}
+                className="mb-2 ml-4 list-disc space-y-1"
+              >
+                {currentListItems.map((item, iIndex) => (
+                  <li key={iIndex} className="text-sm">
+                    {renderInlineMarkdown(item)}
+                  </li>
+                ))}
+              </ul>,
+            );
+            currentListItems = [];
+          }
+          elements.push(
+            <p key={`p-${lIndex}`} className="mb-2">
+              {renderInlineMarkdown(trimmedLine)}
+            </p>,
+          );
+        }
+      });
+
+      // Flush remaining list items
+      if (currentListItems.length > 0) {
+        elements.push(
+          <ul
+            key="list-final"
+            className="mb-2 ml-4 list-disc space-y-1 last:mb-0"
+          >
+            {currentListItems.map((item, iIndex) => (
+              <li key={iIndex} className="text-sm">
+                {renderInlineMarkdown(item)}
+              </li>
+            ))}
+          </ul>,
+        );
+      }
+
+      return <div key={bIndex}>{elements}</div>;
+    }
+
     // Regular paragraph - handle line breaks within
-    const lines = paragraph.split(/\n/);
     return (
-      <p key={pIndex} className="mb-2 last:mb-0">
+      <p key={bIndex} className="mb-2 last:mb-0">
         {lines.map((line, lIndex) => (
           <span key={lIndex}>
             {lIndex > 0 && <br />}

@@ -1005,14 +1005,11 @@ export const Home: React.FC<HomeProps> = React.memo(
     }, [selectedFeed]);
 
     // Handler functions (must be defined before keyboard navigation useEffect)
-    const handlePostClick = React.useCallback(
-      (post: Post) => {
-        setSelectedPost(post);
-        setOpenThreadToReply(false); // Reset when clicking on post normally
-        setShowThread(true);
-      },
-      [],
-    );
+    const handlePostClick = React.useCallback((post: Post) => {
+      setSelectedPost(post);
+      setOpenThreadToReply(false); // Reset when clicking on post normally
+      setShowThread(true);
+    }, []);
 
     // Mutations are handled by useOptimisticPosts hook
 
