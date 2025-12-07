@@ -263,9 +263,15 @@ processorRule.addTarget(new LambdaFunction(backend.scheduledPostsProcessor.resou
 // The warmup handler in each function returns immediately without processing,
 // minimizing execution time and cost (~$10-20/month estimated).
 
-const warmupRule = new Rule(mainStack, 'AILambdaWarmupRule', {
+// CloudWatch Events rules have a 5 target limit, so we split into two rules
+const warmupRule1 = new Rule(mainStack, 'AILambdaWarmupRule1', {
   schedule: Schedule.rate(Duration.minutes(5)),
-  description: 'Keeps AI Lambda functions warm to eliminate cold start latency',
+  description: 'Keeps AI Lambda functions warm (batch 1 of 2)',
+});
+
+const warmupRule2 = new Rule(mainStack, 'AILambdaWarmupRule2', {
+  schedule: Schedule.rate(Duration.minutes(5)),
+  description: 'Keeps AI Lambda functions warm (batch 2 of 2)',
 });
 
 // Add all AI Lambda functions as targets with warmup event input
@@ -276,29 +282,31 @@ const warmupEventInput = RuleTargetInput.fromObject({
   timestamp: RuleTargetInput.fromEventPath('$.time'),
 });
 
-// Core AI-powered features that benefit from warmup
-warmupRule.addTarget(new LambdaFunction(backend.writingFeedback.resources.lambda, {
+// Batch 1: Core composition features (5 targets max)
+warmupRule1.addTarget(new LambdaFunction(backend.writingFeedback.resources.lambda, {
   event: warmupEventInput,
 }));
-warmupRule.addTarget(new LambdaFunction(backend.adjustTone.resources.lambda, {
+warmupRule1.addTarget(new LambdaFunction(backend.adjustTone.resources.lambda, {
   event: warmupEventInput,
 }));
-warmupRule.addTarget(new LambdaFunction(backend.optimizeThread.resources.lambda, {
+warmupRule1.addTarget(new LambdaFunction(backend.optimizeThread.resources.lambda, {
   event: warmupEventInput,
 }));
-warmupRule.addTarget(new LambdaFunction(backend.suggestHashtags.resources.lambda, {
+warmupRule1.addTarget(new LambdaFunction(backend.suggestHashtags.resources.lambda, {
   event: warmupEventInput,
 }));
-warmupRule.addTarget(new LambdaFunction(backend.styleAnalysis.resources.lambda, {
+warmupRule1.addTarget(new LambdaFunction(backend.styleAnalysis.resources.lambda, {
   event: warmupEventInput,
 }));
-warmupRule.addTarget(new LambdaFunction(backend.analyzePosts.resources.lambda, {
+
+// Batch 2: Analysis and media features (3 targets)
+warmupRule2.addTarget(new LambdaFunction(backend.analyzePosts.resources.lambda, {
   event: warmupEventInput,
 }));
-warmupRule.addTarget(new LambdaFunction(backend.generateAltText.resources.lambda, {
+warmupRule2.addTarget(new LambdaFunction(backend.generateAltText.resources.lambda, {
   event: warmupEventInput,
 }));
-warmupRule.addTarget(new LambdaFunction(backend.threadSummary.resources.lambda, {
+warmupRule2.addTarget(new LambdaFunction(backend.threadSummary.resources.lambda, {
   event: warmupEventInput,
 }));
 
