@@ -32,6 +32,7 @@ import {
   hasExistingOAuthSession,
   oauthService,
 } from "../services/oauth-service";
+import { setApiAuthSession } from "../utils/api-auth";
 
 type AuthMethod = "oauth" | "app-password" | null;
 
@@ -97,6 +98,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       atProtoClient.logout();
       setIsAuthenticated(false);
       setSession(null);
+      setApiAuthSession(null);
       setAuthMethod(null);
       setOauthAgent(null);
 
@@ -126,6 +128,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const newSession = await atProtoClient.refreshSession();
       if (newSession) {
         setSession(newSession);
+        setApiAuthSession(newSession);
         return true;
       }
       return false;
@@ -196,6 +199,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               active: true,
             };
             setSession(oauthSession);
+            setApiAuthSession(oauthSession);
 
             // Initialize services with OAuth agent
             await initializeBookmarkService(agent);
@@ -221,6 +225,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setIsAuthenticated(true);
             setAuthMethod("app-password");
             setSession(resumedSession);
+            setApiAuthSession(resumedSession);
             initAttempts.current = 0; // Reset on success
             // Initialize services with user preferences
             await initializeBookmarkService(atProtoClient.agent);
@@ -305,6 +310,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticated(true);
         setAuthMethod("app-password");
         setSession(newSession);
+        setApiAuthSession(newSession);
 
         // Initialize services with user preferences
         await initializeBookmarkService(atProtoClient.agent);
@@ -379,6 +385,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           active: true,
         };
         setSession(oauthSession);
+        setApiAuthSession(oauthSession);
 
         // Initialize services with OAuth agent
         await initializeBookmarkService(agent);
@@ -406,6 +413,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(true);
       setAuthMethod("app-password");
       setSession(resumedSession);
+      setApiAuthSession(resumedSession);
 
       await initializeBookmarkService(atProtoClient.agent);
       await initializeDataServices(atProtoClient.agent);

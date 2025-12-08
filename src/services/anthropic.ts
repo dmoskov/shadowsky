@@ -1,5 +1,6 @@
 import type { BskyAgent } from "@atproto/api";
 import { getApiBaseUrl } from "../config/amplify";
+import { getApiAuthHeaders } from "../utils/api-auth";
 import { createLogger } from "../utils/logger";
 import {
   ALT_TEXT_RETRY_OPTIONS,
@@ -45,6 +46,7 @@ export async function adjustTone(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...getApiAuthHeaders(),
         },
         body: JSON.stringify({ text, tone }),
       },
@@ -92,6 +94,7 @@ export async function optimizeThread(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...getApiAuthHeaders(),
         },
         body: JSON.stringify({ text, maxCharsPerPost }),
       },
@@ -137,6 +140,7 @@ export async function suggestHashtags(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...getApiAuthHeaders(),
         },
         body: JSON.stringify({ text, existingTags }),
       },
@@ -185,6 +189,7 @@ export async function getWritingFeedback(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...getApiAuthHeaders(),
         },
         body: JSON.stringify({ text }),
       },
@@ -246,6 +251,7 @@ export async function generateAltText(imageUrl: string): Promise<string> {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...getApiAuthHeaders(),
         },
         body: JSON.stringify(payload),
       },
@@ -327,6 +333,7 @@ async function analyzeWritingStyle(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...getApiAuthHeaders(),
         },
         body: JSON.stringify({ currentText, historicalPosts }),
       },
@@ -493,6 +500,7 @@ export async function analyzePosts(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...getApiAuthHeaders(),
         },
         body: JSON.stringify({ posts, analysisType }),
       },
@@ -629,6 +637,7 @@ export async function generateThreadSummary(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...getApiAuthHeaders(),
         },
         body: JSON.stringify({ posts, format }),
       },

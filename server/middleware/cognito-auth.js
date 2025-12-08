@@ -1,8 +1,11 @@
 /**
- * AWS Cognito JWT Validation Middleware for Express
+ * Authentication Middleware for Express
  *
- * Validates JWT tokens from AWS Cognito User Pool for securing API endpoints.
- * Mirrors the pattern from amplify/functions/shared/cognito-auth.ts
+ * Supports multiple authentication methods:
+ * 1. AWS Cognito JWT tokens (for admin/service accounts)
+ * 2. Bluesky DID (for regular users authenticated via OAuth)
+ *
+ * Priority: Cognito JWT > DID header
  */
 
 const crypto = require("crypto");
@@ -11,6 +14,9 @@ const crypto = require("crypto");
 let jwksCache = null;
 let jwksCacheTime = 0;
 const JWKS_CACHE_TTL = 3600000; // 1 hour in milliseconds
+
+// Flag to track if Cognito is available
+let cognitoAvailable = true;
 
 // Get Cognito configuration from environment or defaults
 function getCognitoConfig() {
@@ -29,10 +35,10 @@ function getCognitoConfig() {
   const clientId =
     process.env.COGNITO_CLIENT_ID || amplifyOutputs?.auth?.user_pool_client_id;
 
+  // Cognito is optional - if not configured, we'll use DID-based auth
   if (!userPoolId) {
-    throw new Error(
-      "COGNITO_USER_POOL_ID environment variable or amplify_outputs.json auth config is required",
-    );
+    cognitoAvailable = false;
+    return { userPoolId: null, region, clientId: null };
   }
 
   return { userPoolId, region, clientId };
@@ -304,12 +310,62 @@ function extractAuthToken(req) {
 }
 
 /**
+ * Extract Bluesky DID from request headers
+ * Supports: DID:<did>, x-user-did header, x-bluesky-did header
+ *
+ * @param {Object} req - Express request object
+ * @returns {string|null} DID or null if not found
+ */
+function extractUserDid(req) {
+  const authHeader = req.headers.authorization;
+
+  // Support DID directly in Authorization header (e.g., "DID:did:plc:...")
+  if (authHeader && authHeader.startsWith("DID:")) {
+    return authHeader.slice(4);
+  }
+
+  // Support x-user-did header
+  if (req.headers["x-user-did"]) {
+    return req.headers["x-user-did"];
+  }
+
+  // Support x-bluesky-did header
+  if (req.headers["x-bluesky-did"]) {
+    return req.headers["x-bluesky-did"];
+  }
+
+  return null;
+}
+
+/**
+ * Validate Bluesky DID format
+ * Valid formats: did:plc:... or did:web:...
+ *
+ * @param {string} did - DID to validate
+ * @returns {boolean} True if valid DID format
+ */
+function isValidDid(did) {
+  if (!did || typeof did !== "string") {
+    return false;
+  }
+
+  // DID must start with "did:" and have a method
+  if (!did.startsWith("did:")) {
+    return false;
+  }
+
+  // Common Bluesky DID methods: plc and web
+  const didPattern = /^did:(plc|web):[a-zA-Z0-9._%-]+$/;
+  return didPattern.test(did);
+}
+
+/**
  * Authenticate request using Cognito JWT
  *
  * @param {Object} req - Express request object
  * @returns {Object} AuthResult with user information or error
  */
-async function authenticateRequest(req) {
+async function authenticateCognito(req) {
   try {
     // Extract token from request
     const token = extractAuthToken(req);
@@ -321,8 +377,23 @@ async function authenticateRequest(req) {
       };
     }
 
+    // Check if it looks like a JWT (3 dot-separated parts)
+    if (token.split(".").length !== 3) {
+      return {
+        authenticated: false,
+        error: "Invalid token format",
+      };
+    }
+
     // Get Cognito configuration
     const { userPoolId, region, clientId } = getCognitoConfig();
+
+    if (!userPoolId) {
+      return {
+        authenticated: false,
+        error: "Cognito not configured",
+      };
+    }
 
     // Verify JWT signature
     const claims = await verifyJwtSignature(token, region, userPoolId);
@@ -338,6 +409,7 @@ async function authenticateRequest(req) {
 
     return {
       authenticated: true,
+      method: "cognito",
       userId,
       email,
       username,
@@ -355,7 +427,69 @@ async function authenticateRequest(req) {
 }
 
 /**
- * Express middleware that requires Cognito JWT authentication
+ * Authenticate request using Bluesky DID
+ *
+ * @param {Object} req - Express request object
+ * @returns {Object} AuthResult with user information or error
+ */
+function authenticateDid(req) {
+  const did = extractUserDid(req);
+
+  if (!did) {
+    return {
+      authenticated: false,
+      error: "No DID provided",
+    };
+  }
+
+  if (!isValidDid(did)) {
+    return {
+      authenticated: false,
+      error: "Invalid DID format",
+    };
+  }
+
+  return {
+    authenticated: true,
+    method: "did",
+    userId: did,
+    did: did,
+  };
+}
+
+/**
+ * Authenticate request using any available method
+ * Priority: Cognito JWT > Bluesky DID
+ *
+ * @param {Object} req - Express request object
+ * @returns {Object} AuthResult with user information or error
+ */
+async function authenticateRequest(req) {
+  // Try Cognito JWT first (if available)
+  if (cognitoAvailable) {
+    const cognitoAuth = await authenticateCognito(req);
+    if (cognitoAuth.authenticated) {
+      return cognitoAuth;
+    }
+  }
+
+  // Fall back to DID-based authentication
+  const didAuth = authenticateDid(req);
+  if (didAuth.authenticated) {
+    return didAuth;
+  }
+
+  // No valid authentication found
+  return {
+    authenticated: false,
+    error:
+      "Authentication required. Provide a valid Cognito JWT or Bluesky DID.",
+  };
+}
+
+/**
+ * Express middleware that requires authentication
+ * Accepts either Cognito JWT or Bluesky DID
  *
  * @returns {Function} Express middleware function
  */
@@ -379,16 +513,17 @@ function requireCognitoAuth() {
 }
 
 /**
- * Express middleware that optionally validates Cognito JWT
- * If token is present, validates it. If not, continues without auth.
+ * Express middleware that optionally validates authentication
+ * If token/DID is present, validates it. If not, continues without auth.
  *
  * @returns {Function} Express middleware function
  */
 function optionalCognitoAuth() {
   return async (req, res, next) => {
     const token = extractAuthToken(req);
+    const did = extractUserDid(req);
 
-    if (token) {
+    if (token || did) {
       const auth = await authenticateRequest(req);
       req.auth = auth;
     } else {
@@ -403,5 +538,9 @@ module.exports = {
   requireCognitoAuth,
   optionalCognitoAuth,
   authenticateRequest,
+  authenticateCognito,
+  authenticateDid,
+  extractUserDid,
+  isValidDid,
   getCognitoConfig,
 };

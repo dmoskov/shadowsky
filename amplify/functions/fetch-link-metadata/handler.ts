@@ -1,6 +1,7 @@
 import {
   CachePresets,
   createCachedSuccessResponse,
+  createErrorResponse,
   createExternalApiError,
   createInvalidParameterError,
   createMissingParameterError,
@@ -10,6 +11,7 @@ import {
   logWarning,
   parseEventBody,
 } from "../shared/api-response";
+import { validateUrlForSSRF } from "../shared/ip-validator";
 import { withCommonSetup, type MiddlewareContext } from "../shared/middleware";
 import {
   createUrlFetchClient,
@@ -192,6 +194,24 @@ export const handler = withCommonSetup({
     return createInvalidParameterError(
       "url",
       "Invalid URL format",
+      event,
+      correlationId,
+    );
+  }
+
+  // SSRF Protection: Validate URL doesn't resolve to private/internal IPs
+  const ssrfValidation = await validateUrlForSSRF(url);
+  if (!ssrfValidation.valid) {
+    logWarning(
+      "fetch-link-metadata",
+      `SSRF blocked: ${ssrfValidation.error}`,
+      correlationId,
+      { url, resolvedIP: ssrfValidation.resolvedIP },
+    );
+    return createErrorResponse(
+      403,
+      "SSRF_BLOCKED",
+      "Request blocked for security reasons",
       event,
       correlationId,
     );
