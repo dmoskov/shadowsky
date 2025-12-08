@@ -109,7 +109,7 @@
   "custom": {
     "API": {
       "shadowsky-api": {
-        "endpoint": "https://zrrj54yph3.execute-api.us-west-1.amazonaws.com/prod",
+        "endpoint": "https://api.shadowsky.io",
         "region": "us-west-1",
         "apiName": "shadowsky-api"
       }
