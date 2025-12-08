@@ -1,8 +1,7 @@
 import { defineBackend } from '@aws-amplify/backend';
-import { Stack, RemovalPolicy, Duration } from 'aws-cdk-lib';
+import { Duration } from 'aws-cdk-lib';
 import {
   AuthorizationType,
-  Cors,
   LambdaIntegration,
   RestApi,
 } from 'aws-cdk-lib/aws-apigateway';
@@ -11,48 +10,48 @@ import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
-import { writingFeedback } from './functions/writing-feedback/resource';
-import { generateAltText } from './functions/generate-alt-text/resource';
-import { adjustTone } from './functions/adjust-tone/resource';
-import { optimizeThread } from './functions/optimize-thread/resource';
-import { suggestHashtags } from './functions/suggest-hashtags/resource';
-import { styleAnalysis } from './functions/style-analysis/resource';
-import { analyzePosts } from './functions/analyze-posts/resource';
-import { ogMetaTags } from './functions/og-meta-tags/resource';
-import { fetchLinkMetadata } from './functions/fetch-link-metadata/resource';
 import { scheduledPosts } from './functions/scheduled-posts/resource';
 import { scheduledPostsProcessor } from './functions/scheduled-posts-processor/resource';
-import { threadSummary } from './functions/thread-summary/resource';
-import { createAnthropicDashboard, createAnthropicAlarms } from './functions/shared/cloudwatch-dashboard';
-import { createCloudWatchLogsKmsKey } from './functions/shared/kms-encryption';
 
 /**
- * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
+ * ShadowSky Backend Configuration
+ *
+ * ARCHITECTURE DECISION: ECS vs Lambda
+ * =====================================
+ *
+ * We use ECS (always-warm server) for ALL API features including AI endpoints.
+ * Benefits:
+ * - No cold starts (critical for AI features that users expect to be instant)
+ * - Simpler authentication (no Cognito JWT required, uses Bluesky session)
+ * - Single codebase for all API endpoints (server/api-server.js)
+ * - Easier local development (same server runs locally)
+ *
+ * The ONLY exception is scheduled posts, which requires Lambda because:
+ * - CloudWatch Events can trigger Lambda functions on a schedule (every minute)
+ * - ECS doesn't have native cron support without additional infrastructure
+ * - The processor runs briefly every minute - perfect Lambda use case
+ * - It's a background job, not user-facing, so cold starts don't matter
+ *
+ * If you're adding new API endpoints, add them to server/api-server.js, NOT here.
+ * Only add Lambda functions here if you need CloudWatch Events triggers.
+ *
+ * @see https://docs.amplify.aws/react/build-a-backend/
  */
 const backend = defineBackend({
   auth,
   data,
-  writingFeedback,
-  generateAltText,
-  adjustTone,
-  optimizeThread,
-  suggestHashtags,
-  styleAnalysis,
-  analyzePosts,
-  ogMetaTags,
-  fetchLinkMetadata,
   scheduledPosts,
   scheduledPostsProcessor,
-  threadSummary,
 });
 
 // Get the main backend stack
 const mainStack = backend.stack;
 
-// Create REST API in main stack
+// Create minimal REST API for scheduled posts only
+// All other API endpoints are handled by ECS
 const restApi = new RestApi(mainStack, 'RestApi', {
-  restApiName: 'shadowsky-api',
-  description: 'ShadowSky AI-powered features API',
+  restApiName: 'shadowsky-scheduled-posts-api',
+  description: 'ShadowSky scheduled posts API (other features served by ECS)',
   deploy: true,
   deployOptions: {
     stageName: 'prod',
@@ -83,87 +82,15 @@ const restApi = new RestApi(mainStack, 'RestApi', {
 // Create API resource path
 const apiResource = restApi.root.addResource('api');
 
-// Create Lambda integrations
-const writingFeedbackIntegration = new LambdaIntegration(
-  backend.writingFeedback.resources.lambda
-);
-const generateAltTextIntegration = new LambdaIntegration(
-  backend.generateAltText.resources.lambda
-);
-const adjustToneIntegration = new LambdaIntegration(
-  backend.adjustTone.resources.lambda
-);
-const optimizeThreadIntegration = new LambdaIntegration(
-  backend.optimizeThread.resources.lambda
-);
-const suggestHashtagsIntegration = new LambdaIntegration(
-  backend.suggestHashtags.resources.lambda
-);
-const styleAnalysisIntegration = new LambdaIntegration(
-  backend.styleAnalysis.resources.lambda
-);
-const analyzePostsIntegration = new LambdaIntegration(
-  backend.analyzePosts.resources.lambda
-);
-const ogMetaTagsIntegration = new LambdaIntegration(
-  backend.ogMetaTags.resources.lambda
-);
+// Scheduled Posts Lambda integration
 const scheduledPostsIntegration = new LambdaIntegration(
   backend.scheduledPosts.resources.lambda
-);
-const fetchLinkMetadataIntegration = new LambdaIntegration(
-  backend.fetchLinkMetadata.resources.lambda
-);
-const threadSummaryIntegration = new LambdaIntegration(
-  backend.threadSummary.resources.lambda
 );
 
 // Add method options with NONE authorization (no authentication required)
 const methodOptions = {
   authorizationType: AuthorizationType.NONE,
 };
-
-// Add API routes (OPTIONS methods are automatically handled by CORS configuration)
-const writingFeedbackResource = apiResource.addResource('writing-feedback');
-writingFeedbackResource.addMethod('POST', writingFeedbackIntegration, methodOptions);
-
-const generateAltTextResource = apiResource.addResource('generate-alt-text');
-generateAltTextResource.addMethod('POST', generateAltTextIntegration, methodOptions);
-
-const adjustToneResource = apiResource.addResource('adjust-tone');
-adjustToneResource.addMethod('POST', adjustToneIntegration, methodOptions);
-
-const optimizeThreadResource = apiResource.addResource('optimize-thread');
-optimizeThreadResource.addMethod('POST', optimizeThreadIntegration, methodOptions);
-
-const suggestHashtagsResource = apiResource.addResource('suggest-hashtags');
-suggestHashtagsResource.addMethod('POST', suggestHashtagsIntegration, methodOptions);
-
-const styleAnalysisResource = apiResource.addResource('style-analysis');
-styleAnalysisResource.addMethod('POST', styleAnalysisIntegration, methodOptions);
-
-const analyzePostsResource = apiResource.addResource('analyze-posts');
-analyzePostsResource.addMethod('POST', analyzePostsIntegration, methodOptions);
-
-const fetchLinkMetadataResource = apiResource.addResource('fetch-link-metadata');
-fetchLinkMetadataResource.addMethod('POST', fetchLinkMetadataIntegration, methodOptions);
-
-const threadSummaryResource = apiResource.addResource('thread-summary');
-threadSummaryResource.addMethod('POST', threadSummaryIntegration, methodOptions);
-
-// OG Meta Tags endpoints
-const ogResource = restApi.root.addResource('og');
-
-// Thread OG: /og/thread/{handle}/{postId}
-const ogThreadResource = ogResource.addResource('thread');
-const ogThreadHandleResource = ogThreadResource.addResource('{handle}');
-const ogThreadPostResource = ogThreadHandleResource.addResource('{postId}');
-ogThreadPostResource.addMethod('GET', ogMetaTagsIntegration, methodOptions);
-
-// Profile OG: /og/profile/{handle}
-const ogProfileResource = ogResource.addResource('profile');
-const ogProfileHandleResource = ogProfileResource.addResource('{handle}');
-ogProfileHandleResource.addMethod('GET', ogMetaTagsIntegration, methodOptions);
 
 // Scheduled Posts API: /api/scheduled-posts
 const scheduledPostsResource = apiResource.addResource('scheduled-posts');
@@ -184,24 +111,6 @@ scheduledPostIdResource.addMethod('GET', scheduledPostsIntegration, methodOption
 scheduledPostIdResource.addMethod('PUT', scheduledPostsIntegration, methodOptions);
 // DELETE /api/scheduled-posts/{id} - Delete a scheduled post
 scheduledPostIdResource.addMethod('DELETE', scheduledPostsIntegration, methodOptions);
-
-// Create DynamoDB table for alt-text cache
-const altTextCacheTable = new Table(mainStack, 'AltTextCache', {
-  partitionKey: {
-    name: 'imageHash',
-    type: AttributeType.STRING,
-  },
-  billingMode: BillingMode.PAY_PER_REQUEST,
-  timeToLiveAttribute: 'ttl',
-  tableName: 'shadowsky-alt-text-cache',
-});
-
-// Grant the generate-alt-text Lambda permission to read/write to the cache table
-altTextCacheTable.grantReadWriteData(backend.generateAltText.resources.lambda);
-
-// Add table name as environment variable to the Lambda
-// Note: AWS_REGION is automatically provided by Lambda runtime
-backend.generateAltText.addEnvironment('ALT_TEXT_CACHE_TABLE', altTextCacheTable.tableName);
 
 // Create DynamoDB table for scheduled posts
 const scheduledPostsTable = new Table(mainStack, 'ScheduledPostsTable', {
@@ -255,33 +164,15 @@ const processorRule = new Rule(mainStack, 'ScheduledPostsProcessorRule', {
 
 processorRule.addTarget(new LambdaFunction(backend.scheduledPostsProcessor.resources.lambda));
 
-// ============================================================================
-// Note: AI features now served by ECS (always-warm server) instead of Lambda
-// Lambda functions kept as backup but warmup rules removed since ECS is used
-// ============================================================================
-
-// Create CloudWatch Dashboard for Anthropic API monitoring
-const monitoringStack = backend.createStack('monitoring-stack');
-createAnthropicDashboard(monitoringStack);
-createAnthropicAlarms(monitoringStack);
-
-// Create KMS key for CloudWatch logs encryption
-const securityStack = backend.createStack('security-stack');
-const kmsKey = createCloudWatchLogsKmsKey(securityStack);
-
-// Note: Lambda functions will automatically create their own log groups.
-// The KMS key has been configured to allow CloudWatch Logs service to use it,
-// so encryption will work automatically for all Lambda log groups.
-// Explicit LogGroup creation is not needed and can cause circular dependencies.
-
-// Add custom stack output for the API URL
+// Output ECS API endpoint for AI features
+// Uses api.shadowsky.io which has CloudFront + ACM SSL cert in front of the ALB
 backend.addOutput({
   custom: {
     API: {
-      [restApi.restApiName]: {
-        endpoint: restApi.url,
-        region: Stack.of(mainStack).region,
-        apiName: restApi.restApiName,
+      'shadowsky-api': {
+        endpoint: 'https://api.shadowsky.io',
+        region: 'us-west-1',
+        apiName: 'shadowsky-api',
       },
     },
   },
