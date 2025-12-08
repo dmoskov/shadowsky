@@ -87,6 +87,29 @@ interface BlueskyProfile {
   postsCount?: number;
 }
 
+// Allowlist of trusted domains for outbound requests (SSRF protection)
+const TRUSTED_DOMAINS = [
+  'public.api.bsky.app',
+];
+
+/**
+ * Validate that a URL only targets trusted domains (SSRF protection)
+ * Lambda@Edge cannot use DNS resolution, so we use domain allowlisting
+ */
+function isUrlAllowed(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    // Only allow HTTPS
+    if (parsed.protocol !== 'https:') {
+      return false;
+    }
+    // Check against allowlist
+    return TRUSTED_DOMAINS.includes(parsed.hostname);
+  } catch {
+    return false;
+  }
+}
+
 function isCrawler(userAgent: string | undefined): boolean {
   if (!userAgent) return false;
   const ua = userAgent.toLowerCase();
@@ -108,6 +131,11 @@ function truncateText(text: string, maxLength: number): string {
 }
 
 async function fetchWithTimeout(url: string, timeoutMs: number = 3000): Promise<Response> {
+  // SSRF Protection: Only allow requests to trusted domains
+  if (!isUrlAllowed(url)) {
+    throw new Error(`SSRF blocked: URL not in allowlist`);
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {

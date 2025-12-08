@@ -11,6 +11,17 @@ const os = require("os");
 const { WebSocketNotificationServer } = require("./websocket-server");
 const pushSubscriptions = require("./push-subscriptions");
 const pushNotificationService = require("./push-notification-service");
+const { validateUrlForSSRF } = require("./ip-validator");
+const {
+  requireCognitoAuth,
+  optionalCognitoAuth,
+} = require("./middleware/cognito-auth");
+const {
+  rateLimit,
+  aiEndpointLimiter,
+  moderateLimiter,
+  getClientIp: getRateLimitClientIp,
+} = require("./middleware/rate-limit");
 
 // Load environment variables from parent directory's .env file
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
@@ -111,146 +122,183 @@ app.get("/health", (req, res) => {
 });
 
 // Generate alt text for an image URL
-app.post("/api/generate-alt-text", async (req, res) => {
-  const { imageUrl } = req.body;
+// Protected by Cognito auth + AI rate limiting
+app.post(
+  "/api/generate-alt-text",
+  requireCognitoAuth(),
+  aiEndpointLimiter,
+  async (req, res) => {
+    const { imageUrl } = req.body;
 
-  // Use server-side API key from environment variable
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+    // Use server-side API key from environment variable
+    const apiKey = process.env.ANTHROPIC_API_KEY;
 
-  console.log("Alt text generation request:", {
-    imageUrl,
-    hasServerApiKey: !!apiKey,
-  });
-
-  if (!imageUrl) {
-    return res.status(400).json({ error: "Missing imageUrl" });
-  }
-
-  if (!apiKey) {
-    return res.status(500).json({ error: "Server API key not configured" });
-  }
-
-  try {
-    let base64Image;
-    let mimeType;
-
-    // Handle data URLs (base64 encoded images)
-    if (imageUrl.startsWith("data:")) {
-      console.log("Processing data URL");
-      // Extract mime type and base64 data from data URL
-      const matches = imageUrl.match(/^data:([^;]+);base64,(.+)$/);
-      if (!matches) {
-        throw new Error("Invalid data URL format");
-      }
-      mimeType = matches[1];
-      base64Image = matches[2];
-    } else {
-      // Convert relative URLs to absolute URLs
-      let absoluteUrl = imageUrl;
-      if (imageUrl.startsWith("/bsky-cdn/")) {
-        // Convert Vite proxy path to actual CDN URL
-        absoluteUrl = imageUrl.replace("/bsky-cdn/", "https://cdn.bsky.app/");
-      } else if (imageUrl.startsWith("/bsky-video/")) {
-        absoluteUrl = imageUrl.replace(
-          "/bsky-video/",
-          "https://video.bsky.app/",
-        );
-      } else if (imageUrl.startsWith("/bsky-video-cdn/")) {
-        absoluteUrl = imageUrl.replace(
-          "/bsky-video-cdn/",
-          "https://video.cdn.bsky.app/",
-        );
-      } else if (
-        !imageUrl.startsWith("http://") &&
-        !imageUrl.startsWith("https://")
-      ) {
-        // For any other relative URLs, assume they're from the frontend origin
-        absoluteUrl = `http://localhost:5174${imageUrl}`;
-      }
-
-      console.log("Fetching image from:", absoluteUrl);
-      // Fetch the image
-      const response = await fetch(absoluteUrl);
-      if (!response.ok) {
-        console.error(
-          "Image fetch failed:",
-          response.status,
-          response.statusText,
-        );
-        throw new Error(
-          `Failed to fetch image: ${response.status} ${response.statusText}`,
-        );
-      }
-
-      const buffer = await response.buffer();
-      base64Image = buffer.toString("base64");
-      mimeType = response.headers.get("content-type") || "image/jpeg";
-    }
-
-    // Call Anthropic API
-    const anthropicResponse = await fetch(
-      "https://api.anthropic.com/v1/messages",
-      {
-        method: "POST",
-        headers: {
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-5-20250929",
-          max_tokens: 300,
-          messages: [
-            {
-              role: "user",
-              content: [
-                {
-                  type: "image",
-                  source: {
-                    type: "base64",
-                    media_type: mimeType,
-                    data: base64Image,
-                  },
-                },
-                {
-                  type: "text",
-                  text: "Generate alt text for this image that would help someone using a screen reader understand what's shown. Keep it concise (most descriptions should be brief), but you can use up to 500 characters when needed for complex images. Focus on the main subject and action.",
-                },
-              ],
-            },
-          ],
-        }),
-      },
-    );
-
-    if (!anthropicResponse.ok) {
-      const error = await anthropicResponse.text();
-      throw new Error(`Anthropic API error: ${error}`);
-    }
-
-    const data = await anthropicResponse.json();
-    const altText = data.content[0].text;
-
-    // Cache alt text for 2 minutes with stale-while-revalidate
-    // Same image should return same alt text (deterministic based on image content)
-    res.set("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
-    res.json({ altText });
-  } catch (error) {
-    console.error("Error generating alt text:", error);
-    console.error("Stack trace:", error.stack);
-    res.status(500).json({
-      error: error.message,
-      details: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    console.log("Alt text generation request:", {
+      imageUrl,
+      hasServerApiKey: !!apiKey,
     });
-  }
-});
+
+    if (!imageUrl) {
+      return res.status(400).json({ error: "Missing imageUrl" });
+    }
+
+    if (!apiKey) {
+      return res.status(500).json({ error: "Server API key not configured" });
+    }
+
+    try {
+      let base64Image;
+      let mimeType;
+
+      // Handle data URLs (base64 encoded images)
+      if (imageUrl.startsWith("data:")) {
+        console.log("Processing data URL");
+        // Extract mime type and base64 data from data URL
+        const matches = imageUrl.match(/^data:([^;]+);base64,(.+)$/);
+        if (!matches) {
+          throw new Error("Invalid data URL format");
+        }
+        mimeType = matches[1];
+        base64Image = matches[2];
+      } else {
+        // Convert relative URLs to absolute URLs
+        let absoluteUrl = imageUrl;
+        if (imageUrl.startsWith("/bsky-cdn/")) {
+          // Convert Vite proxy path to actual CDN URL
+          absoluteUrl = imageUrl.replace("/bsky-cdn/", "https://cdn.bsky.app/");
+        } else if (imageUrl.startsWith("/bsky-video/")) {
+          absoluteUrl = imageUrl.replace(
+            "/bsky-video/",
+            "https://video.bsky.app/",
+          );
+        } else if (imageUrl.startsWith("/bsky-video-cdn/")) {
+          absoluteUrl = imageUrl.replace(
+            "/bsky-video-cdn/",
+            "https://video.cdn.bsky.app/",
+          );
+        } else if (
+          !imageUrl.startsWith("http://") &&
+          !imageUrl.startsWith("https://")
+        ) {
+          // For any other relative URLs, assume they're from the frontend origin
+          absoluteUrl = `http://localhost:5174${imageUrl}`;
+        }
+
+        // SSRF Protection: Validate URL doesn't resolve to private/internal IPs
+        const ssrfValidation = await validateUrlForSSRF(absoluteUrl);
+        if (!ssrfValidation.valid) {
+          console.warn(
+            `SSRF blocked for alt-text URL: ${absoluteUrl} - ${ssrfValidation.error}`,
+            ssrfValidation.resolvedIP
+              ? `(IP: ${ssrfValidation.resolvedIP})`
+              : "",
+          );
+          return res.status(403).json({
+            error: "Request blocked for security reasons",
+          });
+        }
+
+        console.log("Fetching image from:", absoluteUrl);
+        // Fetch the image
+        const response = await fetch(absoluteUrl);
+        if (!response.ok) {
+          console.error(
+            "Image fetch failed:",
+            response.status,
+            response.statusText,
+          );
+          throw new Error(
+            `Failed to fetch image: ${response.status} ${response.statusText}`,
+          );
+        }
+
+        const buffer = await response.buffer();
+        base64Image = buffer.toString("base64");
+        mimeType = response.headers.get("content-type") || "image/jpeg";
+      }
+
+      // Call Anthropic API
+      const anthropicResponse = await fetch(
+        "https://api.anthropic.com/v1/messages",
+        {
+          method: "POST",
+          headers: {
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-5-20250929",
+            max_tokens: 300,
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "image",
+                    source: {
+                      type: "base64",
+                      media_type: mimeType,
+                      data: base64Image,
+                    },
+                  },
+                  {
+                    type: "text",
+                    text: "Generate alt text for this image that would help someone using a screen reader understand what's shown. Keep it concise (most descriptions should be brief), but you can use up to 500 characters when needed for complex images. Focus on the main subject and action.",
+                  },
+                ],
+              },
+            ],
+          }),
+        },
+      );
+
+      if (!anthropicResponse.ok) {
+        const error = await anthropicResponse.text();
+        throw new Error(`Anthropic API error: ${error}`);
+      }
+
+      const data = await anthropicResponse.json();
+      const altText = data.content[0].text;
+
+      // Cache alt text for 2 minutes with stale-while-revalidate
+      // Same image should return same alt text (deterministic based on image content)
+      res.set(
+        "Cache-Control",
+        "public, max-age=120, stale-while-revalidate=300",
+      );
+      res.json({ altText });
+    } catch (error) {
+      console.error("Error generating alt text:", error);
+      console.error("Stack trace:", error.stack);
+      res.status(500).json({
+        error: error.message,
+        details:
+          process.env.NODE_ENV === "development" ? error.stack : undefined,
+      });
+    }
+  },
+);
 
 // Endpoint to proxy images from Bluesky CDN for alt text generation
-app.get("/api/proxy-image", async (req, res) => {
+// Public endpoint with moderate rate limiting
+app.get("/api/proxy-image", moderateLimiter, async (req, res) => {
   const { url } = req.query;
 
   if (!url) {
     return res.status(400).json({ error: "Image URL is required" });
+  }
+
+  // SSRF Protection: Validate URL doesn't resolve to private/internal IPs
+  const ssrfValidation = await validateUrlForSSRF(url);
+  if (!ssrfValidation.valid) {
+    console.warn(
+      `SSRF blocked for proxy-image URL: ${url} - ${ssrfValidation.error}`,
+      ssrfValidation.resolvedIP ? `(IP: ${ssrfValidation.resolvedIP})` : "",
+    );
+    return res.status(403).json({
+      error: "Request blocked for security reasons",
+    });
   }
 
   try {
@@ -290,7 +338,8 @@ app.get("/api/proxy-image", async (req, res) => {
 });
 
 // Endpoint to convert GIF URL to MP4
-app.post("/api/convert-gif", async (req, res) => {
+// Public endpoint with moderate rate limiting (expensive operation)
+app.post("/api/convert-gif", moderateLimiter, async (req, res) => {
   const { gifUrl } = req.body;
 
   if (!gifUrl) {
@@ -312,6 +361,18 @@ app.post("/api/convert-gif", async (req, res) => {
       const base64Data = gifUrl.split(",")[1];
       buffer = Buffer.from(base64Data, "base64");
     } else {
+      // SSRF Protection: Validate URL doesn't resolve to private/internal IPs
+      const ssrfValidation = await validateUrlForSSRF(gifUrl);
+      if (!ssrfValidation.valid) {
+        console.warn(
+          `SSRF blocked for convert-gif URL: ${gifUrl} - ${ssrfValidation.error}`,
+          ssrfValidation.resolvedIP ? `(IP: ${ssrfValidation.resolvedIP})` : "",
+        );
+        return res.status(403).json({
+          error: "Request blocked for security reasons",
+        });
+      }
+
       // Fetch the GIF from the URL
       console.log("Fetching GIF from:", gifUrl);
       const response = await fetch(gifUrl);
@@ -396,33 +457,38 @@ function cleanJsonResponse(text) {
 }
 
 // Writing feedback endpoint
-app.post("/api/writing-feedback", async (req, res) => {
-  const { text } = req.body;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+// Protected by Cognito auth + AI rate limiting
+app.post(
+  "/api/writing-feedback",
+  requireCognitoAuth(),
+  aiEndpointLimiter,
+  async (req, res) => {
+    const { text } = req.body;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
 
-  if (!text) {
-    return res.status(400).json({ error: "Missing text" });
-  }
+    if (!text) {
+      return res.status(400).json({ error: "Missing text" });
+    }
 
-  if (!apiKey) {
-    return res.status(500).json({ error: "Server API key not configured" });
-  }
+    if (!apiKey) {
+      return res.status(500).json({ error: "Server API key not configured" });
+    }
 
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250929",
-        max_tokens: 1500,
-        messages: [
-          {
-            role: "user",
-            content: `Analyze this social media post and provide helpful feedback with improved versions.
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5-20250929",
+          max_tokens: 1500,
+          messages: [
+            {
+              role: "user",
+              content: `Analyze this social media post and provide helpful feedback with improved versions.
 
 Post: "${text}"
 
@@ -452,69 +518,75 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
 3. Double-check that your JSON is valid before responding
 4. Do not include any text before or after the JSON object
 5. Start directly with { and end with }`,
-          },
-        ],
-      }),
-    });
+            },
+          ],
+        }),
+      });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Anthropic API error: ${error}`);
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Anthropic API error: ${error}`);
+      }
+
+      const data = await response.json();
+      const cleanedText = cleanJsonResponse(data.content[0].text);
+      const result = JSON.parse(cleanedText);
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error getting writing feedback:", error);
+      res.status(500).json({
+        error: error.message,
+      });
     }
-
-    const data = await response.json();
-    const cleanedText = cleanJsonResponse(data.content[0].text);
-    const result = JSON.parse(cleanedText);
-
-    res.json(result);
-  } catch (error) {
-    console.error("Error getting writing feedback:", error);
-    res.status(500).json({
-      error: error.message,
-    });
-  }
-});
+  },
+);
 
 // Style analysis endpoint
-app.post("/api/style-analysis", async (req, res) => {
-  const { currentText, historicalPosts } = req.body;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+// Protected by Cognito auth + AI rate limiting
+app.post(
+  "/api/style-analysis",
+  requireCognitoAuth(),
+  aiEndpointLimiter,
+  async (req, res) => {
+    const { currentText, historicalPosts } = req.body;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
 
-  if (!currentText) {
-    return res.status(400).json({ error: "Missing currentText" });
-  }
+    if (!currentText) {
+      return res.status(400).json({ error: "Missing currentText" });
+    }
 
-  if (!historicalPosts || !Array.isArray(historicalPosts)) {
-    return res
-      .status(400)
-      .json({ error: "Missing or invalid historicalPosts array" });
-  }
+    if (!historicalPosts || !Array.isArray(historicalPosts)) {
+      return res
+        .status(400)
+        .json({ error: "Missing or invalid historicalPosts array" });
+    }
 
-  if (!apiKey) {
-    return res.status(500).json({ error: "Server API key not configured" });
-  }
+    if (!apiKey) {
+      return res.status(500).json({ error: "Server API key not configured" });
+    }
 
-  try {
-    // Build the historical posts context
-    const historicalContext = historicalPosts
-      .slice(0, 20) // Limit to 20 most recent posts
-      .map((post, i) => `${i + 1}. ${post}`)
-      .join("\n");
+    try {
+      // Build the historical posts context
+      const historicalContext = historicalPosts
+        .slice(0, 20) // Limit to 20 most recent posts
+        .map((post, i) => `${i + 1}. ${post}`)
+        .join("\n");
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250929",
-        max_tokens: 1000,
-        messages: [
-          {
-            role: "user",
-            content: `You are a writing style analyst. Analyze the user's writing style based on their historical posts, then compare their current draft to that style.
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5-20250929",
+          max_tokens: 1000,
+          messages: [
+            {
+              role: "user",
+              content: `You are a writing style analyst. Analyze the user's writing style based on their historical posts, then compare their current draft to that style.
 
 HISTORICAL POSTS:
 ${historicalContext}
@@ -544,115 +616,127 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
 3. Base analysis on actual patterns from historical posts
 4. Be constructive and helpful, not critical
 5. Start directly with { and end with }`,
-          },
-        ],
-      }),
-    });
+            },
+          ],
+        }),
+      });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Anthropic API error: ${error}`);
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Anthropic API error: ${error}`);
+      }
+
+      const data = await response.json();
+      const cleanedText = cleanJsonResponse(data.content[0].text);
+      const result = JSON.parse(cleanedText);
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error analyzing writing style:", error);
+      res.status(500).json({
+        error: error.message,
+      });
     }
-
-    const data = await response.json();
-    const cleanedText = cleanJsonResponse(data.content[0].text);
-    const result = JSON.parse(cleanedText);
-
-    res.json(result);
-  } catch (error) {
-    console.error("Error analyzing writing style:", error);
-    res.status(500).json({
-      error: error.message,
-    });
-  }
-});
+  },
+);
 
 // Adjust tone endpoint
-app.post("/api/adjust-tone", async (req, res) => {
-  const { text, tone } = req.body;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+// Protected by Cognito auth + AI rate limiting
+app.post(
+  "/api/adjust-tone",
+  requireCognitoAuth(),
+  aiEndpointLimiter,
+  async (req, res) => {
+    const { text, tone } = req.body;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
 
-  if (!text || !tone) {
-    return res.status(400).json({ error: "Missing text or tone" });
-  }
+    if (!text || !tone) {
+      return res.status(400).json({ error: "Missing text or tone" });
+    }
 
-  if (!apiKey) {
-    return res.status(500).json({ error: "Server API key not configured" });
-  }
+    if (!apiKey) {
+      return res.status(500).json({ error: "Server API key not configured" });
+    }
 
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250929",
-        max_tokens: 500,
-        messages: [
-          {
-            role: "user",
-            content: `Rewrite this social media post in a ${tone} tone while preserving the core message:
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5-20250929",
+          max_tokens: 500,
+          messages: [
+            {
+              role: "user",
+              content: `Rewrite this social media post in a ${tone} tone while preserving the core message:
 
 "${text}"
 
 Respond with ONLY the rewritten text, no explanations or quotes.`,
-          },
-        ],
-      }),
-    });
+            },
+          ],
+        }),
+      });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Anthropic API error: ${error}`);
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Anthropic API error: ${error}`);
+      }
+
+      const data = await response.json();
+      const adjustedText = data.content[0].text.trim();
+
+      res.json({
+        adjustedText,
+        originalText: text,
+        tone,
+      });
+    } catch (error) {
+      console.error("Error adjusting tone:", error);
+      res.status(500).json({
+        error: error.message,
+      });
     }
-
-    const data = await response.json();
-    const adjustedText = data.content[0].text.trim();
-
-    res.json({
-      adjustedText,
-      originalText: text,
-      tone,
-    });
-  } catch (error) {
-    console.error("Error adjusting tone:", error);
-    res.status(500).json({
-      error: error.message,
-    });
-  }
-});
+  },
+);
 
 // Optimize thread endpoint
-app.post("/api/optimize-thread", async (req, res) => {
-  const { text, maxCharsPerPost = 300 } = req.body;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+// Protected by Cognito auth + AI rate limiting
+app.post(
+  "/api/optimize-thread",
+  requireCognitoAuth(),
+  aiEndpointLimiter,
+  async (req, res) => {
+    const { text, maxCharsPerPost = 300 } = req.body;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
 
-  if (!text) {
-    return res.status(400).json({ error: "Missing text" });
-  }
+    if (!text) {
+      return res.status(400).json({ error: "Missing text" });
+    }
 
-  if (!apiKey) {
-    return res.status(500).json({ error: "Server API key not configured" });
-  }
+    if (!apiKey) {
+      return res.status(500).json({ error: "Server API key not configured" });
+    }
 
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250929",
-        max_tokens: 2000,
-        messages: [
-          {
-            role: "user",
-            content: `Split this text into a well-structured thread with posts under ${maxCharsPerPost} characters each:
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5-20250929",
+          max_tokens: 2000,
+          messages: [
+            {
+              role: "user",
+              content: `Split this text into a well-structured thread with posts under ${maxCharsPerPost} characters each:
 
 "${text}"
 
@@ -663,57 +747,63 @@ Provide a JSON response with:
 - totalPosts: number of posts
 
 Start directly with { and end with }`,
-          },
-        ],
-      }),
-    });
+            },
+          ],
+        }),
+      });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Anthropic API error: ${error}`);
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Anthropic API error: ${error}`);
+      }
+
+      const data = await response.json();
+      const cleanedText = cleanJsonResponse(data.content[0].text);
+      const result = JSON.parse(cleanedText);
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error optimizing thread:", error);
+      res.status(500).json({
+        error: error.message,
+      });
     }
-
-    const data = await response.json();
-    const cleanedText = cleanJsonResponse(data.content[0].text);
-    const result = JSON.parse(cleanedText);
-
-    res.json(result);
-  } catch (error) {
-    console.error("Error optimizing thread:", error);
-    res.status(500).json({
-      error: error.message,
-    });
-  }
-});
+  },
+);
 
 // Suggest hashtags endpoint
-app.post("/api/suggest-hashtags", async (req, res) => {
-  const { text, existingTags = [] } = req.body;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+// Protected by Cognito auth + AI rate limiting
+app.post(
+  "/api/suggest-hashtags",
+  requireCognitoAuth(),
+  aiEndpointLimiter,
+  async (req, res) => {
+    const { text, existingTags = [] } = req.body;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
 
-  if (!text) {
-    return res.status(400).json({ error: "Missing text" });
-  }
+    if (!text) {
+      return res.status(400).json({ error: "Missing text" });
+    }
 
-  if (!apiKey) {
-    return res.status(500).json({ error: "Server API key not configured" });
-  }
+    if (!apiKey) {
+      return res.status(500).json({ error: "Server API key not configured" });
+    }
 
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250929",
-        max_tokens: 500,
-        messages: [
-          {
-            role: "user",
-            content: `Suggest 3-5 relevant hashtags for this social media post${existingTags.length > 0 ? `, avoiding these existing tags: ${existingTags.join(", ")}` : ""}:
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5-20250929",
+          max_tokens: 500,
+          messages: [
+            {
+              role: "user",
+              content: `Suggest 3-5 relevant hashtags for this social media post${existingTags.length > 0 ? `, avoiding these existing tags: ${existingTags.join(", ")}` : ""}:
 
 "${text}"
 
@@ -722,79 +812,85 @@ Provide a JSON response with:
 - category: general content category
 
 Start directly with { and end with }`,
-          },
-        ],
-      }),
-    });
+            },
+          ],
+        }),
+      });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Anthropic API error: ${error}`);
-    }
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Anthropic API error: ${error}`);
+      }
 
-    const data = await response.json();
-    const cleanedText = cleanJsonResponse(data.content[0].text);
-    const result = JSON.parse(cleanedText);
+      const data = await response.json();
+      const cleanedText = cleanJsonResponse(data.content[0].text);
+      const result = JSON.parse(cleanedText);
 
-    res.json(result);
-  } catch (error) {
-    console.error("Error suggesting hashtags:", error);
-    res.status(500).json({
-      error: error.message,
-    });
-  }
-});
-
-// Analyze user posts endpoint
-app.post("/api/analyze-posts", async (req, res) => {
-  const { posts, analysisType = "sonnet" } = req.body;
-  const forceRefresh = req.query.forceRefresh === "true";
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-
-  if (!posts || !Array.isArray(posts) || posts.length === 0) {
-    return res.status(400).json({ error: "Missing or invalid posts array" });
-  }
-
-  if (!apiKey) {
-    return res.status(500).json({ error: "Server API key not configured" });
-  }
-
-  // Check cache first (unless force refresh)
-  const cacheKey = generateProfileCacheKey(posts, analysisType);
-  if (!forceRefresh) {
-    const cached = getCachedProfileAnalysis(cacheKey);
-    if (cached) {
-      // Add HTTP cache headers for cached profile analysis
-      res.set(
-        "Cache-Control",
-        "public, max-age=120, stale-while-revalidate=300",
-      );
-      return res.json({
-        ...cached,
-        cached: true,
-        generatedAt: new Date(cached.generatedAt).toISOString(),
+      res.json(result);
+    } catch (error) {
+      console.error("Error suggesting hashtags:", error);
+      res.status(500).json({
+        error: error.message,
       });
     }
-  }
+  },
+);
 
-  try {
-    // Take a sample of posts if there are too many
-    const samplePosts = posts.slice(0, 50);
+// Analyze user posts endpoint
+// Protected by Cognito auth + AI rate limiting
+app.post(
+  "/api/analyze-posts",
+  requireCognitoAuth(),
+  aiEndpointLimiter,
+  async (req, res) => {
+    const { posts, analysisType = "sonnet" } = req.body;
+    const forceRefresh = req.query.forceRefresh === "true";
+    const apiKey = process.env.ANTHROPIC_API_KEY;
 
-    // Build the posts context with engagement metrics
-    const postsContext = samplePosts
-      .map((post, i) => {
-        const engagement = `Likes: ${post.likes}, Reposts: ${post.reposts}, Replies: ${post.replies}`;
-        return `Post ${i + 1} (${engagement}):\n"${post.text}"\nDate: ${post.createdAt}`;
-      })
-      .join("\n\n");
+    if (!posts || !Array.isArray(posts) || posts.length === 0) {
+      return res.status(400).json({ error: "Missing or invalid posts array" });
+    }
 
-    // Choose prompt and token limit based on analysis type
-    const isHaiku = analysisType === "haiku";
-    const maxTokens = isHaiku ? 200 : 3000;
+    if (!apiKey) {
+      return res.status(500).json({ error: "Server API key not configured" });
+    }
 
-    const prompt = isHaiku
-      ? `You are a social media analyst. Quickly analyze these posts and provide a BRIEF JSON response.
+    // Check cache first (unless force refresh)
+    const cacheKey = generateProfileCacheKey(posts, analysisType);
+    if (!forceRefresh) {
+      const cached = getCachedProfileAnalysis(cacheKey);
+      if (cached) {
+        // Add HTTP cache headers for cached profile analysis
+        res.set(
+          "Cache-Control",
+          "public, max-age=120, stale-while-revalidate=300",
+        );
+        return res.json({
+          ...cached,
+          cached: true,
+          generatedAt: new Date(cached.generatedAt).toISOString(),
+        });
+      }
+    }
+
+    try {
+      // Take a sample of posts if there are too many
+      const samplePosts = posts.slice(0, 50);
+
+      // Build the posts context with engagement metrics
+      const postsContext = samplePosts
+        .map((post, i) => {
+          const engagement = `Likes: ${post.likes}, Reposts: ${post.reposts}, Replies: ${post.replies}`;
+          return `Post ${i + 1} (${engagement}):\n"${post.text}"\nDate: ${post.createdAt}`;
+        })
+        .join("\n\n");
+
+      // Choose prompt and token limit based on analysis type
+      const isHaiku = analysisType === "haiku";
+      const maxTokens = isHaiku ? 200 : 3000;
+
+      const prompt = isHaiku
+        ? `You are a social media analyst. Quickly analyze these posts and provide a BRIEF JSON response.
 
 USER'S POSTS:
 ${postsContext}
@@ -808,7 +904,7 @@ Example:
 {
   "summary": "A tech enthusiast who shares insights about AI and programming. Writes in a conversational, approachable style with occasional humor. Focuses on practical applications and real-world examples."
 }`
-      : `You are a social media analyst. Analyze these posts from a single user to provide a qualitative characterization of their content and style.
+        : `You are a social media analyst. Analyze these posts from a single user to provide a qualitative characterization of their content and style.
 
 USER'S POSTS:
 ${postsContext}
@@ -835,51 +931,55 @@ Provide a comprehensive JSON response with:
 
 Provide specific evidence and quotes to support your analysis. Start directly with { and end with }`;
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250929",
-        max_tokens: maxTokens,
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-      }),
-    });
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5-20250929",
+          max_tokens: maxTokens,
+          messages: [
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+        }),
+      });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Anthropic API error: ${error}`);
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Anthropic API error: ${error}`);
+      }
+
+      const data = await response.json();
+      const cleanedText = cleanJsonResponse(data.content[0].text);
+      const result = JSON.parse(cleanedText);
+
+      // Cache the result
+      setCachedProfileAnalysis(cacheKey, result);
+
+      // Add HTTP cache headers - profile analysis is deterministic based on posts content
+      res.set(
+        "Cache-Control",
+        "public, max-age=120, stale-while-revalidate=300",
+      );
+      res.json({
+        ...result,
+        cached: false,
+        generatedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error analyzing posts:", error);
+      res.status(500).json({
+        error: error.message,
+      });
     }
-
-    const data = await response.json();
-    const cleanedText = cleanJsonResponse(data.content[0].text);
-    const result = JSON.parse(cleanedText);
-
-    // Cache the result
-    setCachedProfileAnalysis(cacheKey, result);
-
-    // Add HTTP cache headers - profile analysis is deterministic based on posts content
-    res.set("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
-    res.json({
-      ...result,
-      cached: false,
-      generatedAt: new Date().toISOString(),
-    });
-  } catch (error) {
-    console.error("Error analyzing posts:", error);
-    res.status(500).json({
-      error: error.message,
-    });
-  }
-});
+  },
+);
 
 // =============================================================================
 // Thread Summary Cache (10-minute TTL)
@@ -978,7 +1078,8 @@ setInterval(
 );
 
 // Fetch link metadata endpoint (for link previews in composer)
-app.post("/api/fetch-link-metadata", async (req, res) => {
+// Public endpoint with moderate rate limiting
+app.post("/api/fetch-link-metadata", moderateLimiter, async (req, res) => {
   const { url } = req.body;
 
   if (!url) {
@@ -993,6 +1094,18 @@ app.post("/api/fetch-link-metadata", async (req, res) => {
     }
   } catch {
     return res.status(400).json({ error: "Invalid URL format" });
+  }
+
+  // SSRF Protection: Validate URL doesn't resolve to private/internal IPs
+  const ssrfValidation = await validateUrlForSSRF(url);
+  if (!ssrfValidation.valid) {
+    console.warn(
+      `SSRF blocked for URL: ${url} - ${ssrfValidation.error}`,
+      ssrfValidation.resolvedIP ? `(IP: ${ssrfValidation.resolvedIP})` : "",
+    );
+    return res.status(403).json({
+      error: "Request blocked for security reasons",
+    });
   }
 
   console.log("Fetching link metadata for:", url);
@@ -1148,172 +1261,177 @@ function decodeHtmlEntities(text) {
 }
 
 // Thread summary endpoint
-app.post("/api/thread-summary", async (req, res) => {
-  const { posts, format = "haiku" } = req.body;
-  const forceRefresh = req.query.forceRefresh === "true";
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+// Protected by Cognito auth + AI rate limiting
+app.post(
+  "/api/thread-summary",
+  requireCognitoAuth(),
+  aiEndpointLimiter,
+  async (req, res) => {
+    const { posts, format = "haiku" } = req.body;
+    const forceRefresh = req.query.forceRefresh === "true";
+    const apiKey = process.env.ANTHROPIC_API_KEY;
 
-  // Input validation
-  if (!posts || !Array.isArray(posts)) {
-    return res.status(400).json({ error: "Missing or invalid posts array" });
-  }
+    // Input validation
+    if (!posts || !Array.isArray(posts)) {
+      return res.status(400).json({ error: "Missing or invalid posts array" });
+    }
 
-  if (posts.length === 0) {
-    return res.status(400).json({ error: "Posts array cannot be empty" });
-  }
+    if (posts.length === 0) {
+      return res.status(400).json({ error: "Posts array cannot be empty" });
+    }
 
-  // Maximum 500 posts per request
-  if (posts.length > 500) {
-    return res.status(400).json({
-      error: "Too many posts",
-      details: "Maximum 500 posts per request",
-    });
-  }
-
-  // Validate format - includes legacy and progressive complexity formats
-  const validFormats = [
-    "haiku",
-    "tldr",
-    "keypoints",
-    "extended",
-    "brief",
-    "moderate",
-    "detailed",
-    "comprehensive",
-  ];
-  if (!validFormats.includes(format)) {
-    return res.status(400).json({
-      error: "Invalid format",
-      details: `Format must be one of: ${validFormats.join(", ")}`,
-    });
-  }
-
-  if (!apiKey) {
-    return res.status(500).json({ error: "Server API key not configured" });
-  }
-
-  // Truncate individual post texts to 10,000 characters
-  const sanitizedPosts = posts.map((post, index) => ({
-    text:
-      typeof post.text === "string"
-        ? post.text.slice(0, 10000)
-        : String(post.text || "").slice(0, 10000),
-    author: String(post.author || "unknown").slice(0, 200),
-    authorHandle: String(post.authorHandle || post.author || "unknown").slice(
-      0,
-      100,
-    ),
-    likes: Number(post.likes) || 0,
-    replies: Number(post.replies) || 0,
-    reposts: Number(post.reposts) || 0,
-    uri: String(post.uri || "").slice(0, 500),
-    parentUri: post.parentUri ? String(post.parentUri).slice(0, 500) : null,
-    depth: Number(post.depth) || 0,
-    index,
-  }));
-
-  // Calculate total engagement for scaling summary length
-  const totalEngagement = sanitizedPosts.reduce(
-    (sum, p) => sum + p.likes + p.replies + (p.reposts || 0),
-    0,
-  );
-
-  // Find high-engagement sub-threads (posts with significant replies/likes)
-  const highlightedSubThreads = sanitizedPosts
-    .filter((p) => p.uri && (p.likes >= 10 || p.replies >= 5))
-    .sort((a, b) => b.likes + b.replies - (a.likes + a.replies))
-    .slice(0, 5)
-    .map((p) => ({
-      uri: p.uri,
-      authorHandle: p.authorHandle,
-      snippet: p.text.slice(0, 100) + (p.text.length > 100 ? "..." : ""),
-      engagement: p.likes + p.replies,
-    }));
-
-  // Check cache (unless forceRefresh is true)
-  const cacheKey = generateCacheKey(sanitizedPosts, format);
-  if (!forceRefresh) {
-    const cached = getCachedSummary(cacheKey);
-    if (cached) {
-      // Add HTTP cache headers for cached responses
-      res.set(
-        "Cache-Control",
-        "public, max-age=120, stale-while-revalidate=300",
-      );
-      return res.json({
-        summary: cached.summary,
-        format: cached.format,
-        metadata: {
-          ...cached.metadata,
-          cached: true,
-          generatedAt: new Date(cached.generatedAt).toISOString(),
-        },
+    // Maximum 500 posts per request
+    if (posts.length > 500) {
+      return res.status(400).json({
+        error: "Too many posts",
+        details: "Maximum 500 posts per request",
       });
     }
-  }
 
-  try {
-    // Build the posts context with author and engagement info
-    const postsContext = sanitizedPosts
-      .map((post, i) => {
-        return `<post index="${i + 1}" author="${post.author}" likes="${post.likes}" replies="${post.replies}">
+    // Validate format - includes legacy and progressive complexity formats
+    const validFormats = [
+      "haiku",
+      "tldr",
+      "keypoints",
+      "extended",
+      "brief",
+      "moderate",
+      "detailed",
+      "comprehensive",
+    ];
+    if (!validFormats.includes(format)) {
+      return res.status(400).json({
+        error: "Invalid format",
+        details: `Format must be one of: ${validFormats.join(", ")}`,
+      });
+    }
+
+    if (!apiKey) {
+      return res.status(500).json({ error: "Server API key not configured" });
+    }
+
+    // Truncate individual post texts to 10,000 characters
+    const sanitizedPosts = posts.map((post, index) => ({
+      text:
+        typeof post.text === "string"
+          ? post.text.slice(0, 10000)
+          : String(post.text || "").slice(0, 10000),
+      author: String(post.author || "unknown").slice(0, 200),
+      authorHandle: String(post.authorHandle || post.author || "unknown").slice(
+        0,
+        100,
+      ),
+      likes: Number(post.likes) || 0,
+      replies: Number(post.replies) || 0,
+      reposts: Number(post.reposts) || 0,
+      uri: String(post.uri || "").slice(0, 500),
+      parentUri: post.parentUri ? String(post.parentUri).slice(0, 500) : null,
+      depth: Number(post.depth) || 0,
+      index,
+    }));
+
+    // Calculate total engagement for scaling summary length
+    const totalEngagement = sanitizedPosts.reduce(
+      (sum, p) => sum + p.likes + p.replies + (p.reposts || 0),
+      0,
+    );
+
+    // Find high-engagement sub-threads (posts with significant replies/likes)
+    const highlightedSubThreads = sanitizedPosts
+      .filter((p) => p.uri && (p.likes >= 10 || p.replies >= 5))
+      .sort((a, b) => b.likes + b.replies - (a.likes + a.replies))
+      .slice(0, 5)
+      .map((p) => ({
+        uri: p.uri,
+        authorHandle: p.authorHandle,
+        snippet: p.text.slice(0, 100) + (p.text.length > 100 ? "..." : ""),
+        engagement: p.likes + p.replies,
+      }));
+
+    // Check cache (unless forceRefresh is true)
+    const cacheKey = generateCacheKey(sanitizedPosts, format);
+    if (!forceRefresh) {
+      const cached = getCachedSummary(cacheKey);
+      if (cached) {
+        // Add HTTP cache headers for cached responses
+        res.set(
+          "Cache-Control",
+          "public, max-age=120, stale-while-revalidate=300",
+        );
+        return res.json({
+          summary: cached.summary,
+          format: cached.format,
+          metadata: {
+            ...cached.metadata,
+            cached: true,
+            generatedAt: new Date(cached.generatedAt).toISOString(),
+          },
+        });
+      }
+    }
+
+    try {
+      // Build the posts context with author and engagement info
+      const postsContext = sanitizedPosts
+        .map((post, i) => {
+          return `<post index="${i + 1}" author="${post.author}" likes="${post.likes}" replies="${post.replies}">
 ${post.text}
 </post>`;
-      })
-      .join("\n\n");
+        })
+        .join("\n\n");
 
-    // Get unique authors
-    const authors = [...new Set(sanitizedPosts.map((p) => p.author))];
+      // Get unique authors
+      const authors = [...new Set(sanitizedPosts.map((p) => p.author))];
 
-    // Build format-specific prompts
-    let formatPrompt;
-    let maxTokens;
+      // Build format-specific prompts
+      let formatPrompt;
+      let maxTokens;
 
-    switch (format) {
-      case "haiku":
-        formatPrompt = `Write a haiku (5-7-5 syllable structure) that captures the essence of this thread discussion.
+      switch (format) {
+        case "haiku":
+          formatPrompt = `Write a haiku (5-7-5 syllable structure) that captures the essence of this thread discussion.
 The haiku should be poetic and insightful, distilling the main theme or emotional core of the conversation.
 Return ONLY the haiku, three lines, no additional text or formatting.`;
-        maxTokens = 100;
-        break;
-      case "tldr":
-        formatPrompt = `Write a concise TL;DR summary of this thread conversation in 1-2 sentences (max 280 characters).
+          maxTokens = 100;
+          break;
+        case "tldr":
+          formatPrompt = `Write a concise TL;DR summary of this thread conversation in 1-2 sentences (max 280 characters).
 Summarize both the original post AND what the replies discuss - capture the conversation, not just the original point.
 If there's debate or different viewpoints, mention that. If people agree or add context, note that.
 Return ONLY the summary text, no labels or prefixes.`;
-        maxTokens = 150;
-        break;
-      case "keypoints":
-        formatPrompt = `Extract 3-5 key points from this thread discussion.
+          maxTokens = 150;
+          break;
+        case "keypoints":
+          formatPrompt = `Extract 3-5 key points from this thread discussion.
 Format as a simple bullet list with each point on its own line, starting with "• ".
 Keep each point concise (under 100 characters).
 Return ONLY the bullet points, no headers or additional formatting.`;
-        maxTokens = 300;
-        break;
-      // Progressive complexity formats
-      case "brief":
-        // For simple threads (3-9 replies) - one punchy sentence
-        formatPrompt = `Write ONE sentence (max 140 characters) summarizing what this thread is about.
+          maxTokens = 300;
+          break;
+        // Progressive complexity formats
+        case "brief":
+          // For simple threads (3-9 replies) - one punchy sentence
+          formatPrompt = `Write ONE sentence (max 140 characters) summarizing what this thread is about.
 Focus on the main topic and general sentiment of replies.
 Be direct and informative - no filler words.
 Return ONLY the sentence, no labels or prefixes.`;
-        maxTokens = 80;
-        break;
+          maxTokens = 80;
+          break;
 
-      case "moderate":
-        // For moderate threads (10-29 replies) - 2-3 sentences
-        formatPrompt = `Write 2-3 sentences summarizing this thread conversation (max 400 characters total).
+        case "moderate":
+          // For moderate threads (10-29 replies) - 2-3 sentences
+          formatPrompt = `Write 2-3 sentences summarizing this thread conversation (max 400 characters total).
 First sentence: What's the main topic or point.
 Second sentence: How did the conversation develop (agreements, debates, new angles).
 Third sentence (if notable): Any interesting conclusions or standout points.
 Be concise and capture the essence of the discussion.
 Return ONLY the summary text, no labels or prefixes.`;
-        maxTokens = 200;
-        break;
+          maxTokens = 200;
+          break;
 
-      case "detailed":
-        // For complex threads (30-74 replies) - paragraph with key points
-        formatPrompt = `Write a detailed summary of this thread (150-250 words).
+        case "detailed":
+          // For complex threads (30-74 replies) - paragraph with key points
+          formatPrompt = `Write a detailed summary of this thread (150-250 words).
 Structure:
 1. Opening: What sparked this conversation (1-2 sentences)
 2. Main themes: What topics emerged in the replies (2-3 sentences)
@@ -1323,19 +1441,19 @@ Structure:
 
 Be informative and help readers understand what happened in this thread without reading every reply.
 Return ONLY the summary text, no labels or section headers.`;
-        maxTokens = 500;
-        break;
+          maxTokens = 500;
+          break;
 
-      case "comprehensive":
-      case "extended": {
-        // For viral threads (75+ replies) - full analysis with sub-thread highlights
-        // Build context about important sub-threads for the prompt
-        const subThreadContext =
-          highlightedSubThreads.length > 0
-            ? `\n\nNotable high-engagement replies (reference by post index when describing):\n${highlightedSubThreads.map((st) => `- Post #${sanitizedPosts.findIndex((p) => p.uri === st.uri) + 1} by @${st.authorHandle} (${st.engagement} engagement): "${st.snippet}"`).join("\n")}`
-            : "";
+        case "comprehensive":
+        case "extended": {
+          // For viral threads (75+ replies) - full analysis with sub-thread highlights
+          // Build context about important sub-threads for the prompt
+          const subThreadContext =
+            highlightedSubThreads.length > 0
+              ? `\n\nNotable high-engagement replies (reference by post index when describing):\n${highlightedSubThreads.map((st) => `- Post #${sanitizedPosts.findIndex((p) => p.uri === st.uri) + 1} by @${st.authorHandle} (${st.engagement} engagement): "${st.snippet}"`).join("\n")}`
+              : "";
 
-        formatPrompt = `Write a comprehensive analysis of this viral thread (250-400 words).
+          formatPrompt = `Write a comprehensive analysis of this viral thread (250-400 words).
 
 Analyze:
 1. The original post and its impact (2-3 sentences)
@@ -1355,29 +1473,29 @@ List the top 3-5 most notable replies in this format:
 
 This helps readers navigate directly to the best parts of the conversation.
 Return the full analysis followed by the highlights section.`;
-        maxTokens = 1000;
-        break;
+          maxTokens = 1000;
+          break;
+        }
+
+        default:
+          formatPrompt = `Write a haiku (5-7-5 syllable structure) that captures the essence of this thread.`;
+          maxTokens = 100;
       }
 
-      default:
-        formatPrompt = `Write a haiku (5-7-5 syllable structure) that captures the essence of this thread.`;
-        maxTokens = 100;
-    }
-
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: maxTokens,
-        messages: [
-          {
-            role: "user",
-            content: `<system>
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: maxTokens,
+          messages: [
+            {
+              role: "user",
+              content: `<system>
 You are a thread summarizer. Analyze the following thread posts and provide a summary in the requested format.
 </system>
 
@@ -1388,90 +1506,94 @@ ${postsContext}
 <task>
 ${formatPrompt}
 </task>`,
-          },
-        ],
-      }),
-    });
+            },
+          ],
+        }),
+      });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Anthropic API error: ${error}`);
-    }
-
-    const data = await response.json();
-    let summaryText = data.content[0].text.trim();
-
-    // Parse highlights from comprehensive/extended summaries
-    let parsedHighlights;
-    if (format === "comprehensive" || format === "extended") {
-      const highlightsMatch = summaryText.match(
-        /---HIGHLIGHTS---\s*([\s\S]*?)$/,
-      );
-      if (highlightsMatch) {
-        // Extract summary without highlights section
-        summaryText = summaryText
-          .replace(/---HIGHLIGHTS---[\s\S]*$/, "")
-          .trim();
-
-        // Parse individual highlights
-        const highlightLines = highlightsMatch[1].trim().split("\n");
-        parsedHighlights = highlightLines
-          .map((line) => {
-            // Format: [POST_INDEX]: @handle - Description
-            const match = line.match(/\[(\d+)\]:\s*@(\S+)\s*-\s*(.+)/);
-            if (match) {
-              const postIndex = parseInt(match[1], 10) - 1;
-              const post = sanitizedPosts[postIndex];
-              return {
-                uri: post?.uri || "",
-                authorHandle: match[2],
-                snippet: match[3].slice(0, 200),
-                engagement:
-                  (post?.likes || 0) +
-                  (post?.replies || 0) +
-                  (post?.reposts || 0),
-              };
-            }
-            return null;
-          })
-          .filter((h) => h !== null && h.uri !== "");
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Anthropic API error: ${error}`);
       }
+
+      const data = await response.json();
+      let summaryText = data.content[0].text.trim();
+
+      // Parse highlights from comprehensive/extended summaries
+      let parsedHighlights;
+      if (format === "comprehensive" || format === "extended") {
+        const highlightsMatch = summaryText.match(
+          /---HIGHLIGHTS---\s*([\s\S]*?)$/,
+        );
+        if (highlightsMatch) {
+          // Extract summary without highlights section
+          summaryText = summaryText
+            .replace(/---HIGHLIGHTS---[\s\S]*$/, "")
+            .trim();
+
+          // Parse individual highlights
+          const highlightLines = highlightsMatch[1].trim().split("\n");
+          parsedHighlights = highlightLines
+            .map((line) => {
+              // Format: [POST_INDEX]: @handle - Description
+              const match = line.match(/\[(\d+)\]:\s*@(\S+)\s*-\s*(.+)/);
+              if (match) {
+                const postIndex = parseInt(match[1], 10) - 1;
+                const post = sanitizedPosts[postIndex];
+                return {
+                  uri: post?.uri || "",
+                  authorHandle: match[2],
+                  snippet: match[3].slice(0, 200),
+                  engagement:
+                    (post?.likes || 0) +
+                    (post?.replies || 0) +
+                    (post?.reposts || 0),
+                };
+              }
+              return null;
+            })
+            .filter((h) => h !== null && h.uri !== "");
+        }
+      }
+
+      const now = Date.now();
+      const result = {
+        summary: summaryText,
+        format,
+        metadata: {
+          postCount: sanitizedPosts.length,
+          authors,
+          generatedAt: new Date(now).toISOString(),
+          totalEngagement,
+          highlightedSubThreads:
+            format === "comprehensive" || format === "extended"
+              ? parsedHighlights || highlightedSubThreads
+              : undefined,
+        },
+      };
+
+      // Cache the result
+      setCachedSummary(cacheKey, {
+        summary: summaryText,
+        format,
+        metadata: result.metadata,
+      });
+
+      // Add HTTP cache headers - thread summaries are deterministic based on post content
+      // Browser can cache for 2 minutes and serve stale while revalidating
+      res.set(
+        "Cache-Control",
+        "public, max-age=120, stale-while-revalidate=300",
+      );
+      res.json(result);
+    } catch (error) {
+      console.error("Error generating thread summary:", error);
+      res.status(500).json({
+        error: error.message,
+      });
     }
-
-    const now = Date.now();
-    const result = {
-      summary: summaryText,
-      format,
-      metadata: {
-        postCount: sanitizedPosts.length,
-        authors,
-        generatedAt: new Date(now).toISOString(),
-        totalEngagement,
-        highlightedSubThreads:
-          format === "comprehensive" || format === "extended"
-            ? parsedHighlights || highlightedSubThreads
-            : undefined,
-      },
-    };
-
-    // Cache the result
-    setCachedSummary(cacheKey, {
-      summary: summaryText,
-      format,
-      metadata: result.metadata,
-    });
-
-    // Add HTTP cache headers - thread summaries are deterministic based on post content
-    // Browser can cache for 2 minutes and serve stale while revalidating
-    res.set("Cache-Control", "public, max-age=120, stale-while-revalidate=300");
-    res.json(result);
-  } catch (error) {
-    console.error("Error generating thread summary:", error);
-    res.status(500).json({
-      error: error.message,
-    });
-  }
-});
+  },
+);
 
 // =============================================================================
 // Push Notification Subscription Endpoints

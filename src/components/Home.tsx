@@ -219,7 +219,11 @@ interface HomeProps {
   isFocused?: boolean;
   columnId?: string;
   onClose?: () => void;
-  onFeedChange?: (feed: string, label: string, feedOptions: FeedOption[]) => void;
+  onFeedChange?: (
+    feed: string,
+    label: string,
+    feedOptions: FeedOption[],
+  ) => void;
   onRefreshRequest?: number;
   showFeedDiscovery?: boolean;
   onCloseFeedDiscovery?: () => void;
@@ -1010,7 +1014,11 @@ export const Home: React.FC<HomeProps> = React.memo(
                 >
                   <RichText
                     text={post.record.text}
-                    facets={post.record.facets as Parameters<typeof RichText>[0]["facets"]}
+                    facets={
+                      post.record.facets as Parameters<
+                        typeof RichText
+                      >[0]["facets"]
+                    }
                   />
                 </div>
 
@@ -1488,7 +1496,11 @@ export const Home: React.FC<HomeProps> = React.memo(
 
     // Memoize renderEmbed to prevent re-creation on every render
     const renderEmbed = React.useCallback(
-      (embed: Embed | null | undefined, postUri?: string, postIndex?: number) => {
+      (
+        embed: Embed | null | undefined,
+        postUri?: string,
+        postIndex?: number,
+      ) => {
         if (!embed) return null;
 
         if (embed.$type === "app.bsky.embed.images#view") {
@@ -1778,7 +1790,11 @@ export const Home: React.FC<HomeProps> = React.memo(
                   >
                     <RichText
                       text={quotedPost.value?.text || ""}
-                      facets={quotedPost.value?.facets as Parameters<typeof RichText>[0]["facets"]}
+                      facets={
+                        quotedPost.value?.facets as Parameters<
+                          typeof RichText
+                        >[0]["facets"]
+                      }
                     />
                   </div>
                   {quotedPost.embeds?.[0] &&
@@ -1858,7 +1874,12 @@ export const Home: React.FC<HomeProps> = React.memo(
 
         return null;
       },
-      [generatedAltTexts, generatingAltText, showAltText, handleGenerateAltText],
+      [
+        generatedAltTexts,
+        generatingAltText,
+        showAltText,
+        handleGenerateAltText,
+      ],
     );
 
     if (isLoading) {

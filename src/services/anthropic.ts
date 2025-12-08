@@ -618,13 +618,13 @@ export async function generateThreadSummary(
 ): Promise<ThreadSummaryResult> {
   try {
     const apiBaseUrl = getApiBaseUrl();
-    const url = new URL(`${apiBaseUrl}/api/thread-summary`);
+    let endpoint = `${apiBaseUrl}/api/thread-summary`;
     if (options?.forceRefresh) {
-      url.searchParams.set("forceRefresh", "true");
+      endpoint += "?forceRefresh=true";
     }
 
     const response = await fetchWithRetry(
-      url.toString(),
+      endpoint,
       {
         method: "POST",
         headers: {
