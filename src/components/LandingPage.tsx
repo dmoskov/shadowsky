@@ -350,8 +350,8 @@ export const LandingPage: React.FC = () => {
                         href="https://bsky.app/settings/app-passwords"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="hover:underline"
-                        style={{ color: "var(--bsky-primary)" }}
+                        className="underline hover:no-underline"
+                        style={{ color: "var(--bsky-primary-dark)" }}
                       >
                         bsky.app/settings/app-passwords
                       </a>
