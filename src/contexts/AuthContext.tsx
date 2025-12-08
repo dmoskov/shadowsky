@@ -186,6 +186,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               debug.error("Failed to fetch handle for OAuth session:", err);
             }
 
+            // Add session property for compatibility with code expecting agent.session.did
+            // OAuth Agent has .did directly, but BskyAgent has .session.did
+            const sessionCompat = {
+              did: oauthState.did,
+              handle,
+              accessJwt: "",
+              refreshJwt: "",
+              active: true,
+            };
+            Object.defineProperty(agent, "session", {
+              get: () => sessionCompat,
+              configurable: true,
+            });
+
             setIsAuthenticated(true);
             setAuthMethod("oauth");
             setOauthAgent(agent);
@@ -371,6 +385,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         } catch (err) {
           debug.error("Failed to fetch handle for OAuth session:", err);
         }
+
+        // Add session property for compatibility with code expecting agent.session.did
+        // OAuth Agent has .did directly, but BskyAgent has .session.did
+        const sessionCompat = {
+          did: state.did,
+          handle,
+          accessJwt: "",
+          refreshJwt: "",
+          active: true,
+        };
+        Object.defineProperty(agent, "session", {
+          get: () => sessionCompat,
+          configurable: true,
+        });
 
         setIsAuthenticated(true);
         setAuthMethod("oauth");

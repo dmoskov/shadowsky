@@ -62,7 +62,12 @@ app.use(
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-User-DID",
+      "X-Bluesky-DID",
+    ],
     optionsSuccessStatus: 200, // Some legacy browsers choke on 204
   }),
 );
