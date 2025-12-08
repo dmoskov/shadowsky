@@ -8,6 +8,7 @@ import {
   Plus,
   Search,
   Star,
+  TrendingUp,
   Users,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -68,6 +69,12 @@ const columnOptions = [
     label: "Search",
     icon: Search,
     description: "Search posts on Bluesky",
+  },
+  {
+    type: "trending" as ColumnType,
+    label: "Trending",
+    icon: TrendingUp,
+    description: "Live trending topics",
   },
 ];
 

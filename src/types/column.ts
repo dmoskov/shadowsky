@@ -4,7 +4,8 @@ export type ColumnType =
   | "feed"
   | "messages"
   | "bookmarks"
-  | "search";
+  | "search"
+  | "trending";
 
 export interface Column {
   id: string;

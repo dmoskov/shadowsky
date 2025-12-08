@@ -13,7 +13,9 @@ import {
   Wand2,
   X,
 } from "lucide-react";
-import React from "react";
+import React, { useCallback, useId } from "react";
+import { useEscapeKey } from "../../hooks/useEscapeKey";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import type {
   StyleMatchedWritingFeedback,
   ThreadOptimizationResult,
@@ -147,38 +149,57 @@ const ToneOptionsModal: React.FC<ToneOptionsModalProps> = ({
   onSelectTone,
   onClose,
 }) => {
+  const uniqueId = useId();
+  const titleId = `tone-options-title-${uniqueId}`;
+  const descId = `tone-options-desc-${uniqueId}`;
+  const containerRef = useFocusTrap<HTMLDivElement>(true);
+  const handleClose = useCallback(() => onClose(), [onClose]);
+  useEscapeKey(true, handleClose);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
       onClick={onClose}
+      role="presentation"
     >
       <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descId}
         className="bsky-card w-full max-w-md p-4 shadow-lg"
         onClick={(e) => e.stopPropagation()}
         style={{ maxHeight: "80vh", overflowY: "auto" }}
       >
         <div className="mb-4 flex items-center justify-between">
           <h3
+            id={titleId}
             className="flex items-center gap-2 text-lg font-semibold"
             style={{ color: "var(--bsky-text-primary)" }}
           >
-            <Wand2 size={20} />
+            <Wand2 size={20} aria-hidden="true" />
             Choose a Tone
           </h3>
           <button
-            className="rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
             onClick={onClose}
+            aria-label="Close dialog"
           >
-            <X size={20} />
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
 
-        <div className="space-y-2">
+        <p id={descId} className="sr-only">
+          Select a tone to adjust your text style
+        </p>
+
+        <div className="space-y-2" role="list" aria-label="Tone options">
           {TONE_OPTIONS.map((option) => (
             <button
               key={option.value}
-              className={`w-full rounded-lg border p-3 text-left transition-all hover:shadow-md ${
+              className={`w-full rounded-lg border p-3 text-left transition-all hover:shadow-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
                 isAdjustingTone
                   ? "cursor-not-allowed opacity-50"
                   : "hover:border-blue-400"
@@ -189,9 +210,12 @@ const ToneOptionsModal: React.FC<ToneOptionsModalProps> = ({
               }}
               onClick={() => onSelectTone(option.value)}
               disabled={isAdjustingTone}
+              aria-busy={isAdjustingTone && selectedTone === option.value}
             >
               <div className="flex items-center gap-3">
-                <span className="text-2xl">{option.icon}</span>
+                <span className="text-2xl" aria-hidden="true">
+                  {option.icon}
+                </span>
                 <div className="flex-1">
                   <div
                     className="font-medium"
@@ -211,6 +235,7 @@ const ToneOptionsModal: React.FC<ToneOptionsModalProps> = ({
                     size={16}
                     className="animate-spin"
                     style={{ color: "var(--bsky-primary)" }}
+                    aria-label="Adjusting tone"
                   />
                 )}
               </div>
@@ -238,33 +263,56 @@ const TonePreviewModal: React.FC<TonePreviewModalProps> = ({
   onApply,
   onCancel,
 }) => {
+  const uniqueId = useId();
+  const titleId = `tone-preview-title-${uniqueId}`;
+  const descId = `tone-preview-desc-${uniqueId}`;
+  const containerRef = useFocusTrap<HTMLDivElement>(true);
+  const handleCancel = useCallback(() => onCancel(), [onCancel]);
+  useEscapeKey(true, handleCancel);
+
   const toneConfig = TONE_OPTIONS.find((t) => t.value === selectedTone);
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: "rgba(0, 0, 0, 0.5)" }}
+      onClick={onCancel}
+      role="presentation"
     >
       <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descId}
         className="bsky-card w-full max-w-2xl p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
         style={{ maxHeight: "80vh", overflowY: "auto" }}
       >
         <div className="mb-4 flex items-center justify-between">
           <h3
+            id={titleId}
             className="flex items-center gap-2 text-lg font-semibold"
             style={{ color: "var(--bsky-text-primary)" }}
           >
-            <Wand2 size={20} />
+            <Wand2 size={20} aria-hidden="true" />
             Tone Adjusted - {toneConfig?.label}
-            <span className="ml-2 text-2xl">{toneConfig?.icon}</span>
+            <span className="ml-2 text-2xl" aria-hidden="true">
+              {toneConfig?.icon}
+            </span>
           </h3>
           <button
-            className="rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
             onClick={onCancel}
+            aria-label="Close dialog"
           >
-            <X size={20} />
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
+
+        <p id={descId} className="sr-only">
+          Preview the tone adjustment before applying it to your text
+        </p>
 
         <div className="space-y-4">
           <div>
@@ -307,16 +355,16 @@ const TonePreviewModal: React.FC<TonePreviewModalProps> = ({
 
         <div className="mt-6 flex justify-end gap-3">
           <button
-            className="bsky-button-secondary px-4 py-2"
+            className="bsky-button-secondary px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onCancel}
           >
             Cancel
           </button>
           <button
-            className="bsky-button-primary flex items-center gap-2 px-4 py-2"
+            className="bsky-button-primary flex items-center gap-2 px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onApply}
           >
-            <CheckCircle size={16} />
+            <CheckCircle size={16} aria-hidden="true" />
             Use This Version
           </button>
         </div>
@@ -337,32 +385,49 @@ const ThreadOptimizationModal: React.FC<ThreadOptimizationModalProps> = ({
   onApply,
   onCancel,
 }) => {
+  const uniqueId = useId();
+  const titleId = `thread-optimization-title-${uniqueId}`;
+  const descId = `thread-optimization-desc-${uniqueId}`;
+  const containerRef = useFocusTrap<HTMLDivElement>(true);
+  const handleCancel = useCallback(() => onCancel(), [onCancel]);
+  useEscapeKey(true, handleCancel);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: "rgba(0, 0, 0, 0.5)" }}
+      onClick={onCancel}
+      role="presentation"
     >
       <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descId}
         className="bsky-card w-full max-w-3xl p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
         style={{ maxHeight: "90vh", overflowY: "auto" }}
       >
         <div className="mb-4 flex items-center justify-between">
           <h3
+            id={titleId}
             className="flex items-center gap-2 text-lg font-semibold"
             style={{ color: "var(--bsky-text-primary)" }}
           >
-            <Sparkles size={20} />
+            <Sparkles size={20} aria-hidden="true" />
             Thread Optimization - {result.totalPosts} Posts
           </h3>
           <button
-            className="rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
             onClick={onCancel}
+            aria-label="Close dialog"
           >
-            <X size={20} />
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
 
-        <div className="mb-4">
+        <div id={descId} className="mb-4">
           <p
             className="text-sm"
             style={{ color: "var(--bsky-text-secondary)" }}
@@ -386,7 +451,7 @@ const ThreadOptimizationModal: React.FC<ThreadOptimizationModalProps> = ({
           </p>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-3" role="list" aria-label="Thread segments">
           {result.segments.map((segment, index) => {
             const format = NUMBERING_FORMATS.find(
               (f) => f.id === result.suggestedFormat,
@@ -399,6 +464,7 @@ const ThreadOptimizationModal: React.FC<ThreadOptimizationModalProps> = ({
             return (
               <div
                 key={index}
+                role="listitem"
                 className="rounded-lg border p-4"
                 style={{
                   background: "var(--bsky-bg-secondary)",
@@ -441,16 +507,16 @@ const ThreadOptimizationModal: React.FC<ThreadOptimizationModalProps> = ({
 
         <div className="mt-6 flex justify-end gap-3">
           <button
-            className="bsky-button-secondary px-4 py-2"
+            className="bsky-button-secondary px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onCancel}
           >
             Cancel
           </button>
           <button
-            className="bsky-button-primary flex items-center gap-2 px-4 py-2"
+            className="bsky-button-primary flex items-center gap-2 px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onApply}
           >
-            <CheckCircle size={16} />
+            <CheckCircle size={16} aria-hidden="true" />
             Apply Optimization
           </button>
         </div>
@@ -475,32 +541,49 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
   onApplyEnhanced,
   onClose,
 }) => {
+  const uniqueId = useId();
+  const titleId = `writing-feedback-title-${uniqueId}`;
+  const descId = `writing-feedback-desc-${uniqueId}`;
+  const containerRef = useFocusTrap<HTMLDivElement>(true);
+  const handleClose = useCallback(() => onClose(), [onClose]);
+  useEscapeKey(true, handleClose);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: "rgba(0, 0, 0, 0.5)" }}
+      onClick={onClose}
+      role="presentation"
     >
       <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descId}
         className="bsky-card w-full max-w-2xl p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
         style={{ maxHeight: "90vh", overflowY: "auto" }}
       >
         <div className="mb-4 flex items-center justify-between">
           <h3
+            id={titleId}
             className="flex items-center gap-2 text-lg font-semibold"
             style={{ color: "var(--bsky-text-primary)" }}
           >
-            <MessageSquare size={20} />
+            <MessageSquare size={20} aria-hidden="true" />
             Writing Feedback
           </h3>
           <button
-            className="rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
             onClick={onClose}
+            aria-label="Close dialog"
           >
-            <X size={20} />
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
 
-        <div className="space-y-4">
+        <div id={descId} className="space-y-4">
           {/* Assessment */}
           <div
             className={`rounded-lg border p-4 ${
@@ -511,9 +594,17 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
           >
             <h4 className="mb-2 flex items-center gap-2 font-semibold">
               {!feedback.assessment.hasIssues ? (
-                <CheckCircle size={16} className="text-green-600" />
+                <CheckCircle
+                  size={16}
+                  className="text-green-600"
+                  aria-hidden="true"
+                />
               ) : (
-                <MessageSquare size={16} className="text-yellow-600" />
+                <MessageSquare
+                  size={16}
+                  className="text-yellow-600"
+                  aria-hidden="true"
+                />
               )}
               Quality Assessment
             </h4>
@@ -529,7 +620,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
             }}
           >
             <h4 className="mb-3 flex items-center gap-2 font-semibold">
-              <FileText size={16} />
+              <FileText size={16} aria-hidden="true" />
               Original Version
             </h4>
             <p className="rounded bg-gray-50 p-3 text-sm dark:bg-gray-900">
@@ -547,14 +638,14 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
           >
             <h4 className="mb-3 flex items-center justify-between font-semibold">
               <span className="flex items-center gap-2">
-                <FileText size={16} />
+                <FileText size={16} aria-hidden="true" />
                 Corrected Version
               </span>
               <button
-                className="bsky-button-secondary flex items-center gap-1 px-3 py-1 text-sm"
+                className="bsky-button-secondary flex items-center gap-1 px-3 py-1 text-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 onClick={onApplyCorrected}
               >
-                <Undo size={14} />
+                <Undo size={14} aria-hidden="true" />
                 Use This
               </button>
             </h4>
@@ -583,14 +674,14 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
           >
             <h4 className="mb-3 flex items-center justify-between font-semibold">
               <span className="flex items-center gap-2">
-                <Sparkles size={16} />
+                <Sparkles size={16} aria-hidden="true" />
                 Enhanced Version
               </span>
               <button
-                className="bsky-button-primary flex items-center gap-1 px-3 py-1 text-sm"
+                className="bsky-button-primary flex items-center gap-1 px-3 py-1 text-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 onClick={onApplyEnhanced}
               >
-                <Undo size={14} />
+                <Undo size={14} aria-hidden="true" />
                 Use This
               </button>
             </h4>
@@ -624,16 +715,24 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
                 }}
               >
                 <h4 className="mb-3 flex items-center gap-2 font-semibold">
-                  <MessageSquare size={16} />
+                  <MessageSquare size={16} aria-hidden="true" />
                   Your Writing Style
                 </h4>
                 <p className="mb-2 text-sm italic">
                   {feedback.styleAnalysis.userStyleSummary}
                 </p>
                 <p className="mb-2 text-sm">
-                  {feedback.styleAnalysis.matchesStyle
-                    ? "✅ This post matches your typical style"
-                    : "⚡ This post differs from your usual style"}
+                  {feedback.styleAnalysis.matchesStyle ? (
+                    <>
+                      <span aria-hidden="true">✅</span> This post matches your
+                      typical style
+                    </>
+                  ) : (
+                    <>
+                      <span aria-hidden="true">⚡</span> This post differs from
+                      your usual style
+                    </>
+                  )}
                 </p>
                 {feedback.styleAnalysis.styleNotes.length > 0 && (
                   <ul className="list-disc space-y-0.5 pl-5 text-xs text-gray-500">
@@ -647,7 +746,10 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
         </div>
 
         <div className="mt-6 flex justify-end">
-          <button className="bsky-button-primary px-6 py-2" onClick={onClose}>
+          <button
+            className="bsky-button-primary px-6 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            onClick={onClose}
+          >
             Got it!
           </button>
         </div>

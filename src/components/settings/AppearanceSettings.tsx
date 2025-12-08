@@ -1,14 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Columns, Monitor, Moon, Sun } from "lucide-react";
+import { Columns, GraduationCap, Monitor, Moon, Sun } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useOnboarding } from "../../hooks/useOnboarding";
 import { appPreferencesService } from "../../services/app-preferences-service";
 
 export const AppearanceSettings: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const { agent } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { resetOnboarding, startOnboarding } = useOnboarding();
   const [selectedWidth, setSelectedWidth] = useState(320);
 
   // Get current preferences
@@ -259,6 +263,45 @@ export const AppearanceSettings: React.FC = () => {
               {updateColumnWidth.isPending ? "Applying..." : "Apply Width"}
             </button>
           </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h3
+          className="text-sm font-medium"
+          style={{ color: "var(--bsky-text-primary)" }}
+        >
+          <GraduationCap className="mr-2 inline-block h-4 w-4" />
+          Tutorial
+        </h3>
+        <div
+          className="rounded-lg p-4"
+          style={{
+            backgroundColor: "var(--bsky-bg-secondary)",
+            border: "1px solid var(--bsky-border-primary)",
+          }}
+        >
+          <p
+            className="mb-4 text-sm"
+            style={{ color: "var(--bsky-text-secondary)" }}
+          >
+            Take a guided tour of ShadowSky's features including the
+            multi-column layout, keyboard shortcuts, and feed customization.
+          </p>
+          <button
+            onClick={() => {
+              resetOnboarding();
+              startOnboarding();
+              navigate("/home");
+            }}
+            className="rounded px-4 py-2 text-sm font-medium transition-colors"
+            style={{
+              backgroundColor: "var(--bsky-primary)",
+              color: "white",
+            }}
+          >
+            Replay Tutorial
+          </button>
         </div>
       </div>
     </div>

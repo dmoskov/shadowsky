@@ -36,6 +36,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useOnboarding } from "./hooks/useOnboarding";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
 import { appPreferencesService } from "./services/app-preferences-service";
 import { initializeCoreStorage } from "./services/data-services-initializer";
@@ -109,6 +110,11 @@ const BackgroundSyncIndicator = lazyWithRetry(() =>
 const WebSocketStressPanel = lazyWithRetry(() =>
   import("./components/dev/WebSocketStressPanel").then((m) => ({
     default: m.WebSocketStressPanel,
+  })),
+);
+const OnboardingOverlay = lazyWithRetry(() =>
+  import("./components/onboarding/OnboardingOverlay").then((m) => ({
+    default: m.OnboardingOverlay,
   })),
 );
 
@@ -235,6 +241,9 @@ function AppContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  // Onboarding for first-time users
+  const onboarding = useOnboarding();
 
   // Check if we're on the home route
   const isHomeRoute =
@@ -616,6 +625,7 @@ function AppContent() {
           onClose={() => setIsShortcutsHelpOpen(false)}
         />
         <ServiceWorkerUpdatePrompt />
+        <OnboardingOverlay onboarding={onboarding} />
       </Suspense>
     </div>
   );

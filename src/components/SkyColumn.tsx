@@ -21,6 +21,7 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import { Home } from "./Home";
 import { NotificationsFeed } from "./NotificationsFeed";
 import { SearchColumn } from "./SearchColumn";
+import { TrendingColumn } from "./TrendingColumn";
 import { VisualTimeline } from "./VisualTimeline";
 
 interface SkyColumnProps {
@@ -209,6 +210,13 @@ const SkyColumn = memo(
       [logError],
     );
 
+    const handleTrendingError = useCallback(
+      (error: Error, errorInfo: React.ErrorInfo) => {
+        logError(error, errorInfo, "TrendingColumn");
+      },
+      [logError],
+    );
+
     // Render different components based on column type
     const content = useMemo(() => {
       switch (column.type) {
@@ -278,6 +286,16 @@ const SkyColumn = memo(
             </ErrorBoundary>
           );
 
+        case "trending":
+          return (
+            <ErrorBoundary
+              componentName="Trending"
+              onError={handleTrendingError}
+            >
+              <TrendingColumn isFocused={isFocused} />
+            </ErrorBoundary>
+          );
+
         default:
           return (
             <div className="py-8 text-center">
@@ -303,6 +321,7 @@ const SkyColumn = memo(
       handleBookmarksError,
       handleSearchError,
       handleHomeError,
+      handleTrendingError,
     ]);
 
     // Memoized event handlers for ColumnHeader
