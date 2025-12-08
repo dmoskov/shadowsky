@@ -1,3 +1,4 @@
+import type { AppBskyFeedDefs } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import {
   useInfiniteQuery,
@@ -75,6 +76,17 @@ type FeedType =
   | "recent"
   | string; // Allow custom feed URIs
 
+interface PostRecord {
+  text: string;
+  createdAt: string;
+  embed?: unknown;
+  facets?: unknown[];
+  reply?: {
+    root: { uri: string; cid: string };
+    parent: { uri: string; cid: string };
+  };
+}
+
 interface Post {
   uri: string;
   cid: string;
@@ -85,12 +97,8 @@ interface Post {
     displayName?: string;
     avatar?: string;
   };
-  record: {
-    text: string;
-    createdAt: string;
-    embed?: unknown;
-  };
-  embed?: unknown;
+  record: PostRecord;
+  embed?: Embed;
   replyCount?: number;
   repostCount?: number;
   likeCount?: number;
@@ -156,8 +164,58 @@ interface FeedQueryData {
   pageParams: (string | undefined)[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type FeedItemWithMeta = any;
+interface EmbedImage {
+  thumb: string;
+  fullsize?: string;
+  alt?: string;
+}
+
+interface EmbedExternal {
+  uri?: string;
+  thumb?: string;
+  title?: string;
+  description?: string;
+}
+
+interface EmbedRecord {
+  $type?: string;
+  uri?: string;
+  cid?: string;
+  author?: {
+    did: string;
+    handle: string;
+    displayName?: string;
+    avatar?: string;
+  };
+  value?: {
+    text?: string;
+    createdAt?: string;
+    facets?: unknown[];
+  };
+  embeds?: Embed[];
+  indexedAt?: string;
+}
+
+interface Embed {
+  $type?: string;
+  images?: EmbedImage[];
+  external?: EmbedExternal;
+  record?: EmbedRecord;
+  media?: Embed;
+  playlist?: string;
+  thumbnail?: string;
+  aspectRatio?: { width: number; height: number };
+  alt?: string;
+  cid?: string;
+}
+
+interface FeedItemWithMeta {
+  post: Post;
+  reply?: { root: Post; parent: Post };
+  reason?: { $type: string; by: { did: string; handle: string; displayName?: string }; indexedAt?: string };
+  _pageIndex: number;
+  _itemIndex: number;
+}
 
 interface ApiError {
   message?: string;
@@ -1121,7 +1179,7 @@ export const Home: React.FC<HomeProps> = React.memo(
           const postView = {
             ...post,
             indexedAt: new Date().toISOString(),
-          } as any;
+          } as AppBskyFeedDefs.PostView;
 
           // Use the hook's toggleBookmark which updates the BookmarkStore
           toggleBookmark(postView);
@@ -1437,13 +1495,13 @@ export const Home: React.FC<HomeProps> = React.memo(
 
     // Memoize renderEmbed to prevent re-creation on every render
     const renderEmbed = React.useCallback(
-      (embed: any, postUri?: string, postIndex?: number) => {
+      (embed: Embed | null | undefined, postUri?: string, postIndex?: number) => {
         if (!embed) return null;
 
         if (embed.$type === "app.bsky.embed.images#view") {
           const handleImageClick = (e: React.MouseEvent, index: number) => {
             e.stopPropagation();
-            const images = embed.images.map((img: any) => ({
+            const images = (embed.images || []).map((img: EmbedImage) => ({
               thumb: proxifyBskyImage(img.thumb) || "",
               fullsize: proxifyBskyImage(img.fullsize || img.thumb) || "",
               alt: img.alt || "",
@@ -1464,9 +1522,9 @@ export const Home: React.FC<HomeProps> = React.memo(
 
           return (
             <div className={`mt-2 grid gap-1 ${gridClass}`}>
-              {embed.images.map((img: any, idx: number) => {
+              {(embed.images || []).map((img: EmbedImage, idx: number) => {
                 // Special layout for 3 images: first image takes 2/3, others 1/3 each
-                const isThreeImageLayout = embed.images.length === 3;
+                const isThreeImageLayout = (embed.images || []).length === 3;
                 const colSpan =
                   isThreeImageLayout && idx === 0
                     ? "col-span-2 row-span-2"
@@ -1863,7 +1921,7 @@ export const Home: React.FC<HomeProps> = React.memo(
             role="feed"
             aria-label="Posts"
           >
-            {visibleItems.map((item: any, index: number) => (
+            {visibleItems.map((item, index) => (
               <div
                 key={`${item.post.uri}-page${item._pageIndex}-item${item._itemIndex}`}
                 className="content-enter"

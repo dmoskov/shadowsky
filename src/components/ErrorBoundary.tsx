@@ -8,6 +8,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import { Component, ErrorInfo, ReactNode } from "react";
+import { getErrorMonitor } from "../utils/error-monitoring";
 import {
   toUserFriendlyError,
   type UserFriendlyError,
@@ -159,6 +160,18 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     this.setState({
       errorInfo,
+    });
+
+    // Record error to monitoring system
+    getErrorMonitor().recordError(error, {
+      operation: "render",
+      component: this.props.componentName || "ErrorBoundary",
+      category: "ui",
+      severity: "critical",
+      metadata: {
+        componentStack: errorInfo.componentStack || "unknown",
+        errorId: this.state.errorId,
+      },
     });
 
     if (this.props.onError) {

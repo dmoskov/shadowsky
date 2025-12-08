@@ -24,6 +24,7 @@
  * ```
  */
 
+import type { ZodSchema } from 'zod';
 import {
   cleanJsonResponse,
   createConfigError,
@@ -38,6 +39,7 @@ import {
   isOptionsRequest,
   logError,
   logInfo,
+  logWarning,
   parseEventBody,
   type LambdaResponse,
 } from './api-response';
@@ -47,6 +49,7 @@ import {
   TimeoutError,
   type ResilienceConfig,
 } from './resilience';
+import { SchemaValidationError, validateSchema } from './schemas/validation';
 import { handleWarmupEvent } from './warmup';
 
 /**
@@ -92,6 +95,8 @@ export interface AnthropicHandlerConfig<TBody = Record<string, unknown>, TResult
   logMessage?: (body: TBody) => string;
   /** Optional resilience config overrides */
   resilienceConfig?: Partial<ResilienceConfig>;
+  /** Optional Zod schema for validating AI response structure */
+  responseSchema?: ZodSchema;
 }
 
 /**
@@ -123,6 +128,7 @@ export function createAnthropicHandler<TBody = Record<string, unknown>, TResult 
     processResponse = (result) => result as TResult,
     logMessage,
     resilienceConfig,
+    responseSchema,
   } = config;
 
   return async (event: unknown): Promise<LambdaResponse> => {
@@ -226,6 +232,17 @@ export function createAnthropicHandler<TBody = Record<string, unknown>, TResult 
         const cleanedText = cleanJsonResponse(responseText);
         const result = JSON.parse(cleanedText);
 
+        // Validate response against schema if provided
+        if (responseSchema) {
+          const validation = validateSchema(responseSchema, result);
+          if (!validation.success) {
+            logWarning(name, `AI response validation failed: ${validation.error?.message}`, correlationId, {
+              issues: validation.error?.issues,
+            });
+            throw new SchemaValidationError(name, validation.error!.issues);
+          }
+        }
+
         // Process response
         const processedResult = processResponse(result, body);
 
@@ -254,6 +271,19 @@ export function createAnthropicHandler<TBody = Record<string, unknown>, TResult 
         throw apiError;
       }
     } catch (error) {
+      // Handle schema validation errors with a specific error response
+      if (error instanceof SchemaValidationError) {
+        logError(name, error, correlationId, {
+          errorType: 'schema_validation',
+          issues: error.issues,
+        });
+        return createInternalError(
+          new Error(`AI response validation failed: ${error.message}`),
+          event,
+          correlationId
+        );
+      }
+
       logError(name, error, correlationId);
       return createInternalError(error, event, correlationId);
     }

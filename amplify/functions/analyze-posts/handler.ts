@@ -1,23 +1,20 @@
 import {
   cleanJsonResponse,
-  createConfigError,
   createExternalApiError,
-  createInternalError,
   createInvalidParameterError,
   createMissingParameterError,
-  createOptionsResponse,
   createSuccessResponse,
   createTimeoutError,
-  getCorrelationId,
-  isOptionsRequest,
   logError,
   logInfo,
+  parseEventBody,
 } from "../shared/api-response";
 import {
   authenticateRequest,
   createUnauthorizedResponse,
   type AuthResult,
 } from "../shared/cognito-auth";
+import { withCommonSetup, type MiddlewareContext } from "../shared/middleware";
 import {
   createAnthropicClient,
   MaxRetriesExceededError,
@@ -28,7 +25,6 @@ import {
   createUserRateLimitResponse,
   STRICT_USER_RATE_LIMIT,
 } from "../shared/user-rate-limiter";
-import { handleWarmupEvent } from "../shared/warmup";
 
 interface PostData {
   text: string;
@@ -163,149 +159,134 @@ interface RequestBody {
   posts?: PostData[];
 }
 
-export const handler = async (event: any) => {
-  // Handle warmup events immediately to minimize cold start latency
-  const warmupResponse = handleWarmupEvent(event, 'analyze-posts');
-  if (warmupResponse) {
-    return warmupResponse;
-  }
+// Truncate long posts to avoid exceeding Claude's context limits
+const truncatePostText = (text: string, maxLength: number = 500): string => {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength - 3) + "...";
+};
 
-  const correlationId = getCorrelationId(event);
+export const handler = withCommonSetup({
+  name: 'analyze-posts',
+  enableWarmup: true,
+  requireApiKey: true,
+})(async (event: any, { correlationId, apiKey }: MiddlewareContext) => {
+  // Authenticate the request
+  const auth: AuthResult = await authenticateRequest(event);
 
-  // Handle OPTIONS request for CORS preflight
-  if (isOptionsRequest(event)) {
-    return createOptionsResponse(event);
-  }
-
-  try {
-    // Authenticate the request
-    const auth: AuthResult = await authenticateRequest(event);
-
-    if (!auth.authenticated) {
-      logInfo(
-        "analyze-posts",
-        `Authentication failed: ${auth.error}`,
-        correlationId,
-      );
-      return createUnauthorizedResponse(
-        auth.error || "Authentication required",
-        event,
-        correlationId,
-      );
-    }
-
-    const userId = auth.userId!;
-
-    // Apply per-user rate limiting
-    // Using strict rate limit (5 requests/minute) as this is an expensive operation
-    const rateLimitResult = checkUserRateLimit(userId, STRICT_USER_RATE_LIMIT);
-
-    if (!rateLimitResult.allowed) {
-      logInfo(
-        "analyze-posts",
-        `Rate limit exceeded for user: ${userId}`,
-        correlationId,
-        {
-          retryAfter: rateLimitResult.retryAfter,
-        },
-      );
-      return createUserRateLimitResponse(
-        event,
-        correlationId,
-        rateLimitResult.retryAfter,
-        STRICT_USER_RATE_LIMIT.message,
-      );
-    }
-
+  if (!auth.authenticated) {
     logInfo(
       "analyze-posts",
-      `Request authenticated for user: ${userId}`,
+      `Authentication failed: ${auth.error}`,
       correlationId,
     );
+    return createUnauthorizedResponse(
+      auth.error || "Authentication required",
+      event,
+      correlationId,
+    );
+  }
 
-    const body = parseEventBody<RequestBody>(event);
+  const userId = auth.userId!;
 
-    if (!body) {
-      return createInvalidParameterError(
-        "body",
-        "Invalid JSON format",
-        event,
-        correlationId,
-      );
-    }
+  // Apply per-user rate limiting
+  // Using strict rate limit (5 requests/minute) as this is an expensive operation
+  const rateLimitResult = checkUserRateLimit(userId, STRICT_USER_RATE_LIMIT);
 
-    const { posts } = body;
-
-    if (!posts || !Array.isArray(posts)) {
-      return createInvalidParameterError(
-        "posts",
-        "Must be a non-empty array",
-        event,
-        correlationId,
-      );
-    }
-
-    if (posts.length === 0) {
-      return createMissingParameterError("posts", event, correlationId);
-    }
-
-    // Limit to 25 posts for analysis (reduced to avoid context size issues)
-    const postsToAnalyze = posts.slice(0, 25);
-
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      return createConfigError("ANTHROPIC_API_KEY", event, correlationId);
-    }
-
+  if (!rateLimitResult.allowed) {
     logInfo(
       "analyze-posts",
-      `Analyzing ${postsToAnalyze.length} posts for user ${userId}`,
+      `Rate limit exceeded for user: ${userId}`,
+      correlationId,
+      {
+        retryAfter: rateLimitResult.retryAfter,
+      },
+    );
+    return createUserRateLimitResponse(
+      event,
+      correlationId,
+      rateLimitResult.retryAfter,
+      STRICT_USER_RATE_LIMIT.message,
+    );
+  }
+
+  logInfo(
+    "analyze-posts",
+    `Request authenticated for user: ${userId}`,
+    correlationId,
+  );
+
+  const body = parseEventBody<RequestBody>(event);
+
+  if (!body) {
+    return createInvalidParameterError(
+      "body",
+      "Invalid JSON format",
+      event,
       correlationId,
     );
+  }
 
-    // Truncate long posts to avoid exceeding Claude's context limits
-    const truncatePostText = (text: string, maxLength: number = 500): string => {
-      if (text.length <= maxLength) return text;
-      return text.substring(0, maxLength - 3) + "...";
-    };
+  const { posts } = body;
 
-    // Build the post analysis context
-    const postsContext = postsToAnalyze
-      .map((post: PostData, i: number) => {
-        const engagement =
-          (post.likes || 0) + (post.reposts || 0) + (post.replies || 0);
-        return `Post ${i + 1}:
+  if (!posts || !Array.isArray(posts)) {
+    return createInvalidParameterError(
+      "posts",
+      "Must be a non-empty array",
+      event,
+      correlationId,
+    );
+  }
+
+  if (posts.length === 0) {
+    return createMissingParameterError("posts", event, correlationId);
+  }
+
+  // Limit to 25 posts for analysis (reduced to avoid context size issues)
+  const postsToAnalyze = posts.slice(0, 25);
+
+  logInfo(
+    "analyze-posts",
+    `Analyzing ${postsToAnalyze.length} posts for user ${userId}`,
+    correlationId,
+  );
+
+  // Build the post analysis context
+  const postsContext = postsToAnalyze
+    .map((post: PostData, i: number) => {
+      const engagement =
+        (post.likes || 0) + (post.reposts || 0) + (post.replies || 0);
+      return `Post ${i + 1}:
 Text: "${truncatePostText(post.text)}"
 Date: ${post.createdAt || "unknown"}
 Engagement: ${engagement} (${post.likes || 0} likes, ${post.reposts || 0} reposts, ${post.replies || 0} replies)`;
-      })
-      .join("\n\n");
+    })
+    .join("\n\n");
 
-    // Create resilient client for Anthropic API with retry and timeout
-    // Using longer timeout for large post analysis
-    const client = createAnthropicClient({
-      name: "analyze-posts",
-      timeout: 45000, // 45s for complex analysis
-    });
+  // Create resilient client for Anthropic API with retry and timeout
+  // Using longer timeout for large post analysis
+  const client = createAnthropicClient({
+    name: "analyze-posts",
+    timeout: 45000, // 45s for complex analysis
+  });
 
-    let aiResult;
-    try {
-      const response = await client.fetch(
-        "https://api.anthropic.com/v1/messages",
-        {
-          method: "POST",
-          headers: {
-            "x-api-key": apiKey,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "claude-sonnet-4-5-20250929",
-            max_tokens: 3000,
-            messages: [
-              {
-                role: "user",
-                content: `You are a social media analytics expert. Analyze these posts from a Bluesky user and provide insights about their content, writing style, and engagement patterns.
+  let aiResult;
+  try {
+    const response = await client.fetch(
+      "https://api.anthropic.com/v1/messages",
+      {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey!,
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5-20250929",
+          max_tokens: 3000,
+          messages: [
+            {
+              role: "user",
+              content: `You are a social media analytics expert. Analyze these posts from a Bluesky user and provide insights about their content, writing style, and engagement patterns.
 
 POSTS TO ANALYZE:
 ${postsContext}
@@ -343,87 +324,74 @@ IMPORTANT GUIDELINES:
 6. Be specific and constructive
 7. Base everything on actual data from the posts
 8. Your response MUST be valid JSON only - start with { and end with }`,
-              },
-            ],
-          }),
-        },
-        correlationId
-      );
-
-      const data = await response.json();
-      const cleanedText = cleanJsonResponse(data.content[0].text);
-      aiResult = JSON.parse(cleanedText);
-    } catch (apiError) {
-      if (apiError instanceof TimeoutError) {
-        logError("analyze-posts", apiError, correlationId, {
-          errorType: "timeout",
-        });
-        return createTimeoutError("Anthropic API call", event, correlationId);
-      }
-
-      if (apiError instanceof MaxRetriesExceededError) {
-        logError("analyze-posts", apiError, correlationId, {
-          attempts: apiError.attempts,
-        });
-        return createExternalApiError(
-          "Anthropic",
-          `Failed after ${apiError.attempts} attempts`,
-          event,
-          correlationId
-        );
-      }
-
-      throw apiError;
-    }
-
-    // Calculate optimal posting times from the raw data
-    const postingTimeData = analyzePostingTimes(postsToAnalyze);
-
-    // Merge AI analysis with posting time analysis
-    const result = {
-      ...aiResult,
-      optimalPostingTimes: {
-        recommendations: postingTimeData.optimalTimes,
-        hourlyEngagement: postingTimeData.hourlyEngagement,
-        weekdayEngagement: postingTimeData.weekdayEngagement,
-        lastCalculated: new Date().toISOString(),
+            },
+          ],
+        }),
       },
-    };
-
-    logInfo(
-      "analyze-posts",
-      `Analysis completed successfully for user ${userId}`,
-      correlationId,
+      correlationId
     );
 
-    // Add rate limit headers to response
-    const successResponse = createSuccessResponse(result, event, {
-      correlationId,
-    });
-    if (successResponse.headers) {
-      successResponse.headers["X-RateLimit-Limit"] = String(
-        STRICT_USER_RATE_LIMIT.maxRequests,
-      );
-      successResponse.headers["X-RateLimit-Remaining"] = String(
-        rateLimitResult.remaining,
-      );
-      successResponse.headers["X-RateLimit-Window"] = String(
-        STRICT_USER_RATE_LIMIT.windowMs / 1000,
+    const data = await response.json();
+    const cleanedText = cleanJsonResponse(data.content[0].text);
+    aiResult = JSON.parse(cleanedText);
+  } catch (apiError) {
+    if (apiError instanceof TimeoutError) {
+      logError("analyze-posts", apiError, correlationId, {
+        errorType: "timeout",
+      });
+      return createTimeoutError("Anthropic API call", event, correlationId);
+    }
+
+    if (apiError instanceof MaxRetriesExceededError) {
+      logError("analyze-posts", apiError, correlationId, {
+        attempts: apiError.attempts,
+      });
+      return createExternalApiError(
+        "Anthropic",
+        `Failed after ${apiError.attempts} attempts`,
+        event,
+        correlationId
       );
     }
 
-    return successResponse;
-  } catch (error) {
-    logError("analyze-posts", error, correlationId);
-    return createInternalError(error, event, correlationId);
+    throw apiError;
   }
-};
 
-// Re-export parseEventBody from api-response for local use
-function parseEventBody<T>(event: any): T | null {
-  try {
-    return JSON.parse(event.body || "{}") as T;
-  } catch {
-    return null;
+  // Calculate optimal posting times from the raw data
+  const postingTimeData = analyzePostingTimes(postsToAnalyze);
+
+  // Merge AI analysis with posting time analysis
+  const result = {
+    ...aiResult,
+    optimalPostingTimes: {
+      recommendations: postingTimeData.optimalTimes,
+      hourlyEngagement: postingTimeData.hourlyEngagement,
+      weekdayEngagement: postingTimeData.weekdayEngagement,
+      lastCalculated: new Date().toISOString(),
+    },
+  };
+
+  logInfo(
+    "analyze-posts",
+    `Analysis completed successfully for user ${userId}`,
+    correlationId,
+  );
+
+  // Add rate limit headers to response
+  const successResponse = createSuccessResponse(result, event, {
+    correlationId,
+  });
+  if (successResponse.headers) {
+    successResponse.headers["X-RateLimit-Limit"] = String(
+      STRICT_USER_RATE_LIMIT.maxRequests,
+    );
+    successResponse.headers["X-RateLimit-Remaining"] = String(
+      rateLimitResult.remaining,
+    );
+    successResponse.headers["X-RateLimit-Window"] = String(
+      STRICT_USER_RATE_LIMIT.windowMs / 1000,
+    );
   }
-}
+
+  return successResponse;
+});

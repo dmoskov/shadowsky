@@ -7,6 +7,7 @@
 
 import { createAnthropicHandler, truncateText } from '../shared/handler-factory';
 import { MODELS } from '../shared/model-config';
+import { OptimizeThreadResponseSchema } from '../shared/schemas';
 
 interface RequestBody {
   text?: string;
@@ -68,4 +69,5 @@ Your response MUST be valid JSON only.`,
       },
     };
   },
+  responseSchema: OptimizeThreadResponseSchema,
 });

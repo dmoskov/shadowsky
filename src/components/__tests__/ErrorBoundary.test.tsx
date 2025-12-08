@@ -1,5 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  getErrorMonitor,
+  resetErrorMonitor,
+} from "../../utils/error-monitoring";
 import { ErrorBoundary } from "../ErrorBoundary";
 
 const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
@@ -12,10 +16,12 @@ const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
 describe("ErrorBoundary", () => {
   beforeEach(() => {
     vi.spyOn(console, "error").mockImplementation(() => {});
+    resetErrorMonitor();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    resetErrorMonitor();
   });
 
   it("renders children when there is no error", () => {
@@ -189,5 +195,69 @@ describe("ErrorBoundary", () => {
 
     // Clicking should not throw
     expect(() => fireEvent.click(tryAgainButton)).not.toThrow();
+  });
+
+  it("records error to error monitoring system when error occurs", () => {
+    render(
+      <ErrorBoundary componentName="TestComponent">
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+
+    // Get error stats from the monitor
+    const stats = getErrorMonitor().getErrorStats();
+
+    // Verify error was recorded
+    expect(stats.totalErrors).toBe(1);
+    expect(stats.byCategory.ui).toBe(1);
+    expect(stats.bySeverity.critical).toBe(1);
+  });
+
+  it("records error with correct metadata including component stack", () => {
+    // Spy on recordError to verify the call
+    const recordErrorSpy = vi.spyOn(getErrorMonitor(), "recordError");
+
+    render(
+      <ErrorBoundary componentName="MetadataTestComponent">
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+
+    // Verify recordError was called with correct parameters
+    expect(recordErrorSpy).toHaveBeenCalledTimes(1);
+    expect(recordErrorSpy).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        operation: "render",
+        component: "MetadataTestComponent",
+        category: "ui",
+        severity: "critical",
+        metadata: expect.objectContaining({
+          componentStack: expect.any(String),
+          errorId: expect.any(String),
+        }),
+      }),
+    );
+
+    recordErrorSpy.mockRestore();
+  });
+
+  it("uses ErrorBoundary as default component name when not provided", () => {
+    const recordErrorSpy = vi.spyOn(getErrorMonitor(), "recordError");
+
+    render(
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+
+    expect(recordErrorSpy).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        component: "ErrorBoundary",
+      }),
+    );
+
+    recordErrorSpy.mockRestore();
   });
 });
