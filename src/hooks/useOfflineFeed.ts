@@ -570,12 +570,13 @@ export function useVisibilityRefresh(
 export function useFeedCacheWarmup(
   queryKey: string[],
   feedType: "timeline" | "author" | "list" = "timeline",
+  enabled: boolean = true,
 ) {
   const queryClient = useQueryClient();
   const hasWarmedUpRef = useRef(false);
 
   useEffect(() => {
-    if (hasWarmedUpRef.current) return;
+    if (!enabled || hasWarmedUpRef.current) return;
 
     const warmup = async () => {
       try {
@@ -615,7 +616,7 @@ export function useFeedCacheWarmup(
     };
 
     warmup();
-  }, [queryKey, queryClient, feedType]);
+  }, [queryKey, queryClient, feedType, enabled]);
 }
 
 export default useOfflineFirstFeed;

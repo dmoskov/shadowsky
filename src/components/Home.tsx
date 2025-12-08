@@ -196,7 +196,14 @@ export const Home: React.FC<HomeProps> = React.memo(
 
     // Stability-focused caching: warm up cache for instant first load
     // Pre-populates React Query cache with IndexedDB data before component fetches
-    useFeedCacheWarmup(["timeline", selectedFeed], "timeline");
+    // Only enable for standard timeline feeds - custom feeds (AT URIs) aren't cached in offline storage
+    const isStandardTimelineFeed =
+      selectedFeed === "following" || selectedFeed === "recent";
+    useFeedCacheWarmup(
+      ["timeline", selectedFeed],
+      "timeline",
+      isStandardTimelineFeed,
+    );
 
     // Auto-refresh feed when tab becomes visible after being hidden for 1+ minute
     useVisibilityRefresh(["timeline", selectedFeed], {
