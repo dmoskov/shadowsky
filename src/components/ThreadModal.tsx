@@ -1,7 +1,7 @@
 import { RichText, type AppBskyFeedDefs } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BarChart3, X } from "lucide-react";
+import { BarChart3, ChevronDown, ChevronUp, X } from "lucide-react";
 import React, {
   useCallback,
   useEffect,
@@ -1006,37 +1006,54 @@ export function ThreadModal({
         <div className="modal-container modal-5xl flex flex-col bg-bsky-bg-primary sm:max-h-[90vh] sm:rounded-2xl sm:shadow-2xl">
           {/* Header with close button */}
           <div
-            className="flex flex-shrink-0 items-center justify-between border-b px-4 py-3 md:px-6 md:py-4"
+            className="flex flex-shrink-0 items-center justify-between border-b px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4"
             style={{
               backgroundColor: "var(--bsky-bg-primary)",
               borderColor: "var(--bsky-border-primary)",
             }}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
               <h2
-                className="text-lg font-semibold md:text-xl"
+                className="text-base font-semibold sm:text-lg md:text-xl"
                 style={{ color: "var(--bsky-text-primary)" }}
               >
                 Thread
               </h2>
               {posts.length > 0 && (
-                <span
-                  className="rounded-full px-2 py-0.5 text-xs"
-                  style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    color: "var(--bsky-text-secondary)",
-                  }}
-                >
-                  {posts.length} posts
-                </span>
+                <>
+                  {/* Post count badge - hidden on very small screens */}
+                  <span
+                    className="xs:inline-block hidden rounded-full px-2 py-0.5 text-xs"
+                    style={{
+                      backgroundColor: "var(--bsky-bg-tertiary)",
+                      color: "var(--bsky-text-secondary)",
+                    }}
+                  >
+                    {posts.length} posts
+                  </span>
+                  {/* Mobile progress indicator - shows current position */}
+                  <div
+                    className="flex items-center gap-1.5 text-xs sm:hidden"
+                    style={{ color: "var(--bsky-text-tertiary)" }}
+                  >
+                    <span
+                      className="font-medium"
+                      style={{ color: "var(--bsky-primary)" }}
+                    >
+                      {focusedPostIndex + 1}
+                    </span>
+                    <span>/</span>
+                    <span>{posts.length}</span>
+                  </div>
+                </>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
               {/* Analytics toggle - only show for complex+ threads */}
               {posts.length > 0 && tierConfig.showAnalyticsBadge && (
                 <button
                   onClick={() => setShowAnalytics(!showAnalytics)}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                  className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition-colors sm:px-3 ${
                     showAnalytics
                       ? "bg-blue-500 text-white"
                       : "hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -1052,17 +1069,18 @@ export function ThreadModal({
                   <span className="hidden sm:inline">Analytics</span>
                 </button>
               )}
+              {/* Close button - larger tap target on mobile */}
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   handleClose();
                 }}
-                className="rounded-full p-2 transition-all hover:scale-110 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="-mr-1 rounded-full p-3 transition-all hover:scale-110 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700 sm:mr-0 sm:p-2"
                 style={{ color: "var(--bsky-text-secondary)" }}
-                aria-label="Close"
+                aria-label="Close thread"
               >
-                <X size={24} />
+                <X size={24} className="sm:h-6 sm:w-6" />
               </button>
             </div>
           </div>
@@ -1366,7 +1384,7 @@ export function ThreadModal({
         </div>
 
         {/* Thread Minimap - floating visual navigation for complex threads */}
-        {/* Only show for complex+ threads based on tier config */}
+        {/* Only show for complex+ threads based on tier config (hidden on mobile via CSS) */}
         {posts.length > 0 && tierConfig.showMinimap && (
           <ThreadMinimap
             posts={posts}
@@ -1376,6 +1394,53 @@ export function ThreadModal({
             rootUri={rootPost}
             scrollContainerRef={scrollContainerRef}
           />
+        )}
+
+        {/* Mobile navigation controls - appears on mobile when thread has multiple posts */}
+        {posts.length > 1 && (
+          <div
+            className="fixed bottom-20 right-3 z-50 flex flex-col gap-1 sm:hidden"
+            style={{
+              // Hide when composer is open to avoid overlap
+              display:
+                replyState.isReplying || quoteState.isQuoting
+                  ? "none"
+                  : undefined,
+            }}
+          >
+            <button
+              onClick={handleNavigateUp}
+              disabled={focusedPostIndex === 0}
+              className="flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all active:scale-95 disabled:opacity-40"
+              style={{
+                backgroundColor: "var(--bsky-bg-secondary)",
+                border: "1px solid var(--bsky-border-primary)",
+                color:
+                  focusedPostIndex === 0
+                    ? "var(--bsky-text-tertiary)"
+                    : "var(--bsky-text-primary)",
+              }}
+              aria-label="Previous post"
+            >
+              <ChevronUp size={20} />
+            </button>
+            <button
+              onClick={handleNavigateDown}
+              disabled={focusedPostIndex >= posts.length - 1}
+              className="flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all active:scale-95 disabled:opacity-40"
+              style={{
+                backgroundColor: "var(--bsky-bg-secondary)",
+                border: "1px solid var(--bsky-border-primary)",
+                color:
+                  focusedPostIndex >= posts.length - 1
+                    ? "var(--bsky-text-tertiary)"
+                    : "var(--bsky-text-primary)",
+              }}
+              aria-label="Next post"
+            >
+              <ChevronDown size={20} />
+            </button>
+          </div>
         )}
       </div>
 
