@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { z } from 'zod';
 import {
   createAnthropicHandler,
   truncateText,
@@ -330,6 +331,189 @@ describe('handler-factory', () => {
       expect(response.statusCode).toBe(500);
       const body = JSON.parse(response.body);
       expect(body.error.code).toBe('INTERNAL_ERROR');
+    });
+
+    describe('schema validation', () => {
+      const TestResponseSchema = z.object({
+        text: z.string().min(1),
+        score: z.number().min(0).max(100),
+      });
+
+      it('should pass validation for valid AI response', async () => {
+        mockFetch.mockResolvedValue({
+          json: () =>
+            Promise.resolve({
+              content: [{ text: '{"text": "Hello", "score": 85}' }],
+            }),
+        });
+
+        const config: AnthropicHandlerConfig = {
+          name: 'test-handler',
+          buildPrompt: () => ({
+            model: MODELS.SONNET,
+            maxTokens: 1000,
+            prompt: 'Test',
+          }),
+          responseSchema: TestResponseSchema,
+        };
+
+        const handler = createAnthropicHandler(config);
+        const event = createMockEvent({});
+
+        const response = await handler(event);
+
+        expect(response.statusCode).toBe(200);
+        const body = JSON.parse(response.body);
+        expect(body.text).toBe('Hello');
+        expect(body.score).toBe(85);
+      });
+
+      it('should return error for invalid AI response structure', async () => {
+        mockFetch.mockResolvedValue({
+          json: () =>
+            Promise.resolve({
+              content: [{ text: '{"text": "", "score": 85}' }], // Empty text is invalid
+            }),
+        });
+
+        const config: AnthropicHandlerConfig = {
+          name: 'test-handler',
+          buildPrompt: () => ({
+            model: MODELS.SONNET,
+            maxTokens: 1000,
+            prompt: 'Test',
+          }),
+          responseSchema: TestResponseSchema,
+        };
+
+        const handler = createAnthropicHandler(config);
+        const event = createMockEvent({});
+
+        const response = await handler(event);
+
+        expect(response.statusCode).toBe(500);
+        const body = JSON.parse(response.body);
+        expect(body.error.code).toBe('INTERNAL_ERROR');
+        expect(body.error.message).toContain('validation failed');
+      });
+
+      it('should return error for missing required fields in AI response', async () => {
+        mockFetch.mockResolvedValue({
+          json: () =>
+            Promise.resolve({
+              content: [{ text: '{"text": "Hello"}' }], // Missing score field
+            }),
+        });
+
+        const config: AnthropicHandlerConfig = {
+          name: 'test-handler',
+          buildPrompt: () => ({
+            model: MODELS.SONNET,
+            maxTokens: 1000,
+            prompt: 'Test',
+          }),
+          responseSchema: TestResponseSchema,
+        };
+
+        const handler = createAnthropicHandler(config);
+        const event = createMockEvent({});
+
+        const response = await handler(event);
+
+        expect(response.statusCode).toBe(500);
+        const body = JSON.parse(response.body);
+        expect(body.error.code).toBe('INTERNAL_ERROR');
+      });
+
+      it('should return error for out-of-range values', async () => {
+        mockFetch.mockResolvedValue({
+          json: () =>
+            Promise.resolve({
+              content: [{ text: '{"text": "Hello", "score": 150}' }], // Score > 100
+            }),
+        });
+
+        const config: AnthropicHandlerConfig = {
+          name: 'test-handler',
+          buildPrompt: () => ({
+            model: MODELS.SONNET,
+            maxTokens: 1000,
+            prompt: 'Test',
+          }),
+          responseSchema: TestResponseSchema,
+        };
+
+        const handler = createAnthropicHandler(config);
+        const event = createMockEvent({});
+
+        const response = await handler(event);
+
+        expect(response.statusCode).toBe(500);
+        const body = JSON.parse(response.body);
+        expect(body.error.code).toBe('INTERNAL_ERROR');
+      });
+
+      it('should skip validation when no schema provided', async () => {
+        mockFetch.mockResolvedValue({
+          json: () =>
+            Promise.resolve({
+              content: [{ text: '{"anyField": "anyValue"}' }],
+            }),
+        });
+
+        const config: AnthropicHandlerConfig = {
+          name: 'test-handler',
+          buildPrompt: () => ({
+            model: MODELS.SONNET,
+            maxTokens: 1000,
+            prompt: 'Test',
+          }),
+          // No responseSchema provided
+        };
+
+        const handler = createAnthropicHandler(config);
+        const event = createMockEvent({});
+
+        const response = await handler(event);
+
+        expect(response.statusCode).toBe(200);
+        const body = JSON.parse(response.body);
+        expect(body.anyField).toBe('anyValue');
+      });
+
+      it('should run processResponse after validation passes', async () => {
+        mockFetch.mockResolvedValue({
+          json: () =>
+            Promise.resolve({
+              content: [{ text: '{"text": "Hello", "score": 85}' }],
+            }),
+        });
+
+        const config: AnthropicHandlerConfig = {
+          name: 'test-handler',
+          buildPrompt: () => ({
+            model: MODELS.SONNET,
+            maxTokens: 1000,
+            prompt: 'Test',
+          }),
+          responseSchema: TestResponseSchema,
+          processResponse: (result: unknown) => {
+            const data = result as { text: string; score: number };
+            return { ...data, processed: true };
+          },
+        };
+
+        const handler = createAnthropicHandler(config);
+        const event = createMockEvent({});
+
+        const response = await handler(event);
+
+        expect(response.statusCode).toBe(200);
+        const body = JSON.parse(response.body);
+        expect(body.text).toBe('Hello');
+        expect(body.score).toBe(85);
+        expect(body.processed).toBe(true);
+      });
     });
   });
 });

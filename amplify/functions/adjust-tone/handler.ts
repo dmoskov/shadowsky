@@ -7,6 +7,7 @@
 
 import { createAnthropicHandler, truncateText } from '../shared/handler-factory';
 import { MODELS } from '../shared/model-config';
+import { AdjustToneResponseSchema } from '../shared/schemas';
 
 interface RequestBody {
   text?: string;
@@ -54,4 +55,5 @@ Important:
 Your response MUST be valid JSON only. Start with { and end with }.`,
     };
   },
+  responseSchema: AdjustToneResponseSchema,
 });

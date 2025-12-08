@@ -2,18 +2,15 @@ import {
   CachePresets,
   createCachedSuccessResponse,
   createExternalApiError,
-  createInternalError,
   createInvalidParameterError,
   createMissingParameterError,
-  createOptionsResponse,
   createTimeoutError,
-  getCorrelationId,
-  isOptionsRequest,
   logError,
   logInfo,
   logWarning,
   parseEventBody,
 } from "../shared/api-response";
+import { withCommonSetup, type MiddlewareContext } from "../shared/middleware";
 import {
   createUrlFetchClient,
   MaxRetriesExceededError,
@@ -179,169 +176,161 @@ function resolveImageUrl(
   }
 }
 
-export const handler = async (event: any) => {
-  const correlationId = getCorrelationId(event);
+export const handler = withCommonSetup({
+  name: 'fetch-link-metadata',
+  enableWarmup: true,
+  requireApiKey: false,
+})(async (event: any, { correlationId }: MiddlewareContext) => {
+  const body = parseEventBody<RequestBody>(event);
+  const { url } = body || {};
 
-  // Handle OPTIONS request for CORS preflight
-  if (isOptionsRequest(event)) {
-    return createOptionsResponse(event);
+  if (!url) {
+    return createMissingParameterError("url", event, correlationId);
   }
 
-  try {
-    const body = parseEventBody<RequestBody>(event);
-    const { url } = body || {};
+  if (!isValidUrl(url)) {
+    return createInvalidParameterError(
+      "url",
+      "Invalid URL format",
+      event,
+      correlationId,
+    );
+  }
 
-    if (!url) {
-      return createMissingParameterError("url", event, correlationId);
+  logInfo(
+    "fetch-link-metadata",
+    `Fetching metadata for: ${url}`,
+    correlationId,
+  );
+
+  // Create resilient client for URL fetching with retry and timeout
+  const client = createUrlFetchClient({ name: "fetch-link-metadata" });
+
+  try {
+    // Use the resilient client's execute method for custom fetch logic
+    const result = await client.execute(async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      try {
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (compatible; ShadowSky/1.0; +https://shadowsky.io)",
+            Accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+          },
+          signal: controller.signal,
+          redirect: "follow",
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const error = new Error(
+            `Failed to fetch URL: ${response.status}`,
+          ) as Error & { status: number };
+          error.status = response.status;
+          throw error;
+        }
+
+        const contentType = response.headers.get("content-type") || "";
+        if (
+          !contentType.includes("text/html") &&
+          !contentType.includes("application/xhtml+xml")
+        ) {
+          // Not an HTML page, return minimal metadata
+          return {
+            url,
+            title: new URL(url).hostname,
+            description: "",
+          } as LinkMetadata;
+        }
+
+        // Read only the first 100KB to avoid memory issues with large pages
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error("Unable to read response body");
+        }
+
+        let html = "";
+        const decoder = new TextDecoder();
+        const maxBytes = 100 * 1024; // 100KB
+        let bytesRead = 0;
+
+        while (bytesRead < maxBytes) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          html += decoder.decode(value, { stream: true });
+          bytesRead += value?.length || 0;
+
+          // Early exit if we've found all the metadata we need
+          if (html.includes("</head>")) {
+            break;
+          }
+        }
+
+        reader.cancel();
+
+        const { title, description, imageUrl } = extractMetaTags(html);
+        const resolvedImageUrl = resolveImageUrl(imageUrl, url);
+
+        return {
+          url,
+          title: title || new URL(url).hostname,
+          description: description || "",
+          imageUrl: resolvedImageUrl,
+        } as LinkMetadata;
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+
+        if (fetchError instanceof Error && fetchError.name === "AbortError") {
+          throw new TimeoutError("Request timed out", 10000);
+        }
+
+        throw fetchError;
+      }
+    }, correlationId);
+
+    logInfo(
+      "fetch-link-metadata",
+      "Metadata extracted successfully",
+      correlationId,
+      {
+        hasTitle: !!result.title,
+        hasDescription: !!result.description,
+        hasImage: !!result.imageUrl,
+      },
+    );
+
+    // Use cached response - link metadata is stable for the same URL
+    return createCachedSuccessResponse(result, event, {
+      cacheConfig: CachePresets.LINK_METADATA,
+      correlationId,
+    });
+  } catch (apiError) {
+    if (apiError instanceof TimeoutError) {
+      logWarning("fetch-link-metadata", "Request timed out", correlationId, {
+        url,
+      });
+      return createTimeoutError("URL fetch", event, correlationId);
     }
 
-    if (!isValidUrl(url)) {
-      return createInvalidParameterError(
-        "url",
-        "Invalid URL format",
+    if (apiError instanceof MaxRetriesExceededError) {
+      logError("fetch-link-metadata", apiError, correlationId, {
+        url,
+        attempts: apiError.attempts,
+      });
+      return createExternalApiError(
+        "URL Fetch",
+        `Failed after ${apiError.attempts} attempts`,
         event,
         correlationId,
       );
     }
 
-    logInfo(
-      "fetch-link-metadata",
-      `Fetching metadata for: ${url}`,
-      correlationId,
-    );
-
-    // Create resilient client for URL fetching with retry and timeout
-    const client = createUrlFetchClient({ name: "fetch-link-metadata" });
-
-    try {
-      // Use the resilient client's execute method for custom fetch logic
-      const result = await client.execute(async () => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-        try {
-          const response = await fetch(url, {
-            method: "GET",
-            headers: {
-              "User-Agent":
-                "Mozilla/5.0 (compatible; ShadowSky/1.0; +https://shadowsky.io)",
-              Accept:
-                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-              "Accept-Language": "en-US,en;q=0.5",
-            },
-            signal: controller.signal,
-            redirect: "follow",
-          });
-
-          clearTimeout(timeoutId);
-
-          if (!response.ok) {
-            const error = new Error(
-              `Failed to fetch URL: ${response.status}`,
-            ) as Error & { status: number };
-            error.status = response.status;
-            throw error;
-          }
-
-          const contentType = response.headers.get("content-type") || "";
-          if (
-            !contentType.includes("text/html") &&
-            !contentType.includes("application/xhtml+xml")
-          ) {
-            // Not an HTML page, return minimal metadata
-            return {
-              url,
-              title: new URL(url).hostname,
-              description: "",
-            } as LinkMetadata;
-          }
-
-          // Read only the first 100KB to avoid memory issues with large pages
-          const reader = response.body?.getReader();
-          if (!reader) {
-            throw new Error("Unable to read response body");
-          }
-
-          let html = "";
-          const decoder = new TextDecoder();
-          const maxBytes = 100 * 1024; // 100KB
-          let bytesRead = 0;
-
-          while (bytesRead < maxBytes) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            html += decoder.decode(value, { stream: true });
-            bytesRead += value?.length || 0;
-
-            // Early exit if we've found all the metadata we need
-            if (html.includes("</head>")) {
-              break;
-            }
-          }
-
-          reader.cancel();
-
-          const { title, description, imageUrl } = extractMetaTags(html);
-          const resolvedImageUrl = resolveImageUrl(imageUrl, url);
-
-          return {
-            url,
-            title: title || new URL(url).hostname,
-            description: description || "",
-            imageUrl: resolvedImageUrl,
-          } as LinkMetadata;
-        } catch (fetchError) {
-          clearTimeout(timeoutId);
-
-          if (fetchError instanceof Error && fetchError.name === "AbortError") {
-            throw new TimeoutError("Request timed out", 10000);
-          }
-
-          throw fetchError;
-        }
-      }, correlationId);
-
-      logInfo(
-        "fetch-link-metadata",
-        "Metadata extracted successfully",
-        correlationId,
-        {
-          hasTitle: !!result.title,
-          hasDescription: !!result.description,
-          hasImage: !!result.imageUrl,
-        },
-      );
-
-      // Use cached response - link metadata is stable for the same URL
-      return createCachedSuccessResponse(result, event, {
-        cacheConfig: CachePresets.LINK_METADATA,
-        correlationId,
-      });
-    } catch (apiError) {
-      if (apiError instanceof TimeoutError) {
-        logWarning("fetch-link-metadata", "Request timed out", correlationId, {
-          url,
-        });
-        return createTimeoutError("URL fetch", event, correlationId);
-      }
-
-      if (apiError instanceof MaxRetriesExceededError) {
-        logError("fetch-link-metadata", apiError, correlationId, {
-          url,
-          attempts: apiError.attempts,
-        });
-        return createExternalApiError(
-          "URL Fetch",
-          `Failed after ${apiError.attempts} attempts`,
-          event,
-          correlationId,
-        );
-      }
-
-      throw apiError;
-    }
-  } catch (error) {
-    logError("fetch-link-metadata", error, correlationId);
-    return createInternalError(error, event, correlationId);
+    throw apiError;
   }
-};
+});

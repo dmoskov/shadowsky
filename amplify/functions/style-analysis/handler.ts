@@ -7,6 +7,7 @@
 
 import { createAnthropicHandler, truncateText } from '../shared/handler-factory';
 import { MODELS } from '../shared/model-config';
+import { StyleAnalysisResponseSchema } from '../shared/schemas';
 
 interface RequestBody {
   currentText?: string;
@@ -78,4 +79,5 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
 5. Start directly with { and end with }`,
     };
   },
+  responseSchema: StyleAnalysisResponseSchema,
 });

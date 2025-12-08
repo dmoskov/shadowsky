@@ -7,6 +7,7 @@
 
 import { createAnthropicHandler, truncateText } from '../shared/handler-factory';
 import { MODELS } from '../shared/model-config';
+import { WritingFeedbackResponseSchema } from '../shared/schemas';
 
 interface RequestBody {
   text?: string;
@@ -55,4 +56,5 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
 5. Start directly with { and end with }`,
     };
   },
+  responseSchema: WritingFeedbackResponseSchema,
 });

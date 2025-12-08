@@ -209,14 +209,6 @@ interface Embed {
   cid?: string;
 }
 
-interface FeedItemWithMeta {
-  post: Post;
-  reply?: { root: Post; parent: Post };
-  reason?: { $type: string; by: { did: string; handle: string; displayName?: string }; indexedAt?: string };
-  _pageIndex: number;
-  _itemIndex: number;
-}
-
 interface ApiError {
   message?: string;
   status?: number;
@@ -790,7 +782,8 @@ export const Home: React.FC<HomeProps> = React.memo(
 
     // Memoize post rendering to prevent unnecessary re-renders
     const PostItem = React.memo(
-      ({ item, index }: { item: FeedItemWithMeta; index: number }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ({ item, index }: { item: any; index: number }) => {
         const post = item.post;
         const isFocused = focusedPostIndex === index;
 
@@ -849,10 +842,10 @@ export const Home: React.FC<HomeProps> = React.memo(
                       className="cursor-pointer hover:underline"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/profile/${item.reason.by.handle}`);
+                        navigate(`/profile/${item.reason?.by.handle}`);
                       }}
                     >
-                      {item.reason.by.displayName || item.reason.by.handle}
+                      {item.reason?.by.displayName || item.reason?.by.handle}
                     </span>
                   </ProfileHoverCard>{" "}
                   reposted
@@ -885,13 +878,13 @@ export const Home: React.FC<HomeProps> = React.memo(
                           onClick={(e) => {
                             e.stopPropagation();
                             // Navigate to parent post
-                            const parentPost = item.reply.parent;
+                            const parentPost = item.reply?.parent;
                             if (parentPost) {
                               handlePostClick(parentPost);
                             }
                           }}
                         >
-                          @{item.reply.parent.author?.handle || "unknown"}
+                          @{item.reply?.parent.author?.handle || "unknown"}
                         </button>
                       </ProfileHoverCard>
                     </span>
@@ -1017,7 +1010,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                 >
                   <RichText
                     text={post.record.text}
-                    facets={post.record.facets}
+                    facets={post.record.facets as Parameters<typeof RichText>[0]["facets"]}
                   />
                 </div>
 
@@ -1025,7 +1018,7 @@ export const Home: React.FC<HomeProps> = React.memo(
 
                 {/* Post Action Bar */}
                 <PostActionBar
-                  post={post}
+                  post={post as unknown as AppBskyFeedDefs.PostView}
                   onReply={() => {
                     // Open thread modal with reply focus
                     setSelectedPost(post);
@@ -1179,7 +1172,7 @@ export const Home: React.FC<HomeProps> = React.memo(
           const postView = {
             ...post,
             indexedAt: new Date().toISOString(),
-          } as AppBskyFeedDefs.PostView;
+          } as unknown as AppBskyFeedDefs.PostView;
 
           // Use the hook's toggleBookmark which updates the BookmarkStore
           toggleBookmark(postView);
@@ -1511,12 +1504,13 @@ export const Home: React.FC<HomeProps> = React.memo(
           };
 
           // Determine grid layout based on image count
+          const images = embed.images || [];
           const gridClass =
-            embed.images.length === 1
+            images.length === 1
               ? "grid-cols-1"
-              : embed.images.length === 2
+              : images.length === 2
                 ? "grid-cols-2"
-                : embed.images.length === 3
+                : images.length === 3
                   ? "grid-cols-3"
                   : "grid-cols-2";
 
@@ -1620,24 +1614,22 @@ export const Home: React.FC<HomeProps> = React.memo(
         }
 
         if (embed.$type === "app.bsky.embed.external#view") {
+          const external = embed.external;
+          if (!external) return null;
           return (
             <div
               className="mt-2 cursor-pointer rounded-lg border p-2.5 transition-opacity hover:opacity-90"
               style={{ borderColor: "var(--bsky-border-primary)" }}
               onClick={(e) => {
                 e.stopPropagation();
-                if (embed.external.uri) {
-                  window.open(
-                    embed.external.uri,
-                    "_blank",
-                    "noopener,noreferrer",
-                  );
+                if (external.uri) {
+                  window.open(external.uri, "_blank", "noopener,noreferrer");
                 }
               }}
             >
-              {embed.external.thumb && (
+              {external.thumb && (
                 <img
-                  src={proxifyBskyImage(embed.external.thumb)}
+                  src={proxifyBskyImage(external.thumb)}
                   alt=""
                   className="mb-2 h-auto w-full rounded object-cover"
                   style={{
@@ -1650,13 +1642,13 @@ export const Home: React.FC<HomeProps> = React.memo(
                 className="text-sm font-semibold"
                 style={{ color: "var(--bsky-text-primary)" }}
               >
-                {embed.external.title}
+                {external.title}
               </div>
               <div
                 className="mt-1 text-xs"
                 style={{ color: "var(--bsky-text-secondary)" }}
               >
-                {embed.external.description}
+                {external.description}
               </div>
             </div>
           );
@@ -1786,7 +1778,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                   >
                     <RichText
                       text={quotedPost.value?.text || ""}
-                      facets={quotedPost.value?.facets}
+                      facets={quotedPost.value?.facets as Parameters<typeof RichText>[0]["facets"]}
                     />
                   </div>
                   {quotedPost.embeds?.[0] &&
