@@ -10,6 +10,7 @@ import {
   Hash,
   Heart,
   Loader,
+  type LucideIcon,
   MessageCircle,
   Repeat2,
   Reply,
@@ -77,6 +78,7 @@ type FeedType =
 interface Post {
   uri: string;
   cid: string;
+  indexedAt?: string;
   author: {
     did: string;
     handle: string;
@@ -86,12 +88,12 @@ interface Post {
   record: {
     text: string;
     createdAt: string;
-    embed?: any;
+    embed?: unknown;
   };
-  embed?: any;
-  replyCount: number;
-  repostCount: number;
-  likeCount: number;
+  embed?: unknown;
+  replyCount?: number;
+  repostCount?: number;
+  likeCount?: number;
   viewer?: {
     like?: string;
     repost?: string;
@@ -125,12 +127,49 @@ interface FeedGenerator {
   };
 }
 
+interface FeedOption {
+  type: FeedType;
+  label: string;
+  icon: LucideIcon;
+  uri: string;
+  isDefault?: boolean;
+  pinned?: boolean;
+  generator?: FeedGenerator;
+}
+
+interface SavedFeed {
+  value: string;
+  pinned?: boolean;
+  type: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type FeedPageItem = any;
+
+interface FeedPage {
+  feed: FeedPageItem[];
+  cursor?: string;
+}
+
+interface FeedQueryData {
+  pages: FeedPage[];
+  pageParams: (string | undefined)[];
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type FeedItemWithMeta = any;
+
+interface ApiError {
+  message?: string;
+  status?: number;
+}
+
 interface HomeProps {
   initialFeedUri?: string;
   isFocused?: boolean;
   columnId?: string;
   onClose?: () => void;
-  onFeedChange?: (feed: string, label: string, feedOptions: any[]) => void;
+  onFeedChange?: (feed: string, label: string, feedOptions: FeedOption[]) => void;
   onRefreshRequest?: number;
   showFeedDiscovery?: boolean;
   onCloseFeedDiscovery?: () => void;
@@ -192,6 +231,7 @@ export const Home: React.FC<HomeProps> = React.memo(
           columnService.updateColumnFeedPreference(columnId, initialFeedUri);
         }
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally not including selectedFeed to avoid infinite loop
     }, [initialFeedUri, columnId]);
 
     // Stability-focused caching: warm up cache for instant first load
@@ -325,7 +365,7 @@ export const Home: React.FC<HomeProps> = React.memo(
       ];
 
       // Add pinned feeds first, then other saved feeds
-      const savedFeeds: any[] = [];
+      const savedFeeds: FeedOption[] = [];
       if (userPrefs?.savedFeeds && feedGenerators) {
         const pinnedFeeds = userPrefs.savedFeeds.filter(
           (feed) => feed.pinned && feed.type === "feed",
@@ -334,7 +374,7 @@ export const Home: React.FC<HomeProps> = React.memo(
           (feed) => !feed.pinned && feed.type === "feed",
         );
 
-        const addFeedOption = (savedFeed: any) => {
+        const addFeedOption = (savedFeed: SavedFeed) => {
           const generator = feedGenerators.find(
             (g: FeedGenerator) => g.uri === savedFeed.value,
           );
@@ -523,7 +563,8 @@ export const Home: React.FC<HomeProps> = React.memo(
           ) {
             cacheFeedItems(response.data.feed);
           }
-        } catch (error: any) {
+        } catch (err: unknown) {
+          const error = err as ApiError;
           debug.error(`Failed to fetch feed ${selectedFeed}:`, error);
 
           // If fetch failed and we're possibly offline, try cache
@@ -586,7 +627,7 @@ export const Home: React.FC<HomeProps> = React.memo(
             throw new Error("You do not have permission to view this feed.");
           } else if (error?.status === 404) {
             throw new Error("Feed not found. It may have been deleted.");
-          } else if (error?.status >= 500) {
+          } else if (error?.status && error.status >= 500) {
             throw new Error("Server error. Please try again later.");
           } else {
             throw new Error(
@@ -641,7 +682,7 @@ export const Home: React.FC<HomeProps> = React.memo(
       if (!data?.pages) return [];
       return data.pages.flatMap((page, pageIndex) =>
         page.feed
-          .filter((item: any) => {
+          .filter((item) => {
             const post = item.post;
             // Filter out hidden posts
             if (isPostHidden(post.uri)) return false;
@@ -653,7 +694,7 @@ export const Home: React.FC<HomeProps> = React.memo(
             if (isThreadMuted(post.uri)) return false;
             return true;
           })
-          .map((item: any, itemIndex: number) => ({
+          .map((item, itemIndex) => ({
             ...item,
             _pageIndex: pageIndex,
             _itemIndex: itemIndex,
@@ -675,20 +716,23 @@ export const Home: React.FC<HomeProps> = React.memo(
     React.useEffect(() => {
       if (data?.pages && data.pages.length > MOBILE_CONFIG.MAX_PAGES) {
         // Remove oldest pages from cache
-        queryClient.setQueryData(["timeline", selectedFeed], (oldData: any) => {
-          if (!oldData) return oldData;
-          return {
-            ...oldData,
-            pages: oldData.pages.slice(-MOBILE_CONFIG.MAX_PAGES),
-            pageParams: oldData.pageParams.slice(-MOBILE_CONFIG.MAX_PAGES),
-          };
-        });
+        queryClient.setQueryData(
+          ["timeline", selectedFeed],
+          (oldData: FeedQueryData | undefined) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              pages: oldData.pages.slice(-MOBILE_CONFIG.MAX_PAGES),
+              pageParams: oldData.pageParams.slice(-MOBILE_CONFIG.MAX_PAGES),
+            };
+          },
+        );
       }
     }, [data?.pages, queryClient, selectedFeed]);
 
     // Memoize post rendering to prevent unnecessary re-renders
     const PostItem = React.memo(
-      ({ item, index }: { item: any; index: number }) => {
+      ({ item, index }: { item: FeedItemWithMeta; index: number }) => {
         const post = item.post;
         const isFocused = focusedPostIndex === index;
 
@@ -992,10 +1036,11 @@ export const Home: React.FC<HomeProps> = React.memo(
     // Save scroll position on unmount
     useEffect(() => {
       const currentFeed = selectedFeed;
+      const scrollPositions = scrollPositionRef.current;
       return () => {
         // Save current scroll position when component unmounts
         if (currentFeed) {
-          scrollPositionRef.current[currentFeed] = window.scrollY;
+          scrollPositions[currentFeed] = window.scrollY;
         }
       };
     }, [selectedFeed]);
@@ -1763,13 +1808,7 @@ export const Home: React.FC<HomeProps> = React.memo(
 
         return null;
       },
-      [
-        galleryImages,
-        generatedAltTexts,
-        generatingAltText,
-        showAltText,
-        handleGenerateAltText,
-      ],
+      [generatedAltTexts, generatingAltText, showAltText, handleGenerateAltText],
     );
 
     if (isLoading) {

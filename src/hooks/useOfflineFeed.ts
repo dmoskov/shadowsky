@@ -13,6 +13,7 @@
  * - Background refresh on visibility change
  */
 
+import type { BskyAgent } from "@atproto/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -20,6 +21,36 @@ import {
   type OfflineFeedItem,
 } from "../services/offline-storage-db";
 import { createLogger } from "../utils/logger";
+
+/**
+ * Internal feed item type used for transformations.
+ * Compatible with both API responses and our offline storage format.
+ */
+interface FeedItem {
+  post: {
+    uri: string;
+    cid: string;
+    indexedAt?: string;
+    author: {
+      did: string;
+      handle: string;
+      displayName?: string;
+      avatar?: string;
+    };
+    record?: {
+      text?: string;
+      createdAt?: string;
+      embed?: unknown;
+      facets?: unknown[];
+    };
+    replyCount?: number;
+    repostCount?: number;
+    likeCount?: number;
+    viewer?: { like?: string; repost?: string; [key: string]: unknown };
+  };
+  _fromOfflineCache?: boolean;
+  _cachedAt?: number;
+}
 
 const logger = createLogger("useOfflineFeed");
 
@@ -40,7 +71,7 @@ export interface OfflineFeedStatus {
  * Transform API feed item to offline storage format
  */
 function transformToOfflineItem(
-  item: any,
+  item: FeedItem,
   feedType: "timeline" | "author" | "list" = "timeline",
 ): Omit<OfflineFeedItem, "_offlineCachedAt"> {
   const post = item.post || item;
@@ -70,7 +101,7 @@ function transformToOfflineItem(
 /**
  * Transform offline storage item back to feed item format
  */
-function transformFromOfflineItem(item: OfflineFeedItem): any {
+function transformFromOfflineItem(item: OfflineFeedItem): FeedItem {
   return {
     post: {
       uri: item.uri,
@@ -158,14 +189,14 @@ export function useFeedCaching(
   feedType: "timeline" | "author" | "list" = "timeline",
 ) {
   const cacheFeedItems = useCallback(
-    async (items: any[]) => {
+    async (items: unknown[]) => {
       if (!items || items.length === 0) return;
 
       try {
         await offlineStorageDB.init();
 
         const offlineItems = items.map((item) =>
-          transformToOfflineItem(item, feedType),
+          transformToOfflineItem(item as FeedItem, feedType),
         );
 
         await offlineStorageDB.saveFeedItems(offlineItems, feedType);
@@ -264,7 +295,7 @@ export function useOfflineFirstFeed<T>({
 
       // Cache the results
       if (data && typeof data === "object" && "feed" in data) {
-        const feedData = data as { feed: any[] };
+        const feedData = data as { feed: unknown[] };
         cacheFeedItems(feedData.feed);
       }
 
@@ -303,7 +334,7 @@ export function useOfflineFirstFeed<T>({
  * Utility to prefetch and cache feed data for offline use
  */
 export async function prefetchFeedForOffline(
-  agent: any,
+  agent: BskyAgent,
   feedType: "timeline" | "author" | "list" = "timeline",
   limit = 50,
 ): Promise<void> {
@@ -327,8 +358,8 @@ export async function prefetchFeedForOffline(
 
     if (response?.data?.feed) {
       await offlineStorageDB.init();
-      const offlineItems = response.data.feed.map((item: any) =>
-        transformToOfflineItem(item, feedType),
+      const offlineItems = response.data.feed.map((item) =>
+        transformToOfflineItem(item as unknown as FeedItem, feedType),
       );
       await offlineStorageDB.saveFeedItems(offlineItems, feedType);
       logger.info(`Prefetched ${offlineItems.length} items for offline use`);
