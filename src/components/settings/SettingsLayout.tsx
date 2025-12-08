@@ -4,6 +4,7 @@ import {
   Bell,
   Database,
   HardDrive,
+  HelpCircle,
   History,
   Palette,
   PenTool,
@@ -176,6 +177,18 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
             label: "Performance",
             icon: Activity,
             path: "/settings/performance",
+          },
+        ],
+      },
+      {
+        id: "support",
+        label: "Support",
+        items: [
+          {
+            id: "help",
+            label: "Help & Documentation",
+            icon: HelpCircle,
+            path: "/settings/help",
           },
         ],
       },

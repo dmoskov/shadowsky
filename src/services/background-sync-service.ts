@@ -56,6 +56,7 @@ export const SYNC_TAGS = {
   TIMELINE_REFRESH: "timeline-refresh",
   NOTIFICATION_SYNC: "notification-sync",
   DM_SYNC: "dm-sync",
+  POST_SYNC: "post-sync",
 } as const;
 
 export type SyncTag = (typeof SYNC_TAGS)[keyof typeof SYNC_TAGS];

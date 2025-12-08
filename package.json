@@ -43,6 +43,7 @@
     "dexie": "^4.2.1",
     "dompurify": "3.3.0",
     "hls.js": "^1.6.7",
+    "html2canvas": "^1.4.1",
     "idb": "^8.0.3",
     "lucide-react": "^0.294.0",
     "react": "^18.2.0",

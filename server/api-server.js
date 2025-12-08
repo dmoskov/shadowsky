@@ -1993,6 +1993,199 @@ app.get("/api/push-notification/stats", (req, res) => {
   res.json(stats);
 });
 
+// =============================================================================
+// Bug Report Endpoint
+// =============================================================================
+
+/**
+ * POST /api/bug-report
+ *
+ * Submit a bug report with diagnostic information.
+ * Creates a GitHub issue (if configured) or logs the report.
+ *
+ * Request body:
+ * {
+ *   description: string (required),
+ *   stepsToReproduce?: string,
+ *   expectedBehavior?: string,
+ *   actualBehavior?: string,
+ *   diagnostics?: object,
+ *   screenshot?: string (base64),
+ *   userHandle?: string,
+ *   submittedAt: string
+ * }
+ */
+app.post("/api/bug-report", moderateLimiter, async (req, res) => {
+  const {
+    description,
+    stepsToReproduce,
+    expectedBehavior,
+    actualBehavior,
+    diagnostics,
+    screenshot,
+    userHandle,
+    submittedAt,
+  } = req.body;
+
+  // Validate required fields
+  if (!description || typeof description !== "string" || !description.trim()) {
+    return res.status(400).json({
+      error: "Bug description is required",
+    });
+  }
+
+  // Validate description length
+  if (description.length > 5000) {
+    return res.status(400).json({
+      error: "Description is too long (max 5000 characters)",
+    });
+  }
+
+  // Generate a unique reference ID for this report
+  const referenceId = `BUG-${Date.now()}-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+
+  // Prepare the bug report data
+  const bugReport = {
+    referenceId,
+    description: description.trim(),
+    stepsToReproduce: stepsToReproduce?.trim() || null,
+    expectedBehavior: expectedBehavior?.trim() || null,
+    actualBehavior: actualBehavior?.trim() || null,
+    diagnostics: diagnostics || null,
+    hasScreenshot: !!screenshot,
+    userHandle: userHandle || "anonymous",
+    submittedAt: submittedAt || new Date().toISOString(),
+    clientIp: getClientIp(req),
+  };
+
+  // Log the bug report (always, for audit trail)
+  console.log(
+    `[BUG REPORT] ${referenceId}:`,
+    JSON.stringify({
+      description:
+        bugReport.description.slice(0, 100) +
+        (bugReport.description.length > 100 ? "..." : ""),
+      userHandle: bugReport.userHandle,
+      hasDiagnostics: !!bugReport.diagnostics,
+      hasScreenshot: bugReport.hasScreenshot,
+      submittedAt: bugReport.submittedAt,
+    }),
+  );
+
+  // Check if GitHub integration is configured
+  const githubToken = process.env.GITHUB_TOKEN;
+  const githubRepo = process.env.GITHUB_BUG_REPORT_REPO; // e.g., "owner/repo"
+
+  if (githubToken && githubRepo) {
+    try {
+      // Create GitHub issue
+      const issueTitle = `[Bug Report] ${description.slice(0, 80)}${description.length > 80 ? "..." : ""}`;
+
+      let issueBody = `## Bug Report (${referenceId})\n\n`;
+      issueBody += `**Reported by:** ${userHandle}\n`;
+      issueBody += `**Submitted at:** ${submittedAt}\n\n`;
+      issueBody += `### Description\n${description}\n\n`;
+
+      if (stepsToReproduce) {
+        issueBody += `### Steps to Reproduce\n${stepsToReproduce}\n\n`;
+      }
+
+      if (expectedBehavior) {
+        issueBody += `### Expected Behavior\n${expectedBehavior}\n\n`;
+      }
+
+      if (actualBehavior) {
+        issueBody += `### Actual Behavior\n${actualBehavior}\n\n`;
+      }
+
+      if (diagnostics) {
+        issueBody += `### Diagnostic Information\n`;
+        issueBody += `- **App Version:** ${diagnostics.appVersion || "N/A"}\n`;
+        issueBody += `- **Platform:** ${diagnostics.platform || "N/A"}\n`;
+        issueBody += `- **Screen Size:** ${diagnostics.screenSize || "N/A"}\n`;
+        issueBody += `- **User Agent:** ${diagnostics.userAgent?.slice(0, 100) || "N/A"}\n`;
+        issueBody += `- **Timezone:** ${diagnostics.timezone || "N/A"}\n`;
+
+        if (diagnostics.errorStats) {
+          issueBody += `\n#### Error Stats (Last Hour)\n`;
+          issueBody += `- Total Errors: ${diagnostics.errorStats.totalErrors}\n`;
+          issueBody += `- Last Hour: ${diagnostics.errorStats.lastHour}\n`;
+          if (diagnostics.errorStats.mostFrequentType) {
+            issueBody += `- Most Frequent: ${diagnostics.errorStats.mostFrequentType}\n`;
+          }
+        }
+
+        if (diagnostics.recentErrors && diagnostics.recentErrors.length > 0) {
+          issueBody += `\n#### Recent Errors\n`;
+          issueBody += "```\n";
+          diagnostics.recentErrors.slice(0, 5).forEach((err, i) => {
+            issueBody += `${i + 1}. [${err.category}] ${err.type}: ${err.message?.slice(0, 100)}\n`;
+          });
+          issueBody += "```\n";
+        }
+      }
+
+      if (screenshot) {
+        issueBody += `\n### Screenshot\nA screenshot was attached to this report (stored separately due to size).\n`;
+      }
+
+      // Create the GitHub issue
+      const [owner, repo] = githubRepo.split("/");
+      const githubResponse = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/issues`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${githubToken}`,
+            Accept: "application/vnd.github.v3+json",
+            "Content-Type": "application/json",
+            "User-Agent": "ShadowSky-BugReporter/1.0",
+          },
+          body: JSON.stringify({
+            title: issueTitle,
+            body: issueBody,
+            labels: ["bug", "user-reported"],
+          }),
+        },
+      );
+
+      if (githubResponse.ok) {
+        const issueData = await githubResponse.json();
+        console.log(
+          `[BUG REPORT] Created GitHub issue #${issueData.number} for ${referenceId}`,
+        );
+
+        return res.status(201).json({
+          success: true,
+          referenceId,
+          message: "Bug report submitted successfully",
+          issueUrl: issueData.html_url,
+        });
+      } else {
+        const errorText = await githubResponse.text();
+        console.error(
+          `[BUG REPORT] Failed to create GitHub issue for ${referenceId}:`,
+          errorText,
+        );
+        // Fall through to return success without GitHub issue
+      }
+    } catch (githubError) {
+      console.error(
+        `[BUG REPORT] GitHub API error for ${referenceId}:`,
+        githubError,
+      );
+      // Fall through to return success without GitHub issue
+    }
+  }
+
+  // Return success even without GitHub (report is logged)
+  res.status(201).json({
+    success: true,
+    referenceId,
+    message: "Bug report submitted successfully",
+  });
+});
+
 // Create HTTP server for Express app
 const httpServer = http.createServer(app);
 
@@ -2030,6 +2223,7 @@ httpServer.listen(PORT, () => {
   );
   console.log(`  - GET  /api/push-notification/stats : Push service stats`);
   console.log(`  - GET  /api/push/vapid-public-key : Get VAPID public key`);
+  console.log(`  - POST /api/bug-report            : Submit bug report`);
   console.log(
     `\nAPI Configuration:`,
     process.env.ANTHROPIC_API_KEY

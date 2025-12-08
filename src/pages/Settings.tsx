@@ -6,6 +6,7 @@ import { AppearanceSettings } from "../components/settings/AppearanceSettings";
 import { ComposerSettings } from "../components/settings/ComposerSettings";
 import { ContentModerationSettings } from "../components/settings/ContentModerationSettings";
 import { DataSettings } from "../components/settings/DataSettings";
+import { HelpSettings } from "../components/settings/HelpSettings";
 import { MediaCacheSettings } from "../components/settings/MediaCacheSettings";
 import { ModerationHistorySettings } from "../components/settings/ModerationHistorySettings";
 import { NotificationSettings } from "../components/settings/NotificationSettings";
@@ -42,6 +43,8 @@ export const Settings = () => {
         return <ModerationHistorySettings />;
       case "performance":
         return <PerformanceSettings />;
+      case "help":
+        return <HelpSettings />;
       default:
         // Default to account settings
         return <AccountSettings />;

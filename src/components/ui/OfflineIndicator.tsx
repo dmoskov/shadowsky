@@ -482,7 +482,7 @@ export function useOnlineStatus(): {
 }
 
 /**
- * Connected version of OfflineIndicator that integrates with the mutation queue
+ * Connected version of OfflineIndicator that integrates with the mutation queue and post queue
  * This component should be used in the App to show offline status with pending action count
  */
 export const ConnectedOfflineIndicator: React.FC<{
@@ -491,35 +491,54 @@ export const ConnectedOfflineIndicator: React.FC<{
 }> = ({ className, position = "top" }) => {
   // We'll connect to mutation queue via a callback pattern
   // The parent component can pass these values or they default to 0
-  const [pendingCount, setPendingCount] = useState(0);
+  const [mutationPendingCount, setMutationPendingCount] = useState(0);
+  const [postPendingCount, setPostPendingCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
 
   // Listen for custom events from the mutation queue
   useEffect(() => {
-    const handleQueueUpdate = (event: CustomEvent) => {
+    const handleMutationQueueUpdate = (event: CustomEvent) => {
       const { pendingCount: count, isProcessing } = event.detail;
-      setPendingCount(count);
-      setIsSyncing(isProcessing);
+      setMutationPendingCount(count);
+      setIsSyncing((prev) => prev || isProcessing);
+    };
+
+    const handlePostQueueUpdate = (event: CustomEvent) => {
+      const { pendingCount: count, isProcessing } = event.detail;
+      setPostPendingCount(count);
+      setIsSyncing((prev) => prev || isProcessing);
     };
 
     window.addEventListener(
       "mutation-queue-update",
-      handleQueueUpdate as EventListener,
+      handleMutationQueueUpdate as EventListener,
+    );
+
+    window.addEventListener(
+      "offline-post-queue-update",
+      handlePostQueueUpdate as EventListener,
     );
 
     return () => {
       window.removeEventListener(
         "mutation-queue-update",
-        handleQueueUpdate as EventListener,
+        handleMutationQueueUpdate as EventListener,
+      );
+      window.removeEventListener(
+        "offline-post-queue-update",
+        handlePostQueueUpdate as EventListener,
       );
     };
   }, []);
+
+  // Combine pending counts from both queues
+  const totalPendingCount = mutationPendingCount + postPendingCount;
 
   return (
     <OfflineIndicator
       className={className}
       position={position}
-      pendingActionCount={pendingCount}
+      pendingActionCount={totalPendingCount}
       isSyncing={isSyncing}
     />
   );

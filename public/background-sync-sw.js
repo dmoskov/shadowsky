@@ -15,6 +15,7 @@ const SYNC_TAGS = {
   TIMELINE_REFRESH: "timeline-refresh",
   NOTIFICATION_SYNC: "notification-sync",
   DM_SYNC: "dm-sync",
+  POST_SYNC: "post-sync",
 };
 
 // API endpoints for fetching data
@@ -29,6 +30,10 @@ const CACHE_NAMES = {
   BACKGROUND_TIMELINE: "background-timeline-cache",
   BACKGROUND_NOTIFICATIONS: "background-notifications-cache",
 };
+
+// Offline Post Queue DB constants (must match src/services/offline-post-queue-db.ts)
+const POST_QUEUE_DB_NAME = "BskyOfflinePostQueue";
+const POST_QUEUE_STORE_NAME = "posts";
 
 // IndexedDB for storing fetched data
 const DB_NAME = "BackgroundSyncDB";
@@ -78,6 +83,8 @@ self.addEventListener("sync", (event) => {
     event.waitUntil(handleTimelineSync());
   } else if (event.tag === SYNC_TAGS.NOTIFICATION_SYNC) {
     event.waitUntil(handleNotificationSync());
+  } else if (event.tag === SYNC_TAGS.POST_SYNC) {
+    event.waitUntil(handlePostSync());
   }
 });
 
@@ -101,6 +108,8 @@ self.addEventListener("message", (event) => {
         event.waitUntil(handleTimelineSync());
       } else if (payload?.tag === SYNC_TAGS.NOTIFICATION_SYNC) {
         event.waitUntil(handleNotificationSync());
+      } else if (payload?.tag === SYNC_TAGS.POST_SYNC) {
+        event.waitUntil(handlePostSync());
       }
       break;
 
@@ -283,6 +292,504 @@ async function handleDMSync() {
   console.log("[Background Sync SW] DM sync not implemented in background");
   // DMs are sensitive and should not be synced in background
   // This is a placeholder for future implementation if needed
+}
+
+/**
+ * Handle offline post sync - processes queued posts when connectivity returns
+ */
+async function handlePostSync() {
+  console.log("[Background Sync SW] Starting post sync");
+
+  try {
+    // Get stored credentials
+    const credentials = await getStoredCredentials();
+    if (!credentials) {
+      console.log(
+        "[Background Sync SW] No credentials, skipping post sync",
+      );
+      return notifyClients({
+        type: "background-sync:post-sync-completed",
+        payload: {
+          success: false,
+          timestamp: Date.now(),
+          postsProcessed: 0,
+          error: "No credentials available",
+        },
+      });
+    }
+
+    // Get pending posts from the queue
+    const pendingPosts = await getPendingPostsFromQueue();
+
+    if (pendingPosts.length === 0) {
+      console.log("[Background Sync SW] No pending posts to sync");
+      return notifyClients({
+        type: "background-sync:post-sync-completed",
+        payload: {
+          success: true,
+          timestamp: Date.now(),
+          postsProcessed: 0,
+        },
+      });
+    }
+
+    console.log(`[Background Sync SW] Processing ${pendingPosts.length} posts`);
+
+    let successCount = 0;
+    let failCount = 0;
+    const results = [];
+
+    for (const post of pendingPosts) {
+      try {
+        // Mark as processing
+        await updatePostStatus(post.id, "processing");
+
+        // Post it
+        const result = await submitPost(post, credentials);
+
+        // Remove from queue on success
+        await removePostFromQueue(post.id);
+        successCount++;
+        results.push({ id: post.id, success: true, result });
+
+        // Notify clients of individual success
+        await notifyClients({
+          type: "background-sync:post-submitted",
+          payload: {
+            id: post.id,
+            type: post.type,
+            success: true,
+          },
+        });
+      } catch (error) {
+        failCount++;
+        const errorMessage = error.message || "Unknown error";
+
+        // Check if this is a recoverable error
+        const isRecoverable = isRecoverableError(error);
+        const maxRetries = 3;
+
+        if (isRecoverable && post.retryCount < maxRetries) {
+          // Keep in queue for retry
+          await updatePostInQueue(post.id, {
+            status: "pending",
+            retryCount: post.retryCount + 1,
+            lastError: errorMessage,
+          });
+        } else {
+          // Mark as failed
+          await updatePostInQueue(post.id, {
+            status: "failed",
+            lastError: errorMessage,
+          });
+        }
+
+        results.push({ id: post.id, success: false, error: errorMessage });
+
+        // Notify clients of individual failure
+        await notifyClients({
+          type: "background-sync:post-failed",
+          payload: {
+            id: post.id,
+            type: post.type,
+            error: errorMessage,
+            canRetry: isRecoverable && post.retryCount < maxRetries,
+          },
+        });
+      }
+    }
+
+    // Notify completion
+    await notifyClients({
+      type: "background-sync:post-sync-completed",
+      payload: {
+        success: failCount === 0,
+        timestamp: Date.now(),
+        postsProcessed: successCount,
+        postsFailed: failCount,
+        results,
+      },
+    });
+
+    console.log(
+      `[Background Sync SW] Post sync completed: ${successCount} succeeded, ${failCount} failed`,
+    );
+  } catch (error) {
+    console.error("[Background Sync SW] Post sync failed:", error);
+
+    await notifyClients({
+      type: "background-sync:error",
+      payload: {
+        syncTag: SYNC_TAGS.POST_SYNC,
+        message: error.message,
+      },
+    });
+  }
+}
+
+/**
+ * Check if an error is recoverable (network/temporary issue)
+ */
+function isRecoverableError(error) {
+  if (!navigator.onLine) return true;
+
+  const message = (error.message || "").toLowerCase();
+  const recoverableIndicators = [
+    "network",
+    "fetch",
+    "timeout",
+    "ECONNREFUSED",
+    "ENOTFOUND",
+    "offline",
+    "503",
+    "429", // rate limit
+    "502",
+    "504",
+  ];
+
+  return recoverableIndicators.some((indicator) =>
+    message.includes(indicator.toLowerCase()),
+  );
+}
+
+/**
+ * Get pending posts from the offline queue database
+ */
+async function getPendingPostsFromQueue() {
+  try {
+    const db = await openPostQueueDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(POST_QUEUE_STORE_NAME, "readonly");
+      const store = tx.objectStore(POST_QUEUE_STORE_NAME);
+      const index = store.index("status");
+      const request = index.getAll(IDBKeyRange.only("pending"));
+
+      request.onsuccess = () => {
+        const posts = request.result || [];
+        // Sort by creation time
+        posts.sort((a, b) => a.createdAt - b.createdAt);
+        resolve(posts);
+      };
+      request.onerror = () => reject(request.error);
+    });
+  } catch (error) {
+    console.error("[Background Sync SW] Failed to get pending posts:", error);
+    return [];
+  }
+}
+
+/**
+ * Update post status in the queue
+ */
+async function updatePostStatus(id, status) {
+  return updatePostInQueue(id, { status });
+}
+
+/**
+ * Update a post in the queue
+ */
+async function updatePostInQueue(id, updates) {
+  try {
+    const db = await openPostQueueDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(POST_QUEUE_STORE_NAME, "readwrite");
+      const store = tx.objectStore(POST_QUEUE_STORE_NAME);
+      const getRequest = store.get(id);
+
+      getRequest.onsuccess = () => {
+        const post = getRequest.result;
+        if (!post) {
+          resolve();
+          return;
+        }
+
+        const updated = { ...post, ...updates };
+        const putRequest = store.put(updated);
+        putRequest.onsuccess = () => resolve();
+        putRequest.onerror = () => reject(putRequest.error);
+      };
+      getRequest.onerror = () => reject(getRequest.error);
+    });
+  } catch (error) {
+    console.error("[Background Sync SW] Failed to update post:", error);
+  }
+}
+
+/**
+ * Remove a post from the queue
+ */
+async function removePostFromQueue(id) {
+  try {
+    const db = await openPostQueueDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(POST_QUEUE_STORE_NAME, "readwrite");
+      const store = tx.objectStore(POST_QUEUE_STORE_NAME);
+      const request = store.delete(id);
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  } catch (error) {
+    console.error("[Background Sync SW] Failed to remove post:", error);
+  }
+}
+
+/**
+ * Open the post queue database
+ */
+function openPostQueueDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(POST_QUEUE_DB_NAME, 1);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(POST_QUEUE_STORE_NAME)) {
+        const store = db.createObjectStore(POST_QUEUE_STORE_NAME, {
+          keyPath: "id",
+        });
+        store.createIndex("status", "status", { unique: false });
+        store.createIndex("createdAt", "createdAt", { unique: false });
+        store.createIndex("type", "type", { unique: false });
+      }
+    };
+  });
+}
+
+/**
+ * Submit a post to Bluesky
+ */
+async function submitPost(post, credentials) {
+  const { type, text, replyTo, quotedPost, dmConversationId, facets, labels, langs, threadgate, attachments } = post;
+
+  // Handle DMs differently
+  if (type === "dm" && dmConversationId) {
+    return submitDM(post, credentials);
+  }
+
+  // First, upload any attachments
+  const uploadedAttachments = [];
+  if (attachments && attachments.length > 0) {
+    for (const attachment of attachments) {
+      const blob = await uploadAttachment(attachment, credentials);
+      if (blob) {
+        uploadedAttachments.push({
+          ...attachment,
+          blobRef: blob,
+        });
+      }
+    }
+  }
+
+  // Build the record
+  const record = {
+    $type: "app.bsky.feed.post",
+    text,
+    createdAt: new Date().toISOString(),
+  };
+
+  // Add facets if present
+  if (facets && facets.length > 0) {
+    record.facets = facets;
+  }
+
+  // Add langs if present
+  if (langs && langs.length > 0) {
+    record.langs = langs;
+  }
+
+  // Add labels if present (content warnings)
+  if (labels && labels.length > 0) {
+    record.labels = {
+      $type: "com.atproto.label.defs#selfLabels",
+      values: labels.map(val => ({ val })),
+    };
+  }
+
+  // Add reply reference if this is a reply
+  if (type === "reply" && replyTo) {
+    record.reply = {
+      root: {
+        uri: replyTo.rootUri || replyTo.uri,
+        cid: replyTo.rootCid || replyTo.cid,
+      },
+      parent: {
+        uri: replyTo.uri,
+        cid: replyTo.cid,
+      },
+    };
+  }
+
+  // Add quote reference if this is a quote post
+  if (type === "quote" && quotedPost) {
+    record.embed = {
+      $type: "app.bsky.embed.record",
+      record: {
+        uri: quotedPost.uri,
+        cid: quotedPost.cid,
+      },
+    };
+  }
+
+  // Add images if present (and no quote)
+  if (uploadedAttachments.length > 0 && type !== "quote") {
+    const images = uploadedAttachments
+      .filter(a => a.type === "image")
+      .map(a => ({
+        alt: a.altText || "",
+        image: a.blobRef,
+      }));
+
+    if (images.length > 0) {
+      record.embed = {
+        $type: "app.bsky.embed.images",
+        images,
+      };
+    }
+  }
+
+  // Submit the post
+  const response = await fetch("https://bsky.social/xrpc/com.atproto.repo.createRecord", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${credentials.accessJwt}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      repo: credentials.did,
+      collection: "app.bsky.feed.post",
+      record,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Post submission failed: ${response.status} - ${errorText}`);
+  }
+
+  const result = await response.json();
+
+  // Handle threadgate if present
+  if (threadgate && result.uri) {
+    await createThreadgate(result.uri, result.cid, threadgate, credentials);
+  }
+
+  return result;
+}
+
+/**
+ * Submit a DM
+ */
+async function submitDM(post, credentials) {
+  const { text, dmConversationId } = post;
+
+  const response = await fetch("https://api.bsky.chat/xrpc/chat.bsky.convo.sendMessage", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${credentials.accessJwt}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      convoId: dmConversationId,
+      message: {
+        text,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`DM submission failed: ${response.status} - ${errorText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Upload an attachment (image/video)
+ */
+async function uploadAttachment(attachment, credentials) {
+  try {
+    // Convert base64 back to blob
+    const byteCharacters = atob(attachment.data.split(",")[1] || attachment.data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: attachment.mimeType });
+
+    const response = await fetch("https://bsky.social/xrpc/com.atproto.repo.uploadBlob", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${credentials.accessJwt}`,
+        "Content-Type": attachment.mimeType,
+      },
+      body: blob,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Attachment upload failed: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.blob;
+  } catch (error) {
+    console.error("[Background Sync SW] Failed to upload attachment:", error);
+    return null;
+  }
+}
+
+/**
+ * Create a threadgate for a post
+ */
+async function createThreadgate(postUri, postCid, threadgate, credentials) {
+  try {
+    const rkey = postUri.split("/").pop();
+
+    const allow = [];
+    if (threadgate.allowMentioned) {
+      allow.push({ $type: "app.bsky.feed.threadgate#mentionRule" });
+    }
+    if (threadgate.allowFollowing) {
+      allow.push({ $type: "app.bsky.feed.threadgate#followingRule" });
+    }
+    if (threadgate.allowLists) {
+      for (const listUri of threadgate.allowLists) {
+        allow.push({
+          $type: "app.bsky.feed.threadgate#listRule",
+          list: listUri,
+        });
+      }
+    }
+
+    const response = await fetch("https://bsky.social/xrpc/com.atproto.repo.createRecord", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${credentials.accessJwt}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        repo: credentials.did,
+        collection: "app.bsky.feed.threadgate",
+        rkey,
+        record: {
+          $type: "app.bsky.feed.threadgate",
+          post: postUri,
+          allow,
+          createdAt: new Date().toISOString(),
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      console.warn("[Background Sync SW] Threadgate creation failed:", response.status);
+    }
+  } catch (error) {
+    console.error("[Background Sync SW] Failed to create threadgate:", error);
+  }
 }
 
 /**
