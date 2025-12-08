@@ -8,8 +8,6 @@ import {
   Link,
   List,
   MoreHorizontal,
-  Pin,
-  PinOff,
   Share,
   Trash2,
   UserX,
@@ -23,7 +21,6 @@ import { useModal } from "../contexts/ModalContext";
 import { useModeration } from "../contexts/ModerationContext";
 import { useToast } from "../contexts/ToastContext";
 import { useMenuKeyboardNavigation } from "../hooks/useMenuKeyboardNavigation";
-import { usePinnedPosts } from "../hooks/usePinnedPosts";
 import { generateShareablePostUrl } from "../hooks/usePostDeepLink";
 import { layoutMeasurementService } from "../services/layout-measurement-service";
 import { moderationHistoryDB } from "../services/moderation-history-db";
@@ -75,15 +72,6 @@ export const PostMenu: React.FC<PostMenuProps> = ({
   const isOwnPost = session?.did === post.author.did;
   const postRecord = post.record as any;
   const isThread = postRecord?.reply !== undefined;
-
-  // Pinned posts functionality (only enabled for own posts)
-  const { isPinned, togglePin, canPin, isPinning, isUnpinning, maxPins } =
-    usePinnedPosts({
-      did: session?.did || "",
-      enabled: isOwnPost,
-    });
-
-  const postIsPinned = isOwnPost && isPinned(post.uri);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -368,23 +356,6 @@ export const PostMenu: React.FC<PostMenuProps> = ({
     setShowAddToListModal(true);
   };
 
-  const handleTogglePin = async () => {
-    setIsOpen(false);
-    try {
-      const wasPinned = postIsPinned;
-      await togglePin(post.uri, post.cid);
-      showToast(
-        wasPinned ? "Post unpinned from profile" : "Post pinned to profile",
-        {
-          type: "success",
-          duration: 2000,
-        },
-      );
-    } catch (error) {
-      showToast("Failed to update pin status", { type: "error" });
-    }
-  };
-
   return (
     <>
       <div className={`relative ${className}`} ref={menuRef}>
@@ -622,49 +593,14 @@ export const PostMenu: React.FC<PostMenuProps> = ({
 
                 {/* Options for own posts */}
                 {isOwnPost && (
-                  <>
-                    <button
-                      role="menuitem"
-                      onClick={handleTogglePin}
-                      disabled={
-                        isPinning || isUnpinning || (!postIsPinned && !canPin())
-                      }
-                      aria-disabled={
-                        isPinning || isUnpinning || (!postIsPinned && !canPin())
-                      }
-                      className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:focus-visible:bg-gray-800"
-                      title={
-                        postIsPinned
-                          ? "Unpin from profile"
-                          : !canPin()
-                            ? `Maximum ${maxPins} pinned posts allowed`
-                            : "Pin to profile"
-                      }
-                    >
-                      {postIsPinned ? (
-                        <PinOff className="h-4 w-4" aria-hidden="true" />
-                      ) : (
-                        <Pin className="h-4 w-4" aria-hidden="true" />
-                      )}
-                      {isPinning || isUnpinning
-                        ? "Updating..."
-                        : postIsPinned
-                          ? "Unpin from profile"
-                          : "Pin to profile"}
-                    </button>
-                    <div
-                      className="my-1 border-t border-gray-200 dark:border-gray-700"
-                      role="separator"
-                    />
-                    <button
-                      role="menuitem"
-                      onClick={handleDelete}
-                      className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-red-600 transition-colors hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none dark:text-red-400 dark:hover:bg-red-900/20 dark:focus-visible:bg-red-900/20"
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                      Delete post
-                    </button>
-                  </>
+                  <button
+                    role="menuitem"
+                    onClick={handleDelete}
+                    className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-red-600 transition-colors hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none dark:text-red-400 dark:hover:bg-red-900/20 dark:focus-visible:bg-red-900/20"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    Delete post
+                  </button>
                 )}
               </div>
             </div>,

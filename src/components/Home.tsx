@@ -26,7 +26,6 @@ import { useKeyboardShortcutsContext } from "../contexts/KeyboardShortcutsContex
 import { useModeration } from "../contexts/ModerationContext";
 import { useBookmarks } from "../hooks/useBookmarks";
 import { useIntersectionLoader } from "../hooks/useIntersectionLoader";
-import { useModerationPreferences } from "../hooks/useModerationPreferences";
 import {
   useFeedCacheWarmup,
   useFeedCaching,
@@ -168,7 +167,6 @@ export const Home: React.FC<HomeProps> = React.memo(
     const { toggleBookmark } = useBookmarks();
     const { isPostHidden } = useHiddenPosts();
     const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
-    const { shouldFilterFeedItem } = useModerationPreferences();
     // Offline feed support - caching and status tracking
     const offlineStatus = useOfflineFeedStatus();
     const { cacheFeedItems } = useFeedCaching("timeline");
@@ -646,8 +644,6 @@ export const Home: React.FC<HomeProps> = React.memo(
             if (isUserBlocked(post.author.did)) return false;
             // Filter out muted threads
             if (isThreadMuted(post.uri)) return false;
-            // Apply keyword filters and content preferences
-            if (shouldFilterFeedItem(item).filtered) return false;
             return true;
           })
           .map((item: any, itemIndex: number) => ({
@@ -656,14 +652,7 @@ export const Home: React.FC<HomeProps> = React.memo(
             _itemIndex: itemIndex,
           })),
       );
-    }, [
-      data,
-      isPostHidden,
-      isUserMuted,
-      isUserBlocked,
-      isThreadMuted,
-      shouldFilterFeedItem,
-    ]);
+    }, [data, isPostHidden, isUserMuted, isUserBlocked, isThreadMuted]);
 
     // Use progressive loading instead of full virtualization
     const {

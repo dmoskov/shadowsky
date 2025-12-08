@@ -7,7 +7,6 @@ import {
   Flag,
   List as ListIcon,
   MoreHorizontal,
-  Pin,
   Share2,
   Sparkles,
   UserX,
@@ -28,7 +27,6 @@ import { UserListModal } from "../components/UserListModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
-import { usePinnedPosts } from "../hooks/usePinnedPosts";
 import { useTopPosts } from "../hooks/useTopPosts";
 import { analyzePosts } from "../services/anthropic";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
@@ -64,7 +62,7 @@ interface ProfileData {
   };
 }
 
-type ProfileTab = "posts" | "replies" | "media" | "top" | "pinned";
+type ProfileTab = "posts" | "replies" | "media" | "top";
 
 // Store scroll positions for each profile/tab combination
 const scrollPositions = new Map<string, number>();
@@ -86,10 +84,7 @@ export default function ProfilePage() {
   // Get active tab from URL, default to "posts"
   const tabParam = searchParams.get("tab");
   const activeTab: ProfileTab =
-    tabParam === "replies" ||
-    tabParam === "media" ||
-    tabParam === "top" ||
-    tabParam === "pinned"
+    tabParam === "replies" || tabParam === "media" || tabParam === "top"
       ? tabParam
       : "posts";
 
@@ -225,12 +220,6 @@ export default function ProfilePage() {
     enabled: activeTab === "top" && !!handle,
   });
 
-  // Pinned posts for the profile
-  const { pinnedPosts, isLoading: isPinnedPostsLoading } = usePinnedPosts({
-    did: profile?.did || "",
-    enabled: !!profile?.did,
-  });
-
   useEffect(() => {
     if (!handle || !agent) return;
 
@@ -299,7 +288,7 @@ export default function ProfilePage() {
 
   const loadPosts = async (initial = false) => {
     if (!handle || !agent || postsLoading) return;
-    if (activeTab === "top" || activeTab === "pinned") return;
+    if (activeTab === "top") return;
 
     try {
       setPostsLoading(true);
@@ -1102,31 +1091,6 @@ export default function ProfilePage() {
               />
             )}
           </button>
-          {pinnedPosts.length > 0 && (
-            <button
-              onClick={() => setActiveTab("pinned")}
-              className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
-                activeTab === "pinned" ? "" : "hover:scale-105"
-              }`}
-              style={{
-                color:
-                  activeTab === "pinned"
-                    ? "var(--bsky-primary)"
-                    : "var(--bsky-text-secondary)",
-              }}
-            >
-              <span className="flex items-center justify-center gap-1.5">
-                <Pin size={14} />
-                Pinned
-              </span>
-              {activeTab === "pinned" && (
-                <div
-                  className="absolute bottom-0 left-0 right-0 h-0.5"
-                  style={{ backgroundColor: "var(--bsky-primary)" }}
-                />
-              )}
-            </button>
-          )}
         </div>
       </div>
 
@@ -1312,126 +1276,9 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Pinned Posts Section - Shows at top of Posts tab */}
-      {activeTab === "posts" && pinnedPosts.length > 0 && (
-        <div className="mb-2">
-          <div
-            className="rounded-lg border"
-            style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              borderColor: "var(--bsky-border-primary)",
-            }}
-          >
-            <div
-              className="flex items-center gap-2 border-b px-4 py-3"
-              style={{ borderColor: "var(--bsky-border-primary)" }}
-            >
-              <Pin size={16} style={{ color: "var(--bsky-primary)" }} />
-              <span
-                className="text-sm font-medium"
-                style={{ color: "var(--bsky-text-primary)" }}
-              >
-                Pinned Posts
-              </span>
-            </div>
-            <div>
-              {pinnedPosts.map((item) => (
-                <PostCard
-                  key={item.uri}
-                  post={item.post}
-                  reason={undefined}
-                  onClick={() => {
-                    setSelectedPost(item.post);
-                    setOpenThreadToReply(false);
-                    setOpenThreadToQuote(false);
-                    setShowThread(true);
-                  }}
-                  onReply={() => {
-                    setSelectedPost(item.post);
-                    setOpenThreadToReply(true);
-                    setOpenThreadToQuote(false);
-                    setShowThread(true);
-                  }}
-                  onLike={() => handleLike(item.post)}
-                  onRepost={() => handleRepost(item.post)}
-                  onQuote={() => {
-                    setSelectedPost(item.post);
-                    setOpenThreadToReply(false);
-                    setOpenThreadToQuote(true);
-                    setShowThread(true);
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Posts - Virtualized */}
       <div ref={listContainerRef}>
-        {activeTab === "pinned" ? (
-          <div style={{ height: listHeight }}>
-            {isPinnedPostsLoading ? (
-              <div className="py-8 text-center text-gray-500">
-                Loading pinned posts...
-              </div>
-            ) : pinnedPosts.length === 0 ? (
-              <EmptyState variant="pinned" compact />
-            ) : (
-              <List
-                listRef={listRef}
-                rowCount={pinnedPosts.length}
-                rowHeight={dynamicRowHeight}
-                defaultHeight={listHeight}
-                overscanCount={5}
-                rowComponent={({ index, style }) => {
-                  const item = pinnedPosts[index];
-                  return (
-                    <div style={style}>
-                      <div className="relative">
-                        <div
-                          className="absolute left-4 top-2 z-10 flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
-                          style={{
-                            backgroundColor: "var(--bsky-primary)",
-                            color: "white",
-                          }}
-                        >
-                          <Pin size={10} />
-                          Pinned
-                        </div>
-                        <PostCard
-                          post={item.post}
-                          reason={undefined}
-                          onClick={() => {
-                            setSelectedPost(item.post);
-                            setOpenThreadToReply(false);
-                            setOpenThreadToQuote(false);
-                            setShowThread(true);
-                          }}
-                          onReply={() => {
-                            setSelectedPost(item.post);
-                            setOpenThreadToReply(true);
-                            setOpenThreadToQuote(false);
-                            setShowThread(true);
-                          }}
-                          onLike={() => handleLike(item.post)}
-                          onRepost={() => handleRepost(item.post)}
-                          onQuote={() => {
-                            setSelectedPost(item.post);
-                            setOpenThreadToReply(false);
-                            setOpenThreadToQuote(true);
-                            setShowThread(true);
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                }}
-                rowProps={{}}
-              />
-            )}
-          </div>
-        ) : activeTab === "top" ? (
+        {activeTab === "top" ? (
           <div style={{ height: listHeight }}>
             {isTopPostsLoading ? (
               <div className="py-8 text-center text-gray-500">

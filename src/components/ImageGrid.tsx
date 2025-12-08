@@ -1,8 +1,30 @@
-import { AlertTriangle } from "lucide-react";
 import React, { useState } from "react";
-import { useModerationPreferences } from "../hooks/useModerationPreferences";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { Lightbox } from "./Lightbox";
+
+// Sensitive content labels from Bluesky
+const SENSITIVE_LABELS = ["porn", "sexual", "nudity", "graphic-media"];
+
+// Check if content has sensitive labels that should be blurred
+const hasSensitiveLabels = (labels?: Array<{ val: string }>): boolean => {
+  if (!labels || labels.length === 0) return false;
+  return labels.some((label) => SENSITIVE_LABELS.includes(label.val));
+};
+
+// Get human-readable warning text for sensitive labels
+const getWarningText = (labels?: Array<{ val: string }>): string => {
+  if (!labels || labels.length === 0) return "Sensitive Content";
+  const labelMap: Record<string, string> = {
+    porn: "Adult Content",
+    sexual: "Sexual Content",
+    nudity: "Nudity",
+    "graphic-media": "Graphic Content",
+  };
+  for (const label of labels) {
+    if (labelMap[label.val]) return labelMap[label.val];
+  }
+  return "Sensitive Content";
+};
 
 interface ImageData {
   thumb: string;
@@ -26,62 +48,12 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [showSensitive, setShowSensitive] = useState(false);
-  const { shouldBlurMedia, shouldHideMedia, getSensitiveWarningText } =
-    useModerationPreferences();
 
   if (!images || images.length === 0) return null;
 
-  const hideMedia = shouldHideMedia(labels);
-  const blurMedia = shouldBlurMedia(labels);
-  const isSensitive = hideMedia || blurMedia;
-  const showContent = !isSensitive || showSensitive;
-
-  if (hideMedia && !showSensitive) {
-    return (
-      <div
-        className="mt-2 flex items-center justify-center rounded-lg p-8 text-center"
-        style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
-        }}
-      >
-        <div className="space-y-3">
-          <AlertTriangle
-            size={32}
-            style={{ color: "var(--bsky-text-secondary)", margin: "0 auto" }}
-          />
-          <div>
-            <div
-              className="font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
-            >
-              {getSensitiveWarningText(labels)}
-            </div>
-            <div
-              className="mt-1 text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
-            >
-              This content has been hidden based on your settings
-            </div>
-          </div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowSensitive(true);
-            }}
-            className="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-            style={{
-              backgroundColor: "var(--bsky-bg-tertiary)",
-              color: "var(--bsky-text-primary)",
-              border: "1px solid var(--bsky-border-primary)",
-            }}
-          >
-            Show Content
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Use simple label-based sensitivity check (blur by default, never completely hide)
+  const blurMedia = hasSensitiveLabels(labels);
+  const showContent = !blurMedia || showSensitive;
 
   const handleImageClick = (e: React.MouseEvent, index: number) => {
     e.stopPropagation();
@@ -199,7 +171,7 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
                 border: "2px solid var(--bsky-border-primary)",
               }}
             >
-              {getSensitiveWarningText(labels)} - Click to Show
+              {getWarningText(labels)} - Click to Show
             </button>
           </div>
         )}
