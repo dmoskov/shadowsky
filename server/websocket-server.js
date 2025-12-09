@@ -166,9 +166,10 @@ class WebSocketNotificationServer {
     // Set up WebSocket event handlers (only if not already set up via message-based auth)
     ws.isAlive = true;
 
-    ws.on("pong", () => {
-      ws.isAlive = true;
-    });
+    // Note: We use application-level JSON ping/pong (sent via sendToConnection),
+    // so we handle pong responses in handleMessage, not via ws.on("pong").
+    // The ws.on("pong") is for WebSocket protocol-level pings (ws.ping()),
+    // which we don't use because our server sends JSON messages.
 
     // Start heartbeat for this connection
     this.startHeartbeat(ws, userDid);
@@ -191,8 +192,20 @@ class WebSocketNotificationServer {
       const message = JSON.parse(data.toString());
       this.log(`Message from ${userDid}:`, message.type);
 
+      // Handle application-level pong response to our JSON ping
+      // This is critical for heartbeat detection - without this,
+      // connections would be terminated as zombies after one heartbeat cycle
       if (message.type === "pong") {
         ws.isAlive = true;
+        this.log(`Heartbeat pong received from ${userDid}`);
+      }
+
+      // Handle ping from client (client may also send pings)
+      if (message.type === "ping") {
+        this.sendToConnection(ws, {
+          type: "pong",
+          timestamp: new Date().toISOString(),
+        });
       }
     } catch (err) {
       this.logError(`Failed to parse message from ${userDid}:`, err);
@@ -230,8 +243,13 @@ class WebSocketNotificationServer {
     const heartbeat = setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) {
         if (ws.isAlive === false) {
-          this.log(`Connection timeout for ${userDid}, terminating`);
-          ws.terminate();
+          this.log(
+            `Connection timeout for ${userDid} - no pong received, closing connection`,
+          );
+          // Use close() instead of terminate() to send a proper close frame
+          // This allows the client to know why it was disconnected
+          ws.close(4002, "Heartbeat timeout - no pong received");
+          clearInterval(heartbeat);
           return;
         }
 

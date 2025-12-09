@@ -179,6 +179,11 @@ export class WebSocketService {
   }> = [];
   private _debugQueueTimer: ReturnType<typeof setInterval> | null = null;
 
+  // Browser event handlers for visibility and network changes
+  private boundVisibilityHandler: (() => void) | null = null;
+  private boundOnlineHandler: (() => void) | null = null;
+  private boundOfflineHandler: (() => void) | null = null;
+
   constructor(config: WebSocketConfig) {
     this.config = {
       reconnectDelay: WS_CONFIG.INITIAL_RECONNECT_DELAY_MS,
@@ -223,13 +228,15 @@ export class WebSocketService {
 
     this.isIntentionallyClosed = false;
     this.isAuthenticated = false;
-    // Only reset fatal error flag on fresh connect calls, not reconnect attempts
-    // This allows fresh connect() to work after user re-authenticates
-    if (this.stats.reconnectAttempts === 0) {
-      this.isAuthFatalError = false;
-    }
+    // Always reset fatal error flag on explicit connect() calls
+    // This allows reconnection after user re-authenticates with a new token
+    // The flag will be set again in handleAuthFailure if the new token is also invalid
+    this.isAuthFatalError = false;
     this.updateConnectionState(WebSocketConnectionState.CONNECTING);
     this.log(`Connecting to WebSocket: ${this.config.url}`);
+
+    // Set up browser event listeners for visibility and network changes
+    this.setupBrowserEventListeners();
 
     try {
       this.ws = new WebSocket(this.config.url);
@@ -251,6 +258,7 @@ export class WebSocketService {
     this.log("Disconnecting WebSocket");
     this.isIntentionallyClosed = true;
     this.clearTimers();
+    this.removeBrowserEventListeners();
 
     if (this.ws) {
       this.ws.close(1000, "Client disconnect");
@@ -430,6 +438,33 @@ export class WebSocketService {
     return this.stats.connectionState;
   }
 
+  /**
+   * Update the access token for authentication.
+   * Call this when the token is refreshed to ensure reconnections use the new token.
+   * If currently in an error state due to expired token, this will clear the error
+   * and allow reconnection.
+   */
+  public updateAccessToken(token: string): void {
+    this.config.accessToken = token;
+    this.log("Access token updated");
+
+    // If we were in a fatal auth error state, clear it so we can reconnect
+    if (this.isAuthFatalError) {
+      this.log("Clearing fatal auth error flag after token update");
+      this.isAuthFatalError = false;
+
+      // If not intentionally closed, attempt to reconnect with new token
+      if (
+        !this.isIntentionallyClosed &&
+        this.stats.connectionState === WebSocketConnectionState.ERROR
+      ) {
+        this.log("Attempting reconnection with new token");
+        this.stats.reconnectAttempts = 0;
+        this.connect();
+      }
+    }
+  }
+
   public isConnected(): boolean {
     return (
       this.ws?.readyState === WebSocket.OPEN &&
@@ -476,11 +511,17 @@ export class WebSocketService {
      * STATE: CONNECTED/DEGRADED -> DISCONNECTED or RECONNECTING
      * See: docs/websocket-state-machine.md#transition-details
      *
-     * If wasClean=false and not intentionally closed, schedules reconnect.
+     * Schedules reconnect unless:
+     * - User explicitly called disconnect() (isIntentionallyClosed)
+     * - Close code indicates a terminal error (4001 = auth failure with invalid token)
+     *
+     * Note: We reconnect even for "clean" closes (wasClean=true) because many legitimate
+     * disconnections (server restart, network change, mobile sleep) result in clean closes.
+     * Only truly intentional user disconnects should prevent reconnection.
      */
     this.ws.onclose = (event) => {
       this.log(
-        `WebSocket closed: ${event.code} ${event.reason || "No reason"}`,
+        `WebSocket closed: ${event.code} ${event.reason || "No reason"} (clean: ${event.wasClean})`,
       );
       this.clearTimers();
       this.updateConnectionState(WebSocketConnectionState.DISCONNECTED);
@@ -489,9 +530,26 @@ export class WebSocketService {
         timestamp: new Date().toISOString(),
       });
 
-      if (!this.isIntentionallyClosed && !event.wasClean) {
-        this.scheduleReconnect();
+      // Don't reconnect if user explicitly disconnected
+      if (this.isIntentionallyClosed) {
+        this.log("Not reconnecting: intentionally closed by user");
+        return;
       }
+
+      // Don't reconnect for fatal auth errors (code 4001 with invalid token)
+      // The isAuthFatalError flag is set in handleAuthFailure for TOKEN_INVALID errors
+      if (this.isAuthFatalError) {
+        this.log("Not reconnecting: fatal auth error (invalid token)");
+        return;
+      }
+
+      // Reconnect for all other cases - the connection may have been lost due to:
+      // - Server restart (code 1001, wasClean=true)
+      // - Network change (code 1006, wasClean=false)
+      // - Mobile sleep/background (code 1000 or 1006)
+      // - Server-initiated disconnect (code 1000, wasClean=true)
+      // - PONG timeout (code 4002, wasClean=true)
+      this.scheduleReconnect();
     };
 
     this.ws.onerror = (event) => {
@@ -922,6 +980,105 @@ export class WebSocketService {
       this.pongTimeoutTimer = null;
     }
     this.stopHeartbeat();
+  }
+
+  /**
+   * Set up browser event listeners for visibility changes and network status.
+   * These help detect and recover from:
+   * - Tab going to background and coming back (visibilitychange)
+   * - Network dropping and reconnecting (online/offline events)
+   */
+  private setupBrowserEventListeners(): void {
+    // Skip in non-browser environments (SSR, tests)
+    if (typeof document === "undefined" || typeof window === "undefined") {
+      return;
+    }
+
+    // Only set up once
+    if (this.boundVisibilityHandler) {
+      return;
+    }
+
+    // Visibility change handler - reconnect when tab becomes visible
+    this.boundVisibilityHandler = () => {
+      if (document.visibilityState === "visible") {
+        this.log("Tab became visible, checking connection...");
+
+        // If we're supposed to be connected but WebSocket is not open, reconnect
+        if (
+          !this.isIntentionallyClosed &&
+          !this.isAuthFatalError &&
+          this.ws?.readyState !== WebSocket.OPEN &&
+          this.stats.connectionState !== WebSocketConnectionState.CONNECTING &&
+          this.stats.connectionState !== WebSocketConnectionState.RECONNECTING
+        ) {
+          this.log("Connection lost while tab was hidden, reconnecting...");
+          this.stats.reconnectAttempts = 0; // Fresh start
+          this.connect();
+        } else if (this.ws?.readyState === WebSocket.OPEN) {
+          // Connection is open, send a ping to verify it's still alive
+          this.log("Sending ping to verify connection after visibility change");
+          this.sendPing();
+        }
+      }
+    };
+
+    // Online handler - reconnect when network comes back
+    this.boundOnlineHandler = () => {
+      this.log("Network came online");
+
+      if (
+        !this.isIntentionallyClosed &&
+        !this.isAuthFatalError &&
+        this.ws?.readyState !== WebSocket.OPEN
+      ) {
+        this.log("Reconnecting after network came online...");
+        this.stats.reconnectAttempts = 0; // Fresh start with network back
+        this.connect();
+      }
+    };
+
+    // Offline handler - log and wait for online event
+    this.boundOfflineHandler = () => {
+      this.log("Network went offline", "warn");
+      // Don't close the connection - let it fail naturally
+      // The online handler will reconnect when network returns
+    };
+
+    document.addEventListener("visibilitychange", this.boundVisibilityHandler);
+    window.addEventListener("online", this.boundOnlineHandler);
+    window.addEventListener("offline", this.boundOfflineHandler);
+
+    this.log("Browser event listeners set up (visibility, online/offline)");
+  }
+
+  /**
+   * Remove browser event listeners when disconnecting.
+   */
+  private removeBrowserEventListeners(): void {
+    if (typeof document === "undefined" || typeof window === "undefined") {
+      return;
+    }
+
+    if (this.boundVisibilityHandler) {
+      document.removeEventListener(
+        "visibilitychange",
+        this.boundVisibilityHandler,
+      );
+      this.boundVisibilityHandler = null;
+    }
+
+    if (this.boundOnlineHandler) {
+      window.removeEventListener("online", this.boundOnlineHandler);
+      this.boundOnlineHandler = null;
+    }
+
+    if (this.boundOfflineHandler) {
+      window.removeEventListener("offline", this.boundOfflineHandler);
+      this.boundOfflineHandler = null;
+    }
+
+    this.log("Browser event listeners removed");
   }
 
   /**
