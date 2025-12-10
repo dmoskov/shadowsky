@@ -229,6 +229,9 @@ interface HomeProps {
   onCloseFeedDiscovery?: () => void;
 }
 
+// Session storage key for persisting open thread across view mode changes
+const OPEN_THREAD_KEY = "shadowsky:open-thread";
+
 // Mobile performance configuration
 const MOBILE_CONFIG = {
   // Reduce page size for mobile to improve memory usage
@@ -317,8 +320,39 @@ export const Home: React.FC<HomeProps> = React.memo(
       alt?: string;
     }> | null>(null);
     const [galleryIndex, setGalleryIndex] = useState(0);
-    const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-    const [showThread, setShowThread] = useState(false);
+    // Restore open thread state from sessionStorage (persists across view mode changes)
+    const [selectedPost, setSelectedPost] = useState<Post | null>(() => {
+      try {
+        const stored = sessionStorage.getItem(OPEN_THREAD_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          // Only restore if it was stored recently (within 30 seconds)
+          // This prevents restoring stale thread state on page refresh
+          if (parsed.timestamp && Date.now() - parsed.timestamp < 30000) {
+            return parsed.post;
+          }
+          // Clean up stale data
+          sessionStorage.removeItem(OPEN_THREAD_KEY);
+        }
+      } catch {
+        // Ignore parse errors
+      }
+      return null;
+    });
+    const [showThread, setShowThread] = useState(() => {
+      try {
+        const stored = sessionStorage.getItem(OPEN_THREAD_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.timestamp && Date.now() - parsed.timestamp < 30000) {
+            return true;
+          }
+        }
+      } catch {
+        // Ignore parse errors
+      }
+      return false;
+    });
     const [openThreadToReply, setOpenThreadToReply] = useState(false);
     const [openThreadToQuote, setOpenThreadToQuote] = useState(false);
     const [focusedPostIndex, setFocusedPostIndex] = useState<number>(-1);
@@ -498,6 +532,21 @@ export const Home: React.FC<HomeProps> = React.memo(
         queryClient.invalidateQueries({ queryKey: ["timeline", selectedFeed] });
       }
     }, [onRefreshRequest, queryClient, selectedFeed]);
+
+    // Persist open thread state to sessionStorage for view mode transitions
+    useEffect(() => {
+      if (showThread && selectedPost) {
+        sessionStorage.setItem(
+          OPEN_THREAD_KEY,
+          JSON.stringify({
+            post: selectedPost,
+            timestamp: Date.now(),
+          }),
+        );
+      } else {
+        sessionStorage.removeItem(OPEN_THREAD_KEY);
+      }
+    }, [showThread, selectedPost]);
 
     // Dropdown is now handled by the parent component
 
