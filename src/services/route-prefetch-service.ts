@@ -190,12 +190,19 @@ class RoutePrefetchService {
 
     // Prefetch likely next routes after a short delay
     // This ensures we don't block the current navigation
-    requestIdleCallback(
-      () => {
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(
+        () => {
+          this.prefetchLikelyRoutes(pathname);
+        },
+        { timeout: 2000 },
+      );
+    } else {
+      // Fallback for Safari/iOS
+      setTimeout(() => {
         this.prefetchLikelyRoutes(pathname);
-      },
-      { timeout: 2000 },
-    );
+      }, 100);
+    }
   }
 
   /**
