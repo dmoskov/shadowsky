@@ -32,6 +32,7 @@ import {
   hasExistingOAuthSession,
   oauthService,
 } from "../services/oauth-service";
+import { routePrefetchService } from "../services/route-prefetch-service";
 import { setApiAuthSession } from "../utils/api-auth";
 
 type AuthMethod = "oauth" | "app-password" | null;
@@ -157,6 +158,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const initializeAuth = async () => {
       try {
+        // Start prefetching the home route chunk in parallel with auth
+        // This loads SkyDeck.js while we're checking session status
+        routePrefetchService.prefetchRoute("home");
+
         // First, do a lightweight check for existing OAuth session
         // This avoids loading the ~328KB OAuth client for users who don't use OAuth
         const mayHaveOAuthSession = await hasExistingOAuthSession();
@@ -175,16 +180,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Cast OAuth Agent to BskyAgent - they share the same API interface
             const agent = oauthState.agent as unknown as BskyAgent;
 
-            // Fetch handle from profile since OAuth session doesn't include it
-            let handle = oauthState.handle || "";
-            try {
-              const { data: profile } = await agent.getProfile({
-                actor: oauthState.did,
-              });
-              handle = profile.handle;
-            } catch (err) {
-              debug.error("Failed to fetch handle for OAuth session:", err);
-            }
+            // Set agent for DM service immediately (doesn't need handle)
+            dmService.setAgent(agent);
+
+            // Start service initialization and profile fetch in parallel
+            // Services don't need the handle, so we can initialize them while fetching profile
+            const [profileResult] = await Promise.all([
+              // Fetch handle from profile (needed for session compatibility)
+              agent
+                .getProfile({ actor: oauthState.did })
+                .then(({ data }) => data.handle)
+                .catch((err) => {
+                  debug.error("Failed to fetch handle for OAuth session:", err);
+                  return oauthState.handle || "";
+                }),
+              // Initialize services in parallel
+              initializeBookmarkService(agent),
+              initializeDataServices(agent),
+            ]);
+
+            const handle = profileResult;
 
             // Add session property for compatibility with code expecting agent.session.did
             // OAuth Agent has .did directly, but BskyAgent has .session.did
@@ -215,11 +230,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setSession(oauthSession);
             setApiAuthSession(oauthSession);
 
-            // Initialize services with OAuth agent
-            await initializeBookmarkService(agent);
-            await initializeDataServices(agent);
-            dmService.setAgent(agent);
-
             setIsLoading(false);
             return;
           }
@@ -241,10 +251,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setSession(resumedSession);
             setApiAuthSession(resumedSession);
             initAttempts.current = 0; // Reset on success
-            // Initialize services with user preferences
-            await initializeBookmarkService(atProtoClient.agent);
-            await initializeDataServices(atProtoClient.agent);
+            // Initialize services in parallel for faster startup
             dmService.setAgent(atProtoClient.agent);
+            await Promise.all([
+              initializeBookmarkService(atProtoClient.agent),
+              initializeDataServices(atProtoClient.agent),
+            ]);
           } catch (error) {
             const status = (error as Error & { status?: number })?.status;
 

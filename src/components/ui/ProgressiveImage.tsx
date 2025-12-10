@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { getInitialLoadingStrategy } from "../../hooks/useNetworkAwareLoading";
 import {
   DEFAULT_LQIP_CONFIG,
   generateLQIPUrl,
@@ -219,6 +220,23 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
     return originalSrc;
   };
 
+  // On poor network connections, use lower quality images to save bandwidth
+  const networkOptimizedSrc = useMemo(() => {
+    const loadingStrategy = getInitialLoadingStrategy();
+    if (!loadingStrategy.reduceImageQuality || !src.includes("cdn.bsky.app")) {
+      return src;
+    }
+    // On poor connections, use thumbnail size for all images
+    // This significantly reduces data usage on 2G/3G connections
+    const url = new URL(src);
+    // If the URL already has a size constraint, keep it; otherwise add one
+    if (!url.searchParams.has("width") && !src.includes("/feed_")) {
+      // Use feed thumbnail size (~300px) instead of full resolution
+      return src.replace("/img/", "/img/feed_thumbnail/");
+    }
+    return src;
+  }, [src]);
+
   // Set up Intersection Observer for lazy loading
   useEffect(() => {
     // Priority images load immediately, no need for observer
@@ -276,7 +294,8 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
       setHasError(false);
     }
 
-    const lowQualitySrc = placeholderSrc || getLowQualitySrc(src);
+    const lowQualitySrc =
+      placeholderSrc || getLowQualitySrc(networkOptimizedSrc);
     setImgSrc(lowQualitySrc);
 
     const loadImage = () => {
@@ -285,7 +304,7 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
       img.onload = () => {
         // Add small delay to ensure smooth transition
         requestAnimationFrame(() => {
-          setImgSrc(src);
+          setImgSrc(networkOptimizedSrc);
           setIsLoading(false);
           loadedSrcRef.current = src;
           // Small delay for DOM update before triggering crossfade
@@ -312,7 +331,7 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
         img.onerror = null;
       };
 
-      img.src = src;
+      img.src = networkOptimizedSrc;
     };
 
     // Queue the image load
@@ -332,7 +351,7 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
         loadQueue.splice(index, 1);
       }
     };
-  }, [src, placeholderSrc, shouldLoad, priority]);
+  }, [src, networkOptimizedSrc, placeholderSrc, shouldLoad, priority]);
 
   // Error state
   if (hasError) {

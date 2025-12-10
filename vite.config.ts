@@ -1,8 +1,31 @@
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { visualizer } from "rollup-plugin-visualizer";
+import type { Plugin } from "vite";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+
+/**
+ * Vite plugin to defer non-critical CSS loading.
+ * Converts stylesheet links to use the media="print" trick for async loading,
+ * which improves First Contentful Paint on slow connections.
+ */
+function deferCssPlugin(): Plugin {
+  return {
+    name: "defer-css",
+    enforce: "post",
+    transformIndexHtml(html) {
+      // Convert: <link rel="stylesheet" crossorigin href="/assets/index-xxx.css">
+      // To: <link rel="stylesheet" href="/assets/index-xxx.css" media="print" onload="this.media='all'">
+      // Plus a noscript fallback
+      return html.replace(
+        /<link rel="stylesheet" crossorigin href="(\/assets\/[^"]+\.css)">/g,
+        `<link rel="stylesheet" href="$1" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="$1"></noscript>`,
+      );
+    },
+  };
+}
 
 // Enable bundle analysis when ANALYZE=true is set
 const analyze = process.env.ANALYZE === "true";
@@ -11,6 +34,20 @@ const analyze = process.env.ANALYZE === "true";
 export default defineConfig({
   base: "/",
   build: {
+    // Optimize modulepreload - don't preload OAuth chunk since it's conditionally loaded
+    // based on whether user has existing OAuth session (checked via IndexedDB)
+    modulePreload: {
+      resolveDependencies: (_filename, deps) => {
+        // Filter out chunks that aren't needed for initial render
+        // OAuth: only loaded when user initiates OAuth login
+        // Amplify: only needed for API calls after authentication
+        return deps.filter(
+          (dep) =>
+            !dep.includes("vendor-atproto-oauth") &&
+            !dep.includes("vendor-amplify"),
+        );
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -71,6 +108,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    deferCssPlugin(),
     VitePWA({
       registerType: "prompt",
       injectRegister: null, // We'll handle registration manually
@@ -198,10 +236,34 @@ export default defineConfig({
             },
           },
         ],
-        // Precache static assets from build
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
-        // Skip caching files larger than 2MB
-        maximumFileSizeToCacheInBytes: 2 * 1024 * 1024,
+        // Precache only critical assets for faster first load
+        // Lazy-loaded route chunks will be cached on navigation via runtimeCaching
+        globPatterns: [
+          "index.html",
+          "assets/index-*.css",
+          "assets/index-*.js",
+          "assets/vendor-react-core-*.js",
+          "assets/vendor-react-router-*.js",
+          "assets/vendor-query-*.js",
+          "assets/vendor-icons-*.js",
+          "*.ico",
+          "*.svg",
+        ],
+        // Exclude large vendor chunks and lazy-loaded routes from precache
+        // They'll be cached via runtimeCaching when actually needed
+        globIgnores: [
+          "**/vendor-atproto*.js", // ~1MB - loaded on auth
+          "**/vendor-amplify-*.js", // Loaded on demand
+          "**/hls-*.js", // Video streaming
+          "**/html2canvas-*.js", // Screenshots
+          "**/Composer-*.js", // Lazy route
+          "**/DirectMessages-*.js", // Lazy route
+          "**/Settings-*.js", // Lazy route
+          "**/EmojiPicker-*.js", // Lazy component
+          "**/node_modules/**",
+        ],
+        // Precache files up to 500KB - includes main bundle but excludes large vendor chunks
+        maximumFileSizeToCacheInBytes: 500 * 1024,
         // Clean up old caches
         cleanupOutdatedCaches: true,
         // Skip waiting for old service workers - activate immediately on new deployment

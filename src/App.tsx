@@ -36,6 +36,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { getInitialLoadingStrategy } from "./hooks/useNetworkAwareLoading";
 import { useOnboarding } from "./hooks/useOnboarding";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
 import { appPreferencesService } from "./services/app-preferences-service";
@@ -200,20 +201,24 @@ function ListTimelineWithKey() {
   return <ListTimeline key={listId} />;
 }
 
-// Mobile-optimized query client settings
+// Network and device-aware query client settings
+// Adapts caching and retry behavior based on connection quality
+const loadingStrategy = getInitialLoadingStrategy();
 const isMobile = window.innerWidth < 768;
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // More aggressive cleanup for mobile to prevent memory issues
-      staleTime: isMobile ? 15 * 60 * 1000 : 30 * 60 * 1000, // 15/30 minutes
-      gcTime: isMobile ? 30 * 60 * 1000 : 2 * 60 * 60 * 1000, // 30 mins/2 hours
+      // Adaptive stale/cache times based on network quality
+      staleTime: loadingStrategy.queryStaleTime,
+      gcTime: loadingStrategy.queryCacheTime,
       retry: (failureCount, error: unknown) => {
         const err = error as { status?: number };
         if (err?.status === 429) return false; // Don't retry rate limits
         if (err?.status === 401) return false; // Don't retry auth errors
-        // Fewer retries on mobile to save battery/data
-        return failureCount < (isMobile ? 1 : 3);
+        // Fewer retries on slow connections to save battery/data
+        const maxRetries =
+          loadingStrategy.quality === "poor" ? 0 : isMobile ? 1 : 3;
+        return failureCount < maxRetries;
       },
       // Keep previous data while fetching new data
       placeholderData: <T,>(previousData: T) => previousData,
@@ -223,10 +228,16 @@ const queryClient = new QueryClient({
       refetchOnMount: false,
       // Prevent UI flicker by using structural sharing
       structuralSharing: true,
+      // Disable network requests when offline
+      networkMode:
+        loadingStrategy.quality === "offline" ? "offlineFirst" : "online",
     },
     mutations: {
-      // Reduce retry attempts on mobile
-      retry: isMobile ? 0 : 2,
+      // Reduce retry attempts on slow connections
+      retry: loadingStrategy.quality === "poor" ? 0 : isMobile ? 0 : 2,
+      // Queue mutations when offline
+      networkMode:
+        loadingStrategy.quality === "offline" ? "offlineFirst" : "online",
     },
   },
 });
@@ -389,7 +400,8 @@ function AppContent() {
     return () => window.removeEventListener("resize", checkViewportWidth);
   }, [isAuthenticated]);
 
-  // Initialize core storage backends and run one-time migration on app load
+  // Initialize core storage backends after first paint to improve FCP
+  // Uses requestIdleCallback to avoid blocking main thread during initial render
   useEffect(() => {
     const initializeStorage = async () => {
       try {
@@ -413,7 +425,19 @@ function AppContent() {
       }
     };
 
-    initializeStorage();
+    // Defer storage initialization to after first paint
+    // This improves First Contentful Paint on slow devices
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(
+        () => {
+          initializeStorage();
+        },
+        { timeout: 3000 }, // Ensure it runs within 3 seconds even if busy
+      );
+    } else {
+      // Fallback for browsers without requestIdleCallback (Safari)
+      setTimeout(initializeStorage, 100);
+    }
   }, []);
 
   if (isLoading) {

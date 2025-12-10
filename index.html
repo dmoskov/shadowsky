@@ -8,6 +8,59 @@
       content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
     />
 
+    <!-- Critical CSS - inlined for faster First Contentful Paint -->
+    <style>
+      /* Critical theme variables for initial render */
+      :root {
+        --bsky-primary: #0085ff;
+        --bsky-bg-primary: #0a0e1a;
+        --bsky-bg-secondary: #111827;
+        --bsky-text-primary: #f8fafc;
+        --bsky-text-secondary: #94a3b8;
+      }
+      /* Base styles for loading screen */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background-color: var(--bsky-bg-primary);
+        color: var(--bsky-text-primary);
+        min-height: 100vh;
+      }
+      /* Flex utilities for loading screen */
+      .flex {
+        display: flex;
+      }
+      .items-center {
+        align-items: center;
+      }
+      .justify-center {
+        justify-content: center;
+      }
+      .min-h-screen {
+        min-height: 100vh;
+      }
+      /* Animation for loading spinner */
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .animate-spin {
+        animation: spin 1s linear infinite;
+      }
+    </style>
+
     <!-- Primary Meta Tags -->
     <title>ShadowSky - Bluesky Companion</title>
     <meta name="title" content="ShadowSky - Bluesky Companion" />
