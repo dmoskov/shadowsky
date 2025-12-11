@@ -194,7 +194,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               handle = profile.handle;
             } catch (err) {
               // Check if this is an auth error (401/400) indicating expired session
-              const status = (err as Error & { status?: number })?.status;
+              // AT Protocol errors can have status in different locations
+              const error = err as Error & {
+                status?: number;
+                statusCode?: number;
+                response?: { status?: number };
+              };
+              const status =
+                error.status ||
+                error.statusCode ||
+                error.response?.status ||
+                (error.message?.includes("401") ? 401 : undefined) ||
+                (error.message?.includes("Unauthorized") ? 401 : undefined) ||
+                (error.message?.includes("Authentication Required") ? 401 : undefined);
+
+              debug.log("OAuth validation error:", {
+                status,
+                message: error.message,
+                name: error.name,
+              });
+
               if (status === 401 || status === 400) {
                 debug.error(
                   "OAuth session expired/invalid, clearing and requiring re-auth",
