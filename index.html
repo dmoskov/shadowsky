@@ -8,6 +8,18 @@
       content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
     />
 
+    <!-- Polyfill requestIdleCallback for Safari/iOS - must run before any other JS -->
+    <script>
+      if (!window.requestIdleCallback) {
+        window.requestIdleCallback = function(cb, opts) {
+          return setTimeout(function() {
+            cb({ didTimeout: true, timeRemaining: function() { return 0; } });
+          }, 1);
+        };
+        window.cancelIdleCallback = function(id) { clearTimeout(id); };
+      }
+    </script>
+
     <!-- Critical CSS - inlined for faster First Contentful Paint -->
     <style>
       /* Critical theme variables for initial render */
