@@ -6,7 +6,7 @@ on:
       - main
       - prod
     paths:
-      - 'server/**'
+      - "server/**"
   workflow_dispatch: # Allow manual triggers
 
 jobs:

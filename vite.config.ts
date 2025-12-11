@@ -4,6 +4,7 @@ import { visualizer } from "rollup-plugin-visualizer";
 import type { Plugin } from "vite";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+import pkg from "./package.json" with { type: "json" };
 
 /**
  * Vite plugin to defer non-critical CSS loading.
@@ -23,6 +24,33 @@ function deferCssPlugin(): Plugin {
         `<link rel="stylesheet" href="$1" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="$1"></noscript>`,
       );
+    },
+  };
+}
+
+/**
+ * Vite plugin to add version query parameter to main entry point.
+ * This forces cache invalidation when the app version changes, bypassing
+ * service worker and CDN caches that may serve stale bundles.
+ */
+function versionCacheBustPlugin(): Plugin {
+  const version = pkg.version;
+  return {
+    name: "version-cache-bust",
+    enforce: "post",
+    transformIndexHtml(html) {
+      // Add version query param to the main module script
+      // Dev: <script type="module" src="/src/main.tsx"></script>
+      // Prod: <script type="module" crossorigin src="/assets/index-xxx.js"></script>
+      return html
+        .replace(
+          /<script type="module" src="(\/[^"]+\.(tsx?|js))"><\/script>/g,
+          `<script type="module" src="$1?v=${version}"></script>`,
+        )
+        .replace(
+          /<script type="module" crossorigin src="(\/assets\/[^"]+\.js)"><\/script>/g,
+          `<script type="module" crossorigin src="$1?v=${version}"></script>`,
+        );
     },
   };
 }
@@ -109,6 +137,7 @@ export default defineConfig({
   plugins: [
     react(),
     deferCssPlugin(),
+    versionCacheBustPlugin(),
     VitePWA({
       registerType: "prompt",
       injectRegister: null, // We'll handle registration manually
