@@ -308,9 +308,9 @@ Provide a comprehensive JSON response with the following structure:
     "voiceDescription": "1-2 sentence description of their unique voice"
   },
   "engagementPatterns": {
-    "topPerformers": ["What type of content gets the most engagement"],
+    "topPerformers": ["What type of content resonates most with their audience"],
     "contentStrengths": ["What they do well"],
-    "suggestions": ["Actionable suggestions for improvement"]
+    "observations": ["Neutral observations about patterns - do NOT assume the user wants more engagement or followers"]
   },
   "summary": "2-3 sentence overall summary of their content and presence"
 }
@@ -319,9 +319,9 @@ IMPORTANT GUIDELINES:
 1. Identify 3-5 main content themes based on recurring topics
 2. For each theme, provide 1-2 short example snippets from actual posts
 3. Describe their writing style characteristics (length, structure, emoji use, etc.)
-4. Analyze which types of posts get the most engagement
-5. Provide 2-3 actionable suggestions for improving engagement
-6. Be specific and constructive
+4. Analyze which types of posts resonate most with their audience
+5. Provide 2-3 neutral observations about their posting patterns - NOT suggestions for growth. Not everyone wants more followers or engagement. Frame observations without assuming intent.
+6. Be specific and descriptive rather than prescriptive
 7. Base everything on actual data from the posts
 8. Your response MUST be valid JSON only - start with { and end with }`,
             },

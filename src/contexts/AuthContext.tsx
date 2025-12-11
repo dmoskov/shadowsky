@@ -206,7 +206,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 error.response?.status ||
                 (error.message?.includes("401") ? 401 : undefined) ||
                 (error.message?.includes("Unauthorized") ? 401 : undefined) ||
-                (error.message?.includes("Authentication Required") ? 401 : undefined);
+                (error.message?.includes("Authentication Required")
+                  ? 401
+                  : undefined);
 
               debug.log("OAuth validation error:", {
                 status,

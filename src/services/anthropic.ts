@@ -463,7 +463,8 @@ export interface WritingStyleAnalysis {
 export interface EngagementPatterns {
   topPerformers: string[];
   contentStrengths: string[];
-  suggestions: string[];
+  suggestions?: string[]; // Deprecated: kept for backwards compatibility
+  observations?: string[]; // New: neutral observations without assuming growth goals
 }
 
 export interface OptimalTimeRecommendation {

@@ -1386,20 +1386,22 @@ export const UserAnalytics: React.FC = () => {
                       className="mb-3 text-xs font-medium"
                       style={{ color: "var(--bsky-text-secondary)" }}
                     >
-                      Suggestions
+                      Observations
                     </p>
                     <ul className="space-y-2">
-                      {analysisData.engagementPatterns.suggestions.map(
-                        (item, i) => (
-                          <li
-                            key={i}
-                            className="text-sm"
-                            style={{ color: "var(--bsky-text-secondary)" }}
-                          >
-                            <span className="text-purple-500">→</span> {item}
-                          </li>
-                        ),
-                      )}
+                      {(
+                        analysisData.engagementPatterns.observations ||
+                        analysisData.engagementPatterns.suggestions ||
+                        []
+                      ).map((item, i) => (
+                        <li
+                          key={i}
+                          className="text-sm"
+                          style={{ color: "var(--bsky-text-secondary)" }}
+                        >
+                          <span className="text-purple-500">•</span> {item}
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 </div>

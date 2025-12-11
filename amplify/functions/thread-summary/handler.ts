@@ -198,11 +198,11 @@ export const handler = withCommonSetup({
     }
   }
 
-  // Build posts context
+  // Build posts context - use author handles, no index numbers
   const postsContext = sanitizedPosts
     .map(
-      (post, i) =>
-        `<post index="${i + 1}" author="${post.author}" likes="${post.likes}" replies="${post.replies}">
+      (post) =>
+        `<post author="@${post.authorHandle || post.author}">
 ${post.text}
 </post>`,
     )
@@ -212,97 +212,110 @@ ${post.text}
   const authors = [...new Set(sanitizedPosts.map((p) => p.author))];
 
   // Build format-specific prompts
+  // Key principles:
+  // - Describe the actual content, not meta-commentary about the thread
+  // - Never reference post numbers or indexes
+  // - Use @handles when mentioning specific people
+  // - Focus on what was said, not how many people said it
   let formatPrompt: string;
   let maxTokens: number;
 
   switch (format) {
     case "haiku":
-      formatPrompt = `Write a haiku (5-7-5 syllable structure) that captures the essence of this thread discussion.
-The haiku should be poetic and insightful, distilling the main theme or emotional core of the conversation.
-Return ONLY the haiku, three lines, no additional text or formatting.`;
+      formatPrompt = `Write a haiku (5-7-5 syllable structure) that captures the essence of this conversation.
+The haiku should be poetic and evocative, distilling the main theme or feeling.
+Return ONLY the haiku, three lines, no additional text.`;
       maxTokens = 100;
       break;
 
     case "tldr":
-      formatPrompt = `Write a concise TL;DR summary of this thread conversation in 1-2 sentences (max 280 characters).
-Summarize both the original post AND what the replies discuss - capture the conversation, not just the original point.
-If there's debate or different viewpoints, mention that. If people agree or add context, note that.
-Return ONLY the summary text, no labels or prefixes.`;
+      formatPrompt = `Summarize this conversation in 1-2 sentences (max 280 characters).
+Describe what was discussed and any key conclusions or disagreements.
+Write it as a direct description, not meta-commentary (e.g., "X argues that..." not "This thread discusses...").
+Return ONLY the summary, no labels or prefixes.`;
       maxTokens = 150;
       break;
 
     case "keypoints":
-      formatPrompt = `Extract 3-5 key points from this thread discussion.
-Format as a simple bullet list with each point on its own line, starting with "• ".
+      formatPrompt = `Extract 3-5 key points from this conversation.
+Format as a bullet list with each point on its own line, starting with "• ".
+Each point should describe an actual idea or argument, not meta-commentary.
 Keep each point concise (under 100 characters).
-Return ONLY the bullet points, no headers or additional formatting.`;
+Return ONLY the bullet points, no headers.`;
       maxTokens = 300;
       break;
 
     // Progressive complexity formats
     case "brief":
       // For simple threads (3-9 replies) - one punchy sentence
-      formatPrompt = `Write ONE sentence (max 140 characters) summarizing what this thread is about.
-Focus on the main topic and general sentiment of replies.
-Be direct and informative - no filler words.
-Return ONLY the sentence, no labels or prefixes.`;
+      formatPrompt = `Summarize this conversation in ONE sentence (max 140 characters).
+Describe the main topic and conclusion/sentiment directly.
+Write as a factual description, not meta-commentary.
+Return ONLY the sentence, no labels.`;
       maxTokens = 80;
       break;
 
     case "moderate":
       // For moderate threads (10-29 replies) - 2-3 sentences
-      formatPrompt = `Write 2-3 sentences summarizing this thread conversation (max 400 characters total).
-First sentence: What's the main topic or point.
-Second sentence: How did the conversation develop (agreements, debates, new angles).
-Third sentence (if notable): Any interesting conclusions or standout points.
-Be concise and capture the essence of the discussion.
-Return ONLY the summary text, no labels or prefixes.`;
+      formatPrompt = `Summarize this conversation in 2-3 sentences (max 400 characters).
+Describe what was discussed and how the conversation developed.
+Use @handles when referencing specific people's contributions.
+Write as a direct description, not meta-commentary about "the thread."
+Return ONLY the summary, no labels.`;
       maxTokens = 200;
       break;
 
     case "detailed":
       // For complex threads (30-74 replies) - paragraph with key points
-      formatPrompt = `Write a detailed summary of this thread (150-250 words).
-Structure:
-1. Opening: What sparked this conversation (1-2 sentences)
-2. Main themes: What topics emerged in the replies (2-3 sentences)
-3. Key viewpoints: Different perspectives or arguments made (2-3 sentences)
-4. Notable moments: Any replies that got significant engagement or shifted the conversation (1-2 sentences)
-5. Closing: Where the conversation landed (1 sentence)
+      formatPrompt = `Write a summary of this conversation (150-250 words).
+Cover:
+- What started the discussion
+- The main ideas and arguments that emerged
+- Different perspectives people shared (use @handles)
+- Any conclusions or unresolved debates
 
-Be informative and help readers understand what happened in this thread without reading every reply.
-Return ONLY the summary text, no labels or section headers.`;
+Write as a flowing narrative describing the actual content.
+Do NOT use meta-commentary like "this thread explores" or "users discuss."
+Do NOT reference post numbers.
+Return ONLY the summary, no section headers.`;
       maxTokens = 500;
       break;
 
     case "comprehensive":
     case "extended":
-      // For viral threads (75+ replies) - full analysis with sub-thread highlights
-      formatPrompt = `Write a comprehensive analysis of this viral thread (250-400 words).
+      // For viral threads (75+ replies) - full analysis with highlights
+      formatPrompt = `Write a comprehensive summary of this conversation (250-400 words).
 
-Analyze:
-1. The original post and its impact (2-3 sentences)
-2. Major conversation threads that emerged - what sub-topics sparked significant discussion (3-4 sentences)
-3. Key participants and their contributions - who added valuable perspectives (2-3 sentences)
-4. Points of agreement and disagreement - where did people align or clash (2-3 sentences)
-5. How the conversation evolved over time - did the tone or focus shift (2-3 sentences)
-6. Most impactful replies - which posts generated the most engagement and why (2-3 sentences)
-7. Overall takeaway - what would someone miss if they skipped this thread (1-2 sentences)
+Describe:
+- What sparked the conversation and the original point
+- The main topics and arguments that emerged
+- Key contributors and their perspectives (use @handles)
+- Points of agreement and disagreement
+- How the conversation evolved
+- The overall takeaway
+
+Write as a flowing narrative describing the actual content of the conversation.
+Do NOT use meta-commentary like "this thread explores" or "the discussion centers on."
+Do NOT reference post numbers or indexes.
+When mentioning specific people, use their @handle.
 
 After the main summary, add a section:
 
 ---HIGHLIGHTS---
-List the top 3-5 most notable replies in this format:
-[POST_INDEX]: @handle - Brief description of why this reply was notable (engagement/insight/controversy)
+List 3-5 notable replies worth reading. For each, use this EXACT format:
+@handle: "brief quote from their post" - why it's notable
 
-This helps readers navigate directly to the best parts of the conversation.
-Return the full analysis followed by the highlights section.`;
+Example:
+@alice: "The real issue isn't the policy itself" - Reframes the debate around implementation
+@bob: "I worked on this exact problem at Google" - Adds insider perspective
+
+Use actual quotes from the posts (shortened if needed). This helps readers find specific replies.`;
       maxTokens = 1000;
       break;
 
     default:
       // Fallback to brief
-      formatPrompt = `Write ONE sentence summarizing this thread. Return ONLY the sentence.`;
+      formatPrompt = `Summarize this conversation in ONE sentence. Return ONLY the sentence.`;
       maxTokens = 80;
   }
 
@@ -339,12 +352,18 @@ Return the full analysis followed by the highlights section.`;
             {
               role: "user",
               content: `<system>
-You are a thread summarizer. Analyze the following thread posts and provide a summary in the requested format.
+You are a conversation summarizer. Your job is to describe what people actually said, not to provide meta-commentary about the conversation itself.
+
+Key rules:
+- Describe the actual content and ideas, not "the thread" or "users"
+- Never reference post numbers or indexes
+- Use @handles when mentioning specific contributors
+- Write as if explaining what happened to someone who wasn't there
 </system>
 
-<thread>
+<conversation>
 ${postsContext}
-</thread>
+</conversation>
 
 <task>
 ${formatPrompt}
@@ -370,20 +389,29 @@ ${formatPrompt}
         summaryText = summaryText.replace(/---HIGHLIGHTS---[\s\S]*$/, "").trim();
 
         // Parse individual highlights
-        const highlightLines = highlightsMatch[1].trim().split("\n");
+        // Format: @handle: "quote" - description
+        const highlightLines = highlightsMatch[1].trim().split("\n").filter(line => line.trim());
         highlightedSubThreads = highlightLines
           .map((line) => {
-            // Format: [POST_INDEX]: @handle - Description
+            // Match: @handle: "quote" - description
             const match = line.match(
-              /\[(\d+)\]:\s*@(\S+)\s*-\s*(.+)/,
+              /@(\S+):\s*"([^"]+)"\s*-\s*(.+)/,
             );
             if (match) {
-              const postIndex = parseInt(match[1], 10) - 1;
-              const post = sanitizedPosts[postIndex];
+              const handle = match[1];
+              const quote = match[2];
+              const description = match[3];
+
+              // Find the post by matching handle and quote content
+              const post = sanitizedPosts.find(
+                p => (p.authorHandle === handle || p.author === handle) &&
+                     p.text.toLowerCase().includes(quote.toLowerCase().slice(0, 30))
+              );
+
               return {
                 uri: post?.uri || "",
-                authorHandle: match[2],
-                snippet: match[3].slice(0, 200),
+                authorHandle: handle,
+                snippet: `"${quote}" - ${description}`,
                 engagement:
                   (post?.likes || 0) +
                   (post?.replies || 0) +
@@ -392,7 +420,7 @@ ${formatPrompt}
             }
             return null;
           })
-          .filter((h): h is SubThreadHighlight => h !== null && h.uri !== "");
+          .filter((h): h is SubThreadHighlight => h !== null);
       }
     }
 
