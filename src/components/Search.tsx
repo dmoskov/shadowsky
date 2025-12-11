@@ -765,7 +765,7 @@ export const Search: React.FC = () => {
               posts={threadPosts}
               rootUri={selectedPostUri || undefined}
               highlightUri={highlightPostUri || undefined}
-              className="max-h-[70vh] overflow-y-auto"
+              className="bsky-scrollbar max-h-[70vh] overflow-y-auto"
             />
           )}
         </div>

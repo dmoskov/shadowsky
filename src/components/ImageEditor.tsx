@@ -882,7 +882,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
             </div>
 
             {/* Tab content */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="bsky-scrollbar flex-1 overflow-y-auto p-4">
               {activeTab === "adjust" && (
                 <div className="space-y-6">
                   {/* Brightness slider */}

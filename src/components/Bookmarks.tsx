@@ -265,7 +265,7 @@ export const Bookmarks: React.FC = () => {
       )}
 
       <div
-        className="flex-1 overflow-y-auto p-4"
+        className="bsky-scrollbar flex-1 overflow-y-auto p-4"
         role="feed"
         aria-label="Bookmarked posts"
       >

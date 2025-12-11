@@ -101,7 +101,7 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
           </button>
         </div>
 
-        <div className="max-h-96 overflow-y-auto p-4">
+        <div className="bsky-scrollbar max-h-96 overflow-y-auto p-4">
           {isLoading && (
             <ListItemSkeleton count={3} aria-label="Loading lists" />
           )}

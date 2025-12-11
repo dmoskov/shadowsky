@@ -219,7 +219,7 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="bsky-scrollbar flex-1 overflow-y-auto p-4">
           {isLoading ? (
             <div
               className="py-8 text-center"

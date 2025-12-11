@@ -127,7 +127,7 @@ export const AccountSwitcher: React.FC = () => {
               Switch Account
             </div>
 
-            <div className="max-h-80 overflow-y-auto">
+            <div className="bsky-scrollbar max-h-80 overflow-y-auto">
               {accounts.map((account) => {
                 const isActive = account.did === session?.did;
                 return (

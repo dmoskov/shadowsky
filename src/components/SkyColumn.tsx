@@ -267,7 +267,7 @@ const SkyColumn = memo(
         case "search":
           return (
             <ErrorBoundary componentName="Search" onError={handleSearchError}>
-              <SearchColumn isFocused={isFocused} />
+              <SearchColumn isFocused={isFocused} initialQuery={column.data} />
             </ErrorBoundary>
           );
 

@@ -832,7 +832,9 @@ export const ModerationHistorySettings: React.FC = () => {
       </div>
 
       {/* History List */}
-      <div className="max-h-[400px] overflow-y-auto">{renderEntries()}</div>
+      <div className="bsky-scrollbar max-h-[400px] overflow-y-auto">
+        {renderEntries()}
+      </div>
 
       {/* Clear History Button */}
       {totalItems > 0 && (

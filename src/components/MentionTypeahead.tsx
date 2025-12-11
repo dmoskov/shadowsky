@@ -344,7 +344,7 @@ export const MentionTypeahead = forwardRef<
               id={listboxId}
               role="listbox"
               aria-label="User suggestions"
-              className="fixed z-[9999] max-h-[240px] w-[280px] overflow-y-auto rounded-lg border shadow-lg"
+              className="bsky-scrollbar fixed z-[9999] max-h-[240px] w-[280px] overflow-y-auto rounded-lg border shadow-lg"
               style={{
                 top: dropdownPosition.top,
                 left: dropdownPosition.left,

@@ -156,7 +156,7 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
               ReactDOM.createPortal(
                 <div
                   ref={dropdownRef}
-                  className="fixed z-[9999] max-h-96 w-64 overflow-y-auto rounded-md border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                  className="bsky-scrollbar fixed z-[9999] max-h-96 w-64 overflow-y-auto rounded-md border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
                   style={{
                     top: `${feedMenuPosition.top}px`,
                     right: `${feedMenuPosition.right}px`,

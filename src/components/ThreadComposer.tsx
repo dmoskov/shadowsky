@@ -549,7 +549,7 @@ export function ThreadComposer({
         </div>
 
         {/* Content */}
-        <div className="max-h-[calc(100vh-200px)] overflow-y-auto p-4 md:p-6">
+        <div className="bsky-scrollbar max-h-[calc(100vh-200px)] overflow-y-auto p-4 md:p-6">
           {showPreview ? (
             // Preview mode
             <div className="space-y-4">

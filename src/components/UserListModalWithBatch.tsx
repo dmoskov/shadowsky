@@ -85,7 +85,7 @@ const ListSelectionDialog: React.FC<ListSelectionDialogProps> = ({
             Select a List
           </h3>
         </div>
-        <div className="max-h-64 overflow-y-auto p-2">
+        <div className="bsky-scrollbar max-h-64 overflow-y-auto p-2">
           {loading ? (
             <div className="flex justify-center py-8">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
@@ -587,7 +587,7 @@ const UserListModalInner: React.FC<UserListModalWithBatchProps> = ({
               ).current = el;
               infiniteScrollRef(el);
             }}
-            className={`max-h-[calc(80vh-73px)] overflow-y-auto ${isSelectionMode ? "pb-20" : ""}`}
+            className={`bsky-scrollbar max-h-[calc(80vh-73px)] overflow-y-auto ${isSelectionMode ? "pb-20" : ""}`}
             role="listbox"
             aria-label={`${title} list`}
             aria-multiselectable={isSelectionMode}

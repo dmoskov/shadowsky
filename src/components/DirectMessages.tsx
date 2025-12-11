@@ -364,7 +364,7 @@ export const DirectMessages: React.FC = () => {
         )}
 
         <div
-          className="flex-1 overflow-y-auto overflow-x-hidden"
+          className="bsky-scrollbar flex-1 overflow-y-auto overflow-x-hidden"
           role="list"
           aria-label="Conversation list"
         >
@@ -581,7 +581,7 @@ export const DirectMessages: React.FC = () => {
             {/* Messages */}
             <div
               ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto p-4"
+              className="bsky-scrollbar flex-1 overflow-y-auto p-4"
               role="log"
               aria-label="Message history"
               aria-live="polite"

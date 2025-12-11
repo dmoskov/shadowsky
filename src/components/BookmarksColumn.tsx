@@ -592,7 +592,7 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
 
             {showCollectionDropdown && (
               <div
-                className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border shadow-lg"
+                className="bsky-scrollbar absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border shadow-lg"
                 style={{
                   backgroundColor: "var(--bsky-bg-primary)",
                   borderColor: "var(--bsky-border-primary)",

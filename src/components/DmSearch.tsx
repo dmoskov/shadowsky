@@ -310,7 +310,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
       )}
 
       {/* Results */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="bsky-scrollbar flex-1 overflow-y-auto">
         {isSearching ? (
           <div className="p-4 text-center text-sm text-bsky-text-secondary">
             Searching...

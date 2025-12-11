@@ -179,7 +179,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
       </div>
 
       {/* Collection List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="bsky-scrollbar flex-1 overflow-y-auto">
         {/* All Bookmarks option */}
         <button
           onClick={() => onSelectCollection(null)}

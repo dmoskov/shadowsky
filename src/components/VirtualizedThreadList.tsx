@@ -305,7 +305,7 @@ export const VirtualizedThreadList = forwardRef<
   return (
     <div
       ref={parentRef}
-      className={`thread-list-virtual overflow-y-auto ${className}`}
+      className={`thread-list-virtual bsky-scrollbar overflow-y-auto ${className}`}
       style={{
         // Container needs fixed height for virtualization
         height: "100%",

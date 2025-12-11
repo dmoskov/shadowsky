@@ -209,7 +209,7 @@ export function GiphySearch({ onSelectGif, onClose }: GiphySearchProps) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="bsky-scrollbar flex-1 overflow-y-auto p-4">
           {!GIPHY_API_KEY && (
             <div className="py-8 text-center">
               <p style={{ color: "var(--bsky-text-secondary)" }}>

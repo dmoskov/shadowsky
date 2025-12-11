@@ -428,7 +428,7 @@ export function BugReportModal({
             </div>
 
             {/* Form */}
-            <div className="max-h-[60vh] overflow-y-auto border-t border-gray-200 p-6 dark:border-gray-700">
+            <div className="bsky-scrollbar max-h-[60vh] overflow-y-auto border-t border-gray-200 p-6 dark:border-gray-700">
               <div className="space-y-4">
                 {/* Bug Description */}
                 <div>

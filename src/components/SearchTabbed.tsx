@@ -1107,7 +1107,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
               posts={threadPosts}
               rootUri={selectedPostUri || undefined}
               highlightUri={highlightPostUri || undefined}
-              className="max-h-[70vh] overflow-y-auto"
+              className="bsky-scrollbar max-h-[70vh] overflow-y-auto"
             />
           )}
         </div>
@@ -1180,7 +1180,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     (mainTypeaheadUsers && mainTypeaheadUsers.length > 0)) && (
                     <div
                       ref={mainTypeaheadRef}
-                      className="absolute left-0 right-0 top-full z-50 mt-1 max-h-80 overflow-y-auto rounded-lg border shadow-lg sm:left-8"
+                      className="bsky-scrollbar absolute left-0 right-0 top-full z-50 mt-1 max-h-80 overflow-y-auto rounded-lg border shadow-lg sm:left-8"
                       style={{
                         backgroundColor: "var(--bsky-bg-secondary)",
                         borderColor: "var(--bsky-border-primary)",

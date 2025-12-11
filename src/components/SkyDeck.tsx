@@ -216,6 +216,51 @@ export default function SkyDeck() {
     }
   }, [focusedColumnIndex, columns.length]);
 
+  // Handle searchTopic events from TrendingColumn
+  useEffect(() => {
+    const handleSearchTopic = (event: CustomEvent<{ topic: string }>) => {
+      const topic = event.detail.topic;
+      if (!topic) return;
+
+      // Add a new search column with the topic as the initial query
+      const newColumn: Column = {
+        id: Date.now().toString(),
+        type: "search",
+        title: `Search: ${topic}`,
+        data: topic,
+      };
+
+      setColumns((prev) => [...prev, newColumn]);
+
+      // Focus and scroll to the new column
+      setTimeout(() => {
+        setFocusedColumnIndex(columns.length);
+
+        if (columnsContainerRef.current) {
+          const container = columnsContainerRef.current;
+          const newColumnElement = container.querySelector(
+            ".column-wrapper:last-of-type",
+          ) as HTMLElement;
+          if (newColumnElement) {
+            newColumnElement.scrollIntoView({
+              behavior: "smooth",
+              inline: "end",
+              block: "nearest",
+            });
+          }
+        }
+      }, 100);
+    };
+
+    window.addEventListener("searchTopic", handleSearchTopic as EventListener);
+    return () => {
+      window.removeEventListener(
+        "searchTopic",
+        handleSearchTopic as EventListener,
+      );
+    };
+  }, [columns.length]);
+
   useEffect(() => {
     const homeColumn: Column = {
       id: "home",
@@ -479,7 +524,7 @@ export default function SkyDeck() {
           <div className="h-full" style={{ width: `${columnWidth}px` }}>
             {isAddingColumn ? (
               <div className="flex h-full animate-fade-in flex-col rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
-                <div className="flex-1 overflow-y-auto p-3">
+                <div className="bsky-scrollbar flex-1 overflow-y-auto p-3">
                   <div className="grid gap-2">
                     {columnOptions.map((option) => {
                       const Icon = option.icon;

@@ -31,11 +31,13 @@ import { EmptyState } from "./ui/EmptyState";
 interface SearchColumnProps {
   isFocused?: boolean;
   onClose?: () => void;
+  initialQuery?: string;
 }
 
 export const SearchColumn: React.FC<SearchColumnProps> = ({
   isFocused = false,
   onClose,
+  initialQuery,
 }) => {
   const { isPostHidden } = useHiddenPosts();
   const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
@@ -143,6 +145,14 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
       inputRef.current.focus();
     }
   }, [isFocused]);
+
+  // Handle initial query from props (e.g., from trending topic click)
+  useEffect(() => {
+    if (initialQuery) {
+      setQuery(initialQuery);
+      executeSearch(initialQuery);
+    }
+  }, [initialQuery, setQuery, executeSearch]);
 
   // Handle input change
   const handleInputChange = useCallback(
@@ -443,7 +453,7 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
                 id="search-history-dropdown"
                 role="listbox"
                 aria-label="Search suggestions"
-                className="absolute left-4 right-4 top-full z-30 mt-1 max-h-80 overflow-y-auto rounded-lg border shadow-lg"
+                className="bsky-scrollbar absolute left-4 right-4 top-full z-30 mt-1 max-h-80 overflow-y-auto rounded-lg border shadow-lg"
                 style={{
                   backgroundColor: "var(--bsky-bg-primary)",
                   borderColor: "var(--bsky-border-primary)",
@@ -686,7 +696,7 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
       {/* Results */}
       <div
         ref={resultsContainerRef}
-        className="flex-1 overflow-y-auto"
+        className="bsky-scrollbar flex-1 overflow-y-auto"
         role="feed"
         aria-label="Search results"
       >

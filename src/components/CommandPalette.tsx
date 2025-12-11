@@ -335,7 +335,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
         <div
           ref={listRef}
-          className="max-h-96 overflow-y-auto py-2"
+          className="bsky-scrollbar max-h-96 overflow-y-auto py-2"
           style={{ borderTop: "1px solid var(--bsky-border-primary)" }}
         >
           {filteredCommands.length === 0 ? (

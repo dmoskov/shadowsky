@@ -299,7 +299,7 @@ export const SaveToCollectionDropdown: React.FC<
               </p>
             )}
 
-            <div className="max-h-60 space-y-1 overflow-y-auto">
+            <div className="bsky-scrollbar max-h-60 space-y-1 overflow-y-auto">
               {collections.map((collection) => (
                 <button
                   key={collection.id}

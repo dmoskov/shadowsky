@@ -339,7 +339,7 @@ export const DirectMessagesColumn: React.FC = () => {
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="bsky-scrollbar flex-1 overflow-y-auto overflow-x-hidden">
           {chatError ? (
             <div className="p-4">
               <div
@@ -587,7 +587,7 @@ export const DirectMessagesColumn: React.FC = () => {
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
+      <div className="bsky-scrollbar flex-1 overflow-y-auto overflow-x-hidden p-4">
         {loadingMessages && !isQueueInitialized ? (
           <div
             className="text-center"

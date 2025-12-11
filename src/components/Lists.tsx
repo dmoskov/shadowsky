@@ -195,7 +195,7 @@ export const Lists: React.FC = () => {
       )}
 
       <div
-        className="flex-1 overflow-y-auto p-4"
+        className="bsky-scrollbar flex-1 overflow-y-auto p-4"
         aria-labelledby="lists-heading"
       >
         <div

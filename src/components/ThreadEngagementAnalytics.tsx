@@ -329,7 +329,7 @@ export const ThreadEngagementAnalytics: React.FC<
                 Ranked by engagement (likes + reposts + replies)
               </p>
             </div>
-            <div className="max-h-64 space-y-2 overflow-y-auto">
+            <div className="bsky-scrollbar max-h-64 space-y-2 overflow-y-auto">
               {analytics.postEngagements.map((pe) => {
                 const postText =
                   (pe.post.record as { text?: string })?.text || "";
