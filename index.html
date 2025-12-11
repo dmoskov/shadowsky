@@ -11,12 +11,19 @@
     <!-- Polyfill requestIdleCallback for Safari/iOS - must run before any other JS -->
     <script>
       if (!window.requestIdleCallback) {
-        window.requestIdleCallback = function(cb, opts) {
-          return setTimeout(function() {
-            cb({ didTimeout: true, timeRemaining: function() { return 0; } });
+        window.requestIdleCallback = function (cb, opts) {
+          return setTimeout(function () {
+            cb({
+              didTimeout: true,
+              timeRemaining: function () {
+                return 0;
+              },
+            });
           }, 1);
         };
-        window.cancelIdleCallback = function(id) { clearTimeout(id); };
+        window.cancelIdleCallback = function (id) {
+          clearTimeout(id);
+        };
       }
     </script>
 

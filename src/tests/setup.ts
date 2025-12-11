@@ -40,3 +40,25 @@ global.ResizeObserver = class ResizeObserver {
   unobserve() {}
   disconnect() {}
 };
+
+// Polyfill requestIdleCallback for tests (Safari/iOS don't support it)
+if (!("requestIdleCallback" in window)) {
+  (window as any).requestIdleCallback = (
+    callback: IdleRequestCallback,
+    options?: IdleRequestOptions,
+  ): number => {
+    const timeout = options?.timeout ?? 50;
+    return window.setTimeout(
+      () => {
+        callback({
+          didTimeout: true,
+          timeRemaining: () => 0,
+        });
+      },
+      Math.min(timeout, 1),
+    );
+  };
+  (window as any).cancelIdleCallback = (handle: number): void => {
+    window.clearTimeout(handle);
+  };
+}

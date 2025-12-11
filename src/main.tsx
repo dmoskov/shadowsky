@@ -3,15 +3,18 @@ if (typeof window !== "undefined" && !("requestIdleCallback" in window)) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any).requestIdleCallback = (
     callback: IdleRequestCallback,
-    options?: IdleRequestOptions
+    options?: IdleRequestOptions,
   ): number => {
     const timeout = options?.timeout ?? 50;
-    return window.setTimeout(() => {
-      callback({
-        didTimeout: true,
-        timeRemaining: () => 0,
-      });
-    }, Math.min(timeout, 1));
+    return window.setTimeout(
+      () => {
+        callback({
+          didTimeout: true,
+          timeRemaining: () => 0,
+        });
+      },
+      Math.min(timeout, 1),
+    );
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any).cancelIdleCallback = (handle: number): void => {
