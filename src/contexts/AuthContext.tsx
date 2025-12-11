@@ -183,55 +183,81 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Set agent for DM service immediately (doesn't need handle)
             dmService.setAgent(agent);
 
-            // Start service initialization and profile fetch in parallel
-            // Services don't need the handle, so we can initialize them while fetching profile
-            const [profileResult] = await Promise.all([
-              // Fetch handle from profile (needed for session compatibility)
-              agent
-                .getProfile({ actor: oauthState.did })
-                .then(({ data }) => data.handle)
-                .catch((err) => {
-                  debug.error("Failed to fetch handle for OAuth session:", err);
-                  return oauthState.handle || "";
-                }),
-              // Initialize services in parallel
-              initializeBookmarkService(agent),
-              initializeDataServices(agent),
-            ]);
+            // Validate OAuth session by fetching profile
+            // This verifies the session is actually usable (refresh token not expired)
+            let sessionValid = true;
+            let handle = oauthState.handle || "";
+            try {
+              const { data: profile } = await agent.getProfile({
+                actor: oauthState.did,
+              });
+              handle = profile.handle;
+            } catch (err) {
+              // Check if this is an auth error (401/400) indicating expired session
+              const status = (err as Error & { status?: number })?.status;
+              if (status === 401 || status === 400) {
+                debug.error(
+                  "OAuth session expired/invalid, clearing and requiring re-auth",
+                );
+                sessionValid = false;
+                // Clear the invalid OAuth session
+                try {
+                  await oauthService.signOut();
+                } catch {
+                  // Ignore signOut errors
+                }
+                // Fall through to check for app-password session
+              } else {
+                // Non-auth error (network, etc.) - try to continue with cached handle
+                debug.error("Failed to fetch handle for OAuth session:", err);
+              }
+            }
 
-            const handle = profileResult;
+            // If session validation failed, don't continue with OAuth
+            if (!sessionValid) {
+              debug.log(
+                "OAuth session validation failed, checking for app-password session",
+              );
+              // Fall through to app-password check below
+            } else {
+              // Session is valid, initialize services in parallel
+              await Promise.all([
+                initializeBookmarkService(agent),
+                initializeDataServices(agent),
+              ]);
 
-            // Add session property for compatibility with code expecting agent.session.did
-            // OAuth Agent has .did directly, but BskyAgent has .session.did
-            const sessionCompat = {
-              did: oauthState.did,
-              handle,
-              accessJwt: "",
-              refreshJwt: "",
-              active: true,
-            };
-            Object.defineProperty(agent, "session", {
-              get: () => sessionCompat,
-              configurable: true,
-            });
+              // Add session property for compatibility with code expecting agent.session.did
+              // OAuth Agent has .did directly, but BskyAgent has .session.did
+              const sessionCompat = {
+                did: oauthState.did,
+                handle,
+                accessJwt: "",
+                refreshJwt: "",
+                active: true,
+              };
+              Object.defineProperty(agent, "session", {
+                get: () => sessionCompat,
+                configurable: true,
+              });
 
-            setIsAuthenticated(true);
-            setAuthMethod("oauth");
-            setOauthAgent(agent);
+              setIsAuthenticated(true);
+              setAuthMethod("oauth");
+              setOauthAgent(agent);
 
-            // Create a minimal session object for compatibility
-            const oauthSession: Session = {
-              did: oauthState.did,
-              handle,
-              accessJwt: "", // OAuth doesn't expose raw JWTs
-              refreshJwt: "",
-              active: true,
-            };
-            setSession(oauthSession);
-            setApiAuthSession(oauthSession);
+              // Create a minimal session object for compatibility
+              const oauthSession: Session = {
+                did: oauthState.did,
+                handle,
+                accessJwt: "", // OAuth doesn't expose raw JWTs
+                refreshJwt: "",
+                active: true,
+              };
+              setSession(oauthSession);
+              setApiAuthSession(oauthSession);
 
-            setIsLoading(false);
-            return;
+              setIsLoading(false);
+              return;
+            }
           }
         }
 
