@@ -620,7 +620,9 @@ export class WebSocketService {
         ...auth,
         timestamp: new Date().toISOString(),
       };
-      this.ws.send(JSON.stringify(authMessage));
+      const messageStr = JSON.stringify(authMessage);
+      this.log(`Sending auth message: ${messageStr}`);
+      this.ws.send(messageStr);
       this.stats.messagesSent++;
       this.log(
         "token" in auth
