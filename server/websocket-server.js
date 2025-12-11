@@ -87,7 +87,9 @@ class WebSocketNotificationServer {
             // DID-only auth (OAuth users) - client polls, server just relays
             this.authenticateWithDid(ws, message.did);
           } else {
-            this.log("Connection rejected: Expected token or did in auth message");
+            this.log(
+              "Connection rejected: Expected token or did in auth message",
+            );
             ws.close(1008, "Expected token or did in auth message");
           }
         } else {
