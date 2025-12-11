@@ -366,12 +366,17 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       return;
     }
 
-    // Pass token via config for initial message authentication
-    // This prevents token exposure in URL (browser history, logs, referrer headers)
-    debug.log("🔌 [WebSocket] Initializing service with secure authentication");
+    // Pass token or DID via config for authentication
+    // - App-password users: send JWT token, server polls notifications
+    // - OAuth users: send DID only (no raw JWT available), client polls notifications
+    const hasAccessToken = session.accessJwt && session.accessJwt.length > 0;
+    debug.log(
+      `🔌 [WebSocket] Initializing service with ${hasAccessToken ? "token" : "DID"} authentication`,
+    );
     const service = initializeWebSocketService({
       url: wsUrl,
-      accessToken: session.accessJwt,
+      accessToken: hasAccessToken ? session.accessJwt : undefined,
+      did: hasAccessToken ? undefined : session.did,
       authTimeout: WS_CONFIG.AUTH_TIMEOUT_MS,
       reconnectDelay: WS_CONFIG.INITIAL_RECONNECT_DELAY_MS,
       maxReconnectAttempts: WS_CONFIG.MAX_RECONNECT_ATTEMPTS,

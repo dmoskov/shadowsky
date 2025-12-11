@@ -141,7 +141,10 @@ export enum WebSocketConnectionState {
 
 export interface WebSocketConfig {
   url: string;
+  /** JWT access token for app-password auth (server polls notifications) */
   accessToken?: string;
+  /** DID for OAuth auth (client polls notifications, server is webhook-style) */
+  did?: string;
   authTimeout?: number;
   reconnectDelay?: number;
   maxReconnectAttempts?: number;

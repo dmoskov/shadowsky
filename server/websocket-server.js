@@ -78,9 +78,18 @@ class WebSocketNotificationServer {
       // Handle authentication message
       try {
         const message = JSON.parse(data.toString());
-        if (message.type === "auth" && message.token) {
+        if (message.type === "auth") {
           clearTimeout(authTimeout);
-          this.authenticateWithToken(ws, message.token);
+          if (message.token) {
+            // JWT token auth (app-password users) - server polls for notifications
+            this.authenticateWithToken(ws, message.token);
+          } else if (message.did) {
+            // DID-only auth (OAuth users) - client polls, server just relays
+            this.authenticateWithDid(ws, message.did);
+          } else {
+            this.log("Connection rejected: Expected token or did in auth message");
+            ws.close(1008, "Expected token or did in auth message");
+          }
         } else {
           this.log("Connection rejected: Expected auth message");
           ws.close(1008, "Expected authentication message");
@@ -177,6 +186,62 @@ class WebSocketNotificationServer {
     // Send auth success message
     this.sendToConnection(ws, {
       type: "auth_success",
+      timestamp: new Date().toISOString(),
+    });
+
+    // Send initial connection confirmation
+    this.sendToConnection(ws, {
+      type: "connect",
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Authenticate with DID only (for OAuth users).
+   * Server does NOT poll for notifications - client handles polling via OAuth agent.
+   * WebSocket is used as a notification channel for real-time updates pushed by client.
+   */
+  authenticateWithDid(ws, did) {
+    // Validate DID format (basic check)
+    if (!did || !did.startsWith("did:")) {
+      this.log("Connection rejected: Invalid DID format");
+      this.sendToConnection(ws, {
+        type: "auth_failure",
+        error: "Invalid DID format",
+        timestamp: new Date().toISOString(),
+      });
+      ws.close(1008, "Invalid DID format");
+      return;
+    }
+
+    const userDid = did;
+    ws.isAuthenticated = true;
+    ws.userDid = userDid;
+    ws.isOAuthUser = true; // Mark as OAuth user (no server-side polling)
+    this.log(`Client authenticated (DID-only/OAuth): ${userDid}`);
+
+    // Store connection
+    if (!this.userConnections.has(userDid)) {
+      this.userConnections.set(userDid, new Set());
+    }
+    this.userConnections.get(userDid).add(ws);
+
+    // Register user as active (disables push notifications while connected)
+    pushNotificationService.registerActiveUser(userDid);
+
+    // NOTE: No agent creation or polling for OAuth users
+    // The client polls via its OAuth agent and can send notification updates to the server
+
+    // Set up WebSocket event handlers
+    ws.isAlive = true;
+
+    // Start heartbeat for this connection
+    this.startHeartbeat(ws, userDid);
+
+    // Send auth success message
+    this.sendToConnection(ws, {
+      type: "auth_success",
+      authType: "did",
       timestamp: new Date().toISOString(),
     });
 

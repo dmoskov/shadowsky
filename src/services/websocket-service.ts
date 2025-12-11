@@ -134,8 +134,8 @@ export function calculateBackoff(
 }
 
 type RequiredWebSocketConfig = Required<
-  Omit<WebSocketConfig, "accessToken">
-> & { accessToken?: string };
+  Omit<WebSocketConfig, "accessToken" | "did">
+> & { accessToken?: string; did?: string };
 
 export class WebSocketService {
   private ws: WebSocket | null = null;
@@ -491,12 +491,17 @@ export class WebSocketService {
 
       // Send authentication message immediately after connection
       if (this.config.accessToken) {
-        this.sendAuthMessage(this.config.accessToken);
+        // App-password auth: send JWT token, server will poll notifications
+        this.sendAuthMessage({ token: this.config.accessToken });
+        this.startAuthTimeout();
+      } else if (this.config.did) {
+        // OAuth auth: send DID only, client polls notifications
+        this.sendAuthMessage({ did: this.config.did });
         this.startAuthTimeout();
       } else {
-        // No token provided, emit connect event immediately
+        // No auth configured, emit connect event immediately
         // STATE: CONNECTING -> CONNECTED (bypassing auth)
-        this.log("No access token configured, skipping authentication");
+        this.log("No access token or DID configured, skipping authentication");
         this.isAuthenticated = true;
         this.updateConnectionState(WebSocketConnectionState.CONNECTED);
         this.startHeartbeat();
@@ -603,7 +608,7 @@ export class WebSocketService {
     }
   }
 
-  private sendAuthMessage(token: string): void {
+  private sendAuthMessage(auth: { token: string } | { did: string }): void {
     if (this.ws?.readyState !== WebSocket.OPEN) {
       this.handleError("Cannot send auth message: WebSocket not open", null);
       return;
@@ -612,12 +617,16 @@ export class WebSocketService {
     try {
       const authMessage = {
         type: WebSocketEventType.AUTH,
-        token,
+        ...auth,
         timestamp: new Date().toISOString(),
       };
       this.ws.send(JSON.stringify(authMessage));
       this.stats.messagesSent++;
-      this.log("Authentication message sent");
+      this.log(
+        "token" in auth
+          ? "Authentication message sent (token)"
+          : "Authentication message sent (DID)",
+      );
     } catch (error) {
       this.handleError("Failed to send authentication message", error);
       this.scheduleReconnect();
