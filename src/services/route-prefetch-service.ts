@@ -191,7 +191,7 @@ class RoutePrefetchService {
     // Prefetch likely next routes after a short delay
     // This ensures we don't block the current navigation
     if ("requestIdleCallback" in window) {
-      requestIdleCallback(
+      window.requestIdleCallback(
         () => {
           this.prefetchLikelyRoutes(pathname);
         },

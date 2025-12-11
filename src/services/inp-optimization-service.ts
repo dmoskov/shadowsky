@@ -575,7 +575,7 @@ class INPOptimizationService {
 
     // Use requestIdleCallback if available, otherwise setTimeout
     if ("requestIdleCallback" in window) {
-      requestIdleCallback(
+      window.requestIdleCallback(
         () => this.processDeferredTasks(),
         { timeout: 100 }, // Ensure it runs within 100ms
       );
@@ -784,7 +784,7 @@ class INPOptimizationService {
 
       // Use requestIdleCallback if available
       if ("requestIdleCallback" in window) {
-        requestIdleCallback(() => tryRun(), { timeout });
+        window.requestIdleCallback(() => tryRun(), { timeout });
       } else {
         setTimeout(tryRun, 0);
       }

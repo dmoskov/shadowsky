@@ -428,7 +428,7 @@ function AppContent() {
     // Defer storage initialization to after first paint
     // This improves First Contentful Paint on slow devices
     if ("requestIdleCallback" in window) {
-      requestIdleCallback(
+      window.requestIdleCallback(
         () => {
           initializeStorage();
         },

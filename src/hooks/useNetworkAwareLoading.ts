@@ -163,7 +163,7 @@ export function useDeferredOperation(): {
       if (strategy.deferNonCritical) {
         // Use requestIdleCallback for non-critical operations on slow networks
         if ("requestIdleCallback" in window) {
-          requestIdleCallback(fn, { timeout: 5000 });
+          window.requestIdleCallback(fn, { timeout: 5000 });
         } else {
           setTimeout(fn, 100);
         }
