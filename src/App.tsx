@@ -37,7 +37,7 @@ import { ToastProvider } from "./contexts/ToastContext";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { getInitialLoadingStrategy } from "./hooks/useNetworkAwareLoading";
-import { useOnboarding } from "./hooks/useOnboarding";
+// import { useOnboarding } from "./hooks/useOnboarding";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
 import { appPreferencesService } from "./services/app-preferences-service";
 import { initializeCoreStorage } from "./services/data-services-initializer";
@@ -73,11 +73,12 @@ const KeyboardShortcutsHelp = lazyWithRetry(() =>
     default: m.KeyboardShortcutsHelp,
   })),
 );
-const NotificationPermissionPrompt = lazyWithRetry(() =>
-  import("./components/NotificationPermissionPrompt").then((m) => ({
-    default: m.NotificationPermissionPrompt,
-  })),
-);
+// Disabled - getting in the way
+// const NotificationPermissionPrompt = lazyWithRetry(() =>
+//   import("./components/NotificationPermissionPrompt").then((m) => ({
+//     default: m.NotificationPermissionPrompt,
+//   })),
+// );
 const StatusBar = lazyWithRetry(() =>
   import("./components/StatusBar").then((m) => ({
     default: m.StatusBar,
@@ -113,11 +114,12 @@ const WebSocketStressPanel = lazyWithRetry(() =>
     default: m.WebSocketStressPanel,
   })),
 );
-const OnboardingOverlay = lazyWithRetry(() =>
-  import("./components/onboarding/OnboardingOverlay").then((m) => ({
-    default: m.OnboardingOverlay,
-  })),
-);
+// Disabled - getting in the way
+// const OnboardingOverlay = lazyWithRetry(() =>
+//   import("./components/onboarding/OnboardingOverlay").then((m) => ({
+//     default: m.OnboardingOverlay,
+//   })),
+// );
 
 // Lazy load route components for better performance
 const Bookmarks = lazyWithRetry(() =>
@@ -253,8 +255,8 @@ function AppContent() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
-  // Onboarding for first-time users
-  const onboarding = useOnboarding();
+  // Onboarding for first-time users - disabled
+  // const onboarding = useOnboarding();
 
   // Check if we're on the home route
   const isHomeRoute =
@@ -632,9 +634,11 @@ function AppContent() {
         <FloatingActionButton />
         <SwipeIndicator />
         <StatusBar />
+        {/* Disabled - getting in the way
         <ErrorBoundary componentName="Push Notifications" fallback={null}>
           <NotificationPermissionPrompt />
         </ErrorBoundary>
+        */}
         <DebugConsole />
         <DevPerformanceOverlay />
         <BackgroundSyncIndicator />
@@ -649,7 +653,9 @@ function AppContent() {
           onClose={() => setIsShortcutsHelpOpen(false)}
         />
         <ServiceWorkerUpdatePrompt />
+        {/* Disabled - getting in the way
         <OnboardingOverlay onboarding={onboarding} />
+        */}
       </Suspense>
     </div>
   );

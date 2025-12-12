@@ -420,11 +420,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
       if (!debouncedUserSearch || debouncedUserSearch.length < 2) return [];
 
       try {
-        const response =
-          await agent!.app.bsky.actor.searchActorsTypeahead({
-            q: debouncedUserSearch,
-            limit: 8,
-          });
+        const response = await agent!.app.bsky.actor.searchActorsTypeahead({
+          q: debouncedUserSearch,
+          limit: 8,
+        });
 
         return response.data.actors.map((actor) => ({
           did: actor.did,
@@ -437,7 +436,8 @@ export const SearchTabbed: React.FC = React.memo(() => {
         return [];
       }
     },
-    enabled: !!agent && !!debouncedUserSearch && debouncedUserSearch.length >= 2,
+    enabled:
+      !!agent && !!debouncedUserSearch && debouncedUserSearch.length >= 2,
   });
 
   // Combine followers and search results
@@ -525,10 +525,9 @@ export const SearchTabbed: React.FC = React.memo(() => {
     queryKey: ["trendingTopics"],
     queryFn: async () => {
       try {
-        const response =
-          await agent!.app.bsky.unspecced.getTrendingTopics({
-            limit: 10,
-          });
+        const response = await agent!.app.bsky.unspecced.getTrendingTopics({
+          limit: 10,
+        });
         return response.data;
       } catch (error) {
         debug.error("Error fetching trending topics:", error);
@@ -547,11 +546,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
       if (!debouncedMainSearch || debouncedMainSearch.length < 2) return [];
 
       try {
-        const response =
-          await agent!.app.bsky.actor.searchActorsTypeahead({
-            q: debouncedMainSearch,
-            limit: 5,
-          });
+        const response = await agent!.app.bsky.actor.searchActorsTypeahead({
+          q: debouncedMainSearch,
+          limit: 5,
+        });
 
         return response.data.actors.map((actor) => ({
           did: actor.did,
@@ -711,10 +709,9 @@ export const SearchTabbed: React.FC = React.memo(() => {
       } catch (error) {
         debug.error("Error searching feeds:", error);
         // Fallback to just suggested feeds
-        const response =
-          await agent!.app.bsky.feed.getSuggestedFeeds({
-            limit: 100,
-          });
+        const response = await agent!.app.bsky.feed.getSuggestedFeeds({
+          limit: 100,
+        });
 
         const searchLower = activeSearchQuery.toLowerCase();
         const filteredFeeds = response.data.feeds.filter((feed: any) => {
@@ -1117,9 +1114,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
       ) : (
         <>
           {/* Search Input Box */}
-          <div className="bsky-glass relative mb-6 rounded-xl p-3 sm:p-4">
-            <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-              <div className="relative flex flex-1 items-center gap-2">
+          <div
+            className={`bsky-glass relative mb-6 rounded-xl p-3 sm:p-4 ${showMainTypeahead ? "z-20" : ""}`}
+          >
+            <div className="relative flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+              <div className="flex flex-1 items-center gap-2">
                 <SearchIcon
                   size={20}
                   style={{ color: "var(--bsky-text-secondary)" }}

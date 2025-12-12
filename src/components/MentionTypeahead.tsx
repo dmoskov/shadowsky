@@ -146,11 +146,10 @@ export const MentionTypeahead = forwardRef<
           if (!debouncedQuery || debouncedQuery.length < 1) return [];
 
           try {
-            const response =
-              await agent!.app.bsky.actor.searchActorsTypeahead({
-                q: debouncedQuery,
-                limit: 8,
-              });
+            const response = await agent!.app.bsky.actor.searchActorsTypeahead({
+              q: debouncedQuery,
+              limit: 8,
+            });
 
             return response.data.actors.map((actor) => ({
               did: actor.did,
@@ -164,7 +163,10 @@ export const MentionTypeahead = forwardRef<
           }
         },
         enabled:
-          !!agent && !!debouncedQuery && debouncedQuery.length >= 1 && showSuggestions,
+          !!agent &&
+          !!debouncedQuery &&
+          debouncedQuery.length >= 1 &&
+          showSuggestions,
       },
     );
 

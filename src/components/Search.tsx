@@ -300,11 +300,10 @@ export const Search: React.FC = () => {
       if (!debouncedUserSearch || debouncedUserSearch.length < 2) return [];
 
       try {
-        const response =
-          await agent!.app.bsky.actor.searchActorsTypeahead({
-            q: debouncedUserSearch,
-            limit: 8,
-          });
+        const response = await agent!.app.bsky.actor.searchActorsTypeahead({
+          q: debouncedUserSearch,
+          limit: 8,
+        });
 
         return response.data.actors.map((actor) => ({
           did: actor.did,

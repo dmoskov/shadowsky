@@ -140,7 +140,11 @@ export default function ProfilePage() {
     }));
 
   // Quick haiku analysis using posts already in memory (instant start)
-  const { data: haikuAnalysis, isLoading: isLoadingHaiku } = useQuery({
+  const {
+    data: haikuAnalysis,
+    isLoading: isLoadingHaiku,
+    error: haikuError,
+  } = useQuery({
     queryKey: ["profile-analysis-haiku", handle],
     queryFn: async () => {
       if (postsInMemory.length === 0) throw new Error("No posts in memory");
@@ -197,7 +201,11 @@ export default function ProfilePage() {
   );
 
   // Full sonnet analysis with more posts (detailed)
-  const { data: sonnetAnalysis, isLoading: isLoadingSonnet } = useQuery({
+  const {
+    data: sonnetAnalysis,
+    isLoading: isLoadingSonnet,
+    error: sonnetError,
+  } = useQuery({
     queryKey: ["profile-analysis-sonnet", handle],
     queryFn: async () => {
       if (!postsForSonnet) throw new Error("Posts not loaded");
@@ -212,6 +220,8 @@ export default function ProfilePage() {
   const isLoadingAnalysis =
     (isLoadingHaiku && !haikuAnalysis) ||
     (isLoadingPostsForSonnet && isLoadingSonnet && !haikuAnalysis);
+  // Show error if both haiku and sonnet fail (or sonnet fails after haiku succeeds)
+  const analysisError = sonnetError || haikuError;
 
   // Top posts for the "Top Posts" tab
   const { data: topPostsData, isLoading: isTopPostsLoading } = useTopPosts({
@@ -1095,186 +1105,218 @@ export default function ProfilePage() {
       </div>
 
       {/* Profile Analysis Section */}
-      {showProfileAnalysis && (isLoadingAnalysis || analysisData) && (
-        <div className="mb-4">
-          <div
-            className="rounded-lg p-6"
-            style={{ background: "var(--bsky-bg-secondary)" }}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h2
-                className="flex items-center gap-2 text-lg font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
-              >
-                <Sparkles size={20} className="text-purple-500" />
-                Profile Analysis
-              </h2>
-              <button
-                onClick={() => {
-                  setShowProfileAnalysis(false);
-                  setAnalysisRequested(false);
-                }}
-                className="rounded px-3 py-1 text-sm transition-all hover:opacity-80"
-                style={{
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                  color: "var(--bsky-text-secondary)",
-                }}
-              >
-                Hide
-              </button>
-            </div>
-
-            {isLoadingAnalysis ? (
-              <div className="py-8 text-center">
-                <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-500" />
-                <p style={{ color: "var(--bsky-text-primary)" }}>
-                  Analyzing profile...
-                </p>
+      {showProfileAnalysis &&
+        (isLoadingAnalysis || analysisData || analysisError) && (
+          <div className="mb-4">
+            <div
+              className="rounded-lg p-6"
+              style={{ background: "var(--bsky-bg-secondary)" }}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <h2
+                  className="flex items-center gap-2 text-lg font-semibold"
+                  style={{ color: "var(--bsky-text-primary)" }}
+                >
+                  <Sparkles size={20} className="text-purple-500" />
+                  Profile Analysis
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowProfileAnalysis(false);
+                    setAnalysisRequested(false);
+                  }}
+                  className="rounded px-3 py-1 text-sm transition-all hover:opacity-80"
+                  style={{
+                    backgroundColor: "var(--bsky-bg-tertiary)",
+                    color: "var(--bsky-text-secondary)",
+                  }}
+                >
+                  Hide
+                </button>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Show haiku if that's all we have, or sonnet if ready */}
-                {haikuAnalysis && !sonnetAnalysis && (
-                  <div
-                    className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm"
-                    style={{
-                      backgroundColor: "var(--bsky-bg-tertiary)",
-                      color: "var(--bsky-text-secondary)",
-                    }}
-                  >
-                    <div className="h-2 w-2 animate-pulse rounded-full bg-purple-500" />
-                    Quick analysis ({postsInMemory.length} posts) •{" "}
-                    {isLoadingPostsForSonnet
-                      ? "Fetching more posts..."
-                      : "Deep analysis loading..."}
-                  </div>
-                )}
-                {sonnetAnalysis && (
-                  <div
-                    className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm font-medium"
-                    style={{
-                      backgroundColor: "rgba(168, 85, 247, 0.1)",
-                      color: "var(--bsky-primary)",
-                    }}
-                  >
-                    ✨ Full analysis complete ({postsForSonnet?.length || 0}{" "}
-                    posts analyzed)
-                  </div>
-                )}
 
-                {/* Summary (always shown) */}
-                <p style={{ color: "var(--bsky-text-secondary)" }}>
-                  {analysisData?.summary}
-                </p>
+              {isLoadingAnalysis ? (
+                <div className="py-8 text-center">
+                  <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-500" />
+                  <p style={{ color: "var(--bsky-text-primary)" }}>
+                    Analyzing profile...
+                  </p>
+                </div>
+              ) : analysisError && !analysisData ? (
+                <div className="py-6 text-center">
+                  <div
+                    className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full"
+                    style={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}
+                  >
+                    <span className="text-2xl">⚠️</span>
+                  </div>
+                  <p
+                    className="mb-2 font-medium"
+                    style={{ color: "var(--bsky-text-primary)" }}
+                  >
+                    Analysis Failed
+                  </p>
+                  <p
+                    className="text-sm"
+                    style={{ color: "var(--bsky-text-secondary)" }}
+                  >
+                    {analysisError instanceof Error
+                      ? analysisError.message.includes("Rate limit")
+                        ? "Too many requests. Please wait a minute and try again."
+                        : analysisError.message.includes("401") ||
+                            analysisError.message.includes("Authentication")
+                          ? "Please sign in to use AI analysis."
+                          : analysisError.message
+                      : "An unexpected error occurred. Please try again."}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Show haiku if that's all we have, or sonnet if ready */}
+                  {haikuAnalysis && !sonnetAnalysis && (
+                    <div
+                      className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm"
+                      style={{
+                        backgroundColor: "var(--bsky-bg-tertiary)",
+                        color: "var(--bsky-text-secondary)",
+                      }}
+                    >
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-purple-500" />
+                      Quick analysis ({postsInMemory.length} posts) •{" "}
+                      {isLoadingPostsForSonnet
+                        ? "Fetching more posts..."
+                        : "Deep analysis loading..."}
+                    </div>
+                  )}
+                  {sonnetAnalysis && (
+                    <div
+                      className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm font-medium"
+                      style={{
+                        backgroundColor: "rgba(168, 85, 247, 0.1)",
+                        color: "var(--bsky-primary)",
+                      }}
+                    >
+                      ✨ Full analysis complete ({postsForSonnet?.length || 0}{" "}
+                      posts analyzed)
+                    </div>
+                  )}
 
-                {/* Full sonnet details (only when sonnet is available) */}
-                {sonnetAnalysis && (
-                  <div className="mt-6 space-y-6">
-                    {/* Content Themes */}
-                    {sonnetAnalysis.contentThemes &&
-                      sonnetAnalysis.contentThemes.length > 0 && (
+                  {/* Summary (always shown) */}
+                  <p style={{ color: "var(--bsky-text-secondary)" }}>
+                    {analysisData?.summary}
+                  </p>
+
+                  {/* Full sonnet details (only when sonnet is available) */}
+                  {sonnetAnalysis && (
+                    <div className="mt-6 space-y-6">
+                      {/* Content Themes */}
+                      {sonnetAnalysis.contentThemes &&
+                        sonnetAnalysis.contentThemes.length > 0 && (
+                          <div>
+                            <h3
+                              className="mb-3 text-sm font-semibold"
+                              style={{ color: "var(--bsky-text-primary)" }}
+                            >
+                              Content Themes
+                            </h3>
+                            <div className="space-y-3">
+                              {sonnetAnalysis.contentThemes.map(
+                                (theme, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="rounded-lg p-3"
+                                    style={{
+                                      backgroundColor:
+                                        "var(--bsky-bg-tertiary)",
+                                    }}
+                                  >
+                                    <div className="mb-1 flex items-center gap-2">
+                                      <span
+                                        className="font-medium"
+                                        style={{
+                                          color: "var(--bsky-text-primary)",
+                                        }}
+                                      >
+                                        {theme.theme}
+                                      </span>
+                                      <span
+                                        className="rounded-full px-2 py-0.5 text-xs"
+                                        style={{
+                                          backgroundColor:
+                                            theme.frequency === "primary"
+                                              ? "#8b5cf6"
+                                              : theme.frequency === "regular"
+                                                ? "#a78bfa"
+                                                : "#c4b5fd",
+                                          color: "white",
+                                        }}
+                                      >
+                                        {theme.frequency}
+                                      </span>
+                                    </div>
+                                    <p
+                                      className="text-sm"
+                                      style={{
+                                        color: "var(--bsky-text-secondary)",
+                                      }}
+                                    >
+                                      {theme.description}
+                                    </p>
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                      {/* Writing Style */}
+                      {sonnetAnalysis.writingStyle && (
                         <div>
                           <h3
                             className="mb-3 text-sm font-semibold"
                             style={{ color: "var(--bsky-text-primary)" }}
                           >
-                            Content Themes
+                            Writing Style
                           </h3>
-                          <div className="space-y-3">
-                            {sonnetAnalysis.contentThemes.map((theme, idx) => (
-                              <div
-                                key={idx}
-                                className="rounded-lg p-3"
-                                style={{
-                                  backgroundColor: "var(--bsky-bg-tertiary)",
-                                }}
-                              >
-                                <div className="mb-1 flex items-center gap-2">
-                                  <span
-                                    className="font-medium"
-                                    style={{
-                                      color: "var(--bsky-text-primary)",
-                                    }}
-                                  >
-                                    {theme.theme}
-                                  </span>
-                                  <span
-                                    className="rounded-full px-2 py-0.5 text-xs"
-                                    style={{
-                                      backgroundColor:
-                                        theme.frequency === "primary"
-                                          ? "#8b5cf6"
-                                          : theme.frequency === "regular"
-                                            ? "#a78bfa"
-                                            : "#c4b5fd",
-                                      color: "white",
-                                    }}
-                                  >
-                                    {theme.frequency}
-                                  </span>
-                                </div>
-                                <p
-                                  className="text-sm"
-                                  style={{
-                                    color: "var(--bsky-text-secondary)",
-                                  }}
-                                >
-                                  {theme.description}
-                                </p>
-                              </div>
-                            ))}
+                          <div
+                            className="rounded-lg p-3"
+                            style={{
+                              backgroundColor: "var(--bsky-bg-tertiary)",
+                            }}
+                          >
+                            <p
+                              className="mb-2 text-sm font-medium"
+                              style={{ color: "var(--bsky-text-primary)" }}
+                            >
+                              {sonnetAnalysis.writingStyle.tone}
+                            </p>
+                            {sonnetAnalysis.writingStyle.characteristics && (
+                              <ul className="space-y-1">
+                                {sonnetAnalysis.writingStyle.characteristics.map(
+                                  (char, idx) => (
+                                    <li
+                                      key={idx}
+                                      className="text-sm"
+                                      style={{
+                                        color: "var(--bsky-text-secondary)",
+                                      }}
+                                    >
+                                      • {char}
+                                    </li>
+                                  ),
+                                )}
+                              </ul>
+                            )}
                           </div>
                         </div>
                       )}
-
-                    {/* Writing Style */}
-                    {sonnetAnalysis.writingStyle && (
-                      <div>
-                        <h3
-                          className="mb-3 text-sm font-semibold"
-                          style={{ color: "var(--bsky-text-primary)" }}
-                        >
-                          Writing Style
-                        </h3>
-                        <div
-                          className="rounded-lg p-3"
-                          style={{
-                            backgroundColor: "var(--bsky-bg-tertiary)",
-                          }}
-                        >
-                          <p
-                            className="mb-2 text-sm font-medium"
-                            style={{ color: "var(--bsky-text-primary)" }}
-                          >
-                            {sonnetAnalysis.writingStyle.tone}
-                          </p>
-                          {sonnetAnalysis.writingStyle.characteristics && (
-                            <ul className="space-y-1">
-                              {sonnetAnalysis.writingStyle.characteristics.map(
-                                (char, idx) => (
-                                  <li
-                                    key={idx}
-                                    className="text-sm"
-                                    style={{
-                                      color: "var(--bsky-text-secondary)",
-                                    }}
-                                  >
-                                    • {char}
-                                  </li>
-                                ),
-                              )}
-                            </ul>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Posts - Virtualized */}
       <div ref={listContainerRef}>
