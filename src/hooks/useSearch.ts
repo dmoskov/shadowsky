@@ -1,7 +1,7 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { atProtoClient } from "../services/atproto";
+import { useAuth } from "../contexts/AuthContext";
 import {
   getSearchHistoryDB,
   type SearchHistoryEntry,
@@ -228,6 +228,7 @@ const persistFilters = (filters: SearchFilters): void => {
 };
 
 export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
+  const { agent } = useAuth();
   const { enabled = true, sortOrder: initialSortOrder = "latest" } = options;
 
   const [query, setQuery] = useState("");
@@ -355,7 +356,7 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
         return { posts: [], cursor: undefined };
       }
 
-      const response = await atProtoClient.agent.app.bsky.feed.searchPosts({
+      const response = await agent!.app.bsky.feed.searchPosts({
         q: fullSearchQuery,
         limit: 25,
         cursor: pageParam,

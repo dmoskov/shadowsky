@@ -21,7 +21,6 @@ import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModeration } from "../contexts/ModerationContext";
 import { useDebounce } from "../hooks/useDebounce";
 import { useFollowing } from "../hooks/useFollowing";
-import { atProtoClient } from "../services/atproto";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
 import { getProfileCacheService } from "../services/profile-cache-service";
 import { proxifyBskyImage } from "../utils/image-proxy";
@@ -167,7 +166,7 @@ const buildSearchQuery = (searchFilters: SearchFilters) => {
 };
 
 export const Search: React.FC = () => {
-  useAuth();
+  const { agent } = useAuth();
   const { isPostHidden } = useHiddenPosts();
   const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -220,11 +219,11 @@ export const Search: React.FC = () => {
 
   // Fetch and enrich followers data
   useEffect(() => {
-    if (followingSet && followingSet.size > 0) {
+    if (agent && followingSet && followingSet.size > 0) {
       const loadFollowersData = async () => {
         try {
           const db = await getFollowerCacheDB();
-          const profileService = getProfileCacheService(atProtoClient.agent);
+          const profileService = getProfileCacheService(agent);
 
           // Get DIDs from following set
           const dids = Array.from(followingSet);
@@ -302,7 +301,7 @@ export const Search: React.FC = () => {
 
       try {
         const response =
-          await atProtoClient.agent.app.bsky.actor.searchActorsTypeahead({
+          await agent!.app.bsky.actor.searchActorsTypeahead({
             q: debouncedUserSearch,
             limit: 8,
           });
@@ -411,7 +410,7 @@ export const Search: React.FC = () => {
     queryFn: async () => {
       if (!activeSearchQuery.trim()) return null;
 
-      const response = await atProtoClient.agent.app.bsky.feed.searchPosts({
+      const response = await agent!.app.bsky.feed.searchPosts({
         q: activeSearchQuery,
         limit: 50,
       });
@@ -437,7 +436,7 @@ export const Search: React.FC = () => {
     setIsLoadingThread(true);
     try {
       // Get the thread
-      const response = await atProtoClient.agent.getPostThread({
+      const response = await agent!.getPostThread({
         uri,
         depth: 10,
       });
@@ -460,7 +459,7 @@ export const Search: React.FC = () => {
 
           // Now fetch the full thread from the root
           if (rootThread.post?.uri && rootThread.post.uri !== uri) {
-            const rootResponse = await atProtoClient.agent.getPostThread({
+            const rootResponse = await agent!.getPostThread({
               uri: rootThread.post.uri,
               depth: 10,
             });
@@ -559,6 +558,7 @@ export const Search: React.FC = () => {
 
   // Handle Bluesky URL input
   const handleBskyUrlSubmit = async (url: string) => {
+    if (!agent) return;
     const parsed = parseBskyUrl(url);
     if (!parsed || !parsed.postId) {
       return;
@@ -569,7 +569,7 @@ export const Search: React.FC = () => {
       // If we have a handle, we need to resolve it to a DID first
       let uri: string;
       if (parsed.handle) {
-        const profile = await atProtoClient.agent.getProfile({
+        const profile = await agent!.getProfile({
           actor: parsed.handle,
         });
         uri = constructAtUri(profile.data.did, parsed.postId);

@@ -37,7 +37,6 @@ import { useModeration } from "../contexts/ModerationContext";
 import { useDebounce } from "../hooks/useDebounce";
 import { useFollowing } from "../hooks/useFollowing";
 import { useMinDuration } from "../hooks/useTiming";
-import { atProtoClient } from "../services/atproto";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
 import { getProfileCacheService } from "../services/profile-cache-service";
 import { proxifyBskyImage } from "../utils/image-proxy";
@@ -195,7 +194,7 @@ const buildSearchQuery = (searchFilters: SearchFilters) => {
 };
 
 export const SearchTabbed: React.FC = React.memo(() => {
-  useAuth();
+  const { agent } = useAuth();
   const navigate = useNavigate();
   const { isPostHidden } = useHiddenPosts();
   const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
@@ -340,11 +339,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
 
   // Fetch and enrich followers data
   useEffect(() => {
-    if (followingSet && followingSet.size > 0) {
+    if (agent && followingSet && followingSet.size > 0) {
       const loadFollowersData = async () => {
         try {
           const db = await getFollowerCacheDB();
-          const profileService = getProfileCacheService(atProtoClient.agent);
+          const profileService = getProfileCacheService(agent);
 
           // Get DIDs from following set
           const dids = Array.from(followingSet);
@@ -422,7 +421,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
 
       try {
         const response =
-          await atProtoClient.agent.app.bsky.actor.searchActorsTypeahead({
+          await agent!.app.bsky.actor.searchActorsTypeahead({
             q: debouncedUserSearch,
             limit: 8,
           });
@@ -438,7 +437,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
         return [];
       }
     },
-    enabled: !!debouncedUserSearch && debouncedUserSearch.length >= 2,
+    enabled: !!agent && !!debouncedUserSearch && debouncedUserSearch.length >= 2,
   });
 
   // Combine followers and search results
@@ -527,7 +526,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
     queryFn: async () => {
       try {
         const response =
-          await atProtoClient.agent.app.bsky.unspecced.getTrendingTopics({
+          await agent!.app.bsky.unspecced.getTrendingTopics({
             limit: 10,
           });
         return response.data;
@@ -536,6 +535,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
         return null;
       }
     },
+    enabled: !!agent,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 5 * 60 * 1000,
   });
@@ -548,7 +548,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
 
       try {
         const response =
-          await atProtoClient.agent.app.bsky.actor.searchActorsTypeahead({
+          await agent!.app.bsky.actor.searchActorsTypeahead({
             q: debouncedMainSearch,
             limit: 5,
           });
@@ -565,6 +565,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
       }
     },
     enabled:
+      !!agent &&
       !!debouncedMainSearch &&
       debouncedMainSearch.length >= 2 &&
       mainSearchInputFocused,
@@ -616,7 +617,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
     queryFn: async () => {
       if (!activeSearchQuery.trim()) return null;
 
-      const response = await atProtoClient.agent.app.bsky.feed.searchPosts({
+      const response = await agent!.app.bsky.feed.searchPosts({
         q: activeSearchQuery,
         limit: 50,
         sort: sortOrder,
@@ -635,7 +636,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
 
       return response.data;
     },
-    enabled: !!activeSearchQuery.trim() && activeTab === "posts",
+    enabled: !!agent && !!activeSearchQuery.trim() && activeTab === "posts",
   });
 
   // Search users query
@@ -648,14 +649,14 @@ export const SearchTabbed: React.FC = React.memo(() => {
     queryFn: async () => {
       if (!activeSearchQuery.trim()) return null;
 
-      const response = await atProtoClient.agent.app.bsky.actor.searchActors({
+      const response = await agent!.app.bsky.actor.searchActors({
         q: activeSearchQuery,
         limit: 50,
       });
 
       return response.data;
     },
-    enabled: !!activeSearchQuery.trim() && activeTab === "users",
+    enabled: !!agent && !!activeSearchQuery.trim() && activeTab === "users",
   });
 
   // Search feeds query
@@ -671,10 +672,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
       try {
         // Get popular feeds and user's feeds
         const [popularResponse, suggestedResponse] = await Promise.all([
-          atProtoClient.agent.app.bsky.unspecced.getPopularFeedGenerators({
+          agent!.app.bsky.unspecced.getPopularFeedGenerators({
             limit: 50,
           }),
-          atProtoClient.agent.app.bsky.feed.getSuggestedFeeds({
+          agent!.app.bsky.feed.getSuggestedFeeds({
             limit: 50,
           }),
         ]);
@@ -711,7 +712,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
         debug.error("Error searching feeds:", error);
         // Fallback to just suggested feeds
         const response =
-          await atProtoClient.agent.app.bsky.feed.getSuggestedFeeds({
+          await agent!.app.bsky.feed.getSuggestedFeeds({
             limit: 100,
           });
 
@@ -735,15 +736,16 @@ export const SearchTabbed: React.FC = React.memo(() => {
         };
       }
     },
-    enabled: !!activeSearchQuery.trim() && activeTab === "feeds",
+    enabled: !!agent && !!activeSearchQuery.trim() && activeTab === "feeds",
   });
 
   // Fetch thread for a post
   const fetchThread = async (uri: string, findRoot: boolean = true) => {
+    if (!agent) return;
     setIsLoadingThread(true);
     try {
       // Get the thread
-      const response = await atProtoClient.agent.getPostThread({
+      const response = await agent.getPostThread({
         uri,
         depth: 10,
       });
@@ -766,7 +768,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
 
           // Now fetch the full thread from the root
           if (rootThread.post?.uri && rootThread.post.uri !== uri) {
-            const rootResponse = await atProtoClient.agent.getPostThread({
+            const rootResponse = await agent.getPostThread({
               uri: rootThread.post.uri,
               depth: 10,
             });
@@ -865,6 +867,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
 
   // Handle Bluesky URL input
   const handleBskyUrlSubmit = async (url: string) => {
+    if (!agent) return;
     const parsed = parseBskyUrl(url);
     if (!parsed || !parsed.postId) {
       return;
@@ -875,7 +878,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
       // If we have a handle, we need to resolve it to a DID first
       let uri: string;
       if (parsed.handle) {
-        const profile = await atProtoClient.agent.getProfile({
+        const profile = await agent.getProfile({
           actor: parsed.handle,
         });
         uri = constructAtUri(profile.data.did, parsed.postId);

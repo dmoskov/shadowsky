@@ -8,7 +8,7 @@ import React, {
   useState,
 } from "react";
 import ReactDOM from "react-dom";
-import { atProtoClient } from "../services/atproto";
+import { useAuth } from "../contexts/AuthContext";
 
 interface MentionSuggestion {
   did: string;
@@ -102,6 +102,7 @@ export const MentionTypeahead = forwardRef<
     },
     ref,
   ) => {
+    const { agent } = useAuth();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
@@ -146,7 +147,7 @@ export const MentionTypeahead = forwardRef<
 
           try {
             const response =
-              await atProtoClient.agent.app.bsky.actor.searchActorsTypeahead({
+              await agent!.app.bsky.actor.searchActorsTypeahead({
                 q: debouncedQuery,
                 limit: 8,
               });
@@ -163,7 +164,7 @@ export const MentionTypeahead = forwardRef<
           }
         },
         enabled:
-          !!debouncedQuery && debouncedQuery.length >= 1 && showSuggestions,
+          !!agent && !!debouncedQuery && debouncedQuery.length >= 1 && showSuggestions,
       },
     );
 
