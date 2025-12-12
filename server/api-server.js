@@ -1353,7 +1353,8 @@ app.post(
       const getEngagement = (p) => p.likes + p.replies + (p.reposts || 0);
 
       // Separate root post (depth 0 or first post) from replies
-      const rootPost = sanitizedPosts.find((p) => p.depth === 0) || sanitizedPosts[0];
+      const rootPost =
+        sanitizedPosts.find((p) => p.depth === 0) || sanitizedPosts[0];
       const otherPosts = sanitizedPosts.filter((p) => p !== rootPost);
 
       // Filter out zero-engagement posts (noise)
@@ -1366,7 +1367,10 @@ app.post(
         selectedPosts = engagedPosts
           .sort((a, b) => getEngagement(b) - getEngagement(a))
           .slice(0, MAX_POSTS_FOR_SUMMARY - 1);
-      } else if (engagedPosts.length < 20 && otherPosts.length > engagedPosts.length) {
+      } else if (
+        engagedPosts.length < 20 &&
+        otherPosts.length > engagedPosts.length
+      ) {
         // If very few engaged posts, include some zero-engagement for context
         const zeroEngagement = otherPosts
           .filter((p) => getEngagement(p) === 0)
@@ -1383,8 +1387,12 @@ app.post(
       let totalChars = 0;
       const finalPosts = [];
       for (const post of postsForSummary) {
-        const postChars = post.text.length + (post.authorHandle?.length || 0) + 50;
-        if (totalChars + postChars > MAX_CONTEXT_CHARS && finalPosts.length > 0) {
+        const postChars =
+          post.text.length + (post.authorHandle?.length || 0) + 50;
+        if (
+          totalChars + postChars > MAX_CONTEXT_CHARS &&
+          finalPosts.length > 0
+        ) {
           break;
         }
         finalPosts.push(post);
@@ -1392,7 +1400,9 @@ app.post(
       }
       postsForSummary = finalPosts;
 
-      console.log(`[thread-summary] Filtered posts for large thread: ${sanitizedPosts.length} -> ${postsForSummary.length} (engaged: ${engagedPosts.length + 1})`);
+      console.log(
+        `[thread-summary] Filtered posts for large thread: ${sanitizedPosts.length} -> ${postsForSummary.length} (engaged: ${engagedPosts.length + 1})`,
+      );
     }
 
     // Find high-engagement sub-threads (posts with significant replies/likes)
