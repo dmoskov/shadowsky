@@ -42,148 +42,57 @@ import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
 import { appPreferencesService } from "./services/app-preferences-service";
 import { initializeCoreStorage } from "./services/data-services-initializer";
 import { NotificationStorageDB } from "./services/notification-storage-db";
-import { webVitalsMonitor } from "./services/web-vitals-monitor";
 import { cleanupLocalStorage } from "./utils/cleanupLocalStorage";
 import "./utils/debug-control"; // Initialize debug controls
-import { lazyWithRetry } from "./utils/lazyWithRetry";
 import { removeTrailingSlash } from "./utils/removeTrailingSlash";
 
-// Initialize Web Vitals monitoring early for accurate metrics
-webVitalsMonitor.init();
+// Static imports for core components (no lazy loading - more reliable)
+import { BackgroundNotificationLoader } from "./components/BackgroundNotificationLoader";
+import { Bookmarks } from "./components/Bookmarks";
+import { ColumnMigrationNotice } from "./components/ColumnMigrationNotice";
+import { CommandPalette } from "./components/CommandPalette";
+import { Composer } from "./components/Composer";
+import { DirectMessages } from "./components/DirectMessages";
+import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
+import { Lists } from "./components/Lists";
+import { ListTimeline } from "./components/ListTimeline";
+import { Notifications } from "./components/Notifications";
+import { NotificationsAnalytics } from "./components/NotificationsAnalytics";
+import { ScheduledPosts } from "./components/ScheduledPosts";
+import { SearchTabbed as Search } from "./components/SearchTabbed";
+import { ServiceWorkerUpdatePrompt } from "./components/ServiceWorkerUpdatePrompt";
+import { default as SkyDeck } from "./components/SkyDeck";
+import { StatusBar } from "./components/StatusBar";
+import { SwipeIndicator } from "./components/SwipeIndicator";
+import { BackgroundSyncIndicator } from "./components/ui/BackgroundSyncIndicator";
+import { FloatingActionButton } from "./components/ui/FloatingActionButton";
+import { VisualTimeline } from "./components/VisualTimeline";
+import { default as ProfilePage } from "./pages/ProfilePage";
+import { Settings } from "./pages/Settings";
+import { default as ThreadPage } from "./pages/ThreadPage";
+import { UserAnalytics } from "./pages/UserAnalytics";
 
-// Lazy load non-critical components that are conditionally rendered
-// Using lazyWithRetry to handle chunk load failures after deployments
-const BackgroundNotificationLoader = lazyWithRetry(() =>
-  import("./components/BackgroundNotificationLoader").then((m) => ({
-    default: m.BackgroundNotificationLoader,
-  })),
-);
-const CommandPalette = lazyWithRetry(() =>
-  import("./components/CommandPalette").then((m) => ({
-    default: m.CommandPalette,
-  })),
-);
-const DebugConsole = lazyWithRetry(() =>
+// Keep lazy loading only for rarely-used dev/debug tools
+import { lazy } from "react";
+const DebugConsole = lazy(() =>
   import("./components/DebugConsole").then((m) => ({
     default: m.DebugConsole,
   })),
 );
-const KeyboardShortcutsHelp = lazyWithRetry(() =>
-  import("./components/KeyboardShortcutsHelp").then((m) => ({
-    default: m.KeyboardShortcutsHelp,
-  })),
-);
-// Disabled - getting in the way
-// const NotificationPermissionPrompt = lazyWithRetry(() =>
-//   import("./components/NotificationPermissionPrompt").then((m) => ({
-//     default: m.NotificationPermissionPrompt,
-//   })),
-// );
-const StatusBar = lazyWithRetry(() =>
-  import("./components/StatusBar").then((m) => ({
-    default: m.StatusBar,
-  })),
-);
-const ServiceWorkerUpdatePrompt = lazyWithRetry(() =>
-  import("./components/ServiceWorkerUpdatePrompt").then((m) => ({
-    default: m.ServiceWorkerUpdatePrompt,
-  })),
-);
-const SwipeIndicator = lazyWithRetry(() =>
-  import("./components/SwipeIndicator").then((m) => ({
-    default: m.SwipeIndicator,
-  })),
-);
-const FloatingActionButton = lazyWithRetry(() =>
-  import("./components/ui/FloatingActionButton").then((m) => ({
-    default: m.FloatingActionButton,
-  })),
-);
-const DevPerformanceOverlay = lazyWithRetry(() =>
+const DevPerformanceOverlay = lazy(() =>
   import("./components/DevPerformanceOverlay").then((m) => ({
     default: m.DevPerformanceOverlay,
   })),
 );
-const BackgroundSyncIndicator = lazyWithRetry(() =>
-  import("./components/ui/BackgroundSyncIndicator").then((m) => ({
-    default: m.BackgroundSyncIndicator,
-  })),
-);
-const WebSocketStressPanel = lazyWithRetry(() =>
+const WebSocketStressPanel = lazy(() =>
   import("./components/dev/WebSocketStressPanel").then((m) => ({
     default: m.WebSocketStressPanel,
   })),
 );
-// Disabled - getting in the way
-// const OnboardingOverlay = lazyWithRetry(() =>
-//   import("./components/onboarding/OnboardingOverlay").then((m) => ({
-//     default: m.OnboardingOverlay,
-//   })),
-// );
-
-// Lazy load route components for better performance
-const Bookmarks = lazyWithRetry(() =>
-  import("./components/Bookmarks").then((m) => ({ default: m.Bookmarks })),
-);
-const ColumnMigrationNotice = lazyWithRetry(() =>
-  import("./components/ColumnMigrationNotice").then((m) => ({
-    default: m.ColumnMigrationNotice,
-  })),
-);
-const Composer = lazyWithRetry(() =>
-  import("./components/Composer").then((m) => ({ default: m.Composer })),
-);
-const CompressionTest = lazyWithRetry(() =>
+const CompressionTest = lazy(() =>
   import("./components/CompressionTest").then((m) => ({
     default: m.CompressionTest,
   })),
-);
-const DirectMessages = lazyWithRetry(() =>
-  import("./components/DirectMessages").then((m) => ({
-    default: m.DirectMessages,
-  })),
-);
-const Lists = lazyWithRetry(() =>
-  import("./components/Lists").then((m) => ({ default: m.Lists })),
-);
-const ListTimeline = lazyWithRetry(() =>
-  import("./components/ListTimeline").then((m) => ({
-    default: m.ListTimeline,
-  })),
-);
-const Notifications = lazyWithRetry(() =>
-  import("./components/Notifications").then((m) => ({
-    default: m.Notifications,
-  })),
-);
-const NotificationsAnalytics = lazyWithRetry(() =>
-  import("./components/NotificationsAnalytics").then((m) => ({
-    default: m.NotificationsAnalytics,
-  })),
-);
-const Search = lazyWithRetry(() =>
-  import("./components/SearchTabbed").then((m) => ({
-    default: m.SearchTabbed,
-  })),
-);
-const ScheduledPosts = lazyWithRetry(() =>
-  import("./components/ScheduledPosts").then((m) => ({
-    default: m.ScheduledPosts,
-  })),
-);
-const SkyDeck = lazyWithRetry(() => import("./components/SkyDeck"));
-const VisualTimeline = lazyWithRetry(() =>
-  import("./components/VisualTimeline").then((m) => ({
-    default: m.VisualTimeline,
-  })),
-);
-const ProfilePage = lazyWithRetry(() => import("./pages/ProfilePage"));
-const ThreadPage = lazyWithRetry(() => import("./pages/ThreadPage"));
-const Settings = lazyWithRetry(() =>
-  import("./pages/Settings").then((m) => ({ default: m.Settings })),
-);
-const UserAnalytics = lazyWithRetry(() =>
-  import("./pages/UserAnalytics").then((m) => ({ default: m.UserAnalytics })),
 );
 
 // Wrapper components that use route params as keys to force remount on navigation

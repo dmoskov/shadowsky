@@ -311,8 +311,8 @@ export default defineConfig({
           "**/EmojiPicker-*.js", // Lazy component
           "**/node_modules/**",
         ],
-        // Precache files up to 500KB - includes main bundle but excludes large vendor chunks
-        maximumFileSizeToCacheInBytes: 500 * 1024,
+        // Precache files up to 3MB - main bundle is ~1.7MB with static imports (no lazy loading)
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         // Clean up old caches
         cleanupOutdatedCaches: true,
         // Skip waiting for old service workers - activate immediately on new deployment
