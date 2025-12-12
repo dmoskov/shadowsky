@@ -45,3 +45,16 @@ echo "🚀 Pushing to remote..."
 git push "$@"
 
 echo "✅ Push completed successfully!"
+
+# Check if we're pushing to main and if server files changed
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [ "$CURRENT_BRANCH" = "main" ]; then
+    # Check if any server files were changed in the last commit
+    if git diff --name-only HEAD~1 HEAD | grep -q "^server/"; then
+        echo ""
+        echo "🐳 Server files changed - deploying to ECS..."
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        cd "$SCRIPT_DIR/../server" && ./deploy.sh
+        echo "✅ Server deployment complete!"
+    fi
+fi
