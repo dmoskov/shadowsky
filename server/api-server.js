@@ -1341,8 +1341,62 @@ app.post(
       0,
     );
 
+    // Smart filtering for large threads to avoid exceeding Claude's context limit
+    // Strategy: Keep root + engaged posts, filter noise, limit by character count
+    const MAX_CONTEXT_CHARS = 400000; // ~100k tokens, leaves room for prompt
+    const MAX_POSTS_FOR_SUMMARY = 150; // Hard cap on posts to analyze
+
+    let postsForSummary = sanitizedPosts;
+
+    if (sanitizedPosts.length > 50) {
+      // For large threads, filter intelligently
+      const getEngagement = (p) => p.likes + p.replies + (p.reposts || 0);
+
+      // Separate root post (depth 0 or first post) from replies
+      const rootPost = sanitizedPosts.find((p) => p.depth === 0) || sanitizedPosts[0];
+      const otherPosts = sanitizedPosts.filter((p) => p !== rootPost);
+
+      // Filter out zero-engagement posts (noise)
+      const engagedPosts = otherPosts.filter((p) => getEngagement(p) > 0);
+
+      // If we still have too many, sort by engagement and take top posts
+      let selectedPosts;
+      if (engagedPosts.length > MAX_POSTS_FOR_SUMMARY - 1) {
+        // Sort by engagement descending, take top posts
+        selectedPosts = engagedPosts
+          .sort((a, b) => getEngagement(b) - getEngagement(a))
+          .slice(0, MAX_POSTS_FOR_SUMMARY - 1);
+      } else if (engagedPosts.length < 20 && otherPosts.length > engagedPosts.length) {
+        // If very few engaged posts, include some zero-engagement for context
+        const zeroEngagement = otherPosts
+          .filter((p) => getEngagement(p) === 0)
+          .slice(0, 50 - engagedPosts.length);
+        selectedPosts = [...engagedPosts, ...zeroEngagement];
+      } else {
+        selectedPosts = engagedPosts;
+      }
+
+      // Always include root post first
+      postsForSummary = [rootPost, ...selectedPosts];
+
+      // Final check: estimate total characters and truncate if needed
+      let totalChars = 0;
+      const finalPosts = [];
+      for (const post of postsForSummary) {
+        const postChars = post.text.length + (post.authorHandle?.length || 0) + 50;
+        if (totalChars + postChars > MAX_CONTEXT_CHARS && finalPosts.length > 0) {
+          break;
+        }
+        finalPosts.push(post);
+        totalChars += postChars;
+      }
+      postsForSummary = finalPosts;
+
+      console.log(`[thread-summary] Filtered posts for large thread: ${sanitizedPosts.length} -> ${postsForSummary.length} (engaged: ${engagedPosts.length + 1})`);
+    }
+
     // Find high-engagement sub-threads (posts with significant replies/likes)
-    const highlightedSubThreads = sanitizedPosts
+    const highlightedSubThreads = postsForSummary
       .filter((p) => p.uri && (p.likes >= 10 || p.replies >= 5))
       .sort((a, b) => b.likes + b.replies - (a.likes + a.replies))
       .slice(0, 5)
@@ -1354,7 +1408,7 @@ app.post(
       }));
 
     // Check cache (unless forceRefresh is true)
-    const cacheKey = generateCacheKey(sanitizedPosts, format);
+    const cacheKey = generateCacheKey(postsForSummary, format);
     if (!forceRefresh) {
       const cached = getCachedSummary(cacheKey);
       if (cached) {
@@ -1377,7 +1431,7 @@ app.post(
 
     try {
       // Build the posts context with author and engagement info
-      const postsContext = sanitizedPosts
+      const postsContext = postsForSummary
         .map((post, i) => {
           return `<post index="${i + 1}" author="${post.author}" likes="${post.likes}" replies="${post.replies}">
 ${post.text}
@@ -1385,8 +1439,8 @@ ${post.text}
         })
         .join("\n\n");
 
-      // Get unique authors
-      const authors = [...new Set(sanitizedPosts.map((p) => p.author))];
+      // Get unique authors (from filtered posts)
+      const authors = [...new Set(postsForSummary.map((p) => p.author))];
 
       // Build format-specific prompts
       let formatPrompt;
@@ -1567,6 +1621,7 @@ ${formatPrompt}
         format,
         metadata: {
           postCount: sanitizedPosts.length,
+          analyzedPostCount: postsForSummary.length,
           authors,
           generatedAt: new Date(now).toISOString(),
           totalEngagement,
