@@ -353,6 +353,54 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
     };
   }, [src, networkOptimizedSrc, placeholderSrc, shouldLoad, priority]);
 
+  // Calculate aspect ratio for CLS prevention (must be before early return)
+  const computedAspectRatio = useMemo(() => {
+    // If explicit aspectRatio prop provided
+    if (aspectRatio) {
+      return typeof aspectRatio === "number"
+        ? aspectRatio
+        : ASPECT_RATIO_PRESETS[aspectRatio] || 16 / 9;
+    }
+    // Calculate from width/height if both provided
+    if (width && height) {
+      return width / height;
+    }
+    // No aspect ratio (will not reserve space)
+    return undefined;
+  }, [aspectRatio, width, height]);
+
+  // Container styles for CLS prevention (must be before early return)
+  const containerStyles = useMemo((): React.CSSProperties => {
+    const styles: React.CSSProperties = {
+      ...style,
+    };
+
+    // Apply aspect ratio for CLS prevention (reserves space before image loads)
+    if (computedAspectRatio) {
+      styles.aspectRatio = computedAspectRatio;
+    } else if (height) {
+      // Use explicit height if no aspect ratio
+      styles.height = typeof height === "number" ? `${height}px` : height;
+    } else {
+      styles.height = "auto";
+    }
+
+    // Apply width
+    styles.width = width
+      ? typeof width === "number"
+        ? `${width}px`
+        : width
+      : "100%";
+
+    // Apply max height constraint
+    if (maxHeight) {
+      styles.maxHeight =
+        typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight;
+    }
+
+    return styles;
+  }, [style, computedAspectRatio, width, height, maxHeight]);
+
   // Error state
   if (hasError) {
     return (
@@ -387,54 +435,6 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   const handleLqipLoad = () => {
     setLqipLoaded(true);
   };
-
-  // Calculate aspect ratio for CLS prevention
-  const computedAspectRatio = useMemo(() => {
-    // If explicit aspectRatio prop provided
-    if (aspectRatio) {
-      return typeof aspectRatio === "number"
-        ? aspectRatio
-        : ASPECT_RATIO_PRESETS[aspectRatio] || 16 / 9;
-    }
-    // Calculate from width/height if both provided
-    if (width && height) {
-      return width / height;
-    }
-    // No aspect ratio (will not reserve space)
-    return undefined;
-  }, [aspectRatio, width, height]);
-
-  // Container styles for CLS prevention
-  const containerStyles = useMemo((): React.CSSProperties => {
-    const styles: React.CSSProperties = {
-      ...style,
-    };
-
-    // Apply aspect ratio for CLS prevention (reserves space before image loads)
-    if (computedAspectRatio) {
-      styles.aspectRatio = computedAspectRatio;
-    } else if (height) {
-      // Use explicit height if no aspect ratio
-      styles.height = typeof height === "number" ? `${height}px` : height;
-    } else {
-      styles.height = "auto";
-    }
-
-    // Apply width
-    styles.width = width
-      ? typeof width === "number"
-        ? `${width}px`
-        : width
-      : "100%";
-
-    // Apply max height constraint
-    if (maxHeight) {
-      styles.maxHeight =
-        typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight;
-    }
-
-    return styles;
-  }, [style, computedAspectRatio, width, height, maxHeight]);
 
   // Render with LQIP blur-up effect or skeleton overlay
   return (

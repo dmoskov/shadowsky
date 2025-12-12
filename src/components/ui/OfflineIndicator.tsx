@@ -290,7 +290,7 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
 
   const getStateConfig = () => {
     switch (connectionState) {
-      case "offline":
+      case "offline": {
         // Build message based on pending actions and cached content
         let offlineMessage = "Changes will sync when connected";
         if (pendingActionCount > 0) {
@@ -313,6 +313,7 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
           showRetryButton: showRetry,
           hasCachedContent: cachedFeedCount > 0,
         };
+      }
       case "reconnecting":
         return {
           bgColor: "bg-yellow-500",

@@ -393,7 +393,7 @@ const PostLinkPreview: React.FC<{ postText: string }> = ({ postText }) => {
         if (!cancelled) {
           setMetadata(data);
         }
-      } catch (err) {
+      } catch (_err) {
         if (!cancelled) {
           setError("Failed to load preview");
         }

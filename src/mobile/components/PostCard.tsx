@@ -136,14 +136,16 @@ const RepostReason = memo(function RepostReason({
   reason: AppBskyFeedDefs.FeedViewPost["reason"];
   onPress?: (handle: string) => void;
 }) {
+  const by = (reason as any)?.by;
+  const handlePress = useCallback(() => {
+    if (by?.handle) {
+      onPress?.(by.handle);
+    }
+  }, [by?.handle, onPress]);
+
   if (reason?.$type !== "app.bsky.feed.defs#reasonRepost") {
     return null;
   }
-
-  const by = (reason as any).by;
-  const handlePress = useCallback(() => {
-    onPress?.(by.handle);
-  }, [by.handle, onPress]);
 
   return (
     <Pressable
@@ -251,14 +253,15 @@ const PostImages = memo(function PostImages({
   images: PostImage[];
   onPress?: (index: number) => void;
 }) {
-  if (!images || images.length === 0) return null;
-
   const gridStyle = useMemo<ViewStyle>(() => {
+    if (!images || images.length === 0) return styles.singleImage;
     if (images.length === 1) return styles.singleImage;
     if (images.length === 2) return styles.twoImages;
     if (images.length === 3) return styles.threeImages;
     return styles.fourImages;
-  }, [images.length]);
+  }, [images?.length]);
+
+  if (!images || images.length === 0) return null;
 
   return (
     <View style={[styles.imageContainer, gridStyle]}>
@@ -302,6 +305,13 @@ const QuotedPost = memo(function QuotedPost({
   onPress?: (uri: string) => void;
 }) {
   const record = embed?.record;
+
+  const handlePress = useCallback(() => {
+    if (record?.uri) {
+      onPress?.(record.uri);
+    }
+  }, [record?.uri, onPress]);
+
   if (!record || record.$type === "app.bsky.embed.record#viewNotFound") {
     return (
       <View style={styles.quotedPostDeleted}>
@@ -317,10 +327,6 @@ const QuotedPost = memo(function QuotedPost({
       </View>
     );
   }
-
-  const handlePress = useCallback(() => {
-    onPress?.(record.uri);
-  }, [record.uri, onPress]);
 
   return (
     <Pressable onPress={handlePress} style={styles.quotedPost}>
