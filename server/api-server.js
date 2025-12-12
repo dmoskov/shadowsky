@@ -1431,9 +1431,10 @@ app.post(
 
     try {
       // Build the posts context with author and engagement info
+      // Note: No index numbers - we want Claude to reference posts by author/content, not numbers
       const postsContext = postsForSummary
-        .map((post, i) => {
-          return `<post index="${i + 1}" author="${post.author}" likes="${post.likes}" replies="${post.replies}">
+        .map((post) => {
+          return `<post author="@${post.authorHandle}" likes="${post.likes}" replies="${post.replies}">
 ${post.text}
 </post>`;
         })
@@ -1509,28 +1510,36 @@ Return ONLY the summary text, no labels or section headers.`;
           // Build context about important sub-threads for the prompt
           const subThreadContext =
             highlightedSubThreads.length > 0
-              ? `\n\nNotable high-engagement replies (reference by post index when describing):\n${highlightedSubThreads.map((st) => `- Post #${sanitizedPosts.findIndex((p) => p.uri === st.uri) + 1} by @${st.authorHandle} (${st.engagement} engagement): "${st.snippet}"`).join("\n")}`
+              ? `\n\nNotable high-engagement replies to consider highlighting:\n${highlightedSubThreads.map((st) => `- @${st.authorHandle} (${st.engagement} engagement): "${st.snippet}"`).join("\n")}`
               : "";
 
           formatPrompt = `Write a comprehensive analysis of this viral thread (250-400 words).
 
+IMPORTANT: When referencing specific replies, ALWAYS use descriptive references like:
+- "@username's point about [topic]"
+- "@username argued that..."
+- "One user (@username) shared their experience with..."
+- "@username's reply about [brief description]"
+
+NEVER use post numbers or indexes like "Post #1" or "Posts #37, #50". Readers can't see those numbers.
+
 Analyze:
-1. The original post and its impact (2-3 sentences)
-2. Major conversation threads that emerged - what sub-topics sparked significant discussion (3-4 sentences)
-3. Key participants and their contributions - who added valuable perspectives (2-3 sentences)
-4. Points of agreement and disagreement - where did people align or clash (2-3 sentences)
-5. How the conversation evolved over time - did the tone or focus shift (2-3 sentences)
-6. Most impactful replies - which posts generated the most engagement and why (2-3 sentences)
-7. Overall takeaway - what would someone miss if they skipped this thread (1-2 sentences)
+1. Original Post and Impact - What sparked this conversation and why it resonated (2-3 sentences)
+2. Major Conversation Threads - What sub-topics emerged, referencing specific users who raised them (3-4 sentences)
+3. Key Participants and Perspectives - Who added valuable viewpoints, with @mentions and what they contributed (2-3 sentences)
+4. Points of Agreement and Disagreement - Where people aligned or clashed, citing specific exchanges (2-3 sentences)
+5. How the Conversation Evolved - Did the tone or focus shift over time (2-3 sentences)
+6. Most Impactful Contributions - Which replies resonated most and why, with @mentions (2-3 sentences)
+7. Overall Takeaway - What would someone miss if they skipped this thread (1-2 sentences)
 ${subThreadContext}
 
 After the main summary, add a section:
 
 ---HIGHLIGHTS---
 List the top 3-5 most notable replies in this format:
-[POST_INDEX]: @handle - Brief description of why this reply was notable (engagement/insight/controversy)
+@handle: "quote snippet" - Brief description of why this was notable
 
-This helps readers navigate directly to the best parts of the conversation.
+This helps readers find the best parts of the conversation by searching for the quoted text or username.
 Return the full analysis followed by the highlights section.`;
           maxTokens = 1000;
           break;
@@ -1556,6 +1565,12 @@ Return the full analysis followed by the highlights section.`;
               role: "user",
               content: `<system>
 You are a thread summarizer. Analyze the following thread posts and provide a summary in the requested format.
+
+Key rules:
+- Reference users by their @handle (e.g., "@username's point about...")
+- NEVER use post numbers or indexes (readers can't see them)
+- Quote brief snippets when highlighting specific replies
+- Focus on substance, not meta-commentary about "the thread" or "users"
 </system>
 
 <thread>
