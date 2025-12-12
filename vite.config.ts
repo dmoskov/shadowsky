@@ -149,7 +149,25 @@ export default defineConfig({
         // Import push notification handler and background sync handler
         importScripts: ["/push-sw.js", "/background-sync-sw.js"],
         // Cache static assets with stale-while-revalidate
+        // Use NetworkFirst for navigation (index.html) to always get fresh content
+        // This prevents the "stale HTML referencing missing chunks" problem
+        navigateFallback: "index.html",
+        navigateFallbackDenylist: [/^\/api\//, /^\/assets\//],
         runtimeCaching: [
+          {
+            // Navigation requests (SPA shell) - always try network first
+            // to ensure we get the latest HTML with correct chunk references
+            urlPattern: ({ request }) => request.mode === "navigate",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "navigation-cache",
+              networkTimeoutSeconds: 3, // Fall back to cache quickly if offline
+              expiration: {
+                maxEntries: 1,
+                maxAgeSeconds: 60 * 60 * 24, // 1 day
+              },
+            },
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: "CacheFirst",
@@ -190,13 +208,15 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /\.(?:js|css)$/i,
-            handler: "StaleWhileRevalidate",
+            // Hashed assets are immutable - cache forever, no revalidation needed
+            // The hash in the filename ensures we always get the right version
+            urlPattern: /\/assets\/[^/]+\.[a-f0-9]+\.(js|css)$/i,
+            handler: "CacheFirst",
             options: {
-              cacheName: "static-resources-cache",
+              cacheName: "immutable-assets-cache",
               expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year (immutable)
               },
             },
           },
