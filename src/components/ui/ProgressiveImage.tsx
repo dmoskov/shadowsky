@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { getInitialLoadingStrategy } from "../../hooks/useNetworkAwareLoading";
+import { isBskyCdnUrl, requestImage } from "../../services/cdn-request-manager";
 import {
   DEFAULT_LQIP_CONFIG,
   generateLQIPUrl,
@@ -43,54 +44,15 @@ interface ProgressiveImageProps {
   maxHeight?: number | string;
 }
 
-// Network-aware concurrent load limits
-// Initial values are defaults, updated dynamically based on network conditions
+// Track current prefetch strategy for IntersectionObserver rootMargin
 let currentPrefetchStrategy: PrefetchStrategy =
   getNetworkInfo().prefetchStrategy;
-let currentLoads = 0;
-const loadQueue: Array<() => void> = [];
-let isProcessingQueue = false;
 
 // Subscribe to network changes and update strategy
 if (typeof window !== "undefined") {
   subscribeToNetworkChanges((info: NetworkInfoSnapshot) => {
     currentPrefetchStrategy = info.prefetchStrategy;
-    // Process queue when network improves
-    processLoadQueue();
   });
-}
-
-async function processLoadQueue() {
-  // Use network-aware max concurrent loads
-  const maxLoads = currentPrefetchStrategy.maxConcurrentLoads;
-  const batchDelay = currentPrefetchStrategy.batchDelayMs;
-
-  // Don't load anything if prefetching is disabled (offline)
-  if (!currentPrefetchStrategy.enabled) {
-    return;
-  }
-
-  // Prevent concurrent queue processing
-  if (isProcessingQueue) {
-    return;
-  }
-
-  isProcessingQueue = true;
-
-  while (currentLoads < maxLoads && loadQueue.length > 0) {
-    const loadFn = loadQueue.shift();
-    if (loadFn) {
-      currentLoads++;
-      loadFn();
-
-      // Add network-aware delay between loads on slower connections
-      if (batchDelay > 0 && loadQueue.length > 0 && currentLoads < maxLoads) {
-        await new Promise((resolve) => setTimeout(resolve, batchDelay));
-      }
-    }
-  }
-
-  isProcessingQueue = false;
 }
 
 // Aspect ratio presets for CLS prevention
@@ -298,58 +260,66 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
       placeholderSrc || getLowQualitySrc(networkOptimizedSrc);
     setImgSrc(lowQualitySrc);
 
-    const loadImage = () => {
-      const img = new Image();
+    // Use CDN request manager for Bluesky CDN images
+    if (isBskyCdnUrl(networkOptimizedSrc)) {
+      const { promise, abort } = requestImage(
+        networkOptimizedSrc,
+        priority ? "high" : "normal",
+      );
 
-      img.onload = () => {
-        // Add small delay to ensure smooth transition
-        requestAnimationFrame(() => {
-          setImgSrc(networkOptimizedSrc);
-          setIsLoading(false);
-          loadedSrcRef.current = src;
-          // Small delay for DOM update before triggering crossfade
+      promise
+        .then(() => {
           requestAnimationFrame(() => {
-            setImageLoaded(true);
+            setImgSrc(networkOptimizedSrc);
+            setIsLoading(false);
+            loadedSrcRef.current = src;
+            requestAnimationFrame(() => {
+              setImageLoaded(true);
+            });
+            onLoadRef.current?.();
           });
-          onLoadRef.current?.();
+        })
+        .catch(() => {
+          setHasError(true);
+          setIsLoading(false);
+          onErrorRef.current?.();
         });
-        currentLoads--;
-        processLoadQueue();
-        // Clear image reference to free memory
-        img.onload = null;
-        img.onerror = null;
+
+      return () => {
+        abort();
       };
-
-      img.onerror = () => {
-        setHasError(true);
-        setIsLoading(false);
-        onErrorRef.current?.();
-        currentLoads--;
-        processLoadQueue();
-        // Clear image reference to free memory
-        img.onload = null;
-        img.onerror = null;
-      };
-
-      img.src = networkOptimizedSrc;
-    };
-
-    // Queue the image load
-    if (priority) {
-      // Priority images skip the queue
-      currentLoads++;
-      loadImage();
-    } else {
-      loadQueue.push(loadImage);
-      processLoadQueue();
     }
 
+    // For non-CDN images, load directly
+    const img = new Image();
+
+    img.onload = () => {
+      requestAnimationFrame(() => {
+        setImgSrc(networkOptimizedSrc);
+        setIsLoading(false);
+        loadedSrcRef.current = src;
+        requestAnimationFrame(() => {
+          setImageLoaded(true);
+        });
+        onLoadRef.current?.();
+      });
+      img.onload = null;
+      img.onerror = null;
+    };
+
+    img.onerror = () => {
+      setHasError(true);
+      setIsLoading(false);
+      onErrorRef.current?.();
+      img.onload = null;
+      img.onerror = null;
+    };
+
+    img.src = networkOptimizedSrc;
+
     return () => {
-      // Remove from queue if component unmounts
-      const index = loadQueue.findIndex((fn) => fn === loadImage);
-      if (index > -1) {
-        loadQueue.splice(index, 1);
-      }
+      img.onload = null;
+      img.onerror = null;
     };
   }, [src, networkOptimizedSrc, placeholderSrc, shouldLoad, priority]);
 

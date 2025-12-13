@@ -37,6 +37,7 @@ import { PostActionBar } from "./PostActionBar";
 import { EmptyState } from "./ui/EmptyState";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { RichText } from "./ui/RichText";
+import { ThrottledAvatar } from "./ui/ThrottledAvatar";
 import { VideoPlayer } from "./VideoPlayer";
 import { type VirtualizedThreadListHandle } from "./VirtualizedThreadList";
 export {
@@ -1423,36 +1424,20 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                   className={`flex items-start ${maxThreadDepth > 15 ? "gap-2" : "gap-3"}`}
                 >
                   <div className="flex-shrink-0">
-                    {author?.avatar ? (
-                      <img
-                        src={proxifyBskyImage(author.avatar)}
-                        alt={author.handle}
-                        className={`${maxThreadDepth > 15 ? "h-6 w-6" : maxThreadDepth > 10 ? "h-8 w-8" : "h-10 w-10"} cursor-pointer rounded-full object-cover transition-opacity hover:opacity-80`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (author.handle) {
-                            navigate(`/profile/${author.handle}`);
-                          }
-                        }}
-                      />
-                    ) : (
-                      <div
-                        className={`${maxThreadDepth > 15 ? "h-6 w-6" : maxThreadDepth > 10 ? "h-8 w-8" : "h-10 w-10"} flex cursor-pointer items-center justify-center rounded-full transition-opacity hover:opacity-80`}
-                        style={{ background: "var(--bsky-bg-tertiary)" }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (author?.handle) {
-                            navigate(`/profile/${author.handle}`);
-                          }
-                        }}
-                      >
-                        <span
-                          className={`${maxThreadDepth > 15 ? "text-xs" : "text-sm"} font-semibold`}
-                        >
-                          {author?.handle?.charAt(0).toUpperCase() || "U"}
-                        </span>
-                      </div>
-                    )}
+                    <ThrottledAvatar
+                      src={author?.avatar}
+                      alt={author?.handle || "User"}
+                      className={`${maxThreadDepth > 15 ? "h-6 w-6" : maxThreadDepth > 10 ? "h-8 w-8" : "h-10 w-10"} cursor-pointer object-cover transition-opacity hover:opacity-80`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (author?.handle) {
+                          navigate(`/profile/${author.handle}`);
+                        }
+                      }}
+                      fallbackInitial={
+                        author?.handle?.charAt(0).toUpperCase() || "U"
+                      }
+                    />
                   </div>
 
                   <div className="min-w-0 flex-1">
@@ -1834,29 +1819,18 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
           <div className="mb-6">
             {/* Author header */}
             <div className="mb-4 flex items-center gap-3">
-              {rootPostObject.author?.avatar ? (
-                <img
-                  src={proxifyBskyImage(rootPostObject.author.avatar)}
-                  alt={rootPostObject.author.handle}
-                  className="h-12 w-12 cursor-pointer rounded-full object-cover transition-opacity hover:opacity-80"
-                  onClick={() =>
-                    navigate(`/profile/${rootPostObject.author.handle}`)
-                  }
-                />
-              ) : (
-                <div
-                  className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full"
-                  style={{ background: "var(--bsky-bg-tertiary)" }}
-                  onClick={() =>
-                    navigate(`/profile/${rootPostObject.author?.handle}`)
-                  }
-                >
-                  <span className="text-lg font-semibold">
-                    {rootPostObject.author?.handle?.charAt(0).toUpperCase() ||
-                      "U"}
-                  </span>
-                </div>
-              )}
+              <ThrottledAvatar
+                src={rootPostObject.author?.avatar}
+                alt={rootPostObject.author?.handle || "User"}
+                className="h-12 w-12 cursor-pointer object-cover transition-opacity hover:opacity-80"
+                onClick={() =>
+                  navigate(`/profile/${rootPostObject.author?.handle}`)
+                }
+                fallbackInitial={
+                  rootPostObject.author?.handle?.charAt(0).toUpperCase() || "U"
+                }
+                priority
+              />
               <div className="min-w-0 flex-1">
                 <ProfileHoverCard handle={rootPostObject.author?.handle || ""}>
                   <div

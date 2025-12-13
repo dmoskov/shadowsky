@@ -24,6 +24,7 @@ import { ProgressiveThreadSummary } from "./ProgressiveThreadSummary";
 import { ThreadEngagementAnalytics } from "./ThreadEngagementAnalytics";
 import { ThreadMinimap } from "./ThreadMinimap";
 import { ThreadViewer, type ThreadViewerProps } from "./ThreadViewer";
+import { ThrottledAvatar } from "./ui/ThrottledAvatar";
 
 type Post = AppBskyFeedDefs.PostView;
 
@@ -228,15 +229,16 @@ function ThreadStatsBar({
         <div className="flex items-center gap-2">
           <div className="flex -space-x-2">
             {stats.authorAvatars.map((author, idx) => (
-              <img
+              <ThrottledAvatar
                 key={author.did}
-                src={author.avatar || "/default-avatar.svg"}
+                src={author.avatar}
                 alt={author.handle}
-                className="h-6 w-6 rounded-full border-2"
+                className="h-6 w-6 border-2"
                 style={{
                   borderColor: "var(--bsky-bg-primary)",
                   zIndex: stats.authorAvatars.length - idx,
                 }}
+                fallbackInitial={author.handle?.charAt(0).toUpperCase()}
               />
             ))}
           </div>

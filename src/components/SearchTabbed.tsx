@@ -1307,7 +1307,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
     <div className="mx-auto min-h-screen max-w-4xl p-4">
       {/* Thread Viewer */}
       {showThreadViewer ? (
-        <div className="bsky-glass mb-4 rounded-xl p-4">
+        <div
+          className="bsky-glass mb-4 rounded-xl p-4"
+          style={{ border: "1px solid var(--bsky-border-primary)" }}
+        >
           <div className="mb-4 flex items-center justify-between">
             <button
               onClick={() => {
@@ -1364,7 +1367,8 @@ export const SearchTabbed: React.FC = React.memo(() => {
         <>
           {/* Search Input Box */}
           <div
-            className={`bsky-glass relative mb-6 rounded-xl p-3 sm:p-4 ${showMainTypeahead ? "z-20" : ""}`}
+            className={`bsky-glass relative mb-6 rounded-xl p-3 sm:p-4 ${showMainTypeahead ? "z-[100]" : ""}`}
+            style={{ border: "1px solid var(--bsky-border-primary)" }}
           >
             <div className="relative flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
               <div className="flex flex-1 items-center gap-2">
@@ -1736,7 +1740,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
 
           {/* Faceted Search Filter Panel */}
           {activeTab === "posts" && showFacetedFilters && (
-            <div className="bsky-glass mb-4 rounded-xl">
+            <div
+              className="bsky-glass mb-4 rounded-xl"
+              style={{ border: "1px solid var(--bsky-border-primary)" }}
+            >
               <SearchFilterPanel
                 filters={facetedFilters}
                 setFilters={setFacetedFilters}
@@ -1789,7 +1796,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
 
           {/* Trending Topics Section - Show when no active search */}
           {!activeSearchQuery && trendingTopics && (
-            <div className="bsky-glass mb-6 rounded-xl p-4">
+            <div
+              className="bsky-glass mb-6 rounded-xl p-4"
+              style={{ border: "1px solid var(--bsky-border-primary)" }}
+            >
               <div className="mb-4 flex items-center gap-2">
                 <TrendingUp
                   size={20}
@@ -2203,7 +2213,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
               filters.domains.length > 0 ||
               filters.language ||
               showAdvanced) && (
-              <div className="bsky-glass mb-4 rounded-xl p-3 sm:p-4">
+              <div
+                className="bsky-glass mb-4 rounded-xl p-3 sm:p-4"
+                style={{ border: "1px solid var(--bsky-border-primary)" }}
+              >
                 {/* Filter Action Buttons - Compact when no filters (only for posts) */}
                 {activeTab === "posts" &&
                 filters.from.length === 0 &&
@@ -3381,6 +3394,9 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       <div
                         key={post.uri}
                         className="bsky-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
+                        style={{
+                          border: "1px solid var(--bsky-border-primary)",
+                        }}
                         onClick={() => handlePostClick(post)}
                       >
                         <div className="flex items-start gap-2.5">
@@ -3618,6 +3634,9 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       <div
                         key={user.did}
                         className="bsky-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
+                        style={{
+                          border: "1px solid var(--bsky-border-primary)",
+                        }}
                         onClick={() => navigate(`/profile/${user.handle}`)}
                       >
                         <div className="flex items-start gap-3">
@@ -3748,6 +3767,9 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     <div
                       key={feed.uri}
                       className="bsky-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
+                      style={{
+                        border: "1px solid var(--bsky-border-primary)",
+                      }}
                       onClick={() => {
                         // Navigate to home and set the selected feed
                         // For now, just open the feed URL externally until we have proper feed navigation

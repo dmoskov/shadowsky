@@ -66,7 +66,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.cursor,
-    enabled: false && !!agent, // Manual trigger only
+    enabled: false, // Manual trigger only - query disabled
     staleTime: Infinity, // Don't auto-refetch
     refetchInterval: 10 * 1000, // Refetch every 10 seconds when enabled
   });

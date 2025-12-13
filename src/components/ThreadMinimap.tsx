@@ -20,6 +20,7 @@ import React, {
 } from "react";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { throttle, TIMING } from "../utils/timing";
+import { ThrottledAvatar } from "./ui/ThrottledAvatar";
 
 type Post = AppBskyFeedDefs.PostView;
 
@@ -784,22 +785,19 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
                     key={participant.did}
                     className="flex items-center gap-1.5"
                   >
-                    {participant.avatar ? (
-                      <img
-                        src={proxifyBskyImage(participant.avatar)}
-                        alt=""
-                        className="h-3 w-3 rounded-full object-cover"
-                      />
-                    ) : (
-                      <span
-                        className="flex h-3 w-3 items-center justify-center rounded-full text-[6px] font-bold text-white"
-                        style={{
-                          backgroundColor: getUserColor(participant.did),
-                        }}
-                      >
-                        {(participant.handle[0] || "?").toUpperCase()}
-                      </span>
-                    )}
+                    <ThrottledAvatar
+                      src={participant.avatar}
+                      alt=""
+                      className="h-3 w-3 object-cover"
+                      style={
+                        !participant.avatar
+                          ? { backgroundColor: getUserColor(participant.did) }
+                          : undefined
+                      }
+                      fallbackInitial={(
+                        participant.handle[0] || "?"
+                      ).toUpperCase()}
+                    />
                     <span className="truncate" style={{ maxWidth: "70px" }}>
                       {participant.displayName || participant.handle}
                     </span>
