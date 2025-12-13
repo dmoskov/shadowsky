@@ -241,14 +241,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               );
               // Fall through to app-password check below
             } else {
-              // Session is valid, initialize services in parallel
-              await Promise.all([
-                initializeBookmarkService(agent),
-                initializeDataServices(agent),
-              ]);
-
               // Add session property for compatibility with code expecting agent.session.did
               // OAuth Agent has .did directly, but BskyAgent has .session.did
+              // IMPORTANT: This must be done BEFORE initializing services, as they need session.did
               const sessionCompat = {
                 did: oauthState.did,
                 handle,
@@ -260,6 +255,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 get: () => sessionCompat,
                 configurable: true,
               });
+
+              // Session is valid, initialize services in parallel
+              await Promise.all([
+                initializeBookmarkService(agent),
+                initializeDataServices(agent),
+              ]);
 
               setIsAuthenticated(true);
               setAuthMethod("oauth");

@@ -158,10 +158,20 @@ export class AppPreferencesService {
     }
 
     try {
+      // Ensure we have a valid DID before making the request
+      const did = this.agent.session?.did;
+      if (!did) {
+        logger.log(
+          "No DID available in agent session, falling back to localStorage",
+        );
+        // Skip AT Protocol fetch and fall through to localStorage
+        throw { status: 400 }; // Trigger fallback path
+      }
+
       // Try to get preferences from AT Protocol custom record with retry
       const response = await withAtProtoRetry(async () => {
         return this.agent!.api.com.atproto.repo.getRecord({
-          repo: this.agent!.session?.did || "",
+          repo: did,
           collection: PREFERENCES_COLLECTION,
           rkey: PREFERENCES_RKEY,
         });
@@ -339,33 +349,41 @@ export class AppPreferencesService {
 
     // Try to save to AT Protocol
     if (this.agent) {
-      try {
-        const shadowSkyPref: ShadowSkyPreferences = {
-          $type: AT_PROTO_COLLECTIONS.PREFERENCES,
-          columnStorageType: defaultPrefs.columnStorageType,
-          draftStorageType: defaultPrefs.draftStorageType,
-          createdAt: defaultPrefs.createdAt,
-          updatedAt: defaultPrefs.updatedAt,
-          version: 1,
-        };
-
-        await withAtProtoRetry(async () => {
-          await this.agent!.api.com.atproto.repo.createRecord({
-            repo: this.agent!.session?.did || "",
-            collection: PREFERENCES_COLLECTION,
-            rkey: PREFERENCES_RKEY,
-            record: shadowSkyPref as unknown as Record<string, unknown>,
-          });
-        }, "createDefaultPreferences");
-
-        defaultPrefs.isStoredInAtProto = true;
-        logger.log("Created default preferences in AT Protocol");
-      } catch (error) {
+      const did = this.agent.session?.did;
+      if (!did) {
         logger.log(
-          "Failed to create preferences in AT Protocol, saving to localStorage:",
-          error,
+          "No DID available, saving default preferences to localStorage",
         );
         this.saveToLocalStorage(defaultPrefs);
+      } else {
+        try {
+          const shadowSkyPref: ShadowSkyPreferences = {
+            $type: AT_PROTO_COLLECTIONS.PREFERENCES,
+            columnStorageType: defaultPrefs.columnStorageType,
+            draftStorageType: defaultPrefs.draftStorageType,
+            createdAt: defaultPrefs.createdAt,
+            updatedAt: defaultPrefs.updatedAt,
+            version: 1,
+          };
+
+          await withAtProtoRetry(async () => {
+            await this.agent!.api.com.atproto.repo.createRecord({
+              repo: did,
+              collection: PREFERENCES_COLLECTION,
+              rkey: PREFERENCES_RKEY,
+              record: shadowSkyPref as unknown as Record<string, unknown>,
+            });
+          }, "createDefaultPreferences");
+
+          defaultPrefs.isStoredInAtProto = true;
+          logger.log("Created default preferences in AT Protocol");
+        } catch (error) {
+          logger.log(
+            "Failed to create preferences in AT Protocol, saving to localStorage:",
+            error,
+          );
+          this.saveToLocalStorage(defaultPrefs);
+        }
       }
     } else {
       // Save to localStorage
@@ -403,10 +421,20 @@ export class AppPreferencesService {
       return null;
     }
 
+    const did = this.agent.session?.did;
+    if (!did) {
+      logger.log("No DID available, returning default empty columns");
+      return {
+        $type: COLUMNS_COLLECTION,
+        columns: [],
+        version: 1,
+      };
+    }
+
     try {
       const response = await withAtProtoRetry(async () => {
         return this.agent!.api.com.atproto.repo.getRecord({
-          repo: this.agent!.session?.did || "",
+          repo: did,
           collection: COLUMNS_COLLECTION,
           rkey: COLUMNS_RKEY,
         });
