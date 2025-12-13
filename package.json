@@ -1,7 +1,7 @@
 {
   "name": "bsky-notifications-app",
   "private": true,
-  "version": "0.7.2",
+  "version": "0.7.3",
   "type": "module",
   "scripts": {
     "analyze": "ANALYZE=true npm run build:app && open bundle-stats.html",
