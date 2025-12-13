@@ -30,18 +30,24 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModeration } from "../contexts/ModerationContext";
 import { useDebounce } from "../hooks/useDebounce";
 import { useFollowing } from "../hooks/useFollowing";
+import {
+  defaultFilters as defaultFacetedFilters,
+  type SearchFilters as FacetedSearchFilters,
+  type MediaType,
+} from "../hooks/useSearch";
 import { useMinDuration } from "../hooks/useTiming";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
 import { getProfileCacheService } from "../services/profile-cache-service";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { constructAtUri, parseBskyUrl } from "../utils/url-helpers";
 import { ImageGrid } from "./ImageGrid";
+import { SearchFilterPanel } from "./SearchFilterPanel";
 import { ThreadViewer } from "./ThreadViewer";
 import { LoadingState } from "./ui/LoadingState";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
@@ -102,6 +108,171 @@ const postHasMedia = (post: AppBskyFeedDefs.PostView): boolean => {
   }
 
   return false;
+};
+
+// Check if a post has images specifically
+const postHasImages = (post: AppBskyFeedDefs.PostView): boolean => {
+  if (!post.embed) return false;
+  const embed = post.embed as any;
+
+  if (embed.$type === "app.bsky.embed.images#view") {
+    return true;
+  }
+
+  if (
+    embed.$type === "app.bsky.embed.recordWithMedia#view" &&
+    embed.media?.$type === "app.bsky.embed.images#view"
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+// Check if a post has videos specifically
+const postHasVideo = (post: AppBskyFeedDefs.PostView): boolean => {
+  if (!post.embed) return false;
+  const embed = post.embed as any;
+  return embed.$type === "app.bsky.embed.video#view";
+};
+
+// Check if a post has external links
+const postHasLinks = (post: AppBskyFeedDefs.PostView): boolean => {
+  if (!post.embed) return false;
+  const embed = post.embed as any;
+
+  if (embed.$type === "app.bsky.embed.external#view") {
+    return true;
+  }
+
+  if (
+    embed.$type === "app.bsky.embed.recordWithMedia#view" &&
+    embed.media?.$type === "app.bsky.embed.external#view"
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+// Check if a post is text-only (no embeds)
+const postIsTextOnly = (post: AppBskyFeedDefs.PostView): boolean => {
+  return !post.embed;
+};
+
+// Check if post meets engagement thresholds
+const postMeetsEngagement = (
+  post: AppBskyFeedDefs.PostView,
+  thresholds: { minLikes: number; minReposts: number; minReplies: number },
+): boolean => {
+  const likes = post.likeCount || 0;
+  const reposts = post.repostCount || 0;
+  const replies = post.replyCount || 0;
+
+  return (
+    likes >= thresholds.minLikes &&
+    reposts >= thresholds.minReposts &&
+    replies >= thresholds.minReplies
+  );
+};
+
+// Filter posts by media type
+const filterByMediaType = (
+  posts: AppBskyFeedDefs.PostView[],
+  mediaType: MediaType,
+): AppBskyFeedDefs.PostView[] => {
+  if (mediaType === "all") return posts;
+
+  switch (mediaType) {
+    case "images":
+      return posts.filter(postHasImages);
+    case "videos":
+      return posts.filter(postHasVideo);
+    case "links":
+      return posts.filter(postHasLinks);
+    case "text-only":
+      return posts.filter(postIsTextOnly);
+    default:
+      return posts;
+  }
+};
+
+// Parse faceted filters from URL search params
+const parseFacetedFiltersFromParams = (
+  searchParams: URLSearchParams,
+): Partial<FacetedSearchFilters> => {
+  const filters: Partial<FacetedSearchFilters> = {};
+
+  const mediaType = searchParams.get("mediaType");
+  if (
+    mediaType &&
+    ["all", "images", "videos", "links", "text-only"].includes(mediaType)
+  ) {
+    filters.mediaType = mediaType as MediaType;
+  }
+
+  const sinceDate = searchParams.get("since");
+  if (sinceDate) filters.sinceDate = sinceDate;
+
+  const untilDate = searchParams.get("until");
+  if (untilDate) filters.untilDate = untilDate;
+
+  const datePreset = searchParams.get("datePreset");
+  if (
+    datePreset &&
+    ["today", "week", "month", "year", "custom"].includes(datePreset)
+  ) {
+    filters.datePreset = datePreset as FacetedSearchFilters["datePreset"];
+  }
+
+  const minLikes = searchParams.get("minLikes");
+  const minReposts = searchParams.get("minReposts");
+  const minReplies = searchParams.get("minReplies");
+  if (minLikes || minReposts || minReplies) {
+    filters.engagement = {
+      minLikes: minLikes ? parseInt(minLikes, 10) : 0,
+      minReposts: minReposts ? parseInt(minReposts, 10) : 0,
+      minReplies: minReplies ? parseInt(minReplies, 10) : 0,
+    };
+  }
+
+  const language = searchParams.get("lang");
+  if (language) filters.language = language;
+
+  const fromUsers = searchParams.get("from");
+  if (fromUsers) filters.fromUsers = fromUsers.split(",");
+
+  return filters;
+};
+
+// Serialize faceted filters to URL search params
+const serializeFacetedFiltersToParams = (
+  filters: FacetedSearchFilters,
+): Record<string, string> => {
+  const params: Record<string, string> = {};
+
+  if (filters.mediaType !== "all") {
+    params.mediaType = filters.mediaType;
+  }
+
+  if (filters.sinceDate) params.since = filters.sinceDate;
+  if (filters.untilDate) params.until = filters.untilDate;
+  if (filters.datePreset) params.datePreset = filters.datePreset;
+
+  if (filters.engagement.minLikes > 0) {
+    params.minLikes = filters.engagement.minLikes.toString();
+  }
+  if (filters.engagement.minReposts > 0) {
+    params.minReposts = filters.engagement.minReposts.toString();
+  }
+  if (filters.engagement.minReplies > 0) {
+    params.minReplies = filters.engagement.minReplies.toString();
+  }
+
+  if (filters.language) params.lang = filters.language;
+  if (filters.fromUsers.length > 0) params.from = filters.fromUsers.join(",");
+
+  return params;
 };
 
 // Extract images from a post
@@ -196,10 +367,12 @@ const buildSearchQuery = (searchFilters: SearchFilters) => {
 export const SearchTabbed: React.FC = React.memo(() => {
   const { agent } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isPostHidden } = useHiddenPosts();
   const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
   const [activeTab, setActiveTab] = useState<SearchTab>("posts");
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showFacetedFilters, setShowFacetedFilters] = useState(false);
   const [activeSearchQuery, setActiveSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"top" | "latest">("latest");
   const [filters, setFilters] = useState<SearchFilters>({
@@ -214,6 +387,56 @@ export const SearchTabbed: React.FC = React.memo(() => {
     untilDate: "",
     hasMedia: false,
   });
+
+  // Faceted search filters (media type, engagement thresholds)
+  const [facetedFilters, setFacetedFilters] = useState<FacetedSearchFilters>(
+    () => {
+      const fromParams = parseFacetedFiltersFromParams(searchParams);
+      return {
+        ...defaultFacetedFilters,
+        ...fromParams,
+        engagement: {
+          ...defaultFacetedFilters.engagement,
+          ...(fromParams.engagement || {}),
+        },
+      };
+    },
+  );
+
+  // Sync faceted filters to URL params
+  useEffect(() => {
+    const params = serializeFacetedFiltersToParams(facetedFilters);
+    const currentQuery = searchParams.get("q");
+
+    // Build new search params, preserving query
+    const newParams = new URLSearchParams();
+    if (currentQuery) newParams.set("q", currentQuery);
+
+    Object.entries(params).forEach(([key, value]) => {
+      newParams.set(key, value);
+    });
+
+    // Only update if params have changed
+    const currentStr = searchParams.toString();
+    const newStr = newParams.toString();
+    if (currentStr !== newStr) {
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [facetedFilters, searchParams, setSearchParams]);
+
+  // Check if any faceted filters are active
+  const hasFacetedFiltersActive = useMemo(() => {
+    return (
+      facetedFilters.mediaType !== "all" ||
+      facetedFilters.engagement.minLikes > 0 ||
+      facetedFilters.engagement.minReposts > 0 ||
+      facetedFilters.engagement.minReplies > 0 ||
+      facetedFilters.fromUsers.length > 0 ||
+      facetedFilters.sinceDate !== "" ||
+      facetedFilters.untilDate !== "" ||
+      facetedFilters.language !== ""
+    );
+  }, [facetedFilters]);
 
   // Thread viewer state
   const [showThreadViewer, setShowThreadViewer] = useState(false);
@@ -637,6 +860,30 @@ export const SearchTabbed: React.FC = React.memo(() => {
     enabled: !!agent && !!activeSearchQuery.trim() && activeTab === "posts",
   });
 
+  // Apply faceted filters to search results (client-side filtering)
+  const filteredPostsSearchResults = useMemo(() => {
+    if (!postsSearchResults?.posts) return postsSearchResults;
+
+    let posts = postsSearchResults.posts;
+
+    // Apply media type filter
+    posts = filterByMediaType(posts, facetedFilters.mediaType);
+
+    // Apply engagement thresholds
+    const hasEngagementFilters =
+      facetedFilters.engagement.minLikes > 0 ||
+      facetedFilters.engagement.minReposts > 0 ||
+      facetedFilters.engagement.minReplies > 0;
+
+    if (hasEngagementFilters) {
+      posts = posts.filter((post) =>
+        postMeetsEngagement(post, facetedFilters.engagement),
+      );
+    }
+
+    return { ...postsSearchResults, posts };
+  }, [postsSearchResults, facetedFilters.mediaType, facetedFilters.engagement]);
+
   // Search users query
   const {
     data: usersSearchResults,
@@ -845,7 +1092,9 @@ export const SearchTabbed: React.FC = React.memo(() => {
     } catch (error) {
       debug.error("Error fetching thread:", error);
       // Still show the single post if thread fetch fails
-      const singlePost = postsSearchResults?.posts.find((p) => p.uri === uri);
+      const singlePost = filteredPostsSearchResults?.posts.find(
+        (p) => p.uri === uri,
+      );
       if (singlePost) {
         setThreadPosts([singlePost]);
         setSelectedPostUri(uri);
@@ -1026,7 +1275,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
     switch (activeTab) {
       case "posts":
         return {
-          data: postsSearchResults,
+          data: filteredPostsSearchResults,
           isLoading: isLoadingPosts,
           error: postsError,
         };
@@ -1421,29 +1670,80 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   <span className="hidden sm:inline">Search</span>
                 </button>
                 {activeTab === "posts" && (
-                  <button
-                    onClick={() => setShowAdvanced(!showAdvanced)}
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-all ${
-                      showAdvanced ? "text-white" : ""
-                    }`}
-                    style={{
-                      backgroundColor: showAdvanced
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-bg-secondary)",
-                      color: showAdvanced
-                        ? "white"
-                        : "var(--bsky-text-secondary)",
-                      borderWidth: "1px",
-                      borderColor: "var(--bsky-border-primary)",
-                    }}
-                  >
-                    <Filter size={16} />
-                    <span className="hidden sm:inline">Filters</span>
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setShowAdvanced(!showAdvanced)}
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-all ${
+                        showAdvanced ? "text-white" : ""
+                      }`}
+                      style={{
+                        backgroundColor: showAdvanced
+                          ? "var(--bsky-primary)"
+                          : "var(--bsky-bg-secondary)",
+                        color: showAdvanced
+                          ? "white"
+                          : "var(--bsky-text-secondary)",
+                        borderWidth: "1px",
+                        borderColor: "var(--bsky-border-primary)",
+                      }}
+                    >
+                      <Filter size={16} />
+                      <span className="hidden sm:inline">Query</span>
+                    </button>
+                    <button
+                      onClick={() => setShowFacetedFilters(!showFacetedFilters)}
+                      className={`relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-all ${
+                        showFacetedFilters || hasFacetedFiltersActive
+                          ? "text-white"
+                          : ""
+                      }`}
+                      style={{
+                        backgroundColor:
+                          showFacetedFilters || hasFacetedFiltersActive
+                            ? "var(--bsky-primary)"
+                            : "var(--bsky-bg-secondary)",
+                        color:
+                          showFacetedFilters || hasFacetedFiltersActive
+                            ? "white"
+                            : "var(--bsky-text-secondary)",
+                        borderWidth: "1px",
+                        borderColor:
+                          showFacetedFilters || hasFacetedFiltersActive
+                            ? "var(--bsky-primary)"
+                            : "var(--bsky-border-primary)",
+                      }}
+                      title="Media, date, and engagement filters"
+                    >
+                      <Filter size={16} />
+                      <span className="hidden sm:inline">Filters</span>
+                      {hasFacetedFiltersActive && (
+                        <span
+                          className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold"
+                          style={{
+                            backgroundColor: "var(--bsky-error)",
+                            color: "white",
+                          }}
+                        >
+                          !
+                        </span>
+                      )}
+                    </button>
+                  </>
                 )}
               </div>
             </div>
           </div>
+
+          {/* Faceted Search Filter Panel */}
+          {activeTab === "posts" && showFacetedFilters && (
+            <div className="bsky-glass mb-4 rounded-xl">
+              <SearchFilterPanel
+                filters={facetedFilters}
+                setFilters={setFacetedFilters}
+                onClose={() => setShowFacetedFilters(false)}
+              />
+            </div>
+          )}
 
           {/* Search History */}
           {!activeSearchQuery && searchHistory.length > 0 && (
@@ -1662,8 +1962,8 @@ export const SearchTabbed: React.FC = React.memo(() => {
               <FileText size={16} />
               Posts
               {activeTab === "posts" &&
-                postsSearchResults?.posts &&
-                postsSearchResults.posts.length > 0 && (
+                filteredPostsSearchResults?.posts &&
+                filteredPostsSearchResults.posts.length > 0 && (
                   <span
                     className="ml-1 rounded-full px-1.5 py-0.5 text-xs font-normal"
                     style={{
@@ -1673,7 +1973,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     }}
                   >
                     {
-                      postsSearchResults.posts.filter(
+                      filteredPostsSearchResults.posts.filter(
                         (post) =>
                           !isPostHidden(post.uri) &&
                           !isUserMuted(post.author.did) &&
@@ -2998,7 +3298,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
             {/* Posts Results */}
             {activeTab === "posts" &&
               searchResults &&
-              postsSearchResults?.posts.length === 0 && (
+              filteredPostsSearchResults?.posts.length === 0 && (
                 <div
                   className="rounded-xl border bg-white bg-opacity-5 p-6 text-center"
                   style={{ borderColor: "var(--bsky-border-primary)" }}
@@ -3048,8 +3348,8 @@ export const SearchTabbed: React.FC = React.memo(() => {
 
             {activeTab === "posts" &&
               searchResults &&
-              postsSearchResults?.posts &&
-              postsSearchResults.posts.length > 0 && (
+              filteredPostsSearchResults?.posts &&
+              filteredPostsSearchResults.posts.length > 0 && (
                 <>
                   <div className="mb-2 flex items-center justify-between">
                     <p
@@ -3057,7 +3357,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       style={{ color: "var(--bsky-text-secondary)" }}
                     >
                       {
-                        postsSearchResults.posts.filter(
+                        filteredPostsSearchResults.posts.filter(
                           (post) =>
                             !isPostHidden(post.uri) &&
                             !isUserMuted(post.author.did) &&
@@ -3069,7 +3369,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     </p>
                   </div>
 
-                  {postsSearchResults.posts
+                  {filteredPostsSearchResults.posts
                     .filter(
                       (post) =>
                         !isPostHidden(post.uri) &&

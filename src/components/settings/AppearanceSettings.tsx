@@ -261,7 +261,6 @@ export const AppearanceSettings: React.FC = () => {
           </div>
         </div>
       </div>
-
     </div>
   );
 };

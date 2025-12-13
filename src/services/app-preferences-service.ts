@@ -21,6 +21,14 @@ export interface BackgroundRefreshSettings {
   wifiOnly: boolean;
 }
 
+// Multi-account posting settings
+export interface MultiAccountPostingSettings {
+  /** Default accounts to post to (DIDs) */
+  defaultPostingAccounts: string[];
+  /** Show confirmation dialog before posting to multiple accounts */
+  showConfirmationDialog: boolean;
+}
+
 // Define the app preferences stored as custom record
 export interface ShadowSkyPreferences {
   $type: "com.shadowsky.preferences";
@@ -39,6 +47,8 @@ export interface ShadowSkyPreferences {
   columnWidth?: number;
   // Background refresh settings
   backgroundRefresh?: BackgroundRefreshSettings;
+  // Multi-account posting settings
+  multiAccountPosting?: MultiAccountPostingSettings;
 }
 
 // Column data stored in preferences
@@ -123,6 +133,8 @@ export interface AppPreferencesRecord {
   columnWidth?: number;
   // Background refresh settings
   backgroundRefresh?: BackgroundRefreshSettings;
+  // Multi-account posting settings
+  multiAccountPosting?: MultiAccountPostingSettings;
 }
 
 const PREFERENCES_COLLECTION = "com.shadowsky.preferences";
@@ -191,6 +203,7 @@ export class AppPreferencesService {
           aiSettings: shadowSkyPref.aiSettings,
           columnWidth: shadowSkyPref.columnWidth,
           backgroundRefresh: shadowSkyPref.backgroundRefresh,
+          multiAccountPosting: shadowSkyPref.multiAccountPosting,
         };
         // Mark that we loaded from AT Protocol
         prefs.isStoredInAtProto = true;
@@ -219,6 +232,7 @@ export class AppPreferencesService {
         aiSettings: localPrefs.aiSettings,
         columnWidth: localPrefs.columnWidth,
         backgroundRefresh: localPrefs.backgroundRefresh,
+        multiAccountPosting: localPrefs.multiAccountPosting,
       };
       // Mark that we loaded from localStorage
       validatedPrefs.isStoredInAtProto = false;
@@ -275,6 +289,7 @@ export class AppPreferencesService {
         aiSettings: updatedPrefs.aiSettings,
         columnWidth: updatedPrefs.columnWidth,
         backgroundRefresh: updatedPrefs.backgroundRefresh,
+        multiAccountPosting: updatedPrefs.multiAccountPosting,
       };
 
       logger.log("Saving to AT Protocol:", shadowSkyPref);
