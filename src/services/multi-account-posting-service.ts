@@ -62,7 +62,10 @@ async function createAgentForAccount(
 ): Promise<BskyAgent | null> {
   try {
     // Create a new ATProtoClient instance for this account
-    const tempClient = new ATProtoClient("https://bsky.social");
+    const tempClient = new ATProtoClient({
+      service: "https://bsky.social",
+      persistSession: false, // Don't persist - we're using stored session
+    });
     const session = await tempClient.resumeSession(account.session);
 
     if (session) {
