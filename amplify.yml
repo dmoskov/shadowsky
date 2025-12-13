@@ -5,8 +5,23 @@ frontend:
       commands:
         - nvm use 20
         - node --version
-        # Only download Bun if not cached
-        - test -f ~/.bun/bin/bun || curl -fsSL https://bun.sh/install | bash
+        # Install Bun with retry logic (GitHub can return 504 errors)
+        - |
+          if [ ! -f ~/.bun/bin/bun ]; then
+            for i in 1 2 3; do
+              echo "Attempting to install Bun (attempt $i/3)..."
+              if curl -fsSL https://bun.sh/install | bash; then
+                break
+              fi
+              if [ $i -lt 3 ]; then
+                echo "Bun install failed, retrying in 5 seconds..."
+                sleep 5
+              else
+                echo "Bun install failed after 3 attempts"
+                exit 1
+              fi
+            done
+          fi
         - export BUN_INSTALL="$HOME/.bun" && export PATH="$BUN_INSTALL/bin:$PATH"
         - bun --version
         - bun install
