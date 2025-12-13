@@ -13,12 +13,10 @@ import React, {
 } from "react";
 import { AuthExpiredModal } from "../components/AuthExpiredModal";
 import { WS_CONFIG } from "../config/websocket.config";
-import { pushNotificationService } from "../services/push-notification-service";
 import {
   getWebSocketService,
   initializeWebSocketService,
 } from "../services/websocket-service";
-import type { PushNotificationPayload } from "../types/push-notifications";
 import {
   WebSocketConnectionState,
   WebSocketEventType,
@@ -205,39 +203,14 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         notificationDebounceTimerRef.current = null;
       }, WS_CONFIG.NOTIFICATION_DEBOUNCE_MS);
 
-      // Show push notification via service worker for better handling
-      // (Push notifications are shown immediately, not debounced)
-      const pushPayload: PushNotificationPayload = {
-        type: "notification",
-        title: "New Bluesky Notification",
-        body: getNotificationBody(event.notification),
-        icon: event.notification.author.avatar || "/butterfly-icon.svg",
-        badge: "/butterfly-icon.svg",
-        tag: event.notification.uri,
-        data: {
-          url: getNotificationUrl(event.notification),
-          notificationUri: event.notification.uri,
-          authorDid: event.notification.author.did,
-          reason: event.notification.reason,
-          postUri: getPostUri(event.notification),
-        },
-        renotify: true,
-      };
-
-      // Use push notification service for settings-aware notifications
-      pushNotificationService
-        .showLocalNotification(pushPayload)
-        .catch((err) => {
-          debug.warn("Failed to show push notification:", err);
-          // Fallback to basic notification API
-          if (window.Notification?.permission === "granted") {
-            new window.Notification("New Bluesky Notification", {
-              body: getNotificationBody(event.notification),
-              icon: event.notification.author.avatar,
-              tag: event.notification.uri,
-            });
-          }
+      // Show browser notification if permitted
+      if (window.Notification?.permission === "granted") {
+        new window.Notification("New Bluesky Notification", {
+          body: getNotificationBody(event.notification),
+          icon: event.notification.author.avatar || "/butterfly-icon.svg",
+          tag: event.notification.uri,
         });
+      }
     },
     [flushPendingNotifications],
   );
@@ -265,7 +238,13 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     updateStats();
     // Switch to longer polling interval when connected (event-driven updates handle the rest)
     updatePollingInterval(true);
-  }, [updateStats, updatePollingInterval]);
+
+    // Trigger data refresh on connect
+    debug.log("🔄 [WebSocket] Triggering data refresh on connect");
+    queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
+    queryClient.invalidateQueries({ queryKey: ["timeline"] });
+  }, [updateStats, updatePollingInterval, queryClient]);
 
   const handleDisconnect = useCallback(() => {
     debug.log("❌ [WebSocket] Disconnected");
@@ -277,7 +256,13 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   const handleReconnect = useCallback(() => {
     debug.log("🔄 [WebSocket] Reconnecting...");
     updateStats();
-  }, [updateStats]);
+
+    // Trigger data refresh on reconnect
+    debug.log("🔄 [WebSocket] Triggering data refresh on reconnect");
+    queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
+    queryClient.invalidateQueries({ queryKey: ["timeline"] });
+  }, [updateStats, queryClient]);
 
   const handleError = useCallback(() => {
     debug.error("⚠️ [WebSocket] Error occurred");

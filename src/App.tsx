@@ -37,7 +37,6 @@ import { ToastProvider } from "./contexts/ToastContext";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { getInitialLoadingStrategy } from "./hooks/useNetworkAwareLoading";
-// import { useOnboarding } from "./hooks/useOnboarding";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
 import { appPreferencesService } from "./services/app-preferences-service";
 import { initializeCoreStorage } from "./services/data-services-initializer";
@@ -60,11 +59,9 @@ import { Notifications } from "./components/Notifications";
 import { NotificationsAnalytics } from "./components/NotificationsAnalytics";
 import { ScheduledPosts } from "./components/ScheduledPosts";
 import { SearchTabbed as Search } from "./components/SearchTabbed";
-import { ServiceWorkerUpdatePrompt } from "./components/ServiceWorkerUpdatePrompt";
 import { default as SkyDeck } from "./components/SkyDeck";
 import { StatusBar } from "./components/StatusBar";
 import { SwipeIndicator } from "./components/SwipeIndicator";
-import { BackgroundSyncIndicator } from "./components/ui/BackgroundSyncIndicator";
 import { FloatingActionButton } from "./components/ui/FloatingActionButton";
 import { VisualTimeline } from "./components/VisualTimeline";
 import { default as ProfilePage } from "./pages/ProfilePage";
@@ -543,14 +540,8 @@ function AppContent() {
         <FloatingActionButton />
         <SwipeIndicator />
         <StatusBar />
-        {/* Disabled - getting in the way
-        <ErrorBoundary componentName="Push Notifications" fallback={null}>
-          <NotificationPermissionPrompt />
-        </ErrorBoundary>
-        */}
         <DebugConsole />
         <DevPerformanceOverlay />
-        <BackgroundSyncIndicator />
         <WebSocketStressPanel />
         <ColumnMigrationNotice />
         <CommandPalette
@@ -561,10 +552,6 @@ function AppContent() {
           isOpen={isShortcutsHelpOpen}
           onClose={() => setIsShortcutsHelpOpen(false)}
         />
-        <ServiceWorkerUpdatePrompt />
-        {/* Disabled - getting in the way
-        <OnboardingOverlay onboarding={onboarding} />
-        */}
       </Suspense>
     </div>
   );
