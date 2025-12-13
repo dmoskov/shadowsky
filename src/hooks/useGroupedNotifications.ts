@@ -9,15 +9,13 @@
  */
 
 import type { AppBskyNotificationListNotifications } from "@atproto/api";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   type AggregationConfig,
   DEFAULT_AGGREGATION_CONFIG,
   type GroupedNotification,
   notificationGroupingService,
 } from "../services/notification-grouping-service";
-import { pushNotificationService } from "../services/push-notification-service";
-import type { PushNotificationSettings } from "../types/push-notifications";
 import { createLogger } from "../utils/logger";
 import { useNotifications } from "./useNotifications";
 
@@ -73,30 +71,6 @@ export function useGroupedNotifications(): UseGroupedNotificationsReturn {
   const [dismissedGroups, setDismissedGroups] = useState<Set<string>>(
     new Set(),
   );
-
-  // Sync aggregation config with push notification settings
-  useEffect(() => {
-    const syncConfig = async () => {
-      try {
-        const settings = pushNotificationService.getSettings();
-        updateConfigFromSettings(settings);
-      } catch (err) {
-        logger.error("Failed to sync aggregation config:", err);
-      }
-    };
-
-    syncConfig();
-  }, []);
-
-  const updateConfigFromSettings = (settings: PushNotificationSettings) => {
-    const newConfig: Partial<AggregationConfig> = {
-      timeWindowMs: settings.aggregationWindowHours * 60 * 60 * 1000,
-      enableDmThreading: settings.threadDmNotifications,
-    };
-
-    notificationGroupingService.setConfig(newConfig);
-    setAggregationConfigState(notificationGroupingService.getConfig());
-  };
 
   // Extract all notifications from paginated data
   const allNotifications = useMemo(() => {
