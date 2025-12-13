@@ -4,15 +4,12 @@ import { useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
 export function useFollowing() {
-  const { session } = useAuth();
+  const { session, agent } = useAuth();
 
   const query = useQuery({
     queryKey: ["following", session?.did],
     queryFn: async () => {
       if (!session?.did) throw new Error("No user DID");
-
-      const { atProtoClient } = await import("../services/atproto");
-      const agent = atProtoClient.agent;
       if (!agent) throw new Error("Not authenticated");
 
       // Fetch all follows (paginated)
@@ -41,7 +38,7 @@ export function useFollowing() {
         throw error;
       }
     },
-    enabled: !!session?.did,
+    enabled: !!session?.did && !!agent,
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
     gcTime: 30 * 60 * 1000, // Keep in memory for 30 minutes
     refetchOnWindowFocus: false,

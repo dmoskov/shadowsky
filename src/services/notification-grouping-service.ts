@@ -9,9 +9,26 @@
  */
 
 import type { AppBskyNotificationListNotifications } from "@atproto/api";
-import type { PushNotificationPayload } from "../types/push-notifications";
 
 type Notification = AppBskyNotificationListNotifications.Notification;
+
+// Define PushNotificationPayload inline since push notifications were removed
+interface PushNotificationPayload {
+  type: string;
+  title: string;
+  body: string;
+  icon: string;
+  badge: string;
+  tag: string;
+  data: {
+    reason: string;
+    postUri?: string;
+    url: string;
+  };
+  requireInteraction: boolean;
+  renotify: boolean;
+  actions?: Array<{ action: string; title: string }>;
+}
 
 /**
  * Notification group types

@@ -53,6 +53,12 @@ import {
   type ThreadDraft,
 } from "../services/drafts";
 import {
+  postToMultipleAccounts,
+  retryPostToAccount,
+  type MultiPostProgress,
+  type PostContent,
+} from "../services/multi-account-posting-service";
+import {
   composeFromSharedContent,
   parseReceivedShare,
 } from "../services/share-service";
@@ -62,6 +68,11 @@ import { isGifFile } from "../utils/gif-to-video";
 import { compressImage, isCompressibleImage } from "../utils/image-compression";
 import { createLogger } from "../utils/logger";
 import { parseBskyUrl } from "../utils/url-helpers";
+import { MultiAccountConfirmDialog } from "./composer/MultiAccountConfirmDialog";
+import {
+  MultiAccountSelector,
+  type AccountPostStatus,
+} from "./composer/MultiAccountSelector";
 import { extractFirstBskyPostUrl, extractFirstLinkUrl } from "./composer/utils";
 import { type MentionTypeaheadHandle } from "./MentionTypeahead";
 import { ReplyControls, type ReplyPermission } from "./ReplyControls";
@@ -340,6 +351,22 @@ export function Composer() {
   // Thread composer modal state
   const [showThreadComposer, setShowThreadComposer] = useState(false);
 
+  // Multi-account posting state
+  const [selectedPostingAccounts, setSelectedPostingAccounts] = useState<
+    string[]
+  >([]);
+  const [accountPostStatuses, setAccountPostStatuses] = useState<
+    AccountPostStatus[]
+  >([]);
+  const [showMultiAccountConfirm, setShowMultiAccountConfirm] = useState(false);
+  const [pendingMultiAccountPost, setPendingMultiAccountPost] = useState<{
+    posts: string[];
+    media: UploadedMedia[];
+  } | null>(null);
+  const [lastPostContent, setLastPostContent] = useState<PostContent | null>(
+    null,
+  );
+
   // Load settings on mount
   useEffect(() => {
     const settings = getComposerSettings();
@@ -348,16 +375,22 @@ export function Composer() {
     setDelaySeconds(settings.defaultDelaySeconds);
     setNumberingPosition(settings.numberingPosition || "end");
 
-    // Load AI settings from app preferences
-    const loadAiSettings = async () => {
+    // Load AI settings and multi-account preferences from app preferences
+    const loadAppPreferences = async () => {
       const prefs = await appPreferencesService.getPreferences();
       if (prefs?.aiSettings) {
         setAutoGenerateAltText(prefs.aiSettings.autoGenerateAltText);
         setEnableHashtagSuggestions(prefs.aiSettings.enableHashtagSuggestions);
       }
+      // Load default posting accounts if set
+      if (prefs?.multiAccountPosting?.defaultPostingAccounts?.length) {
+        setSelectedPostingAccounts(
+          prefs.multiAccountPosting.defaultPostingAccounts,
+        );
+      }
     };
 
-    loadAiSettings();
+    loadAppPreferences();
   }, []);
 
   // Handle shared content from Web Share Target API
@@ -407,6 +440,13 @@ export function Composer() {
   useEffect(() => {
     setDrafts(getDrafts());
   }, []);
+
+  // Initialize selected accounts with current account if none selected
+  useEffect(() => {
+    if (session?.did && selectedPostingAccounts.length === 0) {
+      setSelectedPostingAccounts([session.did]);
+    }
+  }, [session?.did, selectedPostingAccounts.length]);
 
   // Cleanup intervals on unmount
   useEffect(() => {
@@ -1703,10 +1743,42 @@ export function Composer() {
   const handleSend = async () => {
     if (!agent || posts.length === 0) return;
 
-    setPendingPost({ posts, media });
+    // Check if posting to multiple accounts
+    const isMultiAccountPost = selectedPostingAccounts.length > 1;
+    const skipConfirmation =
+      localStorage.getItem("shadowsky_skip_multi_account_confirm") === "true";
+
+    if (isMultiAccountPost && !skipConfirmation) {
+      // Show confirmation dialog
+      setPendingMultiAccountPost({ posts, media });
+      setShowMultiAccountConfirm(true);
+      return;
+    }
+
+    // Proceed with posting
+    await performSend(posts, media);
+  };
+
+  const performSend = async (
+    postsToSend: string[],
+    mediaToSend: UploadedMedia[],
+  ) => {
+    if (!agent) return;
+
+    setPendingPost({ posts: postsToSend, media: mediaToSend });
     setIsPosting(true);
 
-    if (delaySeconds > 0) {
+    // Check if multi-account posting
+    const isMultiAccountPost = selectedPostingAccounts.length > 1;
+
+    if (isMultiAccountPost) {
+      // Multi-account posting - skip delay for simplicity
+      setPostStatus({
+        type: "posting",
+        message: "Posting to multiple accounts...",
+      });
+      await executeMultiAccountPost(postsToSend, mediaToSend);
+    } else if (delaySeconds > 0) {
       // Start delayed send
       setCountdown(delaySeconds);
       setPostStatus({
@@ -1739,12 +1811,279 @@ export function Composer() {
 
       // Schedule the actual send
       sendTimeout.current = setTimeout(async () => {
-        await executePost(posts, media);
+        await executePost(postsToSend, mediaToSend);
       }, delaySeconds * 1000);
     } else {
       // Send immediately (no delay)
       setPostStatus({ type: "posting", message: "Creating thread..." });
-      await executePost(posts, media);
+      await executePost(postsToSend, mediaToSend);
+    }
+  };
+
+  const handleMultiAccountConfirm = async () => {
+    setShowMultiAccountConfirm(false);
+    if (pendingMultiAccountPost) {
+      await performSend(
+        pendingMultiAccountPost.posts,
+        pendingMultiAccountPost.media,
+      );
+      setPendingMultiAccountPost(null);
+    }
+  };
+
+  const handleMultiAccountCancel = () => {
+    setShowMultiAccountConfirm(false);
+    setPendingMultiAccountPost(null);
+  };
+
+  const executeMultiAccountPost = async (
+    postsToSend?: string[],
+    mediaToSend?: UploadedMedia[],
+  ) => {
+    if (!agent || !session?.did) {
+      logger.error("No agent or session available");
+      setPostStatus({ type: "error", message: "Not logged in" });
+      setIsPosting(false);
+      return;
+    }
+
+    const originalPosts = postsToSend || pendingPost?.posts || [];
+    const originalMedia = mediaToSend || pendingPost?.media || [];
+
+    if (originalPosts.length === 0) {
+      logger.error("No posts to send");
+      setPostStatus({ type: "error", message: "No content to post" });
+      setIsPosting(false);
+      return;
+    }
+
+    // Clear countdown state
+    setCountdown(null);
+
+    const numberedPosts = applyNumbering(originalPosts, postOrder);
+
+    try {
+      // For multi-account posting, we only support single posts (not threads) for now
+      // This is a simplification - threads would require more complex logic
+      if (numberedPosts.length > 1) {
+        setPostStatus({
+          type: "error",
+          message:
+            "Thread posting to multiple accounts is not yet supported. Please post a single post.",
+        });
+        setIsPosting(false);
+        return;
+      }
+
+      // Prepare the post content
+      const postContent: PostContent = {
+        text: numberedPosts[0],
+      };
+
+      // Prepare media
+      if (originalMedia.length > 0) {
+        const mediaItems = await Promise.all(
+          originalMedia.map(async (m) => ({
+            data: new Uint8Array(await m.file.arrayBuffer()),
+            mimeType: m.file.type,
+            alt: m.alt,
+            type: m.type,
+          })),
+        );
+        postContent.media = mediaItems;
+      }
+
+      // Add external embed if link preview enabled
+      if (
+        !postContent.media?.length &&
+        linkPreviewEnabled &&
+        linkPreview.metadata
+      ) {
+        const metadata = linkPreview.metadata;
+        let thumbData: Uint8Array | undefined;
+        let thumbMimeType: string | undefined;
+
+        if (metadata.imageUrl) {
+          try {
+            const imageResponse = await fetch(metadata.imageUrl);
+            if (imageResponse.ok) {
+              const imageBlob = await imageResponse.blob();
+              thumbData = new Uint8Array(await imageBlob.arrayBuffer());
+              thumbMimeType = imageBlob.type || "image/jpeg";
+            }
+          } catch {
+            // Continue without thumbnail
+          }
+        }
+
+        postContent.embed = {
+          type: "external",
+          uri: metadata.url,
+          title: metadata.title,
+          description: metadata.description,
+          thumbData,
+          thumbMimeType,
+        };
+      }
+
+      // Store for retry purposes
+      setLastPostContent(postContent);
+
+      // Initialize progress
+      const initialStatuses: AccountPostStatus[] = selectedPostingAccounts.map(
+        (did) => ({
+          did,
+          status: "pending" as const,
+        }),
+      );
+      setAccountPostStatuses(initialStatuses);
+
+      // Post to all selected accounts
+      const results = await postToMultipleAccounts(
+        selectedPostingAccounts,
+        postContent,
+        agent,
+        session.did,
+        (progress: MultiPostProgress[]) => {
+          setAccountPostStatuses(
+            progress.map((p) => ({
+              did: p.did,
+              status: p.status,
+              error: p.error,
+              postUrl: p.postUrl,
+            })),
+          );
+        },
+      );
+
+      // Check results
+      const successCount = results.filter((r) => r.success).length;
+      const failCount = results.filter((r) => !r.success).length;
+
+      if (failCount === 0) {
+        // All succeeded
+        const postUrl = results.find((r) => r.did === session.did)?.postUrl;
+        setPostStatus({
+          type: "success",
+          message: `Posted to ${successCount} account${successCount > 1 ? "s" : ""}!`,
+          postUrl,
+        });
+
+        // Reset form
+        setText("");
+        setPosts([]);
+        setPostOrder([]);
+        setMedia([]);
+        setCurrentDraftId(null);
+        setDraftTitle("");
+        setPendingPost(null);
+        setCountdown(null);
+        setReplyPermission("everyone");
+        videoUploadManager.resetUpload();
+        setLinkPreviewEnabled(true);
+        linkPreview.clearPreview();
+        setAccountPostStatuses([]);
+        setLastPostContent(null);
+
+        // Delete draft if it was loaded
+        if (currentDraftId) {
+          deleteDraft(currentDraftId);
+          setDrafts(getDrafts());
+        }
+
+        // Reset status after 3 seconds
+        setTimeout(() => {
+          setPostStatus({ type: "idle" });
+        }, 3000);
+      } else if (successCount === 0) {
+        // All failed
+        setPostStatus({
+          type: "error",
+          message: `Failed to post to all ${failCount} accounts`,
+        });
+      } else {
+        // Partial success
+        const postUrl = results.find(
+          (r) => r.success && r.did === session.did,
+        )?.postUrl;
+        setPostStatus({
+          type: "success",
+          message: `Posted to ${successCount}/${selectedPostingAccounts.length} accounts. ${failCount} failed.`,
+          postUrl,
+        });
+
+        // Keep the form content in case user wants to retry the failed ones
+      }
+    } catch (error) {
+      logger.error("Error in multi-account posting:", error);
+      setPostStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "Failed to post",
+      });
+    } finally {
+      setIsPosting(false);
+    }
+  };
+
+  const handleRetryAccount = async (did: string) => {
+    if (!agent || !session?.did || !lastPostContent) return;
+
+    // Update status to posting
+    setAccountPostStatuses((prev) =>
+      prev.map((s) =>
+        s.did === did
+          ? { ...s, status: "posting" as const, error: undefined }
+          : s,
+      ),
+    );
+
+    const result = await retryPostToAccount(
+      did,
+      lastPostContent,
+      agent,
+      session.did,
+    );
+
+    // Update status
+    setAccountPostStatuses((prev) =>
+      prev.map((s) =>
+        s.did === did
+          ? {
+              ...s,
+              status: result.success
+                ? ("success" as const)
+                : ("error" as const),
+              error: result.error,
+              postUrl: result.postUrl,
+            }
+          : s,
+      ),
+    );
+
+    // Check if all are now successful
+    const allStatuses = accountPostStatuses.map((s) =>
+      s.did === did
+        ? { ...s, status: result.success ? "success" : "error" }
+        : s,
+    );
+    const allSuccessful = allStatuses.every((s) => s.status === "success");
+
+    if (allSuccessful) {
+      // Clear form since all posts succeeded
+      setText("");
+      setPosts([]);
+      setPostOrder([]);
+      setMedia([]);
+      setCurrentDraftId(null);
+      setDraftTitle("");
+      setPendingPost(null);
+      setAccountPostStatuses([]);
+      setLastPostContent(null);
+      setPostStatus({
+        type: "success",
+        message: "All posts successful!",
+      });
+      setTimeout(() => setPostStatus({ type: "idle" }), 3000);
     }
   };
 
@@ -2268,14 +2607,27 @@ export function Composer() {
           </button>
         </div>
 
-        <div className="mb-4 flex items-center justify-between">
-          <button
-            className="bsky-button-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium"
-            onClick={() => setShowThreadComposer(true)}
-          >
-            <MessageSquare size={16} />
-            Create Thread
-          </button>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              className="bsky-button-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium"
+              onClick={() => setShowThreadComposer(true)}
+            >
+              <MessageSquare size={16} />
+              Create Thread
+            </button>
+            {/* Multi-account selector - only shows if multiple accounts */}
+            <MultiAccountSelector
+              selectedAccounts={selectedPostingAccounts}
+              onSelectionChange={setSelectedPostingAccounts}
+              disabled={isPosting}
+              postStatuses={
+                accountPostStatuses.length > 0 ? accountPostStatuses : undefined
+              }
+              onRetry={handleRetryAccount}
+              currentAccountDid={session?.did}
+            />
+          </div>
           <button
             className="bsky-button-primary flex items-center gap-2 px-6 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleSend}
@@ -2293,7 +2645,9 @@ export function Composer() {
                 ? "Posting..."
                 : posts.length > 1
                   ? `Post Thread (${posts.length} posts)`
-                  : "Post"}
+                  : selectedPostingAccounts.length > 1
+                    ? `Post to ${selectedPostingAccounts.length} Accounts`
+                    : "Post"}
           </button>
         </div>
 
@@ -3086,6 +3440,16 @@ export function Composer() {
           setTimeout(() => setPostStatus({ type: "idle" }), 3000);
         }}
       />
+
+      {/* Multi-Account Confirmation Dialog */}
+      <MultiAccountConfirmDialog
+        isOpen={showMultiAccountConfirm}
+        onClose={handleMultiAccountCancel}
+        onConfirm={handleMultiAccountConfirm}
+        selectedAccountDids={selectedPostingAccounts}
+        postCount={posts.length}
+        hasMedia={media.length > 0}
+      />
     </div>
   );
 }
@@ -3220,6 +3584,7 @@ const InlinePostLinkPreview: React.FC<{ postText: string }> = ({
 const InlinePostQuotePreview: React.FC<{ postText: string }> = ({
   postText,
 }) => {
+  const { agent } = useAuth();
   const [quotedPost, setQuotedPost] = useState<AppBskyFeedDefs.PostView | null>(
     null,
   );
@@ -3238,12 +3603,10 @@ const InlinePostQuotePreview: React.FC<{ postText: string }> = ({
       const parsed = parseBskyUrl(bskyUrl);
       if (!parsed || !parsed.postId) return;
 
+      if (!agent) return;
+
       setLoading(true);
       try {
-        const { atProtoClient } = await import("../services/atproto");
-        const agent = atProtoClient.agent;
-        if (!agent) return;
-
         let did = parsed.did;
         if (!did && parsed.handle) {
           try {
@@ -3278,7 +3641,7 @@ const InlinePostQuotePreview: React.FC<{ postText: string }> = ({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [bskyUrl]);
+  }, [bskyUrl, agent]);
 
   if (!bskyUrl) return null;
 

@@ -11,7 +11,7 @@ type Post = AppBskyFeedDefs.PostView;
  * Hook to fetch posts by their URIs
  */
 export function usePostsByUris(uris: string[]) {
-  const { session } = useAuth();
+  const { session, agent } = useAuth();
 
   // Create a stable query key based on sorted URIs
   const queryKey = ["posts-by-uris", uris.slice().sort().join(",")];
@@ -34,8 +34,6 @@ export function usePostsByUris(uris: string[]) {
         `🎯 Found ${cached.length} cached root posts, fetching ${missing.length} from API`,
       );
 
-      const { atProtoClient } = await import("../services/atproto");
-      const agent = atProtoClient.agent;
       if (!agent) throw new Error("Not authenticated");
 
       // Batch fetch missing posts (Bluesky API supports up to 25 posts per request)
@@ -60,7 +58,7 @@ export function usePostsByUris(uris: string[]) {
 
       return posts;
     },
-    enabled: !!session && uris.length > 0,
+    enabled: !!session && !!agent && uris.length > 0,
     staleTime: 30 * 60 * 1000, // 30 minutes - posts don't change often
     gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour
     refetchOnWindowFocus: false, // Don't refetch posts on window focus

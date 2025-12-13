@@ -31,25 +31,23 @@ function deferCssPlugin(): Plugin {
  * Vite plugin to add version query parameter to main entry point.
  * This forces cache invalidation when the app version changes, bypassing
  * service worker and CDN caches that may serve stale bundles.
+ *
+ * NOTE: Only runs in production builds. In dev mode, adding query params
+ * to .tsx files causes esbuild loader errors.
  */
 function versionCacheBustPlugin(): Plugin {
   const version = pkg.version;
   return {
     name: "version-cache-bust",
     enforce: "post",
+    apply: "build", // Only run during production builds, not dev server
     transformIndexHtml(html) {
-      // Add version query param to the main module script
-      // Dev: <script type="module" src="/src/main.tsx"></script>
+      // Add version query param to the main module script (production only)
       // Prod: <script type="module" crossorigin src="/assets/index-xxx.js"></script>
-      return html
-        .replace(
-          /<script type="module" src="(\/[^"]+\.(tsx?|js))"><\/script>/g,
-          `<script type="module" src="$1?v=${version}"></script>`,
-        )
-        .replace(
-          /<script type="module" crossorigin src="(\/assets\/[^"]+\.js)"><\/script>/g,
-          `<script type="module" crossorigin src="$1?v=${version}"></script>`,
-        );
+      return html.replace(
+        /<script type="module" crossorigin src="(\/assets\/[^"]+\.js)"><\/script>/g,
+        `<script type="module" crossorigin src="$1?v=${version}"></script>`,
+      );
     },
   };
 }

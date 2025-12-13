@@ -17,7 +17,7 @@ const MAX_NOTIFICATIONS = 10000;
 const MAX_DAYS = 28; // 4 weeks
 
 export function useNotifications(priority: boolean = false) {
-  const { session } = useAuth();
+  const { session, agent } = useAuth();
   const queryClient = useQueryClient();
 
   // Try to load cached data first
@@ -43,8 +43,6 @@ export function useNotifications(priority: boolean = false) {
       );
 
       // This is the ONLY place where rate limiting applies - actual API calls
-      const { atProtoClient } = await import("../services/atproto");
-      const agent = atProtoClient.agent;
       if (!agent) throw new Error("Not authenticated");
       const notificationService = getNotificationService(agent);
       const result = await notificationService.listNotifications(
@@ -96,7 +94,7 @@ export function useNotifications(priority: boolean = false) {
       // Continue pagination if we have a cursor
       return lastPage.cursor;
     },
-    enabled: !!session,
+    enabled: !!session && !!agent,
     staleTime: 30 * 1000, // Data is considered fresh for 30 seconds
     refetchInterval: 30 * 1000, // Refetch every 30 seconds for more timely updates
     refetchOnWindowFocus: true, // Refetch on window focus to get latest notifications
@@ -175,18 +173,16 @@ export function useNotifications(priority: boolean = false) {
 }
 
 export function useUnreadNotificationCount() {
-  const { session } = useAuth();
+  const { session, agent } = useAuth();
 
   return useQuery({
     queryKey: ["notificationCount"],
     queryFn: async () => {
-      const { atProtoClient } = await import("../services/atproto");
-      const agent = atProtoClient.agent;
       if (!agent) throw new Error("Not authenticated");
       const notificationService = getNotificationService(agent);
       return notificationService.getUnreadCount();
     },
-    enabled: !!session,
+    enabled: !!session && !!agent,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
     refetchOnMount: "always", // Always fetch fresh data on mount
@@ -198,12 +194,11 @@ export const useUnreadCount = useUnreadNotificationCount;
 
 export function useMarkNotificationsRead() {
   const { handleError } = useErrorHandler();
+  const { agent } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
-      const { atProtoClient } = await import("../services/atproto");
-      const agent = atProtoClient.agent;
       if (!agent) throw new Error("Not authenticated");
       const notificationService = getNotificationService(agent);
       const seenAt = new Date().toISOString();

@@ -1,7 +1,6 @@
 const WebSocket = require("ws");
 const jwt = require("jsonwebtoken");
 const { BskyAgent } = require("@atproto/api");
-const pushNotificationService = require("./push-notification-service");
 
 /**
  * WebSocket Server for Real-Time Notifications
@@ -145,9 +144,6 @@ class WebSocketNotificationServer {
     }
     this.userConnections.get(userDid).add(ws);
 
-    // Register user as active (disables push notifications while connected)
-    pushNotificationService.registerActiveUser(userDid);
-
     // Store agent for this user if not already present
     if (!this.userAgents.has(userDid)) {
       const agent = new BskyAgent({
@@ -228,9 +224,6 @@ class WebSocketNotificationServer {
     }
     this.userConnections.get(userDid).add(ws);
 
-    // Register user as active (disables push notifications while connected)
-    pushNotificationService.registerActiveUser(userDid);
-
     // NOTE: No agent creation or polling for OAuth users
     // The client polls via its OAuth agent and can send notification updates to the server
 
@@ -290,9 +283,6 @@ class WebSocketNotificationServer {
       if (connections.size === 0) {
         this.userConnections.delete(userDid);
         this.userAgents.delete(userDid);
-
-        // Unregister user as active (enables push notifications when disconnected)
-        pushNotificationService.unregisterActiveUser(userDid);
 
         // Stop polling for this user
         const interval = this.userPollingIntervals.get(userDid);
@@ -448,12 +438,6 @@ class WebSocketNotificationServer {
             `[Push] Found ${newNotifications.length} new notifications for ${userDid}`,
           );
 
-          // Send push notifications
-          await pushNotificationService.handleNotifications(
-            userDid,
-            newNotifications,
-          );
-
           // Update cursor
           if (notifications.length > 0) {
             this.userLastSeenCursors.set(userDid, notifications[0].indexedAt);
@@ -519,7 +503,6 @@ class WebSocketNotificationServer {
   }
 
   getStats() {
-    const pushStats = pushNotificationService.getStats();
     return {
       connectedUsers: this.userConnections.size,
       totalConnections: Array.from(this.userConnections.values()).reduce(
@@ -527,7 +510,6 @@ class WebSocketNotificationServer {
         0,
       ),
       activePolling: this.userPollingIntervals.size,
-      pushNotifications: pushStats,
     };
   }
 
@@ -537,9 +519,6 @@ class WebSocketNotificationServer {
     // Clear all polling intervals
     this.userPollingIntervals.forEach((interval) => clearInterval(interval));
     this.userPollingIntervals.clear();
-
-    // Shutdown push notification service
-    pushNotificationService.shutdown();
 
     // Close all connections
     this.wss.clients.forEach((ws) => {

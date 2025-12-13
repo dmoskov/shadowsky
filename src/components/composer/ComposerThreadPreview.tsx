@@ -15,6 +15,7 @@ import {
   Video,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 import { fetchLinkMetadata, type LinkMetadata } from "../../services/anthropic";
 import { parseBskyUrl } from "../../utils/url-helpers";
 import { ProfileHoverCard } from "../ui/ProfileHoverCard";
@@ -497,6 +498,7 @@ const PostLinkPreview: React.FC<{ postText: string }> = ({ postText }) => {
  * Fetches and displays the quoted post
  */
 const PostQuotePreview: React.FC<{ postText: string }> = ({ postText }) => {
+  const { agent } = useAuth();
   const [quotedPost, setQuotedPost] = useState<AppBskyFeedDefs.PostView | null>(
     null,
   );
@@ -515,12 +517,10 @@ const PostQuotePreview: React.FC<{ postText: string }> = ({ postText }) => {
       const parsed = parseBskyUrl(bskyUrl);
       if (!parsed || !parsed.postId) return;
 
+      if (!agent) return;
+
       setLoading(true);
       try {
-        const { atProtoClient } = await import("../../services/atproto");
-        const agent = atProtoClient.agent;
-        if (!agent) return;
-
         // Resolve handle to DID if needed
         let did = parsed.did;
         if (!did && parsed.handle) {
@@ -558,7 +558,7 @@ const PostQuotePreview: React.FC<{ postText: string }> = ({ postText }) => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [bskyUrl]);
+  }, [bskyUrl, agent]);
 
   if (!bskyUrl) return null;
 

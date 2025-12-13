@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import React, { memo } from "react";
 import { useNavigate } from "react-router";
+import { useAuth } from "../contexts/AuthContext";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { fetchLinkMetadata, type LinkMetadata } from "../services/anthropic";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
@@ -61,6 +62,7 @@ const BskyUrlEmbed: React.FC<{
   text: string;
   onQuoteClick?: (uri: string) => void;
 }> = ({ text, onQuoteClick }) => {
+  const { agent } = useAuth();
   const [quotedPost, setQuotedPost] =
     React.useState<AppBskyFeedDefs.PostView | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -77,12 +79,10 @@ const BskyUrlEmbed: React.FC<{
       const parsed = parseBskyUrl(url);
       if (!parsed || !parsed.postId) return;
 
+      if (!agent) return;
+
       setLoading(true);
       try {
-        const { atProtoClient } = await import("../services/atproto");
-        const agent = atProtoClient.agent;
-        if (!agent) return;
-
         // Resolve handle to DID if needed
         let did = parsed.did;
         if (!did && parsed.handle) {
@@ -114,7 +114,7 @@ const BskyUrlEmbed: React.FC<{
     };
 
     fetchQuotedPost();
-  }, [text]);
+  }, [text, agent]);
 
   if (loading) {
     return (

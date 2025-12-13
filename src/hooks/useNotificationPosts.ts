@@ -16,7 +16,7 @@ type Post = AppBskyFeedDefs.PostView;
 export function useNotificationPosts(
   notifications: Notification[] | undefined,
 ) {
-  const { session } = useAuth();
+  const { session, agent } = useAuth();
   const queryClient = useQueryClient();
   const [fetchedCount, setFetchedCount] = React.useState(0);
   const [isFetchingMore, setIsFetchingMore] = React.useState(false);
@@ -90,8 +90,6 @@ export function useNotificationPosts(
         return cached;
       }
 
-      const { atProtoClient } = await import("../services/atproto");
-      const agent = atProtoClient.agent;
       if (!agent) throw new Error("Not authenticated");
 
       // Batch fetch only missing posts (Bluesky API supports up to 25 posts per request)
@@ -120,7 +118,7 @@ export function useNotificationPosts(
       setFetchedCount(posts.length);
       return posts;
     },
-    enabled: !!session && postUris.length > 0,
+    enabled: !!session && !!agent && postUris.length > 0,
     staleTime: 60 * 60 * 1000, // 1 hour - posts rarely change
     gcTime: 2 * 60 * 60 * 1000, // Keep in cache for 2 hours
     refetchOnWindowFocus: false, // Don't refetch posts on window focus
@@ -134,7 +132,7 @@ export function useNotificationPosts(
 
   // Progressive fetch for remaining posts
   React.useEffect(() => {
-    if (!session || !queryResult.data || isFetchingMore) return;
+    if (!session || !agent || !queryResult.data || isFetchingMore) return;
 
     // Check if we have unfetched posts
     const fetchedUris = new Set(
@@ -152,8 +150,6 @@ export function useNotificationPosts(
 
     const fetchMorePosts = async () => {
       setIsFetchingMore(true);
-      const { atProtoClient } = await import("../services/atproto");
-      const agent = atProtoClient.agent;
       if (!agent) return;
 
       // More aggressive batch sizing to reduce flicker
@@ -225,6 +221,7 @@ export function useNotificationPosts(
     return () => clearTimeout(timeoutId);
   }, [
     session,
+    agent,
     queryResult.data,
     isFetchingMore,
     postUris.length,

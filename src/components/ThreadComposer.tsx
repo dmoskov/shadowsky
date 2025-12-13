@@ -923,6 +923,7 @@ const ThreadPostLinkPreview: React.FC<{ postText: string }> = ({
 const ThreadPostQuotePreview: React.FC<{ postText: string }> = ({
   postText,
 }) => {
+  const { agent } = useAuth();
   const [quotedPost, setQuotedPost] = useState<AppBskyFeedDefs.PostView | null>(
     null,
   );
@@ -941,12 +942,10 @@ const ThreadPostQuotePreview: React.FC<{ postText: string }> = ({
       const parsed = parseBskyUrl(bskyUrl);
       if (!parsed || !parsed.postId) return;
 
+      if (!agent) return;
+
       setLoading(true);
       try {
-        const { atProtoClient } = await import("../services/atproto");
-        const agent = atProtoClient.agent;
-        if (!agent) return;
-
         let did = parsed.did;
         if (!did && parsed.handle) {
           try {
@@ -981,7 +980,7 @@ const ThreadPostQuotePreview: React.FC<{ postText: string }> = ({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [bskyUrl]);
+  }, [bskyUrl, agent]);
 
   if (!bskyUrl) return null;
 

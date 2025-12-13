@@ -9,8 +9,6 @@ const path = require("path");
 const crypto = require("crypto");
 const os = require("os");
 const { WebSocketNotificationServer } = require("./websocket-server");
-const pushSubscriptions = require("./push-subscriptions");
-const pushNotificationService = require("./push-notification-service");
 const { validateUrlForSSRF } = require("./ip-validator");
 const {
   requireCognitoAuth,
@@ -26,8 +24,8 @@ const {
 // Load environment variables from parent directory's .env file
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 
-// Initialize Web Push with VAPID keys
-const pushEnabled = pushSubscriptions.initWebPush();
+// Push notifications have been removed
+const pushEnabled = false;
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -1736,39 +1734,10 @@ function extractUserDid(req) {
  * }
  */
 app.post("/api/push-subscription", async (req, res) => {
-  if (!pushEnabled) {
-    return res.status(503).json({
-      error: "Push notifications are not configured on this server",
-    });
-  }
-
-  const subscription = req.body;
-  const userDid = extractUserDid(req);
-  const clientIp = getClientIp(req);
-
-  try {
-    const result = await pushSubscriptions.createSubscription(
-      subscription,
-      userDid,
-      clientIp,
-    );
-
-    if (!result.success) {
-      return res.status(400).json({
-        error: result.error,
-        details: result.details,
-      });
-    }
-
-    res.status(201).json({
-      subscriptionId: result.subscriptionId,
-    });
-  } catch (error) {
-    console.error("Error creating push subscription:", error);
-    res.status(500).json({
-      error: "Failed to create push subscription",
-    });
-  }
+  // Push notifications have been removed
+  res.status(503).json({
+    error: "Push notifications have been disabled",
+  });
 });
 
 /**
@@ -1777,28 +1746,10 @@ app.post("/api/push-subscription", async (req, res) => {
  * Delete a push subscription.
  */
 app.delete("/api/push-subscription/:subscriptionId", async (req, res) => {
-  const { subscriptionId } = req.params;
-  const userDid = extractUserDid(req);
-
-  try {
-    const result = await pushSubscriptions.deleteSubscription(
-      subscriptionId,
-      userDid,
-    );
-
-    if (!result.success) {
-      return res.status(403).json({
-        error: result.error,
-      });
-    }
-
-    res.status(204).send();
-  } catch (error) {
-    console.error("Error deleting push subscription:", error);
-    res.status(500).json({
-      error: "Failed to delete push subscription",
-    });
-  }
+  // Push notifications have been removed
+  res.status(503).json({
+    error: "Push notifications have been disabled",
+  });
 });
 
 /**
@@ -1807,24 +1758,8 @@ app.delete("/api/push-subscription/:subscriptionId", async (req, res) => {
  * Get all push subscriptions for the authenticated user.
  */
 app.get("/api/push-subscriptions", async (req, res) => {
-  const userDid = extractUserDid(req);
-
-  if (!userDid) {
-    return res.status(401).json({
-      error: "Authentication required",
-    });
-  }
-
-  try {
-    const subscriptions =
-      await pushSubscriptions.getSubscriptionsForUser(userDid);
-    res.json({ subscriptions });
-  } catch (error) {
-    console.error("Error fetching push subscriptions:", error);
-    res.status(500).json({
-      error: "Failed to fetch push subscriptions",
-    });
-  }
+  // Push notifications have been removed
+  res.json({ subscriptions: [] });
 });
 
 /**
@@ -1832,57 +1767,12 @@ app.get("/api/push-subscriptions", async (req, res) => {
  *
  * Send a push notification to a user (internal/admin endpoint).
  * In production, this should be protected with proper authentication.
- *
- * Request body:
- * {
- *   userDid: string,
- *   notification: {
- *     type: 'notification' | 'message' | 'system',
- *     title: string,
- *     body: string,
- *     icon?: string,
- *     badge?: string,
- *     data?: object
- *   }
- * }
  */
 app.post("/api/push-notification/send", async (req, res) => {
-  if (!pushEnabled) {
-    return res.status(503).json({
-      error: "Push notifications are not configured on this server",
-    });
-  }
-
-  const { userDid, notification } = req.body;
-
-  if (!userDid || !notification) {
-    return res.status(400).json({
-      error: "userDid and notification are required",
-    });
-  }
-
-  try {
-    const result = await pushSubscriptions.sendPushNotification(
-      userDid,
-      notification,
-    );
-
-    if (!result.success) {
-      return res.status(404).json({
-        error: result.error,
-      });
-    }
-
-    res.json({
-      sent: result.sent,
-      failed: result.failed,
-    });
-  } catch (error) {
-    console.error("Error sending push notification:", error);
-    res.status(500).json({
-      error: "Failed to send push notification",
-    });
-  }
+  // Push notifications have been removed
+  res.status(503).json({
+    error: "Push notifications have been disabled",
+  });
 });
 
 /**
@@ -1937,18 +1827,10 @@ app.post("/api/push-notification/batch", async (req, res) => {
     });
   }
 
-  try {
-    const result = await pushNotificationService.handleNotifications(
-      userDid,
-      notifications,
-    );
-    res.json(result);
-  } catch (error) {
-    console.error("Error sending batch notifications:", error);
-    res.status(500).json({
-      error: "Failed to send batch notifications",
-    });
-  }
+  // Push notifications have been removed
+  res.status(503).json({
+    error: "Push notifications have been disabled",
+  });
 });
 
 /**
@@ -1968,50 +1850,10 @@ app.post("/api/push-notification/batch", async (req, res) => {
  * }
  */
 app.post("/api/push-notification/dm", async (req, res) => {
-  if (!pushEnabled) {
-    return res.status(503).json({
-      error: "Push notifications are not configured on this server",
-    });
-  }
-
-  const { userDid, conversation } = req.body;
-
-  if (!userDid || !conversation || !conversation.id) {
-    return res.status(400).json({
-      error: "userDid and conversation with id are required",
-    });
-  }
-
-  try {
-    const result = await pushNotificationService.sendDMNotification(
-      userDid,
-      conversation,
-    );
-
-    if (!result.success && result.reason === "user_active") {
-      return res.status(200).json({
-        sent: 0,
-        skipped: true,
-        reason: "User has active WebSocket connection",
-      });
-    }
-
-    if (!result.success) {
-      return res.status(404).json({
-        error: result.error || "No subscriptions found for user",
-      });
-    }
-
-    res.json({
-      sent: result.sent,
-      failed: result.failed,
-    });
-  } catch (error) {
-    console.error("Error sending DM notification:", error);
-    res.status(500).json({
-      error: "Failed to send DM notification",
-    });
-  }
+  // Push notifications have been removed
+  res.status(503).json({
+    error: "Push notifications have been disabled",
+  });
 });
 
 /**
@@ -2028,44 +1870,10 @@ app.post("/api/push-notification/dm", async (req, res) => {
  * }
  */
 app.post("/api/push-notification/system", async (req, res) => {
-  if (!pushEnabled) {
-    return res.status(503).json({
-      error: "Push notifications are not configured on this server",
-    });
-  }
-
-  const { userDid, title, body, data } = req.body;
-
-  if (!userDid || !title || !body) {
-    return res.status(400).json({
-      error: "userDid, title, and body are required",
-    });
-  }
-
-  try {
-    const result = await pushNotificationService.sendSystemNotification(
-      userDid,
-      title,
-      body,
-      data || {},
-    );
-
-    if (!result.success) {
-      return res.status(404).json({
-        error: result.error || "No subscriptions found for user",
-      });
-    }
-
-    res.json({
-      sent: result.sent,
-      failed: result.failed,
-    });
-  } catch (error) {
-    console.error("Error sending system notification:", error);
-    res.status(500).json({
-      error: "Failed to send system notification",
-    });
-  }
+  // Push notifications have been removed
+  res.status(503).json({
+    error: "Push notifications have been disabled",
+  });
 });
 
 /**
@@ -2074,8 +1882,11 @@ app.post("/api/push-notification/system", async (req, res) => {
  * Get push notification service statistics.
  */
 app.get("/api/push-notification/stats", (req, res) => {
-  const stats = pushNotificationService.getStats();
-  res.json(stats);
+  // Push notifications have been removed
+  res.json({
+    status: "disabled",
+    message: "Push notifications have been removed",
+  });
 });
 
 // =============================================================================

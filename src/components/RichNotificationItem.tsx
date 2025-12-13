@@ -23,6 +23,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 import { fetchLinkMetadata, type LinkMetadata } from "../services/anthropic";
 import type {
   GroupedNotification,
@@ -797,6 +798,7 @@ NotificationLinkPreview.displayName = "NotificationLinkPreview";
  */
 const NotificationQuotePreview: React.FC<{ postText: string }> = React.memo(
   ({ postText }) => {
+    const { agent } = useAuth();
     const [quotedPost, setQuotedPost] =
       useState<AppBskyFeedDefs.PostView | null>(null);
     const [loading, setLoading] = useState(false);
@@ -814,12 +816,10 @@ const NotificationQuotePreview: React.FC<{ postText: string }> = React.memo(
         const parsed = parseBskyUrl(bskyUrl);
         if (!parsed || !parsed.postId) return;
 
+        if (!agent) return;
+
         setLoading(true);
         try {
-          const { atProtoClient } = await import("../services/atproto");
-          const agent = atProtoClient.agent;
-          if (!agent) return;
-
           let did = parsed.did;
           if (!did && parsed.handle) {
             try {
@@ -854,7 +854,7 @@ const NotificationQuotePreview: React.FC<{ postText: string }> = React.memo(
         cancelled = true;
         clearTimeout(timer);
       };
-    }, [bskyUrl]);
+    }, [bskyUrl, agent]);
 
     if (!bskyUrl) return null;
 

@@ -13,7 +13,7 @@ import {
 } from "../utils/prefetchNotificationPosts";
 
 export const ExtendedNotificationsFetcher: React.FC = () => {
-  const { session } = useAuth();
+  const { session, agent } = useAuth();
   const queryClient = useQueryClient();
   const [fetchingStatus, setFetchingStatus] = useState<
     "idle" | "fetching" | "complete"
@@ -60,15 +60,13 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
   const { data, fetchNextPage, hasNextPage, refetch } = useInfiniteQuery({
     queryKey: ["notifications-extended"],
     queryFn: async ({ pageParam }) => {
-      const { atProtoClient } = await import("../services/atproto");
-      const agent = atProtoClient.agent;
       if (!agent) throw new Error("Not authenticated");
       const notificationService = getNotificationService(agent);
       return notificationService.listNotifications(pageParam, false, 100); // Use max limit
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.cursor,
-    enabled: false, // Manual trigger only
+    enabled: false && !!agent, // Manual trigger only
     staleTime: Infinity, // Don't auto-refetch
     refetchInterval: 10 * 1000, // Refetch every 10 seconds when enabled
   });
@@ -146,8 +144,6 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           setLoadedFromStorage(true);
 
           // Prefetch posts for cached reply notifications in the background
-          const { atProtoClient } = await import("../services/atproto");
-          const agent = atProtoClient.agent;
           if (agent) {
             // Don't await - let it run in the background
             const replyNotifications = cachedResult.notifications.filter(
@@ -340,8 +336,6 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
         }
 
         // Prefetch posts for reply notifications
-        const { atProtoClient } = await import("../services/atproto");
-        const agent = atProtoClient.agent;
         if (agent) {
           debug.log("🔄 Prefetching posts for conversations...");
 
@@ -475,8 +469,6 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
         }
 
         // Prefetch posts for reply notifications
-        const { atProtoClient } = await import("../services/atproto");
-        const agent = atProtoClient.agent;
         if (agent) {
           debug.log("🔄 Prefetching posts for conversations...");
 

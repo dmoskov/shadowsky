@@ -24,14 +24,12 @@ interface UseNotificationsByTypeOptions {
 export function useNotificationsByType(
   options: UseNotificationsByTypeOptions = {},
 ) {
-  const { session } = useAuth();
+  const { session, agent } = useAuth();
   const { reasons, priority, enabled = true } = options;
 
   return useInfiniteQuery({
     queryKey: ["notifications", "byType", reasons, priority],
     queryFn: async ({ pageParam }) => {
-      const { atProtoClient } = await import("../services/atproto");
-      const agent = atProtoClient.agent;
       if (!agent) throw new Error("Not authenticated");
       const notificationService = getNotificationService(agent);
 
@@ -102,7 +100,7 @@ export function useNotificationsByType(
       // Continue pagination if we have a cursor
       return lastPage.cursor;
     },
-    enabled: !!session && enabled,
+    enabled: !!session && !!agent && enabled,
     staleTime: 30 * 60 * 1000, // 30 minutes - conversations don't change that often
     refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
     refetchOnWindowFocus: false, // Already disabled globally, but be explicit

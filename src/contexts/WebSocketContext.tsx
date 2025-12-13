@@ -26,7 +26,7 @@ import {
   type WebSocketMessage,
   type WebSocketStats,
 } from "../types/websocket";
-import { useAuth } from "./AuthContext";
+import { AuthContext } from "./AuthContext";
 
 interface WebSocketContextType {
   isConnected: boolean;
@@ -53,7 +53,12 @@ interface WebSocketProviderProps {
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   children,
 }) => {
-  const { isAuthenticated, session, logout } = useAuth();
+  // Use useContext directly instead of useAuth to handle HMR edge cases
+  // where the component tree may be in an inconsistent state
+  const authContext = useContext(AuthContext);
+  const isAuthenticated = authContext?.isAuthenticated ?? false;
+  const session = authContext?.session ?? null;
+  const logout = authContext?.logout ?? (() => {});
   const queryClient = useQueryClient();
   const [connectionState, setConnectionState] =
     useState<WebSocketConnectionState>(WebSocketConnectionState.DISCONNECTED);
@@ -535,23 +540,4 @@ function getNotificationBody(notification: Notification): string {
     default:
       return `${author} interacted with your post`;
   }
-}
-
-function getNotificationUrl(notification: Notification): string {
-  // For follows, link to the profile
-  if (notification.reason === "follow") {
-    return `/profile/${notification.author.handle}`;
-  }
-
-  // For post-related notifications, link to the notification tab
-  // which will show the context
-  return "/notifications";
-}
-
-function getPostUri(notification: Notification): string | undefined {
-  // Extract post URI from the notification if available
-  const record = notification.record as
-    | { subject?: { uri?: string } }
-    | undefined;
-  return record?.subject?.uri || notification.reasonSubject;
 }

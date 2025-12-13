@@ -21,7 +21,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
     timestamp: new Date().toISOString(),
   });
 
-  const { session } = useAuth();
+  const { session, agent } = useAuth();
   const queryClient = useQueryClient();
   const [cacheService] = useState(() => NotificationCacheService.getInstance());
   const [isIndexedDBReady, setIsIndexedDBReady] = useState(false);
@@ -64,8 +64,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
         timestamp: new Date().toISOString(),
       });
 
-      const { atProtoClient } = await import("../services/atproto");
-      const agent = atProtoClient.agent;
       if (!agent) throw new Error("Not authenticated");
       const notificationService = getNotificationService(agent);
       const result = await notificationService.listNotifications(
@@ -78,7 +76,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.cursor,
-    enabled: enablePolling, // Enable polling after initial load
+    enabled: enablePolling && !!agent, // Enable polling after initial load
     staleTime: 30 * 60 * 1000, // 30 minutes
     refetchInterval: enablePolling ? 60 * 1000 : false, // Poll every 60 seconds when enabled - reduced from 10s
   });
@@ -194,8 +192,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
           );
 
           // Prefetch posts for cached reply notifications in the background
-          const { atProtoClient } = await import("../services/atproto");
-          const agent = atProtoClient.agent;
           if (agent) {
             const replyNotifications = cachedResult.notifications.filter(
               (n) => n.reason === "reply",
@@ -223,6 +219,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
     loadCachedData();
   }, [
     session,
+    agent,
     hasCachedData,
     isIndexedDBReady,
     queryClient,
@@ -374,8 +371,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
           );
 
           // Prefetch posts for reply notifications
-          const { atProtoClient } = await import("../services/atproto");
-          const agent = atProtoClient.agent;
           if (agent) {
             const replyNotifications = allNotifications.filter(
               (n: Notification) => n.reason === "reply",
@@ -403,6 +398,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
     return () => clearTimeout(timer);
   }, [
     session,
+    agent,
     isIndexedDBReady,
     hasFetched,
     hasCachedData,
@@ -473,8 +469,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
         );
 
         // Prefetch posts for new reply notifications
-        const { atProtoClient } = await import("../services/atproto");
-        const agent = atProtoClient.agent;
         if (agent) {
           const replyNotifications = allNotifications.filter(
             (n: Notification) => n.reason === "reply",
@@ -496,7 +490,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
     };
 
     saveNewNotifications();
-  }, [data, isIndexedDBReady, enablePolling, cacheService, queryClient]);
+  }, [data, isIndexedDBReady, enablePolling, cacheService, queryClient, agent]);
 
   // Debug lifecycle
   React.useEffect(() => {
