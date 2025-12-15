@@ -22,6 +22,7 @@ import { ReportModal } from "../components/ReportModal";
 import { ThreadModal } from "../components/ThreadModal";
 import { DomainVerifiedBadge } from "../components/ui/DomainVerifiedBadge";
 import { EmptyState } from "../components/ui/EmptyState";
+import { LabelBadge } from "../components/ui/LabelBadge";
 import { ProfileSkeleton } from "../components/ui/SkeletonLoader";
 import { UserListModal } from "../components/UserListModal";
 import { useAuth } from "../contexts/AuthContext";
@@ -946,6 +947,17 @@ export default function ProfilePage() {
               </p>
               <DomainVerifiedBadge handle={profile.handle} size="md" />
             </div>
+            {/* Show profile labels if present */}
+            {(profile as any).labels &&
+              (profile as any).labels.length > 0 && (
+                <div className="mt-2">
+                  <LabelBadge
+                    labels={(profile as any).labels}
+                    maxDisplay={3}
+                    size="md"
+                  />
+                </div>
+              )}
           </div>
 
           {profile.description && (

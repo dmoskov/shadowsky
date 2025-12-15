@@ -35,6 +35,7 @@ import { createLogger } from "../utils/logger";
 import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
 import { EmptyState } from "./ui/EmptyState";
+import { LabelBadge } from "./ui/LabelBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { RichText } from "./ui/RichText";
 import { ThrottledAvatar } from "./ui/ThrottledAvatar";
@@ -1525,6 +1526,19 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                         )}
                       </div>
                     </div>
+
+                    {/* Show labels if present */}
+                    {post &&
+                      (post as any).labels &&
+                      (post as any).labels.length > 0 && (
+                        <div className="mb-2">
+                          <LabelBadge
+                            labels={(post as any).labels}
+                            maxDisplay={2}
+                            size="sm"
+                          />
+                        </div>
+                      )}
 
                     <p
                       className="overflow-wrap-anywhere break-words text-sm"

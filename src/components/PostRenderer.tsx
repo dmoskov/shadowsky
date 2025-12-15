@@ -22,6 +22,7 @@ import { parseBskyUrl } from "../utils/url-helpers";
 import { extractFirstLinkUrl } from "./composer/utils";
 import { ImageGallery } from "./ImageGallery";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
+import { LabelBadge, getContentWarningLabels } from "./ui/LabelBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { ProgressiveImage } from "./ui/ProgressiveImage";
 import { RichText } from "./ui/RichText";
@@ -29,28 +30,11 @@ import { VideoPlayer } from "./VideoPlayer";
 
 const logger = createLogger("PostRenderer");
 
-// Sensitive content labels from Bluesky
-const SENSITIVE_LABELS = ["porn", "sexual", "nudity", "graphic-media"];
-
 // Check if content has sensitive labels that should be blurred
 const hasSensitiveLabels = (labels?: Array<{ val: string }>): boolean => {
   if (!labels || labels.length === 0) return false;
-  return labels.some((label) => SENSITIVE_LABELS.includes(label.val));
-};
-
-// Get human-readable warning text for sensitive labels
-const getWarningText = (labels?: Array<{ val: string }>): string => {
-  if (!labels || labels.length === 0) return "Sensitive Content";
-  const labelMap: Record<string, string> = {
-    porn: "Adult Content",
-    sexual: "Sexual Content",
-    nudity: "Nudity",
-    "graphic-media": "Graphic Content",
-  };
-  for (const label of labels) {
-    if (labelMap[label.val]) return labelMap[label.val];
-  }
-  return "Sensitive Content";
+  const warningLabels = getContentWarningLabels(labels);
+  return warningLabels.length > 0;
 };
 
 async function loadAnthropicService() {
@@ -583,7 +567,12 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                   border: "2px solid var(--bsky-border-primary)",
                 }}
               >
-                {getWarningText(labels)} - Click to Show
+                <LabelBadge
+                  labels={labels || []}
+                  showContentWarningsOnly={true}
+                  size="sm"
+                />{" "}
+                - Click to Show
               </button>
             </div>
           )}
@@ -955,6 +944,16 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
 
             {/* Post content */}
             <div className="mt-1 overflow-hidden">
+              {/* Show labels if present */}
+              {(post as any).labels && (post as any).labels.length > 0 && (
+                <div className="mb-2">
+                  <LabelBadge
+                    labels={(post as any).labels}
+                    maxDisplay={2}
+                    size="sm"
+                  />
+                </div>
+              )}
               <p
                 className="whitespace-pre-wrap break-words"
                 style={{ color: "var(--bsky-text-primary)" }}
