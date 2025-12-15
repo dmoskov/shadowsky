@@ -283,7 +283,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               setApiAuthSession(oauthSession);
 
               // Store account in AccountManager for multi-account support
-              AccountManager.addOrUpdateAccount(oauthSession, profileData, "oauth");
+              AccountManager.addOrUpdateAccount(
+                oauthSession,
+                profileData,
+                "oauth",
+              );
 
               setIsLoading(false);
               return;
@@ -313,6 +317,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               initializeBookmarkService(atProtoClient.agent),
               initializeDataServices(atProtoClient.agent),
             ]);
+
+            // Store account in AccountManager for multi-account support
+            try {
+              const { data: profile } = await atProtoClient.agent.getProfile({
+                actor: resumedSession.did,
+              });
+              AccountManager.addOrUpdateAccount(
+                resumedSession,
+                {
+                  displayName: profile.displayName,
+                  avatar: profile.avatar,
+                },
+                "app-password",
+              );
+            } catch {
+              // Still add account even if profile fetch fails
+              AccountManager.addOrUpdateAccount(
+                resumedSession,
+                undefined,
+                "app-password",
+              );
+            }
           } catch (error) {
             const status = (error as Error & { status?: number })?.status;
 
@@ -414,7 +440,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           );
         } catch (error) {
           debug.error("Failed to fetch profile for account storage:", error);
-          AccountManager.addOrUpdateAccount(newSession, undefined, "app-password");
+          AccountManager.addOrUpdateAccount(
+            newSession,
+            undefined,
+            "app-password",
+          );
         }
 
         return true;
@@ -517,6 +547,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return false;
       }
 
+      // OAuth accounts need re-authentication (can't restore session)
+      if (account.authMethod === "oauth") {
+        // Redirect to add-account page for re-auth
+        window.location.href = "/add-account";
+        return false;
+      }
+
       const resumedSession = await atProtoClient.resumeSession(account.session);
       setIsAuthenticated(true);
       setAuthMethod("app-password");
@@ -533,6 +570,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return true;
     } catch (error) {
       debug.error("Failed to switch account:", error);
+
+      // Session expired or invalid - remove the account and prompt re-auth
+      const status = (error as Error & { status?: number })?.status;
+      if (status === 400 || status === 401) {
+        AccountManager.removeAccount(did);
+        alert("Session expired. Please sign in again.");
+        window.location.href = "/add-account";
+      }
+
       return false;
     }
   }, []);

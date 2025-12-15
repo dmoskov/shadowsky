@@ -90,16 +90,14 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
             icon: User,
             path: "/settings/account",
           },
-          ...(hasMultipleAccounts
-            ? [
-                {
-                  id: "accounts",
-                  label: "Manage Accounts",
-                  icon: Users,
-                  path: "/settings/accounts",
-                },
-              ]
-            : []),
+          {
+            id: "accounts",
+            label: hasMultipleAccounts
+              ? "Manage Accounts"
+              : "Sign into another account",
+            icon: Users,
+            path: "/settings/accounts",
+          },
           {
             id: "privacy",
             label: "Privacy & Safety",

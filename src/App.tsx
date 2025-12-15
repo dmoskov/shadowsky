@@ -64,6 +64,7 @@ import { StatusBar } from "./components/StatusBar";
 import { SwipeIndicator } from "./components/SwipeIndicator";
 import { FloatingActionButton } from "./components/ui/FloatingActionButton";
 import { VisualTimeline } from "./components/VisualTimeline";
+import { AddAccountPage } from "./pages/AddAccountPage";
 import { default as ProfilePage } from "./pages/ProfilePage";
 import { Settings } from "./pages/Settings";
 import { default as ThreadPage } from "./pages/ThreadPage";
@@ -529,6 +530,14 @@ function AppContent() {
                 }
               />
               <Route path="/compression-test" element={<CompressionTest />} />
+              <Route
+                path="/add-account"
+                element={
+                  <ErrorBoundary componentName="Add Account">
+                    <AddAccountPage />
+                  </ErrorBoundary>
+                }
+              />
               <Route path="*" element={<Navigate to="/home" replace />} />
             </Routes>
           </Suspense>

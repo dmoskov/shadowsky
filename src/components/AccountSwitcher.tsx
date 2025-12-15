@@ -60,13 +60,12 @@ export const AccountSwitcher: React.FC = () => {
 
   const handleAddAccount = () => {
     setIsOpen(false);
-    navigate("/");
-    window.location.href = "/";
+    navigate("/add-account");
   };
 
   const currentAccount = accounts.find((acc) => acc.did === session?.did);
 
-  if (accounts.length <= 1) {
+  if (accounts.length === 0) {
     return null;
   }
 
@@ -195,7 +194,9 @@ export const AccountSwitcher: React.FC = () => {
                 >
                   <Plus size={20} />
                 </div>
-                <span className="text-sm font-medium">Add Account</span>
+                <span className="text-sm font-medium">
+                  Sign into another account
+                </span>
               </button>
             </div>
           </div>,

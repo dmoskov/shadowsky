@@ -48,7 +48,7 @@ export const AccountsSettings: React.FC = () => {
   };
 
   const handleAddAccount = () => {
-    window.location.href = "/";
+    window.location.href = "/add-account";
   };
 
   const handleLogoutAll = () => {
@@ -201,7 +201,7 @@ export const AccountsSettings: React.FC = () => {
           }}
         >
           <User size={16} />
-          Add Another Account
+          Sign into another account
         </button>
 
         {accounts.length > 0 && (

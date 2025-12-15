@@ -1,4 +1,11 @@
-import { ChevronDown, LogOut, Settings, User, Users } from "lucide-react";
+import {
+  ChevronDown,
+  LogIn,
+  LogOut,
+  Settings,
+  User,
+  Users,
+} from "lucide-react";
 import React, { useEffect, useId, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router";
@@ -54,6 +61,10 @@ export const UserMenu: React.FC = () => {
 
   const hasMultipleAccounts = AccountManager.hasMultipleAccounts();
 
+  const handleAddAccount = () => {
+    navigate("/add-account");
+  };
+
   const menuItems = [
     {
       icon: User,
@@ -74,6 +85,11 @@ export const UserMenu: React.FC = () => {
           },
         ]
       : []),
+    {
+      icon: LogIn,
+      label: "Sign into another account",
+      onClick: handleAddAccount,
+    },
     {
       divider: true,
     },
