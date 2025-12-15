@@ -187,11 +187,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // This verifies the session is actually usable (refresh token not expired)
             let sessionValid = true;
             let handle = oauthState.handle || "";
+            let profileData: { displayName?: string; avatar?: string } = {};
             try {
               const { data: profile } = await agent.getProfile({
                 actor: oauthState.did,
               });
               handle = profile.handle;
+              profileData = {
+                displayName: profile.displayName,
+                avatar: profile.avatar,
+              };
             } catch (err) {
               // Check if this is an auth error (401/400) indicating expired session
               // AT Protocol errors can have status in different locations
@@ -276,6 +281,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               };
               setSession(oauthSession);
               setApiAuthSession(oauthSession);
+
+              // Store account in AccountManager for multi-account support
+              AccountManager.addOrUpdateAccount(oauthSession, profileData, "oauth");
 
               setIsLoading(false);
               return;
@@ -396,13 +404,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const { data: profile } = await atProtoClient.agent.getProfile({
             actor: newSession.did,
           });
-          AccountManager.addOrUpdateAccount(newSession, {
-            displayName: profile.displayName,
-            avatar: profile.avatar,
-          });
+          AccountManager.addOrUpdateAccount(
+            newSession,
+            {
+              displayName: profile.displayName,
+              avatar: profile.avatar,
+            },
+            "app-password",
+          );
         } catch (error) {
           debug.error("Failed to fetch profile for account storage:", error);
-          AccountManager.addOrUpdateAccount(newSession);
+          AccountManager.addOrUpdateAccount(newSession, undefined, "app-password");
         }
 
         return true;
@@ -437,11 +449,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         // Fetch handle from profile since OAuth session doesn't include it
         let handle = state.handle || "";
+        let profileData: { displayName?: string; avatar?: string } = {};
         try {
           const { data: profile } = await agent.getProfile({
             actor: state.did,
           });
           handle = profile.handle;
+          profileData = {
+            displayName: profile.displayName,
+            avatar: profile.avatar,
+          };
         } catch (err) {
           debug.error("Failed to fetch handle for OAuth session:", err);
         }
@@ -474,6 +491,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
         setSession(oauthSession);
         setApiAuthSession(oauthSession);
+
+        // Store account in AccountManager for multi-account support
+        AccountManager.addOrUpdateAccount(oauthSession, profileData, "oauth");
 
         // Initialize services with OAuth agent
         await initializeBookmarkService(agent);

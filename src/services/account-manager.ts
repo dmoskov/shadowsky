@@ -14,6 +14,7 @@ export interface StoredAccount {
   avatar?: string;
   session: Session;
   lastUsed: number;
+  authMethod?: "oauth" | "app-password"; // Track auth method for proper switching
 }
 
 export interface AccountsList {
@@ -63,9 +64,17 @@ export class AccountManager {
   static addOrUpdateAccount(
     session: Session,
     profileData?: { displayName?: string; avatar?: string },
+    authMethod?: "oauth" | "app-password",
   ): void {
     const accounts = this.getAllAccounts();
     const existingIndex = accounts.findIndex((acc) => acc.did === session.did);
+
+    // Detect auth method if not provided - OAuth sessions have empty JWTs
+    const detectedAuthMethod =
+      authMethod ||
+      (session.accessJwt === "" && session.refreshJwt === ""
+        ? "oauth"
+        : "app-password");
 
     const account: StoredAccount = {
       did: session.did,
@@ -74,6 +83,7 @@ export class AccountManager {
       avatar: profileData?.avatar,
       session,
       lastUsed: Date.now(),
+      authMethod: detectedAuthMethod,
     };
 
     if (existingIndex >= 0) {

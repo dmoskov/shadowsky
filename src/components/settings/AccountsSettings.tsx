@@ -143,16 +143,33 @@ export const AccountsSettings: React.FC = () => {
 
               <div className="flex gap-2">
                 {!isActive && (
-                  <button
-                    onClick={() => handleSwitchAccount(account.did)}
-                    className="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:bg-opacity-90"
-                    style={{
-                      backgroundColor: "var(--bsky-primary)",
-                      color: "white",
-                    }}
-                  >
-                    Switch
-                  </button>
+                  <>
+                    {account.authMethod === "oauth" ? (
+                      <button
+                        onClick={handleAddAccount}
+                        className="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:bg-opacity-90"
+                        style={{
+                          backgroundColor: "var(--bsky-bg-tertiary)",
+                          color: "var(--bsky-text-primary)",
+                          border: "1px solid var(--bsky-border-primary)",
+                        }}
+                        title="OAuth accounts require re-authentication"
+                      >
+                        Re-auth
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleSwitchAccount(account.did)}
+                        className="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:bg-opacity-90"
+                        style={{
+                          backgroundColor: "var(--bsky-primary)",
+                          color: "white",
+                        }}
+                      >
+                        Switch
+                      </button>
+                    )}
+                  </>
                 )}
 
                 <button
@@ -216,7 +233,13 @@ export const AccountsSettings: React.FC = () => {
           About Multi-Account Support
         </p>
         <ul className="mt-2 space-y-1 text-xs">
-          <li>• Switch between accounts without re-entering credentials</li>
+          <li>
+            • App Password accounts: Switch instantly without re-entering
+            credentials
+          </li>
+          <li>
+            • OAuth accounts: Require re-authentication to switch (for security)
+          </li>
           <li>
             • Each account maintains separate drafts, bookmarks, and settings
           </li>
