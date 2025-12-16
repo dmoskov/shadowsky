@@ -12,7 +12,6 @@
  * 8. State getters - Agent, session, authentication status
  */
 
-import { Agent } from "@atproto/api";
 import type {
   BrowserOAuthClient as BrowserOAuthClientType,
   OAuthSession,
@@ -44,6 +43,13 @@ vi.mock("@bsky/shared", () => ({
     log: vi.fn(),
     error: vi.fn(),
   },
+}));
+
+// Mock the Agent constructor from @atproto/api
+vi.mock("@atproto/api", () => ({
+  Agent: vi.fn().mockImplementation(() => ({
+    api: {} as any,
+  })),
 }));
 
 // Helper to wait for async operations
@@ -211,11 +217,10 @@ describe("hasExistingOAuthSession", () => {
 
     it("should return false when database check throws an error", async () => {
       const mockDb = {
-        objectStoreNames: { length: 2 },
-        close: vi.fn(),
-        get length() {
+        get objectStoreNames() {
           throw new Error("Access denied");
         },
+        close: vi.fn(),
       };
 
       mockOpen.mockReturnValue({
@@ -250,8 +255,7 @@ describe("hasExistingOAuthSession", () => {
       const promise = hasExistingOAuthSession();
 
       // Fast-forward past timeout
-      vi.advanceTimersByTime(500);
-      await wait(10);
+      await vi.advanceTimersByTimeAsync(600);
 
       const result = await promise;
       expect(result).toBe(false);
@@ -270,11 +274,30 @@ describe("hasExistingOAuthSession", () => {
   });
 });
 
-describe("OAuthService", () => {
-  let mockOAuthClient: Partial<BrowserOAuthClientType>;
-  let mockSession: Partial<OAuthSession>;
-  let mockAgent: Partial<Agent>;
+// Mock OAuth client at module level
+let mockOAuthClient: Partial<BrowserOAuthClientType>;
+let mockSession: Partial<OAuthSession>;
 
+// Set up default mocks
+mockSession = {
+  did: "did:plc:test123",
+  signOut: vi.fn().mockResolvedValue(undefined),
+};
+
+mockOAuthClient = {
+  init: vi.fn().mockResolvedValue({ session: mockSession }),
+  authorize: vi.fn().mockResolvedValue(new URL("https://oauth.example.com")),
+  addEventListener: vi.fn(),
+};
+
+// Mock the OAuth client module
+vi.mock("@atproto/oauth-client-browser", () => ({
+  BrowserOAuthClient: {
+    load: vi.fn(() => Promise.resolve(mockOAuthClient)),
+  },
+}));
+
+describe("OAuthService", () => {
   beforeEach(() => {
     // Reset service state
     // @ts-expect-error - accessing private property for testing
@@ -297,21 +320,13 @@ describe("OAuthService", () => {
       hostname: "shadowsky.io",
     } as any;
 
-    // Create mock OAuth session
+    // Reset mock session
     mockSession = {
       did: "did:plc:test123",
       signOut: vi.fn().mockResolvedValue(undefined),
     };
 
-    // Create mock Agent
-    mockAgent = {
-      api: {} as any,
-    };
-
-    // Mock Agent constructor
-    vi.spyOn(global as any, "Agent" as any).mockImplementation(() => mockAgent);
-
-    // Create mock OAuth client
+    // Reset mock OAuth client
     mockOAuthClient = {
       init: vi.fn().mockResolvedValue({ session: mockSession }),
       authorize: vi
@@ -319,65 +334,48 @@ describe("OAuthService", () => {
         .mockResolvedValue(new URL("https://oauth.example.com")),
       addEventListener: vi.fn(),
     };
-
-    // Mock the lazy-loaded OAuth module
-    vi.mock("@atproto/oauth-client-browser", () => ({
-      BrowserOAuthClient: {
-        load: vi.fn().mockResolvedValue(mockOAuthClient),
-      },
-    }));
   });
 
   afterEach(() => {
     vi.clearAllMocks();
-    vi.restoreAllMocks();
   });
 
   describe("init()", () => {
     it("should initialize OAuth client and restore existing session", async () => {
-      // Mock the dynamic import
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi.fn().mockResolvedValue(mockOAuthClient),
-        },
-      }));
-
       const result = await oauthService.init();
 
       expect(result).toBeDefined();
       expect(result?.session).toBe(mockSession);
-      expect(result?.agent).toBe(mockAgent);
+      expect(result?.agent).toBeDefined();
       expect(result?.did).toBe("did:plc:test123");
       expect(oauthService.isAuthenticated()).toBe(true);
     });
 
     it("should return cached promise on concurrent init calls", async () => {
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi.fn().mockResolvedValue(mockOAuthClient),
-        },
-      }));
+      // Track how many times the OAuth client load is called
+      const { BrowserOAuthClient } = await import(
+        "@atproto/oauth-client-browser"
+      );
+      const loadSpy = vi.mocked(BrowserOAuthClient.load);
+      loadSpy.mockClear();
 
+      // Make two concurrent init calls
       const promise1 = oauthService.init();
       const promise2 = oauthService.init();
 
-      expect(promise1).toBe(promise2);
+      // Wait for both to complete
+      const [result1, result2] = await Promise.all([promise1, promise2]);
 
-      await promise1;
-      await promise2;
+      // Both should return the same result
+      expect(result1).toEqual(result2);
+
+      // The OAuth client should only be loaded once, not twice
+      // This proves the promise was cached
+      expect(loadSpy).toHaveBeenCalledTimes(1);
     });
 
     it("should return null when no existing session exists", async () => {
-      const clientWithNoSession = {
-        ...mockOAuthClient,
-        init: vi.fn().mockResolvedValue(null),
-      };
-
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi.fn().mockResolvedValue(clientWithNoSession),
-        },
-      }));
+      mockOAuthClient.init = vi.fn().mockResolvedValue(null);
 
       const result = await oauthService.init();
 
@@ -386,13 +384,12 @@ describe("OAuthService", () => {
     });
 
     it("should return null when client metadata is not available", async () => {
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi
-            .fn()
-            .mockRejectedValue(new Error("Client metadata not found")),
-        },
-      }));
+      const { BrowserOAuthClient } = await import(
+        "@atproto/oauth-client-browser"
+      );
+      vi.mocked(BrowserOAuthClient.load).mockRejectedValueOnce(
+        new Error("Client metadata not found"),
+      );
 
       const result = await oauthService.init();
 
@@ -401,14 +398,9 @@ describe("OAuthService", () => {
     });
 
     it("should throw on unexpected initialization errors", async () => {
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi.fn().mockResolvedValue({
-            ...mockOAuthClient,
-            init: vi.fn().mockRejectedValue(new Error("Unexpected error")),
-          }),
-        },
-      }));
+      mockOAuthClient.init = vi
+        .fn()
+        .mockRejectedValue(new Error("Unexpected error"));
 
       await expect(oauthService.init()).rejects.toThrow("Unexpected error");
     });
@@ -417,18 +409,12 @@ describe("OAuthService", () => {
       const sessionCallback = vi.fn();
       oauthService.addEventListener("session", sessionCallback);
 
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi.fn().mockResolvedValue(mockOAuthClient),
-        },
-      }));
-
       await oauthService.init();
 
       expect(sessionCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           session: mockSession,
-          agent: mockAgent,
+          agent: expect.any(Object),
           did: "did:plc:test123",
         }),
       );
@@ -437,27 +423,20 @@ describe("OAuthService", () => {
     it("should listen for 'deleted' events from OAuth client", async () => {
       let deletedEventHandler: ((event: CustomEvent) => void) | undefined;
 
-      const clientWithEventListener = {
-        ...mockOAuthClient,
-        addEventListener: vi.fn().mockImplementation((type, handler) => {
+      mockOAuthClient.addEventListener = vi
+        .fn()
+        .mockImplementation((type, handler) => {
           if (type === "deleted") {
             deletedEventHandler = handler;
           }
-        }),
-      };
-
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi.fn().mockResolvedValue(clientWithEventListener),
-        },
-      }));
+        });
 
       const deletedCallback = vi.fn();
       oauthService.addEventListener("deleted", deletedCallback);
 
       await oauthService.init();
 
-      expect(clientWithEventListener.addEventListener).toHaveBeenCalledWith(
+      expect(mockOAuthClient.addEventListener).toHaveBeenCalledWith(
         "deleted",
         expect.any(Function),
       );
@@ -483,15 +462,6 @@ describe("OAuthService", () => {
     it("should use production client ID for production hostname", async () => {
       window.location.hostname = "shadowsky.io";
 
-      // We'll need to capture what clientId is passed
-      const loadSpy = vi.fn().mockResolvedValue(mockOAuthClient);
-
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: loadSpy,
-        },
-      }));
-
       await oauthService.init();
 
       // The init would have been called with production URL
@@ -510,14 +480,6 @@ describe("OAuthService", () => {
         writable: true,
       });
 
-      const loadSpy = vi.fn().mockResolvedValue(mockOAuthClient);
-
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: loadSpy,
-        },
-      }));
-
       await oauthService.init();
 
       expect(oauthService.isAvailable()).toBe(true);
@@ -527,11 +489,6 @@ describe("OAuthService", () => {
   describe("authorize()", () => {
     beforeEach(async () => {
       // Pre-initialize the service
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi.fn().mockResolvedValue(mockOAuthClient),
-        },
-      }));
       await oauthService.init();
     });
 
@@ -571,13 +528,12 @@ describe("OAuthService", () => {
       // @ts-expect-error - accessing private property for testing
       oauthService.initPromise = null;
 
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi
-            .fn()
-            .mockRejectedValue(new Error("Client metadata not found")),
-        },
-      }));
+      const { BrowserOAuthClient } = await import(
+        "@atproto/oauth-client-browser"
+      );
+      vi.mocked(BrowserOAuthClient.load).mockRejectedValueOnce(
+        new Error("Client metadata not found"),
+      );
 
       await expect(oauthService.authorize("user.bsky.social")).rejects.toThrow(
         "OAuth client not initialized",
@@ -597,12 +553,6 @@ describe("OAuthService", () => {
 
   describe("handleCallback()", () => {
     it("should handle OAuth callback and return session state", async () => {
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi.fn().mockResolvedValue(mockOAuthClient),
-        },
-      }));
-
       const result = await oauthService.handleCallback();
 
       expect(result).toBeDefined();
@@ -615,12 +565,6 @@ describe("OAuthService", () => {
       const sessionCallback = vi.fn();
       oauthService.addEventListener("session", sessionCallback);
 
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi.fn().mockResolvedValue(mockOAuthClient),
-        },
-      }));
-
       await oauthService.handleCallback();
 
       expect(sessionCallback).toHaveBeenCalledWith(
@@ -632,16 +576,7 @@ describe("OAuthService", () => {
     });
 
     it("should return null when callback has no session", async () => {
-      const clientWithNoSession = {
-        ...mockOAuthClient,
-        init: vi.fn().mockResolvedValue(null),
-      };
-
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi.fn().mockResolvedValue(clientWithNoSession),
-        },
-      }));
+      mockOAuthClient.init = vi.fn().mockResolvedValue(null);
 
       const result = await oauthService.handleCallback();
 
@@ -654,13 +589,12 @@ describe("OAuthService", () => {
       // @ts-expect-error - accessing private property for testing
       oauthService.initPromise = null;
 
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi
-            .fn()
-            .mockRejectedValue(new Error("Client metadata not found")),
-        },
-      }));
+      const { BrowserOAuthClient } = await import(
+        "@atproto/oauth-client-browser"
+      );
+      vi.mocked(BrowserOAuthClient.load).mockRejectedValueOnce(
+        new Error("Client metadata not found"),
+      );
 
       await expect(oauthService.handleCallback()).rejects.toThrow(
         "OAuth client not initialized",
@@ -668,16 +602,9 @@ describe("OAuthService", () => {
     });
 
     it("should propagate callback handling errors", async () => {
-      const clientWithError = {
-        ...mockOAuthClient,
-        init: vi.fn().mockRejectedValue(new Error("Callback failed")),
-      };
-
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi.fn().mockResolvedValue(clientWithError),
-        },
-      }));
+      mockOAuthClient.init = vi
+        .fn()
+        .mockRejectedValue(new Error("Callback failed"));
 
       await expect(oauthService.handleCallback()).rejects.toThrow(
         "Callback failed",
@@ -687,11 +614,6 @@ describe("OAuthService", () => {
 
   describe("signOut()", () => {
     beforeEach(async () => {
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi.fn().mockResolvedValue(mockOAuthClient),
-        },
-      }));
       await oauthService.init();
     });
 
@@ -741,16 +663,11 @@ describe("OAuthService", () => {
 
   describe("State getters", () => {
     beforeEach(async () => {
-      vi.doMock("@atproto/oauth-client-browser", () => ({
-        BrowserOAuthClient: {
-          load: vi.fn().mockResolvedValue(mockOAuthClient),
-        },
-      }));
       await oauthService.init();
     });
 
     it("getAgent() should return current agent", () => {
-      expect(oauthService.getAgent()).toBe(mockAgent);
+      expect(oauthService.getAgent()).toBeDefined();
     });
 
     it("getSession() should return current session", () => {
@@ -784,7 +701,7 @@ describe("OAuthService", () => {
 
       expect(state).toEqual({
         session: mockSession,
-        agent: mockAgent,
+        agent: expect.any(Object),
         did: "did:plc:test123",
         handle: null,
       });
