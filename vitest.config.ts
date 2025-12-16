@@ -18,6 +18,7 @@ export default defineConfig({
       "**/tests/playwright/**",
       "**/*.spec.ts",
       "**/*.spec.js",
+      "**/amplify/**",
     ],
     coverage: {
       provider: "v8",

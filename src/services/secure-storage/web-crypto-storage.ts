@@ -184,7 +184,7 @@ export class WebCryptoStorage implements ISecureStorage {
     return crypto.subtle.deriveKey(
       {
         name: "PBKDF2",
-        salt: salt.buffer as ArrayBuffer,
+        salt: salt as BufferSource,
         iterations: 100000,
         hash: "SHA-256",
       },
@@ -256,7 +256,7 @@ export class WebCryptoStorage implements ISecureStorage {
 
     try {
       const encryptedData = await crypto.subtle.encrypt(
-        { name: "AES-GCM", iv: iv.buffer as ArrayBuffer },
+        { name: "AES-GCM", iv: iv as BufferSource },
         this.encryptionKey!,
         encoder.encode(data),
       );
@@ -282,7 +282,7 @@ export class WebCryptoStorage implements ISecureStorage {
 
     try {
       const decrypted = await crypto.subtle.decrypt(
-        { name: "AES-GCM", iv: iv.buffer as ArrayBuffer },
+        { name: "AES-GCM", iv: iv as BufferSource },
         this.encryptionKey!,
         encryptedData,
       );

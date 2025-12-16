@@ -602,9 +602,9 @@ export class EncryptedStorageWrapper implements IStorageProvider {
     const iv = this.base64ToArrayBuffer(envelope.iv);
 
     const plaintext = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
+      { name: "AES-GCM", iv: iv as BufferSource },
       this.encryptionKey,
-      ciphertext,
+      ciphertext as BufferSource,
     );
 
     const decoder = new TextDecoder();
@@ -622,13 +622,13 @@ export class EncryptedStorageWrapper implements IStorageProvider {
     return btoa(binary);
   }
 
-  private base64ToArrayBuffer(base64: string): ArrayBuffer {
+  private base64ToArrayBuffer(base64: string): Uint8Array {
     const binary = atob(base64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
       bytes[i] = binary.charCodeAt(i);
     }
-    return bytes.buffer;
+    return bytes;
   }
 
   // ==================== Public Encryption API ====================

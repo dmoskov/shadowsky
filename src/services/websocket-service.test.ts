@@ -742,15 +742,16 @@ describe("WebSocketService - State Machine", () => {
         );
       });
 
-      it("should enter DISCONNECTED state on clean close", () => {
+      it("should reconnect on clean close (not intentionally closed)", () => {
         service = createService();
         service.connect();
         mockWs = getLatestMockWs();
         mockWs.simulateOpen();
         mockWs.simulateClose(1000, "Normal closure", true);
 
+        // Clean closes without isIntentionallyClosed flag will cause reconnection
         expect(service.getConnectionState()).toBe(
-          WebSocketConnectionState.DISCONNECTED,
+          WebSocketConnectionState.RECONNECTING,
         );
       });
     });
