@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { getNotificationService } from "../services/atproto/notifications";
 
 const MAX_NOTIFICATIONS_PER_TYPE = 5000;
-const MAX_DAYS = 28; // 4 weeks
+const MAX_DAYS = 90; // 3 months
 
 type NotificationReason =
   | "like"
@@ -78,7 +78,7 @@ export function useNotificationsByType(
         return undefined;
       }
 
-      // Check if oldest notification is beyond MAX_DAYS (4 weeks)
+      // Check if oldest notification is beyond MAX_DAYS (3 months)
       if (allPages.length > 0) {
         const allNotifications = allPages.flatMap((page) => page.notifications);
         if (allNotifications.length > 0) {
@@ -90,7 +90,7 @@ export function useNotificationsByType(
 
           if (oldestDate < maxDaysAgo) {
             debug.log(
-              `Reached 4-week limit for ${typeStr}. Oldest notification: ${oldestDate.toLocaleDateString()}`,
+              `Reached 3-month limit for ${typeStr}. Oldest notification: ${oldestDate.toLocaleDateString()}`,
             );
             return undefined;
           }

@@ -14,7 +14,7 @@ import { NotificationObjectCache } from "../utils/notificationObjectCache";
 import { useErrorHandler } from "./useErrorHandler";
 
 const MAX_NOTIFICATIONS = 10000;
-const MAX_DAYS = 28; // 4 weeks
+const MAX_DAYS = 90; // 3 months
 
 export function useNotifications(priority: boolean = false) {
   const { session, agent } = useAuth();
@@ -84,7 +84,7 @@ export function useNotifications(priority: boolean = false) {
 
           if (oldestDate < maxDaysAgo) {
             debug.log(
-              `⏰ Reached 4-week limit. Oldest notification: ${oldestDate.toLocaleDateString()}`,
+              `⏰ Reached 3-month limit. Oldest notification: ${oldestDate.toLocaleDateString()}`,
             );
             return undefined;
           }

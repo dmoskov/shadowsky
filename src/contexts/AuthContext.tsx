@@ -20,7 +20,6 @@ import React, {
 import { AccountManager } from "../services/account-manager";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { atProtoClient, ATProtoClient } from "../services/atproto";
-import { multiClientManager } from "../services/multi-client-manager";
 import {
   bookmarkService,
   initializeBookmarkService,
@@ -29,6 +28,7 @@ import { columnService } from "../services/column-service";
 import { initializeDataServices } from "../services/data-services-initializer";
 import { dmService } from "../services/dm-service";
 import { draftService } from "../services/draft-service";
+import { multiClientManager } from "../services/multi-client-manager";
 import {
   hasExistingOAuthSession,
   oauthService,

@@ -1214,6 +1214,15 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
           post.embed?.$type === "app.bsky.embed.images#view" ||
           (post.embed?.$type === "app.bsky.embed.recordWithMedia#view" &&
             post.embed.media?.$type === "app.bsky.embed.images#view");
+        const hasVideo =
+          post.embed?.$type === "app.bsky.embed.video#view" ||
+          (post.embed?.$type === "app.bsky.embed.recordWithMedia#view" &&
+            post.embed.media?.$type === "app.bsky.embed.video#view");
+        const hasExternal =
+          post.embed?.$type === "app.bsky.embed.external#view" ||
+          (post.embed?.$type === "app.bsky.embed.recordWithMedia#view" &&
+            post.embed.media?.$type === "app.bsky.embed.external#view");
+        const hasMedia = hasImages || hasVideo || hasExternal;
 
         return (
           <div className="mt-2 rounded-md border border-bsky-border-primary bg-bsky-bg-secondary p-2.5">
@@ -1265,32 +1274,211 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                   </span>
                 </span>
               )}
-              {hasImages && (
+              {hasMedia && (
                 <span
                   className="flex items-center gap-1 text-xs"
                   style={{ color: "var(--bsky-text-tertiary)" }}
                 >
-                  · 📷
+                  · {hasVideo ? "🎬" : hasExternal ? "🔗" : "📷"}
                 </span>
               )}
             </div>
 
-            {post.record?.text ? (
+            {post.record?.text && (
               <p className="text-sm leading-relaxed text-bsky-text-primary">
                 {post.record.text}
               </p>
-            ) : (
-              <p
-                className="text-sm italic"
-                style={{ color: "var(--bsky-text-tertiary)" }}
-              >
-                [Post with no text]
-              </p>
             )}
 
-            {/* Display images if present */}
+            {/* Display media if present */}
             {(() => {
               if (!post.embed) return null;
+
+              const embed = post.embed as any;
+
+              // Handle video embeds
+              if (embed.$type === "app.bsky.embed.video#view") {
+                return (
+                  <div className="mt-2">
+                    <div
+                      className="relative overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
+                      style={{
+                        borderColor: "var(--bsky-border-primary)",
+                        aspectRatio: "16/9",
+                        maxHeight: "200px",
+                      }}
+                    >
+                      {embed.thumbnail ? (
+                        <img
+                          src={proxifyBskyImage(embed.thumbnail)}
+                          alt="Video thumbnail"
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <span style={{ color: "var(--bsky-text-tertiary)" }}>
+                            Video
+                          </span>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div
+                          className="flex h-12 w-12 items-center justify-center rounded-full"
+                          style={{
+                            backgroundColor: "rgba(0, 0, 0, 0.6)",
+                          }}
+                        >
+                          <svg
+                            className="h-6 w-6 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Handle video in recordWithMedia
+              if (
+                embed.$type === "app.bsky.embed.recordWithMedia#view" &&
+                embed.media?.$type === "app.bsky.embed.video#view"
+              ) {
+                const video = embed.media;
+                return (
+                  <div className="mt-2">
+                    <div
+                      className="relative overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
+                      style={{
+                        borderColor: "var(--bsky-border-primary)",
+                        aspectRatio: "16/9",
+                        maxHeight: "200px",
+                      }}
+                    >
+                      {video.thumbnail ? (
+                        <img
+                          src={proxifyBskyImage(video.thumbnail)}
+                          alt="Video thumbnail"
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <span style={{ color: "var(--bsky-text-tertiary)" }}>
+                            Video
+                          </span>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div
+                          className="flex h-12 w-12 items-center justify-center rounded-full"
+                          style={{
+                            backgroundColor: "rgba(0, 0, 0, 0.6)",
+                          }}
+                        >
+                          <svg
+                            className="h-6 w-6 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Handle external embeds (link cards, GIFs)
+              if (embed.$type === "app.bsky.embed.external#view") {
+                const external = embed.external;
+                if (external?.thumb || external?.uri) {
+                  // Check if it's a GIF - use the actual URI for animation
+                  const isGif =
+                    external.uri?.toLowerCase().includes(".gif") ||
+                    external.uri?.includes("tenor.com") ||
+                    external.uri?.includes("giphy.com");
+                  const imageSrc = isGif
+                    ? external.uri
+                    : proxifyBskyImage(external.thumb);
+
+                  return (
+                    <div className="mt-2">
+                      <div
+                        className="overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
+                        style={{
+                          borderColor: "var(--bsky-border-primary)",
+                        }}
+                      >
+                        <img
+                          src={imageSrc}
+                          alt={external.title || "Link preview"}
+                          className="w-full object-contain"
+                          style={{ maxHeight: "250px" }}
+                          loading="lazy"
+                        />
+                        {external.title && !isGif && (
+                          <div
+                            className="p-2 text-xs"
+                            style={{ color: "var(--bsky-text-secondary)" }}
+                          >
+                            {external.title}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+              }
+
+              // Handle external in recordWithMedia
+              if (
+                embed.$type === "app.bsky.embed.recordWithMedia#view" &&
+                embed.media?.$type === "app.bsky.embed.external#view"
+              ) {
+                const external = embed.media.external;
+                if (external?.thumb || external?.uri) {
+                  // Check if it's a GIF - use the actual URI for animation
+                  const isGif =
+                    external.uri?.toLowerCase().includes(".gif") ||
+                    external.uri?.includes("tenor.com") ||
+                    external.uri?.includes("giphy.com");
+                  const imageSrc = isGif
+                    ? external.uri
+                    : proxifyBskyImage(external.thumb);
+                  return (
+                    <div className="mt-2">
+                      <div
+                        className="overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
+                        style={{
+                          borderColor: "var(--bsky-border-primary)",
+                        }}
+                      >
+                        <img
+                          src={imageSrc}
+                          alt={external.title || "Link preview"}
+                          className="w-full object-contain"
+                          style={{ maxHeight: "250px" }}
+                          loading="lazy"
+                        />
+                        {external.title && !isGif && (
+                          <div
+                            className="p-2 text-xs"
+                            style={{ color: "var(--bsky-text-secondary)" }}
+                          >
+                            {external.title}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+              }
 
               let images: Array<{
                 thumb: string;
@@ -1300,22 +1488,22 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
 
               // Extract images from different embed types
               if (
-                post.embed.$type === "app.bsky.embed.images#view" &&
-                post.embed.images
+                embed.$type === "app.bsky.embed.images#view" &&
+                embed.images
               ) {
-                images = post.embed.images;
+                images = embed.images;
               } else if (
-                post.embed.$type === "app.bsky.embed.recordWithMedia#view" &&
-                post.embed.media?.$type === "app.bsky.embed.images#view" &&
-                post.embed.media.images
+                embed.$type === "app.bsky.embed.recordWithMedia#view" &&
+                embed.media?.$type === "app.bsky.embed.images#view" &&
+                embed.media.images
               ) {
-                images = post.embed.media.images;
+                images = embed.media.images;
               }
 
               if (images.length === 0) return null;
 
               return (
-                <div className="mt-3">
+                <div className="mt-2">
                   <div
                     className={`grid gap-2 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
                   >

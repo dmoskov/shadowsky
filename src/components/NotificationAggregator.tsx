@@ -589,35 +589,59 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                 // We have full post data with author info
                 const postText = (post.record as any)?.text || "";
                 const postAuthor = post.author;
+                const embed = post.embed as any;
                 const hasImages =
-                  post.embed?.$type === "app.bsky.embed.images#view" ||
-                  (post.embed?.$type ===
-                    "app.bsky.embed.recordWithMedia#view" &&
-                    "media" in post.embed &&
-                    post.embed.media?.$type === "app.bsky.embed.images#view");
+                  embed?.$type === "app.bsky.embed.images#view" ||
+                  (embed?.$type === "app.bsky.embed.recordWithMedia#view" &&
+                    embed.media?.$type === "app.bsky.embed.images#view");
+                const hasVideo =
+                  embed?.$type === "app.bsky.embed.video#view" ||
+                  (embed?.$type === "app.bsky.embed.recordWithMedia#view" &&
+                    embed.media?.$type === "app.bsky.embed.video#view");
+                const hasExternal =
+                  embed?.$type === "app.bsky.embed.external#view" ||
+                  (embed?.$type === "app.bsky.embed.recordWithMedia#view" &&
+                    embed.media?.$type === "app.bsky.embed.external#view");
+                const hasMedia = hasImages || hasVideo || hasExternal;
 
-                // Extract images if present
+                // Extract media info
                 let images: Array<{
                   thumb: string;
                   fullsize: string;
                   alt?: string;
                 }> = [];
-                if (post.embed) {
+                let videoThumbnail: string | null = null;
+                let externalEmbed: {
+                  thumb?: string;
+                  title?: string;
+                  uri?: string;
+                } | null = null;
+                if (embed) {
                   if (
-                    post.embed.$type === "app.bsky.embed.images#view" &&
-                    "images" in post.embed &&
-                    post.embed.images
+                    embed.$type === "app.bsky.embed.images#view" &&
+                    embed.images
                   ) {
-                    images = post.embed.images;
+                    images = embed.images;
                   } else if (
-                    post.embed.$type ===
-                      "app.bsky.embed.recordWithMedia#view" &&
-                    "media" in post.embed &&
-                    post.embed.media?.$type === "app.bsky.embed.images#view" &&
-                    "images" in post.embed.media &&
-                    post.embed.media.images
+                    embed.$type === "app.bsky.embed.recordWithMedia#view" &&
+                    embed.media?.$type === "app.bsky.embed.images#view" &&
+                    embed.media.images
                   ) {
-                    images = post.embed.media.images;
+                    images = embed.media.images;
+                  } else if (embed.$type === "app.bsky.embed.video#view") {
+                    videoThumbnail = embed.thumbnail || null;
+                  } else if (
+                    embed.$type === "app.bsky.embed.recordWithMedia#view" &&
+                    embed.media?.$type === "app.bsky.embed.video#view"
+                  ) {
+                    videoThumbnail = embed.media.thumbnail || null;
+                  } else if (embed.$type === "app.bsky.embed.external#view") {
+                    externalEmbed = embed.external || null;
+                  } else if (
+                    embed.$type === "app.bsky.embed.recordWithMedia#view" &&
+                    embed.media?.$type === "app.bsky.embed.external#view"
+                  ) {
+                    externalEmbed = embed.media.external || null;
                   }
                 }
 
@@ -659,16 +683,16 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                       >
                         {postAuthor?.displayName || postAuthor?.handle || "You"}
                       </span>
-                      {hasImages && (
+                      {hasMedia && (
                         <span
                           className="flex items-center gap-1 text-xs"
                           style={{ color: "var(--bsky-text-tertiary)" }}
                         >
-                          · 📷
+                          · {hasVideo ? "🎬" : hasExternal ? "🔗" : "📷"}
                         </span>
                       )}
                     </div>
-                    {postText ? (
+                    {postText && (
                       <p
                         className="text-sm"
                         style={{
@@ -678,18 +702,11 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                       >
                         {postText}
                       </p>
-                    ) : (
-                      <p
-                        className="text-sm italic"
-                        style={{ color: "var(--bsky-text-tertiary)" }}
-                      >
-                        [Post with no text]
-                      </p>
                     )}
 
                     {/* Display images if present */}
                     {images.length > 0 && (
-                      <div className="mt-3">
+                      <div className="mt-2">
                         <div
                           className={`grid gap-2 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
                         >
@@ -709,6 +726,94 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                         </div>
                       </div>
                     )}
+
+                    {/* Display video thumbnail if present */}
+                    {hasVideo && (
+                      <div className="mt-2">
+                        <div
+                          className="relative overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
+                          style={{
+                            borderColor: "var(--bsky-border-primary)",
+                            aspectRatio: "16/9",
+                            maxHeight: "160px",
+                          }}
+                        >
+                          {videoThumbnail ? (
+                            <img
+                              src={proxifyBskyImage(videoThumbnail)}
+                              alt="Video thumbnail"
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center">
+                              <span
+                                style={{ color: "var(--bsky-text-tertiary)" }}
+                              >
+                                Video
+                              </span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div
+                              className="flex h-10 w-10 items-center justify-center rounded-full"
+                              style={{
+                                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                              }}
+                            >
+                              <svg
+                                className="h-5 w-5 text-white"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Display external embed (link card, GIF) if present */}
+                    {(externalEmbed?.thumb || externalEmbed?.uri) &&
+                      (() => {
+                        const isGif =
+                          externalEmbed.uri?.toLowerCase().includes(".gif") ||
+                          externalEmbed.uri?.includes("tenor.com") ||
+                          externalEmbed.uri?.includes("giphy.com");
+                        const imageSrc = isGif
+                          ? externalEmbed.uri
+                          : proxifyBskyImage(externalEmbed.thumb || "");
+
+                        return (
+                          <div className="mt-2">
+                            <div
+                              className="overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
+                              style={{
+                                borderColor: "var(--bsky-border-primary)",
+                              }}
+                            >
+                              <img
+                                src={imageSrc}
+                                alt={externalEmbed.title || "Link preview"}
+                                className="w-full object-contain"
+                                style={{ maxHeight: "200px" }}
+                                loading="lazy"
+                              />
+                              {externalEmbed.title && !isGif && (
+                                <div
+                                  className="p-2 text-xs"
+                                  style={{
+                                    color: "var(--bsky-text-secondary)",
+                                  }}
+                                >
+                                  {externalEmbed.title}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
                   </div>
                 );
               } else if (

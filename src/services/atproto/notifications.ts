@@ -15,7 +15,7 @@ export class NotificationService {
   async listNotifications(
     cursor?: string,
     priority?: boolean,
-    limit: number = 50,
+    limit: number = 100,
   ): Promise<{
     notifications: Notification[];
     cursor?: string;

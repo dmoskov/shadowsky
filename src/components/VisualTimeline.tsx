@@ -52,6 +52,9 @@ interface AggregatedEvent {
     // Posts affected by user activity
     uri: string;
     text?: string;
+    hasImages?: boolean;
+    hasVideo?: boolean;
+    hasExternal?: boolean;
   }>;
 }
 
@@ -400,9 +403,30 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                     : n.uri;
                 if (postUri && !affectedPosts.has(postUri)) {
                   const post = postMap.get(postUri);
+                  const hasImages =
+                    post?.embed?.$type === "app.bsky.embed.images#view" ||
+                    (post?.embed?.$type ===
+                      "app.bsky.embed.recordWithMedia#view" &&
+                      post?.embed?.media?.$type ===
+                        "app.bsky.embed.images#view");
+                  const hasVideo =
+                    post?.embed?.$type === "app.bsky.embed.video#view" ||
+                    (post?.embed?.$type ===
+                      "app.bsky.embed.recordWithMedia#view" &&
+                      post?.embed?.media?.$type ===
+                        "app.bsky.embed.video#view");
+                  const hasExternal =
+                    post?.embed?.$type === "app.bsky.embed.external#view" ||
+                    (post?.embed?.$type ===
+                      "app.bsky.embed.recordWithMedia#view" &&
+                      post?.embed?.media?.$type ===
+                        "app.bsky.embed.external#view");
                   affectedPosts.set(postUri, {
                     uri: postUri,
                     text: post?.record?.text,
+                    hasImages,
+                    hasVideo,
+                    hasExternal,
                   });
                 }
               });
@@ -445,9 +469,24 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                 : n.uri;
             if (postUri && !affectedPosts.has(postUri)) {
               const post = postMap.get(postUri);
+              const hasImages =
+                post?.embed?.$type === "app.bsky.embed.images#view" ||
+                (post?.embed?.$type === "app.bsky.embed.recordWithMedia#view" &&
+                  post?.embed?.media?.$type === "app.bsky.embed.images#view");
+              const hasVideo =
+                post?.embed?.$type === "app.bsky.embed.video#view" ||
+                (post?.embed?.$type === "app.bsky.embed.recordWithMedia#view" &&
+                  post?.embed?.media?.$type === "app.bsky.embed.video#view");
+              const hasExternal =
+                post?.embed?.$type === "app.bsky.embed.external#view" ||
+                (post?.embed?.$type === "app.bsky.embed.recordWithMedia#view" &&
+                  post?.embed?.media?.$type === "app.bsky.embed.external#view");
               affectedPosts.set(postUri, {
                 uri: postUri,
                 text: post?.record?.text,
+                hasImages,
+                hasVideo,
+                hasExternal,
               });
             }
           });
@@ -1701,7 +1740,29 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                           }}
                                         >
                                           {post.record?.text ||
-                                            "[Post with no text]"}
+                                            (post.embed?.$type ===
+                                              "app.bsky.embed.images#view" ||
+                                            (post.embed?.$type ===
+                                              "app.bsky.embed.recordWithMedia#view" &&
+                                              post.embed?.media?.$type ===
+                                                "app.bsky.embed.images#view")
+                                              ? "📷 Image"
+                                              : post.embed?.$type ===
+                                                    "app.bsky.embed.video#view" ||
+                                                  (post.embed?.$type ===
+                                                    "app.bsky.embed.recordWithMedia#view" &&
+                                                    post.embed?.media?.$type ===
+                                                      "app.bsky.embed.video#view")
+                                                ? "🎬 Video"
+                                                : post.embed?.$type ===
+                                                      "app.bsky.embed.external#view" ||
+                                                    (post.embed?.$type ===
+                                                      "app.bsky.embed.recordWithMedia#view" &&
+                                                      post.embed?.media
+                                                        ?.$type ===
+                                                        "app.bsky.embed.external#view")
+                                                  ? "🔗 Link"
+                                                  : "[Post with no text]")}
                                         </p>
                                       </div>
                                     );
@@ -1926,7 +1987,13 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                                   }}
                                                 >
                                                   {post.text ||
-                                                    "[Post with no text]"}
+                                                    (post.hasImages
+                                                      ? "📷 Image"
+                                                      : post.hasVideo
+                                                        ? "🎬 Video"
+                                                        : post.hasExternal
+                                                          ? "🔗 Link"
+                                                          : "[Post with no text]")}
                                                 </div>
                                               );
                                             })}
@@ -2525,7 +2592,29 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                           }}
                                         >
                                           {post.record?.text ||
-                                            "[Post with no text]"}
+                                            (post.embed?.$type ===
+                                              "app.bsky.embed.images#view" ||
+                                            (post.embed?.$type ===
+                                              "app.bsky.embed.recordWithMedia#view" &&
+                                              post.embed?.media?.$type ===
+                                                "app.bsky.embed.images#view")
+                                              ? "📷 Image"
+                                              : post.embed?.$type ===
+                                                    "app.bsky.embed.video#view" ||
+                                                  (post.embed?.$type ===
+                                                    "app.bsky.embed.recordWithMedia#view" &&
+                                                    post.embed?.media?.$type ===
+                                                      "app.bsky.embed.video#view")
+                                                ? "🎬 Video"
+                                                : post.embed?.$type ===
+                                                      "app.bsky.embed.external#view" ||
+                                                    (post.embed?.$type ===
+                                                      "app.bsky.embed.recordWithMedia#view" &&
+                                                      post.embed?.media
+                                                        ?.$type ===
+                                                        "app.bsky.embed.external#view")
+                                                  ? "🔗 Link"
+                                                  : "[Post with no text]")}
                                         </p>
                                         <div
                                           className="mt-2 flex items-center gap-2 text-xs"

@@ -3,8 +3,8 @@
  * Maintains separate BskyAgent instances per account to preserve sessions
  */
 
-import { BskyAgent } from "@atproto/api";
 import type { AtpSessionData } from "@atproto/api";
+import { BskyAgent } from "@atproto/api";
 import { debug } from "../shared/debug";
 import { AccountManager, type StoredAccount } from "./account-manager";
 
@@ -41,13 +41,15 @@ class MultiClientManager {
     identifier: string,
     password: string,
     serviceUrl: string = "https://bsky.social",
-    authFactorToken?: string
+    authFactorToken?: string,
   ): Promise<ManagedClient> {
     const agent = new BskyAgent({ service: serviceUrl });
 
     try {
       const response = await agent.login({
-        identifier: identifier.startsWith("@") ? identifier.slice(1) : identifier,
+        identifier: identifier.startsWith("@")
+          ? identifier.slice(1)
+          : identifier,
         password,
         authFactorToken,
       });
@@ -80,7 +82,9 @@ class MultiClientManager {
     // Check if we already have a client for this account
     const existingClient = this.clients.get(account.did);
     if (existingClient) {
-      debug.log(`[MultiClientManager] Reusing existing client for ${account.handle}`);
+      debug.log(
+        `[MultiClientManager] Reusing existing client for ${account.handle}`,
+      );
       existingClient.lastUsed = Date.now();
       this.activeClientDid = account.did;
       return existingClient;
@@ -105,7 +109,10 @@ class MultiClientManager {
       debug.log(`[MultiClientManager] Resumed session for ${account.handle}`);
       return managedClient;
     } catch (error) {
-      debug.error(`[MultiClientManager] Failed to resume session for ${account.handle}:`, error);
+      debug.error(
+        `[MultiClientManager] Failed to resume session for ${account.handle}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -122,16 +129,22 @@ class MultiClientManager {
         await existingClient.agent.getProfile({ actor: did });
         existingClient.lastUsed = Date.now();
         this.activeClientDid = did;
-        debug.log(`[MultiClientManager] Switched to existing client for ${existingClient.handle}`);
+        debug.log(
+          `[MultiClientManager] Switched to existing client for ${existingClient.handle}`,
+        );
         return existingClient;
       } catch (error) {
-        debug.log(`[MultiClientManager] Existing client session invalid, will try to resume`);
+        debug.log(
+          `[MultiClientManager] Existing client session invalid, will try to resume`,
+        );
         this.clients.delete(did);
       }
     }
 
     // Try to resume from stored account
-    const account = AccountManager.getAllAccounts().find(acc => acc.did === did);
+    const account = AccountManager.getAllAccounts().find(
+      (acc) => acc.did === did,
+    );
     if (!account) {
       throw new Error(`Account not found: ${did}`);
     }
