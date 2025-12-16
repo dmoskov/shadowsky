@@ -25,7 +25,7 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
-import { ThreadProvider } from "../contexts/ThreadContext";
+import { ThreadProvider, type ThreadNode } from "../contexts/ThreadContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { useResponsiveCollapseThresholds } from "../hooks/useResponsiveCollapseThresholds";
 import { useThreadCollapse } from "../hooks/useThreadCollapse";
@@ -33,8 +33,8 @@ import { useThreadKeyboardNav } from "../hooks/useThreadKeyboardNav";
 import { useThreadTree } from "../hooks/useThreadTree";
 import { useScrollPersistence } from "../hooks/useScrollPersistence";
 import { proxifyBskyImage } from "../utils/image-proxy";
-import { createLogger } from "../utils/logger";
-import { countNodeDescendants, clearPersistedScrollPosition } from "../utils/thread-helpers";
+import { countNodeDescendants } from "../utils/thread-helpers";
+export { clearPersistedScrollPosition } from "../utils/thread-helpers";
 import { EmbedRenderer } from "./EmbedRenderer";
 import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
@@ -51,22 +51,7 @@ export {
   useThreadUserPosts,
 } from "../contexts/ThreadContext";
 
-const logger = createLogger("ThreadViewer");
-
 type Post = AppBskyFeedDefs.PostView;
-
-/**
- * @deprecated Use ThreadNode from ThreadContext instead
- * Kept for backwards compatibility
- */
-export interface ThreadNode {
-  notification?: Notification;
-  post?: Post;
-  children: ThreadNode[];
-  depth: number;
-  isRoot?: boolean;
-  flatIndex?: number;
-}
 
 export interface ThreadViewerProps {
   posts: Post[];
@@ -160,9 +145,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     threadTree,
     flatNodeList,
     maxThreadDepth,
-    branchCount,
     complexityScore,
-    notificationMap,
   } = useThreadTree({
     posts,
     notifications,
@@ -171,11 +154,9 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
 
   // Manage collapse/expand state with persistence
   const {
-    collapsedBranches,
     expandedBranches,
     animatingNodes,
     isCollapsed: isBranchCollapsed,
-    isExpanded: isBranchExpanded,
     toggleCollapse: toggleCollapseBranch,
     toggleExpand: toggleBranch,
   } = useThreadCollapse({
