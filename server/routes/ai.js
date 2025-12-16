@@ -8,15 +8,10 @@
 const express = require("express");
 const router = express.Router();
 const fetch = require("node-fetch");
-const {
-  requireCognitoAuth,
-} = require("../middleware/cognito-auth");
+const { requireCognitoAuth } = require("../middleware/cognito-auth");
 const { aiEndpointLimiter } = require("../middleware/rate-limit");
 const { validateUrlForSSRF } = require("../ip-validator");
-const {
-  cleanJsonResponse,
-  decodeHtmlEntities,
-} = require("../utils/helpers");
+const { cleanJsonResponse, decodeHtmlEntities } = require("../utils/helpers");
 const {
   generateCacheKey,
   getCachedSummary,

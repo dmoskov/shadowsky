@@ -314,7 +314,9 @@ describe("OAuthService", () => {
     // Create mock OAuth client
     mockOAuthClient = {
       init: vi.fn().mockResolvedValue({ session: mockSession }),
-      authorize: vi.fn().mockResolvedValue(new URL("https://oauth.example.com")),
+      authorize: vi
+        .fn()
+        .mockResolvedValue(new URL("https://oauth.example.com")),
       addEventListener: vi.fn(),
     };
 
@@ -433,7 +435,7 @@ describe("OAuthService", () => {
     });
 
     it("should listen for 'deleted' events from OAuth client", async () => {
-      let deletedEventHandler: ((event: CustomEvent) => void) | null = null;
+      let deletedEventHandler: ((event: CustomEvent) => void) | undefined;
 
       const clientWithEventListener = {
         ...mockOAuthClient,
@@ -499,8 +501,14 @@ describe("OAuthService", () => {
     });
 
     it("should use local proxy client ID for localhost", async () => {
-      window.location.hostname = "localhost";
-      window.location.origin = "http://localhost:3000";
+      Object.defineProperty(window, "location", {
+        value: {
+          ...window.location,
+          hostname: "localhost",
+          origin: "http://localhost:3000",
+        },
+        writable: true,
+      });
 
       const loadSpy = vi.fn().mockResolvedValue(mockOAuthClient);
 
@@ -549,9 +557,7 @@ describe("OAuthService", () => {
 
     it("should redirect to authorization URL", async () => {
       const authUrl = "https://oauth.example.com/authorize?client_id=test";
-      mockOAuthClient.authorize = vi
-        .fn()
-        .mockResolvedValue(new URL(authUrl));
+      mockOAuthClient.authorize = vi.fn().mockResolvedValue(new URL(authUrl));
 
       await oauthService.authorize("user.bsky.social");
 
@@ -573,9 +579,9 @@ describe("OAuthService", () => {
         },
       }));
 
-      await expect(
-        oauthService.authorize("user.bsky.social"),
-      ).rejects.toThrow("OAuth client not initialized");
+      await expect(oauthService.authorize("user.bsky.social")).rejects.toThrow(
+        "OAuth client not initialized",
+      );
     });
 
     it("should propagate authorization errors", async () => {
@@ -583,9 +589,9 @@ describe("OAuthService", () => {
         .fn()
         .mockRejectedValue(new Error("Authorization failed"));
 
-      await expect(
-        oauthService.authorize("user.bsky.social"),
-      ).rejects.toThrow("Authorization failed");
+      await expect(oauthService.authorize("user.bsky.social")).rejects.toThrow(
+        "Authorization failed",
+      );
     });
   });
 

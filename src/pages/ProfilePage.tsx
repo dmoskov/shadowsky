@@ -948,16 +948,15 @@ export default function ProfilePage() {
               <DomainVerifiedBadge handle={profile.handle} size="md" />
             </div>
             {/* Show profile labels if present */}
-            {(profile as any).labels &&
-              (profile as any).labels.length > 0 && (
-                <div className="mt-2">
-                  <LabelBadge
-                    labels={(profile as any).labels}
-                    maxDisplay={3}
-                    size="md"
-                  />
-                </div>
-              )}
+            {(profile as any).labels && (profile as any).labels.length > 0 && (
+              <div className="mt-2">
+                <LabelBadge
+                  labels={(profile as any).labels}
+                  maxDisplay={3}
+                  size="md"
+                />
+              </div>
+            )}
           </div>
 
           {profile.description && (

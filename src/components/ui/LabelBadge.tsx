@@ -221,8 +221,7 @@ export const LabelBadge: React.FC<LabelBadgeProps> = ({
   return (
     <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
       {visibleLabels.map((val) => {
-        const def =
-          LABEL_DEFINITIONS[val] || LABEL_DEFINITIONS["!warn"] || {};
+        const def = LABEL_DEFINITIONS[val] || LABEL_DEFINITIONS["!warn"] || {};
         return (
           <span
             key={val}
@@ -287,7 +286,7 @@ export const LabelIndicator: React.FC<{
       highestSeverity = "error";
       break;
     }
-    if (def?.severity === "warning" && highestSeverity !== "error") {
+    if (def?.severity === "warning") {
       highestSeverity = "warning";
     }
   }

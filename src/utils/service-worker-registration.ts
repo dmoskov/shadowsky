@@ -153,6 +153,7 @@ export async function registerServiceWorker(
     await initOfflineServices();
 
     // Import workbox-window for registration handling
+    // @ts-expect-error - workbox-window is dynamically imported and may not have types
     const { Workbox } = await import("workbox-window");
 
     const wb = new Workbox("/sw.js", {
@@ -164,7 +165,7 @@ export async function registerServiceWorker(
       logger.info("New service worker waiting to activate");
 
       // Get the registration for update callback
-      wb.getSW().then((sw) => {
+      wb.getSW().then((sw: ServiceWorker | undefined) => {
         if (sw && sw.state === "installed") {
           const reg = swRegistration;
           if (reg && callbacks.onUpdate) {
@@ -175,7 +176,7 @@ export async function registerServiceWorker(
     });
 
     // Handle successful installation
-    wb.addEventListener("installed", (event) => {
+    wb.addEventListener("installed", (event: any) => {
       if (!event.isUpdate) {
         logger.info("Service worker installed for the first time");
         callbacks.onOfflineReady?.();
@@ -183,7 +184,7 @@ export async function registerServiceWorker(
     });
 
     // Handle activation
-    wb.addEventListener("activated", (event) => {
+    wb.addEventListener("activated", (event: any) => {
       if (event.isUpdate) {
         logger.info("Service worker updated and activated");
       } else {
@@ -240,7 +241,7 @@ export async function registerServiceWorker(
       // Check for updates periodically (every hour)
       setInterval(
         () => {
-          registration.update().catch((err) => {
+          registration.update().catch((err: unknown) => {
             logger.warn("Failed to check for service worker updates:", err);
           });
         },
