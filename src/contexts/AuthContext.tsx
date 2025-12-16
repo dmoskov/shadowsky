@@ -502,15 +502,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           active: true,
         };
 
+        // Check if this is adding a secondary account (already authenticated)
+        // If so, skip service initialization - the page reload will handle it
+        const isAddingSecondaryAccount = isAuthenticated;
+
         setIsAuthenticated(true);
         setAuthMethod("app-password");
         setSession(newSession);
         setApiAuthSession(newSession);
 
-        // Initialize services with the managed client's agent
-        await initializeBookmarkService(managedClient.agent);
-        await initializeDataServices(managedClient.agent);
-        dmService.setAgent(managedClient.agent);
+        // Only initialize services for first login, not when adding accounts
+        // AddAccountPage does a full page reload after login which will re-initialize services
+        if (!isAddingSecondaryAccount) {
+          await initializeBookmarkService(managedClient.agent);
+          await initializeDataServices(managedClient.agent);
+          dmService.setAgent(managedClient.agent);
+        }
 
         // Fetch profile data and store account
         try {
@@ -541,7 +548,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw error;
       }
     },
-    [],
+    [isAuthenticated],
   );
 
   // OAuth login - redirects to authorization server
