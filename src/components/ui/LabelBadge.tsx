@@ -1,5 +1,6 @@
 import { AlertTriangle, Eye, EyeOff, Flag, Shield, X } from "lucide-react";
 import React from "react";
+import { Tooltip } from "./Tooltip";
 
 /**
  * AT Protocol Label Structure
@@ -223,33 +224,41 @@ export const LabelBadge: React.FC<LabelBadgeProps> = ({
       {visibleLabels.map((val) => {
         const def = LABEL_DEFINITIONS[val] || LABEL_DEFINITIONS["!warn"] || {};
         return (
-          <span
+          <Tooltip
             key={val}
-            className={`inline-flex items-center rounded-full font-medium transition-all hover:scale-105 ${sizeClasses[size]}`}
-            style={{
-              color: def.color || "#6b7280",
-              backgroundColor: def.bgColor || "rgba(107, 114, 128, 0.1)",
-              border: `1px solid ${def.borderColor || "rgba(107, 114, 128, 0.3)"}`,
-            }}
-            title={def.description || `Label: ${val}`}
+            content={def.description || `Label: ${val}`}
+            delay={300}
           >
-            {def.icon}
-            <span>{def.label || val}</span>
-          </span>
+            <span
+              className={`inline-flex items-center rounded-full font-medium transition-all hover:scale-105 ${sizeClasses[size]}`}
+              style={{
+                color: def.color || "#6b7280",
+                backgroundColor: def.bgColor || "rgba(107, 114, 128, 0.1)",
+                border: `1px solid ${def.borderColor || "rgba(107, 114, 128, 0.3)"}`,
+              }}
+            >
+              {def.icon}
+              <span>{def.label || val}</span>
+            </span>
+          </Tooltip>
         );
       })}
       {remainingCount > 0 && (
-        <span
-          className={`inline-flex items-center rounded-full font-medium ${sizeClasses[size]}`}
-          style={{
-            color: "var(--bsky-text-secondary)",
-            backgroundColor: "var(--bsky-bg-tertiary)",
-            border: "1px solid var(--bsky-border-primary)",
-          }}
-          title={`${remainingCount} more label${remainingCount > 1 ? "s" : ""}`}
+        <Tooltip
+          content={`${remainingCount} more label${remainingCount > 1 ? "s" : ""}`}
+          delay={300}
         >
-          +{remainingCount}
-        </span>
+          <span
+            className={`inline-flex items-center rounded-full font-medium ${sizeClasses[size]}`}
+            style={{
+              color: "var(--bsky-text-secondary)",
+              backgroundColor: "var(--bsky-bg-tertiary)",
+              border: "1px solid var(--bsky-border-primary)",
+            }}
+          >
+            +{remainingCount}
+          </span>
+        </Tooltip>
       )}
     </div>
   );
@@ -297,18 +306,27 @@ export const LabelIndicator: React.FC<{
     error: "#dc2626",
   };
 
+  // Create a detailed tooltip with all label descriptions
+  const tooltipContent = displayLabels
+    .map((val) => {
+      const def = LABEL_DEFINITIONS[val];
+      return def ? `${def.label}: ${def.description}` : val;
+    })
+    .join("\n");
+
   return (
-    <div
-      className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
-      style={{
-        backgroundColor: `${severityColors[highestSeverity]}20`,
-        color: severityColors[highestSeverity],
-        border: `1px solid ${severityColors[highestSeverity]}40`,
-      }}
-      title={`${displayLabels.length} label${displayLabels.length > 1 ? "s" : ""}`}
-    >
-      <Shield size={10} />
-      <span>{displayLabels.length}</span>
-    </div>
+    <Tooltip content={tooltipContent} delay={300}>
+      <div
+        className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+        style={{
+          backgroundColor: `${severityColors[highestSeverity]}20`,
+          color: severityColors[highestSeverity],
+          border: `1px solid ${severityColors[highestSeverity]}40`,
+        }}
+      >
+        <Shield size={10} />
+        <span>{displayLabels.length}</span>
+      </div>
+    </Tooltip>
   );
 };
