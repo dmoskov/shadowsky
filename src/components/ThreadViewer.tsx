@@ -32,7 +32,6 @@ import { useThreadCollapse } from "../hooks/useThreadCollapse";
 import { useThreadKeyboardNav } from "../hooks/useThreadKeyboardNav";
 import { useThreadTree } from "../hooks/useThreadTree";
 import { useScrollPersistence } from "../hooks/useScrollPersistence";
-import { proxifyBskyImage } from "../utils/image-proxy";
 import { countNodeDescendants } from "../utils/thread-helpers";
 export { clearPersistedScrollPosition } from "../utils/thread-helpers";
 import { EmbedRenderer } from "./EmbedRenderer";
