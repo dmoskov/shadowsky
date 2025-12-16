@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import type { ThreadNode } from "./ThreadViewer";
+import type { ThreadNode } from "../contexts/ThreadContext";
 
 /**
  * Configuration for virtual scrolling behavior

@@ -8,6 +8,7 @@
 ## Problem Summary
 
 The VSM system detected 14 changes to `package.json` over 14 days, indicating high dependency churn that could lead to:
+
 - Build instability
 - Merge conflicts
 - Increased review burden
@@ -19,21 +20,26 @@ The VSM system detected 14 changes to `package.json` over 14 days, indicating hi
 After analyzing the codebase, I identified the following contributing factors:
 
 ### 1. Unrestricted Semver Ranges
+
 All 55 dependencies use caret (^) ranges, allowing automatic minor and patch updates. While this keeps packages current, it can lead to frequent package.json modifications when developers run `npm install` or `npm update`.
 
 ### 2. No Automated Dependency Management
+
 Without Dependabot or Renovate:
+
 - Updates happen ad-hoc
 - Multiple developers may update the same package
 - No consistent update schedule
 - Updates scattered across feature PRs
 
 ### 3. Large Dependency Surface Area
+
 - **24 production dependencies**: Runtime packages shipped to users
 - **31 dev dependencies**: Build, test, and development tools
 - **55 total packages**: More dependencies = more update frequency
 
 ### 4. Active Feature Development
+
 The project is under active development, naturally requiring new dependencies and version updates to support new features.
 
 ## Implemented Solutions
@@ -41,6 +47,7 @@ The project is under active development, naturally requiring new dependencies an
 ### 1. Dependabot Configuration (`.github/dependabot.yml`)
 
 Created an automated dependency management configuration that:
+
 - Runs weekly on Mondays at 9 AM PT
 - Groups related packages together (AT Protocol, React, testing, linting, build tools, AWS, media)
 - Limits to 5 open PRs at a time
@@ -70,6 +77,7 @@ Added convenience scripts to `package.json`:
 Created two documentation files:
 
 #### `/docs/DEPENDENCY_MANAGEMENT.md` (Comprehensive Guide)
+
 - Root cause analysis
 - Dependency categorization
 - Detailed recommendations
@@ -80,6 +88,7 @@ Created two documentation files:
 - Success metrics
 
 #### `/DEPENDENCIES.md` (Quick Reference)
+
 - Common commands
 - Adding new dependencies checklist
 - Update policy summary
@@ -95,6 +104,7 @@ Created two documentation files:
 Running `npm run deps:check` shows 37 outdated packages:
 
 **Notable Updates Available:**
+
 - `@atproto/api`: 0.16.7 → 0.16.11 (wanted) / 0.18.8 (latest)
 - `@tanstack/react-query`: 5.84.2 → 5.90.12
 - `react`: 18.3.1 (current) / 19.2.3 (latest - major)
@@ -104,6 +114,7 @@ Running `npm run deps:check` shows 37 outdated packages:
 ### Security Audit
 
 Running `npm run deps:audit` shows:
+
 - ✅ **0 vulnerabilities** in production dependencies
 
 ## Recommendations
@@ -132,11 +143,13 @@ Running `npm run deps:audit` shows:
 ## Expected Outcomes
 
 ### Churn Reduction
+
 - **Current**: ~14 changes per 14 days (~1 per day)
 - **Target**: ~4 changes per month (~1 per week)
 - **Reduction**: ~70-75%
 
 ### Process Improvements
+
 - Consistent update schedule (Monday mornings)
 - Reduced merge conflicts (grouped updates)
 - Faster security patching (automated)
@@ -144,6 +157,7 @@ Running `npm run deps:audit` shows:
 - Lower cognitive load (standardized process)
 
 ### Team Benefits
+
 - Clear ownership and expectations
 - Reduced time spent on dependency updates
 - Better understanding of dependency health
@@ -152,6 +166,7 @@ Running `npm run deps:audit` shows:
 ## Success Metrics
 
 Track monthly:
+
 1. **Churn Rate**: package.json changes per month (target: < 4)
 2. **Security Lag**: Days to patch critical vulnerabilities (target: < 1)
 3. **Bundle Size**: Total vendor chunk size (target: maintain < 200KB gzipped)

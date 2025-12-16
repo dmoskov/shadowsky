@@ -38,63 +38,79 @@ This refactoring addresses architectural issues in `src/App.tsx` that could lead
 ### Extracted Modules
 
 #### 1. `/src/config/routes.tsx`
+
 **Purpose:** Centralized route definitions
 **Benefits:**
+
 - All routes in one place for easy overview
 - Changes to routes don't touch App.tsx
 - Route wrapper components (ProfilePageWithKey, etc.) co-located with routes
 - Easier to add/remove routes
 
 **Key exports:**
+
 - `AppRoutes`: Component containing all route definitions
 
 #### 2. `/src/config/keyboardShortcuts.ts`
+
 **Purpose:** Keyboard shortcuts configuration
 **Benefits:**
+
 - All shortcuts visible at a glance
 - Easy to add/modify shortcuts
 - Type-safe configuration
 - Separated from component logic
 
 **Key exports:**
+
 - `getKeyboardShortcuts()`: Function that returns keyboard shortcut configuration
 
 #### 3. `/src/components/providers/ProviderComposer.tsx`
+
 **Purpose:** Flatten provider nesting
 **Benefits:**
+
 - Eliminates "Provider Hell"
 - Provider stack declared as simple array
 - Easy to add/remove/reorder providers
 - Cleaner, more maintainable code
 
 **Key exports:**
+
 - `ProviderComposer`: Component that composes multiple providers
 
 #### 4. `/src/hooks/useSidebarManagement.ts`
+
 **Purpose:** Encapsulate sidebar state and auto-collapse logic
 **Benefits:**
+
 - Extracted 50+ lines of sidebar logic
 - Reusable if needed elsewhere
 - Testable in isolation
 - Cleaner App.tsx
 
 **Key exports:**
+
 - `useSidebarManagement()`: Hook that manages sidebar state
 
 #### 5. `/src/hooks/useStorageInitialization.ts`
+
 **Purpose:** Handle storage initialization
 **Benefits:**
+
 - Separated storage concerns
 - Cleaner component code
 - Easy to test
 - Single responsibility
 
 **Key exports:**
+
 - `useStorageInitialization()`: Hook that initializes storage backends
 
 ## Results
 
 ### Before Refactoring
+
 - **App.tsx:** 613 lines
 - **AppContent component:** ~413 lines
 - **Inline route definitions:** 134 lines
@@ -102,6 +118,7 @@ This refactoring addresses architectural issues in `src/App.tsx` that could lead
 - **Provider nesting depth:** 10 levels
 
 ### After Refactoring
+
 - **App.tsx:** 290 lines (53% reduction)
 - **AppContent component:** ~140 lines (66% reduction)
 - **Route definitions:** Extracted to `config/routes.tsx`
@@ -109,12 +126,13 @@ This refactoring addresses architectural issues in `src/App.tsx` that could lead
 - **Provider nesting:** Flattened with `ProviderComposer`
 
 ### Code Metrics Improvement
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| App.tsx LOC | 613 | 290 | -53% |
-| AppContent LOC | 413 | 140 | -66% |
-| Responsibilities | 8+ | 3 | -62% |
-| Files created | 0 | 5 | +5 |
+
+| Metric           | Before | After | Change |
+| ---------------- | ------ | ----- | ------ |
+| App.tsx LOC      | 613    | 290   | -53%   |
+| AppContent LOC   | 413    | 140   | -66%   |
+| Responsibilities | 8+     | 3     | -62%   |
+| Files created    | 0      | 5     | +5     |
 
 ## Future Churn Reduction
 
@@ -143,23 +161,25 @@ This refactoring addresses architectural issues in `src/App.tsx` that could lead
 
 ### Common Scenarios and Where to Make Changes
 
-| Scenario | File(s) to Modify | App.tsx Changed? |
-|----------|-------------------|------------------|
-| Add a new route | `config/routes.tsx` | No |
-| Modify keyboard shortcut | `config/keyboardShortcuts.ts` | No |
-| Add a context provider | `App.tsx` (provider array) | Yes (1 line) |
-| Change storage initialization | `hooks/useStorageInitialization.ts` | No |
-| Modify sidebar behavior | `hooks/useSidebarManagement.ts` | No |
-| Add UI component to layout | `App.tsx` (AppContent) | Yes |
+| Scenario                      | File(s) to Modify                   | App.tsx Changed? |
+| ----------------------------- | ----------------------------------- | ---------------- |
+| Add a new route               | `config/routes.tsx`                 | No               |
+| Modify keyboard shortcut      | `config/keyboardShortcuts.ts`       | No               |
+| Add a context provider        | `App.tsx` (provider array)          | Yes (1 line)     |
+| Change storage initialization | `hooks/useStorageInitialization.ts` | No               |
+| Modify sidebar behavior       | `hooks/useSidebarManagement.ts`     | No               |
+| Add UI component to layout    | `App.tsx` (AppContent)              | Yes              |
 
 ## Migration Notes
 
 ### Behavioral Changes
+
 - **None** - This is a pure refactoring with no functional changes
 - All logic preserved exactly as it was
 - No user-facing changes
 
 ### Testing Recommendations
+
 1. Test all routes are accessible
 2. Test all keyboard shortcuts work
 3. Test sidebar auto-collapse on resize
@@ -167,7 +187,9 @@ This refactoring addresses architectural issues in `src/App.tsx` that could lead
 5. Test provider context availability
 
 ### Rollback Strategy
+
 If issues are discovered:
+
 1. The original App.tsx is in git history (commit before this refactoring)
 2. Can revert with: `git revert <commit-hash>`
 3. All changes are in a single commit for easy reversal
@@ -175,7 +197,9 @@ If issues are discovered:
 ## Technical Details
 
 ### ProviderComposer Implementation
+
 Uses `Array.reduceRight()` to compose providers:
+
 ```typescript
 providers.reduceRight(
   (acc, Provider) => <Provider>{acc}</Provider>,
@@ -186,20 +210,24 @@ providers.reduceRight(
 This creates the same nesting structure as manual nesting but allows declaring providers as a flat array.
 
 ### Keyboard Shortcuts Pattern
+
 Shortcuts are now generated by a function that takes dependencies:
+
 ```typescript
 const shortcuts = getKeyboardShortcuts(
   navigate,
   session,
   setIsCommandPaletteOpen,
-  setIsShortcutsHelpOpen
+  setIsShortcutsHelpOpen,
 );
 ```
 
 This makes it easy to test and modify shortcuts without touching App.tsx.
 
 ### Route Organization
+
 Routes are organized in a single component with clear error boundaries:
+
 - Static imports for frequently used components
 - Lazy loading for rarely used dev tools
 - Wrapper components for routes needing remount on param changes
@@ -207,17 +235,20 @@ Routes are organized in a single component with clear error boundaries:
 ## Maintenance
 
 ### Adding a New Route
+
 1. Open `src/config/routes.tsx`
 2. Import the component
 3. Add a new `<Route>` element
 4. Wrap in `<ErrorBoundary>` if needed
 
 ### Adding a New Keyboard Shortcut
+
 1. Open `src/config/keyboardShortcuts.ts`
 2. Add a new object to the shortcuts array
 3. Specify key, modifiers, description, and action
 
 ### Adding a New Provider
+
 1. Open `src/App.tsx`
 2. Find the `providers` array
 3. Add your provider to the array
@@ -226,9 +257,11 @@ Routes are organized in a single component with clear error boundaries:
 ## Related Files
 
 ### Modified Files
+
 - `src/App.tsx` - Refactored to use extracted modules
 
 ### New Files
+
 - `src/config/routes.tsx` - Route definitions
 - `src/config/keyboardShortcuts.ts` - Keyboard shortcuts
 - `src/components/providers/ProviderComposer.tsx` - Provider composition utility

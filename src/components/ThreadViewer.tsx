@@ -28,12 +28,11 @@ import { useAuth } from "../contexts/AuthContext";
 import { ThreadProvider, type ThreadNode } from "../contexts/ThreadContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { useResponsiveCollapseThresholds } from "../hooks/useResponsiveCollapseThresholds";
+import { useScrollPersistence } from "../hooks/useScrollPersistence";
 import { useThreadCollapse } from "../hooks/useThreadCollapse";
 import { useThreadKeyboardNav } from "../hooks/useThreadKeyboardNav";
 import { useThreadTree } from "../hooks/useThreadTree";
-import { useScrollPersistence } from "../hooks/useScrollPersistence";
 import { countNodeDescendants } from "../utils/thread-helpers";
-export { clearPersistedScrollPosition } from "../utils/thread-helpers";
 import { EmbedRenderer } from "./EmbedRenderer";
 import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
@@ -49,6 +48,7 @@ export {
   useThreadNavigation,
   useThreadUserPosts,
 } from "../contexts/ThreadContext";
+export { clearPersistedScrollPosition } from "../utils/thread-helpers";
 
 type Post = AppBskyFeedDefs.PostView;
 
@@ -122,7 +122,8 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   const [galleryIndex, setGalleryIndex] = useState(0);
 
   // Highlight tracking state
-  const [hasShownInitialHighlight, setHasShownInitialHighlight] = useState(false);
+  const [hasShownInitialHighlight, setHasShownInitialHighlight] =
+    useState(false);
   const [hasScrolledToHighlight, setHasScrolledToHighlight] = useState(false);
 
   // State for showing replies section (progressive reveal) - start expanded
@@ -140,16 +141,12 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   // === EXTRACTED HOOKS ===
 
   // Build thread tree and calculate metrics
-  const {
-    threadTree,
-    flatNodeList,
-    maxThreadDepth,
-    complexityScore,
-  } = useThreadTree({
-    posts,
-    notifications,
-    rootUri,
-  });
+  const { threadTree, flatNodeList, maxThreadDepth, complexityScore } =
+    useThreadTree({
+      posts,
+      notifications,
+      rootUri,
+    });
 
   // Manage collapse/expand state with persistence
   const {
@@ -240,7 +237,6 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     [repostMutation, unrepostMutation],
   );
 
-
   // Get the CSS custom property name based on thread depth
   // This allows CSS clamp() to handle responsive scaling automatically
   const getIndentCssVar = useCallback((depth: number): string => {
@@ -309,7 +305,10 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
 
   // Handle image click for gallery
   const handleImageClick = useCallback(
-    (images: Array<{ thumb: string; fullsize: string; alt?: string }>, index: number) => {
+    (
+      images: Array<{ thumb: string; fullsize: string; alt?: string }>,
+      index: number,
+    ) => {
       setGalleryImages(images);
       setGalleryIndex(index);
     },
