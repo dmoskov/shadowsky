@@ -289,7 +289,7 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
                       <DomainVerifiedBadge handle={profile.handle} size="sm" />
                     </div>
                     <p
-                      className="text-sm hover:underline"
+                      className="truncate text-sm hover:underline"
                       style={{ color: "var(--bsky-text-secondary)" }}
                     >
                       @{profile.handle}

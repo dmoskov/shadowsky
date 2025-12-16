@@ -362,7 +362,7 @@ const NotificationSummary: React.FC<{ notification: GroupedNotification }> =
       if (count === 1 && users.length === 1) {
         return (
           <span
-            className="font-semibold"
+            className="inline-block max-w-[150px] truncate align-bottom font-semibold"
             style={{ color: "var(--bsky-text-primary)" }}
           >
             {users[0].displayName || users[0].handle}
@@ -374,7 +374,7 @@ const NotificationSummary: React.FC<{ notification: GroupedNotification }> =
         return (
           <>
             <span
-              className="font-semibold"
+              className="inline-block max-w-[150px] truncate align-bottom font-semibold"
               style={{ color: "var(--bsky-text-primary)" }}
             >
               {users[0].displayName || users[0].handle}
@@ -391,14 +391,14 @@ const NotificationSummary: React.FC<{ notification: GroupedNotification }> =
         return (
           <>
             <span
-              className="font-semibold"
+              className="inline-block max-w-[120px] truncate align-bottom font-semibold"
               style={{ color: "var(--bsky-text-primary)" }}
             >
               {users[0].displayName || users[0].handle}
             </span>
             <span style={{ color: "var(--bsky-text-secondary)" }}> and </span>
             <span
-              className="font-semibold"
+              className="inline-block max-w-[120px] truncate align-bottom font-semibold"
               style={{ color: "var(--bsky-text-primary)" }}
             >
               {users[1].displayName || users[1].handle}
@@ -473,7 +473,7 @@ const PostPreviewCard: React.FC<{ preview: PostPreview }> = React.memo(
             />
           )}
           <span
-            className="text-xs font-medium"
+            className="max-w-[200px] truncate text-xs font-medium"
             style={{ color: "var(--bsky-text-secondary)" }}
           >
             {preview.authorDisplayName || preview.authorHandle}
@@ -903,7 +903,7 @@ const NotificationQuotePreview: React.FC<{ postText: string }> = React.memo(
             </ProfileHoverCard>
             <ProfileHoverCard handle={quotedPost.author.handle}>
               <span
-                className="cursor-pointer text-xs font-medium hover:underline"
+                className="max-w-[150px] cursor-pointer truncate text-xs font-medium hover:underline"
                 style={{ color: "var(--bsky-text-primary)" }}
               >
                 {quotedPost.author.displayName || quotedPost.author.handle}

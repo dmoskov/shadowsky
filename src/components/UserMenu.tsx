@@ -122,7 +122,7 @@ export const UserMenu: React.FC = () => {
         aria-expanded={isOpen}
         aria-controls={isOpen ? menuId : undefined}
       >
-        <span className="text-sm font-medium">
+        <span className="max-w-[150px] truncate text-sm font-medium">
           @{session?.handle || "user"}
         </span>
         <ChevronDown
@@ -152,13 +152,13 @@ export const UserMenu: React.FC = () => {
               style={{ borderColor: "var(--bsky-border-primary)" }}
             >
               <p
-                className="font-medium"
+                className="truncate font-medium"
                 style={{ color: "var(--bsky-text-primary)" }}
               >
                 {session?.handle}
               </p>
               <p
-                className="text-sm"
+                className="truncate text-sm"
                 style={{ color: "var(--bsky-text-secondary)" }}
               >
                 @{session?.handle}

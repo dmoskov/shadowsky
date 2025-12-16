@@ -891,7 +891,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               <div className="flex flex-wrap items-center gap-1">
                 <ProfileHoverCard handle={post.author.handle}>
                   <span
-                    className="cursor-pointer font-semibold hover:underline"
+                    className="max-w-[200px] cursor-pointer truncate font-semibold hover:underline"
                     style={{ color: "var(--bsky-text-primary)" }}
                     onClick={handleAuthorClick}
                     {...authorPrefetchHandlers}
@@ -901,7 +901,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                 </ProfileHoverCard>
                 <ProfileHoverCard handle={post.author.handle}>
                   <span
-                    className="cursor-pointer hover:underline"
+                    className="max-w-[200px] cursor-pointer truncate hover:underline"
                     style={{ color: "var(--bsky-text-secondary)" }}
                     onClick={handleAuthorClick}
                     {...authorPrefetchHandlers}
