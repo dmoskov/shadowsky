@@ -1,25 +1,16 @@
-import { debug } from "@bsky/shared";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Suspense, useEffect, useState } from "react";
-import {
-  BrowserRouter,
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-  useNavigate,
-  useParams,
-} from "react-router";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { BrowserRouter, useLocation, useNavigate } from "react-router";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Header } from "./components/Header";
 import { LandingPage } from "./components/LandingPage";
 import { MobileTabBar } from "./components/MobileTabBar";
 import { OAuthCallback } from "./components/OAuthCallback";
+import { ProviderComposer } from "./components/providers/ProviderComposer";
 import { StorageErrorProvider } from "./components/providers/StorageErrorProvider";
 import { Sidebar } from "./components/Sidebar";
 import { AriaLiveProvider } from "./components/ui/AriaLiveRegion";
 import { ConnectedOfflineIndicator } from "./components/ui/OfflineIndicator";
-import { RouteSkeletonFallback } from "./components/ui/RouteSkeletonFallback";
 import { SkipLinks } from "./components/ui/SkipLinks";
 import { AccessibilityProvider } from "./contexts/AccessibilityContext";
 import { ActionSyncProvider } from "./contexts/ActionSyncContext";
@@ -37,41 +28,24 @@ import { ToastProvider } from "./contexts/ToastContext";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { getInitialLoadingStrategy } from "./hooks/useNetworkAwareLoading";
+import { useSidebarManagement } from "./hooks/useSidebarManagement";
+import { useStorageInitialization } from "./hooks/useStorageInitialization";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
-import { appPreferencesService } from "./services/app-preferences-service";
-import { initializeCoreStorage } from "./services/data-services-initializer";
-import { NotificationStorageDB } from "./services/notification-storage-db";
-import { cleanupLocalStorage } from "./utils/cleanupLocalStorage";
 import "./utils/debug-control"; // Initialize debug controls
 import { removeTrailingSlash } from "./utils/removeTrailingSlash";
 
-// Static imports for core components (no lazy loading - more reliable)
+// Static imports for core components
 import { BackgroundNotificationLoader } from "./components/BackgroundNotificationLoader";
-import { Bookmarks } from "./components/Bookmarks";
 import { ColumnMigrationNotice } from "./components/ColumnMigrationNotice";
 import { CommandPalette } from "./components/CommandPalette";
-import { Composer } from "./components/Composer";
-import { DirectMessages } from "./components/DirectMessages";
 import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
-import { Lists } from "./components/Lists";
-import { ListTimeline } from "./components/ListTimeline";
-import { Notifications } from "./components/Notifications";
-import { NotificationsAnalytics } from "./components/NotificationsAnalytics";
-import { ScheduledPosts } from "./components/ScheduledPosts";
-import { SearchTabbed as Search } from "./components/SearchTabbed";
-import { default as SkyDeck } from "./components/SkyDeck";
 import { StatusBar } from "./components/StatusBar";
 import { SwipeIndicator } from "./components/SwipeIndicator";
 import { FloatingActionButton } from "./components/ui/FloatingActionButton";
-import { VisualTimeline } from "./components/VisualTimeline";
-import { AddAccountPage } from "./pages/AddAccountPage";
-import { default as ProfilePage } from "./pages/ProfilePage";
-import { Settings } from "./pages/Settings";
-import { default as ThreadPage } from "./pages/ThreadPage";
-import { UserAnalytics } from "./pages/UserAnalytics";
+import { getKeyboardShortcuts } from "./config/keyboardShortcuts";
+import { AppRoutes } from "./config/routes";
 
 // Keep lazy loading only for rarely-used dev/debug tools
-import { lazy } from "react";
 const DebugConsole = lazy(() =>
   import("./components/DebugConsole").then((m) => ({
     default: m.DebugConsole,
@@ -87,28 +61,6 @@ const WebSocketStressPanel = lazy(() =>
     default: m.WebSocketStressPanel,
   })),
 );
-const CompressionTest = lazy(() =>
-  import("./components/CompressionTest").then((m) => ({
-    default: m.CompressionTest,
-  })),
-);
-
-// Wrapper components that use route params as keys to force remount on navigation
-// This ensures all component state resets when navigating between different items
-function ProfilePageWithKey() {
-  const { handle } = useParams<{ handle: string }>();
-  return <ProfilePage key={handle} />;
-}
-
-function ThreadPageWithKey() {
-  const { handle, postId } = useParams<{ handle: string; postId: string }>();
-  return <ThreadPage key={`${handle}/${postId}`} />;
-}
-
-function ListTimelineWithKey() {
-  const { listId } = useParams<{ listId: string }>();
-  return <ListTimeline key={listId} />;
-}
 
 // Network and device-aware query client settings
 // Adapts caching and retry behavior based on connection quality
@@ -158,12 +110,13 @@ function AppContent() {
   const { isShortcutsHelpOpen, setIsShortcutsHelpOpen } =
     useKeyboardShortcutsContext();
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
-  // Onboarding for first-time users - disabled
-  // const onboarding = useOnboarding();
+  // Use extracted hooks for cleaner code
+  const { isSidebarOpen, setIsSidebarOpen, isSidebarCollapsed } =
+    useSidebarManagement(isAuthenticated);
+
+  useStorageInitialization();
 
   // Check if we're on the home route
   const isHomeRoute =
@@ -172,89 +125,14 @@ function AppContent() {
   // Initialize swipe navigation for mobile
   const swipeHandlers = useSwipeNavigation();
 
-  // Set up global keyboard shortcuts
-  useKeyboardShortcuts(
-    [
-      // Command palette
-      {
-        key: "k",
-        meta: true,
-        description: "Open command palette",
-        category: "General",
-        action: () => setIsCommandPaletteOpen(true),
-      },
-      // Help - Shift+? opens shortcuts help (/ without shift focuses search, handled in KeyboardShortcutsContext)
-      {
-        key: "?",
-        shift: true,
-        description: "Show keyboard shortcuts",
-        category: "General",
-        action: () => setIsShortcutsHelpOpen(true),
-      },
-      // Navigation shortcuts
-      {
-        key: "h",
-        meta: true,
-        description: "Go to home",
-        category: "Navigation",
-        action: () => navigate("/home"),
-      },
-      {
-        key: "n",
-        meta: true,
-        description: "Go to notifications",
-        category: "Navigation",
-        action: () => navigate("/notifications"),
-      },
-      {
-        key: "m",
-        meta: true,
-        description: "Go to messages",
-        category: "Navigation",
-        action: () => navigate("/messages"),
-      },
-      {
-        key: "b",
-        meta: true,
-        description: "Go to bookmarks",
-        category: "Navigation",
-        action: () => navigate("/bookmarks"),
-      },
-      {
-        key: "p",
-        meta: true,
-        description: "Go to profile",
-        category: "Navigation",
-        action: () => {
-          if (session?.handle) {
-            navigate(`/profile/${session.handle}`);
-          }
-        },
-      },
-      {
-        key: "/",
-        meta: true,
-        description: "Go to search",
-        category: "Navigation",
-        action: () => navigate("/search"),
-      },
-      {
-        key: ",",
-        meta: true,
-        description: "Open settings",
-        category: "Navigation",
-        action: () => navigate("/settings"),
-      },
-      // Single key shortcuts (vim-style)
-      {
-        key: "c",
-        description: "Compose new post",
-        category: "Actions",
-        action: () => navigate("/compose"),
-      },
-    ],
-    isAuthenticated,
+  // Set up global keyboard shortcuts using extracted configuration
+  const shortcuts = getKeyboardShortcuts(
+    navigate,
+    session,
+    setIsCommandPaletteOpen,
+    setIsShortcutsHelpOpen,
   );
+  useKeyboardShortcuts(shortcuts, isAuthenticated);
 
   // Listen for keyboard-navigate custom events from KeyboardShortcutsContext
   // This handles the g+key navigation sequences (g+h, g+n, g+m, etc.)
@@ -282,72 +160,6 @@ function AppContent() {
       );
     };
   }, [navigate, session?.handle]);
-
-  // Auto-collapse sidebar when viewport is too narrow for 3 columns
-  useEffect(() => {
-    const checkViewportWidth = async () => {
-      // Get column width from preferences
-      if (isAuthenticated) {
-        const prefs = await appPreferencesService.getPreferences();
-        const columnWidth = prefs?.columnWidth || 320;
-
-        // Sidebar: 256px, 3 columns: 3*columnWidth + 2*12px gap + 24px padding
-        const totalNeeded = 256 + 3 * columnWidth + 2 * 12 + 24;
-        const shouldCollapse =
-          window.innerWidth < totalNeeded && window.innerWidth >= 1024; // Only on desktop
-        setIsSidebarCollapsed(shouldCollapse);
-      } else {
-        // Default calculation if not authenticated
-        const shouldCollapse =
-          window.innerWidth < 1280 && window.innerWidth >= 1024;
-        setIsSidebarCollapsed(shouldCollapse);
-      }
-    };
-
-    checkViewportWidth();
-    window.addEventListener("resize", checkViewportWidth);
-    return () => window.removeEventListener("resize", checkViewportWidth);
-  }, [isAuthenticated]);
-
-  // Initialize core storage backends after first paint to improve FCP
-  // Uses requestIdleCallback to avoid blocking main thread during initial render
-  useEffect(() => {
-    const initializeStorage = async () => {
-      try {
-        // Initialize core storage via StorageManager (api-cache, offline-storage, notification-storage)
-        // This replaces scattered individual initializations with coordinated error handling
-        await initializeCoreStorage();
-        debug.log("✅ Core storage backends initialized");
-
-        // Run notification migration after core storage is ready
-        const db = NotificationStorageDB.getInstance();
-        const migrated = await db.migrateFromLocalStorage();
-        if (migrated) {
-          debug.log(
-            "✅ Successfully migrated notifications from localStorage to IndexedDB",
-          );
-          // Clean up remaining localStorage keys
-          cleanupLocalStorage();
-        }
-      } catch (error) {
-        debug.error("Failed to initialize core storage:", error);
-      }
-    };
-
-    // Defer storage initialization to after first paint
-    // This improves First Contentful Paint on slow devices
-    if ("requestIdleCallback" in window) {
-      window.requestIdleCallback(
-        () => {
-          initializeStorage();
-        },
-        { timeout: 3000 }, // Ensure it runs within 3 seconds even if busy
-      );
-    } else {
-      // Fallback for browsers without requestIdleCallback (Safari)
-      setTimeout(initializeStorage, 100);
-    }
-  }, []);
 
   if (isLoading) {
     return (
@@ -405,142 +217,7 @@ function AppContent() {
           aria-label="Main content"
           className={`mt-16 min-h-[calc(100vh-4rem)] flex-1 pb-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto lg:pb-0`}
         >
-          <Suspense fallback={<RouteSkeletonFallback />}>
-            <Routes>
-              <Route path="/home" element={<SkyDeck />} />
-              <Route path="/" element={<SkyDeck />} />
-              <Route
-                path="/timeline"
-                element={
-                  <ErrorBoundary componentName="Visual Timeline">
-                    <VisualTimeline />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/analytics"
-                element={
-                  <ErrorBoundary componentName="User Analytics">
-                    <UserAnalytics />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/analytics/notifications"
-                element={
-                  <ErrorBoundary componentName="Notifications Analytics">
-                    <NotificationsAnalytics />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/notifications"
-                element={
-                  <ErrorBoundary componentName="Notifications">
-                    <Notifications />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/messages"
-                element={
-                  <ErrorBoundary componentName="Direct Messages">
-                    <DirectMessages />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/bookmarks"
-                element={
-                  <ErrorBoundary componentName="Bookmarks">
-                    <Bookmarks />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/lists"
-                element={
-                  <ErrorBoundary componentName="Lists">
-                    <Lists />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/lists/:listId"
-                element={
-                  <ErrorBoundary componentName="List Timeline">
-                    <ListTimelineWithKey />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/compose"
-                element={
-                  <ErrorBoundary componentName="Composer">
-                    <Composer />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/search"
-                element={
-                  <ErrorBoundary componentName="Search">
-                    <Search />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/scheduled"
-                element={
-                  <ErrorBoundary componentName="Scheduled Posts">
-                    <ScheduledPosts />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/profile/:handle"
-                element={
-                  <ErrorBoundary componentName="Profile">
-                    <ProfilePageWithKey />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/thread/:handle/:postId"
-                element={
-                  <ErrorBoundary componentName="Thread">
-                    <ThreadPageWithKey />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <ErrorBoundary componentName="Settings">
-                    <Settings />
-                  </ErrorBoundary>
-                }
-              />
-              <Route
-                path="/settings/:section"
-                element={
-                  <ErrorBoundary componentName="Settings">
-                    <Settings />
-                  </ErrorBoundary>
-                }
-              />
-              <Route path="/compression-test" element={<CompressionTest />} />
-              <Route
-                path="/add-account"
-                element={
-                  <ErrorBoundary componentName="Add Account">
-                    <AddAccountPage />
-                  </ErrorBoundary>
-                }
-              />
-              <Route path="*" element={<Navigate to="/home" replace />} />
-            </Routes>
-          </Suspense>
+          <AppRoutes />
         </main>
       </div>
       <MobileTabBar />
@@ -572,38 +249,31 @@ function App() {
     removeTrailingSlash();
   }, []);
 
+  // Define provider stack for clean composition
+  const providers = [
+    ThemeProvider,
+    AccessibilityProvider,
+    AriaLiveProvider,
+    AuthProvider,
+    KeyboardShortcutsProvider,
+    WebSocketProvider,
+    ModalProvider,
+    ToastProvider,
+    HiddenPostsProvider,
+    ModerationProvider,
+    ActionSyncProvider,
+    StorageErrorProvider,
+    StatusBarProvider,
+  ];
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <ThemeProvider>
-          <AccessibilityProvider>
-            <AriaLiveProvider>
-              <AuthProvider>
-                <KeyboardShortcutsProvider>
-                  <WebSocketProvider>
-                    <ModalProvider>
-                      <ToastProvider>
-                        <HiddenPostsProvider>
-                          <ModerationProvider>
-                            <ActionSyncProvider>
-                              <StorageErrorProvider>
-                                <StatusBarProvider>
-                                  <ErrorBoundary componentName="Application">
-                                    <AppContent />
-                                  </ErrorBoundary>
-                                </StatusBarProvider>
-                              </StorageErrorProvider>
-                            </ActionSyncProvider>
-                          </ModerationProvider>
-                        </HiddenPostsProvider>
-                      </ToastProvider>
-                    </ModalProvider>
-                  </WebSocketProvider>
-                </KeyboardShortcutsProvider>
-              </AuthProvider>
-            </AriaLiveProvider>
-          </AccessibilityProvider>
-        </ThemeProvider>
+        <ProviderComposer providers={providers}>
+          <ErrorBoundary componentName="Application">
+            <AppContent />
+          </ErrorBoundary>
+        </ProviderComposer>
       </BrowserRouter>
     </QueryClientProvider>
   );

@@ -1,0 +1,100 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Los_Angeles"
+    open-pull-requests-limit: 5
+    groups:
+      # Group AT Protocol packages together (critical - review carefully)
+      atproto:
+        patterns:
+          - "@atproto/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group React ecosystem updates
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "react-*"
+          - "@types/react*"
+        update-types:
+          - "patch"
+      # Group testing dependencies
+      testing:
+        patterns:
+          - "@playwright/*"
+          - "@testing-library/*"
+          - "vitest"
+          - "@vitest/*"
+          - "jsdom"
+          - "fake-indexeddb"
+          - "@axe-core/*"
+          - "axe-core"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group linting and formatting tools
+      linting:
+        patterns:
+          - "eslint*"
+          - "prettier*"
+          - "@eslint/*"
+          - "typescript-eslint"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group build tools
+      build-tools:
+        patterns:
+          - "vite"
+          - "esbuild"
+          - "rollup*"
+          - "postcss"
+          - "autoprefixer"
+          - "tailwindcss"
+          - "wireit"
+          - "@vitejs/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group AWS/Amplify dependencies
+      aws:
+        patterns:
+          - "aws-*"
+          - "@aws-*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group media processing libraries
+      media:
+        patterns:
+          - "@ffmpeg/*"
+          - "hls.js"
+          - "html2canvas"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group other minor/patch updates
+      dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    # Keep major updates separate for careful review
+    ignore:
+      # Review major updates manually
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "deps"
+      include: "scope"

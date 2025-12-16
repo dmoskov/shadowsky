@@ -13,7 +13,6 @@ import {
   MessageSquare,
   Minus,
   Plus,
-  Sparkles,
   Trash2,
   User,
 } from "lucide-react";
@@ -29,9 +28,14 @@ import { useAuth } from "../contexts/AuthContext";
 import { ThreadProvider } from "../contexts/ThreadContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { useResponsiveCollapseThresholds } from "../hooks/useResponsiveCollapseThresholds";
-import { calculateComplexityFromPosts } from "../services/thread-complexity-scorer";
-import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
+import { useThreadCollapse } from "../hooks/useThreadCollapse";
+import { useThreadKeyboardNav } from "../hooks/useThreadKeyboardNav";
+import { useThreadTree } from "../hooks/useThreadTree";
+import { useScrollPersistence } from "../hooks/useScrollPersistence";
+import { proxifyBskyImage } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
+import { countNodeDescendants, clearPersistedScrollPosition } from "../utils/thread-helpers";
+import { EmbedRenderer } from "./EmbedRenderer";
 import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
 import { EmptyState } from "./ui/EmptyState";
@@ -39,7 +43,6 @@ import { LabelBadge } from "./ui/LabelBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { RichText } from "./ui/RichText";
 import { ThrottledAvatar } from "./ui/ThrottledAvatar";
-import { VideoPlayer } from "./VideoPlayer";
 import { type VirtualizedThreadListHandle } from "./VirtualizedThreadList";
 export {
   useThread,
@@ -49,100 +52,6 @@ export {
 } from "../contexts/ThreadContext";
 
 const logger = createLogger("ThreadViewer");
-
-// localStorage key prefix for thread collapse state
-const COLLAPSE_STATE_PREFIX = "thread-collapse-state-";
-// sessionStorage key prefix for thread scroll position
-const SCROLL_POSITION_PREFIX = "thread-scroll-position-";
-
-// Helper to get/set collapse state from localStorage
-function getPersistedCollapseState(threadId: string): Set<string> {
-  try {
-    const stored = localStorage.getItem(`${COLLAPSE_STATE_PREFIX}${threadId}`);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      return new Set(parsed);
-    }
-  } catch (e) {
-    logger.error("Error reading collapse state from localStorage:", e);
-  }
-  return new Set();
-}
-
-function setPersistedCollapseState(threadId: string, state: Set<string>) {
-  try {
-    localStorage.setItem(
-      `${COLLAPSE_STATE_PREFIX}${threadId}`,
-      JSON.stringify([...state]),
-    );
-  } catch (e) {
-    logger.error("Error saving collapse state to localStorage:", e);
-  }
-}
-
-// Helper to get/set scroll position from sessionStorage
-interface ScrollPositionData {
-  scrollTop: number;
-  focusedIndex: number;
-  timestamp: number;
-}
-
-function getPersistedScrollPosition(
-  threadId: string,
-): ScrollPositionData | null {
-  try {
-    const stored = sessionStorage.getItem(
-      `${SCROLL_POSITION_PREFIX}${threadId}`,
-    );
-    if (stored) {
-      const parsed = JSON.parse(stored) as ScrollPositionData;
-      // Expire positions older than 30 minutes to prevent stale data
-      const thirtyMinutes = 30 * 60 * 1000;
-      if (Date.now() - parsed.timestamp < thirtyMinutes) {
-        return parsed;
-      }
-      // Clear expired position
-      sessionStorage.removeItem(`${SCROLL_POSITION_PREFIX}${threadId}`);
-    }
-  } catch (e) {
-    logger.error("Error reading scroll position from sessionStorage:", e);
-  }
-  return null;
-}
-
-function setPersistedScrollPosition(
-  threadId: string,
-  data: ScrollPositionData,
-) {
-  try {
-    sessionStorage.setItem(
-      `${SCROLL_POSITION_PREFIX}${threadId}`,
-      JSON.stringify(data),
-    );
-  } catch (e) {
-    logger.error("Error saving scroll position to sessionStorage:", e);
-  }
-}
-
-export function clearPersistedScrollPosition(threadId: string) {
-  try {
-    sessionStorage.removeItem(`${SCROLL_POSITION_PREFIX}${threadId}`);
-  } catch (e) {
-    logger.error("Error clearing scroll position from sessionStorage:", e);
-  }
-}
-
-// Count total descendants of a node
-function countNodeDescendants(node: ThreadNode): number {
-  return node.children.reduce(
-    (sum, child) => sum + 1 + countNodeDescendants(child),
-    0,
-  );
-}
-
-async function loadAnthropicService() {
-  return await import("../services/anthropic");
-}
 
 type Post = AppBskyFeedDefs.PostView;
 
@@ -219,155 +128,89 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   const navigate = useNavigate();
   const { session } = useAuth();
   const currentUserDid = propCurrentUserDid || session?.did;
+
+  // Gallery state (can't extract - needs to be local for image click handling)
   const [galleryImages, setGalleryImages] = useState<Array<{
     thumb: string;
     fullsize: string;
     alt?: string;
   }> | null>(null);
   const [galleryIndex, setGalleryIndex] = useState(0);
-  const [hasShownInitialHighlight, setHasShownInitialHighlight] =
-    useState(false);
-  const [hasScrolledToHighlight, setHasScrolledToHighlight] = useState(false);
-  const [generatedAltTexts, setGeneratedAltTexts] = useState<
-    Record<string, Record<number, string>>
-  >({});
-  const [generatingAltText, setGeneratingAltText] = useState<
-    Record<string, Record<number, boolean>>
-  >({});
-  const [showAltText, setShowAltText] = useState<
-    Record<string, Record<number, boolean>>
-  >({});
 
-  // Get depth-based color functions for visual thread hierarchy
-  const { getBranchBorderColor, getBranchBackgroundColor } =
-    useResponsiveCollapseThresholds();
+  // Highlight tracking state
+  const [hasShownInitialHighlight, setHasShownInitialHighlight] = useState(false);
+  const [hasScrolledToHighlight, setHasScrolledToHighlight] = useState(false);
+
+  // State for showing replies section (progressive reveal) - start expanded
+  const [showReplies, setShowReplies] = useState(true);
 
   // Thread ID for localStorage persistence (use rootUri or first post uri)
   const threadId = useMemo(() => {
     return rootUri || posts[0]?.uri || "";
   }, [rootUri, posts]);
 
-  // State for collapsible reply branches - tracks which nodes are COLLAPSED
-  // Initialize from localStorage if available
-  const [collapsedBranches, setCollapsedBranches] = useState<Set<string>>(
-    () => {
-      if (threadId) {
-        return getPersistedCollapseState(threadId);
-      }
-      return new Set();
-    },
-  );
+  // Get depth-based color functions for visual thread hierarchy
+  const { getBranchBorderColor, getBranchBackgroundColor } =
+    useResponsiveCollapseThresholds();
 
-  // Legacy compatibility - expandedBranches for the old "load more" behavior
-  const [expandedBranches, setExpandedBranches] = useState<Set<string>>(
-    new Set(),
-  );
+  // === EXTRACTED HOOKS ===
 
-  // Track nodes currently animating (for smooth height transitions)
-  const [animatingNodes, setAnimatingNodes] = useState<Set<string>>(new Set());
-  // State for showing replies section (progressive reveal) - start expanded
-  const [showReplies, setShowReplies] = useState(true);
-  // State for keyboard navigation - tracks currently focused post index
-  // Use controlled value if provided, otherwise use internal state
-  const [internalFocusedIndex, setInternalFocusedIndex] = useState<number>(-1);
-  const focusedPostIndex = controlledFocusedIndex ?? internalFocusedIndex;
-  const setFocusedPostIndex = useCallback(
-    (index: number) => {
-      setInternalFocusedIndex(index);
-      onFocusedIndexChange?.(index);
-    },
-    [onFocusedIndexChange],
-  );
-  // Ref to track post elements for keyboard navigation
+  // Build thread tree and calculate metrics
+  const {
+    threadTree,
+    flatNodeList,
+    maxThreadDepth,
+    branchCount,
+    complexityScore,
+    notificationMap,
+  } = useThreadTree({
+    posts,
+    notifications,
+    rootUri,
+  });
+
+  // Manage collapse/expand state with persistence
+  const {
+    collapsedBranches,
+    expandedBranches,
+    animatingNodes,
+    isCollapsed: isBranchCollapsed,
+    isExpanded: isBranchExpanded,
+    toggleCollapse: toggleCollapseBranch,
+    toggleExpand: toggleBranch,
+  } = useThreadCollapse({
+    threadId,
+  });
+
+  // Refs for navigation and scroll management
   const postRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-  // Container ref for scroll management
   const containerRef = useRef<HTMLDivElement>(null);
-  // Ref for virtualized thread list
   const virtualListRef = useRef<VirtualizedThreadListHandle>(null);
-  // Track if we've already restored scroll position
-  const hasRestoredScrollPosition = useRef(false);
-  // Debounce timer for scroll position saving
-  const scrollSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Save scroll position on scroll (debounced)
-  useEffect(() => {
-    if (!threadId || !scrollContainerRef?.current) return;
+  // Manage keyboard navigation
+  const {
+    focusedIndex: focusedPostIndex,
+    setFocusedIndex: setFocusedPostIndex,
+    userParticipationStats,
+  } = useThreadKeyboardNav({
+    flatNodeList,
+    currentUserDid,
+    enabled: enableKeyboardNavigation,
+    onPostClick,
+    virtualListRef,
+    postRefs,
+    controlledFocusedIndex,
+    onFocusedIndexChange,
+  });
 
-    const scrollContainer = scrollContainerRef.current;
-
-    const handleScroll = () => {
-      // Clear any pending save
-      if (scrollSaveTimerRef.current) {
-        clearTimeout(scrollSaveTimerRef.current);
-      }
-
-      // Debounce the save to avoid excessive writes
-      scrollSaveTimerRef.current = setTimeout(() => {
-        const scrollTop = scrollContainer.scrollTop;
-        setPersistedScrollPosition(threadId, {
-          scrollTop,
-          focusedIndex: focusedPostIndex,
-          timestamp: Date.now(),
-        });
-      }, 150); // 150ms debounce
-    };
-
-    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      scrollContainer.removeEventListener("scroll", handleScroll);
-      // Clear pending timer on cleanup
-      if (scrollSaveTimerRef.current) {
-        clearTimeout(scrollSaveTimerRef.current);
-      }
-    };
-  }, [threadId, scrollContainerRef, focusedPostIndex]);
-
-  // Restore scroll position on mount
-  useEffect(() => {
-    if (!threadId || hasRestoredScrollPosition.current) return;
-    if (!scrollContainerRef?.current) return;
-    // Don't restore if there's a highlight URI (user navigated to specific post)
-    if (highlightUri) return;
-
-    const savedPosition = getPersistedScrollPosition(threadId);
-    if (!savedPosition) return;
-
-    hasRestoredScrollPosition.current = true;
-
-    // Use requestAnimationFrame to ensure DOM is ready
-    requestAnimationFrame(() => {
-      const scrollContainer = scrollContainerRef.current;
-      if (!scrollContainer) return;
-
-      // Restore scroll position
-      scrollContainer.scrollTop = savedPosition.scrollTop;
-
-      // Restore focused index if we have a callback
-      if (savedPosition.focusedIndex >= 0 && onRestoreScrollPosition) {
-        onRestoreScrollPosition(savedPosition.focusedIndex);
-      }
-    });
-  }, [threadId, scrollContainerRef, highlightUri, onRestoreScrollPosition]);
-
-  // Save position on unmount/navigation away
-  useEffect(() => {
-    return () => {
-      if (!threadId || !scrollContainerRef?.current) return;
-
-      const scrollContainer = scrollContainerRef.current;
-      const scrollTop = scrollContainer.scrollTop;
-
-      // Only save if we've scrolled somewhere meaningful
-      if (scrollTop > 0) {
-        setPersistedScrollPosition(threadId, {
-          scrollTop,
-          focusedIndex: focusedPostIndex,
-          timestamp: Date.now(),
-        });
-      }
-    };
-  }, [threadId, scrollContainerRef, focusedPostIndex]);
+  // Manage scroll position persistence
+  useScrollPersistence({
+    threadId,
+    scrollContainerRef,
+    focusedIndex: focusedPostIndex,
+    highlightUri,
+    onRestoreScrollPosition,
+  });
 
   // Get optimistic post mutations
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
@@ -417,136 +260,6 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     [repostMutation, unrepostMutation],
   );
 
-  // Create a map of notifications by URI
-  const notificationMap = useMemo(() => {
-    const map = new Map<string, Notification>();
-    notifications.forEach((notification) => {
-      if (notification?.uri) {
-        map.set(notification.uri, notification);
-      }
-    });
-    return map;
-  }, [notifications]);
-
-  // Build thread tree structure
-  const threadTree = useMemo(() => {
-    const nodeMap = new Map<string, ThreadNode>();
-    const rootNodes: ThreadNode[] = [];
-
-    // First, create all nodes
-    posts.forEach((post) => {
-      const node: ThreadNode = {
-        post,
-        notification: notificationMap.get(post.uri),
-        children: [],
-        depth: 0,
-      };
-      nodeMap.set(post.uri, node);
-    });
-
-    // Determine the root URI if not provided
-    const actualRootUri =
-      rootUri ||
-      (() => {
-        // Find posts that are not replies to any other post in our set
-        const childUris = new Set<string>();
-        posts.forEach((post) => {
-          const record = post.record as any;
-          if (record?.reply?.parent?.uri) {
-            childUris.add(post.uri);
-          }
-        });
-
-        // Find posts that aren't children
-        const roots = posts.filter((post) => !childUris.has(post.uri));
-        return roots[0]?.uri;
-      })();
-
-    // Mark root node
-    if (actualRootUri && nodeMap.has(actualRootUri)) {
-      const rootNode = nodeMap.get(actualRootUri)!;
-      rootNode.isRoot = true;
-      rootNodes.push(rootNode);
-    }
-
-    // Build parent-child relationships
-    nodeMap.forEach((childNode) => {
-      if (childNode.isRoot) return;
-
-      const post = childNode.post;
-      const postRecord = post?.record as any;
-      const parentUri = postRecord?.reply?.parent?.uri;
-
-      if (parentUri) {
-        const parentNode = nodeMap.get(parentUri);
-
-        if (parentNode) {
-          parentNode.children.push(childNode);
-          childNode.depth = parentNode.depth + 1;
-        } else if (actualRootUri && rootNodes.length > 0) {
-          // Parent not found, attach to root
-          rootNodes[0].children.push(childNode);
-          childNode.depth = 1;
-        }
-      }
-    });
-
-    // Sort children by timestamp
-    const sortChildren = (node: ThreadNode) => {
-      node.children.sort((a, b) => {
-        const aTime = a.notification?.indexedAt || a.post?.indexedAt || "";
-        const bTime = b.notification?.indexedAt || b.post?.indexedAt || "";
-        return new Date(aTime).getTime() - new Date(bTime).getTime();
-      });
-      node.children.forEach(sortChildren);
-    };
-
-    rootNodes.forEach(sortChildren);
-
-    // If no root was found, return all orphan nodes
-    if (rootNodes.length === 0) {
-      nodeMap.forEach((node) => {
-        if (
-          !node.children.length &&
-          !Array.from(nodeMap.values()).some((n) => n.children.includes(node))
-        ) {
-          rootNodes.push(node);
-        }
-      });
-    }
-
-    return rootNodes;
-  }, [posts, notificationMap, rootUri]);
-
-  // Find the maximum depth in the thread
-  const maxThreadDepth = useMemo(() => {
-    let maxDepth = 0;
-
-    const traverse = (node: ThreadNode) => {
-      maxDepth = Math.max(maxDepth, node.depth);
-      node.children.forEach(traverse);
-    };
-
-    threadTree.forEach(traverse);
-    return maxDepth;
-  }, [threadTree]);
-
-  // Count branch points in the thread
-  const branchCount = useMemo(() => {
-    let count = 0;
-    const countBranches = (node: ThreadNode) => {
-      if (node.children.length > 1) count++;
-      node.children.forEach(countBranches);
-    };
-    threadTree.forEach(countBranches);
-    return count;
-  }, [threadTree]);
-
-  // Calculate thread complexity score for progressive reveal and UI degradation
-  const complexityScore = useMemo(
-    () => calculateComplexityFromPosts(posts, maxThreadDepth, branchCount),
-    [posts, maxThreadDepth, branchCount],
-  );
 
   // Get the CSS custom property name based on thread depth
   // This allows CSS clamp() to handle responsive scaling automatically
@@ -562,216 +275,6 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     () => getIndentCssVar(maxThreadDepth),
     [maxThreadDepth, getIndentCssVar],
   );
-
-  // Create flat list of nodes for keyboard navigation (depth-first order)
-  const flatNodeList = useMemo(() => {
-    const flat: ThreadNode[] = [];
-    let index = 0;
-
-    const traverse = (node: ThreadNode) => {
-      node.flatIndex = index++;
-      flat.push(node);
-      node.children.forEach(traverse);
-    };
-
-    threadTree.forEach(traverse);
-    return flat;
-  }, [threadTree]);
-
-  // Count total user participation in thread
-  const userParticipationStats = useMemo(() => {
-    if (!currentUserDid) return { count: 0, nodeIndices: [] as number[] };
-
-    const nodeIndices: number[] = [];
-    flatNodeList.forEach((node, idx) => {
-      if (node.post?.author?.did === currentUserDid) {
-        nodeIndices.push(idx);
-      }
-    });
-
-    return { count: nodeIndices.length, nodeIndices };
-  }, [flatNodeList, currentUserDid]);
-
-  // Toggle branch expansion (for "load more" behavior at bottom)
-  const toggleBranch = useCallback((nodeUri: string) => {
-    setExpandedBranches((prev) => {
-      const next = new Set(prev);
-      if (next.has(nodeUri)) {
-        next.delete(nodeUri);
-      } else {
-        next.add(nodeUri);
-      }
-      return next;
-    });
-  }, []);
-
-  // Toggle branch collapse state (for per-node collapse/expand button)
-  const toggleCollapseBranch = useCallback(
-    (nodeUri: string) => {
-      // Start animation
-      setAnimatingNodes((prev) => new Set(prev).add(nodeUri));
-
-      setCollapsedBranches((prev) => {
-        const next = new Set(prev);
-        if (next.has(nodeUri)) {
-          next.delete(nodeUri);
-        } else {
-          next.add(nodeUri);
-        }
-        // Persist to localStorage
-        if (threadId) {
-          setPersistedCollapseState(threadId, next);
-        }
-        return next;
-      });
-
-      // End animation after transition completes
-      setTimeout(() => {
-        setAnimatingNodes((prev) => {
-          const next = new Set(prev);
-          next.delete(nodeUri);
-          return next;
-        });
-      }, 300);
-    },
-    [threadId],
-  );
-
-  // Check if a branch is collapsed
-  const isBranchCollapsed = useCallback(
-    (nodeUri: string) => collapsedBranches.has(nodeUri),
-    [collapsedBranches],
-  );
-
-  // Keyboard navigation handler
-  const handleKeyboardNavigation = useCallback(
-    (e: KeyboardEvent) => {
-      if (!enableKeyboardNavigation) return;
-
-      // Check if user is typing in an input
-      const activeElement = document.activeElement;
-      if (
-        activeElement?.tagName === "INPUT" ||
-        activeElement?.tagName === "TEXTAREA" ||
-        (activeElement as HTMLElement)?.isContentEditable
-      ) {
-        return;
-      }
-
-      const totalNodes = flatNodeList.length;
-      if (totalNodes === 0) return;
-
-      let newIndex = focusedPostIndex;
-      let handled = false;
-
-      switch (e.key) {
-        case "ArrowDown":
-        case "j": // Vim-style navigation
-          newIndex = Math.min(focusedPostIndex + 1, totalNodes - 1);
-          if (focusedPostIndex === -1) newIndex = 0;
-          handled = true;
-          break;
-        case "ArrowUp":
-        case "k": // Vim-style navigation
-          newIndex = Math.max(focusedPostIndex - 1, 0);
-          if (focusedPostIndex === -1) newIndex = 0;
-          handled = true;
-          break;
-        case "Home":
-          newIndex = 0;
-          handled = true;
-          break;
-        case "End":
-          newIndex = totalNodes - 1;
-          handled = true;
-          break;
-        case "n": // Jump to next user post
-          if (userParticipationStats.nodeIndices.length > 0) {
-            const nextUserIndex = userParticipationStats.nodeIndices.find(
-              (idx) => idx > focusedPostIndex,
-            );
-            if (nextUserIndex !== undefined) {
-              newIndex = nextUserIndex;
-              handled = true;
-            } else {
-              // Wrap to first user post
-              newIndex = userParticipationStats.nodeIndices[0];
-              handled = true;
-            }
-          }
-          break;
-        case "p": // Jump to previous user post
-          if (userParticipationStats.nodeIndices.length > 0) {
-            const prevUserIndex = [...userParticipationStats.nodeIndices]
-              .reverse()
-              .find((idx) => idx < focusedPostIndex);
-            if (prevUserIndex !== undefined) {
-              newIndex = prevUserIndex;
-              handled = true;
-            } else {
-              // Wrap to last user post
-              newIndex =
-                userParticipationStats.nodeIndices[
-                  userParticipationStats.nodeIndices.length - 1
-                ];
-              handled = true;
-            }
-          }
-          break;
-        case "Enter":
-        case " ":
-          // Trigger reply on current post
-          if (focusedPostIndex >= 0) {
-            const node = flatNodeList[focusedPostIndex];
-            if (node?.post) {
-              onPostClick?.(node.post, e.key === " " ? "quote" : "reply");
-              handled = true;
-            }
-          }
-          break;
-      }
-
-      if (handled) {
-        e.preventDefault();
-        if (newIndex !== focusedPostIndex) {
-          setFocusedPostIndex(newIndex);
-          // Use virtualized list scrolling if available, otherwise fall back to DOM
-          if (virtualListRef.current) {
-            virtualListRef.current.scrollToIndex(newIndex, {
-              align: "center",
-              behavior: "smooth",
-            });
-          } else {
-            // Scroll the focused post into view while preserving scroll position
-            const postElement = postRefs.current.get(newIndex);
-            if (postElement) {
-              postElement.scrollIntoView({
-                behavior: "smooth",
-                block: "center",
-              });
-            }
-          }
-        }
-      }
-    },
-    [
-      enableKeyboardNavigation,
-      flatNodeList,
-      focusedPostIndex,
-      userParticipationStats.nodeIndices,
-      onPostClick,
-    ],
-  );
-
-  // Set up keyboard event listener
-  useEffect(() => {
-    if (enableKeyboardNavigation) {
-      window.addEventListener("keydown", handleKeyboardNavigation);
-      return () => {
-        window.removeEventListener("keydown", handleKeyboardNavigation);
-      };
-    }
-  }, [enableKeyboardNavigation, handleKeyboardNavigation]);
 
   // Ref for the highlighted post
   const highlightRef = useRef<HTMLDivElement>(null);
@@ -824,310 +327,27 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     }
   }, [controlledFocusedIndex]);
 
-  const handleGenerateAltText = useCallback(
-    async (imageUrl: string, postUri: string, index: number) => {
-      const postKey = postUri;
-      setGeneratingAltText((prev) => ({
-        ...prev,
-        [postKey]: { ...prev[postKey], [index]: true },
-      }));
-      try {
-        // Pass the URL directly to the backend which will handle fetching
-        const anthropicService = await loadAnthropicService();
-        const altText = await anthropicService.generateAltText(imageUrl);
-
-        setGeneratedAltTexts((prev) => ({
-          ...prev,
-          [postKey]: { ...prev[postKey], [index]: altText },
-        }));
-        setShowAltText((prev) => ({
-          ...prev,
-          [postKey]: { ...prev[postKey], [index]: true },
-        }));
-      } catch (error) {
-        // Show user-friendly error message
-        logger.error("Error generating alt text:", error);
-        alert(
-          error instanceof Error
-            ? error.message
-            : "Failed to generate alt text",
-        );
-      } finally {
-        setGeneratingAltText((prev) => ({
-          ...prev,
-          [postKey]: { ...prev[postKey], [index]: false },
-        }));
-      }
+  // Handle image click for gallery
+  const handleImageClick = useCallback(
+    (images: Array<{ thumb: string; fullsize: string; alt?: string }>, index: number) => {
+      setGalleryImages(images);
+      setGalleryIndex(index);
     },
     [],
   );
 
-  // Render embeds (images, videos, quotes, etc)
+  // Render embeds using the extracted EmbedRenderer component
   const renderEmbed = useCallback(
     (embed: any, postUri?: string) => {
-      if (!embed) return null;
-
-      if (embed.$type === "app.bsky.embed.images#view") {
-        const handleImageClick = (e: React.MouseEvent, index: number) => {
-          e.stopPropagation();
-          const images = embed.images.map((img: any) => ({
-            thumb: proxifyBskyImage(img.thumb),
-            fullsize: proxifyBskyImage(img.fullsize),
-            alt: img.alt,
-          }));
-          setGalleryImages(images);
-          setGalleryIndex(index);
-        };
-
-        return (
-          <div
-            className={`mt-2 grid gap-1 ${embed.images.length === 1 ? "max-w-2xl grid-cols-1" : embed.images.length === 2 ? "max-w-3xl grid-cols-2" : embed.images.length === 3 ? "max-w-3xl grid-cols-2" : "max-w-3xl grid-cols-2"}`}
-          >
-            {embed.images.map((img: any, idx: number) => {
-              const postKey = postUri || "";
-              const currentAltText =
-                generatedAltTexts[postKey]?.[idx] || img.alt;
-              const hasAltText = currentAltText && currentAltText.length > 0;
-              const isGenerating = generatingAltText[postKey]?.[idx];
-              const shouldShowAlt = showAltText[postKey]?.[idx];
-
-              return (
-                <div
-                  key={idx}
-                  className={`group relative cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-90 ${
-                    embed.images.length === 3 && idx === 0 ? "col-span-2" : ""
-                  }`}
-                  onClick={(e) => handleImageClick(e, idx)}
-                >
-                  <img
-                    src={proxifyBskyImage(img.thumb)}
-                    alt={currentAltText || ""}
-                    className="mx-auto h-auto w-full rounded-lg object-contain"
-                    style={{
-                      maxHeight: embed.images.length === 1 ? "400px" : "300px",
-                      maxWidth: embed.images.length === 1 ? "600px" : "100%",
-                      backgroundColor: "var(--bsky-bg-tertiary)",
-                    }}
-                  />
-
-                  {/* Alt text overlay */}
-                  {hasAltText && shouldShowAlt && (
-                    <div className="absolute bottom-0 left-0 right-0 rounded-b-lg bg-black bg-opacity-70 p-2 text-xs text-white">
-                      {currentAltText}
-                    </div>
-                  )}
-
-                  {/* Alt text generation button */}
-                  {postUri && (
-                    <button
-                      className="absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (hasAltText && !generatedAltTexts[postKey]?.[idx]) {
-                          // Toggle showing existing alt text
-                          setShowAltText((prev) => ({
-                            ...prev,
-                            [postKey]: {
-                              ...prev[postKey],
-                              [idx]: !shouldShowAlt,
-                            },
-                          }));
-                        } else if (!hasAltText) {
-                          // Generate new alt text
-                          handleGenerateAltText(
-                            proxifyBskyImage(img.fullsize) ||
-                              proxifyBskyImage(img.thumb) ||
-                              "",
-                            postUri,
-                            idx,
-                          );
-                        }
-                      }}
-                      disabled={isGenerating}
-                      title={
-                        hasAltText ? "Toggle alt text" : "Generate alt text"
-                      }
-                    >
-                      {isGenerating ? (
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      ) : (
-                        <Sparkles size={16} />
-                      )}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        );
-      }
-
-      if (embed.$type === "app.bsky.embed.external#view") {
-        return (
-          <div
-            className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-blue-500 hover:bg-opacity-5"
-            style={{ borderColor: "var(--bsky-border-primary)" }}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (embed.external.uri) {
-                window.open(
-                  embed.external.uri,
-                  "_blank",
-                  "noopener,noreferrer",
-                );
-              }
-            }}
-          >
-            {embed.external.thumb && (
-              <img
-                src={proxifyBskyImage(embed.external.thumb)}
-                alt=""
-                className="mb-1 h-auto w-full rounded object-contain"
-                style={{
-                  maxHeight: "200px",
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                }}
-              />
-            )}
-            <div
-              className="font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
-            >
-              {embed.external.title}
-            </div>
-            <div
-              className="mt-0.5 opacity-80"
-              style={{ color: "var(--bsky-text-secondary)" }}
-            >
-              {embed.external.description}
-            </div>
-          </div>
-        );
-      }
-
-      if (embed.$type === "app.bsky.embed.video#view") {
-        return (
-          <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-            <VideoPlayer
-              src={proxifyBskyVideo(embed.playlist) || ""}
-              thumbnail={
-                embed.thumbnail ? proxifyBskyVideo(embed.thumbnail) : undefined
-              }
-              aspectRatio={embed.aspectRatio}
-              alt={embed.alt}
-            />
-          </div>
-        );
-      }
-
-      // Handle quote posts
-      if (embed.$type === "app.bsky.embed.record#view") {
-        const quotedPost = embed.record;
-        if (quotedPost?.$type === "app.bsky.embed.record#viewRecord") {
-          return (
-            <div
-              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-500 hover:bg-opacity-5"
-              style={{ borderColor: "var(--bsky-border-primary)" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (quotedPost.uri && quotedPost.author?.handle) {
-                  const quotedPostId = quotedPost.uri.split("/").pop();
-                  navigate(
-                    `/thread/${quotedPost.author.handle}/${quotedPostId}`,
-                  );
-                }
-              }}
-            >
-              <div className="mb-1 flex items-center gap-1">
-                {quotedPost.author?.handle ? (
-                  <ProfileHoverCard handle={quotedPost.author.handle}>
-                    <img
-                      src={
-                        proxifyBskyImage(quotedPost.author.avatar) ||
-                        "/default-avatar.svg"
-                      }
-                      alt={quotedPost.author?.handle || "unknown"}
-                      className="h-4 w-4 cursor-pointer rounded-full transition-opacity hover:opacity-80"
-                    />
-                  </ProfileHoverCard>
-                ) : (
-                  <img
-                    src={
-                      proxifyBskyImage(quotedPost.author?.avatar) ||
-                      "/default-avatar.svg"
-                    }
-                    alt={quotedPost.author?.handle || "unknown"}
-                    className="h-4 w-4 rounded-full"
-                  />
-                )}
-                {quotedPost.author?.handle ? (
-                  <ProfileHoverCard handle={quotedPost.author.handle}>
-                    <span
-                      className="cursor-pointer font-semibold hover:underline"
-                      style={{ color: "var(--bsky-text-primary)" }}
-                    >
-                      {quotedPost.author?.displayName ||
-                        quotedPost.author?.handle ||
-                        "Unknown"}
-                    </span>
-                  </ProfileHoverCard>
-                ) : (
-                  <span
-                    className="font-semibold"
-                    style={{ color: "var(--bsky-text-primary)" }}
-                  >
-                    {quotedPost.author?.displayName ||
-                      quotedPost.author?.handle ||
-                      "Unknown"}
-                  </span>
-                )}
-                {quotedPost.author?.handle ? (
-                  <ProfileHoverCard handle={quotedPost.author.handle}>
-                    <span
-                      className="cursor-pointer hover:underline"
-                      style={{ color: "var(--bsky-text-secondary)" }}
-                    >
-                      @{quotedPost.author?.handle || "unknown"}
-                    </span>
-                  </ProfileHoverCard>
-                ) : (
-                  <span style={{ color: "var(--bsky-text-secondary)" }}>
-                    @{quotedPost.author?.handle || "unknown"}
-                  </span>
-                )}
-              </div>
-              <div style={{ color: "var(--bsky-text-primary)" }}>
-                <RichText
-                  text={quotedPost.value?.text || ""}
-                  facets={quotedPost.value?.facets}
-                />
-              </div>
-            </div>
-          );
-        }
-      }
-
-      // Handle record with media
-      if (embed.$type === "app.bsky.embed.recordWithMedia#view") {
-        return (
-          <div className="mt-2">
-            {embed.media && renderEmbed(embed.media, postUri)}
-            {embed.record && renderEmbed(embed.record, postUri)}
-          </div>
-        );
-      }
-
-      return null;
+      return (
+        <EmbedRenderer
+          embed={embed}
+          postUri={postUri}
+          onImageClick={handleImageClick}
+        />
+      );
     },
-    [
-      generatedAltTexts,
-      generatingAltText,
-      showAltText,
-      handleGenerateAltText,
-      setGalleryImages,
-      setGalleryIndex,
-      setShowAltText,
-    ],
+    [handleImageClick],
   );
 
   // Render thread nodes recursively
