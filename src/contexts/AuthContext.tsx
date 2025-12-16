@@ -74,6 +74,36 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Validates that a PDS URL is safe to use for authentication.
+ * Only allows official Bluesky domains to prevent credential theft via malicious servers.
+ *
+ * @param url - The PDS URL to validate
+ * @returns true if the URL is valid and safe, false otherwise
+ */
+function isValidPDSUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+
+    // Only allow HTTPS protocol for security
+    if (parsed.protocol !== "https:") {
+      return false;
+    }
+
+    // Allowlist of official Bluesky domains
+    const allowedDomains = ["bsky.social", "bsky.app", "blueskyweb.xyz"];
+
+    // Check if hostname exactly matches or is a subdomain of allowed domains
+    return allowedDomains.some(
+      (domain) =>
+        parsed.hostname === domain || parsed.hostname.endsWith(`.${domain}`),
+    );
+  } catch {
+    // Invalid URL format
+    return false;
+  }
+}
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -403,6 +433,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         // If a custom PDS URL is provided, we need to create a new client
         if (pdsUrl && pdsUrl !== "https://bsky.social") {
+          // Validate PDS URL for security - prevent credential theft via malicious servers
+          if (!isValidPDSUrl(pdsUrl)) {
+            throw new Error(
+              "Invalid PDS URL. Only official Bluesky servers (bsky.social, bsky.app) are supported.",
+            );
+          }
           // Update the client's service URL
           atProtoClient.updateService(pdsUrl);
         }
