@@ -153,7 +153,6 @@ export async function registerServiceWorker(
     await initOfflineServices();
 
     // Import workbox-window for registration handling
-    // @ts-expect-error - workbox-window is dynamically imported and may not have types
     const { Workbox } = await import("workbox-window");
 
     const wb = new Workbox("/sw.js", {

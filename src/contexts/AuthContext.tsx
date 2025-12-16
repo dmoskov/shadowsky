@@ -20,6 +20,7 @@ import React, {
 import { AccountManager } from "../services/account-manager";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { atProtoClient, ATProtoClient } from "../services/atproto";
+import { multiClientManager } from "../services/multi-client-manager";
 import {
   bookmarkService,
   initializeBookmarkService,
@@ -146,16 +147,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Clear all accounts if specified
       if (logoutAllAccounts) {
         AccountManager.clearAllAccounts();
+        multiClientManager.clearAll();
+      } else if (session?.did) {
+        // Just remove the current account's client
+        multiClientManager.removeClient(session.did);
       }
 
       // Force a page reload to ensure all state is cleared
       window.location.href = "/";
     },
-    [authMethod],
+    [authMethod, session],
   );
 
   const refreshSession = useCallback(async (): Promise<boolean> => {
     try {
+      // Use the active managed client's agent for refreshing
+      const activeClient = multiClientManager.getActiveClient();
+      if (activeClient && activeClient.agent.session) {
+        // BskyAgent handles token refresh automatically, but we can force it
+        await activeClient.agent.resumeSession(activeClient.agent.session);
+        const newSession: Session = {
+          did: activeClient.did,
+          handle: activeClient.handle,
+          accessJwt: activeClient.agent.session?.accessJwt || "",
+          refreshJwt: activeClient.agent.session?.refreshJwt || "",
+          active: true,
+        };
+        setSession(newSession);
+        setApiAuthSession(newSession);
+        return true;
+      }
+
+      // Fallback to legacy behavior for backward compatibility
       const newSession = await atProtoClient.refreshSession();
       if (newSession) {
         setSession(newSession);
@@ -334,23 +357,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           initAttempts.current++;
 
           try {
-            const resumedSession =
-              await atProtoClient.resumeSession(savedSession);
+            // Get the active account from AccountManager or create one from saved session
+            const activeAccount = AccountManager.getActiveAccount();
+            const accountToResume = activeAccount || {
+              did: savedSession.did,
+              handle: savedSession.handle,
+              session: savedSession,
+              authMethod: "app-password" as const,
+              isActive: true,
+              lastUsed: Date.now(),
+            };
+
+            // Use multiClientManager to resume session - creates dedicated agent
+            const managedClient =
+              await multiClientManager.resumeSession(accountToResume);
+
+            const resumedSession: Session = {
+              did: managedClient.did,
+              handle: managedClient.handle,
+              accessJwt: managedClient.agent.session?.accessJwt || "",
+              refreshJwt: managedClient.agent.session?.refreshJwt || "",
+              active: true,
+            };
+
             setIsAuthenticated(true);
             setAuthMethod("app-password");
             setSession(resumedSession);
             setApiAuthSession(resumedSession);
             initAttempts.current = 0; // Reset on success
+
             // Initialize services in parallel for faster startup
-            dmService.setAgent(atProtoClient.agent);
+            dmService.setAgent(managedClient.agent);
             await Promise.all([
-              initializeBookmarkService(atProtoClient.agent),
-              initializeDataServices(atProtoClient.agent),
+              initializeBookmarkService(managedClient.agent),
+              initializeDataServices(managedClient.agent),
             ]);
 
             // Store account in AccountManager for multi-account support
             try {
-              const { data: profile } = await atProtoClient.agent.getProfile({
+              const { data: profile } = await managedClient.agent.getProfile({
                 actor: resumedSession.did,
               });
               AccountManager.addOrUpdateAccount(
@@ -431,39 +476,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       authFactorToken?: string,
     ): Promise<boolean> => {
       try {
-        // If a custom PDS URL is provided, we need to create a new client
-        if (pdsUrl && pdsUrl !== "https://bsky.social") {
-          // Validate PDS URL for security - prevent credential theft via malicious servers
-          if (!isValidPDSUrl(pdsUrl)) {
+        // Validate PDS URL for security - prevent credential theft via malicious servers
+        const serviceUrl = pdsUrl || "https://bsky.social";
+        if (serviceUrl !== "https://bsky.social") {
+          if (!isValidPDSUrl(serviceUrl)) {
             throw new Error(
               "Invalid PDS URL. Only official Bluesky servers (bsky.social, bsky.app) are supported.",
             );
           }
-          // Update the client's service URL
-          atProtoClient.updateService(pdsUrl);
         }
 
-        const trimAt = (s: string) =>
-          s.length > 0 && s[0] === "@" ? s.slice(1) : s;
-
-        const newSession = await atProtoClient.login(
-          trimAt(identifier),
+        // Use multiClientManager for login - this creates a dedicated agent per account
+        const managedClient = await multiClientManager.login(
+          identifier,
           password,
+          serviceUrl,
           authFactorToken,
         );
+
+        const newSession: Session = {
+          did: managedClient.did,
+          handle: managedClient.handle,
+          accessJwt: managedClient.agent.session?.accessJwt || "",
+          refreshJwt: managedClient.agent.session?.refreshJwt || "",
+          active: true,
+        };
+
         setIsAuthenticated(true);
         setAuthMethod("app-password");
         setSession(newSession);
         setApiAuthSession(newSession);
 
-        // Initialize services with user preferences
-        await initializeBookmarkService(atProtoClient.agent);
-        await initializeDataServices(atProtoClient.agent);
-        dmService.setAgent(atProtoClient.agent);
+        // Initialize services with the managed client's agent
+        await initializeBookmarkService(managedClient.agent);
+        await initializeDataServices(managedClient.agent);
+        dmService.setAgent(managedClient.agent);
 
         // Fetch profile data and store account
         try {
-          const { data: profile } = await atProtoClient.agent.getProfile({
+          const { data: profile } = await managedClient.agent.getProfile({
             actor: newSession.did,
           });
           AccountManager.addOrUpdateAccount(
@@ -590,15 +641,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return false;
       }
 
-      const resumedSession = await atProtoClient.resumeSession(account.session);
+      // Use multiClientManager to switch - this preserves sessions per account
+      const managedClient = await multiClientManager.switchTo(did);
+      const resumedSession: Session = {
+        did: managedClient.did,
+        handle: managedClient.handle,
+        accessJwt: managedClient.agent.session?.accessJwt || "",
+        refreshJwt: managedClient.agent.session?.refreshJwt || "",
+        active: true,
+      };
+
       setIsAuthenticated(true);
       setAuthMethod("app-password");
       setSession(resumedSession);
       setApiAuthSession(resumedSession);
 
-      await initializeBookmarkService(atProtoClient.agent);
-      await initializeDataServices(atProtoClient.agent);
-      dmService.setAgent(atProtoClient.agent);
+      // Use the managed client's agent for services
+      await initializeBookmarkService(managedClient.agent);
+      await initializeDataServices(managedClient.agent);
+      dmService.setAgent(managedClient.agent);
 
       queryClient.clear();
 
@@ -611,6 +672,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const status = (error as Error & { status?: number })?.status;
       if (status === 400 || status === 401) {
         AccountManager.removeAccount(did);
+        multiClientManager.removeClient(did);
         alert("Session expired. Please sign in again.");
         window.location.href = "/add-account";
       }
@@ -620,8 +682,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   // Determine which agent to expose based on auth method
-  const currentAgent =
-    authMethod === "oauth" ? oauthAgent : atProtoClient.agent;
+  // For app-password, use multiClientManager's active client for per-account sessions
+  const currentAgent = useMemo(() => {
+    if (authMethod === "oauth") {
+      return oauthAgent;
+    }
+    // Use the active managed client's agent if available
+    const activeClient = multiClientManager.getActiveClient();
+    return activeClient?.agent || atProtoClient.agent;
+  }, [authMethod, oauthAgent, session]);
 
   // Memoize context value to prevent unnecessary re-renders of consumers
   const contextValue = useMemo(
