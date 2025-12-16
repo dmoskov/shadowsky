@@ -1,4 +1,5 @@
 # Refactoring Recommendations: AuthContext.tsx
+
 **Date:** 2025-12-16
 **For:** Refactoring Agent
 **Related Audit:** SECURITY_AUDIT_AuthContext_2025-12-16.md
@@ -15,6 +16,7 @@ AuthContext.tsx has become a **hotspot** with 16 changes in 14 days due to exces
 ## Problem Statement
 
 ### Current Issues
+
 - **Line count:** 658 lines (too large for a single file)
 - **Cyclomatic complexity:** HIGH (multiple auth flows, error paths)
 - **Churn rate:** 16 changes in 14 days (unsustainable)
@@ -22,6 +24,7 @@ AuthContext.tsx has become a **hotspot** with 16 changes in 14 days due to exces
 - **State management:** 6 interdependent state variables
 
 ### Impact
+
 - Changes require deep context understanding
 - High risk of introducing bugs
 - Difficult to test in isolation
@@ -40,7 +43,7 @@ AuthContext.tsx has become a **hotspot** with 16 changes in 14 days due to exces
 ```typescript
 // src/contexts/auth/strategies/AuthStrategy.ts
 export interface AuthStrategy {
-  readonly name: 'oauth' | 'app-password';
+  readonly name: "oauth" | "app-password";
 
   /**
    * Initialize the strategy and check for existing session
@@ -71,13 +74,19 @@ export interface AuthStrategy {
 export interface AuthResult {
   session: Session;
   agent: BskyAgent;
-  method: 'oauth' | 'app-password';
+  method: "oauth" | "app-password";
 }
 
 export type AuthCredentials =
-  | { type: 'oauth'; handle: string }
-  | { type: 'app-password'; identifier: string; password: string; pdsUrl?: string; authFactorToken?: string }
-  | { type: 'oauth-callback' };
+  | { type: "oauth"; handle: string }
+  | {
+      type: "app-password";
+      identifier: string;
+      password: string;
+      pdsUrl?: string;
+      authFactorToken?: string;
+    }
+  | { type: "oauth-callback" };
 ```
 
 #### Step 1.2: Implement OAuth Strategy
@@ -90,7 +99,7 @@ import { oauthService } from "../../../services/oauth-service";
 import type { AuthResult, AuthStrategy, AuthCredentials } from "./AuthStrategy";
 
 export class OAuthStrategy implements AuthStrategy {
-  readonly name = 'oauth' as const;
+  readonly name = "oauth" as const;
 
   async init(): Promise<AuthResult | null> {
     const oauthState = await oauthService.init();
@@ -105,12 +114,15 @@ export class OAuthStrategy implements AuthStrategy {
         return null;
       }
 
-      const { handle, profileData } = await this.fetchProfile(agent, oauthState.did);
+      const { handle, profileData } = await this.fetchProfile(
+        agent,
+        oauthState.did,
+      );
 
       return {
         session: this.createSession(oauthState.did, handle),
         agent: this.configureAgent(agent, oauthState.did, handle),
-        method: 'oauth',
+        method: "oauth",
       };
     }
 
@@ -118,13 +130,13 @@ export class OAuthStrategy implements AuthStrategy {
   }
 
   async authenticate(credentials: AuthCredentials): Promise<AuthResult> {
-    if (credentials.type === 'oauth') {
+    if (credentials.type === "oauth") {
       await oauthService.authorize(credentials.handle);
       // This redirects, so we won't reach here
       throw new Error("Should have redirected");
     }
 
-    if (credentials.type === 'oauth-callback') {
+    if (credentials.type === "oauth-callback") {
       const state = await oauthService.handleCallback();
       if (!state?.agent || !state.did) {
         throw new Error("OAuth callback failed");
@@ -136,7 +148,7 @@ export class OAuthStrategy implements AuthStrategy {
       return {
         session: this.createSession(state.did, handle),
         agent: this.configureAgent(agent, state.did, handle),
-        method: 'oauth',
+        method: "oauth",
       };
     }
 
@@ -153,10 +165,15 @@ export class OAuthStrategy implements AuthStrategy {
   }
 
   canHandle(credentials: AuthCredentials): boolean {
-    return credentials.type === 'oauth' || credentials.type === 'oauth-callback';
+    return (
+      credentials.type === "oauth" || credentials.type === "oauth-callback"
+    );
   }
 
-  private async validateSession(agent: BskyAgent, did: string): Promise<boolean> {
+  private async validateSession(
+    agent: BskyAgent,
+    did: string,
+  ): Promise<boolean> {
     try {
       await agent.getProfile({ actor: did });
       return true;
@@ -167,7 +184,10 @@ export class OAuthStrategy implements AuthStrategy {
     }
   }
 
-  private async fetchProfile(agent: BskyAgent, did: string): Promise<{
+  private async fetchProfile(
+    agent: BskyAgent,
+    did: string,
+  ): Promise<{
     handle: string;
     profileData: { displayName?: string; avatar?: string };
   }> {
@@ -195,7 +215,11 @@ export class OAuthStrategy implements AuthStrategy {
     };
   }
 
-  private configureAgent(agent: BskyAgent, did: string, handle: string): BskyAgent {
+  private configureAgent(
+    agent: BskyAgent,
+    did: string,
+    handle: string,
+  ): BskyAgent {
     // Add session property for compatibility
     const sessionCompat = {
       did,
@@ -219,7 +243,11 @@ export class OAuthStrategy implements AuthStrategy {
 // src/contexts/auth/strategies/AppPasswordStrategy.ts
 import { atProtoClient } from "../../../services/atproto";
 import type { AuthResult, AuthStrategy, AuthCredentials } from "./AuthStrategy";
-import { SessionExpiredError, AuthenticationError, NetworkError } from "@bsky/shared";
+import {
+  SessionExpiredError,
+  AuthenticationError,
+  NetworkError,
+} from "@bsky/shared";
 
 /**
  * Validates that a PDS URL is safe to use for authentication.
@@ -233,7 +261,7 @@ function isValidPDSUrl(url: string): boolean {
     const allowedDomains = ["bsky.social", "bsky.app", "blueskyweb.xyz"];
     return allowedDomains.some(
       (domain) =>
-        parsed.hostname === domain || parsed.hostname.endsWith(`.${domain}`)
+        parsed.hostname === domain || parsed.hostname.endsWith(`.${domain}`),
     );
   } catch {
     return false;
@@ -241,13 +269,13 @@ function isValidPDSUrl(url: string): boolean {
 }
 
 export class AppPasswordStrategy implements AuthStrategy {
-  readonly name = 'app-password' as const;
+  readonly name = "app-password" as const;
   private initAttempts = 0;
   private readonly maxRetries = 3;
 
   async init(): Promise<AuthResult | null> {
     const savedSession = ATProtoClient.loadSavedSession(
-      atProtoClient.getSessionPrefix()
+      atProtoClient.getSessionPrefix(),
     );
 
     if (!savedSession) {
@@ -262,7 +290,7 @@ export class AppPasswordStrategy implements AuthStrategy {
       return {
         session: resumedSession,
         agent: atProtoClient.agent,
-        method: 'app-password',
+        method: "app-password",
       };
     } catch (error) {
       return this.handleInitError(error);
@@ -270,7 +298,7 @@ export class AppPasswordStrategy implements AuthStrategy {
   }
 
   async authenticate(credentials: AuthCredentials): Promise<AuthResult> {
-    if (credentials.type !== 'app-password') {
+    if (credentials.type !== "app-password") {
       throw new Error("Invalid credentials for app-password strategy");
     }
 
@@ -280,23 +308,23 @@ export class AppPasswordStrategy implements AuthStrategy {
     if (pdsUrl && pdsUrl !== "https://bsky.social") {
       if (!isValidPDSUrl(pdsUrl)) {
         throw new Error(
-          "Invalid PDS URL. Only official Bluesky servers (bsky.social, bsky.app) are supported."
+          "Invalid PDS URL. Only official Bluesky servers (bsky.social, bsky.app) are supported.",
         );
       }
       atProtoClient.updateService(pdsUrl);
     }
 
-    const trimAt = (s: string) => s.startsWith("@") ? s.slice(1) : s;
+    const trimAt = (s: string) => (s.startsWith("@") ? s.slice(1) : s);
     const session = await atProtoClient.login(
       trimAt(identifier),
       password,
-      authFactorToken
+      authFactorToken,
     );
 
     return {
       session,
       agent: atProtoClient.agent,
-      method: 'app-password',
+      method: "app-password",
     };
   }
 
@@ -311,12 +339,12 @@ export class AppPasswordStrategy implements AuthStrategy {
     return {
       session: newSession,
       agent: atProtoClient.agent,
-      method: 'app-password',
+      method: "app-password",
     };
   }
 
   canHandle(credentials: AuthCredentials): boolean {
-    return credentials.type === 'app-password';
+    return credentials.type === "app-password";
   }
 
   private async handleInitError(error: unknown): Promise<AuthResult | null> {
@@ -335,11 +363,7 @@ export class AppPasswordStrategy implements AuthStrategy {
       return null;
     }
 
-    if (
-      error instanceof NetworkError ||
-      status >= 500 ||
-      !navigator.onLine
-    ) {
+    if (error instanceof NetworkError || status >= 500 || !navigator.onLine) {
       if (this.initAttempts < this.maxRetries && navigator.onLine) {
         // Retry with exponential backoff (handled by caller)
         throw error;
@@ -376,7 +400,7 @@ export class ServiceInitializer {
   static async initializeForSession(
     agent: BskyAgent,
     session: Session,
-    authMethod: 'oauth' | 'app-password'
+    authMethod: "oauth" | "app-password",
   ): Promise<void> {
     // Set agent for services that need it immediately
     dmService.setAgent(agent);
@@ -409,7 +433,7 @@ export class ServiceInitializer {
   private static async storeAccount(
     agent: BskyAgent,
     session: Session,
-    authMethod: 'oauth' | 'app-password'
+    authMethod: "oauth" | "app-password",
   ): Promise<void> {
     try {
       const { data: profile } = await agent.getProfile({
@@ -421,7 +445,7 @@ export class ServiceInitializer {
           displayName: profile.displayName,
           avatar: profile.avatar,
         },
-        authMethod
+        authMethod,
       );
     } catch {
       // Still add account even if profile fetch fails
@@ -734,12 +758,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 ## Benefits of This Refactoring
 
 ### Quantifiable Improvements
+
 - **File size:** 658 → ~200 lines (-70%)
 - **Cyclomatic complexity:** HIGH → MEDIUM
 - **Test coverage:** Easier to test strategies in isolation
 - **Expected churn:** 16 changes/14 days → ~5 changes/14 days
 
 ### Qualitative Improvements
+
 - **Separation of concerns:** Each strategy handles one auth method
 - **Open/closed principle:** Easy to add new auth methods
 - **Testability:** Strategies can be unit tested independently
@@ -751,6 +777,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 ## Migration Path
 
 ### Step 1: Create New Structure (No Breaking Changes)
+
 1. Create `src/contexts/auth/` directory
 2. Implement `AuthStrategy.ts` interface
 3. Implement `OAuthStrategy.ts`
@@ -759,12 +786,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 6. Write tests for each strategy
 
 ### Step 2: Parallel Implementation
+
 1. Create new `AuthContext.tsx` using strategies
 2. Export both old and new contexts
 3. Gradually migrate components to new context
 4. Run integration tests
 
 ### Step 3: Cutover
+
 1. Replace old AuthContext with new implementation
 2. Remove old code
 3. Update imports
@@ -776,23 +805,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
 ```typescript
 // tests/auth/strategies/OAuthStrategy.test.ts
-describe('OAuthStrategy', () => {
+describe("OAuthStrategy", () => {
   let strategy: OAuthStrategy;
 
   beforeEach(() => {
     strategy = new OAuthStrategy();
   });
 
-  it('should validate session and return AuthResult', async () => {
+  it("should validate session and return AuthResult", async () => {
     const result = await strategy.init();
     expect(result).toMatchObject({
       session: expect.any(Object),
       agent: expect.any(Object),
-      method: 'oauth',
+      method: "oauth",
     });
   });
 
-  it('should handle expired sessions gracefully', async () => {
+  it("should handle expired sessions gracefully", async () => {
     // Mock expired session
     const result = await strategy.init();
     expect(result).toBeNull();
@@ -800,17 +829,17 @@ describe('OAuthStrategy', () => {
 });
 
 // tests/auth/strategies/AppPasswordStrategy.test.ts
-describe('AppPasswordStrategy', () => {
-  it('should reject invalid PDS URLs', async () => {
+describe("AppPasswordStrategy", () => {
+  it("should reject invalid PDS URLs", async () => {
     const strategy = new AppPasswordStrategy();
     await expect(
       strategy.authenticate({
-        type: 'app-password',
-        identifier: 'user',
-        password: 'pass',
-        pdsUrl: 'http://malicious.com'
-      })
-    ).rejects.toThrow('Invalid PDS URL');
+        type: "app-password",
+        identifier: "user",
+        password: "pass",
+        pdsUrl: "http://malicious.com",
+      }),
+    ).rejects.toThrow("Invalid PDS URL");
   });
 });
 ```
@@ -820,6 +849,7 @@ describe('AppPasswordStrategy', () => {
 ## Implementation Checklist
 
 ### Phase 1: Strategy Pattern (4-6 hours)
+
 - [ ] Create `src/contexts/auth/strategies/` directory
 - [ ] Implement `AuthStrategy.ts` interface
 - [ ] Implement `OAuthStrategy.ts` with tests
@@ -827,18 +857,21 @@ describe('AppPasswordStrategy', () => {
 - [ ] Move PDS validation to strategy
 
 ### Phase 2: Service Initialization (2-3 hours)
+
 - [ ] Create `ServiceInitializer.ts`
 - [ ] Extract all service init logic
 - [ ] Add tests for ServiceInitializer
 - [ ] Verify no duplicate initialization
 
 ### Phase 3: Simplify AuthContext (3-4 hours)
+
 - [ ] Create new `AuthContext.tsx` using strategies
 - [ ] Migrate state management to use strategies
 - [ ] Update all callbacks to use strategies
 - [ ] Preserve backward compatibility
 
 ### Phase 4: Testing & Migration (2-3 hours)
+
 - [ ] Write integration tests
 - [ ] Test OAuth flow end-to-end
 - [ ] Test app-password flow end-to-end
@@ -846,6 +879,7 @@ describe('AppPasswordStrategy', () => {
 - [ ] Performance testing
 
 ### Phase 5: Cleanup (1 hour)
+
 - [ ] Remove old code
 - [ ] Update documentation
 - [ ] Final code review
@@ -858,6 +892,7 @@ describe('AppPasswordStrategy', () => {
 ## Success Metrics
 
 ### Before Refactoring
+
 - Lines of code: 658
 - Churn: 16 changes in 14 days
 - Cyclomatic complexity: HIGH
@@ -865,6 +900,7 @@ describe('AppPasswordStrategy', () => {
 - Time to add new auth method: 4-6 hours
 
 ### After Refactoring
+
 - Lines of code: ~500 total (split across 5 files)
 - Expected churn: ~5 changes in 14 days
 - Cyclomatic complexity: MEDIUM
@@ -876,12 +912,14 @@ describe('AppPasswordStrategy', () => {
 ## Risk Assessment
 
 ### Low Risk
+
 - No breaking API changes
 - Backward compatible during migration
 - Testable in isolation
 - Gradual rollout possible
 
 ### Mitigation Strategies
+
 1. **Feature flags:** Use feature flag for new auth context
 2. **Parallel running:** Keep old code until new code proven
 3. **Rollback plan:** Git revert if issues found
@@ -899,6 +937,7 @@ describe('AppPasswordStrategy', () => {
 ---
 
 **Next Steps:**
+
 1. Review this refactoring plan with team
 2. Get approval for architectural changes
 3. Create implementation branch
@@ -906,5 +945,6 @@ describe('AppPasswordStrategy', () => {
 5. Iterate and get feedback
 
 **For questions or clarifications, refer to:**
+
 - Security audit: `SECURITY_AUDIT_AuthContext_2025-12-16.md`
 - Original file: `src/contexts/AuthContext.tsx` (line 1-658)

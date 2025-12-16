@@ -1,4 +1,5 @@
 # Security Audit: AuthContext.tsx
+
 **Date:** 2025-12-16
 **Severity:** HIGH
 **Signal:** Churn Hotspot - 16 changes in 14 days
@@ -12,6 +13,7 @@ This security audit analyzed `src/contexts/AuthContext.tsx` (626 lines), a criti
 **Overall Assessment:** MODERATE RISK with architectural concerns
 
 ### Key Findings
+
 - ✅ **No Critical Security Vulnerabilities Detected**
 - ⚠️ **7 Security Concerns Requiring Attention**
 - 🔴 **High Code Complexity (626 lines) Contributing to Churn**
@@ -26,6 +28,7 @@ This security audit analyzed `src/contexts/AuthContext.tsx` (626 lines), a criti
 **Status:** Acceptable with recommendations
 
 **Current Implementation:**
+
 - Tokens stored in both localStorage and cookies
 - SameSite=Strict flag prevents CSRF attacks
 - Secure flag enforced for HTTPS connections
@@ -33,18 +36,20 @@ This security audit analyzed `src/contexts/AuthContext.tsx` (626 lines), a criti
 - App password tokens in localStorage/cookies
 
 **Security Controls:**
+
 - `setCookie()` enforces `SameSite=Strict` (src/utils/cookies.ts:66)
 - `Secure` flag enabled for HTTPS (src/utils/cookies.ts:72)
 - Tokens properly encoded/decoded (src/utils/cookies.ts:66,86)
 
 **Recommendations:**
+
 ```typescript
 // LOW PRIORITY: Consider encryption for localStorage tokens
 // Current: Plain JSON storage
 localStorage.setItem(this.sessionKey, sessionData);
 
 // Recommended: Encrypt sensitive session data
-import { encryptSessionData } from './crypto-utils';
+import { encryptSessionData } from "./crypto-utils";
 localStorage.setItem(this.sessionKey, encryptSessionData(sessionData));
 ```
 
@@ -59,6 +64,7 @@ localStorage.setItem(this.sessionKey, encryptSessionData(sessionData));
 **Issues Identified:**
 
 #### Issue 2A: Race Condition in OAuth Session Validation
+
 **Location:** src/contexts/AuthContext.tsx:186-240
 
 ```typescript
@@ -79,6 +85,7 @@ try {
 **Recommendation:** Retry logic for critical profile fetching
 
 #### Issue 2B: Silent Session Failures
+
 **Location:** src/contexts/AuthContext.tsx:342-378
 
 ```typescript
@@ -103,6 +110,7 @@ try {
 **Status:** Generally secure with minor concerns
 
 **Positive Findings:**
+
 - OAuth uses industry-standard @atproto/oauth-client-browser
 - PKCE flow implemented (implicit in OAuth library)
 - State parameter for CSRF protection (handled by OAuth library)
@@ -134,15 +142,18 @@ if (pdsUrl && pdsUrl !== "https://bsky.social") {
 **Impact:** Potential phishing or credential theft if malicious PDS provided
 **Severity:** HIGH
 **Recommendation:**
+
 ```typescript
 // Add URL validation before switching PDS
 function isValidPDSUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return parsed.protocol === 'https:' &&
-           (parsed.hostname.endsWith('.bsky.app') ||
-            parsed.hostname.endsWith('.bsky.social') ||
-            parsed.hostname === 'bsky.social');
+    return (
+      parsed.protocol === "https:" &&
+      (parsed.hostname.endsWith(".bsky.app") ||
+        parsed.hostname.endsWith(".bsky.social") ||
+        parsed.hostname === "bsky.social")
+    );
   } catch {
     return false;
   }
@@ -150,7 +161,9 @@ function isValidPDSUrl(url: string): boolean {
 
 if (pdsUrl && pdsUrl !== "https://bsky.social") {
   if (!isValidPDSUrl(pdsUrl)) {
-    throw new Error("Invalid PDS URL. Only official Bluesky servers are supported.");
+    throw new Error(
+      "Invalid PDS URL. Only official Bluesky servers are supported.",
+    );
   }
   atProtoClient.updateService(pdsUrl);
 }
@@ -176,6 +189,7 @@ private static saveAccounts(accounts: StoredAccount[]): void {
 **Impact:** Full session tokens for all accounts visible in localStorage
 **Severity:** MEDIUM
 **Data Exposed:**
+
 - DID, handle, email
 - accessJwt, refreshJwt (full JWT tokens)
 - Avatar URLs, display names
@@ -183,6 +197,7 @@ private static saveAccounts(accounts: StoredAccount[]): void {
 **Recommendation:** Encrypt multi-account storage
 
 #### Issue 4B: OAuth Account Switching Vulnerability
+
 **Location:** src/contexts/AuthContext.tsx:550-555
 
 ```typescript
@@ -205,12 +220,14 @@ if (account.authMethod === "oauth") {
 **Status:** Good practices observed
 
 **Positive Findings:**
+
 - Sensitive errors not exposed to users
 - Debug logging gated behind `debug.error()` utility
 - Password/token not logged in error messages
 - Proper error type discrimination (400, 401, 500, network)
 
 **Location Examples:**
+
 ```typescript
 // GOOD: Generic error, no sensitive data
 debug.error("Failed to initialize auth:", error);
@@ -250,16 +267,19 @@ const safetyTimeout = setTimeout(() => {
 **Status:** Well protected
 
 **CSRF Protection:**
+
 - SameSite=Strict on all session cookies (src/utils/cookies.ts:66)
 - No cross-origin cookie sharing
 - OAuth state parameter for CSRF (handled by library)
 
 **Session Hijacking Mitigations:**
+
 - Secure flag on HTTPS (src/utils/cookies.ts:72)
 - Short-lived access tokens (standard JWT practice)
 - Refresh token rotation (handled by BskyAgent)
 
 **Missing (OPTIONAL):**
+
 - HttpOnly flag (requires server-side Set-Cookie)
 - Device fingerprinting
 - IP address validation
@@ -271,11 +291,13 @@ const safetyTimeout = setTimeout(() => {
 ### Primary Causes
 
 #### 1. **Excessive Complexity** 🔴 CRITICAL
+
 - **Line Count:** 626 lines in a single file
 - **Multiple Responsibilities:** OAuth, app-password, multi-account, session management, service initialization
 - **Cognitive Load:** High - difficult to modify without side effects
 
 #### 2. **Dual Authentication Paths** ⚠️
+
 - OAuth flow (lines 165-296)
 - App-password flow (lines 298-380)
 - Duplicated logic for:
@@ -285,7 +307,9 @@ const safetyTimeout = setTimeout(() => {
   - Error handling
 
 #### 3. **Tight Coupling** ⚠️
+
 Services directly initialized in AuthContext:
+
 - bookmarkService
 - dmService
 - appPreferencesService
@@ -297,6 +321,7 @@ Services directly initialized in AuthContext:
 **Impact:** Changes to any service require AuthContext modifications
 
 #### 4. **Complex State Management** ⚠️
+
 ```typescript
 const [isAuthenticated, setIsAuthenticated] = useState(false);
 const [isLoading, setIsLoading] = useState(true);
@@ -309,6 +334,7 @@ const [isOAuthAvailable, setIsOAuthAvailable] = useState(false);
 6 interdependent state variables create complex state transitions
 
 #### 5. **Large useEffect with Multiple Paths** ⚠️
+
 - 245 lines (lines 148-394)
 - Multiple async operations
 - Nested error handling
@@ -351,6 +377,7 @@ const [isOAuthAvailable, setIsOAuthAvailable] = useState(false);
 ### Complexity-Induced Security Risks
 
 High code complexity increases risk of:
+
 - **Logic Bugs:** Complex auth flows → edge cases → bypasses
 - **Race Conditions:** Multiple async operations → timing attacks
 - **State Confusion:** 6 state variables → inconsistent auth state
@@ -363,6 +390,7 @@ High code complexity increases risk of:
 ### PRIORITY 1: IMMEDIATE (Security)
 
 #### R1.1: Validate PDS URLs 🔴 HIGH
+
 **File:** src/contexts/AuthContext.tsx:405
 **Impact:** Prevent credential theft via malicious PDS
 
@@ -372,18 +400,14 @@ function validatePDSUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     // Only allow HTTPS
-    if (parsed.protocol !== 'https:') return false;
+    if (parsed.protocol !== "https:") return false;
 
     // Allowlist official Bluesky domains
-    const allowedDomains = [
-      'bsky.social',
-      'bsky.app',
-      'blueskyweb.xyz'
-    ];
+    const allowedDomains = ["bsky.social", "bsky.app", "blueskyweb.xyz"];
 
-    return allowedDomains.some(domain =>
-      parsed.hostname === domain ||
-      parsed.hostname.endsWith(`.${domain}`)
+    return allowedDomains.some(
+      (domain) =>
+        parsed.hostname === domain || parsed.hostname.endsWith(`.${domain}`),
     );
   } catch {
     return false;
@@ -392,13 +416,16 @@ function validatePDSUrl(url: string): boolean {
 
 if (pdsUrl && pdsUrl !== "https://bsky.social") {
   if (!validatePDSUrl(pdsUrl)) {
-    throw new Error("Invalid PDS URL. Only official Bluesky servers are supported.");
+    throw new Error(
+      "Invalid PDS URL. Only official Bluesky servers are supported.",
+    );
   }
   atProtoClient.updateService(pdsUrl);
 }
 ```
 
 #### R1.2: Add User Notification for Silent Logouts 🟡 MEDIUM
+
 **File:** src/contexts/AuthContext.tsx:348
 **Impact:** Security transparency
 
@@ -414,9 +441,11 @@ if (status === 400) {
 ### PRIORITY 2: ARCHITECTURAL (Reduce Churn)
 
 #### R2.1: Extract Authentication Strategies 🔴 HIGH
+
 **Goal:** Separate OAuth and app-password flows
 
 **Proposed Structure:**
+
 ```
 src/contexts/auth/
   ├── AuthContext.tsx          (200 lines - orchestration only)
@@ -433,12 +462,14 @@ src/contexts/auth/
 ```
 
 **Benefits:**
+
 - Reduces main file to ~200 lines
 - Separates concerns
 - Easier testing
 - Lower churn rate (changes isolated to strategy files)
 
 #### R2.2: Implement Service Initialization Manager 🟡 MEDIUM
+
 **Goal:** Decouple service initialization from auth logic
 
 ```typescript
@@ -446,7 +477,7 @@ src/contexts/auth/
 export class ServiceInitializer {
   static async initializeForSession(
     agent: BskyAgent,
-    session: Session
+    session: Session,
   ): Promise<void> {
     await Promise.all([
       initializeBookmarkService(agent),
@@ -470,6 +501,7 @@ export class ServiceInitializer {
 ```
 
 **Current Code Duplication:**
+
 - Lines 265-268 (OAuth init)
 - Lines 316-319 (app-password init)
 - Lines 424-426 (login init)
@@ -477,30 +509,32 @@ export class ServiceInitializer {
 - Lines 563-565 (account switch init)
 
 #### R2.3: Reduce State Variables with State Machine 🟡 MEDIUM
+
 **Goal:** Eliminate inconsistent auth states
 
 ```typescript
 // Replace 6 state variables with 1 state machine
 type AuthState =
-  | { type: 'loading' }
-  | { type: 'unauthenticated' }
+  | { type: "loading" }
+  | { type: "unauthenticated" }
   | {
-      type: 'authenticated',
-      method: 'oauth',
-      session: Session,
-      agent: BskyAgent
+      type: "authenticated";
+      method: "oauth";
+      session: Session;
+      agent: BskyAgent;
     }
   | {
-      type: 'authenticated',
-      method: 'app-password',
-      session: Session,
-      agent: BskyAgent
+      type: "authenticated";
+      method: "app-password";
+      session: Session;
+      agent: BskyAgent;
     };
 
-const [authState, setAuthState] = useState<AuthState>({ type: 'loading' });
+const [authState, setAuthState] = useState<AuthState>({ type: "loading" });
 ```
 
 **Benefits:**
+
 - Impossible states become unrepresentable
 - Simpler state transitions
 - Better TypeScript type narrowing
@@ -508,6 +542,7 @@ const [authState, setAuthState] = useState<AuthState>({ type: 'loading' });
 ### PRIORITY 3: SECURITY HARDENING (Optional)
 
 #### R3.1: Encrypt Multi-Account Storage 🟢 LOW
+
 ```typescript
 // src/services/account-manager.ts
 import { encrypt, decrypt } from '../utils/crypto';
@@ -521,15 +556,19 @@ private static saveAccounts(accounts: StoredAccount[]): void {
 ```
 
 #### R3.2: Implement Content Security Policy 🟢 LOW
+
 ```html
 <!-- Add to index.html -->
-<meta http-equiv="Content-Security-Policy"
-      content="default-src 'self';
+<meta
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self';
                connect-src 'self' https://bsky.social https://*.bsky.app;
-               script-src 'self' 'unsafe-inline';">
+               script-src 'self' 'unsafe-inline';"
+/>
 ```
 
 #### R3.3: Add Rate Limiting for Login Attempts 🟢 LOW
+
 ```typescript
 // Prevent brute force attacks
 const loginAttempts = new Map<string, number>();
@@ -556,22 +595,26 @@ async login(identifier: string, password: string) {
 ## Refactoring Roadmap
 
 ### Phase 1: Immediate Security Fixes (1-2 hours)
+
 - [ ] Add PDS URL validation (R1.1)
 - [ ] Add session expiry notifications (R1.2)
 - [ ] Add rate limiting for login (R3.3)
 
 ### Phase 2: Code Extraction (4-6 hours)
+
 - [ ] Extract OAuthStrategy
 - [ ] Extract AppPasswordStrategy
 - [ ] Create ServiceInitializer
 - [ ] Update tests
 
 ### Phase 3: State Management (2-3 hours)
+
 - [ ] Implement state machine
 - [ ] Refactor component to use new state
 - [ ] Update dependent components
 
 ### Phase 4: Security Hardening (2-4 hours)
+
 - [ ] Implement account storage encryption
 - [ ] Add CSP headers
 - [ ] Security testing
@@ -585,29 +628,29 @@ async login(identifier: string, password: string) {
 ### Security Test Cases
 
 ```typescript
-describe('AuthContext Security', () => {
-  it('should reject invalid PDS URLs', async () => {
-    await expect(
-      login('user', 'pass', 'http://malicious.com')
-    ).rejects.toThrow('Invalid PDS URL');
+describe("AuthContext Security", () => {
+  it("should reject invalid PDS URLs", async () => {
+    await expect(login("user", "pass", "http://malicious.com")).rejects.toThrow(
+      "Invalid PDS URL",
+    );
   });
 
-  it('should not log passwords in errors', async () => {
-    const spy = jest.spyOn(console, 'error');
-    await expect(login('user', 'wrongpass')).rejects.toThrow();
-    expect(spy).not.toHaveBeenCalledWith(expect.stringContaining('wrongpass'));
+  it("should not log passwords in errors", async () => {
+    const spy = jest.spyOn(console, "error");
+    await expect(login("user", "wrongpass")).rejects.toThrow();
+    expect(spy).not.toHaveBeenCalledWith(expect.stringContaining("wrongpass"));
   });
 
-  it('should clear all session data on logout', async () => {
-    await login('user', 'pass');
+  it("should clear all session data on logout", async () => {
+    await login("user", "pass");
     await logout();
-    expect(localStorage.getItem('notifications_bsky_session')).toBeNull();
-    expect(getCookie('notifications_bsky_session')).toBeNull();
+    expect(localStorage.getItem("notifications_bsky_session")).toBeNull();
+    expect(getCookie("notifications_bsky_session")).toBeNull();
   });
 
-  it('should enforce SameSite=Strict on cookies', () => {
-    login('user', 'pass');
-    expect(document.cookie).toContain('SameSite=Strict');
+  it("should enforce SameSite=Strict on cookies", () => {
+    login("user", "pass");
+    expect(document.cookie).toContain("SameSite=Strict");
   });
 });
 ```
@@ -618,14 +661,14 @@ describe('AuthContext Security', () => {
 
 ### Security Standards Alignment
 
-| Standard | Status | Notes |
-|----------|--------|-------|
-| OWASP Top 10 2021 | ✅ Mostly Compliant | Missing: A07:2021 - Identification and Authentication Failures (PDS validation) |
-| OAuth 2.0 Best Practices | ✅ Compliant | Using official @atproto library |
-| PKCE for OAuth | ✅ Compliant | Handled by library |
-| Token Storage | ⚠️ Partial | No encryption for multi-account |
-| CSRF Protection | ✅ Compliant | SameSite=Strict |
-| XSS Protection | ✅ Compliant | React auto-escaping |
+| Standard                 | Status              | Notes                                                                           |
+| ------------------------ | ------------------- | ------------------------------------------------------------------------------- |
+| OWASP Top 10 2021        | ✅ Mostly Compliant | Missing: A07:2021 - Identification and Authentication Failures (PDS validation) |
+| OAuth 2.0 Best Practices | ✅ Compliant        | Using official @atproto library                                                 |
+| PKCE for OAuth           | ✅ Compliant        | Handled by library                                                              |
+| Token Storage            | ⚠️ Partial          | No encryption for multi-account                                                 |
+| CSRF Protection          | ✅ Compliant        | SameSite=Strict                                                                 |
+| XSS Protection           | ✅ Compliant        | React auto-escaping                                                             |
 
 ---
 
@@ -635,13 +678,17 @@ describe('AuthContext Security', () => {
 
 ```typescript
 // Track security events
-analytics.track('auth.login.success', { method: 'oauth' });
-analytics.track('auth.login.failed', { method: 'app-password', reason: 'invalid_credentials' });
-analytics.track('auth.session.expired', { method: 'oauth' });
-analytics.track('auth.pds.rejected', { url: sanitizedUrl });
+analytics.track("auth.login.success", { method: "oauth" });
+analytics.track("auth.login.failed", {
+  method: "app-password",
+  reason: "invalid_credentials",
+});
+analytics.track("auth.session.expired", { method: "oauth" });
+analytics.track("auth.pds.rejected", { url: sanitizedUrl });
 ```
 
 ### Alert on Suspicious Activity
+
 - Multiple failed login attempts from same user
 - Rejected PDS URLs
 - Frequent session expirations
@@ -656,17 +703,20 @@ analytics.track('auth.pds.rejected', { url: sanitizedUrl });
 The authentication system is **fundamentally secure** with industry-standard practices for OAuth and session management. However, the high code complexity (626 lines, 16 changes in 14 days) creates **maintenance risk** that could lead to security vulnerabilities.
 
 ### Critical Actions Required:
+
 1. ✅ **Add PDS URL validation** (HIGH priority - prevents credential theft)
 2. ⚠️ **Refactor to reduce complexity** (HIGH priority - prevents future vulnerabilities)
 3. ℹ️ **Add session expiry notifications** (MEDIUM priority - improves security UX)
 
 ### Expected Outcomes:
+
 - **Reduced churn:** From 16 changes/14 days to ~5 changes/14 days
 - **Lower attack surface:** Isolated auth strategies easier to audit
 - **Improved security:** PDS validation prevents credential theft
 - **Better maintainability:** Smaller files → fewer bugs
 
 ### Risk Summary:
+
 - **Current Risk:** MEDIUM (complex code + missing PDS validation)
 - **Risk After Fixes:** LOW (with R1.1 implemented)
 - **Risk After Refactoring:** VERY LOW (with R2.1-R2.3 implemented)
