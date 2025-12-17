@@ -1,31 +1,38 @@
-import React, {createContext, useContext, useState, useEffect, ReactNode} from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-interface AuthSession {
-  handle: string;
-  did: string;
-  accessJwt: string;
-  refreshJwt: string;
-}
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
+import {
+  signInWithPassword,
+  resumeSession,
+  signOut as authSignOut,
+  StoredSession,
+  AuthAccount,
+  getAccounts,
+} from '../services/auth/auth-service';
+import {getAtProtoClient} from '../services/atproto/client';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
-  session: AuthSession | null;
-  signIn: (session: AuthSession) => Promise<void>;
+  session: StoredSession | null;
+  account: AuthAccount | null;
+  signIn: (identifier: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const AUTH_STORAGE_KEY = '@shadowsky/auth_session';
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 export function AuthProvider({children}: AuthProviderProps) {
-  const [session, setSession] = useState<AuthSession | null>(null);
+  const [session, setSession] = useState<StoredSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load session from storage on mount
@@ -35,10 +42,9 @@ export function AuthProvider({children}: AuthProviderProps) {
 
   const loadSession = async () => {
     try {
-      const storedSession = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
-      if (storedSession) {
-        const parsed = JSON.parse(storedSession);
-        setSession(parsed);
+      const restoredSession = await resumeSession();
+      if (restoredSession) {
+        setSession(restoredSession);
       }
     } catch (error) {
       console.error('Failed to load auth session:', error);
@@ -47,22 +53,46 @@ export function AuthProvider({children}: AuthProviderProps) {
     }
   };
 
-  const signIn = async (newSession: AuthSession) => {
+  const signIn = async (identifier: string, password: string) => {
     try {
-      await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newSession));
+      setIsLoading(true);
+      const newSession = await signInWithPassword(identifier, password);
       setSession(newSession);
     } catch (error) {
-      console.error('Failed to save auth session:', error);
+      console.error('Failed to sign in:', error);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
-      await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+      await authSignOut();
       setSession(null);
     } catch (error) {
-      console.error('Failed to clear auth session:', error);
+      console.error('Failed to sign out:', error);
+      throw error;
+    }
+  };
+
+  const refreshSession = async () => {
+    try {
+      const client = getAtProtoClient();
+      const refreshedData = await client.refreshSession();
+
+      if (session) {
+        const updatedSession: StoredSession = {
+          ...session,
+          accessJwt: refreshedData.accessJwt,
+          refreshJwt: refreshedData.refreshJwt,
+        };
+        setSession(updatedSession);
+      }
+    } catch (error) {
+      console.error('Failed to refresh session:', error);
+      // If refresh fails, sign out
+      await signOut();
       throw error;
     }
   };
@@ -71,8 +101,10 @@ export function AuthProvider({children}: AuthProviderProps) {
     isAuthenticated: session !== null,
     isLoading,
     session,
+    account: session?.account ?? null,
     signIn,
     signOut,
+    refreshSession,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

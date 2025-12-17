@@ -12,7 +12,6 @@ import type {DrawerScreenProps} from '@react-navigation/drawer';
 export type RootStackParamList = {
   // Auth flow screens
   Landing: undefined;
-  OAuthCallback: {code?: string; state?: string; error?: string};
 
   // Main app entry (contains drawer + tabs)
   Main: NavigatorScreenParams<DrawerParamList>;

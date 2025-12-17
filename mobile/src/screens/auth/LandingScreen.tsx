@@ -1,35 +1,123 @@
-import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import {useAuth} from '../../contexts/AuthContext';
 import type {RootStackScreenProps} from '../../types/navigation';
 
 type Props = RootStackScreenProps<'Landing'>;
 
-export function LandingScreen({navigation}: Props) {
-  const handleLogin = () => {
-    // TODO: Implement OAuth flow
-    // For now, navigate to main after mock auth
-    navigation.replace('Main', {screen: 'Tabs'});
+export function LandingScreen({}: Props) {
+  const {signIn} = useAuth();
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!identifier.trim() || !password.trim()) {
+      Alert.alert('Error', 'Please enter both handle and app password');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await signIn(identifier.trim(), password);
+      // Navigation to Main screen happens automatically via RootNavigator
+      // when isAuthenticated becomes true
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert(
+        'Sign In Failed',
+        'Invalid credentials. Please check your handle and app password.',
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>ShadowSky</Text>
-        <Text style={styles.subtitle}>
-          A powerful Bluesky client with advanced features
-        </Text>
-      </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled">
+        <View style={styles.content}>
+          <Text style={styles.title}>ShadowSky</Text>
+          <Text style={styles.subtitle}>
+            A powerful Bluesky client with advanced features
+          </Text>
+        </View>
 
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>Sign in with Bluesky</Text>
-        </TouchableOpacity>
+        <View style={styles.formContainer}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Handle or Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="yourhandle.bsky.social"
+              placeholderTextColor="#6b7280"
+              value={identifier}
+              onChangeText={setIdentifier}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              editable={!isLoading}
+            />
+          </View>
 
-        <Text style={styles.disclaimer}>
-          By signing in, you agree to our Terms of Service and Privacy Policy
-        </Text>
-      </View>
-    </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>App Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="xxxx-xxxx-xxxx-xxxx"
+              placeholderTextColor="#6b7280"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!isLoading}
+            />
+            <Text style={styles.helpText}>
+              Use an app password, not your account password
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+            onPress={handleLogin}
+            disabled={isLoading}>
+            {isLoading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.loginButtonText}>Sign In</Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoText}>
+              Don't have an app password?{' '}
+              <Text style={styles.linkText}>
+                Create one in your Bluesky account settings
+              </Text>
+            </Text>
+          </View>
+
+          <Text style={styles.disclaimer}>
+            By signing in, you agree to our Terms of Service and Privacy Policy
+          </Text>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -37,14 +125,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0a0a0f',
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingVertical: 48,
   },
   content: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 48,
   },
   title: {
     fontSize: 48,
@@ -53,12 +143,37 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#9ca3af',
     textAlign: 'center',
+    paddingHorizontal: 20,
   },
-  actions: {
-    alignItems: 'center',
+  formContainer: {
+    width: '100%',
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  label: {
+    color: '#e5e7eb',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#1a1a24',
+    borderWidth: 1,
+    borderColor: '#374151',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: '#ffffff',
+  },
+  helpText: {
+    color: '#6b7280',
+    fontSize: 12,
+    marginTop: 6,
   },
   loginButton: {
     backgroundColor: '#3b82f6',
@@ -67,11 +182,28 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     width: '100%',
     alignItems: 'center',
-    marginBottom: 16,
+    marginTop: 8,
+    marginBottom: 20,
+  },
+  loginButtonDisabled: {
+    backgroundColor: '#1e3a8a',
   },
   loginButtonText: {
     color: '#ffffff',
     fontSize: 18,
+    fontWeight: '600',
+  },
+  infoContainer: {
+    marginBottom: 20,
+  },
+  infoText: {
+    color: '#9ca3af',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  linkText: {
+    color: '#3b82f6',
     fontWeight: '600',
   },
   disclaimer: {
