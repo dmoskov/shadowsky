@@ -78,8 +78,8 @@ sleep 10
 MAX_ATTEMPTS=30
 ATTEMPT=0
 while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-    # Get both status and commit ID of the latest job
-    JOB_INFO=$(aws amplify list-jobs --app-id "$AMPLIFY_APP_ID" --branch-name "$CURRENT_BRANCH" --max-items 1 --query "jobSummaries[0].[status,commitId]" --output text 2>/dev/null)
+    # Get status and commit ID of the latest job (filter out pagination "None")
+    JOB_INFO=$(aws amplify list-jobs --app-id "$AMPLIFY_APP_ID" --branch-name "$CURRENT_BRANCH" --max-items 1 --query "jobSummaries[0].[status,commitId]" --output text 2>/dev/null | head -1)
     STATUS=$(echo "$JOB_INFO" | awk '{print $1}')
     JOB_COMMIT=$(echo "$JOB_INFO" | awk '{print $2}')
 
