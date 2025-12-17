@@ -90,11 +90,22 @@ class MultiClientManager {
       return existingClient;
     }
 
+    // Validate session data before attempting to resume
+    const session = account.session as AtpSessionData;
+    if (!session?.accessJwt || !session?.refreshJwt) {
+      debug.error(
+        `[MultiClientManager] Invalid session data for ${account.handle}: missing tokens`,
+      );
+      const error = new Error("Invalid session: missing authentication tokens");
+      (error as Error & { status: number }).status = 400;
+      throw error;
+    }
+
     // Create new agent and resume session
     const agent = new BskyAgent({ service: "https://bsky.social" });
 
     try {
-      await agent.resumeSession(account.session as AtpSessionData);
+      await agent.resumeSession(session);
 
       const managedClient: ManagedClient = {
         agent,
@@ -113,6 +124,15 @@ class MultiClientManager {
         `[MultiClientManager] Failed to resume session for ${account.handle}:`,
         error,
       );
+      // Ensure error has status for proper handling upstream
+      const err = error as Error & { status?: number; statusCode?: number };
+      if (!err.status && err.statusCode) {
+        err.status = err.statusCode;
+      }
+      // Default to 400 for session resume failures
+      if (!err.status) {
+        err.status = 400;
+      }
       throw error;
     }
   }
