@@ -153,7 +153,7 @@ class MultiClientManager {
           `[MultiClientManager] Switched to existing client for ${existingClient.handle}`,
         );
         return existingClient;
-      } catch (error) {
+      } catch (_error) {
         debug.log(
           `[MultiClientManager] Existing client session invalid, will try to resume`,
         );
