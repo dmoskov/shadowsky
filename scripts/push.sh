@@ -113,12 +113,11 @@ fi
 
 # Invalidate CloudFront cache
 echo "🌐 Invalidating CloudFront cache ($CLOUDFRONT_DISTRIBUTION_ID)..."
-if INVALIDATION_OUTPUT=$(aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*" 2>&1); then
-    INVALIDATION_ID=$(echo "$INVALIDATION_OUTPUT" | grep -o '"Id": "[^"]*"' | cut -d'"' -f4)
+if INVALIDATION_ID=$(aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*" --query "Invalidation.Id" --output text 2>&1); then
     echo "✅ CloudFront cache invalidation started (ID: $INVALIDATION_ID)"
 else
     echo "❌ CloudFront invalidation failed:"
-    echo "   $INVALIDATION_OUTPUT"
+    echo "   $INVALIDATION_ID"
     exit 1
 fi
 
