@@ -43,7 +43,7 @@
     "@types/dompurify": "3.0.5",
     "@types/node": "^24.2.1",
     "@types/react-window": "^1.8.8",
-    "aws-amplify": "^6.15.7",
+    "aws-amplify": "^6.15.9",
     "date-fns": "^3.0.0",
     "dexie": "^4.2.1",
     "dompurify": "3.3.0",
@@ -60,7 +60,7 @@
     "workbox-window": "^7.4.0"
   },
   "devDependencies": {
-    "@aws-amplify/backend-cli": "^1.8.0",
+    "@aws-amplify/backend-cli": "^1.8.1",
     "@axe-core/playwright": "^4.11.0",
     "@eslint/js": "^9.32.0",
     "@lhci/cli": "^0.15.1",
