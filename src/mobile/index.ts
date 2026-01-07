@@ -31,16 +31,27 @@
  */
 
 // Components
-export { FeedList, PostCard } from "./components";
+export {
+  FeedList,
+  FeedView,
+  PostCard,
+  PostDetailView,
+  ProfileView,
+} from "./components";
 
 // Types
 export { FEED_CONSTANTS } from "./types";
 export type {
+  FeedDescriptor,
   FeedListProps,
+  FeedType,
+  FeedViewProps,
   MobilePostData,
   PostActionBarProps,
   PostCardProps,
+  PostDetailViewProps,
   PostImage,
+  ProfileViewProps,
 } from "./types";
 
 // Hooks

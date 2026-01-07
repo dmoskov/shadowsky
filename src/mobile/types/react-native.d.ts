@@ -213,6 +213,13 @@ declare module "react-native" {
     testID?: string;
     accessibilityRole?: string;
     accessibilityLabel?: string;
+    accessibilityState?: {
+      disabled?: boolean;
+      selected?: boolean;
+      checked?: boolean | "mixed";
+      busy?: boolean;
+      expanded?: boolean;
+    };
     android_ripple?: {
       color?: string;
       borderless?: boolean;
@@ -221,6 +228,27 @@ declare module "react-native" {
   }
 
   export const Pressable: ComponentType<PressableProps>;
+
+  // ScrollView Component
+  export interface ScrollViewProps {
+    children?: ReactNode;
+    style?: ViewStyle | ViewStyle[];
+    contentContainerStyle?: ViewStyle | ViewStyle[];
+    horizontal?: boolean;
+    showsHorizontalScrollIndicator?: boolean;
+    showsVerticalScrollIndicator?: boolean;
+    scrollEnabled?: boolean;
+    pagingEnabled?: boolean;
+    bounces?: boolean;
+    scrollEventThrottle?: number;
+    onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+    refreshControl?: ReactNode;
+    testID?: string;
+    accessibilityRole?: string;
+    accessibilityLabel?: string;
+  }
+
+  export const ScrollView: ComponentType<ScrollViewProps>;
 
   // FlatList Component
   export interface ListRenderItemInfo<T> {

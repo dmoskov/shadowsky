@@ -7,4 +7,7 @@
  */
 
 export { FeedList } from "./FeedList";
+export { FeedView } from "./FeedView";
 export { PostCard } from "./PostCard";
+export { PostDetailView } from "./PostDetailView";
+export { ProfileView } from "./ProfileView";

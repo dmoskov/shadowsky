@@ -5,7 +5,7 @@
  * data structures while being optimized for mobile rendering.
  */
 
-import type { AppBskyFeedDefs } from "@atproto/api";
+import type { AppBskyActorDefs, AppBskyFeedDefs } from "@atproto/api";
 
 /**
  * Post data structure for mobile rendering
@@ -56,6 +56,94 @@ export interface FeedListProps {
   ListEmptyComponent?: React.ReactElement;
   ListHeaderComponent?: React.ReactElement;
   ListFooterComponent?: React.ReactElement;
+}
+
+/**
+ * Props for PostDetailView component
+ */
+export interface PostDetailViewProps {
+  post: AppBskyFeedDefs.PostView;
+  replies?: MobilePostData[];
+  parentPosts?: AppBskyFeedDefs.PostView[];
+  onLike?: () => void;
+  onRepost?: () => void;
+  onReply?: () => void;
+  onQuote?: () => void;
+  onBookmark?: () => void;
+  onAuthorPress?: (handle: string) => void;
+  onQuotePress?: (uri: string) => void;
+  onReplyPress?: (post: AppBskyFeedDefs.PostView) => void;
+  onParentPress?: (post: AppBskyFeedDefs.PostView) => void;
+  onLoadMoreReplies?: () => void;
+  hasMoreReplies?: boolean;
+  isLoadingReplies?: boolean;
+  onBack?: () => void;
+}
+
+/**
+ * Props for ProfileView component
+ */
+export interface ProfileViewProps {
+  profile: AppBskyActorDefs.ProfileViewDetailed;
+  posts: MobilePostData[];
+  onPostPress: (uri: string) => void;
+  onLike?: (uri: string) => void;
+  onRepost?: (uri: string) => void;
+  onReply?: (uri: string) => void;
+  onQuote?: (uri: string) => void;
+  onBookmark?: (uri: string) => void;
+  onFollow?: () => void;
+  onUnfollow?: () => void;
+  onMessage?: () => void;
+  onLoadMore?: () => void;
+  onRefresh?: () => void;
+  hasMore?: boolean;
+  isLoading?: boolean;
+  isRefreshing?: boolean;
+  onBack?: () => void;
+}
+
+/**
+ * Feed type options for FeedView
+ */
+export type FeedType =
+  | "timeline"
+  | "following"
+  | "discover"
+  | "custom"
+  | string;
+
+/**
+ * Feed descriptor for custom feeds
+ */
+export interface FeedDescriptor {
+  uri: string;
+  displayName: string;
+  description?: string;
+}
+
+/**
+ * Props for FeedView component
+ */
+export interface FeedViewProps {
+  activeFeed: FeedType;
+  availableFeeds?: FeedDescriptor[];
+  posts: MobilePostData[];
+  onFeedChange?: (feedType: FeedType) => void;
+  onPostPress: (post: AppBskyFeedDefs.PostView) => void;
+  onLike?: (post: AppBskyFeedDefs.PostView) => void;
+  onRepost?: (post: AppBskyFeedDefs.PostView) => void;
+  onReply?: (post: AppBskyFeedDefs.PostView) => void;
+  onQuote?: (post: AppBskyFeedDefs.PostView) => void;
+  onBookmark?: (post: AppBskyFeedDefs.PostView) => void;
+  onAuthorPress?: (handle: string) => void;
+  onQuotePress?: (uri: string) => void;
+  onLoadMore?: () => void;
+  onRefresh?: () => void;
+  hasMore?: boolean;
+  isLoading?: boolean;
+  isRefreshing?: boolean;
+  showFeedSelector?: boolean;
 }
 
 /**
