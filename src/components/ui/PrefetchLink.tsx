@@ -15,8 +15,10 @@ import { useRoutePrefetch } from "../../hooks/useRoutePrefetch";
 // Hover intent delay (150ms is optimal for detecting intentional hovers)
 const HOVER_INTENT_DELAY_MS = 150;
 
-export interface PrefetchLinkProps
-  extends Omit<NavLinkProps, "to" | "onMouseEnter" | "onMouseLeave"> {
+export interface PrefetchLinkProps extends Omit<
+  NavLinkProps,
+  "to" | "onMouseEnter" | "onMouseLeave"
+> {
   /** The route path to navigate to */
   to: string;
   /** Optional profile handle to prefetch (for profile links) */
@@ -167,8 +169,10 @@ export const PrefetchLink = memo(PrefetchLinkComponent);
  * Simple prefetch link for basic navigation (no profile/thread prefetching).
  * Use this for navigation menu items.
  */
-export interface SimplePrefetchLinkProps
-  extends Omit<NavLinkProps, "to" | "onMouseEnter" | "onMouseLeave"> {
+export interface SimplePrefetchLinkProps extends Omit<
+  NavLinkProps,
+  "to" | "onMouseEnter" | "onMouseLeave"
+> {
   to: string;
   disablePrefetch?: boolean;
 }

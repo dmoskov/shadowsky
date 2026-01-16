@@ -95,9 +95,8 @@ export const DataSettings: React.FC = () => {
             setMissingRecords((prev) => ({ ...prev, columns: false }));
 
             // Check local storage for comparison
-            const { ColumnLocalStorageBackend } = await import(
-              "../../services/storage/column-local-storage-backend"
-            );
+            const { ColumnLocalStorageBackend } =
+              await import("../../services/storage/column-local-storage-backend");
             const localBackend = new ColumnLocalStorageBackend();
             const localColumns = await localBackend.loadColumns();
             setLocalColumnCount(localColumns.length);
@@ -136,9 +135,8 @@ export const DataSettings: React.FC = () => {
 
     try {
       // Load columns from local storage
-      const { ColumnLocalStorageBackend } = await import(
-        "../../services/storage/column-local-storage-backend"
-      );
+      const { ColumnLocalStorageBackend } =
+        await import("../../services/storage/column-local-storage-backend");
       const localBackend = new ColumnLocalStorageBackend();
       const localColumns = await localBackend.loadColumns();
 

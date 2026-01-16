@@ -353,9 +353,8 @@ describe("OAuthService", () => {
 
     it("should return cached promise on concurrent init calls", async () => {
       // Track how many times the OAuth client load is called
-      const { BrowserOAuthClient } = await import(
-        "@atproto/oauth-client-browser"
-      );
+      const { BrowserOAuthClient } =
+        await import("@atproto/oauth-client-browser");
       const loadSpy = vi.mocked(BrowserOAuthClient.load);
       loadSpy.mockClear();
 
@@ -384,9 +383,8 @@ describe("OAuthService", () => {
     });
 
     it("should return null when client metadata is not available", async () => {
-      const { BrowserOAuthClient } = await import(
-        "@atproto/oauth-client-browser"
-      );
+      const { BrowserOAuthClient } =
+        await import("@atproto/oauth-client-browser");
       vi.mocked(BrowserOAuthClient.load).mockRejectedValueOnce(
         new Error("Client metadata not found"),
       );
@@ -528,9 +526,8 @@ describe("OAuthService", () => {
       // @ts-expect-error - accessing private property for testing
       oauthService.initPromise = null;
 
-      const { BrowserOAuthClient } = await import(
-        "@atproto/oauth-client-browser"
-      );
+      const { BrowserOAuthClient } =
+        await import("@atproto/oauth-client-browser");
       vi.mocked(BrowserOAuthClient.load).mockRejectedValueOnce(
         new Error("Client metadata not found"),
       );
@@ -589,9 +586,8 @@ describe("OAuthService", () => {
       // @ts-expect-error - accessing private property for testing
       oauthService.initPromise = null;
 
-      const { BrowserOAuthClient } = await import(
-        "@atproto/oauth-client-browser"
-      );
+      const { BrowserOAuthClient } =
+        await import("@atproto/oauth-client-browser");
       vi.mocked(BrowserOAuthClient.load).mockRejectedValueOnce(
         new Error("Client metadata not found"),
       );

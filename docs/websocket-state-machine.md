@@ -987,7 +987,7 @@ export function initializeWebSocketService(config): WebSocketService {
 | `disconnect():145`                  | Any → DISCONNECTED                       |
 | `scheduleReconnect():632`           | Any → RECONNECTING                       |
 | `handlePongTimeout():773`           | CONNECTED → RECONNECTING                 |
-| `updateDegradedState():754`         | CONNECTED ↔ DEGRADED                    |
+| `updateDegradedState():754`         | CONNECTED ↔ DEGRADED                     |
 
 ### Configuration Constants (websocket.config.ts)
 
