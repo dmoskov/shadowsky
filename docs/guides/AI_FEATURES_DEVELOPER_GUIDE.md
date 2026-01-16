@@ -1,6 +1,7 @@
 # AI Features Developer Guide
 
 ## Document Information
+
 - **Created**: 2025-12-27
 - **Asana Task**: https://app.asana.com/0/1211710875848660/1212598914422287
 - **Audience**: Developers working with AI features
@@ -36,26 +37,28 @@ First, implement the backend endpoint that calls Anthropic's API.
 async function expandText(text: string): Promise<{ expandedText: string }> {
   const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': anthropicApiKey,
-      'anthropic-version': '2023-06-01'
+      "Content-Type": "application/json",
+      "x-api-key": anthropicApiKey,
+      "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-3-5-20241022',
+      model: "claude-sonnet-3-5-20241022",
       max_tokens: 1024,
-      messages: [{
-        role: 'user',
-        content: `Expand this text with more details while keeping the same meaning:\n\n${text}`
-      }]
-    })
+      messages: [
+        {
+          role: "user",
+          content: `Expand this text with more details while keeping the same meaning:\n\n${text}`,
+        },
+      ],
+    }),
   });
 
   const data = await response.json();
   return {
-    expandedText: data.content[0].text
+    expandedText: data.content[0].text,
   };
 }
 
@@ -84,9 +87,9 @@ export async function expandText(text: string): Promise<TextExpansionResult> {
     const response = await fetchWithRetry(
       `${apiBaseUrl}/api/expand-text`,
       {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           ...getApiAuthHeaders(),
         },
         body: JSON.stringify({ text }),
@@ -100,16 +103,16 @@ export async function expandText(text: string): Promise<TextExpansionResult> {
       originalText: text,
     };
   } catch (error) {
-    logger.error('Error expanding text:', error);
+    logger.error("Error expanding text:", error);
 
     // Consistent error handling pattern
-    if (error instanceof Error && error.message.includes('401')) {
-      throw new Error('Text expansion failed: Invalid API key');
-    } else if (error instanceof Error && error.message.includes('429')) {
-      throw new Error('Text expansion failed: Rate limit exceeded');
+    if (error instanceof Error && error.message.includes("401")) {
+      throw new Error("Text expansion failed: Invalid API key");
+    } else if (error instanceof Error && error.message.includes("429")) {
+      throw new Error("Text expansion failed: Rate limit exceeded");
     } else {
       throw new Error(
-        `Text expansion failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Text expansion failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
@@ -123,7 +126,7 @@ Add types to `src/components/composer/types.ts`:
 ```typescript
 // src/components/composer/types.ts
 
-import type { TextExpansionResult } from '../../services/anthropic';
+import type { TextExpansionResult } from "../../services/anthropic";
 
 export type { TextExpansionResult };
 
@@ -175,24 +178,23 @@ Add handlers in `src/components/composer/useComposerState.ts`:
 const handleExpandText = useCallback(async () => {
   if (!state.text.trim()) return;
 
-  setState(prev => ({ ...prev, isExpandingText: true }));
+  setState((prev) => ({ ...prev, isExpandingText: true }));
 
   try {
     const result = await expandText(state.text);
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       textExpansionResult: result,
       showTextExpansion: true,
       isExpandingText: false,
     }));
   } catch (error) {
-    logger.error('Failed to expand text:', error);
-    setState(prev => ({ ...prev, isExpandingText: false }));
+    logger.error("Failed to expand text:", error);
+    setState((prev) => ({ ...prev, isExpandingText: false }));
 
     // Show error to user
-    const errorMessage = error instanceof Error
-      ? error.message
-      : 'Failed to expand text';
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to expand text";
     // Display error toast/notification
   }
 }, [state.text]);
@@ -255,16 +257,16 @@ export const TextExpansionPreview: React.FC<TextExpansionPreviewProps> = ({
 ### Tone Adjustment
 
 ```typescript
-import { adjustTone } from '../../services/anthropic';
+import { adjustTone } from "../../services/anthropic";
 
 // In your component
 const handleAdjustTone = async () => {
   try {
-    const result = await adjustTone(text, 'professional');
-    console.log('Adjusted text:', result.adjustedText);
+    const result = await adjustTone(text, "professional");
+    console.log("Adjusted text:", result.adjustedText);
     // Update your state with result.adjustedText
   } catch (error) {
-    console.error('Tone adjustment failed:', error);
+    console.error("Tone adjustment failed:", error);
     // Handle error
   }
 };
@@ -273,7 +275,7 @@ const handleAdjustTone = async () => {
 ### Alt Text Generation
 
 ```typescript
-import { generateAltText } from '../../services/anthropic';
+import { generateAltText } from "../../services/anthropic";
 
 // When user uploads an image
 const handleImageUpload = async (file: File) => {
@@ -281,7 +283,7 @@ const handleImageUpload = async (file: File) => {
 
   // Add to media immediately
   const imageId = generateId();
-  addMedia({ id: imageId, file, preview, alt: '', type: 'image' });
+  addMedia({ id: imageId, file, preview, alt: "", type: "image" });
 
   // Generate alt text if enabled
   if (autoGenerateAltText) {
@@ -289,7 +291,7 @@ const handleImageUpload = async (file: File) => {
       const altText = await generateAltText(preview);
       updateMediaAlt(imageId, altText);
     } catch (error) {
-      console.error('Alt text generation failed:', error);
+      console.error("Alt text generation failed:", error);
       // User can still add alt text manually
     }
   }
@@ -299,21 +301,21 @@ const handleImageUpload = async (file: File) => {
 ### Writing Feedback
 
 ```typescript
-import { getStyleMatchedWritingFeedback } from '../../services/anthropic';
+import { getStyleMatchedWritingFeedback } from "../../services/anthropic";
 
 // Requires BskyAgent instance
 const handleGetFeedback = async (agent: BskyAgent) => {
   try {
     const feedback = await getStyleMatchedWritingFeedback(text, agent);
 
-    console.log('Assessment:', feedback.assessment.summary);
-    console.log('Corrected:', feedback.correctedVersion.text);
-    console.log('Enhanced:', feedback.enhancedVersion.text);
-    console.log('Style Match:', feedback.styleAnalysis.matchesStyle);
+    console.log("Assessment:", feedback.assessment.summary);
+    console.log("Corrected:", feedback.correctedVersion.text);
+    console.log("Enhanced:", feedback.enhancedVersion.text);
+    console.log("Style Match:", feedback.styleAnalysis.matchesStyle);
 
     // Display in UI
   } catch (error) {
-    console.error('Feedback failed:', error);
+    console.error("Feedback failed:", error);
   }
 };
 ```
@@ -321,20 +323,20 @@ const handleGetFeedback = async (agent: BskyAgent) => {
 ### Thread Optimization
 
 ```typescript
-import { optimizeThread } from '../../services/anthropic';
+import { optimizeThread } from "../../services/anthropic";
 
 const handleOptimizeThread = async () => {
   try {
     const result = await optimizeThread(longText, 300);
 
-    console.log('Split into', result.totalPosts, 'posts');
-    console.log('Suggested format:', result.suggestedFormat);
+    console.log("Split into", result.totalPosts, "posts");
+    console.log("Suggested format:", result.suggestedFormat);
 
     // Apply segments to posts
-    const posts = result.segments.map(seg => seg.text);
+    const posts = result.segments.map((seg) => seg.text);
     setPosts(posts);
   } catch (error) {
-    console.error('Thread optimization failed:', error);
+    console.error("Thread optimization failed:", error);
   }
 };
 ```
@@ -348,7 +350,7 @@ const handleOptimizeThread = async () => {
 ```typescript
 async function callAIFeature<T>(
   apiCall: () => Promise<T>,
-  featureName: string
+  featureName: string,
 ): Promise<T | null> {
   try {
     return await apiCall();
@@ -358,12 +360,12 @@ async function callAIFeature<T>(
     let userMessage = `${featureName} is temporarily unavailable.`;
 
     if (error instanceof Error) {
-      if (error.message.includes('401')) {
-        userMessage = 'AI service authentication failed.';
-      } else if (error.message.includes('429')) {
-        userMessage = 'Too many requests. Please wait a moment.';
-      } else if (error.message.includes('timeout')) {
-        userMessage = 'Request timed out. Please try again.';
+      if (error.message.includes("401")) {
+        userMessage = "AI service authentication failed.";
+      } else if (error.message.includes("429")) {
+        userMessage = "Too many requests. Please wait a moment.";
+      } else if (error.message.includes("timeout")) {
+        userMessage = "Request timed out. Please try again.";
       }
     }
 
@@ -376,8 +378,8 @@ async function callAIFeature<T>(
 
 // Usage
 const result = await callAIFeature(
-  () => adjustTone(text, 'professional'),
-  'Tone adjustment'
+  () => adjustTone(text, "professional"),
+  "Tone adjustment",
 );
 
 if (result) {
@@ -398,11 +400,10 @@ const handleAIFeature = async () => {
     const result = await someAIFunction();
     setResult(result);
   } catch (error) {
-    const errorMessage = error instanceof Error
-      ? error.message
-      : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     setError(errorMessage);
-    logger.error('AI feature failed:', error);
+    logger.error("AI feature failed:", error);
   } finally {
     setIsLoading(false);
   }
@@ -417,7 +418,7 @@ The retry logic is built into `fetchWithRetry`, but you can add additional retri
 async function callWithRetry<T>(
   fn: () => Promise<T>,
   maxRetries = 2,
-  delay = 1000
+  delay = 1000,
 ): Promise<T> {
   let lastError: Error | null = null;
 
@@ -428,13 +429,13 @@ async function callWithRetry<T>(
       lastError = error as Error;
 
       // Don't retry on auth errors
-      if (error instanceof Error && error.message.includes('401')) {
+      if (error instanceof Error && error.message.includes("401")) {
         throw error;
       }
 
       // Wait before retry
       if (i < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+        await new Promise((resolve) => setTimeout(resolve, delay * (i + 1)));
       }
     }
   }
@@ -455,26 +456,26 @@ Create a mock for testing:
 // src/services/__mocks__/anthropic.ts
 
 export const adjustTone = jest.fn().mockResolvedValue({
-  adjustedText: 'Mocked adjusted text',
-  originalText: 'Original text',
-  tone: 'professional',
+  adjustedText: "Mocked adjusted text",
+  originalText: "Original text",
+  tone: "professional",
 });
 
-export const generateAltText = jest.fn().mockResolvedValue(
-  'A mocked alt text description'
-);
+export const generateAltText = jest
+  .fn()
+  .mockResolvedValue("A mocked alt text description");
 
 export const getWritingFeedback = jest.fn().mockResolvedValue({
   assessment: {
-    summary: 'Mocked assessment',
+    summary: "Mocked assessment",
     hasIssues: false,
   },
   correctedVersion: {
-    text: 'Mocked corrected text',
+    text: "Mocked corrected text",
     changes: [],
   },
   enhancedVersion: {
-    text: 'Mocked enhanced text',
+    text: "Mocked enhanced text",
     improvements: [],
   },
 });
@@ -543,14 +544,14 @@ describe('AI Features', () => {
 
 ```typescript
 // Test with real backend (in dev environment)
-describe('AI Integration Tests', () => {
-  it('generates alt text for image', async () => {
+describe("AI Integration Tests", () => {
+  it("generates alt text for image", async () => {
     // Skip if no backend available
     if (!process.env.TEST_WITH_BACKEND) {
       return;
     }
 
-    const testImage = 'data:image/png;base64,...';
+    const testImage = "data:image/png;base64,...";
     const altText = await generateAltText(testImage);
 
     expect(altText).toBeTruthy();
@@ -595,7 +596,7 @@ const handleAIAction = async () => {
     const result = await aiFunction({ signal: abortController.signal });
     setResult(result);
   } catch (error) {
-    if (error.name === 'AbortError') {
+    if (error.name === "AbortError") {
       // User cancelled, no error message needed
       return;
     }
@@ -614,19 +615,19 @@ const handleCancel = () => {
 // ✅ Good - show preview, let user decide
 const handleAdjustTone = async () => {
   const result = await adjustTone(text, tone);
-  setPreview(result.adjustedText);  // Don't overwrite immediately
+  setPreview(result.adjustedText); // Don't overwrite immediately
   setShowPreview(true);
 };
 
 const handleApplyPreview = () => {
-  setText(preview);  // User explicitly accepts
+  setText(preview); // User explicitly accepts
   setShowPreview(false);
 };
 
 // ❌ Bad - overwrites without confirmation
 const handleAdjustTone = async () => {
   const result = await adjustTone(text, tone);
-  setText(result.adjustedText);  // Lost original!
+  setText(result.adjustedText); // Lost original!
 };
 ```
 
@@ -679,14 +680,14 @@ const Composer = () => {
 ```typescript
 // ✅ Good - helpful logging
 const handleAIFeature = async () => {
-  logger.log('AI feature started', { textLength: text.length });
+  logger.log("AI feature started", { textLength: text.length });
 
   try {
     const result = await aiFunction();
-    logger.log('AI feature completed', { resultLength: result.length });
+    logger.log("AI feature completed", { resultLength: result.length });
     return result;
   } catch (error) {
-    logger.error('AI feature failed', { error, text: text.substring(0, 50) });
+    logger.error("AI feature failed", { error, text: text.substring(0, 50) });
     throw error;
   }
 };
@@ -700,17 +701,17 @@ const handleAIFeature = async () => {
 
 ```typescript
 // ❌ NEVER DO THIS
-const ANTHROPIC_API_KEY = 'sk-ant-...';  // Exposed to client!
+const ANTHROPIC_API_KEY = "sk-ant-..."; // Exposed to client!
 
-fetch('https://api.anthropic.com/v1/messages', {
+fetch("https://api.anthropic.com/v1/messages", {
   headers: {
-    'x-api-key': ANTHROPIC_API_KEY,  // Visible in browser!
+    "x-api-key": ANTHROPIC_API_KEY, // Visible in browser!
   },
 });
 
 // ✅ Always use backend proxy
-const result = await fetch('/api/ai-feature', {
-  headers: getApiAuthHeaders(),  // Custom auth for backend
+const result = await fetch("/api/ai-feature", {
+  headers: getApiAuthHeaders(), // Custom auth for backend
 });
 ```
 
@@ -733,13 +734,13 @@ const result = await fetchWithRetry(
 ```typescript
 // ❌ Bad - spam API
 images.forEach(async (image) => {
-  await generateAltText(image);  // Too many simultaneous requests!
+  await generateAltText(image); // Too many simultaneous requests!
 });
 
 // ✅ Good - sequential or batched
 for (const image of images) {
   await generateAltText(image);
-  await delay(500);  // Respect rate limits
+  await delay(500); // Respect rate limits
 }
 ```
 
@@ -751,10 +752,10 @@ const result = await adjustTone(text, tone);
 
 // ✅ Good - validate first
 if (!text.trim()) {
-  throw new Error('Text cannot be empty');
+  throw new Error("Text cannot be empty");
 }
 if (text.length > 10000) {
-  throw new Error('Text too long (max 10,000 chars)');
+  throw new Error("Text too long (max 10,000 chars)");
 }
 const result = await adjustTone(text, tone);
 ```
@@ -764,14 +765,14 @@ const result = await adjustTone(text, tone);
 ```typescript
 // ❌ Bad - blocks UI thread
 const handleAIFeature = async () => {
-  showModal('Processing...');
-  const result = await aiFunction();  // User can't interact!
+  showModal("Processing...");
+  const result = await aiFunction(); // User can't interact!
   hideModal();
 };
 
 // ✅ Good - non-blocking with cancel option
 const handleAIFeature = async () => {
-  setIsProcessing(true);  // Show loading state, UI still responsive
+  setIsProcessing(true); // Show loading state, UI still responsive
   try {
     const result = await aiFunction();
     // ...
@@ -790,11 +791,12 @@ const handleAIFeature = async () => {
 ```typescript
 // For auto-suggestions like hashtags
 const debouncedSuggestHashtags = useMemo(
-  () => debounce(async (text: string) => {
-    const suggestions = await suggestHashtags(text);
-    setHashtagSuggestions(suggestions);
-  }, 1000),  // Wait 1s after user stops typing
-  []
+  () =>
+    debounce(async (text: string) => {
+      const suggestions = await suggestHashtags(text);
+      setHashtagSuggestions(suggestions);
+    }, 1000), // Wait 1s after user stops typing
+  [],
 );
 
 useEffect(() => {
@@ -822,7 +824,7 @@ const handleAIFeature = async () => {
     const result = await aiFunction({ signal: currentRequest.signal });
     setResult(result);
   } catch (error) {
-    if (error.name !== 'AbortError') {
+    if (error.name !== "AbortError") {
       handleError(error);
     }
   }

@@ -1,6 +1,7 @@
 # AI Writing Assistant Integration Architecture
 
 ## Document Information
+
 - **Created**: 2025-12-27
 - **Asana Task**: https://app.asana.com/0/1211710875848660/1212598914422287
 - **Status**: Active Implementation
@@ -117,6 +118,7 @@ After evaluating the three options from the parent task, the system implements *
 ### 1. Client Layer Components
 
 #### A. Anthropic Service (`src/services/anthropic.ts`)
+
 - **Purpose**: Client-side interface to backend AI services
 - **Responsibilities**:
   - Call backend AI endpoints
@@ -134,6 +136,7 @@ After evaluating the three options from the parent task, the system implements *
   - `generateThreadSummary()`: Summarize long threads
 
 #### B. Composer Components
+
 - **ComposerToolbar** (`src/components/composer/ComposerToolbar.tsx`)
   - Renders AI feature buttons (tone adjustment, feedback)
   - Implements progressive disclosure (primary/standard/advanced levels)
@@ -150,6 +153,7 @@ After evaluating the three options from the parent task, the system implements *
   - Persists AI settings to user preferences
 
 #### C. Configuration Module (`src/config/amplify.ts`)
+
 - **Purpose**: Environment-aware API configuration
 - **Responsibilities**:
   - Determine API base URL based on environment
@@ -160,6 +164,7 @@ After evaluating the three options from the parent task, the system implements *
 ### 2. Network Layer
 
 #### Retry Logic (`src/utils/retry.ts`)
+
 - **Features**:
   - Exponential backoff for transient failures
   - Configurable retry attempts and timeouts
@@ -167,12 +172,14 @@ After evaluating the three options from the parent task, the system implements *
   - Blob URL to Data URL conversion for image processing
 
 #### API Authentication (`src/utils/api-auth.ts`)
+
 - **Purpose**: Add authentication headers to backend requests
 - **Headers**: Custom auth tokens for backend validation
 
 ### 3. Backend Service Layer
 
 #### API Gateway
+
 - **Development**: Express server on localhost:3002, proxied by Vite
 - **Production**: AWS API Gateway + Lambda Functions
 - **Features**:
@@ -182,6 +189,7 @@ After evaluating the three options from the parent task, the system implements *
   - Error handling
 
 #### Authentication Middleware
+
 - **Purpose**: Validate client requests before forwarding to Anthropic
 - **Checks**:
   - Verify API authentication headers
@@ -190,6 +198,7 @@ After evaluating the three options from the parent task, the system implements *
   - Log requests for monitoring
 
 #### Anthropic Integration Layer
+
 - **Purpose**: Secure interface to Anthropic's API
 - **Responsibilities**:
   - Store API keys securely (environment variables, AWS Secrets Manager)
@@ -266,6 +275,7 @@ After evaluating the three options from the parent task, the system implements *
 ### Security Architecture
 
 #### 1. API Key Management
+
 ```
 ┌────────────────────────────────────────────────────────┐
 │                   Security Layers                       │
@@ -299,6 +309,7 @@ After evaluating the three options from the parent task, the system implements *
 ```
 
 #### 2. Authentication Flow
+
 1. **Client → Backend**:
    - Custom authentication headers (`getApiAuthHeaders()`)
    - Could be JWT tokens, session cookies, or API keys for authenticated users
@@ -310,6 +321,7 @@ After evaluating the three options from the parent task, the system implements *
    - Key never exposed to client
 
 #### 3. Data Privacy
+
 - **In Transit**: All communication over HTTPS/TLS
 - **At Rest**: API keys in secure storage (AWS Secrets Manager in production)
 - **Processing**: User content sent to Anthropic for processing
@@ -318,6 +330,7 @@ After evaluating the three options from the parent task, the system implements *
   - Future: Add user consent/warning for private accounts
 
 #### 4. Rate Limiting
+
 - **Client-side**: Debouncing and request throttling
 - **Backend**: Rate limits per IP/user to prevent abuse
 - **Anthropic**: Respects API rate limits, handles 429 errors gracefully
@@ -330,14 +343,14 @@ After evaluating the three options from the parent task, the system implements *
 
 #### 1. Error Types and Handling
 
-| Error Type | Status Code | Client Handling | User Message |
-|------------|-------------|-----------------|--------------|
-| Invalid API Key | 401 | Retry not helpful | "AI service authentication failed" |
-| Rate Limited | 429 | Exponential backoff | "Too many requests, please wait" |
-| Timeout | 408/Timeout | Retry with backoff | "Request timed out, please try again" |
-| Server Error | 500 | Retry with backoff | "AI service temporarily unavailable" |
-| Network Error | N/A | Retry with backoff | "Network error, check connection" |
-| Invalid Input | 400 | Don't retry | "Invalid input, please check your text" |
+| Error Type      | Status Code | Client Handling     | User Message                            |
+| --------------- | ----------- | ------------------- | --------------------------------------- |
+| Invalid API Key | 401         | Retry not helpful   | "AI service authentication failed"      |
+| Rate Limited    | 429         | Exponential backoff | "Too many requests, please wait"        |
+| Timeout         | 408/Timeout | Retry with backoff  | "Request timed out, please try again"   |
+| Server Error    | 500         | Retry with backoff  | "AI service temporarily unavailable"    |
+| Network Error   | N/A         | Retry with backoff  | "Network error, check connection"       |
+| Invalid Input   | 400         | Don't retry         | "Invalid input, please check your text" |
 
 #### 2. Retry Logic Implementation
 
@@ -345,18 +358,18 @@ After evaluating the three options from the parent task, the system implements *
 // From src/utils/retry.ts
 const API_RETRY_OPTIONS = {
   maxRetries: 3,
-  initialDelay: 1000,    // 1 second
-  maxDelay: 5000,        // 5 seconds
-  backoffFactor: 2,      // Exponential backoff
-  timeout: 60000         // 60 seconds
+  initialDelay: 1000, // 1 second
+  maxDelay: 5000, // 5 seconds
+  backoffFactor: 2, // Exponential backoff
+  timeout: 60000, // 60 seconds
 };
 
 const ALT_TEXT_RETRY_OPTIONS = {
   maxRetries: 3,
-  initialDelay: 2000,    // 2 seconds
-  maxDelay: 10000,       // 10 seconds
+  initialDelay: 2000, // 2 seconds
+  maxDelay: 10000, // 10 seconds
   backoffFactor: 2,
-  timeout: 90000         // 90 seconds (image processing)
+  timeout: 90000, // 90 seconds (image processing)
 };
 ```
 
@@ -395,6 +408,7 @@ try {
 **Location**: `src/components/composer/ComposerToolbar.tsx`
 
 **AI Feature Buttons**:
+
 - **Tone Adjustment** (Wand icon): Opens tone selection panel
   - Displayed at "standard" disclosure level or higher
   - Shows active state when tone is selected
@@ -406,6 +420,7 @@ try {
   - Shows loading state during analysis
 
 **Progressive Disclosure**:
+
 - **Primary Level**: Core features (media, emoji, thread split)
 - **Standard Level**: + Tone adjustment
 - **Advanced Level**: + Writing feedback
@@ -418,6 +433,7 @@ try {
 **Panels**:
 
 #### A. Tone Adjustment Panel
+
 - **Trigger**: Click tone adjustment button
 - **UI Elements**:
   - 5 tone options (Professional, Casual, Humorous, Informative, Inspirational)
@@ -430,6 +446,7 @@ try {
   - `isAdjustingTone`: Loading state
 
 #### B. Writing Feedback Panel
+
 - **Trigger**: Click feedback button
 - **UI Elements**:
   - Assessment summary (overall quality)
@@ -444,6 +461,7 @@ try {
   - `showWritingFeedback`: Panel visibility
 
 #### C. Hashtag Suggestions Panel
+
 - **Trigger**: Automatic or manual request
 - **UI Elements**:
   - List of suggested hashtags
@@ -456,6 +474,7 @@ try {
   - `enableHashtagSuggestions`: User preference
 
 #### D. Thread Optimization Panel
+
 - **Trigger**: Manual request or automatic detection of long text
 - **UI Elements**:
   - Preview of split posts
@@ -471,6 +490,7 @@ try {
 **Location**: `src/components/composer/ComposerMediaUpload.tsx`
 
 **AI Feature**: Alt Text Generation
+
 - **Trigger**:
   - Automatic: When `autoGenerateAltText` preference is enabled
   - Manual: "Generate Alt Text" button on each image
@@ -488,6 +508,7 @@ try {
 **Location**: `src/components/composer/ComposerSettings.tsx`
 
 **AI Preferences**:
+
 - **Auto-generate Alt Text**: Toggle for automatic alt text generation
 - **Hashtag Suggestions**: Enable/disable hashtag suggestions
 - These preferences are saved to user preferences service
@@ -495,11 +516,13 @@ try {
 ### 5. Status Indicators
 
 **Loading States**:
+
 - Button shows spinner/loading indicator
 - Disabled state prevents multiple concurrent requests
 - Status messages: "Adjusting tone...", "Analyzing writing...", "Generating alt text..."
 
 **Error States**:
+
 - Toast notifications for errors
 - Error messages below buttons
 - Retry options where appropriate
@@ -520,19 +543,25 @@ try {
 **Purpose**: Adjust text tone using AI
 
 **Request**:
+
 ```typescript
 {
-  text: string;      // Original text
-  tone: "professional" | "casual" | "humorous" | "informative" | "inspirational";
+  text: string; // Original text
+  tone: "professional" |
+    "casual" |
+    "humorous" |
+    "informative" |
+    "inspirational";
 }
 ```
 
 **Response**:
+
 ```typescript
 {
-  adjustedText: string;   // Text with adjusted tone
-  originalText: string;   // Original for comparison
-  tone: string;          // Applied tone
+  adjustedText: string; // Text with adjusted tone
+  originalText: string; // Original for comparison
+  tone: string; // Applied tone
 }
 ```
 
@@ -545,14 +574,16 @@ try {
 **Purpose**: Split long text into optimal thread posts
 
 **Request**:
+
 ```typescript
 {
-  text: string;              // Long text to split
-  maxCharsPerPost: number;   // Default: 300
+  text: string; // Long text to split
+  maxCharsPerPost: number; // Default: 300
 }
 ```
 
 **Response**:
+
 ```typescript
 {
   segments: Array<{
@@ -573,6 +604,7 @@ try {
 **Purpose**: Generate relevant hashtag suggestions
 
 **Request**:
+
 ```typescript
 {
   text: string;              // Post text
@@ -581,6 +613,7 @@ try {
 ```
 
 **Response**:
+
 ```typescript
 {
   hashtags: Array<{
@@ -599,13 +632,15 @@ try {
 **Purpose**: Get AI feedback on writing quality
 
 **Request**:
+
 ```typescript
 {
-  text: string;  // Post text to analyze
+  text: string; // Post text to analyze
 }
 ```
 
 **Response**:
+
 ```typescript
 {
   assessment: {
@@ -630,6 +665,7 @@ try {
 **Purpose**: Analyze if text matches user's writing style
 
 **Request**:
+
 ```typescript
 {
   currentText: string;        // Text to analyze
@@ -638,6 +674,7 @@ try {
 ```
 
 **Response**:
+
 ```typescript
 {
   userStyleSummary: string;
@@ -653,20 +690,23 @@ try {
 **Purpose**: Generate image alt text for accessibility
 
 **Request**:
+
 ```typescript
 {
-  imageUrl: string;  // Data URL (base64) or blob URL
+  imageUrl: string; // Data URL (base64) or blob URL
 }
 ```
 
 **Response**:
+
 ```typescript
 {
-  altText: string;  // Generated description (up to 500 chars)
+  altText: string; // Generated description (up to 500 chars)
 }
 ```
 
 **Notes**:
+
 - Longer timeout (90s) due to image processing
 - Blob URLs converted to data URLs client-side before sending
 
@@ -677,6 +717,7 @@ try {
 **Purpose**: Analyze user's posting patterns and engagement
 
 **Request**:
+
 ```typescript
 {
   posts: Array<{
@@ -686,11 +727,12 @@ try {
     reposts: number;
     replies: number;
   }>;
-  analysisType: "haiku" | "sonnet";  // Model size
+  analysisType: "haiku" | "sonnet"; // Model size
 }
 ```
 
 **Response**:
+
 ```typescript
 {
   contentThemes: Array<{
@@ -728,6 +770,7 @@ try {
 **Purpose**: Generate summary of long threads
 
 **Request**:
+
 ```typescript
 {
   posts: Array<{
@@ -741,11 +784,19 @@ try {
     parentUri?: string;
     depth?: number;
   }>;
-  format: "haiku" | "tldr" | "keypoints" | "extended" | "brief" | "moderate" | "detailed" | "comprehensive";
+  format: "haiku" |
+    "tldr" |
+    "keypoints" |
+    "extended" |
+    "brief" |
+    "moderate" |
+    "detailed" |
+    "comprehensive";
 }
 ```
 
 **Response**:
+
 ```typescript
 {
   summary: string;
@@ -767,6 +818,7 @@ try {
 ```
 
 **Query Parameters**:
+
 - `?forceRefresh=true`: Bypass cache, regenerate summary
 
 ---
@@ -776,13 +828,15 @@ try {
 **Purpose**: Fetch Open Graph metadata for links
 
 **Request**:
+
 ```typescript
 {
-  url: string;  // URL to fetch metadata for
+  url: string; // URL to fetch metadata for
 }
 ```
 
 **Response**:
+
 ```typescript
 {
   url: string;
@@ -801,18 +855,21 @@ try {
 ### 1. Optimization Strategies
 
 #### Client-Side Optimizations
+
 - **Debouncing**: Hashtag suggestions debounced to avoid excessive API calls
 - **Caching**: Thread summaries cached locally to avoid regeneration
 - **Lazy Loading**: AI features loaded progressively based on disclosure level
 - **Request Cancellation**: Ability to cancel in-flight requests when user changes input
 
 #### Backend Optimizations
+
 - **Response Caching**: Identical requests cached for short duration (e.g., thread summaries)
 - **Connection Pooling**: Reuse HTTP connections to Anthropic
 - **Payload Compression**: Gzip compression for large payloads
 - **CDN**: Static assets served via CDN
 
 #### Network Optimizations
+
 - **Retry Logic**: Smart retry with exponential backoff
 - **Timeout Configuration**: Different timeouts for different operations
 - **Compression**: Request/response compression
@@ -820,6 +877,7 @@ try {
 ### 2. Performance Metrics
 
 **Target Latencies**:
+
 - Tone Adjustment: < 5 seconds
 - Writing Feedback: < 8 seconds
 - Alt Text Generation: < 10 seconds
@@ -829,6 +887,7 @@ try {
 - Thread Summary (uncached): < 10 seconds
 
 **Monitoring**:
+
 - Track API response times
 - Monitor error rates per endpoint
 - Track cache hit/miss rates
@@ -850,6 +909,7 @@ try {
 ### 1. Hybrid Approach (Option C from Parent Task)
 
 **User Choice Between Local and Cloud**:
+
 - Add setting: "AI Processing Location"
   - **Cloud (Recommended)**: Current implementation
   - **Local (Private)**: WebLLM or ONNX models in browser
@@ -900,16 +960,19 @@ try {
 ### A. Technology Stack
 
 **Client**:
+
 - React 18 + TypeScript
 - Vite (build tool)
 - Fetch API with retry logic
 
 **Backend**:
+
 - Development: Express.js
 - Production: AWS Lambda + API Gateway
 - Anthropic Claude API (Sonnet 3.5/4)
 
 **Infrastructure**:
+
 - AWS Amplify (deployment)
 - AWS Secrets Manager (API key storage)
 - AWS CloudWatch (monitoring)
@@ -917,6 +980,7 @@ try {
 ### B. Code References
 
 **Key Files**:
+
 - Service Layer: `src/services/anthropic.ts:1-664`
 - Composer UI: `src/components/composer/ComposerToolbar.tsx:1-350`
 - AI Features: `src/components/composer/ComposerAIFeatures.tsx:1-xxx`
@@ -945,15 +1009,16 @@ try {
 
 ## Revision History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-12-27 | Claude Code | Initial architecture document |
+| Version | Date       | Author      | Changes                       |
+| ------- | ---------- | ----------- | ----------------------------- |
+| 1.0     | 2025-12-27 | Claude Code | Initial architecture document |
 
 ---
 
 ## Contact & Feedback
 
 For questions or feedback about this architecture:
+
 - Review this document in code reviews
 - Update as implementation evolves
 - Link from Asana tasks requiring AI integration context

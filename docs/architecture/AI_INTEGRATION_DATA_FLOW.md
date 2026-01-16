@@ -1,6 +1,7 @@
 # AI Writing Assistant - Data Flow Diagrams
 
 ## Document Information
+
 - **Created**: 2025-12-27
 - **Asana Task**: https://app.asana.com/0/1211710875848660/1212598914422287
 - **Related**: AI_WRITING_ASSISTANT_INTEGRATION.md
@@ -555,6 +556,7 @@ flowchart TD
 ### Diagram Rendering
 
 These diagrams use Mermaid syntax and can be rendered in:
+
 - GitHub (natively supports Mermaid)
 - GitLab (natively supports Mermaid)
 - VS Code (with Mermaid preview extension)
