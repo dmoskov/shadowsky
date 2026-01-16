@@ -17,6 +17,7 @@ This implementation plan addresses the integration options for AI writing assist
 **Current Implementation**: ✅ **Already partially implemented** with Anthropic API
 
 **Advantages**:
+
 - **Quality**: State-of-the-art language models (Claude 3.5, GPT-4)
 - **Existing Infrastructure**: Backend API server already configured (`server/api-server.js`)
 - **Zero Client Overhead**: No bundle size increase or browser compute requirements
@@ -25,6 +26,7 @@ This implementation plan addresses the integration options for AI writing assist
 - **Feature Velocity**: Rapid iteration without client-side deployment
 
 **Challenges**:
+
 - **API Key Management**: Requires secure backend storage (already solved)
 - **Cost**: Per-request API costs ($0.25-$3 per 1M tokens)
 - **Privacy Concerns**: Post content sent to third-party (mitigated: user choice)
@@ -37,11 +39,13 @@ This implementation plan addresses the integration options for AI writing assist
 ### Option B: Local Model (WebLLM/ONNX)
 
 **Advantages**:
+
 - **Privacy**: All processing on-device, no data leaves browser
 - **Zero Marginal Cost**: No per-request API charges
 - **Offline Capability**: Works without internet connection
 
 **Challenges**:
+
 - **Quality Gap**: Significantly lower quality than cloud models
   - Local models (1-3B parameters) vs. cloud models (175B+ parameters)
   - Noticeable difference in writing coherence and suggestions
@@ -60,11 +64,13 @@ This implementation plan addresses the integration options for AI writing assist
 ### Option C: Hybrid with User Choice
 
 **Advantages**:
+
 - **User Empowerment**: Users control privacy/quality trade-off
 - **Flexibility**: Best of both worlds for different use cases
 - **Progressive Enhancement**: Start with cloud, add local later
 
 **Challenges**:
+
 - **Dual Implementation**: Two complete code paths to maintain
 - **Testing Complexity**: 2x testing surface area
 - **UX Complexity**: Configuration burden on users
@@ -87,6 +93,7 @@ This implementation plan addresses the integration options for AI writing assist
 ### Migration Path to Hybrid (Future)
 
 Once cloud API implementation is proven:
+
 1. Add local model as opt-in feature for privacy-conscious users
 2. Implement feature flag system for gradual rollout
 3. Provide clear privacy/quality trade-off messaging in settings
@@ -100,11 +107,14 @@ Once cloud API implementation is proven:
 **Goal**: Establish robust cloud API foundation with complete Anthropic integration
 
 #### 1.1 Backend API Enhancement
+
 **Files to Modify**:
+
 - `server/api-server.js` - API endpoint orchestration
 - `src/config/amplify.ts` - Configuration management
 
 **Tasks**:
+
 - ✅ **Already Complete**: Basic API endpoints for tone adjustment, thread optimization
 - **Extend API Coverage**:
   - Add writing quality assessment endpoint
@@ -117,37 +127,48 @@ Once cloud API implementation is proven:
 - **Monitoring**: API usage tracking and cost monitoring dashboard
 
 #### 1.2 Frontend Service Layer
+
 **Files to Modify**:
+
 - `src/services/anthropic.ts` - Core AI service
 
 **Tasks**:
+
 - ✅ **Already Complete**: `adjustTone()`, `optimizeThread()`, `suggestHashtags()`
 - **New Functions**:
+
   ```typescript
   // Grammar and spelling correction
-  async function correctWriting(text: string): Promise<CorrectionResult>
+  async function correctWriting(text: string): Promise<CorrectionResult>;
 
   // Content enhancement suggestions
-  async function enhanceContent(text: string, style?: UserStyle): Promise<EnhancementResult>
+  async function enhanceContent(
+    text: string,
+    style?: UserStyle,
+  ): Promise<EnhancementResult>;
 
   // Context-aware reply suggestions
   async function suggestReply(
     parentPost: PostView,
-    userContext: UserProfile
-  ): Promise<ReplySuggestion[]>
+    userContext: UserProfile,
+  ): Promise<ReplySuggestion[]>;
 
   // Writing quality assessment
-  async function assessQuality(text: string): Promise<QualityAssessment>
+  async function assessQuality(text: string): Promise<QualityAssessment>;
   ```
+
 - **Streaming Support**: Implement streaming responses for longer content
 - **Request Batching**: Batch multiple small requests to reduce latency
 - **Offline Queue**: Queue requests when offline, process when online
 
 #### 1.3 Type System & Contracts
+
 **Files to Create**:
+
 - `src/types/ai-services.ts` - Comprehensive type definitions
 
 **Tasks**:
+
 - Define strict TypeScript interfaces for all AI operations
 - Create discriminated union types for different AI response types
 - Implement Zod schemas for runtime validation of API responses
@@ -160,12 +181,15 @@ Once cloud API implementation is proven:
 **Goal**: Integrate AI capabilities seamlessly into composer workflow
 
 #### 2.1 Enhanced Composer UI
+
 **Files to Modify**:
+
 - `src/components/composer/ComposerAIFeatures.tsx` - AI feature UI
 - `src/components/composer/ComposerToolbar.tsx` - Toolbar controls
 - `src/components/EnhancedComposer.tsx` - Main composer component
 
 **Tasks**:
+
 - ✅ **Already Complete**: Tone adjustment modal, thread preview, writing feedback modal
 - **New UI Components**:
   - **Smart Suggestions Panel**: Context-aware writing suggestions
@@ -180,11 +204,14 @@ Once cloud API implementation is proven:
 - **Progressive Disclosure**: Hide advanced features behind "Show more" to avoid overwhelming users
 
 #### 2.2 Context-Aware Suggestions
+
 **Files to Modify**:
+
 - `src/components/Composer.tsx`
 - `src/components/InlineReplyComposer.tsx`
 
 **Tasks**:
+
 - **Reply Context Integration**:
   - Analyze parent post sentiment and topic
   - Suggest relevant reply tones and approaches
@@ -199,11 +226,14 @@ Once cloud API implementation is proven:
   - Graceful degradation on errors
 
 #### 2.3 Settings & Configuration
+
 **Files to Modify**:
+
 - `src/components/settings/ComposerSettings.tsx`
 - `src/services/app-preferences-service.ts`
 
 **Tasks**:
+
 - **AI Preferences Panel**:
   - Toggle AI features on/off globally
   - Toggle individual features (tone, grammar, suggestions)
@@ -223,11 +253,14 @@ Once cloud API implementation is proven:
 **Goal**: Implement sophisticated AI-powered writing intelligence
 
 #### 3.1 Smart Compose Features
+
 **New Files**:
+
 - `src/services/ai-composer-intelligence.ts`
 - `src/hooks/useAIWritingAssistant.ts`
 
 **Tasks**:
+
 - **Autocomplete Suggestions**:
   - Context-aware sentence completion
   - Smart next-word predictions based on post context
@@ -242,11 +275,14 @@ Once cloud API implementation is proven:
   - "Add examples" - relevant example generation
 
 #### 3.2 Thread Intelligence
+
 **Files to Modify**:
+
 - `src/components/ThreadComposer.tsx`
 - `src/components/ThreadPlannerComposer.tsx`
 
 **Tasks**:
+
 - **Thread Structure Analysis**:
   - Analyze thread coherence and flow
   - Suggest reordering for better narrative
@@ -261,11 +297,14 @@ Once cloud API implementation is proven:
   - Estimate engagement potential
 
 #### 3.3 Quality & Safety
+
 **Files to Create**:
+
 - `src/services/content-quality-service.ts`
 - `src/utils/content-safety.ts`
 
 **Tasks**:
+
 - **Quality Checks**:
   - Readability score (Flesch-Kincaid, etc.)
   - Sentiment analysis (avoid unintentional negative tone)
@@ -287,11 +326,14 @@ Once cloud API implementation is proven:
 **Goal**: Refine performance, cost efficiency, and user experience
 
 #### 4.1 Performance Optimization
+
 **Files to Modify**:
+
 - `src/services/anthropic.ts`
 - `src/utils/retry.ts`
 
 **Tasks**:
+
 - **Response Streaming**:
   - Implement streaming for long-form content generation
   - Show partial results as they arrive (reduces perceived latency)
@@ -307,10 +349,13 @@ Once cloud API implementation is proven:
   - Tree-shake unused AI features
 
 #### 4.2 Cost Optimization
+
 **Files to Create**:
+
 - `src/services/ai-cost-optimizer.ts`
 
 **Tasks**:
+
 - **Smart Caching**:
   - Cache tone adjustments for common phrases
   - Cache hashtag suggestions for similar topics
@@ -325,10 +370,13 @@ Once cloud API implementation is proven:
   - Implement soft rate limits per user
 
 #### 4.3 UX Refinement
+
 **Files to Modify**:
+
 - `src/components/composer/ComposerAIFeatures.tsx`
 
 **Tasks**:
+
 - **Loading States**:
   - Skeleton screens for AI suggestions
   - Progress indicators for long operations
@@ -353,18 +401,21 @@ Once cloud API implementation is proven:
 ### Development Team Skills
 
 #### Backend Development
+
 - **Node.js/Express**: For API server enhancements
 - **API Integration**: Experience with OpenAI/Anthropic SDKs
 - **Security**: API key management, rate limiting, abuse prevention
 - **Cloud Infrastructure**: AWS/GCP for API hosting and monitoring
 
 #### Frontend Development
+
 - **React/TypeScript**: Advanced component architecture
 - **State Management**: Complex async state handling
 - **Performance Optimization**: Code splitting, lazy loading, memoization
 - **Accessibility**: WCAG 2.1 AA compliance for AI features
 
 #### AI/ML Understanding
+
 - **Prompt Engineering**: Crafting effective prompts for quality results
 - **API Cost Modeling**: Understanding token economics
 - **Error Handling**: Dealing with non-deterministic AI outputs
@@ -373,12 +424,14 @@ Once cloud API implementation is proven:
 ### Tools & Infrastructure
 
 #### Development Tools
+
 - **Existing Stack**: ✅ React, TypeScript, Vite, Vitest
 - **API Testing**: Postman/Insomnia for endpoint testing
 - **Monitoring**: Sentry for error tracking, Amplitude/Mixpanel for analytics
 - **Feature Flags**: LaunchDarkly or custom feature flag system
 
 #### AI Services
+
 - **Primary**: Anthropic Claude API (already integrated)
   - Recommended model: Claude 3.5 Sonnet (balance of quality/cost)
   - Fallback: Claude 3 Haiku (faster/cheaper for simple tasks)
@@ -386,12 +439,14 @@ Once cloud API implementation is proven:
 - **API Management**: Rate limiting, request queuing, cost tracking
 
 #### Testing Infrastructure
+
 - **Unit Tests**: Vitest (already configured)
 - **Integration Tests**: Playwright (already configured)
 - **AI Mocking**: Mock API responses for deterministic testing
 - **Load Testing**: Simulate concurrent AI requests
 
 #### Cost Management
+
 - **Initial Budget**: Estimate $100-500/month for moderate usage
   - Assumption: 1000 active users, 10 AI requests/user/day
   - Cost: ~$0.01-0.05 per request = $100-500/month
@@ -406,11 +461,13 @@ Once cloud API implementation is proven:
 **Coverage Goals**: >80% for AI service layer
 
 **Test Files to Create/Enhance**:
+
 - `src/services/anthropic.test.ts`
 - `src/components/composer/ComposerAIFeatures.test.tsx`
 - `src/hooks/useAIWritingAssistant.test.ts`
 
 **Test Categories**:
+
 1. **Service Layer Tests**:
    - Mock API responses for all functions
    - Test error handling and retry logic
@@ -431,18 +488,21 @@ Once cloud API implementation is proven:
 ### 4.2 Quality Assurance
 
 **AI Output Quality**:
+
 - **Manual Review**: Sample AI outputs weekly for quality
 - **User Feedback**: In-app feedback mechanism for AI suggestions
 - **A/B Testing**: Compare different prompts and models
 - **Regression Testing**: Maintain test corpus of inputs/expected outputs
 
 **Performance Benchmarks**:
+
 - Response time: <2 seconds for 90% of requests
 - Error rate: <1% under normal conditions
 - Cache hit rate: >40% for repeated requests
 - Bundle size increase: <50KB after tree-shaking
 
 **Security Testing**:
+
 - **Prompt Injection**: Test resistance to malicious inputs
 - **API Key Leakage**: Ensure keys never sent to client
 - **Rate Limit Bypass**: Verify rate limiting cannot be circumvented
@@ -451,12 +511,14 @@ Once cloud API implementation is proven:
 ### 4.3 User Acceptance Testing
 
 **Beta Testing Program**:
+
 1. **Phase 1**: Internal team testing (10-20 users, 2 weeks)
 2. **Phase 2**: Private beta with power users (100 users, 4 weeks)
 3. **Phase 3**: Public beta with feature flag (1000 users, 4 weeks)
 4. **Phase 4**: General availability with monitoring
 
 **Feedback Mechanisms**:
+
 - In-app feedback button on AI suggestions
 - User satisfaction survey after AI feature use
 - Analytics tracking: acceptance rate, edit rate, retention
@@ -471,25 +533,28 @@ Once cloud API implementation is proven:
 **Implementation**: Use existing or add lightweight feature flag system
 
 **Flag Structure**:
+
 ```typescript
 interface AIFeatureFlags {
-  ai_writing_assistant: boolean;           // Master toggle
-  ai_tone_adjustment: boolean;             // Individual features
+  ai_writing_assistant: boolean; // Master toggle
+  ai_tone_adjustment: boolean; // Individual features
   ai_thread_optimization: boolean;
   ai_grammar_check: boolean;
   ai_smart_suggestions: boolean;
-  ai_style_learning: boolean;              // Privacy-sensitive
-  ai_streaming_responses: boolean;         // Performance feature
+  ai_style_learning: boolean; // Privacy-sensitive
+  ai_streaming_responses: boolean; // Performance feature
 }
 ```
 
 **Rollout Strategy**:
+
 - **Week 1-2**: 5% of users (Early adopters, monitor closely)
 - **Week 3-4**: 25% of users (Expand if stable)
 - **Week 5-6**: 50% of users (Validate at scale)
 - **Week 7+**: 100% of users (Full rollout)
 
 **Rollback Triggers**:
+
 - Error rate >2%
 - Response time p95 >5 seconds
 - User satisfaction <70%
@@ -524,6 +589,7 @@ interface AIFeatureFlags {
    - Client-side error rate
 
 **Alerting Thresholds**:
+
 - **Critical**: API error rate >5%, response time p95 >10s
 - **Warning**: API error rate >2%, response time p95 >5s, cost >120% estimate
 - **Info**: Cache hit rate <30%, suggestion acceptance <40%
@@ -531,6 +597,7 @@ interface AIFeatureFlags {
 ### 5.3 Deployment Process
 
 **CI/CD Pipeline**:
+
 1. **Build & Test**: Run full test suite, lint, type-check
 2. **Staging Deployment**: Deploy to staging environment with production data copy
 3. **Smoke Tests**: Run automated E2E tests on staging
@@ -541,6 +608,7 @@ interface AIFeatureFlags {
 8. **Iterate**: Fix issues, deploy patches, continue rollout
 
 **Rollback Plan**:
+
 - **Immediate**: Feature flag toggle (disable in <1 minute)
 - **Quick**: Revert deployment (redeploy previous version in <10 minutes)
 - **Full**: Code revert and redeploy (30-60 minutes)
@@ -551,30 +619,30 @@ interface AIFeatureFlags {
 
 ### Technical Risks
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| **API Rate Limits** | Medium | High | Implement client-side rate limiting, request queuing, graceful degradation |
-| **API Cost Overrun** | Medium | High | Per-user quotas, caching, monitoring alerts, smaller models for simple tasks |
-| **API Downtime** | Low | Medium | Retry logic, fallback messaging, offline queuing |
-| **Performance Degradation** | Medium | Medium | Lazy loading, code splitting, streaming responses, performance budgets |
-| **Security Vulnerability** | Low | High | API key rotation, rate limiting, input validation, security audits |
+| Risk                        | Likelihood | Impact | Mitigation                                                                   |
+| --------------------------- | ---------- | ------ | ---------------------------------------------------------------------------- |
+| **API Rate Limits**         | Medium     | High   | Implement client-side rate limiting, request queuing, graceful degradation   |
+| **API Cost Overrun**        | Medium     | High   | Per-user quotas, caching, monitoring alerts, smaller models for simple tasks |
+| **API Downtime**            | Low        | Medium | Retry logic, fallback messaging, offline queuing                             |
+| **Performance Degradation** | Medium     | Medium | Lazy loading, code splitting, streaming responses, performance budgets       |
+| **Security Vulnerability**  | Low        | High   | API key rotation, rate limiting, input validation, security audits           |
 
 ### Product Risks
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| **Poor AI Quality** | Medium | High | A/B test prompts, user feedback mechanism, manual quality review |
-| **Low Adoption** | Medium | Medium | Onboarding tutorial, clear value proposition, contextual tooltips |
-| **User Privacy Concerns** | Medium | High | Clear privacy policy, opt-in style learning, transparency about data sent to AI |
-| **Over-reliance on AI** | Low | Medium | Educate users on AI limitations, maintain human control, avoid auto-posting |
+| Risk                      | Likelihood | Impact | Mitigation                                                                      |
+| ------------------------- | ---------- | ------ | ------------------------------------------------------------------------------- |
+| **Poor AI Quality**       | Medium     | High   | A/B test prompts, user feedback mechanism, manual quality review                |
+| **Low Adoption**          | Medium     | Medium | Onboarding tutorial, clear value proposition, contextual tooltips               |
+| **User Privacy Concerns** | Medium     | High   | Clear privacy policy, opt-in style learning, transparency about data sent to AI |
+| **Over-reliance on AI**   | Low        | Medium | Educate users on AI limitations, maintain human control, avoid auto-posting     |
 
 ### Business Risks
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| **Unsustainable Costs** | Medium | High | Usage analytics, per-user limits, optimize prompts, consider tiered features |
-| **Competitive Disadvantage** | Low | Medium | Monitor competitor AI features, iterate based on user feedback |
-| **Regulatory Compliance** | Low | High | GDPR compliance for EU users, clear data handling policies, user consent |
+| Risk                         | Likelihood | Impact | Mitigation                                                                   |
+| ---------------------------- | ---------- | ------ | ---------------------------------------------------------------------------- |
+| **Unsustainable Costs**      | Medium     | High   | Usage analytics, per-user limits, optimize prompts, consider tiered features |
+| **Competitive Disadvantage** | Low        | Medium | Monitor competitor AI features, iterate based on user feedback               |
+| **Regulatory Compliance**    | Low        | High   | GDPR compliance for EU users, clear data handling policies, user consent     |
 
 ---
 
@@ -583,29 +651,34 @@ interface AIFeatureFlags {
 ### Key Performance Indicators (KPIs)
 
 #### Adoption Metrics
+
 - **Target**: 40% of active users try AI features within first month
 - **Target**: 20% of active users become regular AI feature users (5+ uses/week)
 - **Measurement**: Analytics tracking of AI feature usage
 
 #### Quality Metrics
+
 - **Target**: 60% suggestion acceptance rate (users apply AI suggestions)
 - **Target**: 80% user satisfaction score (post-use survey)
 - **Target**: 15% reduction in spelling/grammar errors in posts
 - **Measurement**: Track suggestion acceptance, survey data, content analysis
 
 #### Engagement Metrics
+
 - **Target**: 10% increase in post creation rate for AI feature users
 - **Target**: 15% increase in average post length (more thoughtful content)
 - **Target**: 5% increase in engagement (likes, replies) on AI-assisted posts
 - **Measurement**: Compare AI users vs. control group
 
 #### Technical Metrics
+
 - **Target**: 95% API availability
 - **Target**: <2 second response time for 90% of requests
 - **Target**: <1% error rate
 - **Measurement**: Monitoring dashboards, Sentry error tracking
 
 #### Business Metrics
+
 - **Target**: API cost per active user <$0.50/month
 - **Target**: User retention increase of 5% for AI feature users
 - **Target**: Net Promoter Score (NPS) increase of 5 points
@@ -614,12 +687,14 @@ interface AIFeatureFlags {
 ### Validation Protocol
 
 **Phase Gates**:
+
 1. **Phase 1 Complete**: Backend API passes load testing, <2s response time
 2. **Phase 2 Complete**: Composer integration passes UAT, >70% satisfaction
 3. **Phase 3 Complete**: Advanced features have >30% adoption among active AI users
 4. **Phase 4 Complete**: Performance targets met, cost within budget
 
 **Go/No-Go Criteria for Full Rollout**:
+
 - ✅ API stability: >99% uptime over 4-week beta
 - ✅ User satisfaction: >75% positive feedback
 - ✅ Adoption: >30% of beta users try features
@@ -634,30 +709,35 @@ interface AIFeatureFlags {
 **Note**: Timelines provided as development phases, not fixed durations. Actual timeline depends on team size and priorities.
 
 ### Phase 1: Foundation (Backend & Core Services)
+
 - Backend API enhancement and rate limiting
 - Frontend service layer completion
 - Type system and contracts
 - **Deliverable**: Complete API integration with comprehensive error handling
 
 ### Phase 2: Composer Integration (User-Facing)
+
 - Enhanced composer UI with AI features
 - Context-aware suggestions
 - Settings and configuration
 - **Deliverable**: Functional AI features in composer with user controls
 
 ### Phase 3: Advanced Features (Intelligence)
+
 - Smart compose features and autocomplete
 - Thread intelligence and planning
 - Quality and safety guardrails
 - **Deliverable**: Advanced AI capabilities that differentiate the product
 
 ### Phase 4: Optimization (Polish)
+
 - Performance optimization and streaming
 - Cost optimization and caching
 - UX refinement and onboarding
 - **Deliverable**: Production-ready, polished AI writing assistant
 
 **Phased Rollout**:
+
 - Complete Phase 1 & 2 → Initial Beta
 - Complete Phase 3 → Public Beta
 - Complete Phase 4 → General Availability
@@ -667,18 +747,21 @@ interface AIFeatureFlags {
 ## Future Enhancements (Post-MVP)
 
 ### Local Model Support (Option B Implementation)
+
 - Add WebLLM/ONNX.js integration for privacy mode
 - Implement model download and caching
 - Create fallback chain: local → cloud
 - Allow user toggle in settings
 
 ### Multi-Provider Support
+
 - Add OpenAI as alternative to Anthropic
 - Implement provider selection in settings
 - Abstract provider-specific code
 - A/B test quality differences
 
 ### Advanced Features
+
 - **Voice-to-Text Composer**: Dictate posts with AI cleanup
 - **Multi-Language Support**: Translate and localize content
 - **Sentiment Tracking**: Help users maintain consistent brand voice
@@ -692,6 +775,7 @@ interface AIFeatureFlags {
 This implementation plan provides a structured approach to integrating AI writing assistance into the Bluesky client. The **recommended Cloud API approach (Option A)** leverages existing infrastructure and provides immediate value with manageable complexity.
 
 **Key Success Factors**:
+
 1. **Incremental Rollout**: Feature flags and phased deployment minimize risk
 2. **User Control**: Users can enable/disable features, maintaining trust
 3. **Quality Focus**: Continuous monitoring and iteration ensure high-quality suggestions
@@ -699,6 +783,7 @@ This implementation plan provides a structured approach to integrating AI writin
 5. **Performance**: Streaming, caching, and lazy loading maintain responsiveness
 
 **Next Steps**:
+
 1. **Decision**: Confirm Option A (Cloud API) as the chosen approach
 2. **Team Assignment**: Allocate frontend + backend engineers to project
 3. **Sprint Planning**: Break Phase 1 into 2-week sprints
