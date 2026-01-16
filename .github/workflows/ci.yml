@@ -67,7 +67,9 @@ jobs:
               # Check main bundle (index-*.js)
               if [[ "$filename" == index-*.js ]]; then
                 if [ "$gzip_size" -gt "$MAX_MAIN_BUNDLE" ]; then
-                  echo "::error::Main bundle $filename exceeds budget: $(echo "$gzip_size/1024" | bc)KB > $(echo "$MAX_MAIN_BUNDLE/1024" | bc)KB"
+                  gzip_kb=$(awk "BEGIN {printf \"%.2f\", $gzip_size/1024}")
+                  limit_kb=$(awk "BEGIN {printf \"%.2f\", $MAX_MAIN_BUNDLE/1024}")
+                  echo "::error::Main bundle $filename exceeds budget: ${gzip_kb}KB > ${limit_kb}KB"
                   EXIT_CODE=1
                 fi
               fi
@@ -75,7 +77,9 @@ jobs:
               # Check vendor chunks
               if [[ "$filename" == vendor-*.js ]]; then
                 if [ "$gzip_size" -gt "$MAX_VENDOR_CHUNK" ]; then
-                  echo "::warning::Vendor chunk $filename exceeds budget: $(echo "$gzip_size/1024" | bc)KB > $(echo "$MAX_VENDOR_CHUNK/1024" | bc)KB"
+                  gzip_kb=$(awk "BEGIN {printf \"%.2f\", $gzip_size/1024}")
+                  limit_kb=$(awk "BEGIN {printf \"%.2f\", $MAX_VENDOR_CHUNK/1024}")
+                  echo "::warning::Vendor chunk $filename exceeds budget: ${gzip_kb}KB > ${limit_kb}KB"
                 fi
               fi
             fi
