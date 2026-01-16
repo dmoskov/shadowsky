@@ -1,8 +1,8 @@
 import { debug } from "@bsky/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Hash, Plus, Search, Users, X } from "lucide-react";
-import React, { useState } from "react";
-import { useAuth } from "../contexts/AuthContext";
+import React, { useContext, useState } from "react";
+import { AuthContext } from "../contexts/AuthContext";
 import { proxifyBskyImage } from "../utils/image-proxy";
 
 interface FeedDiscoveryProps {
@@ -33,7 +33,10 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { agent } = useAuth();
+  // Use context directly to avoid throwing when rendered outside AuthProvider
+  // (can happen during React DevTools inspection or edge cases)
+  const authContext = useContext(AuthContext);
+  const agent = authContext?.agent ?? null;
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"suggested" | "popular">(
