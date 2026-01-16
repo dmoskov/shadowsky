@@ -37,6 +37,7 @@ vi.mock("../services/multi-client-manager", () => ({
     login: vi.fn(),
     resumeSession: vi.fn(),
     switchAccount: vi.fn(),
+    switchTo: vi.fn(),
     removeClient: vi.fn(),
     clearAll: vi.fn(),
     getActiveClient: vi.fn(),
@@ -49,6 +50,7 @@ vi.mock("../services/account-manager", () => ({
     addOrUpdateAccount: vi.fn(),
     switchAccount: vi.fn(),
     clearAllAccounts: vi.fn(),
+    getActiveAccount: vi.fn(),
   },
 }));
 
@@ -85,6 +87,16 @@ vi.mock("../services/app-preferences-service", () => ({
   appPreferencesService: {
     setAgent: vi.fn(),
   },
+}));
+
+vi.mock("../services/route-prefetch-service", () => ({
+  routePrefetchService: {
+    prefetchRoute: vi.fn(),
+  },
+}));
+
+vi.mock("../utils/api-auth", () => ({
+  setApiAuthSession: vi.fn(),
 }));
 
 vi.mock("@bsky/shared", () => ({
@@ -178,6 +190,7 @@ describe("AuthContext", () => {
     vi.mocked(oauthService.init).mockResolvedValue(null);
     vi.mocked(oauthService.isAvailable).mockReturnValue(false);
     vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(null);
+    vi.mocked(AccountManager.getActiveAccount).mockReturnValue(null);
 
     // Mock multiClientManager
     const mockManagedClient = {
@@ -364,7 +377,6 @@ describe("AuthContext", () => {
   describe("Session Restore from localStorage", () => {
     it("should restore session from localStorage on init", async () => {
       vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(mockSession);
-      vi.mocked(atProtoClient.resumeSession).mockResolvedValue(mockSession);
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),
@@ -377,7 +389,7 @@ describe("AuthContext", () => {
       expect(result.current.isAuthenticated).toBe(true);
       expect(result.current.authMethod).toBe("app-password");
       expect(result.current.session).toEqual(mockSession);
-      expect(atProtoClient.resumeSession).toHaveBeenCalledWith(mockSession);
+      expect(multiClientManager.resumeSession).toHaveBeenCalled();
     });
 
     it("should prioritize OAuth session over localStorage session", async () => {
@@ -398,12 +410,12 @@ describe("AuthContext", () => {
       expect(result.current.session?.did).toBe("did:plc:oauth123");
 
       // App password session should not be resumed if OAuth session exists
-      expect(atProtoClient.resumeSession).not.toHaveBeenCalled();
+      expect(multiClientManager.resumeSession).not.toHaveBeenCalled();
     });
 
     it("should clear session on authentication error during restore", async () => {
       vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(mockSession);
-      vi.mocked(atProtoClient.resumeSession).mockRejectedValue(
+      vi.mocked(multiClientManager.resumeSession).mockRejectedValue(
         new AuthenticationError("Invalid credentials"),
       );
 
@@ -416,14 +428,16 @@ describe("AuthContext", () => {
       });
 
       expect(result.current.isAuthenticated).toBe(false);
-      expect(atProtoClient.logout).toHaveBeenCalled();
+      expect(multiClientManager.removeClient).toHaveBeenCalledWith(
+        mockSession.did,
+      );
     });
 
     it("should clear session on 401 status error during restore", async () => {
       vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(mockSession);
       const error = new Error("Unauthorized");
       (error as any).status = 401;
-      vi.mocked(atProtoClient.resumeSession).mockRejectedValue(error);
+      vi.mocked(multiClientManager.resumeSession).mockRejectedValue(error);
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),
@@ -434,7 +448,9 @@ describe("AuthContext", () => {
       });
 
       expect(result.current.isAuthenticated).toBe(false);
-      expect(atProtoClient.logout).toHaveBeenCalled();
+      expect(multiClientManager.removeClient).toHaveBeenCalledWith(
+        mockSession.did,
+      );
     });
   });
 
@@ -487,7 +503,22 @@ describe("AuthContext", () => {
     it("should logout on session expired error during refresh", async () => {
       // First, establish a session
       vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(mockSession);
-      vi.mocked(atProtoClient.resumeSession).mockResolvedValue(mockSession);
+
+      const mockManagedClient = {
+        agent: {
+          getProfile: vi.fn().mockResolvedValue({
+            data: { displayName: "Test User" },
+          }),
+          session: mockSession,
+          resumeSession: vi.fn().mockResolvedValue(mockSession),
+        } as any,
+        did: mockSession.did,
+        handle: mockSession.handle,
+        lastUsed: Date.now(),
+      };
+      vi.mocked(multiClientManager.resumeSession).mockResolvedValue(
+        mockManagedClient,
+      );
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),
@@ -512,7 +543,22 @@ describe("AuthContext", () => {
     it("should logout on authentication error during refresh", async () => {
       // First, establish a session
       vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(mockSession);
-      vi.mocked(atProtoClient.resumeSession).mockResolvedValue(mockSession);
+
+      const mockManagedClient = {
+        agent: {
+          getProfile: vi.fn().mockResolvedValue({
+            data: { displayName: "Test User" },
+          }),
+          session: mockSession,
+          resumeSession: vi.fn().mockResolvedValue(mockSession),
+        } as any,
+        did: mockSession.did,
+        handle: mockSession.handle,
+        lastUsed: Date.now(),
+      };
+      vi.mocked(multiClientManager.resumeSession).mockResolvedValue(
+        mockManagedClient,
+      );
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),
@@ -535,7 +581,7 @@ describe("AuthContext", () => {
   describe("Session Expiration Handling", () => {
     it("should clear session on SessionExpiredError during restore", async () => {
       vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(mockSession);
-      vi.mocked(atProtoClient.resumeSession).mockRejectedValue(
+      vi.mocked(multiClientManager.resumeSession).mockRejectedValue(
         new SessionExpiredError("Session expired"),
       );
 
@@ -548,12 +594,14 @@ describe("AuthContext", () => {
       });
 
       expect(result.current.isAuthenticated).toBe(false);
-      expect(atProtoClient.logout).toHaveBeenCalled();
+      expect(multiClientManager.removeClient).toHaveBeenCalledWith(
+        mockSession.did,
+      );
     });
 
     it("should handle network errors during session restore without clearing session", async () => {
       vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(mockSession);
-      vi.mocked(atProtoClient.resumeSession).mockRejectedValue(
+      vi.mocked(multiClientManager.resumeSession).mockRejectedValue(
         new NetworkError("Network error"),
       );
 
@@ -576,14 +624,16 @@ describe("AuthContext", () => {
       );
 
       // Session should not be cleared on network errors
-      expect(atProtoClient.logout).not.toHaveBeenCalled();
+      expect(multiClientManager.removeClient).not.toHaveBeenCalled();
     });
 
     it("should handle 5xx server errors without clearing session", async () => {
       vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(mockSession);
       const serverError = new Error("Internal Server Error");
       (serverError as any).status = 500;
-      vi.mocked(atProtoClient.resumeSession).mockRejectedValue(serverError);
+      vi.mocked(multiClientManager.resumeSession).mockRejectedValue(
+        serverError,
+      );
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),
@@ -597,12 +647,31 @@ describe("AuthContext", () => {
       );
 
       // Should not clear session on 5xx errors
-      expect(atProtoClient.logout).not.toHaveBeenCalled();
+      expect(multiClientManager.removeClient).not.toHaveBeenCalled();
     });
   });
 
   describe("Multi-Account Switching", () => {
     it("should switch account successfully", async () => {
+      // First establish a session for the current account
+      vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(mockSession);
+
+      const mockManagedClient = {
+        agent: {
+          getProfile: vi.fn().mockResolvedValue({
+            data: { displayName: "Test User" },
+          }),
+          session: mockSession,
+          resumeSession: vi.fn().mockResolvedValue(mockSession),
+        } as any,
+        did: mockSession.did,
+        handle: mockSession.handle,
+        lastUsed: Date.now(),
+      };
+      vi.mocked(multiClientManager.resumeSession).mockResolvedValue(
+        mockManagedClient,
+      );
+
       const secondAccount = {
         did: "did:plc:second",
         handle: "second.bsky.social",
@@ -613,12 +682,26 @@ describe("AuthContext", () => {
           refreshJwt: "second-refresh-jwt",
           active: true,
         },
+        authMethod: "app-password" as const,
+        isActive: true,
+        lastUsed: Date.now(),
+      };
+
+      const secondManagedClient = {
+        agent: {
+          getProfile: vi.fn().mockResolvedValue({
+            data: { displayName: "Second User" },
+          }),
+          session: secondAccount.session,
+        } as any,
+        did: secondAccount.did,
+        handle: secondAccount.handle,
         lastUsed: Date.now(),
       };
 
       vi.mocked(AccountManager.switchAccount).mockReturnValue(secondAccount);
-      vi.mocked(atProtoClient.resumeSession).mockResolvedValue(
-        secondAccount.session,
+      vi.mocked(multiClientManager.switchTo).mockResolvedValue(
+        secondManagedClient,
       );
 
       const { result } = renderHook(() => useAuth(), {
@@ -638,8 +721,8 @@ describe("AuthContext", () => {
       expect(AccountManager.switchAccount).toHaveBeenCalledWith(
         "did:plc:second",
       );
-      expect(atProtoClient.resumeSession).toHaveBeenCalledWith(
-        secondAccount.session,
+      expect(multiClientManager.switchTo).toHaveBeenCalledWith(
+        "did:plc:second",
       );
       expect(queryClient.clear).toHaveBeenCalled();
     });
@@ -661,7 +744,7 @@ describe("AuthContext", () => {
       });
 
       expect(success!).toBe(false);
-      expect(atProtoClient.resumeSession).not.toHaveBeenCalled();
+      expect(multiClientManager.switchTo).not.toHaveBeenCalled();
     });
 
     it("should return false when session resume fails", async () => {
@@ -675,11 +758,13 @@ describe("AuthContext", () => {
           refreshJwt: "second-refresh-jwt",
           active: true,
         },
+        authMethod: "app-password" as const,
+        isActive: true,
         lastUsed: Date.now(),
       };
 
       vi.mocked(AccountManager.switchAccount).mockReturnValue(secondAccount);
-      vi.mocked(atProtoClient.resumeSession).mockRejectedValue(
+      vi.mocked(multiClientManager.switchTo).mockRejectedValue(
         new Error("Session resume failed"),
       );
 
@@ -702,13 +787,21 @@ describe("AuthContext", () => {
 
   describe("App Password Login", () => {
     it("should login with app password successfully", async () => {
-      vi.mocked(atProtoClient.login).mockResolvedValue(mockSession);
-      vi.mocked(atProtoClient.agent.getProfile).mockResolvedValue({
-        data: {
-          displayName: "Test User",
-          avatar: "https://example.com/avatar.jpg",
-        },
-      } as any);
+      const mockManagedClient = {
+        agent: {
+          getProfile: vi.fn().mockResolvedValue({
+            data: {
+              displayName: "Test User",
+              avatar: "https://example.com/avatar.jpg",
+            },
+          }),
+          session: mockSession,
+        } as any,
+        did: mockSession.did,
+        handle: mockSession.handle,
+        lastUsed: Date.now(),
+      };
+      vi.mocked(multiClientManager.login).mockResolvedValue(mockManagedClient);
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),
@@ -731,9 +824,10 @@ describe("AuthContext", () => {
       expect(result.current.authMethod).toBe("app-password");
       expect(result.current.session).toEqual(mockSession);
 
-      expect(atProtoClient.login).toHaveBeenCalledWith(
+      expect(multiClientManager.login).toHaveBeenCalledWith(
         "test.bsky.social",
         "app-password-123",
+        "https://bsky.social",
         undefined,
       );
     });
@@ -759,10 +853,21 @@ describe("AuthContext", () => {
     });
 
     it("should login with allowed custom PDS URL (bsky.app)", async () => {
-      vi.mocked(atProtoClient.login).mockResolvedValue(mockSession);
-      vi.mocked(atProtoClient.agent.getProfile).mockResolvedValue({
-        data: { displayName: "Test User" },
-      } as any);
+      const mockManagedClient = {
+        agent: {
+          getProfile: vi.fn().mockResolvedValue({
+            data: {
+              displayName: "Test User",
+              avatar: "https://example.com/avatar.jpg",
+            },
+          }),
+          session: mockSession,
+        } as any,
+        did: mockSession.did,
+        handle: mockSession.handle,
+        lastUsed: Date.now(),
+      };
+      vi.mocked(multiClientManager.login).mockResolvedValue(mockManagedClient);
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),
@@ -780,16 +885,30 @@ describe("AuthContext", () => {
         );
       });
 
-      expect(atProtoClient.updateService).toHaveBeenCalledWith(
+      expect(multiClientManager.login).toHaveBeenCalledWith(
+        "test.bsky.app",
+        "password",
         "https://bsky.app",
+        undefined,
       );
     });
 
     it("should strip @ from identifier", async () => {
-      vi.mocked(atProtoClient.login).mockResolvedValue(mockSession);
-      vi.mocked(atProtoClient.agent.getProfile).mockResolvedValue({
-        data: {},
-      } as any);
+      const mockManagedClient = {
+        agent: {
+          getProfile: vi.fn().mockResolvedValue({
+            data: {
+              displayName: "Test User",
+              avatar: "https://example.com/avatar.jpg",
+            },
+          }),
+          session: mockSession,
+        } as any,
+        did: mockSession.did,
+        handle: mockSession.handle,
+        lastUsed: Date.now(),
+      };
+      vi.mocked(multiClientManager.login).mockResolvedValue(mockManagedClient);
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),
@@ -803,18 +922,30 @@ describe("AuthContext", () => {
         await result.current.login("@test.bsky.social", "password");
       });
 
-      expect(atProtoClient.login).toHaveBeenCalledWith(
-        "test.bsky.social",
+      expect(multiClientManager.login).toHaveBeenCalledWith(
+        "@test.bsky.social",
         "password",
+        "https://bsky.social",
         undefined,
       );
     });
 
     it("should pass auth factor token for 2FA", async () => {
-      vi.mocked(atProtoClient.login).mockResolvedValue(mockSession);
-      vi.mocked(atProtoClient.agent.getProfile).mockResolvedValue({
-        data: {},
-      } as any);
+      const mockManagedClient = {
+        agent: {
+          getProfile: vi.fn().mockResolvedValue({
+            data: {
+              displayName: "Test User",
+              avatar: "https://example.com/avatar.jpg",
+            },
+          }),
+          session: mockSession,
+        } as any,
+        did: mockSession.did,
+        handle: mockSession.handle,
+        lastUsed: Date.now(),
+      };
+      vi.mocked(multiClientManager.login).mockResolvedValue(mockManagedClient);
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),
@@ -833,16 +964,17 @@ describe("AuthContext", () => {
         );
       });
 
-      expect(atProtoClient.login).toHaveBeenCalledWith(
+      expect(multiClientManager.login).toHaveBeenCalledWith(
         "test.bsky.social",
         "password",
+        "https://bsky.social",
         "123456",
       );
     });
 
     it("should throw on login failure", async () => {
-      const loginError = new Error("Invalid credentials");
-      vi.mocked(atProtoClient.login).mockRejectedValue(loginError);
+      const loginError = new Error("Invalid identifier or password");
+      vi.mocked(multiClientManager.login).mockRejectedValue(loginError);
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),
@@ -854,7 +986,7 @@ describe("AuthContext", () => {
 
       await expect(
         result.current.login("test.bsky.social", "wrong-password"),
-      ).rejects.toThrow("Invalid credentials");
+      ).rejects.toThrow("Invalid identifier or password");
     });
   });
 
@@ -913,7 +1045,22 @@ describe("AuthContext", () => {
   describe("Logout", () => {
     it("should logout and clear all state for app-password auth", async () => {
       vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(mockSession);
-      vi.mocked(atProtoClient.resumeSession).mockResolvedValue(mockSession);
+
+      const mockManagedClient = {
+        agent: {
+          getProfile: vi.fn().mockResolvedValue({
+            data: { displayName: "Test User" },
+          }),
+          session: mockSession,
+          resumeSession: vi.fn().mockResolvedValue(mockSession),
+        } as any,
+        did: mockSession.did,
+        handle: mockSession.handle,
+        lastUsed: Date.now(),
+      };
+      vi.mocked(multiClientManager.resumeSession).mockResolvedValue(
+        mockManagedClient,
+      );
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),
@@ -927,7 +1074,7 @@ describe("AuthContext", () => {
         result.current.logout();
       });
 
-      expect(atProtoClient.logout).toHaveBeenCalled();
+      expect(multiClientManager.removeClient).toHaveBeenCalled();
       expect(bookmarkService.setAgent).toHaveBeenCalledWith(null);
       expect(dmService.setAgent).toHaveBeenCalledWith(null);
       expect(columnService.setAgent).toHaveBeenCalledWith(null);
@@ -957,7 +1104,22 @@ describe("AuthContext", () => {
 
     it("should clear all accounts when logoutAllAccounts is true", async () => {
       vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(mockSession);
-      vi.mocked(atProtoClient.resumeSession).mockResolvedValue(mockSession);
+
+      const mockManagedClient = {
+        agent: {
+          getProfile: vi.fn().mockResolvedValue({
+            data: { displayName: "Test User" },
+          }),
+          session: mockSession,
+          resumeSession: vi.fn().mockResolvedValue(mockSession),
+        } as any,
+        did: mockSession.did,
+        handle: mockSession.handle,
+        lastUsed: Date.now(),
+      };
+      vi.mocked(multiClientManager.resumeSession).mockResolvedValue(
+        mockManagedClient,
+      );
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),
@@ -998,7 +1160,7 @@ describe("AuthContext", () => {
 
       // The logout flow still attempts signOut even if it errors
       expect(oauthService.signOut).toHaveBeenCalled();
-      expect(atProtoClient.logout).toHaveBeenCalled();
+      expect(multiClientManager.removeClient).toHaveBeenCalled();
     });
   });
 
@@ -1020,7 +1182,22 @@ describe("AuthContext", () => {
 
     it("should expose atProtoClient agent when using app-password auth", async () => {
       vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(mockSession);
-      vi.mocked(atProtoClient.resumeSession).mockResolvedValue(mockSession);
+
+      const mockManagedClient = {
+        agent: {
+          getProfile: vi.fn().mockResolvedValue({
+            data: { displayName: "Test User" },
+          }),
+          session: mockSession,
+        } as any,
+        did: mockSession.did,
+        handle: mockSession.handle,
+        lastUsed: Date.now(),
+      };
+
+      vi.mocked(multiClientManager.getActiveClient).mockReturnValue(
+        mockManagedClient,
+      );
 
       const { result } = renderHook(() => useAuth(), {
         wrapper: createWrapper(),
@@ -1030,7 +1207,7 @@ describe("AuthContext", () => {
         expect(result.current.isAuthenticated).toBe(true);
       });
 
-      expect(result.current.agent).toBe(atProtoClient.agent);
+      expect(result.current.agent).toBe(mockManagedClient.agent);
     });
 
     it("should return null agent when not authenticated", async () => {

@@ -421,6 +421,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             if (status === 400) {
               debug.log("Session expired or invalid, clearing stored session");
               atProtoClient.logout();
+              // Also remove from multi-client manager
+              if (savedSession) {
+                multiClientManager.removeClient(savedSession.did);
+              }
             } else if (
               error instanceof SessionExpiredError ||
               error instanceof AuthenticationError ||
@@ -428,6 +432,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             ) {
               debug.log("Session invalid, clearing...");
               atProtoClient.logout();
+              // Also remove from multi-client manager
+              if (savedSession) {
+                multiClientManager.removeClient(savedSession.did);
+              }
             } else if (
               error instanceof NetworkError ||
               ((error as Error & { status?: number })?.status ?? 0) >= 500 ||
@@ -493,6 +501,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           serviceUrl,
           authFactorToken,
         );
+
+        if (!managedClient || !managedClient.agent.session) {
+          throw new Error("Invalid identifier or password");
+        }
 
         const newSession: Session = {
           did: managedClient.did,
