@@ -11,6 +11,9 @@ export default defineConfig({
   testMatch: isPerformanceTest
     ? ["performance/**/*.spec.ts"]
     : ["e2e/**/*.spec.ts", "visual-regression*.spec.ts"],
+  // Use platform-agnostic snapshot paths so darwin/linux use same baselines
+  snapshotPathTemplate:
+    "{testDir}/{testFileDir}/{testFileName}-snapshots/{arg}-{projectName}{ext}",
   timeout: 60 * 1000,
   expect: {
     timeout: 10000,
