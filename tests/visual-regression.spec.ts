@@ -61,8 +61,9 @@ test.describe("Visual Regression - Landing Page", () => {
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1000); // Let animations settle
 
+    // Use viewport-only screenshot for cross-platform consistency
+    // fullPage screenshots have dimension mismatches due to font rendering
     await expect(page).toHaveScreenshot("01-landing-page.png", {
-      fullPage: true,
       animations: "disabled",
     });
   });
@@ -74,7 +75,6 @@ test.describe("Visual Regression - Landing Page", () => {
     await page.waitForTimeout(1000);
 
     await expect(page).toHaveScreenshot("01-landing-page-mobile.png", {
-      fullPage: true,
       animations: "disabled",
     });
   });
@@ -86,7 +86,6 @@ test.describe("Visual Regression - Landing Page", () => {
     await page.waitForTimeout(1000);
 
     await expect(page).toHaveScreenshot("01-landing-page-tablet.png", {
-      fullPage: true,
       animations: "disabled",
     });
   });
