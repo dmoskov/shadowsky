@@ -640,7 +640,12 @@ class APICacheService {
    * Convert a cache entry back to a Response object
    */
   private entryToResponse(entry: CacheEntry): Response {
-    const headers = new Headers(JSON.parse(entry.headers));
+    // Handle case where headers might already be an object (e.g., in some CI environments)
+    const headersObj =
+      typeof entry.headers === "string"
+        ? JSON.parse(entry.headers)
+        : entry.headers;
+    const headers = new Headers(headersObj);
     return new Response(entry.body, {
       status: entry.status,
       statusText: entry.statusText,
