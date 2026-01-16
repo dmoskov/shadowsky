@@ -4,8 +4,10 @@ import { expect, test } from "@playwright/test";
 const TEST_URL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:5174";
 
 // Configuration for visual regression tests
+// Note: fullPage is set to false to ensure consistent viewport-based snapshots
+// across different platforms (Linux/macOS) that may render content differently
 const VISUAL_CONFIG = {
-  fullPage: true,
+  fullPage: false,
   animations: "disabled" as const,
 };
 

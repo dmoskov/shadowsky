@@ -36,7 +36,11 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        // Set explicit viewport for consistent visual regression tests across platforms
+        viewport: { width: 1280, height: 720 },
+      },
     },
   ],
 
