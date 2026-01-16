@@ -14,11 +14,13 @@ This index provides a comprehensive guide to all AI feature documentation in the
 ### 1. Architecture Documentation
 
 #### [AI Writing Assistant Integration Architecture](./architecture/AI_WRITING_ASSISTANT_INTEGRATION.md)
+
 **Purpose**: Complete technical architecture specification
 **Audience**: Architects, Senior Developers, Technical Leads
 **Length**: ~960 lines
 
 **Covers**:
+
 - High-level system architecture
 - Implementation approach (Cloud API with Anthropic Claude)
 - Component breakdown (client, network, backend layers)
@@ -29,6 +31,7 @@ This index provides a comprehensive guide to all AI feature documentation in the
 - Future enhancement roadmap
 
 **Use When**:
+
 - Planning new AI features
 - Understanding system design decisions
 - Onboarding new team members
@@ -37,11 +40,13 @@ This index provides a comprehensive guide to all AI feature documentation in the
 ---
 
 #### [AI Integration Data Flow Diagrams](./architecture/AI_INTEGRATION_DATA_FLOW.md)
+
 **Purpose**: Visual data flow documentation
 **Audience**: All developers
 **Length**: ~580 lines
 
 **Covers**:
+
 - 12 Mermaid diagrams showing data flows
 - Tone adjustment flow
 - Alt text generation flow
@@ -54,6 +59,7 @@ This index provides a comprehensive guide to all AI feature documentation in the
 - Complete request lifecycle
 
 **Use When**:
+
 - Understanding how features work
 - Debugging issues
 - Planning integrations
@@ -64,11 +70,13 @@ This index provides a comprehensive guide to all AI feature documentation in the
 ### 2. Developer Guides
 
 #### [AI Features Developer Guide](./guides/AI_FEATURES_DEVELOPER_GUIDE.md)
+
 **Purpose**: Practical implementation guide
 **Audience**: Developers implementing or extending AI features
 **Length**: ~855 lines
 
 **Covers**:
+
 - Step-by-step guide to adding new AI features
 - Usage examples for existing services
 - Error handling patterns
@@ -78,6 +86,7 @@ This index provides a comprehensive guide to all AI feature documentation in the
 - Performance optimization tips
 
 **Use When**:
+
 - Implementing a new AI feature
 - Using existing AI services
 - Writing tests
@@ -91,42 +100,51 @@ This index provides a comprehensive guide to all AI feature documentation in the
 ### I want to...
 
 #### Understand the overall architecture
+
 → Start with [AI Writing Assistant Integration Architecture](./architecture/AI_WRITING_ASSISTANT_INTEGRATION.md)
 → Read sections: Architecture Overview, Implementation Approach, System Components
 
 #### See how data flows through the system
+
 → View [AI Integration Data Flow Diagrams](./architecture/AI_INTEGRATION_DATA_FLOW.md)
 → Pick the specific flow diagram you need
 
 #### Add a new AI feature
+
 → Follow [AI Features Developer Guide](./guides/AI_FEATURES_DEVELOPER_GUIDE.md)
 → Section: "Adding a New AI Feature" (6 steps)
 
 #### Use an existing AI service
+
 → Reference [AI Features Developer Guide](./guides/AI_FEATURES_DEVELOPER_GUIDE.md)
 → Section: "Using Existing AI Services"
 
 #### Understand authentication & security
+
 → See [AI Writing Assistant Integration Architecture](./architecture/AI_WRITING_ASSISTANT_INTEGRATION.md)
 → Section: "Authentication & Security"
 → And [AI Integration Data Flow Diagrams](./architecture/AI_INTEGRATION_DATA_FLOW.md)
 → Diagram: "Authentication & Security Flow"
 
 #### Handle errors properly
+
 → Read [AI Features Developer Guide](./guides/AI_FEATURES_DEVELOPER_GUIDE.md)
 → Section: "Error Handling Patterns"
 → And [AI Writing Assistant Integration Architecture](./architecture/AI_WRITING_ASSISTANT_INTEGRATION.md)
 → Section: "Error Handling"
 
 #### Write tests for AI features
+
 → Follow [AI Features Developer Guide](./guides/AI_FEATURES_DEVELOPER_GUIDE.md)
 → Section: "Testing AI Features"
 
 #### Understand API endpoints
+
 → Reference [AI Writing Assistant Integration Architecture](./architecture/AI_WRITING_ASSISTANT_INTEGRATION.md)
 → Section: "API Endpoints" (9 endpoints documented)
 
 #### Optimize performance
+
 → Check [AI Features Developer Guide](./guides/AI_FEATURES_DEVELOPER_GUIDE.md)
 → Section: "Performance Tips"
 → And [AI Writing Assistant Integration Architecture](./architecture/AI_WRITING_ASSISTANT_INTEGRATION.md)
@@ -141,12 +159,14 @@ This index provides a comprehensive guide to all AI feature documentation in the
 The system uses **Option A: Cloud API (Anthropic Claude)** with a backend proxy:
 
 ✅ **Advantages**:
+
 - High-quality AI responses
 - No client-side resource usage
 - Secure API key management
 - Scalable infrastructure
 
 ⚖️ **Trade-offs**:
+
 - Per-request API costs
 - Content sent to Anthropic
 - External service dependency
@@ -164,6 +184,7 @@ Anthropic Cloud
 ### Data Flow Pattern
 
 All AI features follow this pattern:
+
 1. User action in Composer UI
 2. Component state update (loading)
 3. Service function call
@@ -189,9 +210,11 @@ All AI features follow this pattern:
 ### Key Files
 
 **Service Layer**:
+
 - `src/services/anthropic.ts` - Main AI service (664 lines)
 
 **Composer Components**:
+
 - `src/components/composer/ComposerRefactored.tsx` - Main composer
 - `src/components/composer/ComposerToolbar.tsx` - Toolbar with AI buttons
 - `src/components/composer/ComposerAIFeatures.tsx` - AI feature panels
@@ -199,6 +222,7 @@ All AI features follow this pattern:
 - `src/components/composer/types.ts` - Type definitions
 
 **Configuration**:
+
 - `src/config/amplify.ts` - API base URL configuration
 - `src/utils/retry.ts` - Retry logic implementation
 - `src/utils/api-auth.ts` - Authentication headers
@@ -244,6 +268,7 @@ All AI features follow this pattern:
 ### Backend Endpoints
 
 All endpoints at `/api/*`:
+
 - `/api/adjust-tone` - POST
 - `/api/optimize-thread` - POST
 - `/api/suggest-hashtags` - POST
@@ -269,6 +294,7 @@ All endpoints at `/api/*`:
 ### Contributing
 
 When adding new AI features:
+
 1. Follow the 6-step process in the Developer Guide
 2. Add comprehensive error handling
 3. Include loading states and cancellation
@@ -291,6 +317,7 @@ When adding new AI features:
 ## Support & Questions
 
 For questions about AI features:
+
 1. Check this index for relevant documentation
 2. Review code examples in Developer Guide
 3. Examine data flow diagrams for understanding
@@ -301,6 +328,7 @@ For questions about AI features:
 ## Document Maintenance
 
 **Update When**:
+
 - New AI features are added
 - API endpoints change
 - Architecture decisions evolve
