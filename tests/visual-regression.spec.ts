@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 // Test configuration
-const TEST_URL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:5173";
+const TEST_URL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:5174";
 
 // Check if credentials are available
 function hasCredentials() {
