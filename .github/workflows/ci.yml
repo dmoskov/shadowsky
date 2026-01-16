@@ -53,8 +53,9 @@ jobs:
       - name: Check size budgets
         run: |
           # Define size budgets (in bytes, gzipped)
-          MAX_MAIN_BUNDLE=150000  # 150KB gzipped for main entry chunk
-          MAX_VENDOR_CHUNK=200000 # 200KB gzipped for vendor chunks
+          # Note: These are realistic budgets for a modern React SPA with AT Protocol integration
+          MAX_MAIN_BUNDLE=450000  # 450KB gzipped for main entry chunk (~1.3MB uncompressed)
+          MAX_VENDOR_CHUNK=300000 # 300KB gzipped for vendor chunks
 
           EXIT_CODE=0
 

@@ -32,6 +32,18 @@ vi.mock("../services/atproto", () => ({
   },
 }));
 
+vi.mock("../services/multi-client-manager", () => ({
+  multiClientManager: {
+    login: vi.fn(),
+    resumeSession: vi.fn(),
+    switchAccount: vi.fn(),
+    removeClient: vi.fn(),
+    clearAll: vi.fn(),
+    getActiveClient: vi.fn(),
+    getClient: vi.fn(),
+  },
+}));
+
 vi.mock("../services/account-manager", () => ({
   AccountManager: {
     addOrUpdateAccount: vi.fn(),
@@ -120,6 +132,7 @@ import { columnService } from "../services/column-service";
 import { initializeDataServices } from "../services/data-services-initializer";
 import { dmService } from "../services/dm-service";
 import { draftService } from "../services/draft-service";
+import { multiClientManager } from "../services/multi-client-manager";
 import {
   hasExistingOAuthSession,
   oauthService,
@@ -165,6 +178,26 @@ describe("AuthContext", () => {
     vi.mocked(oauthService.init).mockResolvedValue(null);
     vi.mocked(oauthService.isAvailable).mockReturnValue(false);
     vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(null);
+
+    // Mock multiClientManager
+    const mockManagedClient = {
+      agent: {
+        getProfile: vi.fn().mockResolvedValue({
+          data: { displayName: "Test User" },
+        }),
+        session: mockSession,
+        resumeSession: vi.fn().mockResolvedValue(mockSession),
+      } as any,
+      did: mockSession.did,
+      handle: mockSession.handle,
+      lastUsed: Date.now(),
+    };
+
+    vi.mocked(multiClientManager.login).mockResolvedValue(mockManagedClient);
+    vi.mocked(multiClientManager.resumeSession).mockResolvedValue(
+      mockManagedClient,
+    );
+    vi.mocked(multiClientManager.getActiveClient).mockReturnValue(null);
 
     // Mock window.location.href setter - replaceProperty doesn't work well with location
     // so we just set it directly since we're in jsdom
@@ -705,7 +738,27 @@ describe("AuthContext", () => {
       );
     });
 
-    it("should login with custom PDS URL", async () => {
+    it("should reject login with non-whitelisted PDS URL", async () => {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await expect(
+        result.current.login(
+          "test.custom.pds",
+          "password",
+          "https://custom.pds.com",
+        ),
+      ).rejects.toThrow(
+        "Invalid PDS URL. Only official Bluesky servers (bsky.social, bsky.app) are supported.",
+      );
+    });
+
+    it("should login with allowed custom PDS URL (bsky.app)", async () => {
       vi.mocked(atProtoClient.login).mockResolvedValue(mockSession);
       vi.mocked(atProtoClient.agent.getProfile).mockResolvedValue({
         data: { displayName: "Test User" },
@@ -721,14 +774,14 @@ describe("AuthContext", () => {
 
       await act(async () => {
         await result.current.login(
-          "test.custom.pds",
+          "test.bsky.app",
           "password",
-          "https://custom.pds.com",
+          "https://bsky.app",
         );
       });
 
       expect(atProtoClient.updateService).toHaveBeenCalledWith(
-        "https://custom.pds.com",
+        "https://bsky.app",
       );
     });
 

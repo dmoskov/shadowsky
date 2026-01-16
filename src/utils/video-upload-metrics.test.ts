@@ -34,23 +34,21 @@ describe("VideoUploadMetricsTracker", () => {
     expect(stats.totalRetryAttempts).toBe(2);
   });
 
-  it("should complete upload successfully with metrics", () => {
+  it("should complete upload successfully with metrics", async () => {
     const uploadId = tracker.startUpload("video/mp4", 1024000);
     tracker.startTranscoding(uploadId);
 
     // Simulate transcoding delay
-    setTimeout(() => {
-      tracker.completeTranscoding(uploadId, 5);
-      tracker.completeUpload(uploadId, "test-video-id");
-    }, 10);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    tracker.completeTranscoding(uploadId, 5);
+    tracker.completeUpload(uploadId, "test-video-id");
 
-    setTimeout(() => {
-      const stats = tracker.getSessionStatistics();
-      expect(stats.successCount).toBe(1);
-      expect(stats.failureCount).toBe(0);
-      expect(stats.uploads.length).toBe(1);
-      expect(stats.uploads[0].success).toBe(true);
-    }, 20);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    const stats = tracker.getSessionStatistics();
+    expect(stats.successCount).toBe(1);
+    expect(stats.failureCount).toBe(0);
+    expect(stats.uploads.length).toBe(1);
+    expect(stats.uploads[0].success).toBe(true);
   });
 
   it("should track failed uploads with error type", () => {
