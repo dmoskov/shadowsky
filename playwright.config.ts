@@ -18,7 +18,9 @@ export default defineConfig({
   expect: {
     timeout: 10000,
     toHaveScreenshot: {
-      maxDiffPixels: 100,
+      // Use ratio instead of pixel count for cross-platform tolerance
+      // Font rendering differs between macOS and Linux, typically ~3-5% diff
+      maxDiffPixelRatio: 0.05,
     },
   },
   fullyParallel: true,

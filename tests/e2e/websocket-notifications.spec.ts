@@ -775,9 +775,8 @@ test.describe("Visual Regression - Notification UI", () => {
     await page.waitForTimeout(500);
 
     // Take screenshot for visual regression
-    await expect(page).toHaveScreenshot("login-page-with-ws-mock.png", {
-      maxDiffPixels: 100,
-    });
+    // Uses global maxDiffPixelRatio from playwright.config.ts for cross-platform tolerance
+    await expect(page).toHaveScreenshot("login-page-with-ws-mock.png");
   });
 });
 
