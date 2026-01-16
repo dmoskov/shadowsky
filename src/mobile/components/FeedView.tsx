@@ -12,7 +12,7 @@
  */
 
 import type { AppBskyFeedDefs } from "@atproto/api";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useMemo } from "react";
 import {
   Pressable,
   StyleSheet,

@@ -103,11 +103,7 @@ const Avatar = memo(function Avatar({
   );
 
   const content = (
-    <Image
-      source={{ uri: uri || DEFAULT_AVATAR_URI }}
-      style={imageStyle}
-      accessibilityRole="image"
-    />
+    <Image source={{ uri: uri || DEFAULT_AVATAR_URI }} style={imageStyle} />
   );
 
   if (onPress) {
@@ -477,9 +473,7 @@ const ReplyItem = memo(function ReplyItem({
             {reply.replyCount || 0} replies
           </Text>
           <Text style={styles.replyStatText}>·</Text>
-          <Text style={styles.replyStatText}>
-            {reply.likeCount || 0} likes
-          </Text>
+          <Text style={styles.replyStatText}>{reply.likeCount || 0} likes</Text>
         </View>
       </View>
     </Pressable>
@@ -708,8 +702,6 @@ function PostDetailViewComponent({
             data={repliesData}
             renderItem={renderReply}
             keyExtractor={keyExtractor}
-            scrollEnabled={false}
-            nestedScrollEnabled={true}
             style={styles.repliesList}
           />
         )}

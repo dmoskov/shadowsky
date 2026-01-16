@@ -26,7 +26,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from "react-native";
-import type { FeedListProps, MobilePostData } from "../types";
+import type { MobilePostData } from "../types";
 import { PostCard } from "./PostCard";
 
 /**
@@ -95,11 +95,7 @@ const ProfileHeader = memo(function ProfileHeader({
 /**
  * Profile banner image
  */
-const BannerImage = memo(function BannerImage({
-  banner,
-}: {
-  banner?: string;
-}) {
+const BannerImage = memo(function BannerImage({ banner }: { banner?: string }) {
   return (
     <Image
       source={{ uri: banner || DEFAULT_BANNER_URI }}
@@ -112,7 +108,11 @@ const BannerImage = memo(function BannerImage({
 /**
  * Profile avatar with follow status indicator
  */
-const ProfileAvatar = memo(function ProfileAvatar({ avatar }: { avatar?: string }) {
+const ProfileAvatar = memo(function ProfileAvatar({
+  avatar,
+}: {
+  avatar?: string;
+}) {
   return (
     <View style={styles.avatarContainer}>
       <Image
@@ -233,7 +233,10 @@ const TabBar = memo(function TabBar({
         accessibilityRole="button"
       >
         <Text
-          style={[styles.tabText, activeTab === "posts" && styles.tabTextActive]}
+          style={[
+            styles.tabText,
+            activeTab === "posts" && styles.tabTextActive,
+          ]}
         >
           Posts
         </Text>
@@ -258,7 +261,10 @@ const TabBar = memo(function TabBar({
         accessibilityRole="button"
       >
         <Text
-          style={[styles.tabText, activeTab === "media" && styles.tabTextActive]}
+          style={[
+            styles.tabText,
+            activeTab === "media" && styles.tabTextActive,
+          ]}
         >
           Media
         </Text>
@@ -269,7 +275,10 @@ const TabBar = memo(function TabBar({
         accessibilityRole="button"
       >
         <Text
-          style={[styles.tabText, activeTab === "likes" && styles.tabTextActive]}
+          style={[
+            styles.tabText,
+            activeTab === "likes" && styles.tabTextActive,
+          ]}
         >
           Likes
         </Text>
@@ -452,7 +461,9 @@ function arePropsEqual(
     return false;
 
   // Compare viewer state
-  if (prevProps.profile.viewer?.following !== nextProps.profile.viewer?.following)
+  if (
+    prevProps.profile.viewer?.following !== nextProps.profile.viewer?.following
+  )
     return false;
 
   // Compare posts array identity
