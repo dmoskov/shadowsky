@@ -252,9 +252,13 @@ export const NotificationsFeed: React.FC = () => {
       { threshold: 0.1 },
     );
 
-    observer.observe(loadMoreRef.current);
+    const currentRef = loadMoreRef.current;
+    observer.observe(currentRef);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.unobserve(currentRef);
+      observer.disconnect();
+    };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Removed automatic loading of 3 pages - let intersection observer handle it

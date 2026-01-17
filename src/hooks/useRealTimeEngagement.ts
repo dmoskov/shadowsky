@@ -260,20 +260,36 @@ export function useRealTimeEngagement(
     observePosts();
 
     // Set up MutationObserver to watch for new posts
+    // Use a more targeted approach to avoid excessive observation
     const mutationObserver = new MutationObserver((mutations) => {
       let shouldReobserve = false;
       for (const mutation of mutations) {
-        if (mutation.addedNodes.length > 0) {
-          shouldReobserve = true;
-          break;
+        // Only reobserve if nodes were added that might contain posts
+        for (let i = 0; i < mutation.addedNodes.length; i++) {
+          const node = mutation.addedNodes[i];
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node as Element;
+            // Check if this element or its children contain posts
+            if (
+              element.matches?.(postSelector) ||
+              element.querySelector?.(postSelector)
+            ) {
+              shouldReobserve = true;
+              break;
+            }
+          }
         }
+        if (shouldReobserve) break;
       }
       if (shouldReobserve) {
         observePosts();
       }
     });
 
-    mutationObserver.observe(document.body, {
+    // Observe a more specific container if possible, fall back to body
+    const observeRoot =
+      document.querySelector('[role="feed"]') || document.body;
+    mutationObserver.observe(observeRoot, {
       childList: true,
       subtree: true,
     });

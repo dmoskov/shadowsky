@@ -48,6 +48,7 @@ export function useIntersectionLoader<T>(
       if (currentRef) {
         observer.unobserve(currentRef);
       }
+      observer.disconnect();
     };
   }, [visibleCount, items.length, increment, threshold, rootMargin]);
 

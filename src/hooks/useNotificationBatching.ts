@@ -117,16 +117,27 @@ export function useNotificationBatching(
   }, [sourceNotifications, enabled]);
 
   useEffect(() => {
-    if (!enabled || !serviceRef.current) return;
+    if (!enabled || !serviceRef.current) {
+      // Clear state when disabled
+      setPendingCount(0);
+      setIsBatching(false);
+      return;
+    }
 
     const interval = setInterval(() => {
+      // Check if service still exists before accessing
       if (serviceRef.current) {
         setPendingCount(serviceRef.current.getPendingCount());
         setIsBatching(serviceRef.current.isBatchingActive());
       }
     }, 500);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      // Clean up state on unmount
+      setPendingCount(0);
+      setIsBatching(false);
+    };
   }, [enabled]);
 
   const processNotifications = useCallback(

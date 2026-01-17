@@ -1134,11 +1134,17 @@ export const Home: React.FC<HomeProps> = React.memo(
         },
       );
 
-      if (loadMoreRef.current) {
-        observer.observe(loadMoreRef.current);
+      const currentRef = loadMoreRef.current;
+      if (currentRef) {
+        observer.observe(currentRef);
       }
 
-      return () => observer.disconnect();
+      return () => {
+        if (currentRef) {
+          observer.unobserve(currentRef);
+        }
+        observer.disconnect();
+      };
     }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
     // Save scroll position on unmount
