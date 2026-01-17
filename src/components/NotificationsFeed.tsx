@@ -151,12 +151,7 @@ export const NotificationsFeed: React.FC = () => {
   }, [data?.pages]);
 
   // Apply time-window batching to reduce UI jank during high-activity periods
-  const {
-    batchedNotifications,
-    pendingCount,
-    isBatching: isBatchingUpdates,
-    stats: batchStats,
-  } = useNotificationBatching(rawNotifications, {
+  const { batchedNotifications } = useNotificationBatching(rawNotifications, {
     enabled: true,
     config: {
       batchWindowMs: 5000, // 5-second batching window
@@ -174,27 +169,6 @@ export const NotificationsFeed: React.FC = () => {
     transitionDuration: 300,
     enableAnimation: true,
   });
-
-  // Debug: Log when notifications change
-  React.useEffect(() => {
-    console.log("[NotificationsFeed] Notifications updated:", {
-      count: notifications.length,
-      rawCount: rawNotifications.length,
-      pendingCount,
-      isBatching: isBatchingUpdates,
-      batchCount: batchStats.batchCount,
-      firstNotification: notifications[0]?.indexedAt,
-      dataVersion: data?.pageParams?.length,
-      timestamp: new Date().toISOString(),
-    });
-  }, [
-    notifications,
-    rawNotifications.length,
-    pendingCount,
-    isBatchingUpdates,
-    batchStats.batchCount,
-    data?.pageParams,
-  ]);
 
   // Cache indicator removed - no longer needed without header
 
