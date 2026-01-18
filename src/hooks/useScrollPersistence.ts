@@ -100,6 +100,12 @@ export function useScrollPersistence({
   // Save position on unmount/navigation away
   useEffect(() => {
     return () => {
+      // Clear any pending timer to prevent memory leaks
+      if (scrollSaveTimerRef.current) {
+        clearTimeout(scrollSaveTimerRef.current);
+        scrollSaveTimerRef.current = null;
+      }
+
       if (!threadId || !scrollContainerRef?.current) return;
 
       const scrollContainer = scrollContainerRef.current;

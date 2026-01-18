@@ -5,7 +5,7 @@
  * Handles animations and provides utilities to check/toggle collapse state.
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getPersistedCollapseState,
   setPersistedCollapseState,
@@ -55,6 +55,17 @@ export function useThreadCollapse({
   // Track nodes currently animating (for smooth height transitions)
   const [animatingNodes, setAnimatingNodes] = useState<Set<string>>(new Set());
 
+  // Track active animation timers to clean up on unmount
+  const animationTimers = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  // Clean up all animation timers on unmount
+  useEffect(() => {
+    return () => {
+      animationTimers.current.forEach((timer) => clearTimeout(timer));
+      animationTimers.current.clear();
+    };
+  }, []);
+
   /**
    * Check if a branch is collapsed
    */
@@ -94,13 +105,18 @@ export function useThreadCollapse({
       });
 
       // End animation after transition completes
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setAnimatingNodes((prev) => {
           const next = new Set(prev);
           next.delete(nodeUri);
           return next;
         });
+        // Remove this timer from tracking
+        animationTimers.current.delete(timer);
       }, animationDuration);
+
+      // Track this timer for cleanup
+      animationTimers.current.add(timer);
     },
     [threadId, animationDuration],
   );

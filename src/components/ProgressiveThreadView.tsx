@@ -148,10 +148,8 @@ export function getTierConfig(tier: ComplexityTier): ComplexityTierConfig {
   return TIER_CONFIGS[tier];
 }
 
-interface ProgressiveThreadViewProps extends Omit<
-  ThreadViewerProps,
-  "threadSummary"
-> {
+interface ProgressiveThreadViewProps
+  extends Omit<ThreadViewerProps, "threadSummary"> {
   /** Thread URI for summary caching */
   threadUri: string;
   /** Current user's DID for minimap */
@@ -199,6 +197,7 @@ function ThreadStatsBar({
       .slice(0, 5);
 
     // Count branches (posts with multiple children)
+    // Use a Map but only for this calculation, then discard it
     const childCounts = new Map<string, number>();
     posts.forEach((p) => {
       const record = p.record as { reply?: { parent?: { uri: string } } };
@@ -210,6 +209,8 @@ function ThreadStatsBar({
     const branchCount = Array.from(childCounts.values()).filter(
       (c) => c > 1,
     ).length;
+    // Explicitly clear the Map to help GC (though it will be collected anyway)
+    childCounts.clear();
 
     return {
       participantCount: uniqueAuthors.size,
@@ -318,6 +319,10 @@ export function ProgressiveThreadView({
 
     const score = calculateComplexityFromPosts(posts, maxDepth, branchCount);
     const determinedTier = forceTier || getComplexityTier(replyCount, score);
+
+    // Clear Maps to help GC
+    depthMap.clear();
+    childCounts.clear();
 
     return {
       config: getTierConfig(determinedTier),

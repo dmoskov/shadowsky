@@ -164,6 +164,24 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const virtualListRef = useRef<VirtualizedThreadListHandle>(null);
 
+  // Clean up postRefs when flatNodeList changes to prevent unbounded growth
+  useEffect(() => {
+    // Remove entries for indices that no longer exist
+    const validIndices = new Set(
+      flatNodeList
+        .map((_, idx) => idx)
+        .filter((idx) => idx < flatNodeList.length),
+    );
+    const currentRefs = postRefs.current;
+
+    // Delete stale entries
+    for (const key of currentRefs.keys()) {
+      if (!validIndices.has(key)) {
+        currentRefs.delete(key);
+      }
+    }
+  }, [flatNodeList]);
+
   // Manage keyboard navigation
   const {
     focusedIndex: focusedPostIndex,

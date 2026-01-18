@@ -150,6 +150,25 @@ export const VirtualizedThreadList = forwardRef<
     new Map(),
   );
 
+  // Clean up measuredHeights when nodes change to prevent unbounded growth
+  useEffect(() => {
+    setMeasuredHeights((prev) => {
+      const validUris = new Set(
+        nodes.map((n) => n.post?.uri || `node-${nodes.indexOf(n)}`),
+      );
+      const next = new Map<string, number>();
+
+      // Only keep measurements for nodes that still exist
+      for (const [key, value] of prev.entries()) {
+        if (validUris.has(key)) {
+          next.set(key, value);
+        }
+      }
+
+      return next.size === prev.size ? prev : next;
+    });
+  }, [nodes]);
+
   // Determine if virtualization should be active
   const shouldVirtualize = config.enabled && nodes.length >= config.threshold;
 
