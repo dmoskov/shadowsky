@@ -60,7 +60,7 @@
     "workbox-window": "^7.4.0"
   },
   "devDependencies": {
-    "@aws-amplify/backend-cli": "^1.8.1",
+    "@aws-amplify/backend-cli": "^1.8.2",
     "@axe-core/playwright": "^4.11.0",
     "@eslint/js": "^9.32.0",
     "@lhci/cli": "^0.15.1",
