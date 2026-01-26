@@ -34,7 +34,7 @@
     "test:unit:watch": "vitest watch"
   },
   "dependencies": {
-    "@atproto/api": "^0.18.8",
+    "@atproto/api": "^0.18.17",
     "@atproto/oauth-client-browser": "^0.3.37",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
