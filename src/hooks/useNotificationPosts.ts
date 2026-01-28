@@ -148,7 +148,12 @@ export function useNotificationPosts(
       return;
     }
 
+    // Track all timeout IDs for proper cleanup
+    const timeoutIds: NodeJS.Timeout[] = [];
+    let isCancelled = false;
+
     const fetchMorePosts = async () => {
+      if (isCancelled) return;
       setIsFetchingMore(true);
       if (!agent) return;
 
@@ -176,6 +181,7 @@ export function useNotificationPosts(
       // Only fetch missing posts from API
       if (missingBatch.length > 0) {
         for (let i = 0; i < missingBatch.length; i += 25) {
+          if (isCancelled) return;
           const batch = missingBatch.slice(i, i + 25);
           try {
             const response = await rateLimitedPostFetch(async () =>
@@ -198,6 +204,8 @@ export function useNotificationPosts(
         }
       }
 
+      if (isCancelled) return;
+
       // Update the query data with new posts
       if (newPosts.length > 0) {
         queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
@@ -210,15 +218,22 @@ export function useNotificationPosts(
       setIsFetchingMore(false);
 
       // Schedule next batch if there are more unfetched posts
-      if (unfetchedUris.length > BATCH_SIZE) {
-        setTimeout(fetchMorePosts, DELAY_BETWEEN_BATCHES);
+      if (!isCancelled && unfetchedUris.length > BATCH_SIZE) {
+        const nextTimeoutId = setTimeout(fetchMorePosts, DELAY_BETWEEN_BATCHES);
+        timeoutIds.push(nextTimeoutId);
       }
     };
 
     // Start fetching more posts immediately for better UX
     const initialDelay = 50; // Always fast
     const timeoutId = setTimeout(fetchMorePosts, initialDelay);
-    return () => clearTimeout(timeoutId);
+    timeoutIds.push(timeoutId);
+
+    return () => {
+      isCancelled = true;
+      // Clear all pending timeouts
+      timeoutIds.forEach((id) => clearTimeout(id));
+    };
   }, [
     session,
     agent,

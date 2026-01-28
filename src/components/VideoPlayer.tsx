@@ -380,6 +380,10 @@ export function VideoPlayer({
     return () => {
       isCancelled = true;
       hlsInstance?.destroy();
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
     };
   }, [src, cachedSrc, isVideoLoaded, isPlaying, retryCount]);
 

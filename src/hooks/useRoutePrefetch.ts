@@ -21,6 +21,9 @@ const PREFETCH_DELAY_MS = 150;
 // Stale time for prefetched data (5 minutes - matches query-client defaults)
 const PREFETCH_STALE_TIME = 1000 * 60 * 5;
 
+// Maximum number of concurrent pending prefetches (prevents unbounded Map growth)
+const MAX_PENDING_PREFETCHES = 50;
+
 export function useRoutePrefetch() {
   const { agent } = useAuth();
   const queryClient = useQueryClient();
@@ -33,6 +36,34 @@ export function useRoutePrefetch() {
   useEffect(() => {
     routePrefetchService.recordNavigation(location.pathname);
   }, [location.pathname]);
+
+  // Cleanup all pending prefetch timers on unmount
+  useEffect(() => {
+    return () => {
+      // Clear all pending timers
+      for (const timer of pendingPrefetchRef.current.values()) {
+        clearTimeout(timer);
+      }
+      pendingPrefetchRef.current.clear();
+    };
+  }, []);
+
+  // Helper to add a pending timer with size limit enforcement
+  const addPendingTimer = useCallback(
+    (key: string, timer: NodeJS.Timeout) => {
+      // If we're at max capacity, remove the oldest entry
+      if (pendingPrefetchRef.current.size >= MAX_PENDING_PREFETCHES) {
+        const firstKey = pendingPrefetchRef.current.keys().next().value;
+        if (firstKey) {
+          const oldTimer = pendingPrefetchRef.current.get(firstKey);
+          if (oldTimer) clearTimeout(oldTimer);
+          pendingPrefetchRef.current.delete(firstKey);
+        }
+      }
+      pendingPrefetchRef.current.set(key, timer);
+    },
+    [],
+  );
 
   /**
    * Prefetch profile data for a given handle.
@@ -75,9 +106,9 @@ export function useRoutePrefetch() {
         pendingPrefetchRef.current.delete(`profile:${handle}`);
       }, PREFETCH_DELAY_MS);
 
-      pendingPrefetchRef.current.set(`profile:${handle}`, timer);
+      addPendingTimer(`profile:${handle}`, timer);
     },
-    [agent, queryClient],
+    [agent, queryClient, addPendingTimer],
   );
 
   /**
@@ -134,9 +165,9 @@ export function useRoutePrefetch() {
         pendingPrefetchRef.current.delete(`thread:${postUri}`);
       }, PREFETCH_DELAY_MS);
 
-      pendingPrefetchRef.current.set(`thread:${postUri}`, timer);
+      addPendingTimer(`thread:${postUri}`, timer);
     },
-    [agent, queryClient],
+    [agent, queryClient, addPendingTimer],
   );
 
   /**
@@ -192,8 +223,8 @@ export function useRoutePrefetch() {
       pendingPrefetchRef.current.delete(`route:${routePath}`);
     }, PREFETCH_DELAY_MS);
 
-    pendingPrefetchRef.current.set(`route:${routePath}`, timer);
-  }, []);
+    addPendingTimer(`route:${routePath}`, timer);
+  }, [addPendingTimer]);
 
   /**
    * Cancel a pending route chunk prefetch
