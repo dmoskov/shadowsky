@@ -49,21 +49,18 @@ export function useRoutePrefetch() {
   }, []);
 
   // Helper to add a pending timer with size limit enforcement
-  const addPendingTimer = useCallback(
-    (key: string, timer: NodeJS.Timeout) => {
-      // If we're at max capacity, remove the oldest entry
-      if (pendingPrefetchRef.current.size >= MAX_PENDING_PREFETCHES) {
-        const firstKey = pendingPrefetchRef.current.keys().next().value;
-        if (firstKey) {
-          const oldTimer = pendingPrefetchRef.current.get(firstKey);
-          if (oldTimer) clearTimeout(oldTimer);
-          pendingPrefetchRef.current.delete(firstKey);
-        }
+  const addPendingTimer = useCallback((key: string, timer: NodeJS.Timeout) => {
+    // If we're at max capacity, remove the oldest entry
+    if (pendingPrefetchRef.current.size >= MAX_PENDING_PREFETCHES) {
+      const firstKey = pendingPrefetchRef.current.keys().next().value;
+      if (firstKey) {
+        const oldTimer = pendingPrefetchRef.current.get(firstKey);
+        if (oldTimer) clearTimeout(oldTimer);
+        pendingPrefetchRef.current.delete(firstKey);
       }
-      pendingPrefetchRef.current.set(key, timer);
-    },
-    [],
-  );
+    }
+    pendingPrefetchRef.current.set(key, timer);
+  }, []);
 
   /**
    * Prefetch profile data for a given handle.
@@ -210,21 +207,26 @@ export function useRoutePrefetch() {
    * Implements hover intent detection with 150ms delay.
    * Call this on mouseEnter of navigation links.
    */
-  const prefetchRouteChunk = useCallback((routePath: string) => {
-    // Cancel any existing pending prefetch for this route
-    const existingTimer = pendingPrefetchRef.current.get(`route:${routePath}`);
-    if (existingTimer) {
-      clearTimeout(existingTimer);
-    }
+  const prefetchRouteChunk = useCallback(
+    (routePath: string) => {
+      // Cancel any existing pending prefetch for this route
+      const existingTimer = pendingPrefetchRef.current.get(
+        `route:${routePath}`,
+      );
+      if (existingTimer) {
+        clearTimeout(existingTimer);
+      }
 
-    // Hover intent detection: wait 150ms before prefetching
-    const timer = setTimeout(() => {
-      routePrefetchService.prefetchRoute(routePath);
-      pendingPrefetchRef.current.delete(`route:${routePath}`);
-    }, PREFETCH_DELAY_MS);
+      // Hover intent detection: wait 150ms before prefetching
+      const timer = setTimeout(() => {
+        routePrefetchService.prefetchRoute(routePath);
+        pendingPrefetchRef.current.delete(`route:${routePath}`);
+      }, PREFETCH_DELAY_MS);
 
-    addPendingTimer(`route:${routePath}`, timer);
-  }, [addPendingTimer]);
+      addPendingTimer(`route:${routePath}`, timer);
+    },
+    [addPendingTimer],
+  );
 
   /**
    * Cancel a pending route chunk prefetch

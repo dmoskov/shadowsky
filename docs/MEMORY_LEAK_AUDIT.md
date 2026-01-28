@@ -33,6 +33,7 @@ Recent commits have already addressed several major memory leaks:
 **Issue**: HLS.js instances were not properly destroyed on component unmount. The cleanup only destroyed `hlsInstance` but not `hlsRef.current`, potentially leaving event listeners attached.
 
 **Fix Applied**:
+
 ```typescript
 return () => {
   isCancelled = true;
@@ -53,6 +54,7 @@ return () => {
 **Issue**: `pendingPrefetchRef` Map could grow unbounded as prefetch timers were added but never cleaned up on unmount, and no size limit prevented accumulation during component lifetime.
 
 **Fix Applied**:
+
 1. Added cleanup effect to clear all pending timers on unmount
 2. Implemented maximum size limit (50 entries) with automatic eviction
 3. Created `addPendingTimer` helper to enforce size limit
@@ -91,6 +93,7 @@ const addPendingTimer = useCallback((key: string, timer: NodeJS.Timeout) => {
 **Issue**: The `fetchMorePosts` function recursively scheduled itself via `setTimeout` on line 214, but the cleanup only cleared the initial timeout. If the component unmounted during progressive fetching, chained timeouts would continue firing.
 
 **Fix Applied**:
+
 1. Introduced `timeoutIds` array to track all scheduled timeouts
 2. Added `isCancelled` flag to prevent operations after unmount
 3. Modified cleanup to clear all tracked timeouts
@@ -125,6 +128,7 @@ return () => {
 The following components/hooks were audited and confirmed to have proper cleanup:
 
 ### Event Listeners ✅
+
 - **useOfflinePostQueue**: Custom event listeners properly cleaned (lines 333-352)
 - **useOfflineFeed**: Visibility change listeners properly cleaned (lines 527-530, 588-591)
 - **WebSocket Service**: Comprehensive cleanup of visibility and online/offline listeners (lines 1069-1090)
@@ -132,6 +136,7 @@ The following components/hooks were audited and confirmed to have proper cleanup
 - **All other addEventListener usage**: Verified with matching removeEventListener in cleanup
 
 ### Timers ✅
+
 - **useINPOptimization**: All intervals properly cleaned in useEffect returns
 - **useInteractionState**: setInterval cleaned on line 104
 - **useDeferredTasks**: setInterval cleaned on line 136
@@ -139,11 +144,13 @@ The following components/hooks were audited and confirmed to have proper cleanup
 - **useScrollPersistence**: Timer cleanup added in previous fix
 
 ### Observers ✅
+
 - **VideoPlayer**: IntersectionObserver properly disconnected (line 164)
 - **Home/NotificationsFeed**: IntersectionObserver cleanup verified
 - **useRealTimeEngagement**: MutationObserver cleanup verified
 
 ### WebSocket Connections ✅
+
 - **WebSocket Service**: Proper disconnect handling with cleanup of all timers and listeners (lines 257-269)
 
 ## React DevTools Profiling Guide
@@ -170,14 +177,14 @@ To verify these fixes and monitor for future memory leaks:
 ```javascript
 // In browser console
 // 1. Note current memory usage
-performance.memory.usedJSHeapSize / 1048576 // MB
+performance.memory.usedJSHeapSize / 1048576; // MB
 
 // 2. Force garbage collection (if available)
 if (window.gc) window.gc();
 
 // 3. Navigate through app
 // 4. Check memory again
-performance.memory.usedJSHeapSize / 1048576 // MB
+performance.memory.usedJSHeapSize / 1048576; // MB
 ```
 
 ### 4. Event Listener Detection
@@ -191,12 +198,13 @@ getEventListeners(document);
 ### 5. Automated Testing
 
 Add to E2E tests:
+
 ```typescript
-test('memory leak detection', async ({ page }) => {
+test("memory leak detection", async ({ page }) => {
   // Navigate through app
-  await page.goto('/home');
-  await page.goto('/notifications');
-  await page.goto('/home');
+  await page.goto("/home");
+  await page.goto("/notifications");
+  await page.goto("/home");
 
   // Check metrics
   const metrics = await page.metrics();
@@ -207,11 +215,13 @@ test('memory leak detection', async ({ page }) => {
 ## Recommendations
 
 ### Immediate Actions ✅ COMPLETE
+
 - [x] Fix VideoPlayer HLS cleanup
 - [x] Fix useRoutePrefetch Map growth
 - [x] Fix useNotificationPosts timeout chain
 
 ### Future Monitoring
+
 1. Add memory profiling to CI/CD pipeline
 2. Set up automated leak detection in E2E tests
 3. Implement periodic memory checks in development mode
@@ -220,15 +230,19 @@ test('memory leak detection', async ({ page }) => {
 ### Best Practices Going Forward
 
 1. **Always use cleanup returns in useEffect**
+
    ```typescript
    useEffect(() => {
-     const listener = () => { /* ... */ };
-     element.addEventListener('event', listener);
-     return () => element.removeEventListener('event', listener);
+     const listener = () => {
+       /* ... */
+     };
+     element.addEventListener("event", listener);
+     return () => element.removeEventListener("event", listener);
    }, []);
    ```
 
 2. **Track all timers**
+
    ```typescript
    const timerRef = useRef<NodeJS.Timeout | null>(null);
    useEffect(() => {
@@ -240,6 +254,7 @@ test('memory leak detection', async ({ page }) => {
    ```
 
 3. **Implement size limits for Maps/Sets**
+
    ```typescript
    const MAX_SIZE = 100;
    if (map.size >= MAX_SIZE) {
@@ -257,7 +272,9 @@ test('memory leak detection', async ({ page }) => {
        if (!isCancelled) setState(data);
      };
      fetchData();
-     return () => { isCancelled = true; };
+     return () => {
+       isCancelled = true;
+     };
    }, []);
    ```
 
@@ -278,6 +295,7 @@ test('memory leak detection', async ({ page }) => {
 All changes preserve existing functionality while adding proper cleanup. The build passes without TypeScript errors, confirming type safety is maintained.
 
 To verify the fixes in runtime:
+
 1. Open React DevTools Profiler
 2. Navigate between views repeatedly (Home → Thread → Profile → back)
 3. Monitor Components tab for mounting/unmounting
