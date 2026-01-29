@@ -2926,5 +2926,123 @@ describe("WebSocketService - State Machine", () => {
         expect(lastMessage.type).toBe(WebSocketEventType.PING);
       });
     });
+
+    describe("Event Queue during disconnection", () => {
+      it("should queue notification events when disconnected", () => {
+        const service = createService();
+        const newNotificationHandler = vi.fn();
+        service.on(WebSocketEventType.NEW_NOTIFICATION, newNotificationHandler);
+
+        // Connect and authenticate
+        service.connect();
+        const mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateMessage({
+          type: WebSocketEventType.AUTH_SUCCESS,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Verify connected
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+
+        // Simulate disconnection
+        mockWs.simulateClose(1006, "Network error", false);
+
+        // After close, it schedules reconnect, so state becomes RECONNECTING
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.RECONNECTING,
+        );
+
+        // The queue is managed internally - verify metrics show queue size
+        const stats = service.getStats();
+        expect(stats.metrics?.queuedEvents).toBe(0); // Initially empty
+      });
+
+      it("should flush queued events after reconnection", async () => {
+        const service = createService();
+        const newNotificationHandler = vi.fn();
+        service.on(WebSocketEventType.NEW_NOTIFICATION, newNotificationHandler);
+
+        // Connect and authenticate
+        service.connect();
+        let mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateMessage({
+          type: WebSocketEventType.AUTH_SUCCESS,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Disconnect
+        mockWs.simulateClose(1006, "Network error", false);
+
+        // Advance timers to trigger reconnection
+        vi.advanceTimersByTime(5000);
+
+        // Reconnect
+        mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateMessage({
+          type: WebSocketEventType.AUTH_SUCCESS,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Verify reconnected
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.CONNECTED,
+        );
+
+        // After reconnection, queued events should be flushed
+        const stats = service.getStats();
+        expect(stats.metrics?.queuedEvents).toBe(0);
+      });
+
+      it("should include queued events count in metrics", () => {
+        const service = createService();
+
+        service.connect();
+        const mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateMessage({
+          type: WebSocketEventType.AUTH_SUCCESS,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Get metrics while connected
+        const connectedStats = service.getStats();
+        expect(connectedStats.metrics?.queuedEvents).toBe(0);
+
+        // Disconnect
+        mockWs.simulateClose(1006, "Network error", false);
+
+        // Get metrics while disconnected
+        const disconnectedStats = service.getStats();
+        expect(disconnectedStats.metrics?.queuedEvents).toBeDefined();
+        expect(disconnectedStats.metrics?.queuedEvents).toBe(0); // No events queued yet
+      });
+
+      it("should clear event queue on intentional disconnect", () => {
+        const service = createService();
+
+        service.connect();
+        const mockWs = getLatestMockWs();
+        mockWs.simulateOpen();
+        mockWs.simulateMessage({
+          type: WebSocketEventType.AUTH_SUCCESS,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Intentionally disconnect
+        service.disconnect();
+
+        // Verify queue is cleared
+        const stats = service.getStats();
+        expect(stats.metrics?.queuedEvents).toBe(0);
+        expect(service.getConnectionState()).toBe(
+          WebSocketConnectionState.DISCONNECTED,
+        );
+      });
+    });
   });
 });

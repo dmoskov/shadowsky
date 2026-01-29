@@ -184,6 +184,12 @@ export class WebSocketService {
   private boundOnlineHandler: (() => void) | null = null;
   private boundOfflineHandler: (() => void) | null = null;
 
+  // Event queue for buffering notifications during disconnection
+  private eventQueue: WebSocketMessage[] = [];
+  private readonly MAX_QUEUED_EVENTS = 100;
+  private disconnectedAt: number | null = null;
+  private readonly MAX_QUEUE_TIME_MS = 5 * 60 * 1000; // 5 minutes
+
   constructor(config: WebSocketConfig) {
     this.config = {
       reconnectDelay: WS_CONFIG.INITIAL_RECONNECT_DELAY_MS,
@@ -259,6 +265,7 @@ export class WebSocketService {
     this.isIntentionallyClosed = true;
     this.clearTimers();
     this.removeBrowserEventListeners();
+    this.clearEventQueue(); // Clear queued events on intentional disconnect
 
     if (this.ws) {
       this.ws.close(1000, "Client disconnect");
@@ -401,6 +408,7 @@ export class WebSocketService {
       totalPingPongExchanges: this.totalPingPongExchanges,
       isDegraded: degradedState.isDegraded,
       degradedReason: degradedState.reason,
+      queuedEvents: this.eventQueue.length,
     };
   }
 
@@ -756,6 +764,19 @@ export class WebSocketService {
   }
 
   private emit(event: WebSocketMessage): void {
+    // If disconnected or reconnecting, queue notification-related events
+    if (
+      (this.stats.connectionState === WebSocketConnectionState.DISCONNECTED ||
+        this.stats.connectionState === WebSocketConnectionState.RECONNECTING ||
+        this.stats.connectionState === WebSocketConnectionState.ERROR) &&
+      (event.type === WebSocketEventType.NEW_NOTIFICATION ||
+        event.type === WebSocketEventType.NOTIFICATION_COUNT ||
+        event.type === WebSocketEventType.ENGAGEMENT_UPDATE)
+    ) {
+      this.queueEvent(event);
+      return;
+    }
+
     const handlers = this.eventHandlers.get(event.type);
     if (handlers) {
       handlers.forEach((handler) => {
@@ -1093,6 +1114,88 @@ export class WebSocketService {
   }
 
   /**
+   * Queue an event for later processing when disconnected.
+   * Prevents notification gaps during brief disconnections.
+   */
+  private queueEvent(event: WebSocketMessage): void {
+    // Don't queue connection-related events
+    if (
+      event.type === WebSocketEventType.CONNECT ||
+      event.type === WebSocketEventType.DISCONNECT ||
+      event.type === WebSocketEventType.RECONNECT ||
+      event.type === WebSocketEventType.ERROR ||
+      event.type === WebSocketEventType.AUTH_SUCCESS ||
+      event.type === WebSocketEventType.AUTH_FAILURE ||
+      event.type === WebSocketEventType.AUTH_EXPIRED ||
+      event.type === WebSocketEventType.PING ||
+      event.type === WebSocketEventType.PONG
+    ) {
+      return;
+    }
+
+    // Check if we've been disconnected too long to queue
+    if (
+      this.disconnectedAt &&
+      Date.now() - this.disconnectedAt > this.MAX_QUEUE_TIME_MS
+    ) {
+      this.log(
+        "Disconnected too long, not queuing events (will refetch on reconnect)",
+        "warn",
+      );
+      this.clearEventQueue();
+      return;
+    }
+
+    // Add event to queue
+    if (this.eventQueue.length < this.MAX_QUEUED_EVENTS) {
+      this.eventQueue.push(event);
+      this.log(
+        `Queued event: ${event.type} (queue size: ${this.eventQueue.length})`,
+      );
+    } else {
+      this.log(
+        `Event queue full (${this.MAX_QUEUED_EVENTS}), dropping oldest event`,
+        "warn",
+      );
+      this.eventQueue.shift(); // Remove oldest
+      this.eventQueue.push(event);
+    }
+  }
+
+  /**
+   * Flush queued events after reconnection.
+   * Emits all buffered events to handlers.
+   */
+  private flushEventQueue(): void {
+    if (this.eventQueue.length === 0) {
+      return;
+    }
+
+    this.log(
+      `Flushing ${this.eventQueue.length} queued events after reconnection`,
+    );
+
+    // Emit all queued events
+    const events = [...this.eventQueue];
+    this.clearEventQueue();
+
+    for (const event of events) {
+      this.emit(event);
+    }
+  }
+
+  /**
+   * Clear the event queue.
+   */
+  private clearEventQueue(): void {
+    if (this.eventQueue.length > 0) {
+      this.log(`Clearing ${this.eventQueue.length} queued events`);
+    }
+    this.eventQueue = [];
+    this.disconnectedAt = null;
+  }
+
+  /**
    * Central state transition handler - updates metrics and logs state changes
    * See: docs/websocket-state-machine.md#state-transition-table
    *
@@ -1116,6 +1219,8 @@ export class WebSocketService {
       this.totalConnectedTime += now - this.lastConnectedTimestamp;
       this.lastDisconnectedTimestamp = now;
       this.lastConnectedTimestamp = null;
+      // Mark disconnection time for event queue timeout tracking
+      this.disconnectedAt = now;
     }
 
     // Track when connection is established
@@ -1128,6 +1233,9 @@ export class WebSocketService {
       // Check if we should reset metrics after long disconnection
       this.resetMetricsIfNeeded();
       this.lastConnectedTimestamp = now;
+
+      // Flush any queued events after reconnection
+      this.flushEventQueue();
     }
 
     // Track reconnections
