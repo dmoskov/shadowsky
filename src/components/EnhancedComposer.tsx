@@ -825,7 +825,7 @@ export function EnhancedComposer({
                             ?.slice(0, 2)
                             .map((img: any, idx: number) => (
                               <img
-                                key={idx}
+                                key={`composer-quote-img-${img.thumb}-${idx}`}
                                 src={proxifyBskyImage(img.thumb)}
                                 alt=""
                                 className="h-16 w-16 rounded object-cover"
@@ -1020,7 +1020,7 @@ export function EnhancedComposer({
           <div className="flex flex-wrap gap-1">
             {hashtagSuggestions.map((tag, index) => (
               <button
-                key={index}
+                key={`hashtag-suggestion-${tag.tag}-${index}`}
                 onClick={() => handleSelectHashtag(tag.tag)}
                 className="rounded-full border px-2 py-0.5 text-xs transition-all hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 dark:hover:bg-opacity-20"
                 style={{

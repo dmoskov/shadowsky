@@ -515,7 +515,7 @@ export function DevPerformanceOverlay() {
               }}
             >
               {recentViolations.map((v, i) => (
-                <div key={i} style={{ marginBottom: "2px" }}>
+                <div key={`violation-${i}-${v.substring(0, 20)}`} style={{ marginBottom: "2px" }}>
                   {v}
                 </div>
               ))}

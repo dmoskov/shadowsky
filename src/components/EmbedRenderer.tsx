@@ -124,7 +124,7 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
 
               return (
                 <div
-                  key={idx}
+                  key={`embed-img-${img.thumb}-${idx}`}
                   className={`group relative cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-90 ${
                     embedData.images.length === 3 && idx === 0
                       ? "col-span-2"

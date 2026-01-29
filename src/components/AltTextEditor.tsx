@@ -225,7 +225,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
                 <div className="space-y-2">
                   {aiSuggestions.map((suggestion, index) => (
                     <button
-                      key={index}
+                      key={`ai-suggestion-${index}-${suggestion.substring(0, 20)}`}
                       onClick={() => applySuggestion(suggestion, index)}
                       className={`w-full rounded-lg border p-3 text-left text-sm transition-colors ${
                         selectedSuggestion === index
@@ -267,7 +267,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
               <div className="flex flex-wrap gap-1.5">
                 {ALT_TEXT_TEMPLATES.map((template, index) => (
                   <button
-                    key={index}
+                    key={`template-${template.label}-${index}`}
                     onClick={() => applyTemplate(template.prefix)}
                     className="rounded-full border px-2.5 py-1 text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
                     style={{

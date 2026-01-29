@@ -802,7 +802,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                 <div className="absolute inset-0 flex">
                   {thumbnails.map((thumb, index) => (
                     <div
-                      key={index}
+                      key={`video-thumb-${index}-${thumb.substring(0, 20)}`}
                       className="flex-1 bg-cover bg-center"
                       style={{
                         backgroundImage: `url(${thumb})`,
