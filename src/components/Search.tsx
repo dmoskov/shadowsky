@@ -1041,7 +1041,7 @@ export const Search: React.FC = () => {
                   </label>
                   <div className="space-y-2">
                     {filters.from.map((user, i) => (
-                      <div key={i} className="relative">
+                      <div key={`from-user-${i}`} className="relative">
                         <div className="flex items-center gap-2">
                           <input
                             ref={(el) => (inputRefs.current[`from-${i}`] = el)}
@@ -1414,7 +1414,7 @@ export const Search: React.FC = () => {
                   </label>
                   <div className="space-y-2">
                     {filters.phrases.map((phrase, i) => (
-                      <div key={i} className="flex items-center gap-2">
+                      <div key={`phrase-${i}`} className="flex items-center gap-2">
                         <input
                           type="text"
                           value={phrase}
@@ -1470,7 +1470,7 @@ export const Search: React.FC = () => {
                   </label>
                   <div className="space-y-2">
                     {filters.hashtags.map((tag, i) => (
-                      <div key={i} className="flex items-center gap-2">
+                      <div key={`hashtag-${i}`} className="flex items-center gap-2">
                         <input
                           type="text"
                           value={tag}
@@ -1526,7 +1526,7 @@ export const Search: React.FC = () => {
                   </label>
                   <div className="space-y-2">
                     {filters.mentions.map((user, i) => (
-                      <div key={i} className="relative">
+                      <div key={`mention-user-${i}`} className="relative">
                         <div className="flex items-center gap-2">
                           <input
                             ref={(el) =>
@@ -1698,7 +1698,7 @@ export const Search: React.FC = () => {
                   </label>
                   <div className="space-y-2">
                     {filters.domains.map((domain, i) => (
-                      <div key={i} className="flex items-center gap-2">
+                      <div key={`domain-${i}`} className="flex items-center gap-2">
                         <input
                           type="text"
                           value={domain}

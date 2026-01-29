@@ -114,7 +114,7 @@ export const SearchSkeleton: React.FC = () => {
       {/* Results */}
       <div className="divide-y divide-bsky-border-primary">
         {Array.from({ length: 5 }).map((_, i) => (
-          <SearchResultSkeleton key={i} />
+          <SearchResultSkeleton key={`search-result-${i}`} />
         ))}
       </div>
     </div>
@@ -171,7 +171,7 @@ export const ListsSkeleton: React.FC = () => {
       {/* List items */}
       <div className="divide-y divide-bsky-border-primary">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 p-4">
+          <div key={`list-item-${i}`} className="flex items-center gap-3 p-4">
             <SkeletonLoader variant="circular" width={44} height={44} />
             <div className="flex-1">
               <SkeletonLoader width="50%" height={18} className="mb-1" />
@@ -200,7 +200,7 @@ export const SettingsSkeleton: React.FC = () => {
         <div className="hidden w-48 space-y-2 lg:block">
           {Array.from({ length: 8 }).map((_, i) => (
             <SkeletonLoader
-              key={i}
+              key={`settings-nav-${i}`}
               width="100%"
               height={36}
               variant="rounded"
@@ -279,7 +279,7 @@ export const AnalyticsSkeleton: React.FC = () => {
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <div
-            key={i}
+            key={`analytics-stat-${i}`}
             className="rounded-lg border border-bsky-border-primary p-4"
           >
             <SkeletonLoader width={60} height={14} className="mb-2" />

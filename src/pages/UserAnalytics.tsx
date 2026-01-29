@@ -1214,7 +1214,7 @@ export const UserAnalytics: React.FC = () => {
                   </h3>
                   <div className="space-y-4">
                     {analysisData.contentThemes.map((theme, index) => (
-                      <div key={index} className="space-y-2">
+                      <div key={theme.theme} className="space-y-2">
                         <div className="flex items-start justify-between gap-2">
                           <h4
                             className="font-medium"
@@ -1247,7 +1247,7 @@ export const UserAnalytics: React.FC = () => {
                           <div className="space-y-1 pl-4">
                             {theme.examples.map((example, i) => (
                               <p
-                                key={i}
+                                key={`${theme.theme}-example-${i}`}
                                 className="text-xs italic"
                                 style={{ color: "var(--bsky-text-secondary)" }}
                               >
@@ -1298,7 +1298,7 @@ export const UserAnalytics: React.FC = () => {
                         {analysisData.writingStyle.characteristics.map(
                           (char, i) => (
                             <li
-                              key={i}
+                              key={`characteristic-${char.slice(0, 20)}-${i}`}
                               className="flex items-start gap-2 text-sm"
                               style={{ color: "var(--bsky-text-secondary)" }}
                             >
@@ -1350,7 +1350,7 @@ export const UserAnalytics: React.FC = () => {
                       {analysisData.engagementPatterns.topPerformers.map(
                         (item, i) => (
                           <li
-                            key={i}
+                            key={`top-performer-${item.slice(0, 20)}-${i}`}
                             className="text-sm"
                             style={{ color: "var(--bsky-text-secondary)" }}
                           >
@@ -1371,7 +1371,7 @@ export const UserAnalytics: React.FC = () => {
                       {analysisData.engagementPatterns.contentStrengths.map(
                         (item, i) => (
                           <li
-                            key={i}
+                            key={`content-strength-${item.slice(0, 20)}-${i}`}
                             className="text-sm"
                             style={{ color: "var(--bsky-text-secondary)" }}
                           >
@@ -1395,7 +1395,7 @@ export const UserAnalytics: React.FC = () => {
                         []
                       ).map((item, i) => (
                         <li
-                          key={i}
+                          key={`observation-${item.slice(0, 20)}-${i}`}
                           className="text-sm"
                           style={{ color: "var(--bsky-text-secondary)" }}
                         >
@@ -1462,7 +1462,7 @@ export const UserAnalytics: React.FC = () => {
 
                           return (
                             <div
-                              key={i}
+                              key={`posting-time-${rec.dayOfWeek}-${rec.hourRange.start}`}
                               className="flex flex-col rounded-lg p-4"
                               style={{
                                 backgroundColor: "var(--bsky-bg-secondary)",

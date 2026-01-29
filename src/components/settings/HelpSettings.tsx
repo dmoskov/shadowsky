@@ -45,7 +45,7 @@ const renderContent = (content: string): React.ReactNode => {
     if (line.startsWith("# ")) {
       return (
         <h1
-          key={index}
+          key={`h1-${index}`}
           className="mb-4 mt-6 text-2xl font-bold first:mt-0"
           style={{ color: "var(--bsky-text-primary)" }}
         >
@@ -56,7 +56,7 @@ const renderContent = (content: string): React.ReactNode => {
     if (line.startsWith("## ")) {
       return (
         <h2
-          key={index}
+          key={`h2-${index}`}
           className="mb-3 mt-5 text-xl font-semibold"
           style={{ color: "var(--bsky-text-primary)" }}
         >
@@ -67,7 +67,7 @@ const renderContent = (content: string): React.ReactNode => {
     if (line.startsWith("### ")) {
       return (
         <h3
-          key={index}
+          key={`h3-${index}`}
           className="mb-2 mt-4 text-lg font-medium"
           style={{ color: "var(--bsky-text-primary)" }}
         >
@@ -98,7 +98,7 @@ const renderContent = (content: string): React.ReactNode => {
     if (line.startsWith("- ")) {
       return (
         <li
-          key={index}
+          key={`li-${index}`}
           className="ml-4 list-disc"
           style={{ color: "var(--bsky-text-secondary)" }}
           dangerouslySetInnerHTML={{ __html: processed.slice(2) }}
@@ -111,7 +111,7 @@ const renderContent = (content: string): React.ReactNode => {
     if (numberedMatch) {
       return (
         <li
-          key={index}
+          key={`oli-${index}`}
           className="ml-4 list-decimal"
           style={{ color: "var(--bsky-text-secondary)" }}
           dangerouslySetInnerHTML={{
@@ -123,13 +123,13 @@ const renderContent = (content: string): React.ReactNode => {
 
     // Empty line
     if (line.trim() === "") {
-      return <div key={index} className="h-2" />;
+      return <div key={`spacer-${index}`} className="h-2" />;
     }
 
     // Regular paragraph
     return (
       <p
-        key={index}
+        key={`p-${index}`}
         className="mb-2"
         style={{ color: "var(--bsky-text-secondary)" }}
         dangerouslySetInnerHTML={{ __html: processed }}
@@ -170,7 +170,7 @@ const renderContent = (content: string): React.ReactNode => {
               <tr>
                 {tableHeaders.map((header, idx) => (
                   <th
-                    key={idx}
+                    key={`th-${header}-${idx}`}
                     className="border px-3 py-2 text-left font-medium"
                     style={{
                       borderColor: "var(--bsky-border-primary)",
@@ -222,7 +222,7 @@ const renderContent = (content: string): React.ReactNode => {
             <tr>
               {tableHeaders.map((header, idx) => (
                 <th
-                  key={idx}
+                  key={`th-final-${header}-${idx}`}
                   className="border px-3 py-2 text-left font-medium"
                   style={{
                     borderColor: "var(--bsky-border-primary)",

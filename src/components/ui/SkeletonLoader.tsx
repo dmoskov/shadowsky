@@ -231,7 +231,7 @@ export const FeedSkeleton: React.FC<FeedSkeletonProps> = ({
     >
       {Array.from({ length: count }).map((_, i) => (
         <PostSkeleton
-          key={i}
+          key={`feed-skeleton-${i}`}
           showImage={showImages && i % 2 === 0}
           aria-label={`Loading post ${i + 1}`}
         />
@@ -430,7 +430,7 @@ export const NotificationFeedSkeleton: React.FC<
     >
       {Array.from({ length: count }).map((_, i) => (
         <NotificationSkeleton
-          key={i}
+          key={`notification-skeleton-${i}`}
           aria-label={`Loading notification ${i + 1}`}
         />
       ))}
@@ -593,7 +593,7 @@ export const ThreadSkeleton: React.FC<ThreadSkeletonProps> = ({
       {/* Reply skeletons with thread line styling */}
       <div className="space-y-0">
         {Array.from({ length: replyCount }).map((_, i) => (
-          <div key={i} className="relative">
+          <div key={`thread-reply-${i}`} className="relative">
             {/* Thread line connecting replies */}
             {i < replyCount - 1 && (
               <div className="absolute bottom-0 left-6 top-12 w-0.5 bg-bsky-border-primary" />
@@ -658,7 +658,7 @@ export const ConversationListSkeleton: React.FC<
     >
       {Array.from({ length: count }).map((_, i) => (
         <div
-          key={i}
+          key={`conversation-skeleton-${i}`}
           className="flex cursor-pointer items-center gap-3 p-4 transition-colors"
         >
           {/* Avatar - h-10 w-10 (40x40px) matches DirectMessages line 430 */}
@@ -732,7 +732,7 @@ export const MessageListSkeleton: React.FC<MessageListSkeletonProps> = ({
 
         return (
           <div
-            key={i}
+            key={`message-skeleton-${i}`}
             className={`flex ${isOutgoing ? "justify-end" : "justify-start"}`}
           >
             <div className="max-w-[70%]" style={{ width: `${width}%` }}>
@@ -839,7 +839,7 @@ export const UserListSkeleton: React.FC<UserListSkeletonProps> = ({
       aria-label={ariaLabel}
     >
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 p-4">
+        <div key={`user-skeleton-${i}`} className="flex items-center gap-3 p-4">
           <SkeletonLoader
             variant="circular"
             width={48}
@@ -872,7 +872,7 @@ export const ListItemSkeleton: React.FC<ListItemSkeletonProps> = ({
     <div className="space-y-2 p-4" role="status" aria-label={ariaLabel}>
       {Array.from({ length: count }).map((_, i) => (
         <div
-          key={i}
+          key={`list-item-skeleton-${i}`}
           className="flex items-center justify-between rounded-lg border border-bsky-border-primary p-3"
         >
           <div className="flex-1">
