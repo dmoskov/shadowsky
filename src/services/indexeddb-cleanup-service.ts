@@ -426,7 +426,9 @@ export class IndexedDBCleanupService {
       }
 
       // If still having issues, try clearing everything
-      debug.log("⚠️ Normal cleanup didn't free enough space, considering full clear");
+      debug.log(
+        "⚠️ Normal cleanup didn't free enough space, considering full clear",
+      );
       return false;
     } catch (error) {
       debug.error("Failed to handle quota exceeded:", error);
@@ -452,17 +454,12 @@ export class IndexedDBCleanupService {
 // Expose to window for debugging
 if (typeof window !== "undefined") {
   (window as unknown as Record<string, unknown>).indexedDBCleanup = {
-    getStats: () =>
-      IndexedDBCleanupService.getInstance().getStorageStats(),
+    getStats: () => IndexedDBCleanupService.getInstance().getStorageStats(),
     runCleanup: (days?: number) =>
-      IndexedDBCleanupService.getInstance().cleanupOldNotifications(
-        days,
-      ),
+      IndexedDBCleanupService.getInstance().cleanupOldNotifications(days),
     clearAll: () =>
       IndexedDBCleanupService.getInstance().clearAllNotifications(),
-    isWarning: () =>
-      IndexedDBCleanupService.getInstance().isStorageWarning(),
-    isCritical: () =>
-      IndexedDBCleanupService.getInstance().isStorageCritical(),
+    isWarning: () => IndexedDBCleanupService.getInstance().isStorageWarning(),
+    isCritical: () => IndexedDBCleanupService.getInstance().isStorageCritical(),
   };
 }

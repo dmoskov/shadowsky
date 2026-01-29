@@ -54,9 +54,8 @@ export const StorageManagementSettings: React.FC = () => {
         setMessage(null);
 
         try {
-          const result = await cleanupService.cleanupOldNotifications(
-            retentionDays,
-          );
+          const result =
+            await cleanupService.cleanupOldNotifications(retentionDays);
 
           setMessage({
             type: "success",
@@ -116,7 +115,7 @@ export const StorageManagementSettings: React.FC = () => {
         }
       },
       {
-        variant: "destructive",
+        variant: "error",
         title: "Clear All Notifications",
         confirmText: "Delete All",
         cancelText: "Cancel",
@@ -201,7 +200,9 @@ export const StorageManagementSettings: React.FC = () => {
                         ? "bg-yellow-600"
                         : "bg-green-600"
                   }`}
-                  style={{ width: `${Math.min(storageStats.usagePercent, 100)}%` }}
+                  style={{
+                    width: `${Math.min(storageStats.usagePercent, 100)}%`,
+                  }}
                 />
               </div>
               <div

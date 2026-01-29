@@ -1,7 +1,6 @@
 import { AppBskyNotificationListNotifications } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { withIndexedDBRetry } from "../utils/storage-retry";
-import type { IndexedDBCleanupService } from "./indexeddb-cleanup-service";
 
 type Notification = AppBskyNotificationListNotifications.Notification;
 
@@ -225,9 +224,8 @@ export class NotificationStorageDB {
         );
 
         // Dynamically import to avoid circular dependency
-        const { IndexedDBCleanupService } = await import(
-          "./indexeddb-cleanup-service"
-        );
+        const { IndexedDBCleanupService } =
+          await import("./indexeddb-cleanup-service");
         const cleanupService = IndexedDBCleanupService.getInstance();
         const recovered = await cleanupService.handleQuotaExceeded();
 
