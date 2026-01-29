@@ -712,7 +712,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                         >
                           {images.slice(0, 4).map((img, idx) => (
                             <img
-                              key={idx}
+                              key={`notif-img-${img.thumb}-${idx}`}
                               src={proxifyBskyImage(img.thumb)}
                               alt={img.alt || ""}
                               className="w-full rounded-lg border object-cover"

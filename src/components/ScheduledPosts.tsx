@@ -531,7 +531,7 @@ const CalendarView: React.FC<{
 
           return (
             <div
-              key={index}
+              key={`calendar-day-${day.toISOString()}-${index}`}
               className={`min-h-[100px] border-b border-r p-2 ${
                 !isCurrentMonth ? "opacity-40" : ""
               }`}
@@ -1143,7 +1143,7 @@ const RescheduleModal: React.FC<{
             <div className="mb-4 grid grid-cols-2 gap-2">
               {suggestedTimes.slice(0, 6).map((time, index) => (
                 <button
-                  key={index}
+                  key={`suggested-time-${time.toISOString()}-${index}`}
                   type="button"
                   onClick={() => selectSuggestedTime(time)}
                   className="rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:border-blue-500"

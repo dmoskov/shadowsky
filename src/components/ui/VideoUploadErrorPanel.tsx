@@ -391,7 +391,7 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
               <ul className="space-y-1.5" role="list">
                 {config.recoverySteps.map((step, index) => (
                   <li
-                    key={index}
+                    key={`recovery-step-${index}-${step.substring(0, 20)}`}
                     className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400"
                   >
                     <span className="select-none text-gray-400 dark:text-gray-600">
