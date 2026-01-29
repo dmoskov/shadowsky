@@ -104,7 +104,7 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
 
           return (
             <div
-              key={`image-grid-${image.thumb}-${idx}`}
+              key={`image-grid-${img.thumb}-${idx}`}
               className={`media-placeholder-wrapper relative cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-95 ${colSpan}`}
               onClick={(e) => handleImageClick(e, idx)}
               style={{

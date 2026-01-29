@@ -1101,7 +1101,9 @@ export function DebugConsole() {
                     }}
                   >
                     {storageHealth.recommendations.map((rec, idx) => (
-                      <li key={`recommendation-${idx}-${rec.substring(0, 20)}`}>{rec}</li>
+                      <li key={`recommendation-${idx}-${rec.substring(0, 20)}`}>
+                        {rec}
+                      </li>
                     ))}
                   </ul>
                 </div>

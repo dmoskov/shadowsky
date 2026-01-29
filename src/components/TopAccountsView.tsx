@@ -201,7 +201,10 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
 
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={`account-skeleton-${i}`} className="bsky-card bsky-loading h-24 p-4"></div>
+            <div
+              key={`account-skeleton-${i}`}
+              className="bsky-card bsky-loading h-24 p-4"
+            ></div>
           ))}
         </div>
       </div>

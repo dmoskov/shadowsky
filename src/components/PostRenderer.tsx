@@ -482,7 +482,10 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               const hasAltText = currentAltText && currentAltText.length > 0;
 
               return (
-                <div key={`post-image-${image.thumb}-${index}`} className={`group relative ${colSpan}`}>
+                <div
+                  key={`post-image-${image.thumb}-${index}`}
+                  className={`group relative ${colSpan}`}
+                >
                   <div
                     className="relative w-full cursor-pointer overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
                     style={{

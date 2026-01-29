@@ -1647,7 +1647,7 @@ export const Home: React.FC<HomeProps> = React.memo(
 
                 return (
                   <div
-                    key={`home-img-${image.thumb}-${idx}`}
+                    key={`home-img-${img.thumb}-${idx}`}
                     className={`group relative cursor-pointer overflow-hidden rounded-lg ${colSpan}`}
                     onClick={(e) => handleImageClick(e, idx)}
                     style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}

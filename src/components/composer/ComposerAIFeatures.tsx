@@ -694,7 +694,9 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
                 <ul className="list-disc space-y-0.5 pl-5">
                   {feedback.enhancedVersion.improvements.map(
                     (improvement, i) => (
-                      <li key={`improvement-${improvement.slice(0, 20)}-${i}`}>{improvement}</li>
+                      <li key={`improvement-${improvement.slice(0, 20)}-${i}`}>
+                        {improvement}
+                      </li>
                     ),
                   )}
                 </ul>
@@ -737,7 +739,9 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
                 {feedback.styleAnalysis.styleNotes.length > 0 && (
                   <ul className="list-disc space-y-0.5 pl-5 text-xs text-gray-500">
                     {feedback.styleAnalysis.styleNotes.map((note, i) => (
-                      <li key={`style-note-${note.slice(0, 20)}-${i}`}>{note}</li>
+                      <li key={`style-note-${note.slice(0, 20)}-${i}`}>
+                        {note}
+                      </li>
                     ))}
                   </ul>
                 )}

@@ -1839,41 +1839,39 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {trendingTopics.topics
-                            .slice(0, 8)
-                            .map((topic, idx) => (
-                              <button
-                                key={topic.topic}
-                                onClick={() => {
-                                  const searchTerm =
-                                    topic.displayName || topic.topic;
-                                  setFilters((prev) => ({
-                                    ...prev,
-                                    query: searchTerm,
-                                  }));
-                                  setActiveSearchQuery(searchTerm);
-                                  addToSearchHistory(searchTerm);
-                                }}
-                                className="group flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-all hover:shadow-md"
-                                style={{
-                                  backgroundColor: "var(--bsky-bg-secondary)",
-                                  borderWidth: "1px",
-                                  borderColor: "var(--bsky-border-primary)",
-                                }}
+                          {trendingTopics.topics.slice(0, 8).map((topic) => (
+                            <button
+                              key={topic.topic}
+                              onClick={() => {
+                                const searchTerm =
+                                  topic.displayName || topic.topic;
+                                setFilters((prev) => ({
+                                  ...prev,
+                                  query: searchTerm,
+                                }));
+                                setActiveSearchQuery(searchTerm);
+                                addToSearchHistory(searchTerm);
+                              }}
+                              className="group flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-all hover:shadow-md"
+                              style={{
+                                backgroundColor: "var(--bsky-bg-secondary)",
+                                borderWidth: "1px",
+                                borderColor: "var(--bsky-border-primary)",
+                              }}
+                            >
+                              <Hash
+                                size={14}
+                                className="transition-colors group-hover:text-[var(--bsky-primary)]"
+                                style={{ color: "var(--bsky-text-tertiary)" }}
+                              />
+                              <span
+                                className="font-medium transition-colors group-hover:text-[var(--bsky-primary)]"
+                                style={{ color: "var(--bsky-text-primary)" }}
                               >
-                                <Hash
-                                  size={14}
-                                  className="transition-colors group-hover:text-[var(--bsky-primary)]"
-                                  style={{ color: "var(--bsky-text-tertiary)" }}
-                                />
-                                <span
-                                  className="font-medium transition-colors group-hover:text-[var(--bsky-primary)]"
-                                  style={{ color: "var(--bsky-text-primary)" }}
-                                >
-                                  {topic.displayName || topic.topic}
-                                </span>
-                              </button>
-                            ))}
+                                {topic.displayName || topic.topic}
+                              </span>
+                            </button>
+                          ))}
                         </div>
                       </div>
                     )}
@@ -1895,41 +1893,39 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {trendingTopics.suggested
-                            .slice(0, 6)
-                            .map((topic, idx) => (
-                              <button
-                                key={topic.topic}
-                                onClick={() => {
-                                  const searchTerm =
-                                    topic.displayName || topic.topic;
-                                  setFilters((prev) => ({
-                                    ...prev,
-                                    query: searchTerm,
-                                  }));
-                                  setActiveSearchQuery(searchTerm);
-                                  addToSearchHistory(searchTerm);
-                                }}
-                                className="group flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-all hover:opacity-80"
+                          {trendingTopics.suggested.slice(0, 6).map((topic) => (
+                            <button
+                              key={topic.topic}
+                              onClick={() => {
+                                const searchTerm =
+                                  topic.displayName || topic.topic;
+                                setFilters((prev) => ({
+                                  ...prev,
+                                  query: searchTerm,
+                                }));
+                                setActiveSearchQuery(searchTerm);
+                                addToSearchHistory(searchTerm);
+                              }}
+                              className="group flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-all hover:opacity-80"
+                              style={{
+                                backgroundColor: "transparent",
+                                borderWidth: "1px",
+                                borderColor: "var(--bsky-border-primary)",
+                              }}
+                            >
+                              <Hash
+                                size={12}
+                                style={{ color: "var(--bsky-text-tertiary)" }}
+                              />
+                              <span
                                 style={{
-                                  backgroundColor: "transparent",
-                                  borderWidth: "1px",
-                                  borderColor: "var(--bsky-border-primary)",
+                                  color: "var(--bsky-text-secondary)",
                                 }}
                               >
-                                <Hash
-                                  size={12}
-                                  style={{ color: "var(--bsky-text-tertiary)" }}
-                                />
-                                <span
-                                  style={{
-                                    color: "var(--bsky-text-secondary)",
-                                  }}
-                                >
-                                  {topic.displayName || topic.topic}
-                                </span>
-                              </button>
-                            ))}
+                                {topic.displayName || topic.topic}
+                              </span>
+                            </button>
+                          ))}
                         </div>
                       </div>
                     )}
@@ -2848,7 +2844,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       </label>
                       <div className="space-y-2">
                         {filters.phrases.map((phrase, i) => (
-                          <div key={`phrase-${i}`} className="flex items-center gap-2">
+                          <div
+                            key={`phrase-${i}`}
+                            className="flex items-center gap-2"
+                          >
                             <input
                               type="text"
                               value={phrase}
@@ -2907,7 +2906,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       </label>
                       <div className="space-y-2">
                         {filters.hashtags.map((tag, i) => (
-                          <div key={`hashtag-${i}`} className="flex items-center gap-2">
+                          <div
+                            key={`hashtag-${i}`}
+                            className="flex items-center gap-2"
+                          >
                             <input
                               type="text"
                               value={tag}
@@ -3152,7 +3154,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       </label>
                       <div className="space-y-2">
                         {filters.domains.map((domain, i) => (
-                          <div key={`domain-${i}`} className="flex items-center gap-2">
+                          <div
+                            key={`domain-${i}`}
+                            className="flex items-center gap-2"
+                          >
                             <input
                               type="text"
                               value={domain}

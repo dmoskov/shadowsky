@@ -1414,7 +1414,10 @@ export const Search: React.FC = () => {
                   </label>
                   <div className="space-y-2">
                     {filters.phrases.map((phrase, i) => (
-                      <div key={`phrase-${i}`} className="flex items-center gap-2">
+                      <div
+                        key={`phrase-${i}`}
+                        className="flex items-center gap-2"
+                      >
                         <input
                           type="text"
                           value={phrase}
@@ -1470,7 +1473,10 @@ export const Search: React.FC = () => {
                   </label>
                   <div className="space-y-2">
                     {filters.hashtags.map((tag, i) => (
-                      <div key={`hashtag-${i}`} className="flex items-center gap-2">
+                      <div
+                        key={`hashtag-${i}`}
+                        className="flex items-center gap-2"
+                      >
                         <input
                           type="text"
                           value={tag}
@@ -1698,7 +1704,10 @@ export const Search: React.FC = () => {
                   </label>
                   <div className="space-y-2">
                     {filters.domains.map((domain, i) => (
-                      <div key={`domain-${i}`} className="flex items-center gap-2">
+                      <div
+                        key={`domain-${i}`}
+                        className="flex items-center gap-2"
+                      >
                         <input
                           type="text"
                           value={domain}

@@ -1213,7 +1213,7 @@ export const UserAnalytics: React.FC = () => {
                     Content Themes
                   </h3>
                   <div className="space-y-4">
-                    {analysisData.contentThemes.map((theme, index) => (
+                    {analysisData.contentThemes.map((theme) => (
                       <div key={theme.theme} className="space-y-2">
                         <div className="flex items-start justify-between gap-2">
                           <h4
@@ -1462,7 +1462,7 @@ export const UserAnalytics: React.FC = () => {
 
                           return (
                             <div
-                              key={`posting-time-${rec.dayOfWeek}-${rec.hourRange.start}`}
+                              key={`posting-time-${rec.dayOfWeek}-${rec.hour}`}
                               className="flex flex-col rounded-lg p-4"
                               style={{
                                 backgroundColor: "var(--bsky-bg-secondary)",
