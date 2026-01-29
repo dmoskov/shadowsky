@@ -20,6 +20,12 @@ const {
   moderateLimiter,
   getClientIp: getRateLimitClientIp,
 } = require("./middleware/rate-limit");
+const {
+  CloudWatchLogsClient,
+  PutLogEventsCommand,
+  CreateLogStreamCommand,
+  DescribeLogStreamsCommand,
+} = require("@aws-sdk/client-cloudwatch-logs");
 
 // Load environment variables from parent directory's .env file
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
@@ -2082,6 +2088,179 @@ app.post("/api/bug-report", moderateLimiter, async (req, res) => {
   });
 });
 
+// =============================================================================
+// Client Error Logging to CloudWatch
+// =============================================================================
+
+// Initialize CloudWatch client (only if AWS credentials are available)
+let cloudWatchClient = null;
+const LOG_GROUP_NAME = "/shadowsky/client-errors";
+const LOG_STREAM_NAME = "client-error-stream";
+
+// Try to initialize CloudWatch client
+try {
+  // AWS SDK v3 will automatically use environment variables or IAM role
+  cloudWatchClient = new CloudWatchLogsClient({
+    region: process.env.AWS_REGION || "us-east-1",
+  });
+  console.log("CloudWatch client initialized for error logging");
+} catch (error) {
+  console.warn(
+    "CloudWatch client initialization failed - error logging will be local only:",
+    error.message,
+  );
+}
+
+// Helper to ensure log stream exists
+async function ensureLogStream() {
+  if (!cloudWatchClient) return null;
+
+  try {
+    // Check if log stream exists
+    const describeCommand = new DescribeLogStreamsCommand({
+      logGroupName: LOG_GROUP_NAME,
+      logStreamNamePrefix: LOG_STREAM_NAME,
+    });
+
+    const streams = await cloudWatchClient.send(describeCommand);
+
+    if (
+      !streams.logStreams ||
+      !streams.logStreams.find((s) => s.logStreamName === LOG_STREAM_NAME)
+    ) {
+      // Create log stream if it doesn't exist
+      const createCommand = new CreateLogStreamCommand({
+        logGroupName: LOG_GROUP_NAME,
+        logStreamName: LOG_STREAM_NAME,
+      });
+      await cloudWatchClient.send(createCommand);
+      console.log(
+        `Created CloudWatch log stream: ${LOG_GROUP_NAME}/${LOG_STREAM_NAME}`,
+      );
+    }
+
+    // Get the latest sequence token
+    const latestStream = streams.logStreams?.find(
+      (s) => s.logStreamName === LOG_STREAM_NAME,
+    );
+    return latestStream?.uploadSequenceToken || null;
+  } catch (error) {
+    console.error("Error ensuring log stream:", error.message);
+    return null;
+  }
+}
+
+// Store sequence token in memory (in production, consider using Redis)
+let sequenceToken = null;
+
+/**
+ * POST /api/log-error
+ *
+ * Log client-side errors to CloudWatch.
+ * Falls back to localStorage on the client if this fails.
+ *
+ * Request body:
+ * {
+ *   message: string (required),
+ *   stack?: string,
+ *   componentStack?: string,
+ *   context?: string,
+ *   url: string,
+ *   userAgent: string,
+ *   timestamp: string (ISO 8601)
+ * }
+ */
+app.post("/api/log-error", moderateLimiter, async (req, res) => {
+  const {
+    message,
+    stack,
+    componentStack,
+    context,
+    url,
+    userAgent,
+    timestamp,
+  } = req.body;
+
+  // Validate required fields
+  if (!message || typeof message !== "string") {
+    return res.status(400).json({
+      error: "Error message is required",
+    });
+  }
+
+  // Prepare error log entry
+  const errorLog = {
+    level: "CLIENT_ERROR",
+    message: message.slice(0, 1000), // Limit message length
+    stack: stack?.slice(0, 5000) || null, // Limit stack trace
+    componentStack: componentStack?.slice(0, 5000) || null,
+    context: context?.slice(0, 200) || "unknown",
+    url: url?.slice(0, 500) || "unknown",
+    userAgent: userAgent?.slice(0, 500) || "unknown",
+    timestamp: timestamp || new Date().toISOString(),
+    clientIp: getClientIp(req),
+  };
+
+  // Always log to console for local debugging
+  console.error("[CLIENT ERROR]", {
+    message: errorLog.message,
+    context: errorLog.context,
+    url: errorLog.url,
+    timestamp: errorLog.timestamp,
+  });
+
+  // Try to log to CloudWatch if available
+  if (cloudWatchClient) {
+    try {
+      // Ensure log stream exists and get sequence token if not cached
+      if (sequenceToken === null) {
+        sequenceToken = await ensureLogStream();
+      }
+
+      // Prepare CloudWatch log event
+      const logEvent = {
+        message: JSON.stringify(errorLog),
+        timestamp: new Date(errorLog.timestamp).getTime(),
+      };
+
+      // Send to CloudWatch
+      const putCommand = new PutLogEventsCommand({
+        logGroupName: LOG_GROUP_NAME,
+        logStreamName: LOG_STREAM_NAME,
+        logEvents: [logEvent],
+        sequenceToken: sequenceToken || undefined,
+      });
+
+      const response = await cloudWatchClient.send(putCommand);
+
+      // Update sequence token for next request
+      sequenceToken = response.nextSequenceToken;
+
+      // Success response
+      return res.status(200).json({
+        success: true,
+        logged: "cloudwatch",
+      });
+    } catch (error) {
+      // Log CloudWatch error but don't fail the request
+      console.error("Failed to log to CloudWatch:", error.message);
+
+      // If sequence token is invalid, reset it for next request
+      if (error.name === "InvalidSequenceTokenException") {
+        sequenceToken = null;
+      }
+
+      // Fall through to return success (error was logged locally)
+    }
+  }
+
+  // Return success even if CloudWatch failed (silent failure as per requirements)
+  res.status(200).json({
+    success: true,
+    logged: "local",
+  });
+});
+
 // Create HTTP server for Express app
 const httpServer = http.createServer(app);
 
@@ -2120,11 +2299,18 @@ httpServer.listen(PORT, () => {
   console.log(`  - GET  /api/push-notification/stats : Push service stats`);
   console.log(`  - GET  /api/push/vapid-public-key : Get VAPID public key`);
   console.log(`  - POST /api/bug-report            : Submit bug report`);
+  console.log(`  - POST /api/log-error             : Log client errors`);
   console.log(
     `\nAPI Configuration:`,
     process.env.ANTHROPIC_API_KEY
       ? `✓ Anthropic API key loaded`
       : `✗ Anthropic API key not found`,
+  );
+  console.log(
+    `CloudWatch Logging:`,
+    cloudWatchClient
+      ? `✓ CloudWatch client initialized`
+      : `✗ CloudWatch not available (local logging only)`,
   );
   console.log(
     `Push Notifications:`,
