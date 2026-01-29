@@ -26,7 +26,34 @@ interface ColumnHeaderProps {
   children?: React.ReactNode;
 }
 
-export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
+/**
+ * Custom comparison function for ColumnHeader memoization
+ * Prevents unnecessary re-renders of column headers
+ */
+function areColumnHeaderPropsEqual(
+  prevProps: ColumnHeaderProps,
+  nextProps: ColumnHeaderProps,
+): boolean {
+  // Compare column identity and type
+  if (prevProps.column.id !== nextProps.column.id) return false;
+  if (prevProps.column.type !== nextProps.column.type) return false;
+  if (prevProps.column.title !== nextProps.column.title) return false;
+
+  // Compare UI-related props
+  if (prevProps.currentFeedLabel !== nextProps.currentFeedLabel) return false;
+
+  // Compare feedOptions length (shallow comparison is sufficient)
+  if (prevProps.feedOptions?.length !== nextProps.feedOptions?.length)
+    return false;
+
+  // Compare children (for toolbar actions)
+  if (prevProps.children !== nextProps.children) return false;
+
+  // Callbacks are expected to be stable (using useCallback in parent)
+  return true;
+}
+
+const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
   column,
   onRemove,
   onRefresh,
@@ -292,3 +319,12 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
     </div>
   );
 };
+
+/**
+ * Memoized ColumnHeader for optimal performance
+ * Prevents unnecessary re-renders when parent columns update
+ */
+export const ColumnHeader = React.memo(
+  ColumnHeaderComponent,
+  areColumnHeaderPropsEqual,
+);
