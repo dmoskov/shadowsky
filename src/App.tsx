@@ -27,7 +27,6 @@ import { StatusBarProvider } from "./contexts/StatusBarContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
-import { useErrorTracking } from "./hooks/useErrorTracking";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { getInitialLoadingStrategy } from "./hooks/useNetworkAwareLoading";
 import { useSidebarManagement } from "./hooks/useSidebarManagement";
