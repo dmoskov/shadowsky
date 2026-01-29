@@ -142,7 +142,7 @@ export function useNotifications(priority: boolean = false) {
       debug.log(
         `💾 [${successTimestamp}] React Query: Saving ${totalNotifications} notifications to cache`,
       );
-      console.log("[useNotifications] Data updated:", {
+      debug.log("[useNotifications] Data updated:", {
         pages: query.data.pages.length,
         totalNotifications,
         firstNotification: query.data.pages[0]?.notifications[0]?.indexedAt,

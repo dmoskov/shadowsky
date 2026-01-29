@@ -1,3 +1,4 @@
+import { debug } from "@bsky/shared";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
 
@@ -7,12 +8,12 @@ let ffmpegLoaded = false;
 export async function loadFFmpeg() {
   if (ffmpegLoaded && ffmpeg) return ffmpeg;
 
-  console.log("Loading FFmpeg...");
+  debug.log("Loading FFmpeg...");
   ffmpeg = new FFmpeg();
 
   // Set log level to see what's happening
   ffmpeg.on("log", ({ message }) => {
-    console.log("FFmpeg:", message);
+    debug.log("FFmpeg:", message);
   });
 
   try {
@@ -24,7 +25,7 @@ export async function loadFFmpeg() {
       wasmURL: `${baseURL}/ffmpeg/ffmpeg-core.wasm`,
     });
 
-    console.log("FFmpeg loaded successfully");
+    debug.log("FFmpeg loaded successfully");
     ffmpegLoaded = true;
     return ffmpeg;
   } catch (error) {
@@ -37,7 +38,7 @@ export async function convertGifToMp4(
   gifBlob: Blob,
   onProgress?: (progress: number) => void,
 ): Promise<Blob> {
-  console.log(
+  debug.log(
     "Starting GIF to MP4 conversion, blob size:",
     gifBlob.size,
     "type:",
@@ -47,7 +48,7 @@ export async function convertGifToMp4(
 
   if (onProgress) {
     ffmpeg.on("progress", ({ progress }) => {
-      console.log("FFmpeg progress:", progress);
+      debug.log("FFmpeg progress:", progress);
       onProgress(Math.round(progress * 100));
     });
   }
@@ -55,7 +56,7 @@ export async function convertGifToMp4(
   try {
     // Write the GIF to ffmpeg's file system
     const gifData = await fetchFile(gifBlob);
-    console.log("Fetched GIF data, size:", gifData.byteLength);
+    debug.log("Fetched GIF data, size:", gifData.byteLength);
     await ffmpeg.writeFile("input.gif", gifData);
 
     // Convert GIF to MP4
@@ -81,7 +82,7 @@ export async function convertGifToMp4(
 
     // Read the output file
     const outputData = await ffmpeg.readFile("output.mp4");
-    console.log(
+    debug.log(
       "Output MP4 size:",
       outputData instanceof Uint8Array
         ? outputData.byteLength
@@ -94,7 +95,7 @@ export async function convertGifToMp4(
 
     // Convert to Blob
     const mp4Blob = new Blob([outputData as any], { type: "video/mp4" });
-    console.log("Created MP4 blob, size:", mp4Blob.size, "type:", mp4Blob.type);
+    debug.log("Created MP4 blob, size:", mp4Blob.size, "type:", mp4Blob.type);
 
     return mp4Blob;
   } catch (error) {

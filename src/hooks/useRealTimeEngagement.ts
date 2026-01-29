@@ -12,6 +12,7 @@
  * - Feature flag gated
  */
 
+import { debug as debugLogger } from "@bsky/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WS_CONFIG } from "../config/websocket.config";
@@ -114,7 +115,10 @@ export function useRealTimeEngagement(
 
     const handleUpdates = (updates: PostEngagement[]) => {
       if (debug) {
-        console.log("[RealTimeEngagement] Received updates:", updates.length);
+        debugLogger.log(
+          "[RealTimeEngagement] Received updates:",
+          updates.length,
+        );
       }
 
       // Update local state
@@ -200,7 +204,7 @@ export function useRealTimeEngagement(
         if (uris.length > 0) {
           service.updateVisiblePosts(uris);
           if (debug) {
-            console.log(
+            debugLogger.log(
               "[RealTimeEngagement] Viewport update:",
               uris.length,
               "posts",

@@ -1,3 +1,4 @@
+import { debug } from "@bsky/shared";
 import { useQuery } from "@tanstack/react-query";
 import { format, startOfDay, subDays, subHours } from "date-fns";
 import {
@@ -425,7 +426,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
           const allNotifications = extendedData.pages.flatMap(
             (page: any) => page.notifications,
           );
-          console.log("📊 Using cached data for analytics:", {
+          debug.log("📊 Using cached data for analytics:", {
             totalNotifications: allNotifications.length,
             oldestDate:
               allNotifications.length > 0
@@ -514,7 +515,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
         (n: any) => new Date(n.indexedAt) >= cutoffDate,
       );
 
-      console.log("📊 Analytics filtering:", {
+      debug.log("📊 Analytics filtering:", {
         timeRange,
         totalNotifications: notifications.notifications.length,
         filteredCount: filteredNotifications.length,
