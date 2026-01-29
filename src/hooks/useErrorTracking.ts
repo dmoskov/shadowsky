@@ -32,8 +32,7 @@ export const useErrorTracking = () => {
 
     // Try to send to API server (silent fail if offline or API unavailable)
     try {
-      const apiUrl =
-        import.meta.env.VITE_API_URL || "http://localhost:3002";
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3002";
       const response = await fetch(`${apiUrl}/api/log-error`, {
         method: "POST",
         headers: {

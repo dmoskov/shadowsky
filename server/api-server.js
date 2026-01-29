@@ -2171,15 +2171,8 @@ let sequenceToken = null;
  * }
  */
 app.post("/api/log-error", moderateLimiter, async (req, res) => {
-  const {
-    message,
-    stack,
-    componentStack,
-    context,
-    url,
-    userAgent,
-    timestamp,
-  } = req.body;
+  const { message, stack, componentStack, context, url, userAgent, timestamp } =
+    req.body;
 
   // Validate required fields
   if (!message || typeof message !== "string") {
