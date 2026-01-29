@@ -1234,7 +1234,7 @@ export default function ProfilePage() {
                               {sonnetAnalysis.contentThemes.map(
                                 (theme, idx) => (
                                   <div
-                                    key={idx}
+                                    key={theme.theme}
                                     className="rounded-lg p-3"
                                     style={{
                                       backgroundColor:
@@ -1306,7 +1306,7 @@ export default function ProfilePage() {
                                 {sonnetAnalysis.writingStyle.characteristics.map(
                                   (char, idx) => (
                                     <li
-                                      key={idx}
+                                      key={`char-${char.slice(0, 20)}-${idx}`}
                                       className="text-sm"
                                       style={{
                                         color: "var(--bsky-text-secondary)",

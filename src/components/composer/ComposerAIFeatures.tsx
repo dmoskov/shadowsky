@@ -463,7 +463,7 @@ const ThreadOptimizationModal: React.FC<ThreadOptimizationModalProps> = ({
 
             return (
               <div
-                key={index}
+                key={`segment-${index}-${segment.text.slice(0, 20)}`}
                 role="listitem"
                 className="rounded-lg border p-4"
                 style={{
@@ -657,7 +657,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
                 <p className="font-medium">Corrections made:</p>
                 <ul className="list-disc space-y-0.5 pl-5">
                   {feedback.correctedVersion.changes.map((change, i) => (
-                    <li key={i}>{change}</li>
+                    <li key={`change-${change.slice(0, 20)}-${i}`}>{change}</li>
                   ))}
                 </ul>
               </div>
@@ -694,7 +694,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
                 <ul className="list-disc space-y-0.5 pl-5">
                   {feedback.enhancedVersion.improvements.map(
                     (improvement, i) => (
-                      <li key={i}>{improvement}</li>
+                      <li key={`improvement-${improvement.slice(0, 20)}-${i}`}>{improvement}</li>
                     ),
                   )}
                 </ul>
@@ -737,7 +737,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
                 {feedback.styleAnalysis.styleNotes.length > 0 && (
                   <ul className="list-disc space-y-0.5 pl-5 text-xs text-gray-500">
                     {feedback.styleAnalysis.styleNotes.map((note, i) => (
-                      <li key={i}>{note}</li>
+                      <li key={`style-note-${note.slice(0, 20)}-${i}`}>{note}</li>
                     ))}
                   </ul>
                 )}

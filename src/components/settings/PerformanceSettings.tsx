@@ -326,7 +326,7 @@ export const PerformanceSettings: React.FC = () => {
                   <ul className="mt-1 space-y-0.5">
                     {report.regressionDetails.map((detail, idx) => (
                       <li
-                        key={idx}
+                        key={`regression-detail-${idx}-${detail.substring(0, 20)}`}
                         className="text-xs text-red-700 dark:text-red-300"
                       >
                         • {detail}
@@ -580,7 +580,7 @@ export const PerformanceSettings: React.FC = () => {
                   .slice(0, 20)
                   .map((entry, idx) => (
                     <tr
-                      key={idx}
+                      key={`perf-entry-${entry.timestamp}-${idx}`}
                       className="border-b last:border-0"
                       style={{ borderColor: "var(--bsky-border-primary)" }}
                     >

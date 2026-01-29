@@ -1333,7 +1333,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
         <div className="p-6">
           <div className="animate-pulse space-y-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex gap-4">
+              <div key={`timeline-skeleton-${i}`} className="flex gap-4">
                 <div
                   className="h-6 w-24 rounded"
                   style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}

@@ -102,7 +102,7 @@ export const StorageOptionSelector: React.FC<StorageOptionSelectorProps> = ({
                     </span>
                     <ul className="mt-1 text-bsky-success">
                       {option.pros.map((pro, i) => (
-                        <li key={i}>• {pro}</li>
+                        <li key={`${option.id}-pro-${i}-${pro.substring(0, 10)}`}>• {pro}</li>
                       ))}
                     </ul>
                   </div>
@@ -113,7 +113,7 @@ export const StorageOptionSelector: React.FC<StorageOptionSelectorProps> = ({
                     <ul className="mt-1 text-bsky-error">
                       {option.cons.map((con, i) => (
                         <li
-                          key={i}
+                          key={`${option.id}-con-${i}-${con.substring(0, 10)}`}
                           className={con.includes("PUBLIC") ? "font-bold" : ""}
                         >
                           • {con}

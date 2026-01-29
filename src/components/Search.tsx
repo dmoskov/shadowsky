@@ -1933,7 +1933,7 @@ export const Search: React.FC = () => {
                                 >
                                   {images.slice(0, 4).map((img, idx) => (
                                     <img
-                                      key={idx}
+                                      key={`post-image-${img.thumb}-${idx}`}
                                       src={proxifyBskyImage(img.thumb)}
                                       alt={img.alt || ""}
                                       className="w-full cursor-pointer rounded-lg border object-cover transition-opacity hover:opacity-90"
