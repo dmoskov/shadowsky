@@ -165,6 +165,12 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
             path: "/settings/data",
           },
           {
+            id: "storage",
+            label: "Storage Management",
+            icon: HardDrive,
+            path: "/settings/storage",
+          },
+          {
             id: "media-cache",
             label: "Media Cache",
             icon: HardDrive,

@@ -1,6 +1,7 @@
 import { debug } from "@bsky/shared";
 import { useEffect } from "react";
 import { initializeCoreStorage } from "../services/data-services-initializer";
+import { IndexedDBCleanupService } from "../services/indexeddb-cleanup-service";
 import { NotificationStorageDB } from "../services/notification-storage-db";
 import { cleanupLocalStorage } from "../utils/cleanupLocalStorage";
 
@@ -26,6 +27,15 @@ export function useStorageInitialization() {
           );
           // Clean up remaining localStorage keys
           cleanupLocalStorage();
+        }
+
+        // Run proactive IndexedDB cleanup
+        const cleanupService = IndexedDBCleanupService.getInstance();
+        const cleanupResult = await cleanupService.runStartupCleanup();
+        if (cleanupResult) {
+          debug.log(
+            `✅ Startup cleanup: ${cleanupResult.deletedCount} old notifications removed`,
+          );
         }
       } catch (error) {
         debug.error("Failed to initialize core storage:", error);
