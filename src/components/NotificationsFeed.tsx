@@ -60,7 +60,7 @@ type NotificationFilter =
   | "top-accounts"
   | "from-following";
 
-export const NotificationsFeed: React.FC = () => {
+const NotificationsFeedComponent: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -1017,6 +1017,13 @@ export const NotificationsFeed: React.FC = () => {
     </div>
   );
 };
+
+/**
+ * Memoized NotificationsFeed for optimal rendering performance
+ */
+export const NotificationsFeed = React.memo(NotificationsFeedComponent);
+
+NotificationsFeed.displayName = "NotificationsFeed";
 
 interface FilterTabProps {
   active: boolean;

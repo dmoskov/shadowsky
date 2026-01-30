@@ -21,7 +21,7 @@ interface ThrottledAvatarProps {
   priority?: boolean;
 }
 
-export const ThrottledAvatar: React.FC<ThrottledAvatarProps> = ({
+const ThrottledAvatarComponent: React.FC<ThrottledAvatarProps> = ({
   src,
   alt,
   className = "",
@@ -164,5 +164,26 @@ export const ThrottledAvatar: React.FC<ThrottledAvatarProps> = ({
     </div>
   );
 };
+
+/**
+ * Memoized ThrottledAvatar for optimal feed scroll performance
+ * Prevents unnecessary re-renders when parent components update
+ */
+export const ThrottledAvatar = React.memo(
+  ThrottledAvatarComponent,
+  (prevProps, nextProps) => {
+    // Only re-render if these props change
+    return (
+      prevProps.src === nextProps.src &&
+      prevProps.alt === nextProps.alt &&
+      prevProps.className === nextProps.className &&
+      prevProps.priority === nextProps.priority &&
+      prevProps.fallbackInitial === nextProps.fallbackInitial
+      // onClick and style are expected to be stable
+    );
+  },
+);
+
+ThrottledAvatar.displayName = "ThrottledAvatar";
 
 export default ThrottledAvatar;

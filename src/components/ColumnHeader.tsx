@@ -26,33 +26,6 @@ interface ColumnHeaderProps {
   children?: React.ReactNode;
 }
 
-/**
- * Custom comparison function for ColumnHeader memoization
- * Prevents unnecessary re-renders of column headers
- */
-function areColumnHeaderPropsEqual(
-  prevProps: ColumnHeaderProps,
-  nextProps: ColumnHeaderProps,
-): boolean {
-  // Compare column identity and type
-  if (prevProps.column.id !== nextProps.column.id) return false;
-  if (prevProps.column.type !== nextProps.column.type) return false;
-  if (prevProps.column.title !== nextProps.column.title) return false;
-
-  // Compare UI-related props
-  if (prevProps.currentFeedLabel !== nextProps.currentFeedLabel) return false;
-
-  // Compare feedOptions length (shallow comparison is sufficient)
-  if (prevProps.feedOptions?.length !== nextProps.feedOptions?.length)
-    return false;
-
-  // Compare children (for toolbar actions)
-  if (prevProps.children !== nextProps.children) return false;
-
-  // Callbacks are expected to be stable (using useCallback in parent)
-  return true;
-}
-
 const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
   column,
   onRemove,
@@ -321,10 +294,22 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
 };
 
 /**
- * Memoized ColumnHeader for optimal performance
- * Prevents unnecessary re-renders when parent columns update
+ * Memoized ColumnHeader for optimal SkyDeck performance
+ * Prevents re-renders when column state hasn't changed
  */
 export const ColumnHeader = React.memo(
   ColumnHeaderComponent,
-  areColumnHeaderPropsEqual,
+  (prevProps, nextProps) => {
+    // Only re-render if these props change
+    return (
+      prevProps.column.id === nextProps.column.id &&
+      prevProps.column.type === nextProps.column.type &&
+      prevProps.column.title === nextProps.column.title &&
+      prevProps.currentFeedLabel === nextProps.currentFeedLabel &&
+      prevProps.feedOptions?.length === nextProps.feedOptions?.length
+      // Callbacks are expected to be stable (using useCallback in parent)
+    );
+  },
 );
+
+ColumnHeader.displayName = "ColumnHeader";
