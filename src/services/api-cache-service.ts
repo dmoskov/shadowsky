@@ -86,8 +86,8 @@ export interface CacheEntry {
   statusText: string;
   /** Response headers as JSON string */
   headers: string;
-  /** Response body as ArrayBuffer (stored as Blob in IndexedDB) */
-  body: Blob;
+  /** Response body - stored as ArrayBuffer for cross-environment compatibility */
+  body: ArrayBuffer | Blob;
   /** Estimated size in bytes */
   size: number;
 }
@@ -550,9 +550,9 @@ class APICacheService {
         const id = generateCacheId(cacheType, url);
         const now = Date.now();
 
-        // Clone response and read body
+        // Clone response and read body as ArrayBuffer (more portable than Blob)
         const clonedResponse = response.clone();
-        const body = await clonedResponse.blob();
+        const body = await clonedResponse.arrayBuffer();
 
         // Serialize headers
         const headers: Record<string, string> = {};
@@ -570,7 +570,7 @@ class APICacheService {
           statusText: clonedResponse.statusText,
           headers: JSON.stringify(headers),
           body,
-          size: body.size,
+          size: body.byteLength,
         };
 
         await db.cacheEntries.put(entry);
@@ -646,7 +646,25 @@ class APICacheService {
         ? JSON.parse(entry.headers)
         : entry.headers;
     const headers = new Headers(headersObj);
-    return new Response(entry.body, {
+
+    // Handle ArrayBuffer-like objects from different JavaScript realms (e.g., jsdom + fake-indexeddb)
+    // The instanceof check may fail across realms, so we check for byteLength property instead
+    let body: BodyInit;
+    if (entry.body instanceof ArrayBuffer) {
+      body = entry.body;
+    } else if (entry.body instanceof Blob) {
+      body = entry.body;
+    } else if (
+      entry.body &&
+      typeof (entry.body as ArrayBuffer).byteLength === "number"
+    ) {
+      // ArrayBuffer-like object from different realm - convert via Uint8Array
+      body = new Uint8Array(entry.body as ArrayBuffer).buffer;
+    } else {
+      body = new ArrayBuffer(0);
+    }
+
+    return new Response(body, {
       status: entry.status,
       statusText: entry.statusText,
       headers,

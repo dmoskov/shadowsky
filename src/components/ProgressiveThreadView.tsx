@@ -148,8 +148,10 @@ export function getTierConfig(tier: ComplexityTier): ComplexityTierConfig {
   return TIER_CONFIGS[tier];
 }
 
-interface ProgressiveThreadViewProps
-  extends Omit<ThreadViewerProps, "threadSummary"> {
+interface ProgressiveThreadViewProps extends Omit<
+  ThreadViewerProps,
+  "threadSummary"
+> {
   /** Thread URI for summary caching */
   threadUri: string;
   /** Current user's DID for minimap */
