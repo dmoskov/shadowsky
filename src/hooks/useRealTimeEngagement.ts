@@ -128,58 +128,64 @@ export function useRealTimeEngagement(
 
       // Update React Query cache for feed queries
       // This allows the updates to propagate to PostCard components
-      for (const update of updates) {
-        // Invalidate any queries that might contain this post
-        // Using a pattern that matches feed-related queries
-        queryClient.setQueriesData(
-          { predicate: (query) => query.queryKey[0] === "timeline" },
-          (oldData: unknown) => {
-            if (!oldData || typeof oldData !== "object") return oldData;
+      // Build a lookup map first for O(1) access instead of O(n) per update
+      const updateMap = new Map(updates.map((u) => [u.uri, u]));
 
-            // Handle InfiniteQueryData structure
-            const data = oldData as {
-              pages?: Array<{
-                feed?: Array<{
-                  post?: {
-                    uri?: string;
-                    likeCount?: number;
-                    repostCount?: number;
-                    replyCount?: number;
-                  };
-                }>;
+      // Single setQueriesData call instead of one per update
+      queryClient.setQueriesData(
+        { predicate: (query) => query.queryKey[0] === "timeline" },
+        (oldData: unknown) => {
+          if (!oldData || typeof oldData !== "object") return oldData;
+
+          // Handle InfiniteQueryData structure
+          const data = oldData as {
+            pages?: Array<{
+              feed?: Array<{
+                post?: {
+                  uri?: string;
+                  likeCount?: number;
+                  repostCount?: number;
+                  replyCount?: number;
+                };
               }>;
-            };
+            }>;
+          };
 
-            if (data.pages) {
-              return {
-                ...data,
-                pages: data.pages.map((page) => {
-                  if (!page.feed) return page;
-                  return {
-                    ...page,
-                    feed: page.feed.map((item) => {
-                      if (item.post?.uri === update.uri) {
-                        return {
-                          ...item,
-                          post: {
-                            ...item.post,
-                            likeCount: update.likeCount,
-                            repostCount: update.repostCount,
-                            replyCount: update.replyCount,
-                          },
-                        };
-                      }
-                      return item;
-                    }),
-                  };
-                }),
-              };
-            }
+          if (!data.pages) return oldData;
 
-            return oldData;
-          },
-        );
-      }
+          // Track if any changes were made to avoid unnecessary re-renders
+          let hasChanges = false;
+
+          const newPages = data.pages.map((page) => {
+            if (!page.feed) return page;
+
+            const newFeed = page.feed.map((item) => {
+              const update = item.post?.uri
+                ? updateMap.get(item.post.uri)
+                : undefined;
+              if (update) {
+                hasChanges = true;
+                return {
+                  ...item,
+                  post: {
+                    ...item.post,
+                    likeCount: update.likeCount,
+                    repostCount: update.repostCount,
+                    replyCount: update.replyCount,
+                  },
+                };
+              }
+              return item;
+            });
+
+            // Only create new page object if feed changed
+            return newFeed !== page.feed ? { ...page, feed: newFeed } : page;
+          });
+
+          // Only return new object if changes were made
+          return hasChanges ? { ...data, pages: newPages } : oldData;
+        },
+      );
     };
 
     const unsubscribe = service.addListener(handleUpdates);
@@ -261,7 +267,11 @@ export function useRealTimeEngagement(
 
     // Set up MutationObserver to watch for new posts
     // Use a more targeted approach to avoid excessive observation
+    let mutationDebounceTimer: ReturnType<typeof setTimeout> | null = null;
     const mutationObserver = new MutationObserver((mutations) => {
+      // Debounce reobservation to avoid blocking main thread
+      if (mutationDebounceTimer) return;
+
       let shouldReobserve = false;
       for (const mutation of mutations) {
         // Only reobserve if nodes were added that might contain posts
@@ -269,10 +279,10 @@ export function useRealTimeEngagement(
           const node = mutation.addedNodes[i];
           if (node.nodeType === Node.ELEMENT_NODE) {
             const element = node as Element;
-            // Check if this element or its children contain posts
+            // Quick check: only look for data-post-uri attribute, avoid querySelector
             if (
-              element.matches?.(postSelector) ||
-              element.querySelector?.(postSelector)
+              element.hasAttribute?.("data-post-uri") ||
+              element.matches?.(postSelector)
             ) {
               shouldReobserve = true;
               break;
@@ -282,7 +292,10 @@ export function useRealTimeEngagement(
         if (shouldReobserve) break;
       }
       if (shouldReobserve) {
-        observePosts();
+        mutationDebounceTimer = setTimeout(() => {
+          mutationDebounceTimer = null;
+          observePosts();
+        }, 200);
       }
     });
 
@@ -300,6 +313,9 @@ export function useRealTimeEngagement(
         observerRef.current = null;
       }
       mutationObserver.disconnect();
+      if (mutationDebounceTimer) {
+        clearTimeout(mutationDebounceTimer);
+      }
       if (updateThrottleRef.current) {
         clearTimeout(updateThrottleRef.current);
         updateThrottleRef.current = null;
