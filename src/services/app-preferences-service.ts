@@ -274,9 +274,6 @@ export class AppPreferencesService {
         updatedPrefs,
       });
 
-      // Clear cache immediately to ensure fresh data on next read
-      this.preferencesCache = null;
-
       // Save to AT Protocol as custom record
       const shadowSkyPref: ShadowSkyPreferences = {
         $type: PREFERENCES_COLLECTION,
@@ -294,6 +291,7 @@ export class AppPreferencesService {
 
       logger.log("Saving to AT Protocol:", shadowSkyPref);
 
+      let atProtoSaveSucceeded = false;
       try {
         const did = this.agent.session?.did;
         if (!did) throw new Error("No DID available");
@@ -323,6 +321,7 @@ export class AppPreferencesService {
           }
         }, "updatePreferences");
 
+        atProtoSaveSucceeded = true;
         logger.log("Successfully saved preferences to AT Protocol");
       } catch (atProtoError) {
         logger.error(
@@ -332,6 +331,9 @@ export class AppPreferencesService {
         // Fall back to localStorage
         this.saveToLocalStorage(updatedPrefs);
       }
+
+      // Set storage flag based on actual save result
+      updatedPrefs.isStoredInAtProto = atProtoSaveSucceeded;
 
       // Update cache
       this.preferencesCache = updatedPrefs;

@@ -280,52 +280,70 @@ export class OfflineStorageDB {
     return this.db;
   }
 
+  private isQuotaExceededError(error: unknown): boolean {
+    return error instanceof DOMException && error.name === "QuotaExceededError";
+  }
+
   // ==================== Feed Item Operations ====================
 
   async saveFeedItems(
     items: Omit<OfflineFeedItem, "_offlineCachedAt">[],
     feedType: "timeline" | "author" | "list" = "timeline",
   ): Promise<void> {
-    return withIndexedDBRetry(async () => {
-      const db = this.ensureDb();
-      const transaction = db.transaction(
-        [STORES.FEED_ITEMS, STORES.METADATA],
-        "readwrite",
-      );
-      const store = transaction.objectStore(STORES.FEED_ITEMS);
-      const metaStore = transaction.objectStore(STORES.METADATA);
+    const doSave = () =>
+      withIndexedDBRetry(async () => {
+        const db = this.ensureDb();
+        const transaction = db.transaction(
+          [STORES.FEED_ITEMS, STORES.METADATA],
+          "readwrite",
+        );
+        const store = transaction.objectStore(STORES.FEED_ITEMS);
+        const metaStore = transaction.objectStore(STORES.METADATA);
 
-      const now = Date.now();
+        const now = Date.now();
 
-      for (const item of items) {
-        const offlineItem: OfflineFeedItem = {
-          ...item,
-          _offlineCachedAt: now,
-          _feedType: feedType,
+        for (const item of items) {
+          const offlineItem: OfflineFeedItem = {
+            ...item,
+            _offlineCachedAt: now,
+            _feedType: feedType,
+          };
+          store.put(offlineItem);
+        }
+
+        // Update metadata
+        const metaKey = `feed_${feedType}`;
+        const existingMeta = await this.getMetadataInTransaction(
+          metaStore,
+          metaKey,
+        );
+        const newMeta: OfflineMetadata = {
+          key: metaKey,
+          lastSyncAt: now,
+          itemCount: (existingMeta?.itemCount || 0) + items.length,
+          newestItemAt: items[0]?.indexedAt,
+          oldestItemAt: items[items.length - 1]?.indexedAt,
         };
-        store.put(offlineItem);
+        metaStore.put(newMeta);
+
+        return new Promise<void>((resolve, reject) => {
+          transaction.oncomplete = () => resolve();
+          transaction.onerror = () => reject(transaction.error);
+        });
+      }, "saveFeedItems");
+
+    try {
+      return await doSave();
+    } catch (error) {
+      if (this.isQuotaExceededError(error)) {
+        debug.log(
+          "QuotaExceededError in saveFeedItems, running aggressive cleanup and retrying",
+        );
+        await this.enforceFeedLimit(Math.floor(LIMITS.MAX_FEED_ITEMS / 2));
+        return await doSave();
       }
-
-      // Update metadata
-      const metaKey = `feed_${feedType}`;
-      const existingMeta = await this.getMetadataInTransaction(
-        metaStore,
-        metaKey,
-      );
-      const newMeta: OfflineMetadata = {
-        key: metaKey,
-        lastSyncAt: now,
-        itemCount: (existingMeta?.itemCount || 0) + items.length,
-        newestItemAt: items[0]?.indexedAt,
-        oldestItemAt: items[items.length - 1]?.indexedAt,
-      };
-      metaStore.put(newMeta);
-
-      return new Promise<void>((resolve, reject) => {
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error);
-      });
-    }, "saveFeedItems");
+      throw error;
+    }
   }
 
   async getFeedItems(
@@ -404,37 +422,53 @@ export class OfflineStorageDB {
   async saveConversations(
     conversations: Omit<OfflineDMConversation, "_offlineCachedAt">[],
   ): Promise<void> {
-    return withIndexedDBRetry(async () => {
-      const db = this.ensureDb();
-      const transaction = db.transaction(
-        [STORES.DM_CONVERSATIONS, STORES.METADATA],
-        "readwrite",
-      );
-      const store = transaction.objectStore(STORES.DM_CONVERSATIONS);
-      const metaStore = transaction.objectStore(STORES.METADATA);
+    const doSave = () =>
+      withIndexedDBRetry(async () => {
+        const db = this.ensureDb();
+        const transaction = db.transaction(
+          [STORES.DM_CONVERSATIONS, STORES.METADATA],
+          "readwrite",
+        );
+        const store = transaction.objectStore(STORES.DM_CONVERSATIONS);
+        const metaStore = transaction.objectStore(STORES.METADATA);
 
-      const now = Date.now();
+        const now = Date.now();
 
-      for (const convo of conversations) {
-        const offlineConvo: OfflineDMConversation = {
-          ...convo,
-          _offlineCachedAt: now,
-        };
-        store.put(offlineConvo);
+        for (const convo of conversations) {
+          const offlineConvo: OfflineDMConversation = {
+            ...convo,
+            _offlineCachedAt: now,
+          };
+          store.put(offlineConvo);
+        }
+
+        // Update metadata
+        metaStore.put({
+          key: "dm_conversations",
+          lastSyncAt: now,
+          itemCount: conversations.length,
+        });
+
+        return new Promise<void>((resolve, reject) => {
+          transaction.oncomplete = () => resolve();
+          transaction.onerror = () => reject(transaction.error);
+        });
+      }, "saveConversations");
+
+    try {
+      return await doSave();
+    } catch (error) {
+      if (this.isQuotaExceededError(error)) {
+        debug.log(
+          "QuotaExceededError in saveConversations, running aggressive cleanup and retrying",
+        );
+        await this.enforceConversationLimit(
+          Math.floor(LIMITS.MAX_DM_CONVERSATIONS / 2),
+        );
+        return await doSave();
       }
-
-      // Update metadata
-      metaStore.put({
-        key: "dm_conversations",
-        lastSyncAt: now,
-        itemCount: conversations.length,
-      });
-
-      return new Promise<void>((resolve, reject) => {
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error);
-      });
-    }, "saveConversations");
+      throw error;
+    }
   }
 
   async getConversations(): Promise<OfflineDMConversation[]> {
@@ -479,27 +513,41 @@ export class OfflineStorageDB {
     conversationId: string,
     messages: Omit<OfflineDMMessage, "_offlineCachedAt" | "conversationId">[],
   ): Promise<void> {
-    return withIndexedDBRetry(async () => {
-      const db = this.ensureDb();
-      const transaction = db.transaction([STORES.DM_MESSAGES], "readwrite");
-      const store = transaction.objectStore(STORES.DM_MESSAGES);
+    const doSave = () =>
+      withIndexedDBRetry(async () => {
+        const db = this.ensureDb();
+        const transaction = db.transaction([STORES.DM_MESSAGES], "readwrite");
+        const store = transaction.objectStore(STORES.DM_MESSAGES);
 
-      const now = Date.now();
+        const now = Date.now();
 
-      for (const msg of messages) {
-        const offlineMsg: OfflineDMMessage = {
-          ...msg,
-          conversationId,
-          _offlineCachedAt: now,
-        };
-        store.put(offlineMsg);
+        for (const msg of messages) {
+          const offlineMsg: OfflineDMMessage = {
+            ...msg,
+            conversationId,
+            _offlineCachedAt: now,
+          };
+          store.put(offlineMsg);
+        }
+
+        return new Promise<void>((resolve, reject) => {
+          transaction.oncomplete = () => resolve();
+          transaction.onerror = () => reject(transaction.error);
+        });
+      }, "saveMessages");
+
+    try {
+      return await doSave();
+    } catch (error) {
+      if (this.isQuotaExceededError(error)) {
+        debug.log(
+          "QuotaExceededError in saveMessages, running aggressive cleanup and retrying",
+        );
+        await this.evictOldMessages();
+        return await doSave();
       }
-
-      return new Promise<void>((resolve, reject) => {
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error);
-      });
-    }, "saveMessages");
+      throw error;
+    }
   }
 
   async getMessages(
@@ -541,44 +589,60 @@ export class OfflineStorageDB {
   async saveThreadSummary(
     summary: Omit<OfflineThreadSummary, "_offlineCachedAt" | "_lastAccessedAt">,
   ): Promise<void> {
-    return withIndexedDBRetry(async () => {
-      const db = this.ensureDb();
-      const transaction = db.transaction(
-        [STORES.THREAD_SUMMARIES, STORES.METADATA],
-        "readwrite",
-      );
-      const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
-      const metaStore = transaction.objectStore(STORES.METADATA);
+    const doSave = () =>
+      withIndexedDBRetry(async () => {
+        const db = this.ensureDb();
+        const transaction = db.transaction(
+          [STORES.THREAD_SUMMARIES, STORES.METADATA],
+          "readwrite",
+        );
+        const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
+        const metaStore = transaction.objectStore(STORES.METADATA);
 
-      const now = Date.now();
+        const now = Date.now();
 
-      const offlineSummary: OfflineThreadSummary = {
-        ...summary,
-        _offlineCachedAt: now,
-        _lastAccessedAt: now,
-      };
-      store.put(offlineSummary);
-
-      // Update metadata
-      const existingMeta = await this.getMetadataInTransaction(
-        metaStore,
-        "thread_summaries",
-      );
-      const newMeta: OfflineMetadata = {
-        key: "thread_summaries",
-        lastSyncAt: now,
-        itemCount: (existingMeta?.itemCount || 0) + 1,
-      };
-      metaStore.put(newMeta);
-
-      return new Promise<void>((resolve, reject) => {
-        transaction.oncomplete = () => {
-          debug.log(`Cached thread summary for: ${summary.threadUri}`);
-          resolve();
+        const offlineSummary: OfflineThreadSummary = {
+          ...summary,
+          _offlineCachedAt: now,
+          _lastAccessedAt: now,
         };
-        transaction.onerror = () => reject(transaction.error);
-      });
-    }, "saveThreadSummary");
+        store.put(offlineSummary);
+
+        // Update metadata
+        const existingMeta = await this.getMetadataInTransaction(
+          metaStore,
+          "thread_summaries",
+        );
+        const newMeta: OfflineMetadata = {
+          key: "thread_summaries",
+          lastSyncAt: now,
+          itemCount: (existingMeta?.itemCount || 0) + 1,
+        };
+        metaStore.put(newMeta);
+
+        return new Promise<void>((resolve, reject) => {
+          transaction.oncomplete = () => {
+            debug.log(`Cached thread summary for: ${summary.threadUri}`);
+            resolve();
+          };
+          transaction.onerror = () => reject(transaction.error);
+        });
+      }, "saveThreadSummary");
+
+    try {
+      return await doSave();
+    } catch (error) {
+      if (this.isQuotaExceededError(error)) {
+        debug.log(
+          "QuotaExceededError in saveThreadSummary, running aggressive cleanup and retrying",
+        );
+        await this.enforceSummaryLimit(
+          Math.floor(LIMITS.MAX_THREAD_SUMMARIES / 2),
+        );
+        return await doSave();
+      }
+      throw error;
+    }
   }
 
   async getThreadSummary(
@@ -624,23 +688,28 @@ export class OfflineStorageDB {
     limit = 50,
   ): Promise<OfflineThreadSummary[]> {
     const db = this.ensureDb();
-    const transaction = db.transaction([STORES.THREAD_SUMMARIES], "readonly");
+    const transaction = db.transaction([STORES.THREAD_SUMMARIES], "readwrite");
     const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
 
     const summaries: OfflineThreadSummary[] = [];
+    const now = Date.now();
 
     return new Promise((resolve, reject) => {
       if (source) {
         // Use compound index for filtering by source
         const index = store.index("source_cachedAt");
-        const range = IDBKeyRange.bound([source, 0], [source, Date.now()]);
+        const range = IDBKeyRange.bound([source, 0], [source, now]);
         const request = index.openCursor(range, "prev");
 
         request.onsuccess = (event) => {
           const cursor = (event.target as IDBRequest).result;
 
           if (cursor && summaries.length < limit) {
-            summaries.push(cursor.value as OfflineThreadSummary);
+            const summary = cursor.value as OfflineThreadSummary;
+            // Update last accessed time for LRU accuracy
+            summary._lastAccessedAt = now;
+            store.put(summary);
+            summaries.push(summary);
             cursor.continue();
           } else {
             resolve(summaries);
@@ -657,7 +726,11 @@ export class OfflineStorageDB {
           const cursor = (event.target as IDBRequest).result;
 
           if (cursor && summaries.length < limit) {
-            summaries.push(cursor.value as OfflineThreadSummary);
+            const summary = cursor.value as OfflineThreadSummary;
+            // Update last accessed time for LRU accuracy
+            summary._lastAccessedAt = now;
+            store.put(summary);
+            summaries.push(summary);
             cursor.continue();
           } else {
             resolve(summaries);
@@ -903,7 +976,9 @@ export class OfflineStorageDB {
     await this.evictOldSummaries();
   }
 
-  private async enforceFeedLimit(): Promise<void> {
+  private async enforceFeedLimit(
+    maxItems: number = LIMITS.MAX_FEED_ITEMS,
+  ): Promise<void> {
     const db = this.ensureDb();
     const transaction = db.transaction([STORES.FEED_ITEMS], "readwrite");
     const store = transaction.objectStore(STORES.FEED_ITEMS);
@@ -914,9 +989,9 @@ export class OfflineStorageDB {
       req.onerror = () => reject(req.error);
     });
 
-    if (count > LIMITS.MAX_FEED_ITEMS) {
+    if (count > maxItems) {
       const index = store.index("_offlineCachedAt");
-      const deleteCount = count - LIMITS.MAX_FEED_ITEMS;
+      const deleteCount = count - maxItems;
       let deleted = 0;
 
       await new Promise<void>((resolve, reject) => {
@@ -941,7 +1016,9 @@ export class OfflineStorageDB {
     }
   }
 
-  private async enforceConversationLimit(): Promise<void> {
+  private async enforceConversationLimit(
+    maxConversations: number = LIMITS.MAX_DM_CONVERSATIONS,
+  ): Promise<void> {
     const db = this.ensureDb();
     const transaction = db.transaction(
       [STORES.DM_CONVERSATIONS, STORES.DM_MESSAGES],
@@ -956,9 +1033,9 @@ export class OfflineStorageDB {
       req.onerror = () => reject(req.error);
     });
 
-    if (count > LIMITS.MAX_DM_CONVERSATIONS) {
+    if (count > maxConversations) {
       const index = convoStore.index("_offlineCachedAt");
-      const deleteCount = count - LIMITS.MAX_DM_CONVERSATIONS;
+      const deleteCount = count - maxConversations;
       const conversationsToDelete: string[] = [];
       let deleted = 0;
 
@@ -1009,7 +1086,9 @@ export class OfflineStorageDB {
     }
   }
 
-  private async enforceSummaryLimit(): Promise<void> {
+  private async enforceSummaryLimit(
+    maxSummaries: number = LIMITS.MAX_THREAD_SUMMARIES,
+  ): Promise<void> {
     const db = this.ensureDb();
     const transaction = db.transaction([STORES.THREAD_SUMMARIES], "readwrite");
     const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
@@ -1020,10 +1099,10 @@ export class OfflineStorageDB {
       req.onerror = () => reject(req.error);
     });
 
-    if (count > LIMITS.MAX_THREAD_SUMMARIES) {
+    if (count > maxSummaries) {
       // Use LRU eviction based on last accessed time
       const index = store.index("_lastAccessedAt");
-      const deleteCount = count - LIMITS.MAX_THREAD_SUMMARIES;
+      const deleteCount = count - maxSummaries;
       let deleted = 0;
 
       await new Promise<void>((resolve, reject) => {

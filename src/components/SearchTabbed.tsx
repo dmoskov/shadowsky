@@ -1,4 +1,10 @@
-import type { AppBskyFeedDefs } from "@atproto/api";
+import {
+  AppBskyEmbedExternal,
+  AppBskyEmbedImages,
+  AppBskyEmbedRecordWithMedia,
+  AppBskyEmbedVideo,
+  type AppBskyFeedDefs,
+} from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceToNow, subDays, subMonths } from "date-fns";
@@ -87,23 +93,23 @@ interface SavedSearch {
 const postHasMedia = (post: AppBskyFeedDefs.PostView): boolean => {
   if (!post.embed) return false;
 
-  const embed = post.embed as any;
+  const embed = post.embed;
 
   // Direct image embed
-  if (embed.$type === "app.bsky.embed.images#view") {
+  if (AppBskyEmbedImages.isView(embed)) {
     return true;
   }
 
   // Record with media (quote post with images)
   if (
-    embed.$type === "app.bsky.embed.recordWithMedia#view" &&
-    embed.media?.$type === "app.bsky.embed.images#view"
+    AppBskyEmbedRecordWithMedia.isView(embed) &&
+    AppBskyEmbedImages.isView(embed.media)
   ) {
     return true;
   }
 
   // Video embed
-  if (embed.$type === "app.bsky.embed.video#view") {
+  if (AppBskyEmbedVideo.isView(embed)) {
     return true;
   }
 
@@ -113,15 +119,15 @@ const postHasMedia = (post: AppBskyFeedDefs.PostView): boolean => {
 // Check if a post has images specifically
 const postHasImages = (post: AppBskyFeedDefs.PostView): boolean => {
   if (!post.embed) return false;
-  const embed = post.embed as any;
+  const embed = post.embed;
 
-  if (embed.$type === "app.bsky.embed.images#view") {
+  if (AppBskyEmbedImages.isView(embed)) {
     return true;
   }
 
   if (
-    embed.$type === "app.bsky.embed.recordWithMedia#view" &&
-    embed.media?.$type === "app.bsky.embed.images#view"
+    AppBskyEmbedRecordWithMedia.isView(embed) &&
+    AppBskyEmbedImages.isView(embed.media)
   ) {
     return true;
   }
@@ -132,22 +138,21 @@ const postHasImages = (post: AppBskyFeedDefs.PostView): boolean => {
 // Check if a post has videos specifically
 const postHasVideo = (post: AppBskyFeedDefs.PostView): boolean => {
   if (!post.embed) return false;
-  const embed = post.embed as any;
-  return embed.$type === "app.bsky.embed.video#view";
+  return AppBskyEmbedVideo.isView(post.embed);
 };
 
 // Check if a post has external links
 const postHasLinks = (post: AppBskyFeedDefs.PostView): boolean => {
   if (!post.embed) return false;
-  const embed = post.embed as any;
+  const embed = post.embed;
 
-  if (embed.$type === "app.bsky.embed.external#view") {
+  if (AppBskyEmbedExternal.isView(embed)) {
     return true;
   }
 
   if (
-    embed.$type === "app.bsky.embed.recordWithMedia#view" &&
-    embed.media?.$type === "app.bsky.embed.external#view"
+    AppBskyEmbedRecordWithMedia.isView(embed) &&
+    AppBskyEmbedExternal.isView(embed.media)
   ) {
     return true;
   }

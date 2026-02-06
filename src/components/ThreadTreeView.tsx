@@ -32,7 +32,10 @@ import { RichText } from "./ui/RichText";
 export {
   useCollapsedNodes,
   useThread,
+  useThreadCollapseState,
   useThreadComplexity,
+  useThreadData,
+  useThreadNav,
   useThreadNavigation,
 } from "../contexts/ThreadContext";
 

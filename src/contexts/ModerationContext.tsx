@@ -93,18 +93,20 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [blockedUsers]);
 
-  // Expose to window for debugging
+  // Expose to window for debugging (DEV only)
   React.useEffect(() => {
-    (window as any).getModerationData = () => ({
-      mutedUsers: Array.from(mutedUsers),
-      mutedThreads: Array.from(mutedThreads),
-      blockedUsers: Array.from(blockedUsers),
-    });
-    (window as any).clearModerationData = () => {
-      setMutedUsers(new Set());
-      setMutedThreads(new Set());
-      setBlockedUsers(new Set());
-    };
+    if (import.meta.env.DEV) {
+      (window as any).getModerationData = () => ({
+        mutedUsers: Array.from(mutedUsers),
+        mutedThreads: Array.from(mutedThreads),
+        blockedUsers: Array.from(blockedUsers),
+      });
+      (window as any).clearModerationData = () => {
+        setMutedUsers(new Set());
+        setMutedThreads(new Set());
+        setBlockedUsers(new Set());
+      };
+    }
   }, [mutedUsers, mutedThreads, blockedUsers]);
 
   const muteUser = useCallback((did: string) => {

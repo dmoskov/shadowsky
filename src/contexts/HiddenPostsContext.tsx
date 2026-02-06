@@ -27,15 +27,17 @@ export const HiddenPostsProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [hiddenPosts, setHiddenPosts] = useState<Set<string>>(new Set());
 
-  // Expose to window for debugging
+  // Expose to window for debugging (DEV only)
   React.useEffect(() => {
-    (window as any).clearHiddenPosts = () => {
-      setHiddenPosts(new Set());
-      console.log("All hidden posts have been cleared");
-    };
-    (window as any).getHiddenPosts = () => {
-      return Array.from(hiddenPosts);
-    };
+    if (import.meta.env.DEV) {
+      (window as any).clearHiddenPosts = () => {
+        setHiddenPosts(new Set());
+        console.log("All hidden posts have been cleared");
+      };
+      (window as any).getHiddenPosts = () => {
+        return Array.from(hiddenPosts);
+      };
+    }
   }, [hiddenPosts]);
 
   // Load hidden posts from localStorage on mount

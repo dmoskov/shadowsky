@@ -50,17 +50,20 @@ export function useNotificationPosts(
     return orderedUris;
   }, [notifications]);
 
-  // Create a more stable query key that doesn't change with minor reordering
   const queryKey = React.useMemo(() => {
-    // Use a hash of the first 100 URIs for stability
-    const urisForKey = postUris.slice(0, 100).sort();
-    const keyString = urisForKey.length > 0 ? urisForKey.join(",") : "empty";
-    return ["notification-posts", keyString];
+    if (postUris.length === 0) return ["notification-posts", "empty"];
+    const sorted = [...postUris].sort();
+    const str = sorted.join(",");
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) + hash + str.charCodeAt(i)) | 0;
+    }
+    return ["notification-posts", `${hash}:${postUris.length}`];
   }, [postUris]);
 
   const queryResult = useQuery({
     queryKey,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (postUris.length === 0) return [];
 
       // First, check if ALL posts are cached (not just first 200)
@@ -94,13 +97,12 @@ export function useNotificationPosts(
 
       // Batch fetch only missing posts (Bluesky API supports up to 25 posts per request)
       const posts: Post[] = [...cached]; // Start with cached posts
-      let apiCallCount = 0;
 
       for (let i = 0; i < missing.length; i += 25) {
+        if (signal?.aborted) return posts; // bail early on cancellation
+
         const batch = missing.slice(i, i + 25);
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          apiCallCount++;
           // Rate limit the API call
           const response = await rateLimitedPostFetch(async () =>
             agent.app.bsky.feed.getPosts({ uris: batch }),

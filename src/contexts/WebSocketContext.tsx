@@ -253,6 +253,27 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
   const handleDisconnect = useCallback(() => {
     debug.log("❌ [WebSocket] Disconnected");
+
+    // Clear reconnect timer
+    if (reconnectAttemptTimer.current) {
+      clearTimeout(reconnectAttemptTimer.current);
+      reconnectAttemptTimer.current = null;
+    }
+
+    // Clear debounce timers
+    if (notificationDebounceTimerRef.current) {
+      clearTimeout(notificationDebounceTimerRef.current);
+      notificationDebounceTimerRef.current = null;
+    }
+    if (countDebounceTimerRef.current) {
+      clearTimeout(countDebounceTimerRef.current);
+      countDebounceTimerRef.current = null;
+    }
+
+    // Reset pending data buffers
+    pendingNotificationsRef.current = [];
+    pendingCountRef.current = null;
+
     updateStats();
     // Switch to shorter polling interval to monitor reconnection status
     updatePollingInterval(false);

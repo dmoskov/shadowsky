@@ -835,49 +835,52 @@ export const Home: React.FC<HomeProps> = React.memo(
 
     // Clean up alt text states and postRefs for posts that are no longer in the feed
     // This prevents unbounded memory growth as users scroll through feeds
+    // Only prunes state when entries actually need removal to avoid unnecessary re-renders
     React.useEffect(() => {
       const currentPostUris = new Set(posts.map((p) => p.post.uri));
 
-      // Clean up alt text states for removed posts
-      setGeneratedAltTexts((prev) => {
-        const filtered: Record<string, Record<number, string>> = {};
-        for (const uri of currentPostUris) {
-          if (prev[uri]) {
-            filtered[uri] = prev[uri];
+      // Helper: returns prev unchanged if nothing was pruned, otherwise returns filtered copy
+      function pruneRecord<T>(
+        prev: Record<string, T>,
+        validKeys: Set<string>,
+      ): Record<string, T> {
+        const staleKeys = Object.keys(prev).filter(
+          (key) => !validKeys.has(key),
+        );
+        if (staleKeys.length === 0) return prev;
+        const filtered: Record<string, T> = {};
+        for (const key of Object.keys(prev)) {
+          if (validKeys.has(key)) {
+            filtered[key] = prev[key];
           }
         }
         return filtered;
-      });
+      }
 
-      setGeneratingAltText((prev) => {
-        const filtered: Record<string, Record<number, boolean>> = {};
-        for (const uri of currentPostUris) {
-          if (prev[uri]) {
-            filtered[uri] = prev[uri];
-          }
-        }
-        return filtered;
-      });
-
-      setShowAltText((prev) => {
-        const filtered: Record<string, Record<number, boolean>> = {};
-        for (const uri of currentPostUris) {
-          if (prev[uri]) {
-            filtered[uri] = prev[uri];
-          }
-        }
-        return filtered;
-      });
+      // Clean up alt text states for removed posts (no-op if nothing stale)
+      setGeneratedAltTexts((prev) => pruneRecord(prev, currentPostUris));
+      setGeneratingAltText((prev) => pruneRecord(prev, currentPostUris));
+      setShowAltText((prev) => pruneRecord(prev, currentPostUris));
 
       // Clean up postRefs for removed posts
-      const newPostRefs: { [key: string]: HTMLDivElement } = {};
+      let hasStaleRefs = false;
       for (const key in postRefs.current) {
         const uri = key.split("-").slice(0, -1).join("-"); // Remove index suffix
-        if (currentPostUris.has(uri)) {
-          newPostRefs[key] = postRefs.current[key];
+        if (!currentPostUris.has(uri)) {
+          hasStaleRefs = true;
+          break;
         }
       }
-      postRefs.current = newPostRefs;
+      if (hasStaleRefs) {
+        const newPostRefs: { [key: string]: HTMLDivElement } = {};
+        for (const key in postRefs.current) {
+          const uri = key.split("-").slice(0, -1).join("-");
+          if (currentPostUris.has(uri)) {
+            newPostRefs[key] = postRefs.current[key];
+          }
+        }
+        postRefs.current = newPostRefs;
+      }
     }, [posts]);
 
     // Memoize post rendering to prevent unnecessary re-renders

@@ -91,7 +91,15 @@ export class DraftService {
     // Import to new backend
     await newBackend.import(drafts);
 
-    // Switch to new backend
+    // Verify migration by reading back from the new backend
+    const migratedDrafts = await newBackend.export();
+    if (migratedDrafts.length !== drafts.length) {
+      throw new Error(
+        `Draft migration verification failed: expected ${drafts.length} drafts but new backend has ${migratedDrafts.length}. Migration aborted, original backend preserved.`,
+      );
+    }
+
+    // Switch to new backend only after verification succeeds
     this.backend = newBackend;
     this.storageType = toType;
   }

@@ -183,13 +183,13 @@ export const postRateLimiter = new RateLimiter({
   slowdownAfter: 25, // Start slowing down after 25 requests
 });
 
-// Notification fetch rate limiter - Adaptive for initial load
+// Notification fetch rate limiter - Adaptive for initial load and pagination
 export const notificationRateLimiter = new RateLimiter({
   maxTokens: 30,
-  refillRate: 0.5, // Reduced to 0.5 requests per second (1 request every 2 seconds)
-  minDelay: 1000, // Increased to 1000ms (1 second) minimum delay between requests
+  refillRate: 2, // 2 requests per second to support active pagination
+  minDelay: 200, // 200ms minimum delay - low base for pagination, adaptive slows after burst
   adaptive: true,
-  burstTokens: 10, // Reduced burst tokens to 10 (40 total initially)
+  burstTokens: 10, // 10 burst tokens (40 total initially)
   slowdownAfter: 20, // Start slowing down after 20 requests
 });
 

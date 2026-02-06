@@ -14,6 +14,13 @@ import { useBookmarks } from "../hooks/useBookmarks";
 import { PostMenu } from "./PostMenu";
 import { SyncStatusBadge } from "./SyncStatusBadge";
 
+// Extracted constant styles to avoid creating new objects on every render
+const repostMenuStyle: React.CSSProperties = {
+  backgroundColor: "var(--bsky-bg-secondary)",
+  borderColor: "var(--bsky-border-primary)",
+  boxShadow: "var(--bsky-shadow-lg)",
+};
+
 interface PostActionBarProps {
   post: AppBskyFeedDefs.PostView;
   onReply?: () => void;
@@ -207,24 +214,14 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
                 aria-label="Repost options"
                 className="fixed z-[9999] w-40 rounded-lg border shadow-lg"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
-                  boxShadow: "var(--bsky-shadow-lg)",
+                  ...repostMenuStyle,
                   top: `${menuPosition.top}px`,
                   left: `${menuPosition.left}px`,
                 }}
               >
                 <button
                   role="menuitem"
-                  className="flex min-h-[44px] w-full items-center gap-3 rounded-t-lg px-4 py-3 text-left text-sm transition-all"
-                  style={{ color: "var(--bsky-text-primary)" }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor =
-                      "var(--bsky-bg-hover)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor = "transparent")
-                  }
+                  className="flex min-h-[44px] w-full items-center gap-3 rounded-t-lg bg-transparent px-4 py-3 text-left text-sm text-bsky-text-primary transition-all hover:bg-bsky-bg-hover"
                   onClick={(e) => {
                     handleAction(e, onRepost);
                     setShowRepostMenu(false);
@@ -235,15 +232,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
                 </button>
                 <button
                   role="menuitem"
-                  className="flex min-h-[44px] w-full items-center gap-3 rounded-b-lg px-4 py-3 text-left text-sm transition-all"
-                  style={{ color: "var(--bsky-text-primary)" }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor =
-                      "var(--bsky-bg-hover)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor = "transparent")
-                  }
+                  className="flex min-h-[44px] w-full items-center gap-3 rounded-b-lg bg-transparent px-4 py-3 text-left text-sm text-bsky-text-primary transition-all hover:bg-bsky-bg-hover"
                   onClick={(e) => {
                     handleAction(e, onQuote);
                     setShowRepostMenu(false);

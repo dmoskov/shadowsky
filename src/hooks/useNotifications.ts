@@ -10,7 +10,6 @@ import React from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { getNotificationService } from "../services/atproto/notifications";
 import { NotificationCache } from "../utils/notificationCache";
-import { NotificationObjectCache } from "../utils/notificationObjectCache";
 import { useErrorHandler } from "./useErrorHandler";
 
 const MAX_NOTIFICATIONS = 10000;
@@ -36,7 +35,9 @@ export function useNotifications(priority: boolean = false) {
 
   const query = useInfiniteQuery({
     queryKey: ["notifications", priority],
-    queryFn: async ({ pageParam }) => {
+    queryFn: async ({ pageParam, signal }) => {
+      if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
       const fetchTimestamp = new Date().toLocaleTimeString();
       debug.log(
         `🌐 [${fetchTimestamp}] React Query: Making API call (priority: ${priority}, cursor: ${pageParam || "none"})`,
@@ -142,19 +143,7 @@ export function useNotifications(priority: boolean = false) {
       debug.log(
         `💾 [${successTimestamp}] React Query: Saving ${totalNotifications} notifications to cache`,
       );
-      console.log("[useNotifications] Data updated:", {
-        pages: query.data.pages.length,
-        totalNotifications,
-        firstNotification: query.data.pages[0]?.notifications[0]?.indexedAt,
-        timestamp: new Date().toISOString(),
-      });
       NotificationCache.save(query.data.pages, priority);
-
-      // Also save individual notifications to object cache
-      const allNotifications = query.data.pages.flatMap(
-        (page) => page.notifications,
-      );
-      NotificationObjectCache.save(allNotifications);
     }
   }, [query.data, query.isLoading, priority]);
 

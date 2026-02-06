@@ -74,9 +74,8 @@ export function useRealTimeEngagement(
 
   const [isEnabled, setIsEnabledState] = useState(service.isEnabled());
   const [metrics, setMetrics] = useState<EngagementServiceMetrics | null>(null);
-  const [engagementData, setEngagementData] = useState<
-    Map<string, PostEngagement>
-  >(new Map());
+  const engagementDataRef = useRef<Map<string, PostEngagement>>(new Map());
+  const [engagementVersion, setEngagementVersion] = useState(0);
 
   // Track visible post URIs
   const visiblePostsRef = useRef<Set<string>>(new Set());
@@ -103,9 +102,10 @@ export function useRealTimeEngagement(
   // Get engagement for a specific URI
   const getEngagement = useCallback(
     (uri: string): PostEngagement | undefined => {
-      return engagementData.get(uri);
+      return engagementDataRef.current.get(uri);
     },
-    [engagementData],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [engagementVersion],
   );
 
   // Handle engagement updates from service
@@ -117,14 +117,11 @@ export function useRealTimeEngagement(
         console.log("[RealTimeEngagement] Received updates:", updates.length);
       }
 
-      // Update local state
-      setEngagementData((prev) => {
-        const next = new Map(prev);
-        for (const update of updates) {
-          next.set(update.uri, update);
-        }
-        return next;
-      });
+      // Update local ref and bump version to notify consumers
+      for (const update of updates) {
+        engagementDataRef.current.set(update.uri, update);
+      }
+      setEngagementVersion((v) => v + 1);
 
       // Update React Query cache for feed queries
       // This allows the updates to propagate to PostCard components
@@ -353,7 +350,7 @@ export function useRealTimeEngagement(
     setEnabled,
     metrics,
     updateVisiblePosts,
-    engagementData,
+    engagementData: engagementDataRef.current,
     getEngagement,
   };
 }

@@ -101,8 +101,12 @@ export function useMutationQueue(
           setStats(initialStats);
           setIsInitialized(true);
 
-          // Process any pending mutations if online
-          if (navigator.onLine && initialStats.pendingCount > 0) {
+          // Process any pending mutations if online and not already processing
+          if (
+            navigator.onLine &&
+            initialStats.pendingCount > 0 &&
+            !mutationQueueDB.isQueueProcessing()
+          ) {
             mutationQueueDB.processQueue();
           }
         }

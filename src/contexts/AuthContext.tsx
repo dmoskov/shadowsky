@@ -113,6 +113,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [oauthAgent, setOauthAgent] = useState<BskyAgent | null>(null);
   const [isOAuthAvailable, setIsOAuthAvailable] = useState(false);
   const initAttempts = useRef(0);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const maxRetries = 3;
 
   const logout = useCallback(
@@ -445,7 +446,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               debug.log("Network error during session resume, will retry...");
 
               if (initAttempts.current < maxRetries && navigator.onLine) {
-                setTimeout(() => {
+                retryTimerRef.current = setTimeout(() => {
+                  retryTimerRef.current = null;
                   initializeAuth(); // Retry
                 }, 2000 * initAttempts.current); // Exponential backoff
                 return; // Don't set loading to false yet
@@ -473,6 +475,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     return () => {
       clearTimeout(safetyTimeout);
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
     };
   }, []);
 

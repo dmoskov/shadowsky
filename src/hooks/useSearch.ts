@@ -351,7 +351,9 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
     error,
   } = useInfiniteQuery({
     queryKey: ["searchPosts", fullSearchQuery, sortOrder],
-    queryFn: async ({ pageParam }): Promise<SearchPage> => {
+    queryFn: async ({ pageParam, signal }): Promise<SearchPage> => {
+      if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
       if (!fullSearchQuery.trim()) {
         return { posts: [], cursor: undefined };
       }

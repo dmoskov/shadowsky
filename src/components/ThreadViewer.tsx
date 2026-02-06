@@ -44,7 +44,10 @@ import { ThrottledAvatar } from "./ui/ThrottledAvatar";
 import { type VirtualizedThreadListHandle } from "./VirtualizedThreadList";
 export {
   useThread,
+  useThreadCollapseState,
   useThreadComplexity,
+  useThreadData,
+  useThreadNav,
   useThreadNavigation,
   useThreadUserPosts,
 } from "../contexts/ThreadContext";
@@ -164,23 +167,38 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const virtualListRef = useRef<VirtualizedThreadListHandle>(null);
 
-  // Clean up postRefs when flatNodeList changes to prevent unbounded growth
+  // Clean up postRefs when flatNodeList changes to prevent unbounded growth.
+  // Also applies LRU-style pruning: when the map exceeds MAX_POST_REFS_SIZE,
+  // entries far from the current visible range are evicted.
+  const MAX_POST_REFS_SIZE = 200;
   useEffect(() => {
-    // Remove entries for indices that no longer exist
-    const validIndices = new Set(
-      flatNodeList
-        .map((_, idx) => idx)
-        .filter((idx) => idx < flatNodeList.length),
-    );
     const currentRefs = postRefs.current;
 
-    // Delete stale entries
+    // Remove entries for indices that no longer exist in the list
     for (const key of currentRefs.keys()) {
-      if (!validIndices.has(key)) {
+      if (key >= flatNodeList.length) {
         currentRefs.delete(key);
       }
     }
-  }, [flatNodeList]);
+
+    // LRU-style pruning: if map is still too large, keep only entries
+    // closest to the current focused/visible area
+    if (currentRefs.size > MAX_POST_REFS_SIZE) {
+      const anchor =
+        controlledFocusedIndex !== undefined && controlledFocusedIndex >= 0
+          ? controlledFocusedIndex
+          : 0;
+      const half = Math.floor(MAX_POST_REFS_SIZE / 2);
+      const keepMin = Math.max(0, anchor - half);
+      const keepMax = keepMin + MAX_POST_REFS_SIZE;
+
+      for (const key of currentRefs.keys()) {
+        if (key < keepMin || key > keepMax) {
+          currentRefs.delete(key);
+        }
+      }
+    }
+  }, [flatNodeList, controlledFocusedIndex]);
 
   // Manage keyboard navigation
   const {

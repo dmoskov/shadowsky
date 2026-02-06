@@ -559,6 +559,7 @@ class APICacheService {
         clonedResponse.headers.forEach((value, key) => {
           headers[key] = value;
         });
+        const headersJson = JSON.stringify(headers);
 
         const entry: CacheEntry = {
           id,
@@ -568,9 +569,10 @@ class APICacheService {
           lastAccessedAt: now,
           status: clonedResponse.status,
           statusText: clonedResponse.statusText,
-          headers: JSON.stringify(headers),
+          headers: headersJson,
           body,
-          size: body.byteLength,
+          // Estimate total size: body + URL (UTF-16) + headers JSON (UTF-16) + fixed overhead
+          size: body.byteLength + url.length * 2 + headersJson.length * 2 + 512,
         };
 
         await db.cacheEntries.put(entry);

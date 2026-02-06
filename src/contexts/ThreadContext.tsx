@@ -1,13 +1,12 @@
 /**
  * ThreadContext - Unified state management for thread visualization
  *
- * This context provides:
- * - Thread tree structure (parent-child relationships, depth tracking)
- * - Complexity metrics (totalPosts, maxDepth, branchCount, uniqueAuthors)
- * - Complexity level enum (Simple/Medium/Complex/VeryComplex)
- * - Collapse state synchronization across views
- * - Navigation state (focused post, scroll position)
- * - Memoized calculations to prevent re-renders
+ * Split into three focused sub-contexts to minimize re-renders:
+ * - ThreadDataContext: tree structure, metrics, complexity
+ * - ThreadNavigationContext: navigation state and helpers
+ * - ThreadCollapseContext: collapse state and adaptive collapse
+ *
+ * useThread() merges all three for backward compatibility.
  */
 
 import type { AppBskyFeedDefs } from "@atproto/api";
@@ -37,9 +36,6 @@ import {
 
 type Post = AppBskyFeedDefs.PostView;
 
-/**
- * Represents a node in the thread tree
- */
 export interface ThreadNode {
   post: Post;
   notification?: Notification;
@@ -52,19 +48,13 @@ export interface ThreadNode {
   totalSiblings?: number;
 }
 
-/**
- * Complexity level enum for thread classification
- */
 export enum ThreadComplexityLevel {
-  Simple = "Simple", // < 5 posts, depth <= 2
-  Medium = "Medium", // 5-15 posts, depth <= 5
-  Complex = "Complex", // 15-50 posts OR depth 6-10
-  VeryComplex = "VeryComplex", // > 50 posts OR depth > 10
+  Simple = "Simple",
+  Medium = "Medium",
+  Complex = "Complex",
+  VeryComplex = "VeryComplex",
 }
 
-/**
- * Thread statistics and metrics
- */
 export interface ThreadMetrics {
   totalPosts: number;
   totalReplies: number;
@@ -76,68 +66,61 @@ export interface ThreadMetrics {
   complexityLevel: ThreadComplexityLevel;
 }
 
-/**
- * Navigation state for tracking focused post
- */
 export interface ThreadNavigationState {
   focusedIndex: number;
   highlightUri: string | null;
   scrollPosition: number;
 }
 
-/**
- * Thread context value exposed to consumers
- */
-export interface ThreadContextValue {
-  // Tree structure
+// ============================================================================
+// Sub-context value types
+// ============================================================================
+
+export interface ThreadDataContextValue {
   threadTree: ThreadNode[];
   flatList: ThreadNode[];
   nodeMap: Map<string, ThreadNode>;
-
-  // Metrics
   metrics: ThreadMetrics;
-
-  // Complexity scoring (weighted scoring for progressive reveal)
   complexityScore: ThreadComplexityScore;
-
-  // Collapse state
-  collapsedNodes: Set<string>;
-  toggleCollapse: (uri: string) => void;
-  collapseAll: () => void;
-  expandAll: () => void;
-  isCollapsed: (uri: string) => boolean;
-
-  // Adaptive collapse
-  collapseThresholds: CollapseThresholds;
-  screenSize: ScreenSize;
-  getBranchBorderColor: (depth: number) => string;
-  getBranchBackgroundColor: (depth: number) => string;
-  collapseBranch: (uri: string) => void;
-  expandBranch: (uri: string) => void;
-
-  // Navigation state
-  navigationState: ThreadNavigationState;
-  setFocusedIndex: (index: number) => void;
-  setHighlightUri: (uri: string | null) => void;
-  setScrollPosition: (position: number) => void;
-
-  // Navigation helpers
-  jumpToRoot: () => void;
-  jumpToParent: () => void;
-  jumpToNextSibling: () => void;
-  jumpToPrevSibling: () => void;
-  jumpToNode: (uri: string) => void;
-
-  // Utility
+  descendantCountMap: Map<string, number>;
   getNodeByUri: (uri: string) => ThreadNode | undefined;
   getNodeByIndex: (index: number) => ThreadNode | undefined;
   getDescendantCount: (node: ThreadNode) => number;
   getUserPosts: (userDid: string) => ThreadNode[];
 }
 
-/**
- * Props for ThreadProvider
- */
+export interface ThreadNavigationContextValue {
+  navigationState: ThreadNavigationState;
+  setFocusedIndex: (index: number) => void;
+  setHighlightUri: (uri: string | null) => void;
+  setScrollPosition: (position: number) => void;
+  jumpToRoot: () => void;
+  jumpToParent: () => void;
+  jumpToNextSibling: () => void;
+  jumpToPrevSibling: () => void;
+  jumpToNode: (uri: string) => void;
+}
+
+export interface ThreadCollapseContextValue {
+  collapsedNodes: Set<string>;
+  toggleCollapse: (uri: string) => void;
+  collapseAll: () => void;
+  expandAll: () => void;
+  isCollapsed: (uri: string) => boolean;
+  collapseThresholds: CollapseThresholds;
+  screenSize: ScreenSize;
+  getBranchBorderColor: (depth: number) => string;
+  getBranchBackgroundColor: (depth: number) => string;
+  collapseBranch: (uri: string) => void;
+  expandBranch: (uri: string) => void;
+}
+
+export interface ThreadContextValue
+  extends
+    ThreadDataContextValue,
+    ThreadNavigationContextValue,
+    ThreadCollapseContextValue {}
+
 export interface ThreadProviderProps {
   posts: Post[];
   notifications?: Notification[];
@@ -148,8 +131,16 @@ export interface ThreadProviderProps {
 }
 
 // ============================================================================
-// Context
+// Contexts
 // ============================================================================
+
+const ThreadDataCtx = createContext<ThreadDataContextValue | null>(null);
+const ThreadNavigationCtx = createContext<ThreadNavigationContextValue | null>(
+  null,
+);
+const ThreadCollapseCtx = createContext<ThreadCollapseContextValue | null>(
+  null,
+);
 
 const ThreadContext = createContext<ThreadContextValue | null>(null);
 
@@ -157,33 +148,23 @@ const ThreadContext = createContext<ThreadContextValue | null>(null);
 // Utility Functions
 // ============================================================================
 
-/**
- * Calculates complexity level based on metrics
- */
 function calculateComplexityLevel(
   totalPosts: number,
   maxDepth: number,
   branchCount: number,
 ): ThreadComplexityLevel {
-  // VeryComplex: > 50 posts OR depth > 10 OR > 20 branches
   if (totalPosts > 50 || maxDepth > 10 || branchCount > 20) {
     return ThreadComplexityLevel.VeryComplex;
   }
-  // Complex: 15-50 posts OR depth 6-10 OR 10-20 branches
   if (totalPosts > 15 || maxDepth > 5 || branchCount > 10) {
     return ThreadComplexityLevel.Complex;
   }
-  // Medium: 5-15 posts OR depth 3-5 OR 3-10 branches
   if (totalPosts > 5 || maxDepth > 2 || branchCount > 3) {
     return ThreadComplexityLevel.Medium;
   }
-  // Simple: < 5 posts, depth <= 2, <= 3 branches
   return ThreadComplexityLevel.Simple;
 }
 
-/**
- * Builds thread tree from flat post array
- */
 function buildThreadTree(
   posts: Post[],
   notifications: Notification[],
@@ -193,11 +174,11 @@ function buildThreadTree(
   flatList: ThreadNode[];
   nodeMap: Map<string, ThreadNode>;
   metrics: ThreadMetrics;
+  descendantCountMap: Map<string, number>;
 } {
   const nodeMap = new Map<string, ThreadNode>();
   const rootNodes: ThreadNode[] = [];
 
-  // Create notification map for quick lookup
   const notificationMap = new Map<string, Notification>();
   notifications.forEach((notification) => {
     if (notification?.uri) {
@@ -205,7 +186,6 @@ function buildThreadTree(
     }
   });
 
-  // Create all nodes
   posts.forEach((post) => {
     const node: ThreadNode = {
       post,
@@ -216,7 +196,6 @@ function buildThreadTree(
     nodeMap.set(post.uri, node);
   });
 
-  // Determine actual root URI
   const actualRootUri =
     rootUri ||
     (() => {
@@ -233,14 +212,12 @@ function buildThreadTree(
       return roots[0]?.uri;
     })();
 
-  // Mark root and add to roots array
   if (actualRootUri && nodeMap.has(actualRootUri)) {
     const rootNode = nodeMap.get(actualRootUri)!;
     rootNode.isRoot = true;
     rootNodes.push(rootNode);
   }
 
-  // Build parent-child relationships
   nodeMap.forEach((childNode) => {
     if (childNode.isRoot) return;
 
@@ -256,7 +233,6 @@ function buildThreadTree(
         childNode.depth = parentNode.depth + 1;
         childNode.parentNode = parentNode;
       } else if (rootNodes.length > 0) {
-        // Parent not found, attach to root
         rootNodes[0].children.push(childNode);
         childNode.depth = 1;
         childNode.parentNode = rootNodes[0];
@@ -264,7 +240,6 @@ function buildThreadTree(
     }
   });
 
-  // Sort children by timestamp and add sibling info
   const sortAndIndexChildren = (node: ThreadNode) => {
     node.children.sort((a, b) => {
       const aTime = a.notification?.indexedAt || a.post?.indexedAt || "";
@@ -279,7 +254,6 @@ function buildThreadTree(
   };
   rootNodes.forEach(sortAndIndexChildren);
 
-  // Create flat list (depth-first) and calculate metrics
   const flatList: ThreadNode[] = [];
   let index = 0;
   let maxDepth = 0;
@@ -294,7 +268,6 @@ function buildThreadTree(
   };
   rootNodes.forEach(traverse);
 
-  // Handle orphan nodes (if no root found)
   if (rootNodes.length === 0) {
     nodeMap.forEach((node) => {
       const hasParent = Array.from(nodeMap.values()).some((n) =>
@@ -308,7 +281,16 @@ function buildThreadTree(
     });
   }
 
-  // Calculate aggregate stats
+  const descendantCountMap = new Map<string, number>();
+  for (let i = flatList.length - 1; i >= 0; i--) {
+    const node = flatList[i];
+    let count = 0;
+    for (const child of node.children) {
+      count += 1 + (descendantCountMap.get(child.post.uri) || 0);
+    }
+    descendantCountMap.set(node.post.uri, count);
+  }
+
   const uniqueAuthors = new Set(posts.map((p) => p.author.did)).size;
   const totalLikes = posts.reduce((sum, p) => sum + (p.likeCount || 0), 0);
   const totalReposts = posts.reduce((sum, p) => sum + (p.repostCount || 0), 0);
@@ -330,7 +312,13 @@ function buildThreadTree(
     complexityLevel,
   };
 
-  return { threadTree: rootNodes, flatList, nodeMap, metrics };
+  return {
+    threadTree: rootNodes,
+    flatList,
+    nodeMap,
+    metrics,
+    descendantCountMap,
+  };
 }
 
 // ============================================================================
@@ -345,7 +333,6 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
   initialFoldDepth = 3,
   children,
 }) => {
-  // Get responsive collapse thresholds
   const {
     thresholds: collapseThresholds,
     screenSize,
@@ -354,13 +341,12 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
     getBranchBackgroundColor,
   } = useResponsiveCollapseThresholds();
 
-  // Build thread tree structure (memoized)
-  const { threadTree, flatList, nodeMap, metrics } = useMemo(
-    () => buildThreadTree(posts, notifications, rootUri),
-    [posts, notifications, rootUri],
-  );
+  const { threadTree, flatList, nodeMap, metrics, descendantCountMap } =
+    useMemo(
+      () => buildThreadTree(posts, notifications, rootUri),
+      [posts, notifications, rootUri],
+    );
 
-  // Calculate complexity score for progressive reveal
   const complexityScore = useMemo(
     () =>
       calculateComplexityFromPosts(
@@ -371,16 +357,17 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
     [posts, metrics.maxDepth, metrics.branchCount],
   );
 
-  // Collapse state - initialize with adaptive thresholds
+  // ========================================================================
+  // Collapse state
+  // ========================================================================
+
   const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
 
-  // Apply adaptive collapse when thresholds change or thread changes
   useEffect(() => {
     const initial = new Set<string>();
     flatList.forEach((node) => {
       if (node.children.length > 0) {
         const branchPostCount = countDescendants(node);
-        // Use adaptive collapse logic OR fallback to initialFoldDepth
         const shouldCollapseAdaptive = shouldAutoCollapse(
           node.depth,
           branchPostCount,
@@ -396,19 +383,6 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
     });
     setCollapsedNodes(initial);
   }, [flatList, shouldAutoCollapse, initialFoldDepth]);
-
-  // Navigation state
-  const [navigationState, setNavigationState] = useState<ThreadNavigationState>(
-    {
-      focusedIndex: -1,
-      highlightUri: initialHighlightUri,
-      scrollPosition: 0,
-    },
-  );
-
-  // ========================================================================
-  // Collapse state handlers
-  // ========================================================================
 
   const toggleCollapse = useCallback((uri: string) => {
     setCollapsedNodes((prev) => {
@@ -441,7 +415,6 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
     [collapsedNodes],
   );
 
-  // Collapse a specific branch (and optionally its children)
   const collapseBranch = useCallback((uri: string) => {
     setCollapsedNodes((prev) => {
       const next = new Set(prev);
@@ -450,7 +423,6 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
     });
   }, []);
 
-  // Expand a specific branch
   const expandBranch = useCallback((uri: string) => {
     setCollapsedNodes((prev) => {
       const next = new Set(prev);
@@ -460,8 +432,16 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
   }, []);
 
   // ========================================================================
-  // Navigation state handlers
+  // Navigation state
   // ========================================================================
+
+  const [navigationState, setNavigationState] = useState<ThreadNavigationState>(
+    {
+      focusedIndex: -1,
+      highlightUri: initialHighlightUri,
+      scrollPosition: 0,
+    },
+  );
 
   const setFocusedIndex = useCallback((index: number) => {
     setNavigationState((prev) => ({
@@ -483,10 +463,6 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
       scrollPosition: position,
     }));
   }, []);
-
-  // ========================================================================
-  // Navigation helpers
-  // ========================================================================
 
   const jumpToRoot = useCallback(() => {
     if (flatList.length > 0) {
@@ -563,12 +539,12 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
     [flatList],
   );
 
-  const getDescendantCount = useCallback((node: ThreadNode): number => {
-    return node.children.reduce(
-      (sum, child) => sum + 1 + getDescendantCount(child),
-      0,
-    );
-  }, []);
+  const getDescendantCount = useCallback(
+    (node: ThreadNode): number => {
+      return descendantCountMap.get(node.post.uri) || 0;
+    },
+    [descendantCountMap],
+  );
 
   const getUserPosts = useCallback(
     (userDid: string) => {
@@ -578,51 +554,17 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
   );
 
   // ========================================================================
-  // Context value
+  // Sub-context values (each with own useMemo)
   // ========================================================================
 
-  const contextValue: ThreadContextValue = useMemo(
+  const dataValue: ThreadDataContextValue = useMemo(
     () => ({
-      // Tree structure
       threadTree,
       flatList,
       nodeMap,
-
-      // Metrics
       metrics,
-
-      // Complexity scoring
       complexityScore,
-
-      // Collapse state
-      collapsedNodes,
-      toggleCollapse,
-      collapseAll,
-      expandAll,
-      isCollapsed,
-
-      // Adaptive collapse
-      collapseThresholds,
-      screenSize,
-      getBranchBorderColor,
-      getBranchBackgroundColor,
-      collapseBranch,
-      expandBranch,
-
-      // Navigation state
-      navigationState,
-      setFocusedIndex,
-      setHighlightUri,
-      setScrollPosition,
-
-      // Navigation helpers
-      jumpToRoot,
-      jumpToParent,
-      jumpToNextSibling,
-      jumpToPrevSibling,
-      jumpToNode,
-
-      // Utility
+      descendantCountMap,
       getNodeByUri,
       getNodeByIndex,
       getDescendantCount,
@@ -634,6 +576,41 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
       nodeMap,
       metrics,
       complexityScore,
+      descendantCountMap,
+      getNodeByUri,
+      getNodeByIndex,
+      getDescendantCount,
+      getUserPosts,
+    ],
+  );
+
+  const navigationValue: ThreadNavigationContextValue = useMemo(
+    () => ({
+      navigationState,
+      setFocusedIndex,
+      setHighlightUri,
+      setScrollPosition,
+      jumpToRoot,
+      jumpToParent,
+      jumpToNextSibling,
+      jumpToPrevSibling,
+      jumpToNode,
+    }),
+    [
+      navigationState,
+      setFocusedIndex,
+      setHighlightUri,
+      setScrollPosition,
+      jumpToRoot,
+      jumpToParent,
+      jumpToNextSibling,
+      jumpToPrevSibling,
+      jumpToNode,
+    ],
+  );
+
+  const collapseValue: ThreadCollapseContextValue = useMemo(
+    () => ({
       collapsedNodes,
       toggleCollapse,
       collapseAll,
@@ -645,37 +622,78 @@ export const ThreadProvider: React.FC<ThreadProviderProps> = ({
       getBranchBackgroundColor,
       collapseBranch,
       expandBranch,
-      navigationState,
-      setFocusedIndex,
-      setHighlightUri,
-      setScrollPosition,
-      jumpToRoot,
-      jumpToParent,
-      jumpToNextSibling,
-      jumpToPrevSibling,
-      jumpToNode,
-      getNodeByUri,
-      getNodeByIndex,
-      getDescendantCount,
-      getUserPosts,
+    }),
+    [
+      collapsedNodes,
+      toggleCollapse,
+      collapseAll,
+      expandAll,
+      isCollapsed,
+      collapseThresholds,
+      screenSize,
+      getBranchBorderColor,
+      getBranchBackgroundColor,
+      collapseBranch,
+      expandBranch,
     ],
   );
 
+  const combinedValue: ThreadContextValue = useMemo(
+    () => ({
+      ...dataValue,
+      ...navigationValue,
+      ...collapseValue,
+    }),
+    [dataValue, navigationValue, collapseValue],
+  );
+
   return (
-    <ThreadContext.Provider value={contextValue}>
-      {children}
-    </ThreadContext.Provider>
+    <ThreadDataCtx.Provider value={dataValue}>
+      <ThreadNavigationCtx.Provider value={navigationValue}>
+        <ThreadCollapseCtx.Provider value={collapseValue}>
+          <ThreadContext.Provider value={combinedValue}>
+            {children}
+          </ThreadContext.Provider>
+        </ThreadCollapseCtx.Provider>
+      </ThreadNavigationCtx.Provider>
+    </ThreadDataCtx.Provider>
   );
 };
 
 // ============================================================================
-// Hooks
+// Focused sub-context hooks
 // ============================================================================
 
-/**
- * Main hook to access thread context
- * @throws Error if used outside ThreadProvider
- */
+export function useThreadData(): ThreadDataContextValue {
+  const context = useContext(ThreadDataCtx);
+  if (!context) {
+    throw new Error("useThreadData must be used within a ThreadProvider");
+  }
+  return context;
+}
+
+export function useThreadNav(): ThreadNavigationContextValue {
+  const context = useContext(ThreadNavigationCtx);
+  if (!context) {
+    throw new Error("useThreadNav must be used within a ThreadProvider");
+  }
+  return context;
+}
+
+export function useThreadCollapseState(): ThreadCollapseContextValue {
+  const context = useContext(ThreadCollapseCtx);
+  if (!context) {
+    throw new Error(
+      "useThreadCollapseState must be used within a ThreadProvider",
+    );
+  }
+  return context;
+}
+
+// ============================================================================
+// Backward-compatible combined hook
+// ============================================================================
+
 export function useThread(): ThreadContextValue {
   const context = useContext(ThreadContext);
   if (!context) {
@@ -684,13 +702,13 @@ export function useThread(): ThreadContextValue {
   return context;
 }
 
-/**
- * Hook specifically for thread tree structure
- * Returns only tree-related data for components that only need structure
- */
+// ============================================================================
+// Derived hooks (preserved for backward compatibility)
+// ============================================================================
+
 export function useThreadTree() {
   const { threadTree, flatList, nodeMap, getNodeByUri, getNodeByIndex } =
-    useThread();
+    useThreadData();
 
   return useMemo(
     () => ({
@@ -704,12 +722,8 @@ export function useThreadTree() {
   );
 }
 
-/**
- * Hook specifically for thread complexity/metrics
- * Returns metrics and complexity level for UI decisions
- */
 export function useThreadComplexity() {
-  const { metrics, complexityScore } = useThread();
+  const { metrics, complexityScore } = useThreadData();
 
   return useMemo(
     () => ({
@@ -719,7 +733,6 @@ export function useThreadComplexity() {
       isComplex: metrics.complexityLevel === ThreadComplexityLevel.Complex,
       isVeryComplex:
         metrics.complexityLevel === ThreadComplexityLevel.VeryComplex,
-      // Enhanced complexity scoring for progressive reveal
       complexityScore,
       shouldUseSimplifiedRendering: complexityScore.useSimplifiedRendering,
       initialRevealCount: complexityScore.initialRevealCount,
@@ -729,77 +742,24 @@ export function useThreadComplexity() {
   );
 }
 
-/**
- * Hook specifically for collapse state management
- * Returns collapse state and handlers for tree view components
- * Now includes adaptive collapse features
- */
 export function useCollapsedNodes() {
-  const {
-    collapsedNodes,
-    toggleCollapse,
-    collapseAll,
-    expandAll,
-    isCollapsed,
-    getDescendantCount,
-    collapseThresholds,
-    screenSize,
-    getBranchBorderColor,
-    getBranchBackgroundColor,
-    collapseBranch,
-    expandBranch,
-  } = useThread();
+  const collapseCtx = useThreadCollapseState();
+  const { getDescendantCount } = useThreadData();
 
   return useMemo(
     () => ({
-      collapsedNodes,
-      toggleCollapse,
-      collapseAll,
-      expandAll,
-      isCollapsed,
+      ...collapseCtx,
       getDescendantCount,
-      // Adaptive collapse
-      collapseThresholds,
-      screenSize,
-      getBranchBorderColor,
-      getBranchBackgroundColor,
-      collapseBranch,
-      expandBranch,
     }),
-    [
-      collapsedNodes,
-      toggleCollapse,
-      collapseAll,
-      expandAll,
-      isCollapsed,
-      getDescendantCount,
-      collapseThresholds,
-      screenSize,
-      getBranchBorderColor,
-      getBranchBackgroundColor,
-      collapseBranch,
-      expandBranch,
-    ],
+    [collapseCtx, getDescendantCount],
   );
 }
 
-/**
- * Hook for navigation state
- * Returns navigation state and handlers for keyboard navigation
- */
 export function useThreadNavigation() {
-  const {
-    navigationState,
-    flatList,
-    setFocusedIndex,
-    setHighlightUri,
-    setScrollPosition,
-    jumpToRoot,
-    jumpToParent,
-    jumpToNextSibling,
-    jumpToPrevSibling,
-    jumpToNode,
-  } = useThread();
+  const navCtx = useThreadNav();
+  const { flatList } = useThreadData();
+
+  const { navigationState, setFocusedIndex } = navCtx;
 
   const navigateUp = useCallback(() => {
     const newIndex = Math.max(navigationState.focusedIndex - 1, 0);
@@ -836,49 +796,34 @@ export function useThreadNavigation() {
       highlightUri: navigationState.highlightUri,
       scrollPosition: navigationState.scrollPosition,
       totalNodes: flatList.length,
-      setFocusedIndex,
-      setHighlightUri,
-      setScrollPosition,
+      setFocusedIndex: navCtx.setFocusedIndex,
+      setHighlightUri: navCtx.setHighlightUri,
+      setScrollPosition: navCtx.setScrollPosition,
       navigateUp,
       navigateDown,
       navigateToStart,
       navigateToEnd,
-      jumpToRoot,
-      jumpToParent,
-      jumpToNextSibling,
-      jumpToPrevSibling,
-      jumpToNode,
+      jumpToRoot: navCtx.jumpToRoot,
+      jumpToParent: navCtx.jumpToParent,
+      jumpToNextSibling: navCtx.jumpToNextSibling,
+      jumpToPrevSibling: navCtx.jumpToPrevSibling,
+      jumpToNode: navCtx.jumpToNode,
     }),
     [
       navigationState,
       flatList.length,
-      setFocusedIndex,
-      setHighlightUri,
-      setScrollPosition,
+      navCtx,
       navigateUp,
       navigateDown,
       navigateToStart,
       navigateToEnd,
-      jumpToRoot,
-      jumpToParent,
-      jumpToNextSibling,
-      jumpToPrevSibling,
-      jumpToNode,
     ],
   );
 }
 
-/**
- * Hook for user participation tracking
- * Returns user's posts within the thread and navigation helpers
- */
 export function useThreadUserPosts(userDid: string | undefined) {
-  const {
-    getUserPosts,
-    setFocusedIndex,
-    navigationState,
-    flatList: _,
-  } = useThread();
+  const { getUserPosts } = useThreadData();
+  const { navigationState, setFocusedIndex } = useThreadNav();
 
   const userPosts = useMemo(
     () => (userDid ? getUserPosts(userDid) : []),
@@ -901,7 +846,6 @@ export function useThreadUserPosts(userDid: string | undefined) {
     if (nextIndex !== undefined) {
       setFocusedIndex(nextIndex);
     } else {
-      // Wrap to first user post
       setFocusedIndex(userPostIndices[0]);
     }
   }, [userPostIndices, navigationState.focusedIndex, setFocusedIndex]);
@@ -914,7 +858,6 @@ export function useThreadUserPosts(userDid: string | undefined) {
     if (prevIndex !== undefined) {
       setFocusedIndex(prevIndex);
     } else {
-      // Wrap to last user post
       setFocusedIndex(userPostIndices[userPostIndices.length - 1]);
     }
   }, [userPostIndices, navigationState.focusedIndex, setFocusedIndex]);
