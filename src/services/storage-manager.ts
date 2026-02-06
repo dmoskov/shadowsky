@@ -316,15 +316,20 @@ class StorageManager {
     }
 
     this.initPromise = (async () => {
-      logger.log("Starting full storage initialization...");
+      try {
+        logger.log("Starting full storage initialization...");
 
-      // Step 1: Initialize core storage (no auth required)
-      await this.initializeCoreStorage();
+        // Step 1: Initialize core storage (no auth required)
+        await this.initializeCoreStorage();
 
-      // Step 2: Initialize user storage (auth required)
-      await this.initializeUserStorage(agent);
+        // Step 2: Initialize user storage (auth required)
+        await this.initializeUserStorage(agent);
 
-      return this.getHealth();
+        return this.getHealth();
+      } catch (err) {
+        this.initPromise = null;
+        throw err;
+      }
     })();
 
     return this.initPromise;

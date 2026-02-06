@@ -28,7 +28,7 @@ const ALLOWED_MIME_TYPES = [
 
 // MIME type to extension mapping for validation
 const MIME_TO_EXTENSIONS: Record<string, string[]> = {
-  "video/mp4": [".mp4", ".mpeg"],
+  "video/mp4": [".mp4", ".m4v", ".mp4v"],
   "video/quicktime": [".mov"],
   "video/webm": [".webm"],
   "video/x-m4v": [".m4v"],

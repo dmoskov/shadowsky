@@ -324,19 +324,25 @@ class NotificationGroupingService {
       return notifications.map((n) => this.createSingleNotification(n));
     }
 
-    const groups: Notification[][] = [];
-    let currentGroup: Notification[] = [notifications[0]];
+    // Sort newest-first to ensure timeDiff calculation is correct
+    const sorted = [...notifications].sort(
+      (a, b) =>
+        new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime(),
+    );
 
-    for (let i = 1; i < notifications.length; i++) {
+    const groups: Notification[][] = [];
+    let currentGroup: Notification[] = [sorted[0]];
+
+    for (let i = 1; i < sorted.length; i++) {
       const timeDiff =
-        new Date(notifications[i - 1].indexedAt).getTime() -
-        new Date(notifications[i].indexedAt).getTime();
+        new Date(sorted[i - 1].indexedAt).getTime() -
+        new Date(sorted[i].indexedAt).getTime();
 
       if (timeDiff <= thresholdMs) {
-        currentGroup.push(notifications[i]);
+        currentGroup.push(sorted[i]);
       } else {
         groups.push(currentGroup);
-        currentGroup = [notifications[i]];
+        currentGroup = [sorted[i]];
       }
     }
     groups.push(currentGroup);

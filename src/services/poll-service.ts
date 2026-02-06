@@ -56,6 +56,11 @@ class PollService {
     }
 
     try {
+      if (!this.agent.session?.did) {
+        logger.error("No session DID available for creating poll");
+        return null;
+      }
+
       const now = new Date();
       const endsAt = new Date(
         now.getTime() + pollData.durationHours * 60 * 60 * 1000,
@@ -77,7 +82,7 @@ class PollService {
       const rkey = postUri.split("/").pop() || Date.now().toString();
 
       const result = await this.agent.com.atproto.repo.createRecord({
-        repo: this.agent.session?.did || "",
+        repo: this.agent.session.did,
         collection: POLL_COLLECTION,
         rkey,
         record,
@@ -137,6 +142,11 @@ class PollService {
     }
 
     try {
+      if (!this.agent.session?.did) {
+        logger.error("No session DID available for voting");
+        return false;
+      }
+
       const existingVote = await this.getUserVote(pollUri);
       if (existingVote) {
         logger.log("User already voted");
@@ -153,7 +163,7 @@ class PollService {
       const rkey = `${pollUri.split("/").pop()}_${Date.now()}`;
 
       await this.agent.com.atproto.repo.createRecord({
-        repo: this.agent.session?.did || "",
+        repo: this.agent.session.did,
         collection: VOTE_COLLECTION,
         rkey,
         record,

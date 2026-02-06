@@ -31,6 +31,8 @@ export class PostCache {
     if (!this.initPromise) {
       this.initPromise = this.cacheService.init().catch((error) => {
         debug.error("Failed to initialize PostCacheService:", error);
+        this.initPromise = null;
+        throw error;
       });
     }
     return this.initPromise;

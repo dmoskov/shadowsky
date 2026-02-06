@@ -28,17 +28,12 @@ function isDefaultRetryableError(error: unknown): boolean {
     return true;
   }
 
+  // Check status code directly (more reliable than string matching)
+  const status = getErrorStatus(error);
+  if (status === 429) return true;
+  if (status === 500 || status === 503) return true;
+
   const message = getErrorMessage(error);
-
-  // Retry on rate limits (429)
-  if (message.includes("429")) {
-    return true;
-  }
-
-  // Retry on server errors (500, 503)
-  if (message.includes("500") || message.includes("503")) {
-    return true;
-  }
 
   // Retry on timeout errors
   if (message.toLowerCase().includes("timeout")) {

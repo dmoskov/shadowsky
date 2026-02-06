@@ -18,8 +18,9 @@ export function useNotificationPosts(
 ) {
   const { session, agent } = useAuth();
   const queryClient = useQueryClient();
-  const [fetchedCount, setFetchedCount] = React.useState(0);
+  const fetchedCountRef = React.useRef(0);
   const [isFetchingMore, setIsFetchingMore] = React.useState(false);
+  const cancelledRef = React.useRef(false);
 
   // Create a stable query key based on unique post URIs, maintaining order
   const postUris = React.useMemo(() => {
@@ -72,7 +73,7 @@ export function useNotificationPosts(
 
       // If we have ALL posts cached, return them immediately - no progressive loading needed!
       if (allMissing.length === 0) {
-        setFetchedCount(allCached.length);
+        fetchedCountRef.current = allCached.length;
         debug.log(
           `🚀 All ${allCached.length} posts found in cache - instant load!`,
         );
@@ -89,7 +90,7 @@ export function useNotificationPosts(
 
       // If we have the initial batch cached, use it
       if (missing.length === 0 && cached.length === urisToFetch.length) {
-        setFetchedCount(cached.length);
+        fetchedCountRef.current = cached.length;
         return cached;
       }
 
@@ -117,7 +118,7 @@ export function useNotificationPosts(
         }
       }
 
-      setFetchedCount(posts.length);
+      fetchedCountRef.current = posts.length;
       return posts;
     },
     enabled: !!session && !!agent && postUris.length > 0,
@@ -134,7 +135,7 @@ export function useNotificationPosts(
 
   // Progressive fetch for remaining posts
   React.useEffect(() => {
-    if (!session || !agent || !queryResult.data || isFetchingMore) return;
+    if (!session || !agent || !queryResult.data) return;
 
     // Check if we have unfetched posts
     const fetchedUris = new Set(
@@ -145,39 +146,52 @@ export function useNotificationPosts(
     ).length;
 
     if (unfetchedCount === 0) {
-      // All posts fetched - make sure fetchedCount is accurate
-      setFetchedCount(queryResult.data?.length || 0);
+      fetchedCountRef.current = queryResult.data?.length || 0;
       return;
     }
 
+    // Use a cancelled flag to stop the recursive chain on cleanup
+    cancelledRef.current = false;
+
     const fetchMorePosts = async () => {
+      if (cancelledRef.current) return;
       setIsFetchingMore(true);
       if (!agent) return;
 
       // More aggressive batch sizing to reduce flicker
-      const batchNumber = Math.floor(fetchedCount / 100) + 1;
-      const BATCH_SIZE = batchNumber <= 3 ? 200 : 100; // First 3 batches: 200 posts, then 100
-      const DELAY_BETWEEN_BATCHES = batchNumber <= 3 ? 100 : 1000; // First 3 batches: 100ms, then 1s
+      const batchNumber = Math.floor(fetchedCountRef.current / 100) + 1;
+      const BATCH_SIZE = batchNumber <= 3 ? 200 : 100;
+      const DELAY_BETWEEN_BATCHES = batchNumber <= 3 ? 100 : 1000;
 
-      // Get already fetched URIs from current data
-      const fetchedUris = new Set(
-        (queryResult.data || []).map((post) => post.uri),
+      // Get already fetched URIs from current query data
+      const currentData: Post[] | undefined =
+        queryClient.getQueryData(queryKey);
+      const currentFetchedUris = new Set(
+        (currentData || []).map((post) => post.uri),
       );
 
       // Filter out URIs that have already been fetched
-      const unfetchedUris = postUris.filter((uri) => !fetchedUris.has(uri));
+      const unfetchedUris = postUris.filter(
+        (uri) => !currentFetchedUris.has(uri),
+      );
 
-      // Take the next batch of unfetched URIs in order (which naturally prioritizes top posts)
+      if (unfetchedUris.length === 0 || cancelledRef.current) {
+        setIsFetchingMore(false);
+        return;
+      }
+
+      // Take the next batch of unfetched URIs in order
       const urisToFetch = unfetchedUris.slice(0, BATCH_SIZE);
 
-      // Check cache first for this batch (using async method for IndexedDB)
+      // Check cache first for this batch
       const { cached: cachedBatch, missing: missingBatch } =
         await PostCache.getCachedPostsAsync(urisToFetch);
       const newPosts: Post[] = [...cachedBatch];
 
       // Only fetch missing posts from API
-      if (missingBatch.length > 0) {
+      if (missingBatch.length > 0 && !cancelledRef.current) {
         for (let i = 0; i < missingBatch.length; i += 25) {
+          if (cancelledRef.current) break;
           const batch = missingBatch.slice(i, i + 25);
           try {
             const response = await rateLimitedPostFetch(async () =>
@@ -191,8 +205,7 @@ export function useNotificationPosts(
 
             // Minimal delay between API calls within a batch
             if (i + 25 < missingBatch.length) {
-              const delay = 50; // Consistent fast delay
-              await new Promise((resolve) => setTimeout(resolve, delay));
+              await new Promise((resolve) => setTimeout(resolve, 50));
             }
           } catch (error) {
             debug.error("Failed to fetch additional posts batch:", error);
@@ -200,38 +213,37 @@ export function useNotificationPosts(
         }
       }
 
+      if (cancelledRef.current) return;
+
       // Update the query data with new posts
       if (newPosts.length > 0) {
         queryClient.setQueryData(queryKey, (oldData: Post[] | undefined) => {
           const updatedData = [...(oldData || []), ...newPosts];
           return updatedData;
         });
-        setFetchedCount((prev) => prev + newPosts.length);
+        fetchedCountRef.current += newPosts.length;
       }
 
       setIsFetchingMore(false);
 
       // Schedule next batch if there are more unfetched posts
-      if (unfetchedUris.length > BATCH_SIZE) {
-        setTimeout(fetchMorePosts, DELAY_BETWEEN_BATCHES);
+      if (unfetchedUris.length > BATCH_SIZE && !cancelledRef.current) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, DELAY_BETWEEN_BATCHES),
+        );
+        if (!cancelledRef.current) {
+          fetchMorePosts();
+        }
       }
     };
 
-    // Start fetching more posts immediately for better UX
-    const initialDelay = 50; // Always fast
-    const timeoutId = setTimeout(fetchMorePosts, initialDelay);
-    return () => clearTimeout(timeoutId);
-  }, [
-    session,
-    agent,
-    queryResult.data,
-    isFetchingMore,
-    postUris.length,
-    queryClient,
-    queryKey,
-    fetchedCount,
-    postUris,
-  ]); // Add missing dependencies
+    // Start fetching more posts after a short delay
+    const timeoutId = setTimeout(fetchMorePosts, 50);
+    return () => {
+      cancelledRef.current = true;
+      clearTimeout(timeoutId);
+    };
+  }, [session, agent, queryResult.data, postUris, queryClient, queryKey]);
 
   // Calculate actual fetched count based on current data
   const actualFetchedCount = queryResult.data?.length || 0;

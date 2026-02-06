@@ -189,11 +189,17 @@ export class AccountManager {
   private static saveAccounts(accounts: StoredAccount[]): void {
     const data = JSON.stringify(accounts);
 
-    // Security: SameSite=Strict prevents CSRF attacks
-    setCookie(this.STORAGE_KEY, data, {
-      secure: window.location.protocol === "https:",
-      sameSite: "Strict",
-    });
+    // Cookies have a ~4KB limit; account data with JWTs can exceed this.
+    // Only store in cookie if small enough, otherwise rely on localStorage.
+    if (data.length <= 3800) {
+      setCookie(this.STORAGE_KEY, data, {
+        secure: window.location.protocol === "https:",
+        sameSite: "Strict",
+      });
+    } else {
+      // Data too large for cookie — clear stale cookie and use localStorage only
+      deleteCookie(this.STORAGE_KEY);
+    }
     localStorage.setItem(this.STORAGE_KEY, data);
   }
 

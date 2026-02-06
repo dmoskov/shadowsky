@@ -238,7 +238,7 @@ export async function registerServiceWorker(
       }
 
       // Check for updates periodically (every hour)
-      setInterval(
+      const updateIntervalId = setInterval(
         () => {
           registration.update().catch((err: unknown) => {
             logger.warn("Failed to check for service worker updates:", err);
@@ -246,6 +246,9 @@ export async function registerServiceWorker(
         },
         60 * 60 * 1000,
       );
+
+      // Store for cleanup on unregister
+      (registration as any).__updateIntervalId = updateIntervalId;
     }
 
     return registration ?? null;
@@ -268,6 +271,11 @@ export async function unregisterServiceWorker(): Promise<boolean> {
   try {
     // Stop eviction scheduler
     stopEvictionScheduler();
+
+    // Clear the update check interval
+    if (swRegistration && (swRegistration as any).__updateIntervalId) {
+      clearInterval((swRegistration as any).__updateIntervalId);
+    }
 
     const registrations = await navigator.serviceWorker.getRegistrations();
     await Promise.all(registrations.map((reg) => reg.unregister()));

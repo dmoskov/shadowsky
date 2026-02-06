@@ -52,10 +52,21 @@ export function useIntersectionLoader<T>(
     };
   }, [visibleCount, items.length, increment, threshold, rootMargin]);
 
-  // Reset visible count when items change (e.g., feed switch)
+  // Reset visible count when items change significantly (e.g., feed switch)
+  const itemsLengthRef = useRef(items.length);
+  const firstItemRef = useRef(items[0]);
   useEffect(() => {
-    setVisibleCount(initialLoad);
-  }, [items, initialLoad]);
+    // Only reset if the items list has fundamentally changed (not just a new reference)
+    const firstItemChanged = items[0] !== firstItemRef.current;
+    const lengthChangedSignificantly =
+      Math.abs(items.length - itemsLengthRef.current) >
+      itemsLengthRef.current * 0.5;
+    if (firstItemChanged || lengthChangedSignificantly) {
+      setVisibleCount(initialLoad);
+    }
+    itemsLengthRef.current = items.length;
+    firstItemRef.current = items[0];
+  }, [items.length, items[0], initialLoad]);
 
   return {
     visibleItems: items.slice(0, visibleCount),

@@ -55,6 +55,6 @@ export function parseBskyPostUrl(url: string): ParsedBskyUrl | null {
 export function extractBskyUrls(text: string): string[] {
   // Match URLs that look like Bluesky post URLs
   const urlRegex =
-    /https?:\/\/[^\s]+bsky\.(app|social)\/profile\/[^\s]+\/post\/[^\s]+/gi;
+    /https?:\/\/[^\s<>"'()]+bsky\.(app|social)\/profile\/[^\s<>"'()]+\/post\/[a-zA-Z0-9]+/gi;
   return text.match(urlRegex) || [];
 }

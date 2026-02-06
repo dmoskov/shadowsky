@@ -364,7 +364,11 @@ class DMQueueDB {
       _retryCount: dm._retryCount,
     });
 
-    await this.processMessage(dm);
+    // Re-read the message after update to get the latest state
+    const updatedDm = await this.getMessage(localId);
+    if (updatedDm) {
+      await this.processMessage(updatedDm);
+    }
   }
 
   /**

@@ -40,6 +40,15 @@ const renderContent = (content: string): React.ReactNode => {
   let tableRows: string[][] = [];
   let tableHeaders: string[] = [];
 
+  // Escape HTML entities to prevent XSS in dangerouslySetInnerHTML
+  const escapeHtml = (str: string): string =>
+    str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
   const processLine = (line: string, index: number): React.ReactNode => {
     // Headers
     if (line.startsWith("# ")) {
@@ -76,16 +85,23 @@ const renderContent = (content: string): React.ReactNode => {
       );
     }
 
+    // Escape HTML first to prevent XSS, then apply markdown formatting
+    let processed = escapeHtml(line);
+
     // Bold text
-    let processed = line.replace(
+    processed = processed.replace(
       /\*\*([^*]+)\*\*/g,
       '<strong class="font-semibold">$1</strong>',
     );
 
-    // Links
+    // Links — validate URL protocol to prevent javascript: URIs
     processed = processed.replace(
       /\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">$1</a>',
+      (_match, text, url) => {
+        const safeUrl =
+          url.startsWith("http://") || url.startsWith("https://") ? url : "#";
+        return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">${text}</a>`;
+      },
     );
 
     // Inline code

@@ -136,18 +136,21 @@ export function usePostDeepLink(
   }, []);
 
   // Parse hash from current location
+  const prevHashRef = useRef(location.hash);
   useEffect(() => {
     if (!enabled) return;
 
     const postId = parsePostFragment(location.hash);
-    setTargetPostId(postId);
 
-    // Reset scroll state when target changes
-    if (postId !== targetPostId) {
+    // Only reset scroll state if hash actually changed
+    if (location.hash !== prevHashRef.current) {
+      prevHashRef.current = location.hash;
       setHasScrolledToInitialTarget(false);
       scrollAttemptRef.current = 0;
     }
-  }, [location.hash, enabled, targetPostId]);
+
+    setTargetPostId(postId);
+  }, [location.hash, enabled]);
 
   // Handle browser history changes (back/forward)
   useEffect(() => {

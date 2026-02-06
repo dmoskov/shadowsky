@@ -73,7 +73,7 @@ class TokenBucket {
     if (intervals > 0) {
       const tokensToAdd = intervals * this.refillRate;
       this.tokens = Math.min(this.capacity, this.tokens + tokensToAdd);
-      this.lastRefill = now;
+      this.lastRefill += intervals * this.refillInterval;
     }
   }
 

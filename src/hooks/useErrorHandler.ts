@@ -145,7 +145,15 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
         }
       }
     },
-    [options, showAlert],
+    [
+      options.onRateLimit,
+      options.onAuthError,
+      options.onSessionExpired,
+      options.fallback,
+      options.logout,
+      options.silent,
+      showAlert,
+    ],
   );
 
   return { handleError };

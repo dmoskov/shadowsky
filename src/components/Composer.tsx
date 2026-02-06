@@ -328,8 +328,7 @@ export function Composer() {
     import("../services/anthropic").HashtagSuggestion[]
   >([]);
   const [isLoadingHashtags, setIsLoadingHashtags] = useState(false);
-  const [hashtagDebounceTimer, setHashtagDebounceTimer] =
-    useState<NodeJS.Timeout | null>(null);
+  const hashtagDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // AI settings state
   const [enableHashtagSuggestions, setEnableHashtagSuggestions] =
@@ -457,8 +456,8 @@ export function Composer() {
       if (sendTimeout.current) {
         clearTimeout(sendTimeout.current);
       }
-      if (hashtagDebounceTimer) {
-        clearTimeout(hashtagDebounceTimer);
+      if (hashtagDebounceTimerRef.current) {
+        clearTimeout(hashtagDebounceTimerRef.current);
       }
       // Remove any body overflow styles
       document.body.style.overflow = "";
@@ -467,8 +466,8 @@ export function Composer() {
 
   // Load hashtag suggestions with debounce
   useEffect(() => {
-    if (hashtagDebounceTimer) {
-      clearTimeout(hashtagDebounceTimer);
+    if (hashtagDebounceTimerRef.current) {
+      clearTimeout(hashtagDebounceTimerRef.current);
     }
 
     // Don't suggest hashtags if feature is disabled or text is too short
@@ -497,7 +496,7 @@ export function Composer() {
       }
     }, 1000); // 1 second debounce
 
-    setHashtagDebounceTimer(timer);
+    hashtagDebounceTimerRef.current = timer;
 
     return () => {
       if (timer) {
@@ -1225,6 +1224,20 @@ export function Composer() {
 
       // Create reordered posts array
       const reorderedPosts = newOrder.map((i) => posts[i]);
+
+      // Build a mapping from old post index to new post index
+      const indexMap = new Map<number, number>();
+      newOrder.forEach((oldIdx, newIdx) => {
+        indexMap.set(oldIdx, newIdx);
+      });
+
+      // Update media postIndex values to match the new order
+      setMedia((prev) =>
+        prev.map((m) => ({
+          ...m,
+          postIndex: indexMap.get(m.postIndex ?? 0) ?? m.postIndex ?? 0,
+        })),
+      );
 
       // Update all state values together
       setPosts(reorderedPosts);

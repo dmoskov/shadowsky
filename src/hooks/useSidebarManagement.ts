@@ -11,10 +11,13 @@ export function useSidebarManagement(isAuthenticated: boolean) {
 
   // Auto-collapse sidebar when viewport is too narrow for 3 columns
   useEffect(() => {
+    let cancelled = false;
+
     const checkViewportWidth = async () => {
       // Get column width from preferences
       if (isAuthenticated) {
         const prefs = await appPreferencesService.getPreferences();
+        if (cancelled) return; // Stale async result — discard
         const columnWidth = prefs?.columnWidth || 320;
 
         // Sidebar: 256px, 3 columns: 3*columnWidth + 2*12px gap + 24px padding
@@ -32,7 +35,10 @@ export function useSidebarManagement(isAuthenticated: boolean) {
 
     checkViewportWidth();
     window.addEventListener("resize", checkViewportWidth);
-    return () => window.removeEventListener("resize", checkViewportWidth);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("resize", checkViewportWidth);
+    };
   }, [isAuthenticated]);
 
   return {

@@ -145,7 +145,7 @@ export async function compressImage(file: File): Promise<File> {
           const outputFormat =
             file.type === "image/png" ? "image/png" : "image/jpeg";
 
-          while (quality > 0.1) {
+          while (quality >= 0.1 - 1e-9) {
             blob = await new Promise<Blob | null>((resolve) => {
               canvas.toBlob((b) => resolve(b), outputFormat, quality);
             });
@@ -158,7 +158,7 @@ export async function compressImage(file: File): Promise<File> {
               break;
             }
 
-            quality -= COMPRESSION_STEP;
+            quality = Math.round((quality - COMPRESSION_STEP) * 100) / 100;
           }
 
           if (!blob || blob.size > MAX_FILE_SIZE) {
@@ -304,7 +304,7 @@ export async function compressProfileImage(
           let quality = 0.92;
           let blob: Blob | null = null;
 
-          while (quality > 0.1) {
+          while (quality >= 0.1 - 1e-9) {
             blob = await new Promise<Blob | null>((resolve) => {
               canvas.toBlob((b) => resolve(b), "image/jpeg", quality);
             });
@@ -313,7 +313,7 @@ export async function compressProfileImage(
               break;
             }
 
-            quality -= COMPRESSION_STEP;
+            quality = Math.round((quality - COMPRESSION_STEP) * 100) / 100;
           }
 
           if (!blob) {

@@ -252,6 +252,16 @@ export function useOptimisticPosts() {
         actionSync?.setActionFailed("like", postUri, () => {
           unlikeMutation.mutate({ likeUri, postUri });
         });
+
+        // Revert optimistic update on non-network error
+        updatePostInCaches(postUri, (post) => ({
+          ...post,
+          likeCount: (post.likeCount || 0) + 1,
+          viewer: {
+            ...post.viewer,
+            like: likeUri,
+          },
+        }));
       }
     },
   });
@@ -358,6 +368,16 @@ export function useOptimisticPosts() {
         actionSync?.setActionFailed("repost", postUri, () => {
           unrepostMutation.mutate({ repostUri, postUri });
         });
+
+        // Revert optimistic update on non-network error
+        updatePostInCaches(postUri, (post) => ({
+          ...post,
+          repostCount: (post.repostCount || 0) + 1,
+          viewer: {
+            ...post.viewer,
+            repost: repostUri,
+          },
+        }));
       }
     },
   });

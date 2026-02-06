@@ -1219,13 +1219,13 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                       src={proxifyBskyImage(post.author.avatar)}
                       alt={post.author.handle}
                       className="bsky-avatar h-5 w-5 cursor-pointer transition-opacity hover:opacity-80"
-                      onClick={handleAuthorClick}
+                      onClick={handlePostAuthorClick}
                     />
                   ) : (
                     <div
                       className="bsky-avatar flex h-5 w-5 cursor-pointer items-center justify-center text-xs transition-opacity hover:opacity-80"
                       style={{ background: "var(--bsky-bg-tertiary)" }}
-                      onClick={handleAuthorClick}
+                      onClick={handlePostAuthorClick}
                     >
                       {post.author?.handle?.charAt(0).toUpperCase()}
                     </div>
@@ -1588,6 +1588,13 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
       navigate(`/profile/${notification.author.handle}`);
     };
 
+    const handlePostAuthorClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (post?.author?.handle) {
+        navigate(`/profile/${post.author.handle}`);
+      }
+    };
+
     return (
       <div
         className={`bsky-notification cursor-pointer px-3 py-2 ${
@@ -1672,9 +1679,12 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
         </div>
 
         {/* Show the referenced post content below, with left margin to align with profile picture */}
-        {renderPostContent() && (
-          <div className="ml-[1.75rem] mt-2">{renderPostContent()}</div>
-        )}
+        {(() => {
+          const postContent = renderPostContent();
+          return postContent ? (
+            <div className="ml-[1.75rem] mt-2">{postContent}</div>
+          ) : null;
+        })()}
       </div>
     );
   },

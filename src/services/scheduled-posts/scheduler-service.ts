@@ -164,7 +164,7 @@ class SchedulerService {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${this.userDid}`,
+        Authorization: `DID ${this.userDid}`,
       },
       body: JSON.stringify(input),
     });
@@ -202,7 +202,7 @@ class SchedulerService {
         `${API_BASE_URL}/api/scheduled-posts/${id}`,
         {
           headers: {
-            Authorization: `Bearer ${this.userDid}`,
+            Authorization: `DID ${this.userDid}`,
           },
         },
       );
@@ -281,7 +281,7 @@ class SchedulerService {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${this.userDid}`,
+        Authorization: `DID ${this.userDid}`,
       },
       body: JSON.stringify(updates),
     });
@@ -348,7 +348,7 @@ class SchedulerService {
     const response = await fetch(`${API_BASE_URL}/api/scheduled-posts/${id}`, {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${this.userDid}`,
+        Authorization: `DID ${this.userDid}`,
       },
     });
 
@@ -368,7 +368,7 @@ class SchedulerService {
     try {
       const response = await fetch(`${API_BASE_URL}/api/scheduled-posts`, {
         headers: {
-          Authorization: `Bearer ${this.userDid}`,
+          Authorization: `DID ${this.userDid}`,
         },
       });
 

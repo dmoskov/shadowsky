@@ -64,44 +64,51 @@ const WebSocketStressPanel = lazy(() =>
 
 // Network and device-aware query client settings
 // Adapts caching and retry behavior based on connection quality
-const loadingStrategy = getInitialLoadingStrategy();
-const isMobile = window.innerWidth < 768;
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // Adaptive stale/cache times based on network quality
-      staleTime: loadingStrategy.queryStaleTime,
-      gcTime: loadingStrategy.queryCacheTime,
-      retry: (failureCount, error: unknown) => {
-        const err = error as { status?: number };
-        if (err?.status === 429) return false; // Don't retry rate limits
-        if (err?.status === 401) return false; // Don't retry auth errors
-        // Fewer retries on slow connections to save battery/data
-        const maxRetries =
-          loadingStrategy.quality === "poor" ? 0 : isMobile ? 1 : 3;
-        return failureCount < maxRetries;
+// Note: These are captured once at startup. For dynamic updates, the query
+// client's retry functions read live values where possible.
+function createAppQueryClient(): QueryClient {
+  const loadingStrategy = getInitialLoadingStrategy();
+  const isMobile = window.innerWidth < 768;
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        // Adaptive stale/cache times based on network quality
+        staleTime: loadingStrategy.queryStaleTime,
+        gcTime: loadingStrategy.queryCacheTime,
+        retry: (failureCount, error: unknown) => {
+          const err = error as { status?: number };
+          if (err?.status === 429) return false; // Don't retry rate limits
+          if (err?.status === 401) return false; // Don't retry auth errors
+          // Fewer retries on slow connections to save battery/data
+          const currentIsMobile = window.innerWidth < 768;
+          const maxRetries =
+            loadingStrategy.quality === "poor" ? 0 : currentIsMobile ? 1 : 3;
+          return failureCount < maxRetries;
+        },
+        // Keep previous data while fetching new data
+        placeholderData: <T,>(previousData: T) => previousData,
+        // Don't refetch on window focus by default
+        refetchOnWindowFocus: false,
+        // Don't refetch on mount if data exists
+        refetchOnMount: false,
+        // Prevent UI flicker by using structural sharing
+        structuralSharing: true,
+        // Disable network requests when offline
+        networkMode:
+          loadingStrategy.quality === "offline" ? "offlineFirst" : "online",
       },
-      // Keep previous data while fetching new data
-      placeholderData: <T,>(previousData: T) => previousData,
-      // Don't refetch on window focus by default
-      refetchOnWindowFocus: false,
-      // Don't refetch on mount if data exists
-      refetchOnMount: false,
-      // Prevent UI flicker by using structural sharing
-      structuralSharing: true,
-      // Disable network requests when offline
-      networkMode:
-        loadingStrategy.quality === "offline" ? "offlineFirst" : "online",
+      mutations: {
+        // Reduce retry attempts on slow connections
+        retry: loadingStrategy.quality === "poor" ? 0 : isMobile ? 0 : 2,
+        // Queue mutations when offline
+        networkMode:
+          loadingStrategy.quality === "offline" ? "offlineFirst" : "online",
+      },
     },
-    mutations: {
-      // Reduce retry attempts on slow connections
-      retry: loadingStrategy.quality === "poor" ? 0 : isMobile ? 0 : 2,
-      // Queue mutations when offline
-      networkMode:
-        loadingStrategy.quality === "offline" ? "offlineFirst" : "online",
-    },
-  },
-});
+  });
+}
+
+const queryClient = createAppQueryClient();
 
 function AppContent() {
   const { isAuthenticated, isLoading, session } = useAuth();

@@ -177,8 +177,8 @@ async function processQueue(): Promise<void> {
         continue;
       }
       if (state.inFlight.has(request.url)) {
-        // Re-queue to wait for the existing request
-        state.queue.push(request);
+        // Skip duplicate in-flight URL; the original request's
+        // load/error handler will process the queue again
         continue;
       }
 

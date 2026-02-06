@@ -22,8 +22,10 @@ export const setCookie = (
     days = options;
   } else if (options) {
     days = options.days || 365;
-    secure = options.secure || false;
-    sameSite = options.sameSite || "Lax";
+    secure =
+      options.secure ??
+      (typeof window !== "undefined" && window.location.protocol === "https:");
+    sameSite = options.sameSite ?? "Strict";
     domain = options.domain;
   }
 

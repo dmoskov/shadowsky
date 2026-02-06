@@ -308,7 +308,8 @@ export class StorageManager {
       maxSize,
     );
 
-    // Reconstruct pages structure
+    // Reconstruct pages by chunking the optimized notifications into
+    // pages that match the original page sizes, preserving cursors
     const optimizedPages: Array<{
       notifications: CompressedNotification[];
       cursor?: string;
@@ -316,7 +317,12 @@ export class StorageManager {
     let notifIndex = 0;
 
     for (const page of pages) {
-      const pageSize = page.notifications.length;
+      if (notifIndex >= optimized.length) break;
+
+      const pageSize = Math.min(
+        page.notifications.length,
+        optimized.length - notifIndex,
+      );
       const pageNotifs = optimized.slice(notifIndex, notifIndex + pageSize);
 
       if (pageNotifs.length > 0) {
@@ -327,9 +333,6 @@ export class StorageManager {
       }
 
       notifIndex += pageSize;
-
-      // Stop if we've used all optimized notifications
-      if (notifIndex >= optimized.length) break;
     }
 
     return optimizedPages;

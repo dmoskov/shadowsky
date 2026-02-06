@@ -59,7 +59,7 @@ class MetricBatcher {
 
   constructor(config: MetricBatchConfig = DEFAULT_BATCH_CONFIG) {
     this.config = config;
-    this.startFlushTimer();
+    // Timer is started lazily on first enqueue to avoid side effects on import
   }
 
   /**
@@ -68,6 +68,11 @@ class MetricBatcher {
   enqueue(metric: StructuredMetric): void {
     if (this.isShuttingDown) {
       return;
+    }
+
+    // Start flush timer lazily on first enqueue
+    if (!this.flushTimer) {
+      this.startFlushTimer();
     }
 
     try {
