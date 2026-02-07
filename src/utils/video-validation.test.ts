@@ -120,7 +120,8 @@ describe("validateVideoFile", () => {
       expect(result.error?.code).toBe("EXTENSION_MISMATCH");
       expect(result.error?.context?.expectedExtensions).toEqual([
         ".mp4",
-        ".mpeg",
+        ".m4v",
+        ".mp4v",
       ]);
     });
 
@@ -133,12 +134,17 @@ describe("validateVideoFile", () => {
       expect(result.error?.context?.extension).toBe("");
     });
 
-    it("should accept .mpeg extension with video/mp4 MIME type", () => {
+    it("should reject .mpeg extension with video/mp4 MIME type", () => {
       const videoData = new Uint8Array(1024);
       const result = validateVideoFile(videoData, "video/mp4", "video.mpeg");
 
-      expect(result.valid).toBe(true);
-      expect(result.error).toBeUndefined();
+      expect(result.valid).toBe(false);
+      expect(result.error?.code).toBe("EXTENSION_MISMATCH");
+      expect(result.error?.context?.expectedExtensions).toEqual([
+        ".mp4",
+        ".m4v",
+        ".mp4v",
+      ]);
     });
 
     it("should reject malicious file disguised as video", () => {
