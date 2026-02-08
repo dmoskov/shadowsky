@@ -58,6 +58,13 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
     null,
   );
+  const reconnectedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const syncCompleteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Check cached content availability
   useEffect(() => {
@@ -111,7 +118,7 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
         setReconnectAttempt(0);
 
         // Hide after 3 seconds
-        setTimeout(() => {
+        reconnectedTimeoutRef.current = setTimeout(() => {
           setConnectionState("online");
           setReconnectProgress(0);
         }, 3000);
@@ -131,6 +138,10 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      if (reconnectedTimeoutRef.current) {
+        clearTimeout(reconnectedTimeoutRef.current);
+        reconnectedTimeoutRef.current = null;
+      }
     };
   }, [pendingActionCount, isSyncing]);
 
@@ -140,12 +151,12 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
       if (!isSyncing && pendingActionCount === 0) {
         // Syncing complete
         setSyncProgress(100);
-        setTimeout(() => {
+        syncCompleteTimeoutRef.current = setTimeout(() => {
           setConnectionState("reconnected");
           onSyncComplete?.();
 
           // Hide after 3 seconds
-          setTimeout(() => {
+          hideTimeoutRef.current = setTimeout(() => {
             setConnectionState("online");
             setSyncProgress(0);
             setReconnectProgress(0);
@@ -158,6 +169,17 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
         setSyncProgress(Math.min(90, baseProgress));
       }
     }
+
+    return () => {
+      if (syncCompleteTimeoutRef.current) {
+        clearTimeout(syncCompleteTimeoutRef.current);
+        syncCompleteTimeoutRef.current = null;
+      }
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+        hideTimeoutRef.current = null;
+      }
+    };
   }, [connectionState, isSyncing, pendingActionCount, onSyncComplete]);
 
   // Auto-retry reconnection when offline
@@ -443,6 +465,9 @@ export function useOnlineStatus(): {
   const [wasOffline, setWasOffline] = useState(false);
   const [connectionStatus, setConnectionStatus] =
     useState<ConnectionStatus>("online");
+  const statusResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   useEffect(() => {
     // Initialize state
@@ -457,7 +482,7 @@ export function useOnlineStatus(): {
       if (!isOnline) {
         setWasOffline(true);
         setConnectionStatus("syncing");
-        setTimeout(() => {
+        statusResetTimeoutRef.current = setTimeout(() => {
           setWasOffline(false);
           setConnectionStatus("online");
         }, 5000);
@@ -476,6 +501,10 @@ export function useOnlineStatus(): {
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      if (statusResetTimeoutRef.current) {
+        clearTimeout(statusResetTimeoutRef.current);
+        statusResetTimeoutRef.current = null;
+      }
     };
   }, [isOnline]);
 
