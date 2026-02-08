@@ -503,6 +503,14 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         error: null,
         authExpired: null,
       };
+
+      // Disconnect the WebSocket service
+      if (currentService) {
+        currentService.disconnect();
+      }
+
+      // Mark as uninitialized to allow re-initialization if needed
+      isInitialized.current = false;
     };
   }, [
     isAuthenticated,
