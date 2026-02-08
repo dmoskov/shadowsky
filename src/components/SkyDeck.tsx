@@ -1,3 +1,4 @@
+import type { AppBskyActorDefs, AppBskyGraphDefs } from "@atproto/api";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
@@ -112,8 +113,10 @@ export default function SkyDeck() {
       if (!agent || !userPrefs?.savedFeeds?.length) return [];
 
       const feedUris = userPrefs.savedFeeds
-        .filter((feed: any): boolean => feed.type === "feed")
-        .map((feed: any) => feed.value);
+        .filter(
+          (feed: AppBskyActorDefs.SavedFeed): boolean => feed.type === "feed",
+        )
+        .map((feed: AppBskyActorDefs.SavedFeed) => feed.value);
 
       if (feedUris.length === 0) return [];
 
@@ -558,44 +561,49 @@ export default function SkyDeck() {
                             </h4>
                             <div className="grid gap-1">
                               {userPrefs.savedFeeds
-                                .filter((feed: any) => feed.type === "feed")
-                                .map((savedFeed: any) => {
-                                  const generator = feedGenerators.find(
-                                    (g: FeedGenerator) =>
-                                      g.uri === savedFeed.value,
-                                  );
-                                  if (!generator) return null;
+                                .filter(
+                                  (feed: AppBskyActorDefs.SavedFeed) =>
+                                    feed.type === "feed",
+                                )
+                                .map(
+                                  (savedFeed: AppBskyActorDefs.SavedFeed) => {
+                                    const generator = feedGenerators.find(
+                                      (g: FeedGenerator) =>
+                                        g.uri === savedFeed.value,
+                                    );
+                                    if (!generator) return null;
 
-                                  return (
-                                    <button
-                                      key={savedFeed.value}
-                                      onClick={() =>
-                                        handleAddColumn(
-                                          "feed",
-                                          savedFeed.value,
-                                          generator.displayName,
-                                        )
-                                      }
-                                      className="flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/50"
-                                    >
-                                      {savedFeed.pinned ? (
-                                        <Star className="mt-0.5 h-4 w-4 text-yellow-500" />
-                                      ) : (
-                                        <Hash className="mt-0.5 h-4 w-4 text-gray-400" />
-                                      )}
-                                      <div className="min-w-0 flex-1">
-                                        <div className="truncate text-sm font-medium text-gray-900 dark:text-white">
-                                          {generator.displayName}
-                                        </div>
-                                        {generator.description && (
-                                          <div className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
-                                            {generator.description}
-                                          </div>
+                                    return (
+                                      <button
+                                        key={savedFeed.value}
+                                        onClick={() =>
+                                          handleAddColumn(
+                                            "feed",
+                                            savedFeed.value,
+                                            generator.displayName,
+                                          )
+                                        }
+                                        className="flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/50"
+                                      >
+                                        {savedFeed.pinned ? (
+                                          <Star className="mt-0.5 h-4 w-4 text-yellow-500" />
+                                        ) : (
+                                          <Hash className="mt-0.5 h-4 w-4 text-gray-400" />
                                         )}
-                                      </div>
-                                    </button>
-                                  );
-                                })}
+                                        <div className="min-w-0 flex-1">
+                                          <div className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                                            {generator.displayName}
+                                          </div>
+                                          {generator.description && (
+                                            <div className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
+                                              {generator.description}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </button>
+                                    );
+                                  },
+                                )}
                             </div>
                           </div>
                         </>
@@ -609,30 +617,32 @@ export default function SkyDeck() {
                             Add List
                           </h4>
                           <div className="grid gap-1">
-                            {userLists.map((list: any) => (
-                              <button
-                                key={list.uri}
-                                onClick={() =>
-                                  handleAddColumn("feed", list.uri, list.name)
-                                }
-                                className="flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/50"
-                              >
-                                <Users className="mt-0.5 h-4 w-4 text-blue-500" />
-                                <div className="min-w-0 flex-1">
-                                  <div className="truncate text-sm font-medium text-gray-900 dark:text-white">
-                                    {list.name}
-                                  </div>
-                                  {list.description && (
-                                    <div className="truncate text-xs text-gray-500 dark:text-gray-400">
-                                      {list.description}
+                            {userLists.map(
+                              (list: AppBskyGraphDefs.ListView) => (
+                                <button
+                                  key={list.uri}
+                                  onClick={() =>
+                                    handleAddColumn("feed", list.uri, list.name)
+                                  }
+                                  className="flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/50"
+                                >
+                                  <Users className="mt-0.5 h-4 w-4 text-blue-500" />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                                      {list.name}
                                     </div>
-                                  )}
-                                  <div className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
-                                    {list.listItemCount || 0} members
+                                    {list.description && (
+                                      <div className="truncate text-xs text-gray-500 dark:text-gray-400">
+                                        {list.description}
+                                      </div>
+                                    )}
+                                    <div className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                                      {list.listItemCount || 0} members
+                                    </div>
                                   </div>
-                                </div>
-                              </button>
-                            ))}
+                                </button>
+                              ),
+                            )}
                           </div>
                         </div>
                       </>
@@ -788,14 +798,18 @@ export default function SkyDeck() {
                                     setCustomFeedUri("");
                                   }
                                 }
-                              } catch (error: any) {
+                              } catch (error: unknown) {
                                 logger.error(
                                   "Error fetching feed/list:",
                                   error,
                                 );
                                 // Show error to user instead of adding invalid feed
+                                const errorMessage =
+                                  error instanceof Error
+                                    ? error.message
+                                    : "Invalid feed URL";
                                 showAlert(
-                                  `Failed to add feed: ${error?.message || "Invalid feed URL"}`,
+                                  `Failed to add feed: ${errorMessage}`,
                                   {
                                     variant: "error",
                                     title: "Failed to Add Feed",
