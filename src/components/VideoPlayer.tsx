@@ -265,6 +265,8 @@ export function VideoPlayer({
     const videoSrc = cachedSrc || src;
     let hlsInstance: Hls | null = null;
     let isCancelled = false;
+    let hlsManifestHandler: (() => void) | null = null;
+    let hlsErrorHandler: ((event: string, data: any) => void) | null = null;
 
     // Check if this is an HLS stream
     if (src.endsWith(".m3u8")) {
@@ -297,7 +299,7 @@ export function VideoPlayer({
             hls.loadSource(src);
             hls.attachMedia(videoRef.current);
 
-            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            const handleManifestParsed = () => {
               setIsLoading(false);
               if (isPlaying) {
                 videoRef.current?.play().catch((error) => {
@@ -305,9 +307,9 @@ export function VideoPlayer({
                   setIsPlaying(false);
                 });
               }
-            });
+            };
 
-            hls.on(Hls.Events.ERROR, (event, data) => {
+            const handleHlsError = (event: string, data: any) => {
               logger.error("HLS error:", event, data);
               if (data.fatal) {
                 switch (data.type) {
@@ -347,7 +349,12 @@ export function VideoPlayer({
                     break;
                 }
               }
-            });
+            };
+
+            hlsManifestHandler = handleManifestParsed;
+            hlsErrorHandler = handleHlsError;
+            hls.on(Hls.Events.MANIFEST_PARSED, handleManifestParsed);
+            hls.on(Hls.Events.ERROR, handleHlsError);
           } else if (
             videoRef.current.canPlayType("application/vnd.apple.mpegurl")
           ) {
@@ -379,7 +386,18 @@ export function VideoPlayer({
 
     return () => {
       isCancelled = true;
-      hlsInstance?.destroy();
+      if (hlsInstance) {
+        // Remove event listeners before destroying
+        // Using string event names since Hls is type-only import
+        // These correspond to Hls.Events.MANIFEST_PARSED and Hls.Events.ERROR
+        if (hlsManifestHandler) {
+          hlsInstance.off("hlsManifestParsed", hlsManifestHandler);
+        }
+        if (hlsErrorHandler) {
+          hlsInstance.off("hlsError", hlsErrorHandler);
+        }
+        hlsInstance.destroy();
+      }
     };
   }, [src, cachedSrc, isVideoLoaded, isPlaying, retryCount]);
 
