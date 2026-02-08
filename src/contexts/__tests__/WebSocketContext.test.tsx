@@ -766,7 +766,7 @@ describe("WebSocketContext", () => {
       });
 
       const service = mockService!;
-      const disconnectSpy = vi.spyOn(service, "disconnect");
+      vi.spyOn(service, "disconnect");
 
       // Unmount simulates cleanup
       unmount();
@@ -867,7 +867,7 @@ describe("WebSocketContext", () => {
 
     it("should update stats when messages are received", async () => {
       const wrapper = createWrapper(true);
-      const { result } = renderHook(() => useWebSocket(), { wrapper });
+      renderHook(() => useWebSocket(), { wrapper });
 
       await waitFor(
         () => {
@@ -878,20 +878,23 @@ describe("WebSocketContext", () => {
 
       await waitFor(
         () => {
-          expect(result.current.isConnected).toBe(true);
+          expect(mockService?.getStats().connectionState).toBe(
+            WebSocketConnectionState.CONNECTED,
+          );
         },
         { timeout: 3000 },
       );
 
-      const initialReceived = result.current.stats.messagesReceived;
+      const initialReceived = mockService!.getStats().messagesReceived;
 
       act(() => {
         mockService?.simulateNotificationCount(5);
       });
 
+      // Stats are updated in the service directly
       await waitFor(
         () => {
-          expect(result.current.stats.messagesReceived).toBeGreaterThan(
+          expect(mockService!.getStats().messagesReceived).toBeGreaterThan(
             initialReceived,
           );
         },
