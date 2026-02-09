@@ -9,7 +9,7 @@
  * - Event handling for post success/failure
  */
 
-import type { BskyAgent } from "@atproto/api";
+import { AppBskyFeedPost, type BskyAgent } from "@atproto/api";
 import type { BlobRef } from "@atproto/lexicon";
 import { debug } from "@bsky/shared";
 import { useCallback, useEffect, useState } from "react";
@@ -179,8 +179,10 @@ export function useOfflinePostQueue(
           }
 
           // Build post record
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const postRecord: Record<string, any> = {
+          const postRecord: Partial<AppBskyFeedPost.Record> & {
+            text: string;
+            createdAt: string;
+          } = {
             text,
             createdAt: new Date().toISOString(),
           };
