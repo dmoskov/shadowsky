@@ -115,8 +115,7 @@ function extractMediaUrls(
 
   // Handle embedded images
   if (post.post?.embed) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const embed = post.post.embed as any;
+    const embed = post.post.embed as Record<string, unknown>;
 
     // Images array
     if (embed.images && Array.isArray(embed.images)) {
@@ -127,22 +126,28 @@ function extractMediaUrls(
     }
 
     // Single image
-    if (embed.thumb) {
+    if (typeof embed.thumb === "string") {
       urls.push(embed.thumb);
     }
 
     // External embed with thumbnail
-    if (embed.external?.thumb) {
-      urls.push(embed.external.thumb);
+    if (
+      embed.external &&
+      typeof embed.external === "object" &&
+      embed.external !== null &&
+      "thumb" in embed.external &&
+      typeof (embed.external as Record<string, unknown>).thumb === "string"
+    ) {
+      urls.push((embed.external as Record<string, unknown>).thumb as string);
     }
 
     // Video thumbnail
-    if (embed.thumbnail) {
+    if (typeof embed.thumbnail === "string") {
       urls.push(embed.thumbnail);
     }
 
     // Video playlist (if enabled)
-    if (includeVideos && embed.playlist) {
+    if (includeVideos && typeof embed.playlist === "string") {
       urls.push(embed.playlist);
     }
 

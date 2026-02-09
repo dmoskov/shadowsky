@@ -347,12 +347,14 @@ describe("AuthContext", () => {
       const mockGetProfile = vi.fn().mockResolvedValue({
         data: { handle: "oauth.test.bsky.social", displayName: "OAuth User" },
       });
-      const stateWithoutHandle = {
-        agent: { getProfile: mockGetProfile },
+      const stateWithoutHandle: OAuthState = {
+        agent: { getProfile: mockGetProfile } as unknown as BskyAgent,
         did: "did:plc:oauth123",
-        handle: undefined,
-        session: { did: "did:plc:oauth123" },
-      } as any;
+        handle: null,
+        session: {
+          did: "did:plc:oauth123",
+        } as unknown as OAuthState["session"],
+      };
       vi.mocked(oauthService.handleCallback).mockResolvedValue(
         stateWithoutHandle,
       );
