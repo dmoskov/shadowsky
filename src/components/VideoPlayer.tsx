@@ -297,6 +297,10 @@ function VideoPlayerComponent({
     const videoSrc = cachedSrc || src;
     let hlsInstance: Hls | null = null;
     let isCancelled = false;
+    let hlsManifestHandler: (() => void) | null = null;
+    let hlsErrorHandler: ((event: string, data: any) => void) | null = null;
+    let manifestParsedEvent: string | null = null;
+    let errorEvent: string | null = null;
 
     // Check if this is an HLS stream
     if (src.endsWith(".m3u8")) {
@@ -329,7 +333,7 @@ function VideoPlayerComponent({
             hls.loadSource(src);
             hls.attachMedia(videoRef.current);
 
-            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            const handleManifestParsed = () => {
               setIsLoading(false);
               if (isPlaying) {
                 videoRef.current?.play().catch((error) => {
@@ -337,9 +341,9 @@ function VideoPlayerComponent({
                   setIsPlaying(false);
                 });
               }
-            });
+            };
 
-            hls.on(Hls.Events.ERROR, (event, data) => {
+            const handleHlsError = (event: string, data: any) => {
               logger.error("HLS error:", event, data);
               if (data.fatal) {
                 switch (data.type) {
@@ -379,7 +383,14 @@ function VideoPlayerComponent({
                     break;
                 }
               }
-            });
+            };
+
+            hlsManifestHandler = handleManifestParsed;
+            hlsErrorHandler = handleHlsError;
+            manifestParsedEvent = Hls.Events.MANIFEST_PARSED;
+            errorEvent = Hls.Events.ERROR;
+            hls.on(Hls.Events.MANIFEST_PARSED, handleManifestParsed);
+            hls.on(Hls.Events.ERROR, handleHlsError);
           } else if (
             videoRef.current.canPlayType("application/vnd.apple.mpegurl")
           ) {
@@ -411,7 +422,16 @@ function VideoPlayerComponent({
 
     return () => {
       isCancelled = true;
-      hlsInstance?.destroy();
+      if (hlsInstance) {
+        // Remove event listeners before destroying
+        if (hlsManifestHandler && manifestParsedEvent) {
+          hlsInstance.off(manifestParsedEvent as any, hlsManifestHandler);
+        }
+        if (hlsErrorHandler && errorEvent) {
+          hlsInstance.off(errorEvent as any, hlsErrorHandler);
+        }
+        hlsInstance.destroy();
+      }
     };
   }, [src, cachedSrc, isVideoLoaded, isPlaying, retryCount]);
 
