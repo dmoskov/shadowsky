@@ -2,6 +2,8 @@
 // Security: Using SameSite=Strict and Secure flags for session cookies
 // Note: httpOnly cannot be set via JavaScript - requires server-side Set-Cookie headers
 
+import { debug } from "@bsky/shared";
+
 // Individual exports for backwards compatibility
 export const setCookie = (
   name: string,
@@ -146,14 +148,12 @@ export const columnFeedPrefs = {
     const prefsJson = JSON.stringify(prefs);
 
     // Debug logging in development
-    if (process.env.NODE_ENV === "development") {
-      console.log("Setting column feed preference:", {
-        columnId,
-        feedUri,
-        allPrefs: prefs,
-        cookieValue: prefsJson.length,
-      });
-    }
+    debug.log("Setting column feed preference:", {
+      columnId,
+      feedUri,
+      allPrefs: prefs,
+      cookieValue: prefsJson.length,
+    });
 
     cookies.set("columnFeedPrefs", prefsJson);
   },

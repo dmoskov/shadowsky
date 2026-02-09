@@ -3,6 +3,8 @@
  * with smart cropping to standard aspect ratios
  */
 
+import { debug } from "@bsky/shared";
+
 const MAX_DIMENSION = 1000; // Bluesky stores with longest side at 1000px
 const MAX_FILE_SIZE = 1000000; // 1MB (Bluesky's limit)
 const PROFILE_IMAGE_MAX_SIZE = 976560; // ~976KB for profile images (avatar/banner)
@@ -181,7 +183,7 @@ export async function compressImage(file: File): Promise<File> {
             { type: blob.type },
           );
 
-          console.log(
+          debug.log(
             `Compressed image from ${(file.size / 1024 / 1024).toFixed(2)}MB to ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`,
             `(${img.width}x${img.height} → ${width}x${height}, aspect ratio: ${targetAspectRatio.name})`,
           );
@@ -327,7 +329,7 @@ export async function compressProfileImage(
             { type: "image/jpeg" },
           );
 
-          console.log(
+          debug.log(
             `Compressed ${type} from ${(file.size / 1024).toFixed(0)}KB to ${(compressedFile.size / 1024).toFixed(0)}KB`,
             `(${img.width}x${img.height} → ${targetWidth}x${targetHeight})`,
           );
