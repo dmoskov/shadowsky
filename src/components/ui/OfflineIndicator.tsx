@@ -58,6 +58,16 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
     null,
   );
+  const reconnectedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const syncCompleteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const syncHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const backoffTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Check cached content availability
   useEffect(() => {
@@ -111,7 +121,7 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
         setReconnectAttempt(0);
 
         // Hide after 3 seconds
-        setTimeout(() => {
+        reconnectedTimeoutRef.current = setTimeout(() => {
           setConnectionState("online");
           setReconnectProgress(0);
         }, 3000);
@@ -131,6 +141,9 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      if (reconnectedTimeoutRef.current) {
+        clearTimeout(reconnectedTimeoutRef.current);
+      }
     };
   }, [pendingActionCount, isSyncing]);
 
@@ -140,12 +153,12 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
       if (!isSyncing && pendingActionCount === 0) {
         // Syncing complete
         setSyncProgress(100);
-        setTimeout(() => {
+        syncCompleteTimeoutRef.current = setTimeout(() => {
           setConnectionState("reconnected");
           onSyncComplete?.();
 
           // Hide after 3 seconds
-          setTimeout(() => {
+          syncHideTimeoutRef.current = setTimeout(() => {
             setConnectionState("online");
             setSyncProgress(0);
             setReconnectProgress(0);
@@ -158,6 +171,15 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
         setSyncProgress(Math.min(90, baseProgress));
       }
     }
+
+    return () => {
+      if (syncCompleteTimeoutRef.current) {
+        clearTimeout(syncCompleteTimeoutRef.current);
+      }
+      if (syncHideTimeoutRef.current) {
+        clearTimeout(syncHideTimeoutRef.current);
+      }
+    };
   }, [connectionState, isSyncing, pendingActionCount, onSyncComplete]);
 
   // Auto-retry reconnection when offline
@@ -219,7 +241,7 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
           attempt++;
           // Exponential backoff: 5s, 10s, 20s, 30s max
           const nextDelay = Math.min(5000 * Math.pow(2, attempt), 30000);
-          setTimeout(attemptReconnect, nextDelay);
+          backoffTimeoutRef.current = setTimeout(attemptReconnect, nextDelay);
         },
         10000, // Base check interval
       );
@@ -231,6 +253,9 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
         }
         if (progressIntervalRef.current) {
           clearInterval(progressIntervalRef.current);
+        }
+        if (backoffTimeoutRef.current) {
+          clearTimeout(backoffTimeoutRef.current);
         }
       };
     }
@@ -443,6 +468,7 @@ export function useOnlineStatus(): {
   const [wasOffline, setWasOffline] = useState(false);
   const [connectionStatus, setConnectionStatus] =
     useState<ConnectionStatus>("online");
+  const statusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     // Initialize state
@@ -457,7 +483,7 @@ export function useOnlineStatus(): {
       if (!isOnline) {
         setWasOffline(true);
         setConnectionStatus("syncing");
-        setTimeout(() => {
+        statusTimeoutRef.current = setTimeout(() => {
           setWasOffline(false);
           setConnectionStatus("online");
         }, 5000);
@@ -476,6 +502,9 @@ export function useOnlineStatus(): {
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      if (statusTimeoutRef.current) {
+        clearTimeout(statusTimeoutRef.current);
+      }
     };
   }, [isOnline]);
 
