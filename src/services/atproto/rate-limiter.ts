@@ -256,7 +256,10 @@ export class ATProtoRateLimiter {
     string,
     RateLimiterMetrics & { headerMetrics?: RateLimitHeaderMetrics }
   > {
-    const metrics: Record<string, any> = {};
+    const metrics: Record<
+      string,
+      RateLimiterMetrics & { headerMetrics?: RateLimitHeaderMetrics }
+    > = {};
 
     for (const [type, bucket] of this.buckets.entries()) {
       const bucketMetrics = bucket.getMetrics();
