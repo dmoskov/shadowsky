@@ -34,7 +34,7 @@ export function usePostMenuActions({
   const { showToast } = useToast();
 
   const isOwnPost = session?.did === post.author.did;
-  const postRecord = post.record as any;
+  const postRecord = post.record as { reply?: unknown } | undefined;
   const isThread = postRecord?.reply !== undefined;
 
   const handleMute = async () => {

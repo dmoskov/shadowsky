@@ -8,6 +8,22 @@ import {
   type MutationType,
 } from "../services/mutation-queue-db";
 
+interface TimelinePage {
+  feed: Array<{ post?: AppBskyFeedDefs.PostView; [key: string]: unknown }>;
+  cursor?: string;
+}
+
+interface TimelineData {
+  pages: TimelinePage[];
+  pageParams: unknown[];
+}
+
+interface ThreadNode {
+  post?: AppBskyFeedDefs.PostView;
+  replies?: ThreadNode[];
+  [key: string]: unknown;
+}
+
 export function useOptimisticPosts() {
   const { agent } = useAuth();
   const queryClient = useQueryClient();
@@ -19,14 +35,16 @@ export function useOptimisticPosts() {
     updater: (post: AppBskyFeedDefs.PostView) => AppBskyFeedDefs.PostView,
   ) => {
     // Update in all feed queries
-    queryClient.setQueriesData({ queryKey: ["timeline"] }, (oldData: any) => {
-      if (!oldData?.pages) return oldData;
+    queryClient.setQueriesData(
+      { queryKey: ["timeline"] },
+      (oldData: TimelineData | undefined) => {
+        if (!oldData?.pages) return oldData;
 
-      return {
-        ...oldData,
-        pages: oldData.pages.map((page: any) => ({
-          ...page,
-          feed: page.feed.map((item: any) => {
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) => ({
+            ...page,
+            feed: page.feed.map((item) => {
             if (item.post?.uri === postUri) {
               return {
                 ...item,
@@ -40,17 +58,27 @@ export function useOptimisticPosts() {
     });
 
     // Update in column feed queries
-    queryClient.setQueriesData({ queryKey: ["columnFeed"] }, (oldData: any) => {
-      if (!oldData?.pages) return oldData;
+    queryClient.setQueriesData(
+      { queryKey: ["columnFeed"] },
+      (oldData: TimelineData | undefined) => {
+        if (!oldData?.pages) return oldData;
 
-      return {
-        ...oldData,
-        pages: oldData.pages.map((page: any) => ({
-          ...page,
-          posts: page.posts.map((item: any) => {
-            const post = item.post || item;
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) => ({
+            ...page,
+            posts: (
+              page as unknown as {
+                posts: Array<
+                  | AppBskyFeedDefs.PostView
+                  | { post: AppBskyFeedDefs.PostView }
+                >;
+              }
+            ).posts.map((item) => {
+            const post =
+              "post" in item ? item.post : (item as AppBskyFeedDefs.PostView);
             if (post.uri === postUri) {
-              if (item.post) {
+              if ("post" in item) {
                 return {
                   ...item,
                   post: updater(post),
@@ -65,10 +93,12 @@ export function useOptimisticPosts() {
     });
 
     // Update in thread queries
-    queryClient.setQueriesData({ queryKey: ["thread"] }, (oldData: any) => {
-      if (!oldData) return oldData;
+    queryClient.setQueriesData(
+      { queryKey: ["thread"] },
+      (oldData: ThreadNode | undefined) => {
+        if (!oldData) return oldData;
 
-      const updateThread = (thread: any): any => {
+        const updateThread = (thread: ThreadNode | undefined): ThreadNode | undefined => {
         if (!thread) return thread;
 
         if (thread.post?.uri === postUri) {
@@ -81,7 +111,7 @@ export function useOptimisticPosts() {
         if (thread.replies?.length) {
           return {
             ...thread,
-            replies: thread.replies.map(updateThread),
+            replies: thread.replies.map(updateThread).filter((r): r is ThreadNode => r !== undefined),
           };
         }
 
@@ -92,14 +122,16 @@ export function useOptimisticPosts() {
     });
 
     // Update in author feed queries (profile pages)
-    queryClient.setQueriesData({ queryKey: ["authorFeed"] }, (oldData: any) => {
-      if (!oldData?.pages) return oldData;
+    queryClient.setQueriesData(
+      { queryKey: ["authorFeed"] },
+      (oldData: TimelineData | undefined) => {
+        if (!oldData?.pages) return oldData;
 
-      return {
-        ...oldData,
-        pages: oldData.pages.map((page: any) => ({
-          ...page,
-          feed: page.feed.map((item: any) => {
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) => ({
+            ...page,
+            feed: page.feed.map((item) => {
             if (item.post?.uri === postUri) {
               return {
                 ...item,

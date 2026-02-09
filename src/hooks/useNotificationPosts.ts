@@ -266,7 +266,11 @@ export function useNotificationPosts(
 export function postHasImages(post: Post): boolean {
   if (!post.embed) return false;
 
-  const embed = post.embed as any;
+  const embed = post.embed as
+    | { $type: string; media?: { $type: string } }
+    | undefined;
+
+  if (!embed) return false;
 
   // Check for direct image embed
   if (embed.$type === "app.bsky.embed.images#view") {

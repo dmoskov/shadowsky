@@ -96,12 +96,26 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
   // Expose to window for debugging (DEV only)
   React.useEffect(() => {
     if (import.meta.env.DEV) {
-      (window as any).getModerationData = () => ({
+      (window as unknown as {
+        getModerationData: () => {
+          mutedUsers: string[];
+          mutedThreads: string[];
+          blockedUsers: string[];
+        };
+        clearModerationData: () => void;
+      }).getModerationData = () => ({
         mutedUsers: Array.from(mutedUsers),
         mutedThreads: Array.from(mutedThreads),
         blockedUsers: Array.from(blockedUsers),
       });
-      (window as any).clearModerationData = () => {
+      (window as unknown as {
+        getModerationData: () => {
+          mutedUsers: string[];
+          mutedThreads: string[];
+          blockedUsers: string[];
+        };
+        clearModerationData: () => void;
+      }).clearModerationData = () => {
         setMutedUsers(new Set());
         setMutedThreads(new Set());
         setBlockedUsers(new Set());

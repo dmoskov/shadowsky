@@ -122,7 +122,7 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
 
       if (!videoServiceRef.current) {
         const error: StandardErrorResponse = {
-          code: "CLIENT_BAD_REQUEST" as any,
+          code: "CLIENT_BAD_REQUEST" as StandardErrorCode,
           message:
             "Video service not initialized. Please ensure you're logged in.",
           context: { timestamp: new Date().toISOString() },
@@ -152,7 +152,7 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
         );
 
         const error: StandardErrorResponse = {
-          code: "CLIENT_BAD_REQUEST" as any,
+          code: "CLIENT_BAD_REQUEST" as StandardErrorCode,
           message: validationResult.error.message,
           context: {
             ...validationResult.error.context,
@@ -252,7 +252,7 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
 
         logger.log(`[${result.uploadId}] Upload completed successfully`);
         return result;
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Check if this was a cancellation
         if (abortController.signal.aborted) {
           if (isMountedRef.current) {
@@ -271,12 +271,13 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
         // Handle actual errors
         logger.error(`[${uploadId}] Upload failed:`, error);
 
+        const err = error as { code?: string; message?: string };
         const standardError: StandardErrorResponse =
-          error.code && error.message
-            ? error
+          err.code && err.message
+            ? (error as StandardErrorResponse)
             : {
-                code: "UNKNOWN" as any,
-                message: error.message || "Unknown upload error",
+                code: "UNKNOWN" as StandardErrorCode,
+                message: err.message || "Unknown upload error",
                 context: {
                   uploadId: uploadId || undefined,
                   timestamp: new Date().toISOString(),

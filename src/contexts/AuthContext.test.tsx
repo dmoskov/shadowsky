@@ -1,3 +1,4 @@
+import type { BskyAgent } from "@atproto/api";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -176,7 +177,7 @@ const mockOAuthState = {
   did: "did:plc:oauth123",
   handle: "oauth.test.bsky.social",
   session: { did: "did:plc:oauth123" },
-} as any;
+} as unknown as { agent: BskyAgent; did: string; handle: string; session: { did: string } };
 
 // Store original location
 const originalLocationHref = window.location.href;
@@ -200,7 +201,7 @@ describe("AuthContext", () => {
         }),
         session: mockSession,
         resumeSession: vi.fn().mockResolvedValue(mockSession),
-      } as any,
+      } as unknown as BskyAgent,
       did: mockSession.did,
       handle: mockSession.handle,
       lastUsed: Date.now(),
@@ -436,7 +437,7 @@ describe("AuthContext", () => {
     it("should clear session on 401 status error during restore", async () => {
       vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(mockSession);
       const error = new Error("Unauthorized");
-      (error as any).status = 401;
+      (error as Error & { status: number }).status = 401;
       vi.mocked(multiClientManager.resumeSession).mockRejectedValue(error);
 
       const { result } = renderHook(() => useAuth(), {
@@ -511,7 +512,7 @@ describe("AuthContext", () => {
           }),
           session: mockSession,
           resumeSession: vi.fn().mockResolvedValue(mockSession),
-        } as any,
+        } as unknown as BskyAgent,
         did: mockSession.did,
         handle: mockSession.handle,
         lastUsed: Date.now(),
@@ -551,7 +552,7 @@ describe("AuthContext", () => {
           }),
           session: mockSession,
           resumeSession: vi.fn().mockResolvedValue(mockSession),
-        } as any,
+        } as unknown as BskyAgent,
         did: mockSession.did,
         handle: mockSession.handle,
         lastUsed: Date.now(),
@@ -630,7 +631,7 @@ describe("AuthContext", () => {
     it("should handle 5xx server errors without clearing session", async () => {
       vi.mocked(ATProtoClient.loadSavedSession).mockReturnValue(mockSession);
       const serverError = new Error("Internal Server Error");
-      (serverError as any).status = 500;
+      (serverError as Error & { status: number }).status = 500;
       vi.mocked(multiClientManager.resumeSession).mockRejectedValue(
         serverError,
       );
@@ -663,7 +664,7 @@ describe("AuthContext", () => {
           }),
           session: mockSession,
           resumeSession: vi.fn().mockResolvedValue(mockSession),
-        } as any,
+        } as unknown as BskyAgent,
         did: mockSession.did,
         handle: mockSession.handle,
         lastUsed: Date.now(),
@@ -693,7 +694,7 @@ describe("AuthContext", () => {
             data: { displayName: "Second User" },
           }),
           session: secondAccount.session,
-        } as any,
+        } as unknown as BskyAgent,
         did: secondAccount.did,
         handle: secondAccount.handle,
         lastUsed: Date.now(),
@@ -796,7 +797,7 @@ describe("AuthContext", () => {
             },
           }),
           session: mockSession,
-        } as any,
+        } as unknown as BskyAgent,
         did: mockSession.did,
         handle: mockSession.handle,
         lastUsed: Date.now(),
@@ -862,7 +863,7 @@ describe("AuthContext", () => {
             },
           }),
           session: mockSession,
-        } as any,
+        } as unknown as BskyAgent,
         did: mockSession.did,
         handle: mockSession.handle,
         lastUsed: Date.now(),
@@ -903,7 +904,7 @@ describe("AuthContext", () => {
             },
           }),
           session: mockSession,
-        } as any,
+        } as unknown as BskyAgent,
         did: mockSession.did,
         handle: mockSession.handle,
         lastUsed: Date.now(),
@@ -940,7 +941,7 @@ describe("AuthContext", () => {
             },
           }),
           session: mockSession,
-        } as any,
+        } as unknown as BskyAgent,
         did: mockSession.did,
         handle: mockSession.handle,
         lastUsed: Date.now(),
@@ -1053,7 +1054,7 @@ describe("AuthContext", () => {
           }),
           session: mockSession,
           resumeSession: vi.fn().mockResolvedValue(mockSession),
-        } as any,
+        } as unknown as BskyAgent,
         did: mockSession.did,
         handle: mockSession.handle,
         lastUsed: Date.now(),
@@ -1112,7 +1113,7 @@ describe("AuthContext", () => {
           }),
           session: mockSession,
           resumeSession: vi.fn().mockResolvedValue(mockSession),
-        } as any,
+        } as unknown as BskyAgent,
         did: mockSession.did,
         handle: mockSession.handle,
         lastUsed: Date.now(),
@@ -1189,7 +1190,7 @@ describe("AuthContext", () => {
             data: { displayName: "Test User" },
           }),
           session: mockSession,
-        } as any,
+        } as unknown as BskyAgent,
         did: mockSession.did,
         handle: mockSession.handle,
         lastUsed: Date.now(),

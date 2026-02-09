@@ -78,7 +78,9 @@ export function useThreadTree({
         // Find posts that are not replies to any other post in our set
         const childUris = new Set<string>();
         posts.forEach((post) => {
-          const record = post.record as any;
+          const record = post.record as
+            | { reply?: { parent?: { uri: string } } }
+            | undefined;
           if (record?.reply?.parent?.uri) {
             childUris.add(post.uri);
           }
@@ -101,7 +103,9 @@ export function useThreadTree({
       if (childNode.isRoot) return;
 
       const post = childNode.post;
-      const postRecord = post?.record as any;
+      const postRecord = post?.record as
+        | { reply?: { parent?: { uri: string } } }
+        | undefined;
       const parentUri = postRecord?.reply?.parent?.uri;
 
       if (parentUri) {

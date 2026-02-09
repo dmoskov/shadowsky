@@ -30,11 +30,17 @@ export const HiddenPostsProvider: React.FC<{ children: React.ReactNode }> = ({
   // Expose to window for debugging (DEV only)
   React.useEffect(() => {
     if (import.meta.env.DEV) {
-      (window as any).clearHiddenPosts = () => {
+      (window as unknown as {
+        clearHiddenPosts: () => void;
+        getHiddenPosts: () => string[];
+      }).clearHiddenPosts = () => {
         setHiddenPosts(new Set());
         console.log("All hidden posts have been cleared");
       };
-      (window as any).getHiddenPosts = () => {
+      (window as unknown as {
+        clearHiddenPosts: () => void;
+        getHiddenPosts: () => string[];
+      }).getHiddenPosts = () => {
         return Array.from(hiddenPosts);
       };
     }

@@ -201,12 +201,22 @@ export function useMarkNotificationsRead() {
       // Update notifications in place to mark them as read
       queryClient.setQueriesData(
         { queryKey: ["notifications"] },
-        (oldData: any) => {
+        (
+          oldData:
+            | {
+                pages: Array<{
+                  notifications: Notification[];
+                  cursor?: string;
+                }>;
+                pageParams: unknown[];
+              }
+            | undefined,
+        ) => {
           if (!oldData?.pages) return oldData;
 
           return {
             ...oldData,
-            pages: oldData.pages.map((page: any) => ({
+            pages: oldData.pages.map((page) => ({
               ...page,
               notifications: page.notifications.map(
                 (notification: Notification) => ({

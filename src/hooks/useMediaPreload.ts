@@ -1,3 +1,4 @@
+import type { AppBskyFeedDefs } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useEffect, useRef } from "react";
 import { MediaCacheService } from "../services/media-cache-service";
@@ -13,7 +14,7 @@ interface MediaPreloadOptions {
  * Extracts media URLs from posts and preloads them in the background
  */
 export function useMediaPreload(
-  posts: any[], // Array of posts from timeline
+  posts: AppBskyFeedDefs.FeedViewPost[], // Array of posts from timeline
   currentIndex: number, // Current scroll position/index
   options: MediaPreloadOptions = {},
 ) {
@@ -99,7 +100,10 @@ export function useMediaPreload(
 /**
  * Extract media URLs from a post
  */
-function extractMediaUrls(post: any, includeVideos: boolean): string[] {
+function extractMediaUrls(
+  post: AppBskyFeedDefs.FeedViewPost,
+  includeVideos: boolean,
+): string[] {
   const urls: string[] = [];
 
   if (!post) return urls;
@@ -111,7 +115,8 @@ function extractMediaUrls(post: any, includeVideos: boolean): string[] {
 
   // Handle embedded images
   if (post.post?.embed) {
-    const embed = post.post.embed;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const embed = post.post.embed as any;
 
     // Images array
     if (embed.images && Array.isArray(embed.images)) {
@@ -144,7 +149,7 @@ function extractMediaUrls(post: any, includeVideos: boolean): string[] {
     // Quoted post
     if (embed.record) {
       const quotedUrls = extractMediaUrls(
-        { post: embed.record },
+        { post: embed.record } as AppBskyFeedDefs.FeedViewPost,
         includeVideos,
       );
       urls.push(...quotedUrls);
@@ -155,14 +160,14 @@ function extractMediaUrls(post: any, includeVideos: boolean): string[] {
   if (post.reply) {
     if (post.reply.parent) {
       const parentUrls = extractMediaUrls(
-        { post: post.reply.parent },
+        { post: post.reply.parent } as AppBskyFeedDefs.FeedViewPost,
         includeVideos,
       );
       urls.push(...parentUrls);
     }
     if (post.reply.root) {
       const rootUrls = extractMediaUrls(
-        { post: post.reply.root },
+        { post: post.reply.root } as AppBskyFeedDefs.FeedViewPost,
         includeVideos,
       );
       urls.push(...rootUrls);

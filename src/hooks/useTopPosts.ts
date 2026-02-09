@@ -71,7 +71,7 @@ export function useTopPosts({
       // Map to engagement structure
       const postsWithEngagement: PostEngagement[] = allPosts.map((item) => ({
         uri: item.post.uri,
-        text: (item.post.record as any)?.text || "",
+        text: (item.post.record as { text?: string } | undefined)?.text || "",
         createdAt: item.post.indexedAt,
         likes: item.post.likeCount || 0,
         reposts: item.post.repostCount || 0,

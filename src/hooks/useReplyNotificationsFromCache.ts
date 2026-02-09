@@ -4,6 +4,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 import { useReplyNotifications } from "./useNotificationsByType";
 
+interface ExtendedNotificationsData {
+  pages: Array<{
+    notifications: Notification[];
+    cursor?: string;
+  }>;
+  pageParams: Array<string | undefined>;
+}
+
 /**
  * Hook that first checks the extended notifications cache for reply notifications
  * Falls back to fetching fresh data if cache is not available
@@ -15,18 +23,19 @@ export function useReplyNotificationsFromCache() {
   // Check if we have extended notifications in cache
   const extendedData = queryClient.getQueryData([
     "notifications-extended",
-  ]) as any;
-  const hasExtendedData = extendedData?.pages?.length > 0;
+  ]) as ExtendedNotificationsData | undefined;
+  const hasExtendedData =
+    extendedData?.pages && extendedData.pages.length > 0;
 
   // Extract reply notifications from extended data
   const cachedReplyNotifications = useQuery({
     queryKey: ["reply-notifications-from-cache"],
     queryFn: () => {
-      if (!hasExtendedData) return null;
+      if (!hasExtendedData || !extendedData) return null;
 
       // Extract all notifications from paginated data
       const allNotifications = extendedData.pages.flatMap(
-        (page: any) => page.notifications,
+        (page) => page.notifications,
       );
 
       // Filter for reply notifications

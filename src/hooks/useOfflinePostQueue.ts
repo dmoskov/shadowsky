@@ -10,6 +10,7 @@
  */
 
 import type { BskyAgent } from "@atproto/api";
+import type { BlobRef } from "@atproto/lexicon";
 import { debug } from "@bsky/shared";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -152,8 +153,7 @@ export function useOfflinePostQueue(
           }
 
           // Upload attachments first
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const uploadedImages: Array<{ alt: string; image: any }> = [];
+          const uploadedImages: Array<{ alt: string; image: BlobRef }> = [];
           if (attachments && attachments.length > 0) {
             for (const attachment of attachments) {
               if (attachment.type === "image") {
@@ -180,7 +180,7 @@ export function useOfflinePostQueue(
 
           // Build post record
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const postRecord: any = {
+          const postRecord: Record<string, any> = {
             text,
             createdAt: new Date().toISOString(),
           };
@@ -232,8 +232,11 @@ export function useOfflinePostQueue(
 
           // Handle threadgate if present
           if (threadgate && result.uri) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const allow: any[] = [];
+            const allow: Array<
+              | { $type: "app.bsky.feed.threadgate#mentionRule" }
+              | { $type: "app.bsky.feed.threadgate#followingRule" }
+              | { $type: "app.bsky.feed.threadgate#listRule"; list: string }
+            > = [];
             if (threadgate.allowMentioned) {
               allow.push({ $type: "app.bsky.feed.threadgate#mentionRule" });
             }

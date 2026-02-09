@@ -1,6 +1,15 @@
+import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 import { NotificationCacheService } from "../services/notification-cache-service";
+
+interface ExtendedNotificationsData {
+  pages: Array<{
+    notifications: Notification[];
+    cursor?: string;
+  }>;
+  pageParams: Array<string | undefined>;
+}
 
 /**
  * Hook to load extended notifications from IndexedDB
@@ -69,11 +78,13 @@ export function useExtendedNotifications() {
   const queryClient = useQueryClient();
   const inMemoryData = queryClient.getQueryData([
     "notifications-extended",
-  ]) as any;
+  ]) as ExtendedNotificationsData | undefined;
 
   // Use in-memory data if available, otherwise use IndexedDB data
-  const extendedData = inMemoryData?.pages?.length > 0 ? inMemoryData : data;
-  const hasExtendedData = extendedData?.pages?.length > 0;
+  const extendedData =
+    inMemoryData?.pages && inMemoryData.pages.length > 0 ? inMemoryData : data;
+  const hasExtendedData =
+    extendedData?.pages && extendedData.pages.length > 0;
 
   return {
     extendedData,
