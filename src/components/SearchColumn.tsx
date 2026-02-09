@@ -34,7 +34,7 @@ interface SearchColumnProps {
   initialQuery?: string;
 }
 
-export const SearchColumn: React.FC<SearchColumnProps> = ({
+const SearchColumnComponent: React.FC<SearchColumnProps> = ({
   isFocused = false,
   onClose,
   initialQuery,
@@ -796,3 +796,18 @@ export const SearchColumn: React.FC<SearchColumnProps> = ({
     </div>
   );
 };
+
+/**
+ * Memoized SearchColumn for optimal SkyDeck performance
+ */
+export const SearchColumn = React.memo(
+  SearchColumnComponent,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.isFocused === nextProps.isFocused &&
+      prevProps.initialQuery === nextProps.initialQuery
+    );
+  },
+);
+
+SearchColumn.displayName = "SearchColumn";

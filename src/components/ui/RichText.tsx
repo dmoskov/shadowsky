@@ -42,7 +42,42 @@ export function byteToCharOffset(text: string, byteOffset: number): number {
   return stringIndex;
 }
 
-export const RichText: React.FC<RichTextProps> = ({
+/**
+ * Custom comparison function for RichText memoization
+ * Prevents re-renders when props haven't meaningfully changed
+ */
+function areRichTextPropsEqual(
+  prevProps: RichTextProps,
+  nextProps: RichTextProps,
+): boolean {
+  // Compare text content
+  if (prevProps.text !== nextProps.text) return false;
+
+  // Compare className and style
+  if (prevProps.className !== nextProps.className) return false;
+  if (prevProps.style !== nextProps.style) return false;
+
+  // Compare facets length first (fast check)
+  if (prevProps.facets?.length !== nextProps.facets?.length) return false;
+
+  // If both undefined or both empty, they're equal
+  if (!prevProps.facets && !nextProps.facets) return true;
+  if (prevProps.facets?.length === 0 && nextProps.facets?.length === 0)
+    return true;
+
+  // Deep compare facets if needed
+  // Since facets are derived from post data and don't change often,
+  // a simple JSON comparison is acceptable here
+  if (prevProps.facets && nextProps.facets) {
+    return (
+      JSON.stringify(prevProps.facets) === JSON.stringify(nextProps.facets)
+    );
+  }
+
+  return true;
+}
+
+const RichTextComponent: React.FC<RichTextProps> = ({
   text,
   facets,
   className,
@@ -153,3 +188,9 @@ export const RichText: React.FC<RichTextProps> = ({
     </span>
   );
 };
+
+/**
+ * Memoized RichText component for optimal feed scroll performance
+ * Prevents expensive text processing and facet parsing on every parent render
+ */
+export const RichText = React.memo(RichTextComponent, areRichTextPropsEqual);

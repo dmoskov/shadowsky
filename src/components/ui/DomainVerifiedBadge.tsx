@@ -17,7 +17,7 @@ interface DomainVerifiedBadgeProps {
  * Badge component to indicate domain-verified users
  * Shows a visual indicator when a user has verified their domain ownership
  */
-export const DomainVerifiedBadge: React.FC<DomainVerifiedBadgeProps> = ({
+const DomainVerifiedBadgeComponent: React.FC<DomainVerifiedBadgeProps> = ({
   handle,
   size = "sm",
   showDomain = false,
@@ -70,9 +70,15 @@ export const DomainVerifiedBadge: React.FC<DomainVerifiedBadgeProps> = ({
 };
 
 /**
+ * Memoized DomainVerifiedBadge for optimal performance
+ * Prevents unnecessary re-renders when handle hasn't changed
+ */
+export const DomainVerifiedBadge = React.memo(DomainVerifiedBadgeComponent);
+
+/**
  * Inline version of the badge that can be used next to handles
  */
-export const DomainVerifiedBadgeInline: React.FC<{
+const DomainVerifiedBadgeInlineComponent: React.FC<{
   handle: string;
   className?: string;
 }> = ({ handle, className = "" }) => {
@@ -95,3 +101,11 @@ export const DomainVerifiedBadgeInline: React.FC<{
     </span>
   );
 };
+
+/**
+ * Memoized DomainVerifiedBadgeInline for optimal performance
+ * Prevents unnecessary re-renders in frequently updated post lists
+ */
+export const DomainVerifiedBadgeInline = React.memo(
+  DomainVerifiedBadgeInlineComponent,
+);

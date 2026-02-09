@@ -48,7 +48,7 @@ interface BookmarksColumnProps {
 
 const scrollPositions = new Map<string, number>();
 
-export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
+const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
   isFocused = false,
   onClose,
 }) => {
@@ -866,3 +866,15 @@ export const BookmarksColumn: React.FC<BookmarksColumnProps> = ({
     </div>
   );
 };
+
+/**
+ * Memoized BookmarksColumn for optimal SkyDeck performance
+ */
+export const BookmarksColumn = React.memo(
+  BookmarksColumnComponent,
+  (prevProps, nextProps) => {
+    return prevProps.isFocused === nextProps.isFocused;
+  },
+);
+
+BookmarksColumn.displayName = "BookmarksColumn";

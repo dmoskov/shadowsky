@@ -26,7 +26,7 @@ interface ColumnHeaderProps {
   children?: React.ReactNode;
 }
 
-export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
+const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
   column,
   onRemove,
   onRefresh,
@@ -292,3 +292,24 @@ export const ColumnHeader: React.FC<ColumnHeaderProps> = ({
     </div>
   );
 };
+
+/**
+ * Memoized ColumnHeader for optimal SkyDeck performance
+ * Prevents re-renders when column state hasn't changed
+ */
+export const ColumnHeader = React.memo(
+  ColumnHeaderComponent,
+  (prevProps, nextProps) => {
+    // Only re-render if these props change
+    return (
+      prevProps.column.id === nextProps.column.id &&
+      prevProps.column.type === nextProps.column.type &&
+      prevProps.column.title === nextProps.column.title &&
+      prevProps.currentFeedLabel === nextProps.currentFeedLabel &&
+      prevProps.feedOptions?.length === nextProps.feedOptions?.length
+      // Callbacks are expected to be stable (using useCallback in parent)
+    );
+  },
+);
+
+ColumnHeader.displayName = "ColumnHeader";

@@ -64,7 +64,39 @@ const VIDEO_ERROR_MESSAGES: Record<number, VideoError> = {
   4: { code: 4, message: "Video format not supported", recoverable: false },
 };
 
-export function VideoPlayer({
+/**
+ * Custom comparison function for VideoPlayer memoization
+ * Prevents unnecessary re-renders when video props haven't changed
+ */
+function areVideoPlayerPropsEqual(
+  prevProps: VideoPlayerProps,
+  nextProps: VideoPlayerProps,
+): boolean {
+  // Compare video source (most important)
+  if (prevProps.src !== nextProps.src) return false;
+
+  // Compare thumbnail
+  if (prevProps.thumbnail !== nextProps.thumbnail) return false;
+
+  // Compare alt text
+  if (prevProps.alt !== nextProps.alt) return false;
+
+  // Compare context flags
+  if (prevProps.inTimeline !== nextProps.inTimeline) return false;
+  if (prevProps.enableCache !== nextProps.enableCache) return false;
+
+  // Compare aspect ratio
+  if (
+    prevProps.aspectRatio?.width !== nextProps.aspectRatio?.width ||
+    prevProps.aspectRatio?.height !== nextProps.aspectRatio?.height
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function VideoPlayerComponent({
   src,
   thumbnail,
   aspectRatio,
@@ -927,3 +959,12 @@ export function VideoPlayer({
     </div>
   );
 }
+
+/**
+ * Memoized VideoPlayer for optimal feed scroll performance
+ * Prevents expensive HLS initialization and video DOM updates on parent re-renders
+ */
+export const VideoPlayer = React.memo(
+  VideoPlayerComponent,
+  areVideoPlayerPropsEqual,
+);

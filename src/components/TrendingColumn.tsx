@@ -8,7 +8,7 @@ interface TrendingColumnProps {
   onSearchTopic?: (topic: string) => void;
 }
 
-export const TrendingColumn: React.FC<TrendingColumnProps> = ({
+const TrendingColumnComponent: React.FC<TrendingColumnProps> = ({
   isFocused: _isFocused = false,
   onSearchTopic,
 }) => {
@@ -202,6 +202,13 @@ export const TrendingColumn: React.FC<TrendingColumnProps> = ({
     </div>
   );
 };
+
+/**
+ * Memoized TrendingColumn for optimal SkyDeck performance
+ */
+export const TrendingColumn = React.memo(TrendingColumnComponent);
+
+TrendingColumn.displayName = "TrendingColumn";
 
 // Individual trending item component
 interface TrendingItemProps {
