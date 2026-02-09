@@ -341,7 +341,6 @@ describe("ModerationContext", () => {
       });
 
       // Mock setItem to throw on the second call (first is for muted users initialization, second is for muted threads)
-      let callCount = 0;
       vi.mocked(batchedStorage.setItem).mockImplementation((key, value) => {
         if (key === "shadowsky_muted_threads") {
           throw new Error("Storage quota exceeded");

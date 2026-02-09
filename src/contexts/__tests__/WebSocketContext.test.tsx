@@ -117,6 +117,12 @@ class MockWebSocket {
 
 type ServiceEventHandler = (event: WebSocketMessage) => void;
 
+// Permissive message type for mock - real service enforces stricter types
+type MockWebSocketMessage = {
+  type: WebSocketEventType;
+  [key: string]: unknown;
+};
+
 class MockWebSocketService {
   private eventHandlers: Map<WebSocketEventType, ServiceEventHandler[]> =
     new Map();
@@ -166,10 +172,12 @@ class MockWebSocketService {
     }
   }
 
-  emit(event: WebSocketEventType, data: WebSocketMessage): void {
+  emit(event: WebSocketEventType, data: MockWebSocketMessage): void {
     const handlers = this.eventHandlers.get(event);
     if (handlers) {
-      handlers.forEach((handler) => handler(data));
+      handlers.forEach((handler) =>
+        handler(data as unknown as WebSocketMessage),
+      );
     }
   }
 
@@ -312,19 +320,13 @@ function createWrapper(
       login: vi.fn(),
       refreshSession: vi.fn(),
       isLoading: false,
-      error: null,
-      user: null,
-      isFirstTimeUser: false,
       switchAccount: vi.fn(),
-      removeAccount: vi.fn(),
-      accounts: [],
-      clearAllAccounts: vi.fn(),
       authMethod: "app-password" as const,
       isOAuthAvailable: false,
       loginWithOAuth: vi.fn(),
       handleOAuthCallback: vi.fn(),
-      signOutFromOAuth: vi.fn(),
-      supports2FA: false,
+      client: {} as any,
+      agent: null,
     };
 
     return (
@@ -401,7 +403,7 @@ describe("WebSocketContext", () => {
   describe("Connection establishment", () => {
     it("should initialize and connect when authenticated", async () => {
       const wrapper = createWrapper(true);
-      const { result } = renderHook(() => useWebSocket(), { wrapper });
+      renderHook(() => useWebSocket(), { wrapper });
 
       await waitFor(
         () => {

@@ -27,6 +27,7 @@ describe("api-auth", () => {
     email: "test@example.com",
     accessJwt: "access-token",
     refreshJwt: "refresh-token",
+    active: true,
   };
 
   beforeEach(() => {
@@ -63,7 +64,7 @@ describe("api-auth", () => {
 
     it("should return null for session without DID", () => {
       const sessionWithoutDid = { ...mockSession, did: undefined };
-      setApiAuthSession(sessionWithoutDid as Session);
+      setApiAuthSession(sessionWithoutDid as unknown as Session);
 
       expect(getCurrentUserDid()).toBeNull();
     });
@@ -82,7 +83,7 @@ describe("api-auth", () => {
 
     it("should return false for session without DID", () => {
       const sessionWithoutDid = { ...mockSession, did: undefined };
-      setApiAuthSession(sessionWithoutDid as Session);
+      setApiAuthSession(sessionWithoutDid as unknown as Session);
 
       expect(isApiAuthenticated()).toBe(false);
     });

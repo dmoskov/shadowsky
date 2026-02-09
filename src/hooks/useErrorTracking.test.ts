@@ -11,7 +11,7 @@
 
 import { renderHook } from "@testing-library/react";
 import type { ErrorInfo } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useErrorTracking } from "./useErrorTracking";
 
 describe("useErrorTracking", () => {
@@ -189,7 +189,7 @@ describe("useErrorTracking", () => {
     }).not.toThrow();
 
     expect(console.error).toHaveBeenCalledWith(
-      "Failed to store error:",
+      "Failed to store error in localStorage:",
       expect.any(Error),
     );
   });

@@ -117,15 +117,16 @@ function createMockPost(
  */
 function createMockBookmark(uri: string): Bookmark {
   return {
+    id: `bookmark-${uri}`,
     postUri: uri,
+    postCid: `cid-${uri}`,
     text: `Test post content for ${uri}`,
     author: {
       did: `did:plc:test`,
       handle: "test.bsky.social",
       displayName: "Test User",
     },
-    createdAt: new Date().toISOString(),
-    indexedAt: new Date().toISOString(),
+    savedAt: new Date().toISOString(),
   };
 }
 
