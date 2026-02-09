@@ -141,6 +141,7 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
       window.removeEventListener("offline", handleOffline);
       if (reconnectedTimeoutRef.current) {
         clearTimeout(reconnectedTimeoutRef.current);
+        reconnectedTimeoutRef.current = null;
       }
     };
   }, [pendingActionCount, isSyncing]);
@@ -173,9 +174,11 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
     return () => {
       if (syncCompleteTimeoutRef.current) {
         clearTimeout(syncCompleteTimeoutRef.current);
+        syncCompleteTimeoutRef.current = null;
       }
       if (syncHideTimeoutRef.current) {
         clearTimeout(syncHideTimeoutRef.current);
+        syncHideTimeoutRef.current = null;
       }
     };
   }, [connectionState, isSyncing, pendingActionCount, onSyncComplete]);
@@ -502,6 +505,7 @@ export function useOnlineStatus(): {
       window.removeEventListener("offline", handleOffline);
       if (statusTimeoutRef.current) {
         clearTimeout(statusTimeoutRef.current);
+        statusTimeoutRef.current = null;
       }
     };
   }, [isOnline]);
