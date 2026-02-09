@@ -95,10 +95,15 @@ describe("useStorageErrorManager", () => {
 
     const { result } = renderHook(() => useStorageErrorManager());
 
-    const originalError = new Error("Network timeout");
+    interface NetworkError extends Error {
+      code?: string;
+      status?: number;
+    }
+
+    const originalError: NetworkError = new Error("Network timeout");
     originalError.stack = "Error: Network timeout\n  at fetch";
-    (originalError as any).code = "ETIMEDOUT";
-    (originalError as any).status = 504;
+    originalError.code = "ETIMEDOUT";
+    originalError.status = 504;
 
     result.current.handleStorageError(originalError, "fetch records");
 

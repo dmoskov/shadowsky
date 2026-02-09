@@ -1,7 +1,18 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mocked,
+} from "vitest";
 import { createMockAgent } from "../../tests/mocks/atproto";
+import type { ColumnType } from "../../types/column";
+import type { AppPreferencesService } from "../app-preferences-service";
 import { ColumnAtProtoBackend } from "./column-atproto-backend";
-import { Column } from "./types";
+import type { ColumnStorageBackend } from "./column-storage-backend";
+import type { Column } from "./types";
 
 // Mock the app preferences service
 vi.mock("../app-preferences-service", () => ({
@@ -15,11 +26,11 @@ vi.mock("../app-preferences-service", () => ({
 describe("ColumnAtProtoBackend", () => {
   let backend: ColumnAtProtoBackend;
   let mockAgent: ReturnType<typeof createMockAgent>;
-  let mockAppPreferencesService: any;
+  let mockAppPreferencesService: Mocked<AppPreferencesService>;
 
-  const createMockColumn = (id: string, type: string = "feed"): Column => ({
+  const createMockColumn = (id: string, type: ColumnType = "feed"): Column => ({
     id,
-    type: type as any,
+    type,
     title: `Column ${id}`,
     data: type === "feed" ? "at://feed/123" : undefined,
   });
@@ -392,7 +403,7 @@ describe("ColumnAtProtoBackend", () => {
             createMockColumn("col1", "feed"),
             createMockColumn("col2", "notifications"),
           ]),
-      } as any;
+      } as unknown as ColumnStorageBackend;
 
       await backend.migrateFrom(sourceBackend);
 

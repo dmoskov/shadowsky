@@ -17,25 +17,25 @@ export const createMockAgent = (overrides?: Partial<AtpAgent>): AtpAgent => {
             createRecord: vi.fn().mockResolvedValue({
               uri: "at://did:plc:testuser123/com.shadowsky.draft/draft-123",
               cid: "mock-cid",
-            }) as any,
+            }),
             getRecord: vi.fn().mockResolvedValue({
               data: {
                 uri: "at://did:plc:testuser123/com.shadowsky.draft/draft-123",
                 cid: "mock-cid",
                 value: {},
               },
-            }) as any,
+            }),
             listRecords: vi.fn().mockResolvedValue({
               data: {
                 records: [],
                 cursor: undefined,
               },
-            }) as any,
+            }),
             putRecord: vi.fn().mockResolvedValue({
               uri: "at://did:plc:testuser123/com.shadowsky.draft/draft-123",
               cid: "mock-cid",
-            }) as any,
-            deleteRecord: vi.fn().mockResolvedValue({}) as any,
+            }),
+            deleteRecord: vi.fn().mockResolvedValue({}),
           },
         },
       },
@@ -46,14 +46,14 @@ export const createMockAgent = (overrides?: Partial<AtpAgent>): AtpAgent => {
               data: {
                 preferences: [],
               },
-            }) as any,
-            putPreferences: vi.fn().mockResolvedValue({}) as any,
+            }),
+            putPreferences: vi.fn().mockResolvedValue({}),
           },
         },
       },
     },
     ...overrides,
-  } as any;
+  } as AtpAgent;
 
   return mockAgent;
 };

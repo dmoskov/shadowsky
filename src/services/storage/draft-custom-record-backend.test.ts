@@ -5,7 +5,7 @@ import { DraftCustomRecordBackend } from "./draft-custom-record-backend";
 
 describe("DraftCustomRecordBackend", () => {
   let backend: DraftCustomRecordBackend;
-  let mockAgent: any;
+  let mockAgent: ReturnType<typeof createMockAgent>;
   let errorCallback: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -39,7 +39,7 @@ describe("DraftCustomRecordBackend", () => {
       backend.setErrorCallback(errorCallback);
 
       // Force an error by making the API call fail
-      mockAgent.api.com.atproto.repo.listRecords.mockRejectedValue(
+      vi.mocked(mockAgent.api.com.atproto.repo.listRecords).mockRejectedValue(
         new Error("API Error"),
       );
 
@@ -66,6 +66,7 @@ describe("DraftCustomRecordBackend", () => {
       const mockRecords = [
         {
           uri: "at://did:plc:testuser123/com.shadowsky.draft/draft-1",
+          cid: "mock-cid-1",
           value: {
             $type: "com.shadowsky.draft",
             id: "draft-1",
@@ -77,6 +78,7 @@ describe("DraftCustomRecordBackend", () => {
         },
         {
           uri: "at://did:plc:testuser123/com.shadowsky.draft/draft-2",
+          cid: "mock-cid-2",
           value: {
             $type: "com.shadowsky.draft",
             id: "draft-2",
@@ -88,7 +90,9 @@ describe("DraftCustomRecordBackend", () => {
         },
       ];
 
-      mockAgent.api.com.atproto.repo.listRecords.mockResolvedValue({
+      vi.mocked(mockAgent.api.com.atproto.repo.listRecords).mockResolvedValue({
+        success: true,
+        headers: {},
         data: {
           records: mockRecords,
           cursor: undefined,
@@ -104,7 +108,7 @@ describe("DraftCustomRecordBackend", () => {
 
     it("should handle API errors gracefully", async () => {
       backend.setErrorCallback(errorCallback);
-      mockAgent.api.com.atproto.repo.listRecords.mockRejectedValue(
+      vi.mocked(mockAgent.api.com.atproto.repo.listRecords).mockRejectedValue(
         new Error("Network error"),
       );
 
@@ -133,7 +137,9 @@ describe("DraftCustomRecordBackend", () => {
         updatedAt: "2024-01-01T00:00:00Z",
       };
 
-      mockAgent.api.com.atproto.repo.getRecord.mockResolvedValue({
+      vi.mocked(mockAgent.api.com.atproto.repo.getRecord).mockResolvedValue({
+        success: true,
+        headers: {},
         data: {
           uri: "at://did:plc:testuser123/com.shadowsky.draft/draft-123",
           cid: "mock-cid",
@@ -159,7 +165,7 @@ describe("DraftCustomRecordBackend", () => {
     });
 
     it("should return undefined when draft not found", async () => {
-      mockAgent.api.com.atproto.repo.getRecord.mockRejectedValue(
+      vi.mocked(mockAgent.api.com.atproto.repo.getRecord).mockRejectedValue(
         new Error("Record not found"),
       );
 
@@ -198,7 +204,7 @@ describe("DraftCustomRecordBackend", () => {
 
     it("should handle creation errors", async () => {
       backend.setErrorCallback(errorCallback);
-      mockAgent.api.com.atproto.repo.createRecord.mockRejectedValue(
+      vi.mocked(mockAgent.api.com.atproto.repo.createRecord).mockRejectedValue(
         new Error("Creation failed"),
       );
 
@@ -271,6 +277,7 @@ describe("DraftCustomRecordBackend", () => {
       const mockRecords = [
         {
           uri: "at://did:plc:testuser123/com.shadowsky.draft/draft-1",
+          cid: "mock-cid-1",
           value: {
             $type: "com.shadowsky.draft",
             id: "draft-1",
@@ -282,6 +289,7 @@ describe("DraftCustomRecordBackend", () => {
         },
         {
           uri: "at://did:plc:testuser123/com.shadowsky.draft/draft-2",
+          cid: "mock-cid-2",
           value: {
             $type: "com.shadowsky.draft",
             id: "draft-2",
@@ -293,7 +301,9 @@ describe("DraftCustomRecordBackend", () => {
         },
       ];
 
-      mockAgent.api.com.atproto.repo.listRecords.mockResolvedValue({
+      vi.mocked(mockAgent.api.com.atproto.repo.listRecords).mockResolvedValue({
+        success: true,
+        headers: {},
         data: {
           records: mockRecords,
           cursor: undefined,

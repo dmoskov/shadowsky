@@ -48,7 +48,7 @@ vi.mock("@bsky/shared", () => ({
 // Mock the Agent constructor from @atproto/api
 vi.mock("@atproto/api", () => ({
   Agent: vi.fn().mockImplementation(() => ({
-    api: {} as any,
+    api: {},
   })),
 }));
 
@@ -63,16 +63,19 @@ describe("hasExistingOAuthSession", () => {
 
   beforeEach(() => {
     // Reset window.location
-    delete (window as any).location;
-    window.location = {
-      search: "",
-      href: "",
-    } as any;
+    Object.defineProperty(window, "location", {
+      value: {
+        search: "",
+        href: "",
+      },
+      writable: true,
+      configurable: true,
+    });
 
     // Mock indexedDB methods
     mockOpen = vi.fn();
     mockDeleteDatabase = vi.fn();
-    (global as any).indexedDB = {
+    (global as Record<string, unknown>).indexedDB = {
       open: mockOpen,
       deleteDatabase: mockDeleteDatabase,
     };
@@ -110,7 +113,8 @@ describe("hasExistingOAuthSession", () => {
 
   describe("IndexedDB availability", () => {
     it("should return false if IndexedDB is not available", async () => {
-      delete (global as any).indexedDB;
+      // @ts-expect-error - Deleting indexedDB for testing
+      delete global.indexedDB;
       const result = await hasExistingOAuthSession();
       expect(result).toBe(false);
     });
@@ -312,13 +316,16 @@ describe("OAuthService", () => {
     oauthService.eventListeners = new Map();
 
     // Reset window.location
-    delete (window as any).location;
-    window.location = {
-      search: "",
-      href: "",
-      origin: "https://shadowsky.io",
-      hostname: "shadowsky.io",
-    } as any;
+    Object.defineProperty(window, "location", {
+      value: {
+        search: "",
+        href: "",
+        origin: "https://shadowsky.io",
+        hostname: "shadowsky.io",
+      },
+      writable: true,
+      configurable: true,
+    });
 
     // Reset mock session
     mockSession = {
