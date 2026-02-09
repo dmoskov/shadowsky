@@ -13,6 +13,7 @@ import { NotificationSettings } from "../components/settings/NotificationSetting
 import { PerformanceSettings } from "../components/settings/PerformanceSettings";
 import { PrivacySettings } from "../components/settings/PrivacySettings";
 import { SettingsLayout } from "../components/settings/SettingsLayout";
+import { StorageManagementSettings } from "../components/settings/StorageManagementSettings";
 
 export const Settings = () => {
   const { section } = useParams<{ section?: string }>();
@@ -37,6 +38,8 @@ export const Settings = () => {
         return <ContentModerationSettings />;
       case "data":
         return <DataSettings />;
+      case "storage":
+        return <StorageManagementSettings />;
       case "media-cache":
         return <MediaCacheSettings />;
       case "moderation-history":

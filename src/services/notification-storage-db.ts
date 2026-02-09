@@ -181,36 +181,69 @@ export class NotificationStorageDB {
 
   // Batch save notifications
   async saveNotifications(notifications: Notification[]): Promise<void> {
-    return withIndexedDBRetry(async () => {
-      this.ensureDB();
+    try {
+      return await withIndexedDBRetry(async () => {
+        this.ensureDB();
 
-      const transaction = this.db!.transaction(
-        [this.NOTIFICATIONS_STORE],
-        "readwrite",
-      );
-      const store = transaction.objectStore(this.NOTIFICATIONS_STORE);
+        const transaction = this.db!.transaction(
+          [this.NOTIFICATIONS_STORE],
+          "readwrite",
+        );
+        const store = transaction.objectStore(this.NOTIFICATIONS_STORE);
 
-      return new Promise<void>((resolve, reject) => {
-        let completed = 0;
+        return new Promise<void>((resolve, reject) => {
+          let completed = 0;
 
-        notifications.forEach((notification) => {
-          const request = store.put(notification);
+          notifications.forEach((notification) => {
+            const request = store.put(notification);
 
-          request.onsuccess = () => {
-            completed++;
-            if (completed === notifications.length) {
-              resolve();
-            }
-          };
+            request.onsuccess = () => {
+              completed++;
+              if (completed === notifications.length) {
+                resolve();
+              }
+            };
 
-          request.onerror = () => reject(request.error);
+            request.onerror = () => reject(request.error);
+          });
+
+          if (notifications.length === 0) {
+            resolve();
+          }
         });
+      }, "saveNotifications");
+    } catch (error) {
+      // Handle quota exceeded error specifically
+      if (
+        error instanceof Error &&
+        (error.name === "QuotaExceededError" ||
+          error.message.toLowerCase().includes("quota"))
+      ) {
+        debug.error(
+          "Storage quota exceeded while saving notifications. Running emergency cleanup...",
+        );
 
-        if (notifications.length === 0) {
-          resolve();
+        // Dynamically import to avoid circular dependency
+        const { IndexedDBCleanupService } =
+          await import("./indexeddb-cleanup-service");
+        const cleanupService = IndexedDBCleanupService.getInstance();
+        const recovered = await cleanupService.handleQuotaExceeded();
+
+        if (recovered) {
+          debug.log(
+            "Cleanup freed space. Retrying notification save operation...",
+          );
+          // Retry once after cleanup
+          return this.saveNotifications(notifications);
+        } else {
+          throw new Error(
+            "Storage quota exceeded and cleanup could not free enough space. Please clear old notifications manually in settings.",
+          );
         }
-      });
-    }, "saveNotifications");
+      }
+
+      throw error;
+    }
   }
 
   // Get notification by URI
