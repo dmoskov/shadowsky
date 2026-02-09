@@ -64,9 +64,7 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
   const syncCompleteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
-  const syncHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
+  const syncHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const backoffTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Check cached content availability
