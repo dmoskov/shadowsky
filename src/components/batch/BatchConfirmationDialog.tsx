@@ -226,7 +226,7 @@ export const BatchConfirmationDialog: React.FC<
               <ul className="list-inside list-disc space-y-1">
                 {estimation.suggestions.map((suggestion, index) => (
                   <li
-                    key={index}
+                    key={`suggestion-${index}-${suggestion.substring(0, 20)}`}
                     className="text-sm text-blue-700 dark:text-blue-300"
                   >
                     {suggestion}

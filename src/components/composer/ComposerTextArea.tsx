@@ -96,7 +96,7 @@ export const ComposerTextArea: React.FC<ComposerTextAreaProps> = ({
           <div className="flex flex-wrap gap-2">
             {hashtagSuggestions.map((suggestion, index) => (
               <button
-                key={index}
+                key={`hashtag-${suggestion.tag}-${index}`}
                 onClick={() => onApplyHashtag?.(suggestion.tag)}
                 disabled={isPosting}
                 className="group relative flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-all hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 dark:hover:bg-opacity-20"

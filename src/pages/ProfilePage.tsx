@@ -1231,51 +1231,48 @@ export default function ProfilePage() {
                               Content Themes
                             </h3>
                             <div className="space-y-3">
-                              {sonnetAnalysis.contentThemes.map(
-                                (theme, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="rounded-lg p-3"
-                                    style={{
-                                      backgroundColor:
-                                        "var(--bsky-bg-tertiary)",
-                                    }}
-                                  >
-                                    <div className="mb-1 flex items-center gap-2">
-                                      <span
-                                        className="font-medium"
-                                        style={{
-                                          color: "var(--bsky-text-primary)",
-                                        }}
-                                      >
-                                        {theme.theme}
-                                      </span>
-                                      <span
-                                        className="rounded-full px-2 py-0.5 text-xs"
-                                        style={{
-                                          backgroundColor:
-                                            theme.frequency === "primary"
-                                              ? "#8b5cf6"
-                                              : theme.frequency === "regular"
-                                                ? "#a78bfa"
-                                                : "#c4b5fd",
-                                          color: "white",
-                                        }}
-                                      >
-                                        {theme.frequency}
-                                      </span>
-                                    </div>
-                                    <p
-                                      className="text-sm"
+                              {sonnetAnalysis.contentThemes.map((theme) => (
+                                <div
+                                  key={theme.theme}
+                                  className="rounded-lg p-3"
+                                  style={{
+                                    backgroundColor: "var(--bsky-bg-tertiary)",
+                                  }}
+                                >
+                                  <div className="mb-1 flex items-center gap-2">
+                                    <span
+                                      className="font-medium"
                                       style={{
-                                        color: "var(--bsky-text-secondary)",
+                                        color: "var(--bsky-text-primary)",
                                       }}
                                     >
-                                      {theme.description}
-                                    </p>
+                                      {theme.theme}
+                                    </span>
+                                    <span
+                                      className="rounded-full px-2 py-0.5 text-xs"
+                                      style={{
+                                        backgroundColor:
+                                          theme.frequency === "primary"
+                                            ? "#8b5cf6"
+                                            : theme.frequency === "regular"
+                                              ? "#a78bfa"
+                                              : "#c4b5fd",
+                                        color: "white",
+                                      }}
+                                    >
+                                      {theme.frequency}
+                                    </span>
                                   </div>
-                                ),
-                              )}
+                                  <p
+                                    className="text-sm"
+                                    style={{
+                                      color: "var(--bsky-text-secondary)",
+                                    }}
+                                  >
+                                    {theme.description}
+                                  </p>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         )}
@@ -1306,7 +1303,7 @@ export default function ProfilePage() {
                                 {sonnetAnalysis.writingStyle.characteristics.map(
                                   (char, idx) => (
                                     <li
-                                      key={idx}
+                                      key={`char-${char.slice(0, 20)}-${idx}`}
                                       className="text-sm"
                                       style={{
                                         color: "var(--bsky-text-secondary)",

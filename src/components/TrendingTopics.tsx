@@ -34,7 +34,7 @@ export const TrendingTopics: React.FC<TrendingTopicsProps> = ({
         <div className="flex gap-2 overflow-x-auto pb-2">
           {[...Array(5)].map((_, i) => (
             <div
-              key={i}
+              key={`trending-skeleton-${i}`}
               className="h-8 w-24 shrink-0 animate-pulse rounded-full"
               style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
             />

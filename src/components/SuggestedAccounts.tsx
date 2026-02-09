@@ -35,7 +35,7 @@ export const SuggestedAccounts: React.FC<SuggestedAccountsProps> = ({
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <div
-              key={i}
+              key={`suggested-skeleton-${i}`}
               className="flex animate-pulse items-center gap-2 rounded-lg p-2"
               style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
             >

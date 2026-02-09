@@ -205,7 +205,7 @@ export const ImageGridPlaceholder: React.FC<ImageGridPlaceholderProps> = ({
 
         return (
           <div
-            key={i}
+            key={`image-placeholder-${i}`}
             className="placeholder-image placeholder-animated"
             style={{
               aspectRatio: aspectRatioValue,
@@ -341,7 +341,7 @@ export const TextPlaceholder: React.FC<TextPlaceholderProps> = ({
         const width = widths[i] || widths[widths.length - 1] || "100%";
         return (
           <div
-            key={i}
+            key={`text-placeholder-${i}-${width}`}
             className={`placeholder-text placeholder-animated ${sizeClass}`}
             style={{
               width: typeof width === "number" ? `${width}px` : width,

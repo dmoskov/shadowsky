@@ -382,7 +382,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
         >
           {imageEmbed.images.map((img, idx: number) => (
             <div
-              key={idx}
+              key={`bookmark-img-${img.thumb}-${idx}`}
               className="relative overflow-hidden rounded-lg bg-bsky-bg-tertiary"
             >
               <img

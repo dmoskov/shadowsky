@@ -1158,7 +1158,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                     const isEdited = editedImages.has(index);
                     return (
                       <button
-                        key={index}
+                        key={`image-thumb-${index}-${img.preview.substring(0, 20)}`}
                         onClick={() => goToImage(index)}
                         className={`relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
                           currentIndex === index

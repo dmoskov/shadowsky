@@ -170,7 +170,7 @@ export const UserMenu: React.FC = () => {
                 if (item.divider) {
                   return (
                     <div
-                      key={index}
+                      key={`menu-divider-${index}`}
                       role="separator"
                       className="my-1 border-t"
                       style={{ borderColor: "var(--bsky-border-primary)" }}
@@ -181,7 +181,7 @@ export const UserMenu: React.FC = () => {
                 const Icon = item.icon!;
                 return (
                   <button
-                    key={index}
+                    key={`menu-item-${item.label}-${index}`}
                     role="menuitem"
                     onClick={item.onClick}
                     className={`flex w-full items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-blue-50 focus-visible:bg-blue-50 focus-visible:outline-none dark:hover:bg-blue-900/20 dark:focus-visible:bg-blue-900/20 ${

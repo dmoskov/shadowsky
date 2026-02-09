@@ -38,7 +38,7 @@ export function PollDisplay({ postUri, onVote }: PollDisplayProps) {
         <div className="space-y-2">
           {[1, 2].map((i) => (
             <div
-              key={i}
+              key={`poll-skeleton-${i}`}
               className="h-10 rounded-lg"
               style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
             />

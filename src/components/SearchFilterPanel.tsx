@@ -519,7 +519,7 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
           <div className="flex flex-wrap gap-2">
             {filters.fromUsers.map((user, i) => (
               <div
-                key={i}
+                key={`from-user-${user}-${i}`}
                 className="flex min-h-[44px] items-center gap-1.5 rounded-md border px-3 py-2 text-xs"
                 style={{
                   backgroundColor: "var(--bsky-bg-secondary)",

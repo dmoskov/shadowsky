@@ -267,7 +267,7 @@ const PostImages = memo(function PostImages({
     <View style={[styles.imageContainer, gridStyle]}>
       {images.slice(0, 4).map((image, index) => (
         <Pressable
-          key={index}
+          key={image.thumb}
           onPress={() => onPress?.(index)}
           style={[
             styles.imageWrapper,

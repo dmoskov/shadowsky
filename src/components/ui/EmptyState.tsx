@@ -212,7 +212,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
               const ActionIcon = action.icon;
               return (
                 <button
-                  key={index}
+                  key={`action-compact-${action.label}-${index}`}
                   onClick={action.onClick}
                   className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                     action.variant === "secondary"
@@ -268,7 +268,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             const ActionIcon = action.icon;
             return (
               <button
-                key={index}
+                key={`action-${action.label}-${index}`}
                 onClick={action.onClick}
                 className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                   action.variant === "secondary"

@@ -418,7 +418,7 @@ const NotificationsFeedComponent: React.FC = () => {
       <div className="skeleton-stagger">
         {Array.from({ length: 8 }).map((_, i) => (
           <div
-            key={i}
+            key={`notif-skeleton-${i}`}
             className="animate-skeleton-reveal"
             style={
               {
@@ -1494,7 +1494,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                   >
                     {images.slice(0, 4).map((img, idx) => (
                       <div
-                        key={idx}
+                        key={`notif-feed-img-${img.thumb}-${idx}`}
                         className="relative overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
                         style={{
                           borderColor: "var(--bsky-border-primary)",

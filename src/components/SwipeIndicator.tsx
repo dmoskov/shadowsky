@@ -81,7 +81,7 @@ export const SwipeIndicator: React.FC = () => {
         <div className="flex space-x-1.5">
           {navigationOrder.map((_, index) => (
             <div
-              key={index}
+              key={`swipe-dot-${index}`}
               className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
                 index === currentIndex ? "w-4" : ""
               }`}

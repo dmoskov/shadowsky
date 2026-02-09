@@ -177,7 +177,7 @@ const BskyUrlEmbed: React.FC<{
                   .slice(0, 4)
                   .map((img: any, i: number) => (
                     <img
-                      key={i}
+                      key={`quote-img-${img.thumb}-${i}`}
                       src={proxifyBskyImage(img.thumb) || ""}
                       alt={img.alt || ""}
                       className="h-32 w-full rounded object-cover"
@@ -482,7 +482,10 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               const hasAltText = currentAltText && currentAltText.length > 0;
 
               return (
-                <div key={index} className={`group relative ${colSpan}`}>
+                <div
+                  key={`post-image-${image.thumb}-${index}`}
+                  className={`group relative ${colSpan}`}
+                >
                   <div
                     className="relative w-full cursor-pointer overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
                     style={{

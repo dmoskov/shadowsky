@@ -194,7 +194,7 @@ export function ImageGallery({
         <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 rounded-lg bg-black/50 p-2">
           {images.map((image, index) => (
             <button
-              key={index}
+              key={`gallery-thumb-${image.thumb}-${index}`}
               onClick={() => {
                 setCurrentIndex(index);
               }}

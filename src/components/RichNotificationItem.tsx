@@ -534,7 +534,7 @@ const MediaThumbnails: React.FC<{ thumbnails: string[] }> = React.memo(
       <div className={`mt-2 grid gap-1 ${gridCols}`}>
         {thumbnails.slice(0, 4).map((url, idx) => (
           <div
-            key={idx}
+            key={`notif-thumb-${url}-${idx}`}
             className="relative overflow-hidden rounded"
             style={{
               aspectRatio: thumbnails.length === 1 ? "16/9" : "1",

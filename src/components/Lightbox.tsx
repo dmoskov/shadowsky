@@ -167,7 +167,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
         >
           {images.map((_, idx) => (
             <button
-              key={idx}
+              key={`lightbox-dot-${idx}`}
               onClick={(e) => {
                 e.stopPropagation();
                 onNavigate(idx);

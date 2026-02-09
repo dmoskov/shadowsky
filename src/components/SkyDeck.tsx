@@ -438,7 +438,7 @@ export default function SkyDeck() {
               <div className="pointer-events-auto flex gap-1.5 rounded-full bg-black/20 px-3 py-2 dark:bg-white/20">
                 {columns.map((col, index) => (
                   <button
-                    key={index}
+                    key={`column-dot-${col.id}-${index}`}
                     onClick={() => setMobileColumnIndex(index)}
                     className={`h-2 w-2 rounded-full transition-all ${
                       index === mobileColumnIndex

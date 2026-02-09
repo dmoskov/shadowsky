@@ -1038,7 +1038,7 @@ export function DebugConsole() {
                   >
                     {storageMetrics.largestItems.map((item, idx) => (
                       <div
-                        key={idx}
+                        key={`storage-item-${item.key}-${idx}`}
                         style={{
                           display: "flex",
                           justifyContent: "space-between",
@@ -1101,7 +1101,9 @@ export function DebugConsole() {
                     }}
                   >
                     {storageHealth.recommendations.map((rec, idx) => (
-                      <li key={idx}>{rec}</li>
+                      <li key={`recommendation-${idx}-${rec.substring(0, 20)}`}>
+                        {rec}
+                      </li>
                     ))}
                   </ul>
                 </div>

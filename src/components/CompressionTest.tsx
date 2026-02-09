@@ -370,7 +370,10 @@ export function CompressionTest() {
       {results.length > 0 && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {results.map((result, i) => (
-            <div key={i} className="rounded border p-4">
+            <div
+              key={`compression-result-${result.name}-${i}`}
+              className="rounded border p-4"
+            >
               <h3 className="mb-2 font-bold">{result.name}</h3>
               <div className="mb-2 text-sm text-gray-600">
                 Size: {(result.size / 1024 / 1024).toFixed(2)} MB
