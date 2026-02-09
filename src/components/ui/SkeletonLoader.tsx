@@ -28,6 +28,15 @@ export {
  *
  * All skeletons use the bsky theme colors for consistent appearance
  * across light and dark modes.
+ *
+ * Note on key={index} Usage:
+ * This file uses index keys in Array.map() calls (7 instances). This is
+ * intentional and acceptable because:
+ * 1. Skeleton items are static placeholders with no internal state
+ * 2. Arrays are generated from fixed lengths and never reorder
+ * 3. Items are temporary and replaced by real content after loading
+ * 4. All skeleton items are identical - no unique data to track
+ * This is a legitimate use case where index keys are appropriate and efficient.
  */
 
 interface SkeletonLoaderProps {
