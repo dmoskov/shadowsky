@@ -1,5 +1,6 @@
-import { BskyAgent } from "@atproto/api";
+import { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
 import { createLogger } from "../utils/logger";
+import { Bookmark } from "./bookmark-backends/types";
 import { bookmarkServiceV2 } from "./bookmark-service-v2";
 
 const logger = createLogger("BookmarkServiceWrapper");
@@ -66,7 +67,7 @@ export const bookmarkService = {
     bookmarkServiceV2.setAgent(agent);
   },
 
-  async toggleBookmark(post: any) {
+  async toggleBookmark(post: AppBskyFeedDefs.PostView) {
     return bookmarkServiceV2.toggleBookmark(post);
   },
 
@@ -90,7 +91,7 @@ export const bookmarkService = {
     return bookmarkServiceV2.exportBookmarks();
   },
 
-  async importBookmarks(bookmarks: any[]) {
+  async importBookmarks(bookmarks: Bookmark[]) {
     return bookmarkServiceV2.importBookmarks(bookmarks);
   },
 

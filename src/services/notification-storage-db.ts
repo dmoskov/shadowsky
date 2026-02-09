@@ -626,14 +626,11 @@ export class NotificationStorageDB {
         if (allNotifications.length > 0) {
           await this.saveNotifications(allNotifications);
 
-          // Save metadata
+          // Save metadata - pages are just indices
           await this.saveMetadata({
             id: "main",
             lastFetch: parsed.metadata?.lastFetch || Date.now(),
-            pages: parsed.pages.map((p: any) => ({
-              cursor: p.cursor,
-              count: p.notifications?.length || 0,
-            })),
+            pages: parsed.pages.map((_: unknown, index: number) => index),
             totalCount: allNotifications.length,
           });
 

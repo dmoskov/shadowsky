@@ -9,6 +9,7 @@ import {
   getInteractionsService,
   getThreadService,
   type ATProtoConfig,
+  type Session,
 } from "@bsky/shared";
 import { ATProtoClientWith2FA } from "./client-with-2fa";
 
@@ -44,7 +45,7 @@ export const atProtoClient = clientWith2FA as ATProtoClient & {
     identifier: string,
     password: string,
     authFactorToken?: string,
-  ) => Promise<any>;
+  ) => Promise<Session>;
 };
 
 export const feedService = new FeedService(baseClient);

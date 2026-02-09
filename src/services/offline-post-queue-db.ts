@@ -428,10 +428,15 @@ class OfflinePostQueueDB {
       try {
         const registration = await navigator.serviceWorker.ready;
         // Check if sync is available on the registration
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if ("sync" in registration) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (registration as any).sync.register("post-sync");
+        interface ServiceWorkerRegistrationWithSync extends ServiceWorkerRegistration {
+          sync?: {
+            register(tag: string): Promise<void>;
+          };
+        }
+        const registrationWithSync =
+          registration as ServiceWorkerRegistrationWithSync;
+        if (registrationWithSync.sync) {
+          await registrationWithSync.sync.register("post-sync");
           debug.log("Registered background sync for post-sync");
         }
       } catch (error) {

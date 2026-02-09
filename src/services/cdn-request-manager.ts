@@ -370,7 +370,13 @@ export function resetCdnManager(): void {
 
 // Expose for debugging
 if (typeof window !== "undefined") {
-  (window as any).__cdnRequestManager = {
+  interface WindowWithCdnDebug extends Window {
+    __cdnRequestManager?: {
+      getStats: typeof getQueueStats;
+      reset: typeof resetCdnManager;
+    };
+  }
+  (window as WindowWithCdnDebug).__cdnRequestManager = {
     getStats: getQueueStats,
     reset: resetCdnManager,
   };

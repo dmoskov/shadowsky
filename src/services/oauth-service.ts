@@ -378,8 +378,13 @@ class OAuthService {
     if (listeners) {
       for (const callback of listeners) {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (callback as (arg: any) => void)(data);
+          if (type === "session") {
+            (callback as OAuthEventCallback)(data as OAuthState);
+          } else {
+            (callback as OAuthDeletedCallback)(
+              data as { sub: string; cause: Error },
+            );
+          }
         } catch (error) {
           debug.error(`Error in OAuth event listener (${type}):`, error);
         }

@@ -1,4 +1,4 @@
-import { BskyAgent } from "@atproto/api";
+import { AppBskyActorDefs, BskyAgent } from "@atproto/api";
 import { debug, getProfileService } from "@bsky/shared";
 import {
   getFollowerCacheDB,
@@ -64,7 +64,9 @@ export class ProfileCacheService {
         if (freshProfiles && "profiles" in freshProfiles) {
           for (const profile of freshProfiles.profiles) {
             if (profile) {
-              const cachedProfile = profileToCached(profile as any);
+              const cachedProfile = profileToCached(
+                profile as AppBskyActorDefs.ProfileViewDetailed,
+              );
               // Mark as from API
               profileMap.set(profile.handle, {
                 ...cachedProfile,
