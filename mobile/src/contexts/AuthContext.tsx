@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -51,49 +52,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const checkTimerRef = useRef<NodeJS.Timeout | null>(null);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
 
-  // Load session from storage on mount
-  useEffect(() => {
-    loadSession();
-    loadAccounts();
-
-    // Listen for app state changes to refresh session when app comes to foreground
-    const subscription = AppState.addEventListener(
-      "change",
-      handleAppStateChange,
-    );
-
-    return () => {
-      subscription.remove();
-      clearTimers();
-    };
-  }, []);
-
-  // Set up automatic session refresh when authenticated
-  useEffect(() => {
-    if (session && !isLoading) {
-      setupSessionRefresh();
-    } else {
-      clearTimers();
-    }
-
-    return () => {
-      clearTimers();
-    };
-  }, [session, isLoading]);
-
-  const handleAppStateChange = (nextAppState: AppStateStatus) => {
-    // When app comes to foreground, check session validity
-    if (
-      appStateRef.current.match(/inactive|background/) &&
-      nextAppState === "active" &&
-      session
-    ) {
-      checkSessionValidity();
-    }
-    appStateRef.current = nextAppState;
-  };
-
-  const clearTimers = () => {
+  const clearTimers = useCallback(() => {
     if (refreshTimerRef.current) {
       clearInterval(refreshTimerRef.current);
       refreshTimerRef.current = null;
@@ -102,28 +61,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
       clearInterval(checkTimerRef.current);
       checkTimerRef.current = null;
     }
-  };
+  }, []);
 
-  const setupSessionRefresh = () => {
-    // Clear existing timers
-    clearTimers();
+  const signOut = useCallback(async () => {
+    try {
+      clearTimers(); // Stop automatic refresh timers
+      await authSignOut();
+      setSession(null);
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+      throw error;
+    }
+  }, [clearTimers]);
 
-    // Set up periodic session refresh
-    refreshTimerRef.current = setInterval(() => {
-      refreshSession().catch((error) => {
-        console.error("Automatic session refresh failed:", error);
-      });
-    }, SESSION_REFRESH_INTERVAL);
-
-    // Set up periodic session validity check
-    checkTimerRef.current = setInterval(() => {
-      checkSessionValidity().catch((error) => {
-        console.error("Session validity check failed:", error);
-      });
-    }, SESSION_CHECK_INTERVAL);
-  };
-
-  const checkSessionValidity = async () => {
+  const checkSessionValidity = useCallback(async () => {
     if (!session) {
       return;
     }
@@ -143,7 +94,113 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await signOut();
       }
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, signOut]);
+
+  const refreshSession = useCallback(async () => {
+    if (!session) {
+      return;
+    }
+
+    try {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
+
+      // BskyAgent handles token refresh automatically when needed
+      // We just need to verify the session and update stored data
+      const currentSession = agent.session;
+
+      if (currentSession) {
+        const updatedSession: StoredSession = {
+          ...session,
+          accessJwt: currentSession.accessJwt,
+          refreshJwt: currentSession.refreshJwt,
+        };
+
+        // Only update if tokens actually changed
+        if (
+          updatedSession.accessJwt !== session.accessJwt ||
+          updatedSession.refreshJwt !== session.refreshJwt
+        ) {
+          // Persist updated session
+          await AsyncStorage.setItem(
+            AUTH_STORAGE_KEY,
+            JSON.stringify(updatedSession),
+          );
+          setSession(updatedSession);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to refresh session:", error);
+      // If refresh fails, sign out
+      await signOut();
+      throw error;
+    }
+  }, [session, signOut]);
+
+  const setupSessionRefresh = useCallback(() => {
+    // Clear existing timers
+    clearTimers();
+
+    // Set up periodic session refresh
+    refreshTimerRef.current = setInterval(() => {
+      refreshSession().catch((error) => {
+        console.error("Automatic session refresh failed:", error);
+      });
+    }, SESSION_REFRESH_INTERVAL);
+
+    // Set up periodic session validity check
+    checkTimerRef.current = setInterval(() => {
+      checkSessionValidity().catch((error) => {
+        console.error("Session validity check failed:", error);
+      });
+    }, SESSION_CHECK_INTERVAL);
+  }, [clearTimers, refreshSession, checkSessionValidity]);
+
+  const handleAppStateChange = useCallback(
+    (nextAppState: AppStateStatus) => {
+      // When app comes to foreground, check session validity
+      if (
+        appStateRef.current.match(/inactive|background/) &&
+        nextAppState === "active" &&
+        session
+      ) {
+        checkSessionValidity();
+      }
+      appStateRef.current = nextAppState;
+    },
+    [session, checkSessionValidity],
+  );
+
+  // Load session from storage on mount
+  useEffect(() => {
+    loadSession();
+    loadAccounts();
+
+    // Listen for app state changes to refresh session when app comes to foreground
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange,
+    );
+
+    return () => {
+      subscription.remove();
+      clearTimers();
+    };
+  }, [handleAppStateChange, clearTimers]);
+
+  // Set up automatic session refresh when authenticated
+  useEffect(() => {
+    if (session && !isLoading) {
+      setupSessionRefresh();
+    } else {
+      clearTimers();
+    }
+
+    return () => {
+      clearTimers();
+    };
+  }, [session, isLoading, setupSessionRefresh, clearTimers]);
 
   const loadSession = async () => {
     try {
@@ -196,57 +253,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signOut = async () => {
-    try {
-      clearTimers(); // Stop automatic refresh timers
-      await authSignOut();
-      setSession(null);
-    } catch (error) {
-      console.error("Failed to sign out:", error);
-      throw error;
-    }
-  };
-
-  const refreshSession = async () => {
-    if (!session) {
-      return;
-    }
-
-    try {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
-
-      // BskyAgent handles token refresh automatically when needed
-      // We just need to verify the session and update stored data
-      const currentSession = agent.session;
-
-      if (currentSession) {
-        const updatedSession: StoredSession = {
-          ...session,
-          accessJwt: currentSession.accessJwt,
-          refreshJwt: currentSession.refreshJwt,
-        };
-
-        // Only update if tokens actually changed
-        if (
-          updatedSession.accessJwt !== session.accessJwt ||
-          updatedSession.refreshJwt !== session.refreshJwt
-        ) {
-          // Persist updated session
-          await AsyncStorage.setItem(
-            AUTH_STORAGE_KEY,
-            JSON.stringify(updatedSession),
-          );
-          setSession(updatedSession);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to refresh session:", error);
-      // If refresh fails, sign out
-      await signOut();
-      throw error;
-    }
-  };
 
   const switchAccount = async (did: string) => {
     try {

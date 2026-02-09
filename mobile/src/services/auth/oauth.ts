@@ -6,10 +6,8 @@
 import { AtpSessionData } from "@atproto/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Linking } from "react-native";
-import { getAtProtoClient } from "../atproto/client";
 
 const OAUTH_STATE_KEY = "@shadowsky/oauth_state";
-const AUTH_STORAGE_KEY = "@shadowsky/auth_session";
 
 export interface OAuthState {
   state: string;
@@ -117,8 +115,8 @@ export async function handleOAuthCallback(
     // Exchange authorization code for tokens
     // Note: In production, this would call the token endpoint of the OAuth server
     // For AT Protocol, this is typically handled by the PDS
-    const service = params.iss || "https://bsky.social";
-    const client = getAtProtoClient();
+    // const service = params.iss || "https://bsky.social";
+    // const client = getAtProtoClient();
 
     // TODO: Implement proper OAuth token exchange
     // For now, this is a placeholder that shows the expected flow
