@@ -1,3 +1,9 @@
+import type {
+  ProfileView,
+  ProfileViewBasic,
+} from "@atproto/api/dist/client/types/app/bsky/actor/defs";
+import type { FeedViewPost } from "@atproto/api/dist/client/types/app/bsky/feed/defs";
+import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
 import { useQuery } from "@tanstack/react-query";
 import { format, startOfDay, subDays, subHours } from "date-fns";
 import {
@@ -16,6 +22,43 @@ import { proxifyBskyImage } from "../utils/image-proxy";
 import { BackgroundNotificationLoader } from "./BackgroundNotificationLoader";
 
 type TimeRange = "1d" | "3d" | "7d" | "4w";
+
+interface UserInteractionStats {
+  handle: string;
+  displayName?: string;
+  avatar?: string;
+  did: string;
+  likes: number;
+  replies: number;
+  reposts: number;
+  total: number;
+}
+
+interface ActivityBucket {
+  label: string;
+  time: Date;
+  posts: number;
+  replies: number;
+  reposts: number;
+  quotes: number;
+}
+
+interface AnalyticsBucket {
+  startDate: Date;
+  endDate: Date;
+  label: string;
+  likes: number;
+  reposts: number;
+  follows: number;
+  replies: number;
+  mentions: number;
+  total: number;
+}
+
+interface ExtendedNotificationPage {
+  notifications: Notification[];
+  cursor?: string;
+}
 
 export const NotificationsAnalytics: React.FC = React.memo(
   function NotificationsAnalytics() {
@@ -54,7 +97,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
         // Fetch user's recent posts to analyze their activity
 
         // Fetch multiple pages if needed to cover the time range
-        let allPosts: any[] = [];
+        let allPosts: FeedViewPost[] = [];
         let cursor: string | undefined;
         let fetchedEnough = false;
         const maxPages = 5; // Limit to prevent excessive API calls
@@ -127,8 +170,15 @@ export const NotificationsAnalytics: React.FC = React.memo(
             // Track posts with significant engagement
             if (likes > 1000 || reposts > 100) {
               const author = item.post.author;
+              const recordText =
+                typeof item.post.record === "object" &&
+                item.post.record !== null &&
+                "text" in item.post.record &&
+                typeof item.post.record.text === "string"
+                  ? item.post.record.text
+                  : "";
               topPosts.push({
-                text: item.post.record?.text?.substring(0, 100) || "[No text]",
+                text: recordText.substring(0, 100) || "[No text]",
                 likes,
                 reposts,
                 replies,
@@ -175,23 +225,11 @@ export const NotificationsAnalytics: React.FC = React.memo(
                 : subDays(new Date(), 28);
 
         // Track interactions per user
-        const userInteractions = new Map<
-          string,
-          {
-            handle: string;
-            displayName?: string;
-            avatar?: string;
-            did: string;
-            likes: number;
-            replies: number;
-            reposts: number;
-            total: number;
-          }
-        >();
+        const userInteractions = new Map<string, UserInteractionStats>();
 
         // Helper to add/update user interaction
         const addInteraction = (
-          author: any,
+          author: ProfileView | ProfileViewBasic,
           type: "likes" | "replies" | "reposts",
         ) => {
           const key = author.handle;
@@ -294,7 +332,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                 : subDays(new Date(), 28);
 
         // Fetch user's recent posts (same logic as user activity)
-        let allPosts: any[] = [];
+        let allPosts: FeedViewPost[] = [];
         let cursor: string | undefined;
         let fetchedEnough = false;
         const maxPages = 5;
@@ -324,14 +362,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
         const posts = { data: { feed: allPosts } };
 
         // Organize by time buckets
-        const buckets: Array<{
-          label: string;
-          time: Date;
-          posts: number;
-          replies: number;
-          reposts: number;
-          quotes: number;
-        }> = [];
+        const buckets: ActivityBucket[] = [];
 
         // Create time buckets based on time range
         const now = new Date();
@@ -423,7 +454,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
         // If we have extended data (from IndexedDB), use it instead of fetching
         if (hasExtendedData && extendedData?.pages) {
           const allNotifications = extendedData.pages.flatMap(
-            (page: any) => page.notifications,
+            (page: ExtendedNotificationPage) => page.notifications,
           );
           console.log("📊 Using cached data for analytics:", {
             totalNotifications: allNotifications.length,
@@ -443,7 +474,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
         }
 
         // Otherwise, fetch fresh data based on the selected time range
-        const allNotifications: any[] = [];
+        const allNotifications: Notification[] = [];
         let cursor: string | undefined;
 
         // Determine how far back to fetch based on time range
@@ -511,7 +542,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
 
       const cutoffDate = subHours(now, timeRangeHours[timeRange]);
       const filteredNotifications = notifications.notifications.filter(
-        (n: any) => new Date(n.indexedAt) >= cutoffDate,
+        (n: Notification) => new Date(n.indexedAt) >= cutoffDate,
       );
 
       console.log("📊 Analytics filtering:", {
@@ -547,17 +578,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
           : now;
 
       // Create time buckets based on the selected range
-      const buckets: Array<{
-        startDate: Date;
-        endDate: Date;
-        label: string;
-        likes: number;
-        reposts: number;
-        follows: number;
-        replies: number;
-        mentions: number;
-        total: number;
-      }> = [];
+      const buckets: AnalyticsBucket[] = [];
 
       if (timeRange === "1d") {
         // Hourly buckets for last 24 hours (group by 2-hour chunks)
@@ -649,7 +670,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
 
       // Count notifications by bucket and type
 
-      filteredNotifications.forEach((notification: any) => {
+      filteredNotifications.forEach((notification: Notification) => {
         // Parse the UTC timestamp and it will automatically convert to local timezone
         const notifDate = new Date(notification.indexedAt);
         const bucket = buckets.find(
@@ -680,7 +701,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
 
       // Find most active users (use filtered notifications, excluding subscription notifications)
       const userActivity = new Map<string, number>();
-      filteredNotifications.forEach((notification: any) => {
+      filteredNotifications.forEach((notification: Notification) => {
         // Exclude starterpack-joined notifications from "Top Users Engaging"
         if (notification.reason !== "starterpack-joined") {
           const key = notification.author.handle;
@@ -693,7 +714,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
         .slice(0, 5)
         .map(([handle, count]) => {
           const user = filteredNotifications.find(
-            (n: any) => n.author.handle === handle,
+            (n: Notification) => n.author.handle === handle,
           )?.author;
           return { handle, count, user };
         });
@@ -702,7 +723,9 @@ export const NotificationsAnalytics: React.FC = React.memo(
       const totalEngagement = filteredNotifications.length;
       const uniqueUsers =
         filteredNotifications.length > 0
-          ? new Set(filteredNotifications.map((n: any) => n.author.did)).size
+          ? new Set(
+              filteredNotifications.map((n: Notification) => n.author.did),
+            ).size
           : 0;
       const hourSpan = Math.max(
         1,
@@ -731,23 +754,27 @@ export const NotificationsAnalytics: React.FC = React.memo(
         // Get notifications from the last 24 hours for "recent" stats
         const oneDayAgo = subDays(new Date(), 1);
         const recentNotifications = notifications.notifications.filter(
-          (n: any) => new Date(n.indexedAt) >= oneDayAgo,
+          (n: Notification) => new Date(n.indexedAt) >= oneDayAgo,
         );
 
         const counts = {
           total: recentNotifications.length,
           unread: 0, // Extended data doesn't include read status
-          likes: recentNotifications.filter((n: any) => n.reason === "like")
-            .length,
-          reposts: recentNotifications.filter((n: any) => n.reason === "repost")
-            .length,
-          follows: recentNotifications.filter((n: any) => n.reason === "follow")
-            .length,
-          mentions: recentNotifications.filter(
-            (n: any) => n.reason === "mention",
+          likes: recentNotifications.filter(
+            (n: Notification) => n.reason === "like",
           ).length,
-          replies: recentNotifications.filter((n: any) => n.reason === "reply")
-            .length,
+          reposts: recentNotifications.filter(
+            (n: Notification) => n.reason === "repost",
+          ).length,
+          follows: recentNotifications.filter(
+            (n: Notification) => n.reason === "follow",
+          ).length,
+          mentions: recentNotifications.filter(
+            (n: Notification) => n.reason === "mention",
+          ).length,
+          replies: recentNotifications.filter(
+            (n: Notification) => n.reason === "reply",
+          ).length,
         };
 
         return counts;
@@ -758,21 +785,23 @@ export const NotificationsAnalytics: React.FC = React.memo(
 
       const counts = {
         total: currentStats.notifications.length,
-        unread: currentStats.notifications.filter((n: any) => !n.isRead).length,
+        unread: currentStats.notifications.filter(
+          (n: Notification) => !n.isRead,
+        ).length,
         likes: currentStats.notifications.filter(
-          (n: any) => n.reason === "like",
+          (n: Notification) => n.reason === "like",
         ).length,
         reposts: currentStats.notifications.filter(
-          (n: any) => n.reason === "repost",
+          (n: Notification) => n.reason === "repost",
         ).length,
         follows: currentStats.notifications.filter(
-          (n: any) => n.reason === "follow",
+          (n: Notification) => n.reason === "follow",
         ).length,
         mentions: currentStats.notifications.filter(
-          (n: any) => n.reason === "mention",
+          (n: Notification) => n.reason === "mention",
         ).length,
         replies: currentStats.notifications.filter(
-          (n: any) => n.reason === "reply",
+          (n: Notification) => n.reason === "reply",
         ).length,
       };
 
