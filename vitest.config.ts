@@ -33,6 +33,13 @@ export default defineConfig({
         "**/*.config.*",
         "**/mockData/**",
       ],
+      // Coverage thresholds - prevent coverage drops
+      thresholds: {
+        statements: 30,
+        branches: 30,
+        functions: 30,
+        lines: 30,
+      },
     },
   },
   resolve: {
