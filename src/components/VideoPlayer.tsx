@@ -267,6 +267,8 @@ export function VideoPlayer({
     let isCancelled = false;
     let hlsManifestHandler: (() => void) | null = null;
     let hlsErrorHandler: ((event: string, data: any) => void) | null = null;
+    let manifestParsedEvent: string | null = null;
+    let errorEvent: string | null = null;
 
     // Check if this is an HLS stream
     if (src.endsWith(".m3u8")) {
@@ -353,6 +355,8 @@ export function VideoPlayer({
 
             hlsManifestHandler = handleManifestParsed;
             hlsErrorHandler = handleHlsError;
+            manifestParsedEvent = Hls.Events.MANIFEST_PARSED;
+            errorEvent = Hls.Events.ERROR;
             hls.on(Hls.Events.MANIFEST_PARSED, handleManifestParsed);
             hls.on(Hls.Events.ERROR, handleHlsError);
           } else if (
@@ -388,13 +392,11 @@ export function VideoPlayer({
       isCancelled = true;
       if (hlsInstance) {
         // Remove event listeners before destroying
-        // Using string event names since Hls is type-only import
-        // These correspond to Hls.Events.MANIFEST_PARSED and Hls.Events.ERROR
-        if (hlsManifestHandler) {
-          hlsInstance.off("hlsManifestParsed", hlsManifestHandler);
+        if (hlsManifestHandler && manifestParsedEvent) {
+          hlsInstance.off(manifestParsedEvent as any, hlsManifestHandler);
         }
-        if (hlsErrorHandler) {
-          hlsInstance.off("hlsError", hlsErrorHandler);
+        if (hlsErrorHandler && errorEvent) {
+          hlsInstance.off(errorEvent as any, hlsErrorHandler);
         }
         hlsInstance.destroy();
       }
