@@ -2,6 +2,7 @@ import type { BskyAgent } from "@atproto/api";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { OAuthState } from "../services/oauth-service";
 import { AuthProvider, useAuth } from "./AuthContext";
 
 // Mock dependencies
@@ -177,7 +178,7 @@ const mockOAuthState = {
   did: "did:plc:oauth123",
   handle: "oauth.test.bsky.social",
   session: { did: "did:plc:oauth123" },
-} as unknown as { agent: BskyAgent; did: string; handle: string; session: { did: string } };
+} as unknown as OAuthState;
 
 // Store original location
 const originalLocationHref = window.location.href;

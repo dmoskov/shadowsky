@@ -45,17 +45,18 @@ export function useOptimisticPosts() {
           pages: oldData.pages.map((page) => ({
             ...page,
             feed: page.feed.map((item) => {
-            if (item.post?.uri === postUri) {
-              return {
-                ...item,
-                post: updater(item.post),
-              };
-            }
-            return item;
-          }),
-        })),
-      };
-    });
+              if (item.post?.uri === postUri) {
+                return {
+                  ...item,
+                  post: updater(item.post),
+                };
+              }
+              return item;
+            }),
+          })),
+        };
+      },
+    );
 
     // Update in column feed queries
     queryClient.setQueriesData(
@@ -70,27 +71,27 @@ export function useOptimisticPosts() {
             posts: (
               page as unknown as {
                 posts: Array<
-                  | AppBskyFeedDefs.PostView
-                  | { post: AppBskyFeedDefs.PostView }
+                  AppBskyFeedDefs.PostView | { post: AppBskyFeedDefs.PostView }
                 >;
               }
             ).posts.map((item) => {
-            const post =
-              "post" in item ? item.post : (item as AppBskyFeedDefs.PostView);
-            if (post.uri === postUri) {
-              if ("post" in item) {
-                return {
-                  ...item,
-                  post: updater(post),
-                };
+              const post =
+                "post" in item ? item.post : (item as AppBskyFeedDefs.PostView);
+              if (post.uri === postUri) {
+                if ("post" in item) {
+                  return {
+                    ...item,
+                    post: updater(post),
+                  };
+                }
+                return updater(post);
               }
-              return updater(post);
-            }
-            return item;
-          }),
-        })),
-      };
-    });
+              return item;
+            }),
+          })),
+        };
+      },
+    );
 
     // Update in thread queries
     queryClient.setQueriesData(
@@ -98,28 +99,33 @@ export function useOptimisticPosts() {
       (oldData: ThreadNode | undefined) => {
         if (!oldData) return oldData;
 
-        const updateThread = (thread: ThreadNode | undefined): ThreadNode | undefined => {
-        if (!thread) return thread;
+        const updateThread = (
+          thread: ThreadNode | undefined,
+        ): ThreadNode | undefined => {
+          if (!thread) return thread;
 
-        if (thread.post?.uri === postUri) {
-          return {
-            ...thread,
-            post: updater(thread.post),
-          };
-        }
+          if (thread.post?.uri === postUri) {
+            return {
+              ...thread,
+              post: updater(thread.post),
+            };
+          }
 
-        if (thread.replies?.length) {
-          return {
-            ...thread,
-            replies: thread.replies.map(updateThread).filter((r): r is ThreadNode => r !== undefined),
-          };
-        }
+          if (thread.replies?.length) {
+            return {
+              ...thread,
+              replies: thread.replies
+                .map(updateThread)
+                .filter((r): r is ThreadNode => r !== undefined),
+            };
+          }
 
-        return thread;
-      };
+          return thread;
+        };
 
-      return updateThread(oldData);
-    });
+        return updateThread(oldData);
+      },
+    );
 
     // Update in author feed queries (profile pages)
     queryClient.setQueriesData(
@@ -132,17 +138,18 @@ export function useOptimisticPosts() {
           pages: oldData.pages.map((page) => ({
             ...page,
             feed: page.feed.map((item) => {
-            if (item.post?.uri === postUri) {
-              return {
-                ...item,
-                post: updater(item.post),
-              };
-            }
-            return item;
-          }),
-        })),
-      };
-    });
+              if (item.post?.uri === postUri) {
+                return {
+                  ...item,
+                  post: updater(item.post),
+                };
+              }
+              return item;
+            }),
+          })),
+        };
+      },
+    );
   };
 
   // Helper to check if error is a network error (should queue for retry)

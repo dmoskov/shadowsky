@@ -76,15 +76,14 @@ export function useExtendedNotifications() {
 
   // Also check React Query cache for in-memory data
   const queryClient = useQueryClient();
-  const inMemoryData = queryClient.getQueryData([
-    "notifications-extended",
-  ]) as ExtendedNotificationsData | undefined;
+  const inMemoryData = queryClient.getQueryData(["notifications-extended"]) as
+    | ExtendedNotificationsData
+    | undefined;
 
   // Use in-memory data if available, otherwise use IndexedDB data
   const extendedData =
     inMemoryData?.pages && inMemoryData.pages.length > 0 ? inMemoryData : data;
-  const hasExtendedData =
-    extendedData?.pages && extendedData.pages.length > 0;
+  const hasExtendedData = extendedData?.pages && extendedData.pages.length > 0;
 
   return {
     extendedData,

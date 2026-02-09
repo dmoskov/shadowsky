@@ -21,11 +21,10 @@ export function useReplyNotificationsFromCache() {
   const queryClient = useQueryClient();
 
   // Check if we have extended notifications in cache
-  const extendedData = queryClient.getQueryData([
-    "notifications-extended",
-  ]) as ExtendedNotificationsData | undefined;
-  const hasExtendedData =
-    extendedData?.pages && extendedData.pages.length > 0;
+  const extendedData = queryClient.getQueryData(["notifications-extended"]) as
+    | ExtendedNotificationsData
+    | undefined;
+  const hasExtendedData = extendedData?.pages && extendedData.pages.length > 0;
 
   // Extract reply notifications from extended data
   const cachedReplyNotifications = useQuery({

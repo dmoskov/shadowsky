@@ -1,6 +1,7 @@
 import type { BskyAgent } from "@atproto/api";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { StandardErrorResponse } from "../services/atproto/error-handler";
+import { ATProtoErrorCode } from "../services/atproto/error-handler";
 import {
   VideoUploadService,
   type VideoUploadResult,
@@ -122,7 +123,7 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
 
       if (!videoServiceRef.current) {
         const error: StandardErrorResponse = {
-          code: "CLIENT_BAD_REQUEST" as StandardErrorCode,
+          code: "CLIENT_BAD_REQUEST" as ATProtoErrorCode,
           message:
             "Video service not initialized. Please ensure you're logged in.",
           context: { timestamp: new Date().toISOString() },
@@ -152,7 +153,7 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
         );
 
         const error: StandardErrorResponse = {
-          code: "CLIENT_BAD_REQUEST" as StandardErrorCode,
+          code: "CLIENT_BAD_REQUEST" as ATProtoErrorCode,
           message: validationResult.error.message,
           context: {
             ...validationResult.error.context,
@@ -276,7 +277,7 @@ export function useVideoUploadManager(agent: BskyAgent | null) {
           err.code && err.message
             ? (error as StandardErrorResponse)
             : {
-                code: "UNKNOWN" as StandardErrorCode,
+                code: "UNKNOWN" as ATProtoErrorCode,
                 message: err.message || "Unknown upload error",
                 context: {
                   uploadId: uploadId || undefined,
