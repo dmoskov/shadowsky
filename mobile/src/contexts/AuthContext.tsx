@@ -1,19 +1,27 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
   createContext,
-  useContext,
-  useState,
-  useEffect,
   ReactNode,
-} from 'react';
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { AppState, AppStateStatus } from "react-native";
+import { getAtProtoClient } from "../services/atproto/client";
 import {
-  signInWithPassword,
-  resumeSession,
-  signOut as authSignOut,
-  StoredSession,
   AuthAccount,
+  signOut as authSignOut,
   getAccounts,
-} from '../services/auth/auth-service';
-import {getAtProtoClient} from '../services/atproto/client';
+  resumeSession,
+  signInWithPassword,
+  StoredSession,
+} from "../services/auth/auth-service";
+import * as OAuthService from "../services/auth/oauth";
+
+const AUTH_STORAGE_KEY = "@shadowsky/auth_session";
+const SESSION_REFRESH_INTERVAL = 50 * 60 * 1000; // Refresh every 50 minutes
+const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // Check session validity every 5 minutes
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -21,8 +29,11 @@ interface AuthContextType {
   session: StoredSession | null;
   account: AuthAccount | null;
   signIn: (identifier: string, password: string) => Promise<void>;
+  signInWithOAuth: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  accounts: AuthAccount[];
+  switchAccount: (did: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,14 +42,108 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-export function AuthProvider({children}: AuthProviderProps) {
+export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<StoredSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [accounts, setAccounts] = useState<AuthAccount[]>([]);
+
+  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const checkTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
 
   // Load session from storage on mount
   useEffect(() => {
     loadSession();
+    loadAccounts();
+
+    // Listen for app state changes to refresh session when app comes to foreground
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange,
+    );
+
+    return () => {
+      subscription.remove();
+      clearTimers();
+    };
   }, []);
+
+  // Set up automatic session refresh when authenticated
+  useEffect(() => {
+    if (session && !isLoading) {
+      setupSessionRefresh();
+    } else {
+      clearTimers();
+    }
+
+    return () => {
+      clearTimers();
+    };
+  }, [session, isLoading]);
+
+  const handleAppStateChange = (nextAppState: AppStateStatus) => {
+    // When app comes to foreground, check session validity
+    if (
+      appStateRef.current.match(/inactive|background/) &&
+      nextAppState === "active" &&
+      session
+    ) {
+      checkSessionValidity();
+    }
+    appStateRef.current = nextAppState;
+  };
+
+  const clearTimers = () => {
+    if (refreshTimerRef.current) {
+      clearInterval(refreshTimerRef.current);
+      refreshTimerRef.current = null;
+    }
+    if (checkTimerRef.current) {
+      clearInterval(checkTimerRef.current);
+      checkTimerRef.current = null;
+    }
+  };
+
+  const setupSessionRefresh = () => {
+    // Clear existing timers
+    clearTimers();
+
+    // Set up periodic session refresh
+    refreshTimerRef.current = setInterval(() => {
+      refreshSession().catch((error) => {
+        console.error("Automatic session refresh failed:", error);
+      });
+    }, SESSION_REFRESH_INTERVAL);
+
+    // Set up periodic session validity check
+    checkTimerRef.current = setInterval(() => {
+      checkSessionValidity().catch((error) => {
+        console.error("Session validity check failed:", error);
+      });
+    }, SESSION_CHECK_INTERVAL);
+  };
+
+  const checkSessionValidity = async () => {
+    if (!session) {
+      return;
+    }
+
+    try {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
+
+      // Try to make a simple API call to verify session is valid
+      await agent.getProfile({ actor: session.did });
+    } catch (error) {
+      console.warn("Session appears invalid, attempting refresh:", error);
+      try {
+        await refreshSession();
+      } catch (refreshError) {
+        console.error("Session refresh failed, signing out:", refreshError);
+        await signOut();
+      }
+    }
+  };
 
   const loadSession = async () => {
     try {
@@ -47,9 +152,18 @@ export function AuthProvider({children}: AuthProviderProps) {
         setSession(restoredSession);
       }
     } catch (error) {
-      console.error('Failed to load auth session:', error);
+      console.error("Failed to load auth session:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadAccounts = async () => {
+    try {
+      const loadedAccounts = await getAccounts();
+      setAccounts(loadedAccounts);
+    } catch (error) {
+      console.error("Failed to load accounts:", error);
     }
   };
 
@@ -58,8 +172,24 @@ export function AuthProvider({children}: AuthProviderProps) {
       setIsLoading(true);
       const newSession = await signInWithPassword(identifier, password);
       setSession(newSession);
+      await loadAccounts(); // Reload accounts list
     } catch (error) {
-      console.error('Failed to sign in:', error);
+      console.error("Failed to sign in:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signInWithOAuth = async () => {
+    try {
+      setIsLoading(true);
+      // Start OAuth flow
+      await OAuthService.startOAuthFlow();
+      // The actual session creation happens in the OAuth callback handler
+      // which should be implemented in OAuthCallbackScreen
+    } catch (error) {
+      console.error("Failed to start OAuth flow:", error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -68,32 +198,78 @@ export function AuthProvider({children}: AuthProviderProps) {
 
   const signOut = async () => {
     try {
+      clearTimers(); // Stop automatic refresh timers
       await authSignOut();
       setSession(null);
     } catch (error) {
-      console.error('Failed to sign out:', error);
+      console.error("Failed to sign out:", error);
       throw error;
     }
   };
 
   const refreshSession = async () => {
+    if (!session) {
+      return;
+    }
+
     try {
       const client = getAtProtoClient();
-      const refreshedData = await client.refreshSession();
+      const agent = client.getAgent();
 
-      if (session) {
+      // BskyAgent handles token refresh automatically when needed
+      // We just need to verify the session and update stored data
+      const currentSession = agent.session;
+
+      if (currentSession) {
         const updatedSession: StoredSession = {
           ...session,
-          accessJwt: refreshedData.accessJwt,
-          refreshJwt: refreshedData.refreshJwt,
+          accessJwt: currentSession.accessJwt,
+          refreshJwt: currentSession.refreshJwt,
         };
-        setSession(updatedSession);
+
+        // Only update if tokens actually changed
+        if (
+          updatedSession.accessJwt !== session.accessJwt ||
+          updatedSession.refreshJwt !== session.refreshJwt
+        ) {
+          // Persist updated session
+          await AsyncStorage.setItem(
+            AUTH_STORAGE_KEY,
+            JSON.stringify(updatedSession),
+          );
+          setSession(updatedSession);
+        }
       }
     } catch (error) {
-      console.error('Failed to refresh session:', error);
+      console.error("Failed to refresh session:", error);
       // If refresh fails, sign out
       await signOut();
       throw error;
+    }
+  };
+
+  const switchAccount = async (did: string) => {
+    try {
+      setIsLoading(true);
+
+      // Find the account in the accounts list
+      const targetAccount = accounts.find((acc) => acc.did === did);
+      if (!targetAccount) {
+        throw new Error("Account not found");
+      }
+
+      // For now, we can't switch to an account without re-authenticating
+      // because we don't store credentials. This would require the user
+      // to sign in again with that account.
+      // In a full implementation, you might store sessions for multiple accounts.
+      throw new Error(
+        "Account switching requires re-authentication. Please sign in with the desired account.",
+      );
+    } catch (error) {
+      console.error("Failed to switch account:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -103,8 +279,11 @@ export function AuthProvider({children}: AuthProviderProps) {
     session,
     account: session?.account ?? null,
     signIn,
+    signInWithOAuth,
     signOut,
     refreshSession,
+    accounts,
+    switchAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -113,7 +292,7 @@ export function AuthProvider({children}: AuthProviderProps) {
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
