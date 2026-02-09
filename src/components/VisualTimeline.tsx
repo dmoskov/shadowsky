@@ -123,11 +123,6 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
     // Update state when initial data loads
     React.useEffect(() => {
       if (data) {
-        console.log("=== Initial Data Loaded ===", {
-          notificationCount: data.notifications?.length,
-          cursor: data.cursor,
-          hasCursor: !!data.cursor,
-        });
         setAllNotifications(data.notifications || []);
         setCursor(data.cursor);
         setHasMore(!!data.cursor);
@@ -161,36 +156,15 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
 
     // Load more function
     const loadMore = React.useCallback(async () => {
-      console.log("=== LoadMore Called ===", {
-        hasAgent: !!agent,
-        cursor,
-        isLoadingMore,
-        hasMore,
-        currentNotificationsLength: allNotifications.length,
-      });
-
       if (!agent || !cursor || isLoadingMore || !hasMore) {
-        console.log("LoadMore blocked:", {
-          noAgent: !agent,
-          noCursor: !cursor,
-          alreadyLoading: isLoadingMore,
-          noMore: !hasMore,
-        });
         return;
       }
 
       setIsLoadingMore(true);
       try {
-        console.log("Fetching more notifications with cursor:", cursor);
         const response = await agent.listNotifications({
           limit: 50,
           cursor: cursor,
-        });
-
-        console.log("LoadMore response:", {
-          notificationCount: response.data.notifications?.length,
-          newCursor: response.data.cursor,
-          hasNewCursor: !!response.data.cursor,
         });
 
         if (
@@ -198,25 +172,14 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
           response.data.notifications.length > 0
         ) {
           const newNotifications = response.data.notifications;
-          console.log("Adding new notifications:", {
-            newCount: newNotifications.length,
-            firstNew: newNotifications[0]?.uri,
-            lastNew: newNotifications[newNotifications.length - 1]?.uri,
-          });
 
           setAllNotifications((prev) => {
             const updated = [...prev, ...newNotifications];
-            console.log("Updated notifications array:", {
-              previousLength: prev.length,
-              newLength: updated.length,
-              actuallyAdded: updated.length - prev.length,
-            });
             return updated;
           });
           setCursor(response.data.cursor);
           setHasMore(!!response.data.cursor);
         } else {
-          console.log("No more notifications to load");
           setHasMore(false);
         }
       } catch (error) {
@@ -224,10 +187,6 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
         setHasMore(false);
       } finally {
         setIsLoadingMore(false);
-        console.log("LoadMore completed:", {
-          finalNotificationsLength: allNotifications.length,
-          hasMore,
-        });
       }
     }, [agent, cursor, isLoadingMore, hasMore, allNotifications.length]);
 
@@ -303,12 +262,6 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
 
       const observer = new IntersectionObserver((entries) => {
         const target = entries[0];
-        console.log("Intersection Observer triggered:", {
-          isIntersecting: target.isIntersecting,
-          hasMore,
-          isLoadingMore,
-          willLoadMore: target.isIntersecting && hasMore && !isLoadingMore,
-        });
         if (target.isIntersecting && hasMore && !isLoadingMore) {
           loadMore();
         }
@@ -329,17 +282,6 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
 
     // Get notifications from the state
     const notifications = allNotifications;
-
-    // Log whenever allNotifications changes
-    React.useEffect(() => {
-      console.log("=== allNotifications Updated ===", {
-        length: allNotifications.length,
-        hasMore,
-        cursor,
-        firstNotification: allNotifications[0]?.uri,
-        lastNotification: allNotifications[allNotifications.length - 1]?.uri,
-      });
-    }, [allNotifications, hasMore, cursor]);
 
     // Fetch posts for notifications to show richer content
     const { data: posts } = useNotificationPosts(notifications);
