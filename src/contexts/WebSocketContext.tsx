@@ -491,6 +491,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
             WebSocketEventType.AUTH_EXPIRED,
             handlers.authExpired,
           );
+
+        // Disconnect WebSocket and clean up browser event listeners
+        currentService.disconnect();
       }
 
       // Clear handler refs
@@ -503,6 +506,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         error: null,
         authExpired: null,
       };
+
+      // Mark as uninitialized
+      isInitialized.current = false;
     };
   }, [
     isAuthenticated,
