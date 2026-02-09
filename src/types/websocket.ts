@@ -177,6 +177,8 @@ export interface WebSocketMetrics {
   isDegraded: boolean;
   /** Reason for degraded state, if applicable */
   degradedReason?: string;
+  /** Number of events queued during disconnection */
+  queuedEvents?: number;
 }
 
 export interface WebSocketStats {

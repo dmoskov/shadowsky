@@ -165,6 +165,13 @@ export const WebSocketStatus: React.FC = () => {
                       Degraded: {metrics.degradedReason}
                     </div>
                   )}
+                  {metrics.queuedEvents !== undefined &&
+                    metrics.queuedEvents > 0 && (
+                      <div className="text-blue-500">
+                        Buffering: {metrics.queuedEvents} event
+                        {metrics.queuedEvents !== 1 ? "s" : ""}
+                      </div>
+                    )}
                 </>
               )}
 
