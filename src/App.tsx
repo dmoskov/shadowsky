@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { ErrorInfo, lazy, Suspense, useEffect, useState } from "react";
 import { BrowserRouter, useLocation, useNavigate } from "react-router";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { GlobalErrorFallback } from "./components/GlobalErrorFallback";
 import { Header } from "./components/Header";
 import { LandingPage } from "./components/LandingPage";
 import { MobileTabBar } from "./components/MobileTabBar";
@@ -273,16 +274,51 @@ function App() {
     StatusBarProvider,
   ];
 
+  // Global error handler for the entire app
+  const handleGlobalError = (error: Error, errorInfo: ErrorInfo) => {
+    // Log to console for immediate visibility
+    console.error("Global error caught:", error, errorInfo);
+
+    // Store error in localStorage for tracking
+    try {
+      const errorData = {
+        message: error.message,
+        stack: error.stack,
+        componentStack: errorInfo.componentStack,
+        context: "global",
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+      };
+
+      const errors = JSON.parse(localStorage.getItem("app_errors") || "[]");
+      errors.push(errorData);
+      // Keep only last 50 errors
+      if (errors.length > 50) {
+        errors.shift();
+      }
+      localStorage.setItem("app_errors", JSON.stringify(errors));
+    } catch (e) {
+      console.error("Failed to store global error:", e);
+    }
+  };
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ProviderComposer providers={providers}>
-          <ErrorBoundary componentName="Application">
+    <ErrorBoundary
+      componentName="App"
+      fallback={<GlobalErrorFallback />}
+      onError={handleGlobalError}
+      showGoBack={false}
+      showReportLink={true}
+    >
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <ProviderComposer providers={providers}>
             <AppContent />
-          </ErrorBoundary>
-        </ProviderComposer>
-      </BrowserRouter>
-    </QueryClientProvider>
+          </ProviderComposer>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
