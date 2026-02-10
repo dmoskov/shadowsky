@@ -1532,7 +1532,10 @@ export const Search: React.FC = () => {
                   </label>
                   <div className="space-y-2">
                     {filters.mentions.map((user, i) => (
-                      <div key={`mention-user-${user}-${i}`} className="relative">
+                      <div
+                        key={`mention-user-${user}-${i}`}
+                        className="relative"
+                      >
                         <div className="flex items-center gap-2">
                           <input
                             ref={(el) =>
