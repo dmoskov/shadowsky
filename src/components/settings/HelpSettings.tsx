@@ -201,10 +201,10 @@ const renderContent = (content: string): React.ReactNode => {
             </thead>
             <tbody>
               {tableRows.map((row, rowIdx) => (
-                <tr key={rowIdx}>
+                <tr key={`row-${i}-${rowIdx}`}>
                   {row.map((cell, cellIdx) => (
                     <td
-                      key={cellIdx}
+                      key={`cell-${i}-${rowIdx}-${cellIdx}`}
                       className="border px-3 py-2"
                       style={{
                         borderColor: "var(--bsky-border-primary)",
@@ -253,10 +253,10 @@ const renderContent = (content: string): React.ReactNode => {
           </thead>
           <tbody>
             {tableRows.map((row, rowIdx) => (
-              <tr key={rowIdx}>
+              <tr key={`row-final-${rowIdx}`}>
                 {row.map((cell, cellIdx) => (
                   <td
-                    key={cellIdx}
+                    key={`cell-final-${rowIdx}-${cellIdx}`}
                     className="border px-3 py-2"
                     style={{
                       borderColor: "var(--bsky-border-primary)",
