@@ -1,8 +1,10 @@
+import type { Session } from "@bsky/shared";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ATProtoClient } from "../../services/atproto";
 import {
   WebSocketConnectionState,
   WebSocketEventType,
@@ -281,7 +283,13 @@ vi.mock("@bsky/shared", () => ({
 }));
 
 vi.mock("../../components/AuthExpiredModal", () => ({
-  AuthExpiredModal: ({ isOpen, onReLogin }: any) => {
+  AuthExpiredModal: ({
+    isOpen,
+    onReLogin,
+  }: {
+    isOpen: boolean;
+    onReLogin: () => void;
+  }) => {
     if (!isOpen) return null;
     return React.createElement(
       "div",
@@ -301,7 +309,13 @@ vi.mock("../../components/AuthExpiredModal", () => ({
 
 function createWrapper(
   isAuthenticated: boolean = true,
-  session: any = { accessJwt: "test-token", did: "did:test:123" },
+  session: Session | null = {
+    accessJwt: "test-token",
+    did: "did:test:123",
+    handle: "test.bsky.social",
+    refreshJwt: "test-refresh-token",
+    active: true,
+  },
 ) {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -325,7 +339,7 @@ function createWrapper(
       isOAuthAvailable: false,
       loginWithOAuth: vi.fn(),
       handleOAuthCallback: vi.fn(),
-      client: {} as any,
+      client: {} as ATProtoClient,
       agent: null,
     };
 
@@ -346,7 +360,7 @@ function createWrapper(
 describe("WebSocketContext", () => {
   beforeEach(() => {
     // Install mock WebSocket
-    global.WebSocket = MockWebSocket as any;
+    global.WebSocket = MockWebSocket as unknown as typeof WebSocket;
     MockWebSocket.clearInstances();
     mockService = null;
 
@@ -356,10 +370,13 @@ describe("WebSocketContext", () => {
     // Mock Notification API
     global.Notification = {
       permission: "granted",
-    } as any;
-    global.window.Notification = function (title: string, options: any) {
+    } as unknown as typeof Notification;
+    global.window.Notification = function (
+      title: string,
+      options: NotificationOptions,
+    ) {
       return { title, ...options };
-    } as any;
+    } as unknown as typeof Notification;
 
     vi.clearAllMocks();
   });
@@ -465,6 +482,9 @@ describe("WebSocketContext", () => {
       const wrapper = createWrapper(true, {
         accessJwt: "test-token",
         did: "did:test:123",
+        handle: "test.bsky.social",
+        refreshJwt: "test-refresh-token",
+        active: true,
       });
 
       renderHook(() => useWebSocket(), { wrapper });
@@ -486,6 +506,9 @@ describe("WebSocketContext", () => {
       const wrapper = createWrapper(true, {
         accessJwt: "",
         did: "did:test:123",
+        handle: "test.bsky.social",
+        refreshJwt: "test-refresh-token",
+        active: true,
       });
 
       renderHook(() => useWebSocket(), { wrapper });
