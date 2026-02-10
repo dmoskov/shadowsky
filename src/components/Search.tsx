@@ -1041,7 +1041,7 @@ export const Search: React.FC = () => {
                   </label>
                   <div className="space-y-2">
                     {filters.from.map((user, i) => (
-                      <div key={`from-user-${i}`} className="relative">
+                      <div key={`from-user-${user}-${i}`} className="relative">
                         <div className="flex items-center gap-2">
                           <input
                             ref={(el) => (inputRefs.current[`from-${i}`] = el)}
@@ -1415,7 +1415,7 @@ export const Search: React.FC = () => {
                   <div className="space-y-2">
                     {filters.phrases.map((phrase, i) => (
                       <div
-                        key={`phrase-${i}`}
+                        key={`phrase-${phrase}-${i}`}
                         className="flex items-center gap-2"
                       >
                         <input
@@ -1474,7 +1474,7 @@ export const Search: React.FC = () => {
                   <div className="space-y-2">
                     {filters.hashtags.map((tag, i) => (
                       <div
-                        key={`hashtag-${i}`}
+                        key={`hashtag-${tag}-${i}`}
                         className="flex items-center gap-2"
                       >
                         <input
@@ -1532,7 +1532,7 @@ export const Search: React.FC = () => {
                   </label>
                   <div className="space-y-2">
                     {filters.mentions.map((user, i) => (
-                      <div key={`mention-user-${i}`} className="relative">
+                      <div key={`mention-user-${user}-${i}`} className="relative">
                         <div className="flex items-center gap-2">
                           <input
                             ref={(el) =>
@@ -1705,7 +1705,7 @@ export const Search: React.FC = () => {
                   <div className="space-y-2">
                     {filters.domains.map((domain, i) => (
                       <div
-                        key={`domain-${i}`}
+                        key={`domain-${domain}-${i}`}
                         className="flex items-center gap-2"
                       >
                         <input
@@ -1940,9 +1940,9 @@ export const Search: React.FC = () => {
                                 <div
                                   className={`grid gap-2 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
                                 >
-                                  {images.slice(0, 4).map((img, idx) => (
+                                  {images.slice(0, 4).map((img) => (
                                     <img
-                                      key={`post-image-${img.thumb}-${idx}`}
+                                      key={img.thumb}
                                       src={proxifyBskyImage(img.thumb)}
                                       alt={img.alt || ""}
                                       className="w-full cursor-pointer rounded-lg border object-cover transition-opacity hover:opacity-90"
