@@ -5,6 +5,7 @@
 
 // Auth screens
 export {LandingScreen} from './auth/LandingScreen';
+export {OAuthCallbackScreen} from './auth/OAuthCallbackScreen';
 
 // Home stack screens
 export {HomeScreen} from './home/HomeScreen';

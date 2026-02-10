@@ -1,4 +1,7 @@
 {
   "name": "ShadowSky",
-  "displayName": "ShadowSky"
+  "displayName": "ShadowSky",
+  "expo": {
+    "scheme": "shadowsky"
+  }
 }

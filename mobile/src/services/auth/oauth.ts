@@ -68,6 +68,7 @@ export async function startOAuthFlow(
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
       `&response_type=code` +
       `&state=${state}` +
+      `&scope=atproto transition:generic` + // Required AT Protocol scopes
       `&code_challenge=${codeVerifier}` + // In production, this should be hashed
       `&code_challenge_method=plain`; // Should be S256 in production
 

@@ -40,11 +40,12 @@ export const linking: LinkingOptions<RootStackParamList> = {
       // Auth screens
       Landing: 'login',
       OAuthCallback: {
-        path: 'oauth/callback',
+        path: 'oauth-callback',
         parse: {
           code: (code: string) => code,
           state: (state: string) => state,
           error: (error: string) => error,
+          iss: (iss: string) => iss,
         },
       },
 

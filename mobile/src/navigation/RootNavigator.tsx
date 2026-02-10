@@ -2,7 +2,7 @@ import React from 'react';
 import {View, ActivityIndicator, StyleSheet} from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../types/navigation';
-import {LandingScreen} from '../screens';
+import {LandingScreen, OAuthCallbackScreen} from '../screens';
 import {DrawerNavigator} from './DrawerNavigator';
 import {useAuth} from '../contexts/AuthContext';
 
@@ -31,8 +31,11 @@ export function RootNavigator() {
         // Authenticated routes
         <Stack.Screen name="Main" component={DrawerNavigator} />
       ) : (
-        // Auth routes - only Landing screen for app password authentication
-        <Stack.Screen name="Landing" component={LandingScreen} />
+        // Auth routes
+        <>
+          <Stack.Screen name="Landing" component={LandingScreen} />
+          <Stack.Screen name="OAuthCallback" component={OAuthCallbackScreen} />
+        </>
       )}
     </Stack.Navigator>
   );
