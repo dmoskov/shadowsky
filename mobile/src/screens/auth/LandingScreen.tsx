@@ -17,7 +17,7 @@ import type {RootStackScreenProps} from '../../types/navigation';
 type Props = RootStackScreenProps<'Landing'>;
 
 export function LandingScreen({}: Props) {
-  const {signIn} = useAuth();
+  const {signIn, signInWithOAuth} = useAuth();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -44,6 +44,22 @@ export function LandingScreen({}: Props) {
     }
   };
 
+  const handleOAuthLogin = async () => {
+    try {
+      setIsLoading(true);
+      await signInWithOAuth();
+      // Navigation happens automatically when OAuth flow completes
+    } catch (error) {
+      console.error('OAuth login error:', error);
+      Alert.alert(
+        'Sign In Failed',
+        'Failed to start OAuth flow. Please try again.',
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -59,6 +75,23 @@ export function LandingScreen({}: Props) {
         </View>
 
         <View style={styles.formContainer}>
+          <TouchableOpacity
+            style={[styles.oauthButton, isLoading && styles.oauthButtonDisabled]}
+            onPress={handleOAuthLogin}
+            disabled={isLoading}>
+            {isLoading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.oauthButtonText}>Sign in with Bluesky</Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.divider} />
+          </View>
+
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Handle or Email</Text>
             <TextInput
@@ -150,6 +183,38 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: '100%',
+  },
+  oauthButton: {
+    backgroundColor: '#1185fe',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  oauthButtonDisabled: {
+    backgroundColor: '#0d4d8f',
+  },
+  oauthButtonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#374151',
+  },
+  dividerText: {
+    color: '#6b7280',
+    fontSize: 14,
+    marginHorizontal: 16,
   },
   inputContainer: {
     marginBottom: 20,
