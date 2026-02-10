@@ -324,6 +324,32 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         debug.log("🔌 [WebSocket] User logged out, disconnecting");
         const service = getWebSocketService();
         if (service) {
+          // Clear stats polling interval
+          if (statsIntervalRef.current) {
+            clearInterval(statsIntervalRef.current);
+            statsIntervalRef.current = null;
+          }
+
+          // Clear reconnect timer
+          if (reconnectAttemptTimer.current) {
+            clearTimeout(reconnectAttemptTimer.current);
+            reconnectAttemptTimer.current = null;
+          }
+
+          // Clear debounce timers
+          if (notificationDebounceTimerRef.current) {
+            clearTimeout(notificationDebounceTimerRef.current);
+            notificationDebounceTimerRef.current = null;
+          }
+          if (countDebounceTimerRef.current) {
+            clearTimeout(countDebounceTimerRef.current);
+            countDebounceTimerRef.current = null;
+          }
+
+          // Clear pending data
+          pendingNotificationsRef.current = [];
+          pendingCountRef.current = null;
+
           // Remove event handlers before disconnecting
           const handlers = handlersRef.current;
           if (handlers.newNotification)
@@ -506,11 +532,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         error: null,
         authExpired: null,
       };
-
-      // Disconnect the WebSocket service
-      if (currentService) {
-        currentService.disconnect();
-      }
 
       // Mark as uninitialized to allow re-initialization if needed
       isInitialized.current = false;
