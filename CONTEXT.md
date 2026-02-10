@@ -223,7 +223,25 @@ npm run test:types       # TypeScript checking
    - TODO: Audit and fix event listener cleanup
 
 4. **Type Safety**: Some `any` types in older code
-   - TODO: Progressive type improvement
+   - **Baseline** (Feb 10, 2026): 393 instances of `any` across src/
+     - components/: 206 instances
+     - services/: 45 instances
+     - utils/: 43 instances
+     - hooks/: 26 instances
+     - platform/: 20 instances
+     - mobile/: 19 instances
+     - shared/: 14 instances
+     - contexts/: 5 instances
+     - Root files: 4 instances
+     - pages/: 3 instances
+     - tests/: 4 instances
+     - types/: 0 instances (good!)
+     - lib/: 0 instances (good!)
+     - config/: 0 instances (good!)
+   - **ESLint Rule**: `@typescript-eslint/no-explicit-any` set to 'warn' to prevent new instances
+   - **Goal**: Reduce from 393 to <100 over time
+   - **Strategy**: Progressive improvement, prioritizing services → contexts → hooks → components
+   - TODO: Reduce count by 50+ instances per sprint without introducing new `any` types
 
 5. **Bundle Size**: Growing with new features
    - TODO: Implement code splitting for routes
