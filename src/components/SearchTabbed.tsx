@@ -1532,9 +1532,9 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               Clear
                             </button>
                           </div>
-                          {searchHistory.slice(0, 5).map((query, idx) => (
+                          {searchHistory.slice(0, 5).map((query) => (
                             <button
-                              key={`search-history-${query}-${idx}`}
+                              key={`search-history-${query}`}
                               className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-white hover:bg-opacity-5"
                               onMouseDown={(e) => {
                                 e.preventDefault();
@@ -1776,9 +1776,9 @@ export const SearchTabbed: React.FC = React.memo(() => {
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
-                {searchHistory.slice(0, 5).map((query, idx) => (
+                {searchHistory.slice(0, 5).map((query) => (
                   <button
-                    key={`search-pill-${query}-${idx}`}
+                    key={`search-pill-${query}`}
                     onClick={() => {
                       setFilters((prev) => ({ ...prev, query }));
                       setActiveSearchQuery(query);
@@ -2421,7 +2421,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       </label>
                       <div className="space-y-2">
                         {filters.from.map((user, i) => (
-                          <div key={`from-user-${i}`} className="relative">
+                          <div
+                            key={`from-user-${user}-${i}`}
+                            className="relative"
+                          >
                             <div className="flex items-center gap-2">
                               <input
                                 ref={(el) =>
@@ -2850,7 +2853,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       <div className="space-y-2">
                         {filters.phrases.map((phrase, i) => (
                           <div
-                            key={`phrase-${i}`}
+                            key={`phrase-${phrase}-${i}`}
                             className="flex items-center gap-2"
                           >
                             <input
@@ -2912,7 +2915,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       <div className="space-y-2">
                         {filters.hashtags.map((tag, i) => (
                           <div
-                            key={`hashtag-${i}`}
+                            key={`hashtag-${tag}-${i}`}
                             className="flex items-center gap-2"
                           >
                             <input
@@ -2973,7 +2976,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       </label>
                       <div className="space-y-2">
                         {filters.mentions.map((user, i) => (
-                          <div key={`mention-user-${i}`} className="relative">
+                          <div
+                            key={`mention-user-${user}-${i}`}
+                            className="relative"
+                          >
                             <div className="flex items-center gap-2">
                               <input
                                 ref={(el) =>
@@ -3160,7 +3166,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       <div className="space-y-2">
                         {filters.domains.map((domain, i) => (
                           <div
-                            key={`domain-${i}`}
+                            key={`domain-${domain}-${i}`}
                             className="flex items-center gap-2"
                           >
                             <input
