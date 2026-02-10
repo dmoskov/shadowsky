@@ -64,34 +64,46 @@ describe("VideoUploadMetricsTracker", () => {
     expect(stats.uploads[0].errorType).toBe("Timeout");
   });
 
-  it("should calculate bandwidth correctly", () => {
+  it("should calculate bandwidth correctly", async () => {
     const uploadId = tracker.startUpload("video/mp4", 1000000); // 1MB
 
     // Complete upload after a delay
-    setTimeout(() => {
-      tracker.completeUpload(uploadId, "test-video-id");
-    }, 100);
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        tracker.completeUpload(uploadId, "test-video-id");
+        resolve(undefined);
+      }, 100);
+    });
 
-    setTimeout(() => {
-      const stats = tracker.getSessionStatistics();
-      expect(stats.uploads[0].bandwidthBytesPerSecond).toBeGreaterThan(0);
-    }, 150);
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        const stats = tracker.getSessionStatistics();
+        expect(stats.uploads[0].bandwidthBytesPerSecond).toBeGreaterThan(0);
+        resolve(undefined);
+      }, 50);
+    });
   });
 
-  it("should track transcoding wait time", () => {
+  it("should track transcoding wait time", async () => {
     const uploadId = tracker.startUpload("video/mp4", 1024000);
     tracker.startTranscoding(uploadId);
 
-    setTimeout(() => {
-      tracker.completeTranscoding(uploadId, 10);
-      tracker.completeUpload(uploadId, "test-video-id");
-    }, 50);
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        tracker.completeTranscoding(uploadId, 10);
+        tracker.completeUpload(uploadId, "test-video-id");
+        resolve(undefined);
+      }, 50);
+    });
 
-    setTimeout(() => {
-      const stats = tracker.getSessionStatistics();
-      expect(stats.uploads[0].transcodingWaitTimeMs).toBeGreaterThan(0);
-      expect(stats.uploads[0].pollingAttempts).toBe(10);
-    }, 100);
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        const stats = tracker.getSessionStatistics();
+        expect(stats.uploads[0].transcodingWaitTimeMs).toBeGreaterThan(0);
+        expect(stats.uploads[0].pollingAttempts).toBe(10);
+        resolve(undefined);
+      }, 50);
+    });
   });
 
   it("should calculate success rate", () => {
