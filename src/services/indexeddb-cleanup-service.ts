@@ -160,7 +160,7 @@ export class IndexedDBCleanupService {
               }
             };
           }
-        } catch (error) {
+        } catch (_error) {
           db.close();
           resolve(0);
         }
