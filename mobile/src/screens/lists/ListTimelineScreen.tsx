@@ -1,17 +1,18 @@
-import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
-import type {HomeStackScreenProps} from '../../types/navigation';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 
-type Props = HomeStackScreenProps<'ListTimeline'>;
+interface ListTimelineScreenProps {
+  listId: string;
+}
 
-export function ListTimelineScreen({route}: Props) {
-  const {listId} = route.params;
-
+export function ListTimelineScreen({ listId }: ListTimelineScreenProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>List Timeline</Text>
       <Text style={styles.listId}>List: {listId}</Text>
-      <Text style={styles.subtext}>Posts from this list will appear here</Text>
+      <Text style={styles.subtext}>
+        Posts from this list will appear here
+      </Text>
     </View>
   );
 }
@@ -19,23 +20,23 @@ export function ListTimelineScreen({route}: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#0a0a0f",
+    justifyContent: "center",
+    alignItems: "center",
   },
   text: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   listId: {
-    color: '#3b82f6',
+    color: "#3b82f6",
     fontSize: 14,
     marginTop: 8,
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
   },
   subtext: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
     marginTop: 8,
   },

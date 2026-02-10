@@ -1,14 +1,13 @@
-import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
-import type {DrawerScreenPropsType} from '../../types/navigation';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 
-type Props = DrawerScreenPropsType<'Analytics'>;
-
-export function AnalyticsScreen({}: Props) {
+export function AnalyticsScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>User Analytics</Text>
-      <Text style={styles.subtext}>Engagement metrics and insights coming soon</Text>
+      <Text style={styles.subtext}>
+        Engagement metrics and insights coming soon
+      </Text>
     </View>
   );
 }
@@ -16,17 +15,17 @@ export function AnalyticsScreen({}: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#0a0a0f",
+    justifyContent: "center",
+    alignItems: "center",
   },
   text: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   subtext: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
     marginTop: 8,
   },

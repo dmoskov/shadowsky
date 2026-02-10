@@ -1,12 +1,11 @@
-import React from 'react';
-import {View, Text, TextInput, StyleSheet} from 'react-native';
-import type {SearchStackScreenProps} from '../../types/navigation';
+import React from "react";
+import { View, Text, TextInput, StyleSheet } from "react-native";
 
-type Props = SearchStackScreenProps<'Search'>;
+interface SearchScreenProps {
+  query?: string;
+}
 
-export function SearchScreen({route}: Props) {
-  const {query} = route.params ?? {};
-
+export function SearchScreen({ query }: SearchScreenProps) {
   return (
     <View style={styles.container}>
       <View style={styles.searchBar}>
@@ -28,33 +27,33 @@ export function SearchScreen({route}: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: "#0a0a0f",
   },
   searchBar: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
+    borderBottomColor: "#1f2937",
   },
   input: {
-    backgroundColor: '#1f2937',
+    backgroundColor: "#1f2937",
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   text: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   subtext: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
     marginTop: 8,
   },

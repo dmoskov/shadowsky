@@ -1,23 +1,17 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
-import type {TabScreenPropsType} from '../../types/navigation';
+import React from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { useRouter } from "expo-router";
 
-type Props = TabScreenPropsType<'Compose'>;
+export function ComposeScreen() {
+  const router = useRouter();
 
-export function ComposeScreen({navigation}: Props) {
   const handleClose = () => {
-    navigation.goBack();
+    router.back();
   };
 
   const handlePost = () => {
     // TODO: Implement post creation
-    navigation.goBack();
+    router.back();
   };
 
   return (
@@ -26,7 +20,7 @@ export function ComposeScreen({navigation}: Props) {
         <TouchableOpacity
           onPress={handleClose}
           style={styles.cancelTouchable}
-          hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Text style={styles.cancelButton}>Cancel</Text>
         </TouchableOpacity>
@@ -53,52 +47,52 @@ export function ComposeScreen({navigation}: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: "#0a0a0f",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
+    borderBottomColor: "#1f2937",
   },
   cancelTouchable: {
-    minHeight: 44, // WCAG 2.1 touch target minimum
+    minHeight: 44,
     minWidth: 44,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   cancelButton: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 16,
   },
   postButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: "#3b82f6",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 20,
-    minHeight: 44, // WCAG 2.1 touch target minimum
-    justifyContent: 'center',
+    minHeight: 44,
+    justifyContent: "center",
   },
   postButtonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   input: {
     flex: 1,
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 18,
     padding: 16,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   toolbar: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#1f2937',
+    borderTopColor: "#1f2937",
   },
   toolbarText: {
-    color: '#6b7280',
+    color: "#6b7280",
     fontSize: 14,
   },
 });

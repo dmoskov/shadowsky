@@ -1,12 +1,11 @@
-import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
-import type {ProfileStackScreenProps} from '../../types/navigation';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 
-type Props = ProfileStackScreenProps<'Profile'>;
+interface ProfileScreenProps {
+  handle: string;
+}
 
-export function ProfileScreen({route}: Props) {
-  const {handle} = route.params;
-
+export function ProfileScreen({ handle }: ProfileScreenProps) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -25,34 +24,34 @@ export function ProfileScreen({route}: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
-    alignItems: 'center',
+    backgroundColor: "#0a0a0f",
+    alignItems: "center",
     paddingTop: 48,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   avatar: {
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#3b82f6',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#3b82f6",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 16,
   },
   avatarText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 36,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   handle: {
-    color: '#3b82f6',
+    color: "#3b82f6",
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   subtext: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
     marginTop: 24,
   },

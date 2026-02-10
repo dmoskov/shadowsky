@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -10,34 +10,28 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-} from 'react-native';
-import {useAuth} from '../../contexts/AuthContext';
-import type {RootStackScreenProps} from '../../types/navigation';
+} from "react-native";
+import { useAuth } from "../../contexts/AuthContext";
 
-type Props = RootStackScreenProps<'Landing'>;
-
-export function LandingScreen({}: Props) {
-  const {signIn, signInWithOAuth} = useAuth();
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
+export function LandingScreen() {
+  const { signIn, signInWithOAuth } = useAuth();
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!identifier.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter both handle and app password');
+      Alert.alert("Error", "Please enter both handle and app password");
       return;
     }
 
     try {
       setIsLoading(true);
       await signIn(identifier.trim(), password);
-      // Navigation to Main screen happens automatically via RootNavigator
-      // when isAuthenticated becomes true
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch {
       Alert.alert(
-        'Sign In Failed',
-        'Invalid credentials. Please check your handle and app password.',
+        "Sign In Failed",
+        "Invalid credentials. Please check your handle and app password.",
       );
     } finally {
       setIsLoading(false);
@@ -48,12 +42,10 @@ export function LandingScreen({}: Props) {
     try {
       setIsLoading(true);
       await signInWithOAuth();
-      // Navigation happens automatically when OAuth flow completes
-    } catch (error) {
-      console.error('OAuth login error:', error);
+    } catch {
       Alert.alert(
-        'Sign In Failed',
-        'Failed to start OAuth flow. Please try again.',
+        "Sign In Failed",
+        "Failed to start OAuth flow. Please try again.",
       );
     } finally {
       setIsLoading(false);
@@ -63,10 +55,12 @@ export function LandingScreen({}: Props) {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.content}>
           <Text style={styles.title}>ShadowSky</Text>
           <Text style={styles.subtitle}>
@@ -78,7 +72,8 @@ export function LandingScreen({}: Props) {
           <TouchableOpacity
             style={[styles.oauthButton, isLoading && styles.oauthButtonDisabled]}
             onPress={handleOAuthLogin}
-            disabled={isLoading}>
+            disabled={isLoading}
+          >
             {isLoading ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
@@ -126,9 +121,13 @@ export function LandingScreen({}: Props) {
           </View>
 
           <TouchableOpacity
-            style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+            style={[
+              styles.loginButton,
+              isLoading && styles.loginButtonDisabled,
+            ]}
             onPress={handleLogin}
-            disabled={isLoading}>
+            disabled={isLoading}
+          >
             {isLoading ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
@@ -138,7 +137,7 @@ export function LandingScreen({}: Props) {
 
           <View style={styles.infoContainer}>
             <Text style={styles.infoText}>
-              Don't have an app password?{' '}
+              Don't have an app password?{" "}
               <Text style={styles.linkText}>
                 Create one in your Bluesky account settings
               </Text>
@@ -157,62 +156,62 @@ export function LandingScreen({}: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: "#0a0a0f",
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     paddingHorizontal: 24,
     paddingVertical: 48,
   },
   content: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 48,
   },
   title: {
     fontSize: 48,
-    fontWeight: 'bold',
-    color: '#ffffff',
+    fontWeight: "bold",
+    color: "#ffffff",
     marginBottom: 16,
   },
   subtitle: {
     fontSize: 16,
-    color: '#9ca3af',
-    textAlign: 'center',
+    color: "#9ca3af",
+    textAlign: "center",
     paddingHorizontal: 20,
   },
   formContainer: {
-    width: '100%',
+    width: "100%",
   },
   oauthButton: {
-    backgroundColor: '#1185fe',
+    backgroundColor: "#1185fe",
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
     marginBottom: 24,
   },
   oauthButtonDisabled: {
-    backgroundColor: '#0d4d8f',
+    backgroundColor: "#0d4d8f",
   },
   oauthButtonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 24,
   },
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: '#374151',
+    backgroundColor: "#374151",
   },
   dividerText: {
-    color: '#6b7280',
+    color: "#6b7280",
     fontSize: 14,
     marginHorizontal: 16,
   },
@@ -220,60 +219,60 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    color: '#e5e7eb',
+    color: "#e5e7eb",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#1a1a24',
+    backgroundColor: "#1a1a24",
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: "#374151",
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: '#ffffff',
+    color: "#ffffff",
   },
   helpText: {
-    color: '#6b7280',
+    color: "#6b7280",
     fontSize: 12,
     marginTop: 6,
   },
   loginButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: "#3b82f6",
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
     marginTop: 8,
     marginBottom: 20,
   },
   loginButtonDisabled: {
-    backgroundColor: '#1e3a8a',
+    backgroundColor: "#1e3a8a",
   },
   loginButtonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   infoContainer: {
     marginBottom: 20,
   },
   infoText: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 20,
   },
   linkText: {
-    color: '#3b82f6',
-    fontWeight: '600',
+    color: "#3b82f6",
+    fontWeight: "600",
   },
   disclaimer: {
-    color: '#6b7280',
+    color: "#6b7280",
     fontSize: 12,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

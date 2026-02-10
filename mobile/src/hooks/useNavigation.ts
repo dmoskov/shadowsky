@@ -1,183 +1,78 @@
-import {useNavigation as useRNNavigation, useRoute} from '@react-navigation/native';
-import {useCallback} from 'react';
-import type {
-  RootStackParamList,
-  DrawerParamList,
-  TabParamList,
-  HomeStackParamList,
-} from '../types/navigation';
+import { useRouter } from "expo-router";
+import { useCallback } from "react";
 
-/**
- * Custom navigation hook with typed helpers
- */
 export function useAppNavigation() {
-  const navigation = useRNNavigation();
+  const router = useRouter();
 
-  // Navigate to a profile
   const navigateToProfile = useCallback(
     (handle: string) => {
-      // @ts-expect-error - nested navigation
-      navigation.navigate('Main', {
-        screen: 'Tabs',
-        params: {
-          screen: 'HomeStack',
-          params: {
-            screen: 'Profile',
-            params: {handle},
-          },
-        },
-      });
+      router.push(`/(app)/(tabs)/(home)/profile/${handle}`);
     },
-    [navigation],
+    [router],
   );
 
-  // Navigate to a thread
   const navigateToThread = useCallback(
     (handle: string, postId: string) => {
-      // @ts-expect-error - nested navigation
-      navigation.navigate('Main', {
-        screen: 'Tabs',
-        params: {
-          screen: 'HomeStack',
-          params: {
-            screen: 'Thread',
-            params: {handle, postId},
-          },
-        },
-      });
+      router.push(`/(app)/(tabs)/(home)/thread/${postId}?handle=${handle}`);
     },
-    [navigation],
+    [router],
   );
 
-  // Navigate to search
   const navigateToSearch = useCallback(
     (query?: string) => {
-      // @ts-expect-error - nested navigation
-      navigation.navigate('Main', {
-        screen: 'Tabs',
-        params: {
-          screen: 'SearchStack',
-          params: {
-            screen: 'Search',
-            params: query ? {query} : undefined,
-          },
-        },
-      });
+      if (query) {
+        router.push(`/(app)/(tabs)/(search)?query=${query}`);
+      } else {
+        router.push("/(app)/(tabs)/(search)");
+      }
     },
-    [navigation],
+    [router],
   );
 
-  // Navigate to compose
   const navigateToCompose = useCallback(() => {
-    // @ts-expect-error - nested navigation
-    navigation.navigate('Main', {
-      screen: 'Tabs',
-      params: {
-        screen: 'Compose',
-      },
-    });
-  }, [navigation]);
+    router.push("/(app)/compose");
+  }, [router]);
 
-  // Navigate to settings
   const navigateToSettings = useCallback(
     (section?: string) => {
-      // @ts-expect-error - nested navigation
-      navigation.navigate('Main', {
-        screen: 'Settings',
-        params: section ? {section} : undefined,
-      });
+      if (section) {
+        router.push(`/(app)/settings?section=${section}`);
+      } else {
+        router.push("/(app)/settings");
+      }
     },
-    [navigation],
+    [router],
   );
 
-  // Navigate to home
   const navigateToHome = useCallback(() => {
-    // @ts-expect-error - nested navigation
-    navigation.navigate('Main', {
-      screen: 'Tabs',
-      params: {
-        screen: 'HomeStack',
-        params: {
-          screen: 'Home',
-        },
-      },
-    });
-  }, [navigation]);
+    router.push("/(app)/(tabs)/(home)");
+  }, [router]);
 
-  // Navigate to notifications
   const navigateToNotifications = useCallback(() => {
-    // @ts-expect-error - nested navigation
-    navigation.navigate('Main', {
-      screen: 'Tabs',
-      params: {
-        screen: 'NotificationsStack',
-        params: {
-          screen: 'Notifications',
-        },
-      },
-    });
-  }, [navigation]);
+    router.push("/(app)/(tabs)/(notifications)");
+  }, [router]);
 
-  // Navigate to bookmarks
   const navigateToBookmarks = useCallback(() => {
-    // @ts-expect-error - nested navigation
-    navigation.navigate('Main', {
-      screen: 'Tabs',
-      params: {
-        screen: 'ProfileStack',
-        params: {
-          screen: 'Bookmarks',
-        },
-      },
-    });
-  }, [navigation]);
+    router.push("/(app)/(tabs)/(profile)/bookmarks");
+  }, [router]);
 
-  // Navigate to messages
   const navigateToMessages = useCallback(() => {
-    // @ts-expect-error - nested navigation
-    navigation.navigate('Main', {
-      screen: 'Tabs',
-      params: {
-        screen: 'ProfileStack',
-        params: {
-          screen: 'Messages',
-        },
-      },
-    });
-  }, [navigation]);
+    router.push("/(app)/(tabs)/(profile)/messages");
+  }, [router]);
 
-  // Navigate to a list timeline
   const navigateToList = useCallback(
     (listId: string) => {
-      // @ts-expect-error - nested navigation
-      navigation.navigate('Main', {
-        screen: 'Tabs',
-        params: {
-          screen: 'HomeStack',
-          params: {
-            screen: 'ListTimeline',
-            params: {listId},
-          },
-        },
-      });
+      router.push(`/(app)/(tabs)/(home)/list/${listId}`);
     },
-    [navigation],
+    [router],
   );
 
-  // Open drawer
-  const openDrawer = useCallback(() => {
-    // @ts-expect-error - drawer navigation
-    navigation.openDrawer?.();
-  }, [navigation]);
-
-  // Close drawer
-  const closeDrawer = useCallback(() => {
-    // @ts-expect-error - drawer navigation
-    navigation.closeDrawer?.();
-  }, [navigation]);
+  const goBack = useCallback(() => {
+    router.back();
+  }, [router]);
 
   return {
-    navigation,
+    router,
     navigateToProfile,
     navigateToThread,
     navigateToSearch,
@@ -188,15 +83,6 @@ export function useAppNavigation() {
     navigateToBookmarks,
     navigateToMessages,
     navigateToList,
-    openDrawer,
-    closeDrawer,
+    goBack,
   };
-}
-
-/**
- * Hook to extract route params with type safety
- */
-export function useRouteParams<T extends Record<string, unknown>>(): T {
-  const route = useRoute();
-  return (route.params as T) ?? ({} as T);
 }

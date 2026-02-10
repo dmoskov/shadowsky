@@ -26,7 +26,7 @@ export class AtProtoClient {
    */
   async login(identifier: string, password: string) {
     const response = await this.agent.login({identifier, password});
-    this.session = response.data;
+    this.session = response.data as AtpSessionData;
     return this.session;
   }
 

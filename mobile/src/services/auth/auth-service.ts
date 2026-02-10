@@ -31,48 +31,37 @@ export async function signInWithPassword(
   identifier: string,
   password: string,
 ): Promise<StoredSession> {
-  try {
-    // Reset any existing client
-    resetAtProtoClient();
+  resetAtProtoClient();
 
-    // Get fresh client and login
-    const client = getAtProtoClient();
-    const sessionData = await client.login(identifier, password);
+  const client = getAtProtoClient();
+  const sessionData = await client.login(identifier, password);
 
-    // Fetch user profile to get handle and other info
-    const agent = client.getAgent();
-    const profile = await agent.getProfile({actor: sessionData.did});
-
-    const account: AuthAccount = {
-      did: sessionData.did,
-      handle: sessionData.handle || profile.data.handle,
-      email: sessionData.email,
-      displayName: profile.data.displayName,
-      avatar: profile.data.avatar,
-    };
-
-    const session: StoredSession = {
-      ...sessionData,
-      account,
-    };
-
-    // Store as active session
-    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-
-    // Store in sessions array for multi-account support
-    await addSession(session);
-
-    // Add to accounts list for multi-account support
-    await addAccount(account);
-
-    // Mark as active account
-    await AsyncStorage.setItem(ACTIVE_ACCOUNT_KEY, session.did);
-
-    return session;
-  } catch (error) {
-    console.error('Sign in failed:', error);
-    throw error;
+  if (!sessionData) {
+    throw new Error('Login failed: no session data returned');
   }
+
+  const agent = client.getAgent();
+  const profile = await agent.getProfile({actor: sessionData.did});
+
+  const account: AuthAccount = {
+    did: sessionData.did,
+    handle: sessionData.handle || profile.data.handle,
+    email: sessionData.email,
+    displayName: profile.data.displayName,
+    avatar: profile.data.avatar,
+  };
+
+  const session: StoredSession = {
+    ...sessionData,
+    account,
+  } as StoredSession;
+
+  await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+  await addSession(session);
+  await addAccount(account);
+  await AsyncStorage.setItem(ACTIVE_ACCOUNT_KEY, session.did);
+
+  return session;
 }
 
 /**
@@ -87,16 +76,13 @@ export async function resumeSession(): Promise<StoredSession | null> {
 
     const session: StoredSession = JSON.parse(storedSession);
 
-    // Resume session with AT Protocol client
     const client = getAtProtoClient();
     await client.resumeSession(session);
 
-    // Verify session is still valid by making a test API call
     try {
       const agent = client.getAgent();
       const profile = await agent.getProfile({actor: session.did});
 
-      // Update account info in case it changed
       session.account = {
         ...session.account,
         handle: profile.data.handle,
@@ -104,58 +90,34 @@ export async function resumeSession(): Promise<StoredSession | null> {
         avatar: profile.data.avatar,
       };
 
-      // Update stored session
       await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-
-      // Also update in sessions array
       await addSession(session);
-    } catch (profileError) {
+    } catch {
       // Session might be expired, try to refresh
-      console.warn('Session validation failed, attempting refresh:', profileError);
       try {
         const refreshedSession = await client.refreshSession();
         session.accessJwt = refreshedSession.accessJwt;
         session.refreshJwt = refreshedSession.refreshJwt;
         await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-      } catch (refreshError) {
-        // Refresh failed, session is invalid
-        console.error('Session refresh failed:', refreshError);
+      } catch {
         await signOut();
         return null;
       }
     }
 
     return session;
-  } catch (error) {
-    console.error('Failed to resume session:', error);
+  } catch {
     return null;
   }
 }
 
 /**
  * Sign out and clear current session
- * Note: This only signs out the current account, other accounts remain available
  */
 export async function signOut(): Promise<void> {
-  try {
-    // Get current account DID before clearing
-    const currentSession = await getCurrentSession();
-
-    // Clear active session
-    await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-    await AsyncStorage.removeItem(ACTIVE_ACCOUNT_KEY);
-    resetAtProtoClient();
-
-    // Optionally remove the session from stored sessions
-    // (keeping it allows quick re-switching if session is still valid)
-    // If you want to remove it, uncomment the following:
-    // if (currentSession) {
-    //   await removeSession(currentSession.did);
-    // }
-  } catch (error) {
-    console.error('Sign out failed:', error);
-    throw error;
-  }
+  await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+  await AsyncStorage.removeItem(ACTIVE_ACCOUNT_KEY);
+  resetAtProtoClient();
 }
 
 /**
@@ -168,8 +130,7 @@ export async function getCurrentSession(): Promise<StoredSession | null> {
       return null;
     }
     return JSON.parse(storedSession);
-  } catch (error) {
-    console.error('Failed to get current session:', error);
+  } catch {
     return null;
   }
 }
@@ -184,19 +145,16 @@ async function addAccount(account: AuthAccount): Promise<void> {
       ? JSON.parse(storedAccounts)
       : [];
 
-    // Check if account already exists
     const existingIndex = accounts.findIndex(a => a.did === account.did);
     if (existingIndex >= 0) {
-      // Update existing account
       accounts[existingIndex] = account;
     } else {
-      // Add new account
       accounts.push(account);
     }
 
     await AsyncStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(accounts));
-  } catch (error) {
-    console.error('Failed to add account:', error);
+  } catch {
+    // Storage write failed — non-critical
   }
 }
 
@@ -207,8 +165,7 @@ export async function getAccounts(): Promise<AuthAccount[]> {
   try {
     const storedAccounts = await AsyncStorage.getItem(ACCOUNTS_STORAGE_KEY);
     return storedAccounts ? JSON.parse(storedAccounts) : [];
-  } catch (error) {
-    console.error('Failed to get accounts:', error);
+  } catch {
     return [];
   }
 }
@@ -222,18 +179,16 @@ export async function removeAccount(did: string): Promise<void> {
     const filtered = accounts.filter(a => a.did !== did);
     await AsyncStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(filtered));
 
-    // Also remove the session
     await removeSession(did);
 
-    // If removing active account, clear active session
     const activeAccount = await AsyncStorage.getItem(ACTIVE_ACCOUNT_KEY);
     if (activeAccount === did) {
       await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
       await AsyncStorage.removeItem(ACTIVE_ACCOUNT_KEY);
       resetAtProtoClient();
     }
-  } catch (error) {
-    console.error('Failed to remove account:', error);
+  } catch {
+    // Storage write failed — non-critical
   }
 }
 
@@ -247,19 +202,16 @@ async function addSession(session: StoredSession): Promise<void> {
       ? JSON.parse(storedSessions)
       : [];
 
-    // Check if session already exists for this account
     const existingIndex = sessions.findIndex(s => s.did === session.did);
     if (existingIndex >= 0) {
-      // Update existing session
       sessions[existingIndex] = session;
     } else {
-      // Add new session
       sessions.push(session);
     }
 
     await AsyncStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
-  } catch (error) {
-    console.error('Failed to add session:', error);
+  } catch {
+    // Storage write failed — non-critical
   }
 }
 
@@ -270,8 +222,7 @@ export async function getSessions(): Promise<StoredSession[]> {
   try {
     const storedSessions = await AsyncStorage.getItem(SESSIONS_STORAGE_KEY);
     return storedSessions ? JSON.parse(storedSessions) : [];
-  } catch (error) {
-    console.error('Failed to get sessions:', error);
+  } catch {
     return [];
   }
 }
@@ -284,8 +235,8 @@ async function removeSession(did: string): Promise<void> {
     const sessions = await getSessions();
     const filtered = sessions.filter(s => s.did !== did);
     await AsyncStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(filtered));
-  } catch (error) {
-    console.error('Failed to remove session:', error);
+  } catch {
+    // Storage write failed — non-critical
   }
 }
 
@@ -293,59 +244,45 @@ async function removeSession(did: string): Promise<void> {
  * Multi-account support: Switch to a different account
  */
 export async function switchToAccount(did: string): Promise<StoredSession> {
-  try {
-    const sessions = await getSessions();
-    const targetSession = sessions.find(s => s.did === did);
+  const sessions = await getSessions();
+  const targetSession = sessions.find(s => s.did === did);
 
-    if (!targetSession) {
-      throw new Error('Session not found for account');
-    }
-
-    // Reset current client
-    resetAtProtoClient();
-
-    // Resume the target session
-    const client = getAtProtoClient();
-    await client.resumeSession(targetSession);
-
-    // Verify session is still valid
-    try {
-      const agent = client.getAgent();
-      const profile = await agent.getProfile({actor: targetSession.did});
-
-      // Update account info
-      targetSession.account = {
-        ...targetSession.account,
-        handle: profile.data.handle,
-        displayName: profile.data.displayName,
-        avatar: profile.data.avatar,
-      };
-
-      // Update stored session
-      await addSession(targetSession);
-    } catch (profileError) {
-      // Session might be expired, try to refresh
-      console.warn('Session validation failed, attempting refresh:', profileError);
-      try {
-        const refreshedSession = await client.refreshSession();
-        targetSession.accessJwt = refreshedSession.accessJwt;
-        targetSession.refreshJwt = refreshedSession.refreshJwt;
-        await addSession(targetSession);
-      } catch (refreshError) {
-        // Refresh failed, remove invalid session
-        console.error('Session refresh failed:', refreshError);
-        await removeSession(did);
-        throw new Error('Session expired. Please sign in again.');
-      }
-    }
-
-    // Set as active session
-    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(targetSession));
-    await AsyncStorage.setItem(ACTIVE_ACCOUNT_KEY, targetSession.did);
-
-    return targetSession;
-  } catch (error) {
-    console.error('Failed to switch account:', error);
-    throw error;
+  if (!targetSession) {
+    throw new Error('Session not found for account');
   }
+
+  resetAtProtoClient();
+
+  const client = getAtProtoClient();
+  await client.resumeSession(targetSession);
+
+  try {
+    const agent = client.getAgent();
+    const profile = await agent.getProfile({actor: targetSession.did});
+
+    targetSession.account = {
+      ...targetSession.account,
+      handle: profile.data.handle,
+      displayName: profile.data.displayName,
+      avatar: profile.data.avatar,
+    };
+
+    await addSession(targetSession);
+  } catch {
+    // Session might be expired, try to refresh
+    try {
+      const refreshedSession = await client.refreshSession();
+      targetSession.accessJwt = refreshedSession.accessJwt;
+      targetSession.refreshJwt = refreshedSession.refreshJwt;
+      await addSession(targetSession);
+    } catch {
+      await removeSession(did);
+      throw new Error('Session expired. Please sign in again.');
+    }
+  }
+
+  await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(targetSession));
+  await AsyncStorage.setItem(ACTIVE_ACCOUNT_KEY, targetSession.did);
+
+  return targetSession;
 }

@@ -1,41 +1,47 @@
-import React, {useState} from 'react';
-import {View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert} from 'react-native';
-import {AccountSwitcher} from '../../components';
-import {useAuth} from '../../contexts/AuthContext';
-import type {DrawerScreenPropsType} from '../../types/navigation';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from "react-native";
+import { AccountSwitcher } from "../../components";
+import { useAuth } from "../../contexts/AuthContext";
 
-type Props = DrawerScreenPropsType<'Settings'>;
+interface SettingsScreenProps {
+  section?: string;
+}
 
 const SETTINGS_SECTIONS = [
-  {id: 'account', title: 'Account', description: 'Manage your account settings'},
-  {id: 'appearance', title: 'Appearance', description: 'Theme, colors, and display'},
-  {id: 'notifications', title: 'Notifications', description: 'Push and in-app notifications'},
-  {id: 'privacy', title: 'Privacy', description: 'Control your data and visibility'},
-  {id: 'accessibility', title: 'Accessibility', description: 'Screen reader and motion settings'},
-  {id: 'storage', title: 'Storage', description: 'Data sync and local storage'},
-  {id: 'about', title: 'About', description: 'App version and legal info'},
+  { id: "account", title: "Account", description: "Manage your account settings" },
+  { id: "appearance", title: "Appearance", description: "Theme, colors, and display" },
+  { id: "notifications", title: "Notifications", description: "Push and in-app notifications" },
+  { id: "privacy", title: "Privacy", description: "Control your data and visibility" },
+  { id: "accessibility", title: "Accessibility", description: "Screen reader and motion settings" },
+  { id: "storage", title: "Storage", description: "Data sync and local storage" },
+  { id: "about", title: "About", description: "App version and legal info" },
 ];
 
-export function SettingsScreen({route, navigation}: Props) {
-  const {section} = route.params ?? {};
-  const {signOut, accounts} = useAuth();
+export function SettingsScreen({ section }: SettingsScreenProps) {
+  const { signOut, accounts } = useAuth();
   const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
 
   const handleSignOut = () => {
     Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
+      "Sign Out",
+      "Are you sure you want to sign out?",
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Sign Out',
-          style: 'destructive',
+          text: "Sign Out",
+          style: "destructive",
           onPress: async () => {
             try {
               await signOut();
-            } catch (error) {
-              console.error('Sign out failed:', error);
-              Alert.alert('Error', 'Failed to sign out. Please try again.');
+            } catch {
+              Alert.alert("Error", "Failed to sign out. Please try again.");
             }
           },
         },
@@ -44,21 +50,19 @@ export function SettingsScreen({route, navigation}: Props) {
   };
 
   const handleAddAccount = () => {
-    // Close switcher and navigate to landing screen to add new account
     setShowAccountSwitcher(false);
     Alert.alert(
-      'Add Account',
-      'You will be taken to the sign-in screen to add another account.',
+      "Add Account",
+      "You will be taken to the sign-in screen to add another account.",
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Continue',
+          text: "Continue",
           onPress: async () => {
             try {
               await signOut();
-              // User will be automatically taken to landing screen after sign out
-            } catch (error) {
-              console.error('Failed to prepare for account addition:', error);
+            } catch {
+              // Sign out failed
             }
           },
         },
@@ -80,7 +84,7 @@ export function SettingsScreen({route, navigation}: Props) {
         <AccountSwitcher
           onAccountSwitch={() => {
             setShowAccountSwitcher(false);
-            Alert.alert('Account Switched', 'Successfully switched to the selected account.');
+            Alert.alert("Account Switched", "Successfully switched to the selected account.");
           }}
           onAddAccount={handleAddAccount}
         />
@@ -95,7 +99,6 @@ export function SettingsScreen({route, navigation}: Props) {
         <Text style={styles.activeSection}>Active section: {section}</Text>
       )}
 
-      {/* Account Management Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account Management</Text>
 
@@ -119,10 +122,9 @@ export function SettingsScreen({route, navigation}: Props) {
         </TouchableOpacity>
       </View>
 
-      {/* Other Settings Sections */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>App Settings</Text>
-        {SETTINGS_SECTIONS.map(item => (
+        {SETTINGS_SECTIONS.map((item) => (
           <TouchableOpacity key={item.id} style={styles.item}>
             <Text style={styles.itemTitle}>{item.title}</Text>
             <Text style={styles.itemDescription}>{item.description}</Text>
@@ -136,17 +138,17 @@ export function SettingsScreen({route, navigation}: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: "#0a0a0f",
   },
   header: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     padding: 16,
     paddingTop: 24,
   },
   activeSection: {
-    color: '#3b82f6',
+    color: "#3b82f6",
     fontSize: 14,
     paddingHorizontal: 16,
     marginBottom: 8,
@@ -155,10 +157,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    fontWeight: "600",
+    textTransform: "uppercase",
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginTop: 16,
@@ -166,33 +168,33 @@ const styles = StyleSheet.create({
   item: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
-    minHeight: 44, // WCAG 2.1 touch target minimum
+    borderBottomColor: "#1f2937",
+    minHeight: 44,
   },
   itemTitle: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   itemDescription: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
     marginTop: 4,
   },
   dangerText: {
-    color: '#F91880',
+    color: "#F91880",
   },
   accountSwitcherHeader: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
-    backgroundColor: '#000',
+    borderBottomColor: "#333",
+    backgroundColor: "#000",
   },
   backButton: {
     padding: 8,
   },
   backButtonText: {
-    color: '#1DA1F2',
+    color: "#1DA1F2",
     fontSize: 16,
   },
 });

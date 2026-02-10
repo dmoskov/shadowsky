@@ -1,12 +1,12 @@
-import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
-import type {HomeStackScreenProps} from '../../types/navigation';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 
-type Props = HomeStackScreenProps<'Thread'>;
+interface ThreadScreenProps {
+  handle: string;
+  postId: string;
+}
 
-export function ThreadScreen({route}: Props) {
-  const {handle, postId} = route.params;
-
+export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Thread View</Text>
@@ -19,24 +19,24 @@ export function ThreadScreen({route}: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#0a0a0f",
+    justifyContent: "center",
+    alignItems: "center",
   },
   text: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   subtext: {
-    color: '#3b82f6',
+    color: "#3b82f6",
     fontSize: 16,
     marginTop: 8,
   },
   postId: {
-    color: '#6b7280',
+    color: "#6b7280",
     fontSize: 12,
     marginTop: 4,
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
   },
 });
