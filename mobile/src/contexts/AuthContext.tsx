@@ -17,6 +17,9 @@ import {
   resumeSession,
   signInWithPassword,
   StoredSession,
+  switchToAccount,
+  removeAccount as removeAccountFromStorage,
+  getCurrentSession,
 } from "../services/auth/auth-service";
 import * as OAuthService from "../services/auth/oauth";
 
@@ -35,6 +38,7 @@ interface AuthContextType {
   refreshSession: () => Promise<void>;
   accounts: AuthAccount[];
   switchAccount: (did: string) => Promise<void>;
+  removeAccount: (did: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -264,18 +268,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error("Account not found");
       }
 
-      // For now, we can't switch to an account without re-authenticating
-      // because we don't store credentials. This would require the user
-      // to sign in again with that account.
-      // In a full implementation, you might store sessions for multiple accounts.
-      throw new Error(
-        "Account switching requires re-authentication. Please sign in with the desired account.",
-      );
+      // Switch to the account using stored session
+      const newSession = await switchToAccount(did);
+      setSession(newSession);
     } catch (error) {
       console.error("Failed to switch account:", error);
       throw error;
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const removeAccount = async (did: string) => {
+    try {
+      // Remove account and its session
+      await removeAccountFromStorage(did);
+
+      // Reload accounts list
+      await loadAccounts();
+
+      // If we removed the current account, session state will be cleared by removeAccountFromStorage
+      // Just need to update our local state
+      const currentSession = await getCurrentSession();
+      if (!currentSession || currentSession.did === did) {
+        setSession(null);
+      }
+    } catch (error) {
+      console.error("Failed to remove account:", error);
+      throw error;
     }
   };
 
@@ -290,6 +310,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     refreshSession,
     accounts,
     switchAccount,
+    removeAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
