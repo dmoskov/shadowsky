@@ -1,13 +1,107 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
+import {useLists} from '../../hooks/api';
+import {useAppNavigation} from '../../hooks/useNavigation';
+import {AppBskyGraphDefs} from '@atproto/api';
+
+interface ListItemProps {
+  list: AppBskyGraphDefs.ListView;
+  onPress: () => void;
+}
+
+function ListItem({list, onPress}: ListItemProps) {
+  return (
+    <TouchableOpacity style={styles.listItem} onPress={onPress}>
+      <View style={styles.listContent}>
+        <Text style={styles.listName}>{list.name}</Text>
+        {list.description && (
+          <Text style={styles.listDescription} numberOfLines={2}>
+            {list.description}
+          </Text>
+        )}
+        <Text style={styles.listMemberCount}>
+          {list.listItemCount || 0} members
+        </Text>
+      </View>
+      <View style={styles.chevron}>
+        <Text style={styles.chevronText}>›</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
 
 export function ListsScreen() {
+  const {data, isLoading, error, refetch, isRefetching} = useLists();
+  const {navigateToList} = useAppNavigation();
+
+  const handleListPress = (list: AppBskyGraphDefs.ListView) => {
+    // Extract the list URI or use it directly
+    navigateToList(encodeURIComponent(list.uri));
+  };
+
+  const renderEmpty = () => {
+    if (isLoading) {
+      return (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator color="#3b82f6" size="large" />
+          <Text style={styles.loadingText}>Loading lists...</Text>
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>Failed to load lists</Text>
+          <Text style={styles.errorSubtext}>
+            {error instanceof Error ? error.message : 'Unknown error'}
+          </Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.emptyText}>No lists yet</Text>
+        <Text style={styles.emptySubtext}>
+          Create lists on the web or other clients to see them here
+        </Text>
+      </View>
+    );
+  };
+
+  const lists = data?.lists || [];
+
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Lists</Text>
-      <Text style={styles.subtext}>
-        Your lists and feeds will appear here
-      </Text>
+      <FlatList
+        data={lists}
+        renderItem={({item}) => (
+          <ListItem list={item} onPress={() => handleListPress(item)} />
+        )}
+        keyExtractor={(item) => item.uri}
+        ListEmptyComponent={renderEmpty}
+        contentContainerStyle={lists.length === 0 ? styles.emptyContainer : undefined}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor="#3b82f6"
+            colors={['#3b82f6']}
+          />
+        }
+      />
     </View>
   );
 }
@@ -15,18 +109,88 @@ export function ListsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#0a0a0f',
   },
-  text: {
-    color: "#ffffff",
-    fontSize: 24,
-    fontWeight: "bold",
+  listItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1f1f2e',
   },
-  subtext: {
-    color: "#9ca3af",
+  listContent: {
+    flex: 1,
+  },
+  listName: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  listDescription: {
+    color: '#9ca3af',
     fontSize: 14,
-    marginTop: 8,
+    marginBottom: 4,
+  },
+  listMemberCount: {
+    color: '#6b7280',
+    fontSize: 13,
+  },
+  chevron: {
+    marginLeft: 8,
+  },
+  chevronText: {
+    color: '#6b7280',
+    fontSize: 24,
+    fontWeight: '300',
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  emptyContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  loadingText: {
+    color: '#9ca3af',
+    fontSize: 14,
+    marginTop: 12,
+  },
+  emptyText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    color: '#9ca3af',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  errorSubtext: {
+    color: '#9ca3af',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
