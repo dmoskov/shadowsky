@@ -65,6 +65,41 @@ export async function signInWithPassword(
 }
 
 /**
+ * Sign in with OAuth session data
+ */
+export async function signInWithOAuth(
+  sessionData: AtpSessionData,
+): Promise<StoredSession> {
+  resetAtProtoClient();
+
+  const client = getAtProtoClient();
+  await client.initialize(sessionData);
+
+  const agent = client.getAgent();
+  const profile = await agent.getProfile({actor: sessionData.did});
+
+  const account: AuthAccount = {
+    did: sessionData.did,
+    handle: sessionData.handle || profile.data.handle,
+    email: sessionData.email,
+    displayName: profile.data.displayName,
+    avatar: profile.data.avatar,
+  };
+
+  const session: StoredSession = {
+    ...sessionData,
+    account,
+  } as StoredSession;
+
+  await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+  await addSession(session);
+  await addAccount(account);
+  await AsyncStorage.setItem(ACTIVE_ACCOUNT_KEY, session.did);
+
+  return session;
+}
+
+/**
  * Resume existing session from storage
  */
 export async function resumeSession(): Promise<StoredSession | null> {
