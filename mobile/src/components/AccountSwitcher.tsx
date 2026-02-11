@@ -99,7 +99,7 @@ export function AccountSwitcher({
           ) : (
             <View style={[styles.avatar, styles.avatarPlaceholder]}>
               <Text style={styles.avatarText}>
-                {(acc.displayName || acc.handle)[0].toUpperCase()}
+                {(acc.displayName || acc.handle || "?")[0].toUpperCase()}
               </Text>
             </View>
           )}
