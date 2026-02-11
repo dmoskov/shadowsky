@@ -1,11 +1,97 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { AppBskyFeedDefs } from "@atproto/api";
+import { useTimeline } from "../../hooks/api/useFeed";
+import { useLikePost, useUnlikePost, useRepost, useDeleteRepost } from "../../hooks/api/usePosts";
+import { useAppNavigation } from "../../hooks/useNavigation";
+import { FeedList } from "../../components/FeedList";
+
+/**
+ * Extract post ID (rkey) from AT Protocol URI
+ * URI format: at://did/collection/rkey
+ */
+function getPostIdFromUri(uri: string): string {
+  const parts = uri.split("/");
+  return parts[parts.length - 1];
+}
 
 export function HomeScreen() {
+  const { data, isLoading, isRefetching, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useTimeline();
+  const { navigateToThread, navigateToProfile } = useAppNavigation();
+  const likePost = useLikePost();
+  const unlikePost = useUnlikePost();
+  const repost = useRepost();
+  const deleteRepost = useDeleteRepost();
+
+  // Flatten paginated data
+  const posts = data?.pages.flatMap((page) => page.feed) ?? [];
+
+  const handlePostPress = (post: AppBskyFeedDefs.FeedViewPost) => {
+    const postId = getPostIdFromUri(post.post.uri);
+    const handle = post.post.author.handle;
+    navigateToThread(handle, postId);
+  };
+
+  const handleProfilePress = (handle: string) => {
+    navigateToProfile(handle);
+  };
+
+  const handleLike = (post: AppBskyFeedDefs.FeedViewPost) => {
+    const { uri, cid, viewer } = post.post;
+
+    if (viewer?.like) {
+      // Unlike if already liked
+      unlikePost.mutate(viewer.like);
+    } else {
+      // Like the post
+      likePost.mutate({ uri, cid });
+    }
+  };
+
+  const handleRepost = (post: AppBskyFeedDefs.FeedViewPost) => {
+    const { uri, cid, viewer } = post.post;
+
+    if (viewer?.repost) {
+      // Delete repost if already reposted
+      deleteRepost.mutate(viewer.repost);
+    } else {
+      // Repost the post
+      repost.mutate({ uri, cid });
+    }
+  };
+
+  const handleReply = (post: AppBskyFeedDefs.FeedViewPost) => {
+    // Navigate to thread view where reply can be composed
+    handlePostPress(post);
+  };
+
+  const handleRefresh = () => {
+    refetch();
+  };
+
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Home Feed</Text>
-      <Text style={styles.subtext}>SkyDeck multi-column view coming soon</Text>
+      <FeedList
+        posts={posts}
+        isLoading={isLoading}
+        isRefreshing={isRefetching}
+        isLoadingMore={isFetchingNextPage}
+        error={error}
+        onRefresh={handleRefresh}
+        onLoadMore={handleLoadMore}
+        onPostPress={handlePostPress}
+        onProfilePress={handleProfilePress}
+        onLike={handleLike}
+        onRepost={handleRepost}
+        onReply={handleReply}
+        emptyMessage="No posts in your timeline yet"
+      />
     </View>
   );
 }
@@ -14,17 +100,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#0a0a0f",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  text: {
-    color: "#ffffff",
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-  subtext: {
-    color: "#9ca3af",
-    fontSize: 14,
-    marginTop: 8,
   },
 });
