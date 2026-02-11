@@ -26,6 +26,7 @@ import * as OAuthService from "../services/auth/oauth";
 const AUTH_STORAGE_KEY = "@shadowsky/auth_session";
 const SESSION_REFRESH_INTERVAL = 50 * 60 * 1000;
 const SESSION_CHECK_INTERVAL = 5 * 60 * 1000;
+const MAX_CONSECUTIVE_FAILURES = 3;
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -55,6 +56,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const checkTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  const consecutiveRefreshFailures = useRef<number>(0);
+  const consecutiveValidityFailures = useRef<number>(0);
 
   const clearTimers = useCallback(() => {
     if (refreshTimerRef.current) {
@@ -65,6 +68,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       clearInterval(checkTimerRef.current);
       checkTimerRef.current = null;
     }
+    // Reset failure counters when clearing timers
+    consecutiveRefreshFailures.current = 0;
+    consecutiveValidityFailures.current = 0;
   }, []);
 
   const signOut = useCallback(async () => {
@@ -130,13 +136,59 @@ export function AuthProvider({ children }: AuthProviderProps) {
     clearTimers();
 
     refreshTimerRef.current = setInterval(() => {
-      refreshSession().catch(() => {});
+      refreshSession()
+        .then(() => {
+          // Reset failure counter on success
+          consecutiveRefreshFailures.current = 0;
+        })
+        .catch((error) => {
+          consecutiveRefreshFailures.current += 1;
+          console.error(
+            `Session refresh failed (${consecutiveRefreshFailures.current}/${MAX_CONSECUTIVE_FAILURES}):`,
+            error,
+          );
+
+          if (
+            consecutiveRefreshFailures.current >= MAX_CONSECUTIVE_FAILURES
+          ) {
+            console.error(
+              "Max consecutive session refresh failures reached, forcing sign out",
+            );
+            clearTimers();
+            signOut().catch((signOutError) =>
+              console.error("Error during forced sign out:", signOutError),
+            );
+          }
+        });
     }, SESSION_REFRESH_INTERVAL);
 
     checkTimerRef.current = setInterval(() => {
-      checkSessionValidity().catch(() => {});
+      checkSessionValidity()
+        .then(() => {
+          // Reset failure counter on success
+          consecutiveValidityFailures.current = 0;
+        })
+        .catch((error) => {
+          consecutiveValidityFailures.current += 1;
+          console.error(
+            `Session validity check failed (${consecutiveValidityFailures.current}/${MAX_CONSECUTIVE_FAILURES}):`,
+            error,
+          );
+
+          if (
+            consecutiveValidityFailures.current >= MAX_CONSECUTIVE_FAILURES
+          ) {
+            console.error(
+              "Max consecutive session validity failures reached, forcing sign out",
+            );
+            clearTimers();
+            signOut().catch((signOutError) =>
+              console.error("Error during forced sign out:", signOutError),
+            );
+          }
+        });
     }, SESSION_CHECK_INTERVAL);
-  }, [clearTimers, refreshSession, checkSessionValidity]);
+  }, [clearTimers, refreshSession, checkSessionValidity, signOut]);
 
   const handleAppStateChange = useCallback(
     (nextAppState: AppStateStatus) => {
