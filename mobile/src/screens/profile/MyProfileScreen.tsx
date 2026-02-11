@@ -1,18 +1,17 @@
-import React from "react";
+import { AppBskyFeedDefs } from "@atproto/api";
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
   ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
   TouchableOpacity,
+  View,
 } from "react-native";
-import { useAuth } from "../../contexts/AuthContext";
-import { useProfile } from "../../hooks/api/useProfile";
-import { useAuthorFeed } from "../../hooks/api/useFeed";
 import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
-import { AppBskyFeedDefs } from "@atproto/api";
+import { useAuth } from "../../contexts/AuthContext";
+import { useAuthorFeed } from "../../hooks/api/useFeed";
+import { useProfile } from "../../hooks/api/useProfile";
 
 interface MyProfileScreenProps {
   onNavigateToPost?: (uri: string) => void;
@@ -27,7 +26,7 @@ export function MyProfileScreen({
 }: MyProfileScreenProps) {
   const { account, signOut } = useAuth();
   const { data: profile, isLoading: isLoadingProfile } = useProfile(
-    account?.handle || ""
+    account?.handle || "",
   );
   const {
     data: feedData,
@@ -42,7 +41,7 @@ export function MyProfileScreen({
       await signOut();
       onSignOut?.();
     } catch (error) {
-      console.error("Sign out failed:", error);
+      // Error is handled by the auth context
     }
   };
 
@@ -159,7 +158,9 @@ export function MyProfileScreen({
           }
         }}
         onEndReachedThreshold={0.5}
-        contentContainerStyle={posts.length === 0 ? styles.emptyList : undefined}
+        contentContainerStyle={
+          posts.length === 0 ? styles.emptyList : undefined
+        }
       />
     </View>
   );

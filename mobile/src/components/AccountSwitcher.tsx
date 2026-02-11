@@ -3,18 +3,18 @@
  * Displays list of accounts and allows switching between them
  */
 
-import React, { useState } from 'react';
+import { useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  Image,
-} from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
-import { AuthAccount } from '../services/auth/auth-service';
+  View,
+} from "react-native";
+import { useAuth } from "../contexts/AuthContext";
+import { AuthAccount } from "../services/auth/auth-service";
 
 interface AccountSwitcherProps {
   onAccountSwitch?: () => void;
@@ -25,7 +25,12 @@ export function AccountSwitcher({
   onAccountSwitch,
   onAddAccount,
 }: AccountSwitcherProps) {
-  const { accounts, account: currentAccount, switchAccount, removeAccount } = useAuth();
+  const {
+    accounts,
+    account: currentAccount,
+    switchAccount,
+    removeAccount,
+  } = useAuth();
   const [switchingTo, setSwitchingTo] = useState<string | null>(null);
   const [removingAccount, setRemovingAccount] = useState<string | null>(null);
 
@@ -39,12 +44,11 @@ export function AccountSwitcher({
       await switchAccount(did);
       onAccountSwitch?.();
     } catch (error) {
-      console.error('Failed to switch account:', error);
       Alert.alert(
-        'Switch Failed',
+        "Switch Failed",
         error instanceof Error
           ? error.message
-          : 'Failed to switch account. Please try again.',
+          : "Failed to switch account. Please try again.",
       );
     } finally {
       setSwitchingTo(null);
@@ -53,25 +57,24 @@ export function AccountSwitcher({
 
   const handleRemoveAccount = async (did: string, handle: string) => {
     Alert.alert(
-      'Remove Account',
+      "Remove Account",
       `Are you sure you want to remove @${handle}? You will need to sign in again to use this account.`,
       [
         {
-          text: 'Cancel',
-          style: 'cancel',
+          text: "Cancel",
+          style: "cancel",
         },
         {
-          text: 'Remove',
-          style: 'destructive',
+          text: "Remove",
+          style: "destructive",
           onPress: async () => {
             try {
               setRemovingAccount(did);
               await removeAccount(did);
             } catch (error) {
-              console.error('Failed to remove account:', error);
               Alert.alert(
-                'Remove Failed',
-                'Failed to remove account. Please try again.',
+                "Remove Failed",
+                "Failed to remove account. Please try again.",
               );
             } finally {
               setRemovingAccount(null);
@@ -152,10 +155,7 @@ export function AccountSwitcher({
         )}
       </View>
 
-      <TouchableOpacity
-        style={styles.addAccountButton}
-        onPress={onAddAccount}
-      >
+      <TouchableOpacity style={styles.addAccountButton} onPress={onAddAccount}>
         <Text style={styles.addAccountButtonText}>+ Add Account</Text>
       </TouchableOpacity>
     </View>
@@ -164,39 +164,39 @@ export function AccountSwitcher({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: "#333",
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
   },
   accountsList: {
     paddingVertical: 8,
   },
   accountContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 4,
   },
   accountButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
     borderRadius: 8,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: "#1a1a1a",
   },
   activeAccount: {
-    backgroundColor: '#1e3a4f',
+    backgroundColor: "#1e3a4f",
     borderWidth: 1,
-    borderColor: '#1DA1F2',
+    borderColor: "#1DA1F2",
   },
   avatar: {
     width: 40,
@@ -205,26 +205,26 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   avatarPlaceholder: {
-    backgroundColor: '#333',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#333",
+    justifyContent: "center",
+    alignItems: "center",
   },
   avatarText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   accountInfo: {
     flex: 1,
   },
   displayName: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 2,
   },
   handle: {
-    color: '#8899a6',
+    color: "#8899a6",
     fontSize: 14,
   },
   spinner: {
@@ -234,44 +234,44 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#1DA1F2',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#1DA1F2",
+    justifyContent: "center",
+    alignItems: "center",
     marginLeft: 8,
   },
   activeIndicatorText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   removeButton: {
     width: 32,
     height: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginLeft: 8,
   },
   removeButtonText: {
-    color: '#F91880',
+    color: "#F91880",
     fontSize: 28,
-    fontWeight: '300',
+    fontWeight: "300",
   },
   emptyText: {
-    color: '#8899a6',
+    color: "#8899a6",
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     padding: 24,
   },
   addAccountButton: {
     margin: 16,
     padding: 16,
     borderRadius: 8,
-    backgroundColor: '#1DA1F2',
-    alignItems: 'center',
+    backgroundColor: "#1DA1F2",
+    alignItems: "center",
   },
   addAccountButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
